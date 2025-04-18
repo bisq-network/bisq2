@@ -214,6 +214,15 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         ChatChannel<?> selectedChatChannel = model.getSelectedChannel().get();
         model.getShouldShowUserProfileSelection().set(multipleProfiles && selectedChatChannel instanceof PublicChatChannel);
 
+        if (selectedChatChannel instanceof TwoPartyPrivateChatChannel twoPartyPrivateChatChannel) {
+            UserProfile myProfile = userProfileService.getManagedUserProfile(twoPartyPrivateChatChannel.getMyUserIdentity().getUserProfile());
+            model.getMyUserProfile().set(myProfile);
+            model.getShouldShowUserProfile().set(true);
+        } else {
+            model.getMyUserProfile().set(null);
+            model.getShouldShowUserProfile().set(false);
+        }
+
         if (chatMessagesPin != null) {
             chatMessagesPin.unbind();
         }

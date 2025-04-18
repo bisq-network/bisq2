@@ -19,6 +19,7 @@ package bisq.desktop.main.content.chat.message_container;
 
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.chat.ChatUtil;
@@ -30,6 +31,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
@@ -47,15 +49,18 @@ import static javafx.scene.input.KeyEvent.KEY_PRESSED;
 @Slf4j
 public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox, ChatMessageContainerModel, ChatMessageContainerController> {
     private final static double CHAT_BOX_MAX_WIDTH = 1200;
+    private final static double CAT_HASH_IMAGE_SIZE = 34;
     public final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
+
     private final BisqTextArea inputField = new BisqTextArea();
     private final EventHandler<KeyEvent> enterKeyPressedHandler = this::processEnterKeyPressed;
     private final Button sendButton = new Button();
     private final Pane messagesListView;
     private final VBox emptyMessageList;
+    private ImageView myProfileCatHashImageView;
     private ChatMentionPopupMenu userMentionPopup;
     private Pane userProfileSelectionRoot;
-    private Subscription focusInputTextFieldPin, caretPositionPin;
+    private Subscription focusInputTextFieldPin, caretPositionPin, myUserProfilePin;
 
     public ChatMessageContainerView(ChatMessageContainerModel model,
                                     ChatMessageContainerController controller,
@@ -83,11 +88,20 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
     protected void onViewAttached() {
         userProfileSelectionRoot.visibleProperty().bind(model.getShouldShowUserProfileSelection());
         userProfileSelectionRoot.managedProperty().bind(model.getShouldShowUserProfileSelection());
+        myProfileCatHashImageView.visibleProperty().bind(model.getShouldShowUserProfile());
+        myProfileCatHashImageView.managedProperty().bind(model.getShouldShowUserProfile());
+
         inputField.textProperty().bindBidirectional(model.getTextInput());
 
         caretPositionPin = EasyBind.subscribe(model.getCaretPosition(), position -> {
             if (position != null) {
                 inputField.positionCaret(position.intValue());
+            }
+        });
+
+        myUserProfilePin = EasyBind.subscribe(model.getMyUserProfile(), userProfile -> {
+            if (userProfile != null) {
+                myProfileCatHashImageView.setImage(CatHash.getImage(userProfile, CAT_HASH_IMAGE_SIZE));
             }
         });
 
@@ -118,9 +132,12 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
     protected void onViewDetached() {
         userProfileSelectionRoot.visibleProperty().unbind();
         userProfileSelectionRoot.managedProperty().unbind();
+        myProfileCatHashImageView.visibleProperty().unbind();
+        myProfileCatHashImageView.managedProperty().unbind();
         inputField.textProperty().unbindBidirectional(model.getTextInput());
         focusInputTextFieldPin.unsubscribe();
         caretPositionPin.unsubscribe();
+        myUserProfilePin.unsubscribe();
         removeChatDialogEnabledSubscription();
 
         inputField.setOnKeyPressed(null);
@@ -131,10 +148,16 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
 
     private VBox createAndGetBottomBar(UserProfileSelection userProfileSelection) {
         setUpUserProfileSelection(userProfileSelection);
+
+        myProfileCatHashImageView = new ImageView();
+        myProfileCatHashImageView.setFitWidth(CAT_HASH_IMAGE_SIZE);
+        myProfileCatHashImageView.setFitHeight(CAT_HASH_IMAGE_SIZE);
+        HBox.setMargin(myProfileCatHashImageView, new Insets(-4, 0, 4, 0));
+
         HBox sendMessageBox = createAndGetSendMessageBox();
 
         HBox bottomBar = new HBox(10);
-        bottomBar.getChildren().addAll(userProfileSelectionRoot, sendMessageBox);
+        bottomBar.getChildren().addAll(userProfileSelectionRoot, myProfileCatHashImageView, sendMessageBox);
         bottomBar.setMaxWidth(CHAT_BOX_MAX_WIDTH);
         bottomBar.setPadding(new Insets(14, 20, 14, 20));
         bottomBar.setAlignment(Pos.BOTTOM_CENTER);
