@@ -118,7 +118,9 @@ public class BisqEasyService implements Service {
         bisqEasyNotificationsService = new BisqEasyNotificationsService(chatService.getChatNotificationService(),
                 supportService.getMediatorService(),
                 chatService.getBisqEasyOfferbookChannelService(),
-                settingsService);
+                settingsService,
+                tradeService.getBisqEasyTradeService(),
+                chatService.getBisqEasyOpenTradeChannelService());
 
         bisqEasySellersReputationBasedTradeAmountService = new BisqEasySellersReputationBasedTradeAmountService(userService.getUserProfileService(),
                 userService.getReputationService(),
