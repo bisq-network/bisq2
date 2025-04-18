@@ -172,7 +172,11 @@ public final class MyTextMessageBox extends BubbleMessageBox {
             if (keyEvent.getCode() == KeyCode.ENTER) {
                 keyEvent.consume();
                 if (keyEvent.isShiftDown()) {
-                    editInputField.appendText(System.lineSeparator());
+                    int caretPos = editInputField.getCaretPosition();
+                    String currentText = editInputField.getText();
+                    String newText = currentText.substring(0, caretPos) + System.lineSeparator() + currentText.substring(caretPos);
+                    editInputField.setText(newText);
+                    editInputField.positionCaret(caretPos + 1); // Move caret after the newline
                 } else if (!editInputField.getText().isEmpty()) {
                     controller.onSaveEditedMessage(item.getChatMessage(), editInputField.getText().trim());
                     onCloseEditMessage();
