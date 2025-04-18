@@ -33,6 +33,7 @@ import bisq.desktop.main.content.chat.message_container.components.CitationBlock
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.desktop.main.content.components.UserProfileSelection;
+import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.i18n.Res;
 import bisq.settings.ChatMessageType;
 import bisq.settings.SettingsService;
@@ -202,6 +203,10 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         String content = model.getTextInput().get().replaceAll("@[a-zA-Z\\d]*$", "@" + user.getUserName() + " ");
         model.getTextInput().set(content);
         model.getCaretPosition().set(content.length());
+    }
+
+    void onOpenProfileCard(UserProfile userProfile) {
+        Navigation.navigateTo(NavigationTarget.PROFILE_CARD, new ProfileCardController.InitData(userProfile));
     }
 
 

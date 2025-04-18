@@ -43,7 +43,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javax.tools.Tool;
 import java.util.stream.Collectors;
 
 import static javafx.scene.input.KeyEvent.KEY_PRESSED;
@@ -105,6 +104,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         myUserProfilePin = EasyBind.subscribe(model.getMyUserProfile(), userProfile -> {
             if (userProfile != null) {
                 myProfileCatHashImageView.setImage(CatHash.getImage(userProfile, CAT_HASH_IMAGE_SIZE));
+                myProfileCatHashImageView.setOnMouseClicked(e -> controller.onOpenProfileCard(userProfile));
                 myProfileNickNameTooltip.setText(userProfile.getNickName());
             }
         });
@@ -146,6 +146,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
 
         Tooltip.uninstall(myProfileCatHashImageView, myProfileNickNameTooltip);
 
+        myProfileCatHashImageView.setOnMouseClicked(null);
         inputField.setOnKeyPressed(null);
         inputField.removeEventFilter(KEY_PRESSED, enterKeyPressedHandler);
         sendButton.setOnAction(null);
@@ -158,6 +159,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         myProfileCatHashImageView = new ImageView();
         myProfileCatHashImageView.setFitWidth(CAT_HASH_IMAGE_SIZE);
         myProfileCatHashImageView.setFitHeight(CAT_HASH_IMAGE_SIZE);
+        myProfileCatHashImageView.getStyleClass().add("hand-cursor");
         HBox.setMargin(myProfileCatHashImageView, new Insets(-4, 0, 4, 0));
 
         myProfileNickNameTooltip = new BisqTooltip();
