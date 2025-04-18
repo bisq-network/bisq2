@@ -31,6 +31,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -42,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javax.tools.Tool;
 import java.util.stream.Collectors;
 
 import static javafx.scene.input.KeyEvent.KEY_PRESSED;
@@ -58,6 +60,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
     private final Pane messagesListView;
     private final VBox emptyMessageList;
     private ImageView myProfileCatHashImageView;
+    private BisqTooltip myProfileNickNameTooltip;
     private ChatMentionPopupMenu userMentionPopup;
     private Pane userProfileSelectionRoot;
     private Subscription focusInputTextFieldPin, caretPositionPin, myUserProfilePin;
@@ -102,6 +105,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         myUserProfilePin = EasyBind.subscribe(model.getMyUserProfile(), userProfile -> {
             if (userProfile != null) {
                 myProfileCatHashImageView.setImage(CatHash.getImage(userProfile, CAT_HASH_IMAGE_SIZE));
+                myProfileNickNameTooltip.setText(userProfile.getNickName());
             }
         });
 
@@ -140,6 +144,8 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         myUserProfilePin.unsubscribe();
         removeChatDialogEnabledSubscription();
 
+        Tooltip.uninstall(myProfileCatHashImageView, myProfileNickNameTooltip);
+
         inputField.setOnKeyPressed(null);
         inputField.removeEventFilter(KEY_PRESSED, enterKeyPressedHandler);
         sendButton.setOnAction(null);
@@ -153,6 +159,9 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         myProfileCatHashImageView.setFitWidth(CAT_HASH_IMAGE_SIZE);
         myProfileCatHashImageView.setFitHeight(CAT_HASH_IMAGE_SIZE);
         HBox.setMargin(myProfileCatHashImageView, new Insets(-4, 0, 4, 0));
+
+        myProfileNickNameTooltip = new BisqTooltip();
+        Tooltip.install(myProfileCatHashImageView, myProfileNickNameTooltip);
 
         HBox sendMessageBox = createAndGetSendMessageBox();
 
