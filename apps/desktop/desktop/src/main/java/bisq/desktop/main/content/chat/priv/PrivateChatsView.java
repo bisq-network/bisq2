@@ -60,9 +60,8 @@ import java.util.Optional;
 public abstract class PrivateChatsView extends ChatView<PrivateChatsView, PrivateChatsModel> {
     private BisqTableView<ListItem> tableView;
     private VBox openChatsSelectionList, chatHeaderVBox;
-    private Subscription noOpenChatsPin, tableViewSelectionPin, selectedModelItemPin, peersUserProfilePin,
-            myUserProfilePin;
-    private UserProfileDisplay chatPeerUserProfileDisplay, chatMyUserProfileDisplay;
+    private Subscription noOpenChatsPin, tableViewSelectionPin, selectedModelItemPin, peersUserProfilePin;
+    private UserProfileDisplay chatPeerUserProfileDisplay;
     private DropdownBisqMenuItem leaveChatButton;
 
     public PrivateChatsView(PrivateChatsModel model,
@@ -115,13 +114,6 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
             }
         });
 
-        myUserProfilePin = EasyBind.subscribe(model.getMyUserProfile(), userProfile -> {
-            if (userProfile != null) {
-                chatMyUserProfileDisplay.setUserProfile(userProfile);
-                chatMyUserProfileDisplay.setReputationScore(model.getMyUserReputationScore());
-            }
-        });
-
         leaveChatButton.setOnAction(e -> getController().onLeaveChat());
 
         ellipsisMenu.visibleProperty().bind(model.getNoOpenChats().not());
@@ -141,7 +133,6 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         tableViewSelectionPin.unsubscribe();
         noOpenChatsPin.unsubscribe();
         peersUserProfilePin.unsubscribe();
-        myUserProfilePin.unsubscribe();
 
         leaveChatButton.setOnAction(null);
         ellipsisMenu.visibleProperty().unbind();
@@ -150,10 +141,6 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         tableView.visibleProperty().unbind();
         tableView.managedProperty().unbind();
 
-        if (chatMyUserProfileDisplay != null) {
-            chatMyUserProfileDisplay.dispose();
-            chatMyUserProfileDisplay = null;
-        }
         if (chatPeerUserProfileDisplay != null) {
             chatPeerUserProfileDisplay.dispose();
             chatPeerUserProfileDisplay = null;
@@ -261,13 +248,8 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
     private void createHeaderVBox(boolean hasPeerToDisplay) {
         chatHeaderVBox.getChildren().clear();
         if (hasPeerToDisplay) {
-            chatMyUserProfileDisplay = new UserProfileDisplay(25);
-            chatPeerUserProfileDisplay = new UserProfileDisplay(25);
-            HBox hBox = new HBox(30,
-                    createUserProfileVBox(chatMyUserProfileDisplay, "bisqEasy.privateChats.table.myUser"),
-                    createUserProfileVBox(chatPeerUserProfileDisplay, "bisqEasy.openTrades.chat.peer.description")
-            );
-            chatHeaderVBox.getChildren().add(hBox);
+            chatPeerUserProfileDisplay = new UserProfileDisplay(34);
+            chatHeaderVBox.getChildren().add(chatPeerUserProfileDisplay);
             chatHeaderVBox.setAlignment(Pos.CENTER_LEFT);
         } else {
             Label emptyChatBoxHeader = new Label(
@@ -281,15 +263,6 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
             chatHeaderVBox.setPadding(new Insets(15, 0, 15, 0));
             chatHeaderVBox.getChildren().add(emptyChatBoxHeader);
         }
-    }
-
-    private VBox createUserProfileVBox(UserProfileDisplay userProfileDisplay, String descriptionKey) {
-        Label peerDescription = new Label(Res.get(descriptionKey).toUpperCase());
-        peerDescription.getStyleClass().add("bisq-easy-open-trades-header-description");
-        VBox.setMargin(peerDescription, new Insets(2, 0, 3, 0));
-        VBox vbox = new VBox(0, peerDescription, userProfileDisplay);
-        vbox.setAlignment(Pos.CENTER_LEFT);
-        return vbox;
     }
 
     @Getter

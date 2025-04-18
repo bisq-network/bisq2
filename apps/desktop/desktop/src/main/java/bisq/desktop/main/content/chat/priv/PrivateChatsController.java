@@ -102,8 +102,6 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
         UIThread.run(() -> {
             if (chatChannel == null) {
                 model.getSelectedItem().set(null);
-                model.setMyUserReputationScore(null);
-                model.getMyUserProfile().set(null);
                 model.setPeersReputationScore(null);
                 model.getPeersUserProfile().set(null);
                 maybeSelectFirst();
@@ -114,9 +112,6 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
                 UserProfile peer = userProfileService.getManagedUserProfile(channel.getPeer());
                 model.setPeersReputationScore(reputationService.getReputationScore(peer));
                 model.getPeersUserProfile().set(peer);
-                UserProfile myProfile = userProfileService.getManagedUserProfile(channel.getMyUserIdentity().getUserProfile());
-                model.setMyUserReputationScore(reputationService.getReputationScore(myProfile));
-                model.getMyUserProfile().set(myProfile);
 
                 model.getListItems().stream()
                         .filter(item -> item.getChannel().equals(channel))
