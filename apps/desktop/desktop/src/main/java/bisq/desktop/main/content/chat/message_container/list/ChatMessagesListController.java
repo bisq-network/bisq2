@@ -361,6 +361,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             String maxFiatAmount = OfferAmountFormatter.formatQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer, true);
             boolean isAmountRangeOffer = bisqEasyOffer.getAmountSpec() instanceof RangeAmountSpec;
             long sellersScore;
+            String learnMore = Res.get("chat.message.takeOffer.reputation.warning.learnMore");
             if (bisqEasyOffer.getTakersDirection().isBuy()) {
                 // I am as taker the buyer. We check if seller has the required reputation
                 sellersScore = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId())
@@ -376,7 +377,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                                             : "chat.message.takeOffer.buyer.invalidOffer.fixedAmount.text",
                                     sellersScore,
                                     isAmountRangeOffer ? requiredReputationScoreForMinOrFixed : requiredReputationScoreForMaxOrFixed,
-                                    isAmountRangeOffer ? minFiatAmount : maxFiatAmount))
+                                    isAmountRangeOffer ? minFiatAmount : maxFiatAmount) + "\n\n" + learnMore)
                             .show();
                 } else {
                     Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
@@ -386,14 +387,17 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 sellersScore = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
                 boolean canSellerTakeOffer = sellersScore >= requiredReputationScoreForMinOrFixed;
                 if (!canSellerTakeOffer) {
+                    String buildReputation = "chat.message.takeOffer.seller.insufficientScore.warning.buildReputation";
+                    String message = Res.get(isAmountRangeOffer
+                                    ? "chat.message.takeOffer.seller.insufficientScore.rangeAmount.warning"
+                                    : "chat.message.takeOffer.seller.insufficientScore.fixedAmount.warning",
+                            sellersScore,
+                            isAmountRangeOffer ? requiredReputationScoreForMinOrFixed : requiredReputationScoreForMaxOrFixed,
+                            isAmountRangeOffer ? minFiatAmount : maxFiatAmount) + "\n\n" + learnMore + "\n\n" + buildReputation;
+
                     new Popup()
                             .headline(Res.get("chat.message.takeOffer.seller.insufficientScore.headline"))
-                            .warning(Res.get(isAmountRangeOffer
-                                            ? "chat.message.takeOffer.seller.insufficientScore.rangeAmount.warning"
-                                            : "chat.message.takeOffer.seller.insufficientScore.fixedAmount.warning",
-                                    sellersScore,
-                                    isAmountRangeOffer ? requiredReputationScoreForMinOrFixed : requiredReputationScoreForMaxOrFixed,
-                                    isAmountRangeOffer ? minFiatAmount : maxFiatAmount))
+                            .warning(message)
                             .onAction(() -> Navigation.navigateTo(NavigationTarget.BUILD_REPUTATION))
                             .actionButtonText(Res.get("bisqEasy.offerbook.offerList.popup.offersWithInsufficientReputationWarning.buildReputation"))
                             .show();
