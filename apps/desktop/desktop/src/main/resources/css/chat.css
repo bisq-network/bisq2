@@ -64,11 +64,6 @@
     -fx-border-insets: 0 0 -1 0;
 }
 
-.chat-user-profile-bg {
-    -fx-background-color: -bisq-dark-grey-40;
-    -fx-background-radius: 8;
-}
-
 .chat-input-field {
     -fx-faint-focus-color: transparent;
     -fx-text-fill: -fx-light-text-color;

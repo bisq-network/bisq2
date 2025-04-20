@@ -113,6 +113,10 @@
     -fx-alignment: center;
 }
 
+.user-profile-selection-w-cat-hash-image .dropdown-menu {
+    -fx-padding: 0 2 0 5 !important;
+}
+
 .user-profile-selection-material-design .user-profile-display-name {
     -fx-font-size: 0.8em !important;
 }

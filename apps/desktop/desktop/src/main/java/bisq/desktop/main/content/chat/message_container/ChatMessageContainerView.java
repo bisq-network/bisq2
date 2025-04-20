@@ -58,8 +58,8 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
     private final Button sendButton = new Button();
     private final Pane messagesListView;
     private final VBox emptyMessageList;
+    private final BisqTooltip myProfileNickNameTooltip = new BisqTooltip();
     private ImageView myProfileCatHashImageView;
-    private BisqTooltip myProfileNickNameTooltip;
     private ChatMentionPopupMenu userMentionPopup;
     private Pane userProfileSelectionRoot;
     private Subscription focusInputTextFieldPin, caretPositionPin, myUserProfilePin;
@@ -160,14 +160,12 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         myProfileCatHashImageView.setFitWidth(CAT_HASH_IMAGE_SIZE);
         myProfileCatHashImageView.setFitHeight(CAT_HASH_IMAGE_SIZE);
         myProfileCatHashImageView.getStyleClass().add("hand-cursor");
-        HBox.setMargin(myProfileCatHashImageView, new Insets(-4, 0, 4, 0));
-
-        myProfileNickNameTooltip = new BisqTooltip();
+        HBox.setMargin(myProfileCatHashImageView, new Insets(-4, 3, 4, 0));
         Tooltip.install(myProfileCatHashImageView, myProfileNickNameTooltip);
 
         HBox sendMessageBox = createAndGetSendMessageBox();
 
-        HBox bottomBar = new HBox(10);
+        HBox bottomBar = new HBox(4);
         bottomBar.getChildren().addAll(userProfileSelectionRoot, myProfileCatHashImageView, sendMessageBox);
         bottomBar.setMaxWidth(CHAT_BOX_MAX_WIDTH);
         bottomBar.setPadding(new Insets(14, 20, 14, 20));
@@ -205,14 +203,11 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
     }
 
     private void setUpUserProfileSelection(UserProfileSelection userProfileSelection) {
-        userProfileSelection.setMaxWidth(165);
         userProfileSelection.openMenuUpwards();
         userProfileSelection.openMenuToTheRight();
         userProfileSelectionRoot = userProfileSelection.getRoot();
         userProfileSelectionRoot.setMaxHeight(45);
-        userProfileSelectionRoot.setMaxWidth(165);
-        userProfileSelectionRoot.setMinWidth(165);
-        userProfileSelectionRoot.getStyleClass().add("chat-user-profile-bg");
+        userProfileSelectionRoot.setMinWidth(55);
     }
 
     private void createChatDialogEnabledSubscription() {
