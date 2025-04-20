@@ -88,10 +88,10 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         offerListGreyIcon = ImageUtil.getImageViewById("list-view-grey");
         offerListCollapsedWhiteIcon = ImageUtil.getImageViewById("list-view-white");
         offerListExpandedWhiteIcon = ImageUtil.getImageViewById("list-view-white");
-        expandOfferListWhiteIcon = ImageUtil.getImageViewById("expand-white");
-        expandOfferListGreyIcon = ImageUtil.getImageViewById("expand-grey");
-        collapseOfferListWhiteIcon = ImageUtil.getImageViewById("collapse-white");
-        collapseOfferListGreyIcon = ImageUtil.getImageViewById("collapse-grey");
+        expandOfferListWhiteIcon = ImageUtil.getImageViewById("arrows-left-white");
+        expandOfferListGreyIcon = ImageUtil.getImageViewById("arrows-left-grey");
+        collapseOfferListWhiteIcon = ImageUtil.getImageViewById("arrows-right-white");
+        collapseOfferListGreyIcon = ImageUtil.getImageViewById("arrows-right-grey");
 
         // expanded header title
         headline = new Label(Res.get("bisqEasy.offerbook.offerList"), offerListGreenIcon);

@@ -382,8 +382,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         marketSelectionListTitle.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.markets.ExpandedList.Tooltip")));
         HBox.setHgrow(marketSelectionListTitle, Priority.ALWAYS);
 
-        collapseMarketsListWhiteIcon = ImageUtil.getImageViewById("expand-white");
-        collapseMarketsListGreyIcon = ImageUtil.getImageViewById("expand-grey");
+        collapseMarketsListWhiteIcon = ImageUtil.getImageViewById("arrows-left-white");
+        collapseMarketsListGreyIcon = ImageUtil.getImageViewById("arrows-left-grey");
         collapseMarketsListIconLabel = new Label("", collapseMarketsListGreyIcon);
         collapseMarketsListIconLabel.setCursor(Cursor.HAND);
         collapseMarketsListIconLabel.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.markets.ExpandedList.Tooltip")));
@@ -458,8 +458,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         subheader.setAlignment(Pos.CENTER);
         subheader.getStyleClass().add("market-selection-subheader");
 
-        expandMarketsListWhiteIcon = ImageUtil.getImageViewById("collapse-white");
-        expandMarketsListGreyIcon = ImageUtil.getImageViewById("collapse-grey");
+        expandMarketsListWhiteIcon = ImageUtil.getImageViewById("arrows-right-white");
+        expandMarketsListGreyIcon = ImageUtil.getImageViewById("arrows-right-grey");
         expandMarketsListIconLabel = new Label("", expandMarketsListGreyIcon);
         expandMarketsListIconLabel.setCursor(Cursor.HAND);
         expandMarketsListIconLabel.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.markets.CollapsedList.Tooltip")));
