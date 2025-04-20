@@ -19,28 +19,24 @@ package bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
 import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 class OfferbookListModel implements bisq.desktop.common.view.Model {
     @Setter
     private boolean useAnimations;
+    private final Set<String> chatMessageIds = new HashSet<>();
     private final ObservableList<OfferbookListItem> offerbookListItems = FXCollections.observableArrayList();
     private final FilteredList<OfferbookListItem> filteredOfferbookListItems = new FilteredList<>(offerbookListItems);
-    private final SortedList<OfferbookListItem> sortedOfferbookListItems = new SortedList<>(filteredOfferbookListItems);
     private final StringProperty fiatAmountTitle = new SimpleStringProperty();
     private final BooleanProperty showBuyOffers = new SimpleBooleanProperty();
     private final BooleanProperty showOfferListExpanded = new SimpleBooleanProperty();

@@ -22,9 +22,13 @@ import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.common.currency.Market;
 import bisq.i18n.Res;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+
+import java.util.Optional;
+import java.util.stream.Stream;
 
 @Getter
 @ToString(callSuper = true)
@@ -75,5 +79,16 @@ public final class BisqEasyOfferbookChannel extends PublicChatChannel<BisqEasyOf
 
     public String getShortDescription() {
         return Res.get("bisqEasy.offerBookChannel.description", market.getFiatCurrencyName());
+    }
+
+    public Stream<BisqEasyOffer> getBisqEasyOffers() {
+        return getBisqEasyOfferbookMessagesWithOffer()
+                .map(BisqEasyOfferbookMessage::getBisqEasyOffer)
+                .filter(Optional::isPresent)
+                .map(Optional::get);
+    }
+
+    public Stream<BisqEasyOfferbookMessage> getBisqEasyOfferbookMessagesWithOffer() {
+        return getChatMessages().stream().filter(BisqEasyOfferbookMessage::hasBisqEasyOffer);
     }
 }

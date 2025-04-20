@@ -80,6 +80,8 @@ public class BisqEasyService implements Service {
 
     private final Set<String> bannedAccountDataSet = new HashSet<>();
     private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
+    private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
+
     private Pin difficultyAdjustmentFactorPin, ignoreDiffAdjustmentFromSecManagerPin,
             mostRecentDiffAdjustmentValueOrDefaultPin, selectedMarketPin, authorizedAlertDataSetPin;
 
@@ -123,6 +125,7 @@ public class BisqEasyService implements Service {
         bisqEasySellersReputationBasedTradeAmountService = new BisqEasySellersReputationBasedTradeAmountService(userService.getUserProfileService(),
                 userService.getReputationService(),
                 marketPriceService);
+        bisqEasyOfferbookMessageService = new BisqEasyOfferbookMessageService(chatService, userService, bisqEasySellersReputationBasedTradeAmountService);
     }
 
 
@@ -171,6 +174,7 @@ public class BisqEasyService implements Service {
             }
         });
         return bisqEasySellersReputationBasedTradeAmountService.initialize()
+                .thenCompose(result -> bisqEasyOfferbookMessageService.initialize())
                 .thenCompose(result -> bisqEasyNotificationsService.initialize());
     }
 
@@ -183,9 +187,12 @@ public class BisqEasyService implements Service {
             selectedMarketPin.unbind();
             authorizedAlertDataSetPin.unbind();
         }
-
-        return getStorePendingMessagesInMailboxFuture()
-                .thenCompose(e -> bisqEasyNotificationsService.shutdown());
+        return getStorePendingMessagesInMailboxFuture().exceptionally(e -> false) // continue even if flush fails
+                .thenCompose(v -> CompletableFutureUtils.allOf( // shut down in parallel
+                        bisqEasyNotificationsService.shutdown().exceptionally(e -> false),
+                        bisqEasyOfferbookMessageService.shutdown().exceptionally(e -> false),
+                        bisqEasySellersReputationBasedTradeAmountService.shutdown().exceptionally(e -> false)))
+                .thenApply(list -> list.stream().allMatch(Boolean::booleanValue));
     }
 
     public boolean isDeleteUserIdentityProhibited(UserIdentity userIdentity) {

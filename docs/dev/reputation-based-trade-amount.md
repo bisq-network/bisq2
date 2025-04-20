@@ -24,7 +24,7 @@ The offerbook is filtered to only include valid offers where the sellers (maker)
 ### Create BUY offer
 
 Show text with number of sellers who have sufficient reputation for the selected amount.
-Additionally, we show a green progress bar at the slider marking the range where potential selles exist.
+Additionally, we show a green progress bar on the slider marking the range where potential sellers exist.
 
 <img src="img/reputation-based-amounts/create_buy_offer.png" width="1200"/>
 

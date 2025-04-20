@@ -253,9 +253,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     /**
      * Send message via given senderNetworkIdWithKeyPair to the receiverNetworkId as encrypted message.
-     * If peer is offline and if message is of type mailBoxMessage it will not be stored as mailbox message in the
+     * If peer is offline and if message is of type mailBoxMessage it will be stored as mailbox message in the
      * network.
-     * We send if at least one node on any transport was initialized
      */
     public CompletableFuture<SendMessageResult> confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
                                                                  NetworkId receiverNetworkId,
@@ -288,8 +287,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 .whenComplete((result, throwable) -> {
                     if (throwable != null) {
                         if (throwable instanceof TimeoutException) {
-                            log.warn("TimeoutException at confidentialSend. Node for give networkId is not initialized. " +
-                                    "We send the message as mailbox message");
+                            log.warn("TimeoutException at confidentialSend, likely caused by the anySuppliedInitializedNode() method " +
+                                    "as the node for the given networkId is not initialized yet. " +
+                                    "We call serviceNodesByTransport.confidentialSend() to send the message as mailbox message.");
                             supplyAsync(() -> {
                                         ThreadName.set(this, "confidentialSend");
                                         return serviceNodesByTransport.confidentialSend(envelopePayloadMessage,

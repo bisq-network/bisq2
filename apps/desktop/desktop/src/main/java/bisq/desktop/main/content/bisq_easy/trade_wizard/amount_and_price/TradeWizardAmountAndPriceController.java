@@ -42,7 +42,6 @@ public class TradeWizardAmountAndPriceController implements Controller {
     private final TradeWizardAmountAndPriceModel model;
     @Getter
     private final TradeWizardAmountAndPriceView view;
-    private final Region owner;
     private final TradeWizardAmountController tradeWizardAmountController;
     private final TradeWizardPriceController tradeWizardPriceController;
 
@@ -50,7 +49,6 @@ public class TradeWizardAmountAndPriceController implements Controller {
                                                Region owner,
                                                Consumer<Boolean> navigationButtonsVisibleHandler,
                                                Consumer<NavigationTarget> closeAndNavigateToHandler) {
-        this.owner = owner;
         tradeWizardAmountController = new TradeWizardAmountController(serviceProvider,
                 owner,
                 navigationButtonsVisibleHandler,

@@ -54,6 +54,7 @@ public class TradeWizardAmountModel implements Model {
     private final BooleanProperty shouldShowAmountLimitInfo = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowHowToBuildReputationButton = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowWarningIcon = new SimpleBooleanProperty();
+    private final BooleanProperty learnMoreVisible = new SimpleBooleanProperty();
     @Setter
     private String amountLimitInfoLink;
     @Setter
@@ -84,6 +85,7 @@ public class TradeWizardAmountModel implements Model {
         shouldShowAmountLimitInfo.set(false);
         shouldShowHowToBuildReputationButton.set(false);
         shouldShowWarningIcon.set(false);
+        learnMoreVisible.set(false);
         amountLimitInfoLink = null;
         linkToWikiText = null;
         isCreateOfferMode = false;
