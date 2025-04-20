@@ -28,12 +28,15 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.components.cathash.CatHash;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.property.BooleanProperty;
@@ -47,6 +50,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
+import javafx.geometry.Insets;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.EqualsAndHashCode;
@@ -63,11 +69,15 @@ public class UserProfileSelection {
     private final Controller controller;
 
     public UserProfileSelection(ServiceProvider serviceProvider) {
-        controller = new Controller(serviceProvider, 30, false);
+        controller = new Controller(serviceProvider, 30, false, false);
     }
 
     public UserProfileSelection(ServiceProvider serviceProvider, int iconSize, boolean useMaterialStyle) {
-        controller = new Controller(serviceProvider, iconSize, useMaterialStyle);
+        controller = new Controller(serviceProvider, iconSize, useMaterialStyle, false);
+    }
+
+    public UserProfileSelection(ServiceProvider serviceProvider, boolean useCatHashImageAsMenuItem) {
+        controller = new Controller(serviceProvider, 30, false, useCatHashImageAsMenuItem);
     }
 
     public Pane getRoot() {
@@ -114,12 +124,12 @@ public class UserProfileSelection {
         private Pin selectedUserProfilePin, chatChannelSelectionPin, navigationPin, userIdentitiesPin;
         private Subscription isPrivateChannelPin;
 
-        private Controller(ServiceProvider serviceProvider, int iconSize, boolean useMaterialStyle) {
+        private Controller(ServiceProvider serviceProvider, int iconSize, boolean useMaterialStyle, boolean useCatHashImageAsMenuItem) {
             this.userIdentityService = serviceProvider.getUserService().getUserIdentityService();
             chatChannelSelectionServices = serviceProvider.getChatService().getChatChannelSelectionServices();
             reputationService = serviceProvider.getUserService().getReputationService();
 
-            model = new Model();
+            model = new Model(useCatHashImageAsMenuItem);
             view = new View(model, this, iconSize, useMaterialStyle);
         }
 
@@ -228,6 +238,7 @@ public class UserProfileSelection {
     @Slf4j
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
+        private final boolean useCatHashImageAsMenuItem;
         private final ObjectProperty<UserIdentity> selectedUserIdentity = new SimpleObjectProperty<>();
         private final ObservableList<UserProfileMenuItem> userProfiles = FXCollections.observableArrayList();
         private final BooleanProperty isPrivateChannel = new SimpleBooleanProperty(false);
@@ -235,11 +246,16 @@ public class UserProfileSelection {
         private final DoubleProperty menuWidth = new SimpleDoubleProperty();
         @Setter
         private ReputationScore userReputationScore;
+
+        private Model(boolean useCatHashImageAsMenuItem) {
+            this.useCatHashImageAsMenuItem = useCatHashImageAsMenuItem;
+        }
     }
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
-        private static final double DEFAULT_MENU_WIDTH = 200;
+        private final static double DEFAULT_MENU_WIDTH = 200;
+        private final static double CAT_HASH_IMAGE_SIZE = 34;
 
         private final UserProfileDisplay userProfileDisplay;
         private final UserProfileDisplay singleUserProfileDisplay;
@@ -247,14 +263,23 @@ public class UserProfileSelection {
         private final DropdownMenu dropdownMenu;
         private final HBox singleUserProfileHBox;
         private final ListChangeListener<UserProfileMenuItem> userProfilesListener = change -> updateMenuItems();
+        private final BisqTooltip myProfileNickNameTooltip;
+        private final ImageView myProfileCatHashImageView;
         private Subscription selectedUserProfilePin, menuWidthPin;
 
         private View(Model model, Controller controller, int iconSize, boolean useMaterialStyle) {
             super(new Pane(), model, controller);
 
             userProfileDisplay = new UserProfileDisplay(iconSize, false);
+
+            myProfileNickNameTooltip = new BisqTooltip();
+            myProfileCatHashImageView = new ImageView();
+            myProfileCatHashImageView.setFitWidth(CAT_HASH_IMAGE_SIZE);
+            myProfileCatHashImageView.setFitHeight(CAT_HASH_IMAGE_SIZE);
+            HBox.setMargin(myProfileCatHashImageView, new Insets(0, -7, 0, 1));
+
             dropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
-            dropdownMenu.setContent(userProfileDisplay);
+            dropdownMenu.setContent(model.useCatHashImageAsMenuItem ? myProfileCatHashImageView : userProfileDisplay);
             dropdownMenu.useSpaceBetweenContentAndIcon();
 
             singleUserProfileDisplay = new UserProfileDisplay(iconSize, true);
@@ -268,6 +293,11 @@ public class UserProfileSelection {
             } else {
                 root.getStyleClass().add("user-profile-selection");
             }
+
+            if (model.useCatHashImageAsMenuItem) {
+                root.getStyleClass().add("user-profile-selection-w-cat-hash-image");
+            }
+
             root.getChildren().setAll(dropdownMenu, singleUserProfileHBox);
             root.setPrefHeight(60);
         }
@@ -280,17 +310,26 @@ public class UserProfileSelection {
             singleUserProfileHBox.managedProperty().bind(model.getShouldShowMenu().not());
 
             selectedUserProfilePin = EasyBind.subscribe(model.getSelectedUserIdentity(), selectedUserIdentity -> {
-                userProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile(), false);
+                UserProfile userProfile = selectedUserIdentity.getUserProfile();
+                userProfileDisplay.setUserProfile(userProfile, false);
                 userProfileDisplay.setReputationScore(model.getUserReputationScore());
-                singleUserProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile(), true);
+                singleUserProfileDisplay.setUserProfile(userProfile, true);
                 singleUserProfileDisplay.setReputationScore(model.getUserReputationScore());
+                myProfileCatHashImageView.setImage(CatHash.getImage(userProfile, CAT_HASH_IMAGE_SIZE));
+                myProfileNickNameTooltip.setText(userProfile.getNickName());
                 model.getUserProfiles().forEach(userProfileMenuItem ->
                         userProfileMenuItem.updateSelection(selectedUserIdentity.equals(userProfileMenuItem.getUserIdentity())));
             });
-            menuWidthPin = EasyBind.subscribe(model.getMenuWidth(), w -> setMenuPrefWidth(w.doubleValue()));
+            menuWidthPin = EasyBind.subscribe(model.getMenuWidth(), w -> {
+                if (!model.useCatHashImageAsMenuItem) {
+                    setMenuPrefWidth(w.doubleValue());
+                }
+            });
 
             model.getUserProfiles().addListener(userProfilesListener);
             updateMenuItems();
+
+            Tooltip.install(myProfileCatHashImageView, myProfileNickNameTooltip);
         }
 
         @Override
@@ -308,6 +347,8 @@ public class UserProfileSelection {
 
             dropdownMenu.clearMenuItems();
             model.getUserProfiles().removeListener(userProfilesListener);
+
+            Tooltip.uninstall(myProfileCatHashImageView, myProfileNickNameTooltip);
         }
 
         private void setMenuPrefWidth(double width) {

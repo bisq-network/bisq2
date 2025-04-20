@@ -75,7 +75,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
 
         citationBlock = new CitationBlock(serviceProvider);
 
-        UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider);
+        UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider, true);
 
         chatMessagesListController = new ChatMessagesListController(serviceProvider,
                 this::mentionUserHandler,
