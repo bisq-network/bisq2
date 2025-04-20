@@ -85,6 +85,7 @@ public class TradeWizardAmountModel implements Model {
         shouldShowAmountLimitInfo.set(false);
         shouldShowHowToBuildReputationButton.set(false);
         shouldShowWarningIcon.set(false);
+        learnMoreVisible.set(false);
         amountLimitInfoLink = null;
         linkToWikiText = null;
         isCreateOfferMode = false;

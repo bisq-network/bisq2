@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.bisq_easy.BisqEasyOfferbookMessageService;
-import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
@@ -104,7 +103,6 @@ public class ChatMessagesListController implements Controller {
     private final NetworkService networkService;
     private final Optional<ResendMessageService> resendMessageService;
     private final MarketPriceService marketPriceService;
-    private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final LeavePrivateChatManager leavePrivateChatManager;
     private final DontShowAgainService dontShowAgainService;
@@ -131,7 +129,6 @@ public class ChatMessagesListController implements Controller {
         resendMessageService = serviceProvider.getNetworkService().getResendMessageService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         bisqEasyOfferbookMessageService = serviceProvider.getBisqEasyService().getBisqEasyOfferbookMessageService();
-        bisqEasySellersReputationBasedTradeAmountService = serviceProvider.getBisqEasyService().getBisqEasySellersReputationBasedTradeAmountService();
         authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
 
@@ -388,7 +385,7 @@ public class ChatMessagesListController implements Controller {
                 sellersScore = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
                 boolean canSellerTakeOffer = sellersScore >= requiredReputationScoreForMinOrFixed;
                 if (!canSellerTakeOffer) {
-                    String buildReputation = "chat.message.takeOffer.seller.insufficientScore.warning.buildReputation";
+                    String buildReputation = Res.get("chat.message.takeOffer.seller.insufficientScore.warning.buildReputation");
                     String message = Res.get(isAmountRangeOffer
                                     ? "chat.message.takeOffer.seller.insufficientScore.rangeAmount.warning"
                                     : "chat.message.takeOffer.seller.insufficientScore.fixedAmount.warning",
@@ -629,6 +626,8 @@ public class ChatMessagesListController implements Controller {
     private void updatePredicate() {
         model.getFilteredChatMessages().setPredicate(item ->
                 model.getSearchPredicate().test(item) && getPredicate().test(item));
+        // Re‑evaluate unread counters after the underlying list changed
+        handleScrollValueChanged();
     }
 
     private <M extends ChatMessage, C extends ChatChannel<M>> Pin bindChatMessages(C channel) {
@@ -649,7 +648,7 @@ public class ChatMessagesListController implements Controller {
                         networkService,
                         resendMessageService,
                         authorizedBondedRolesService))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(LinkedHashSet::new)); // preserve insertion order
         model.getChatMessages().addAll(items);
         model.getChatMessageIds().clear();
         model.getChatMessageIds().addAll(items.stream()
@@ -855,6 +854,11 @@ public class ChatMessagesListController implements Controller {
                             throw new IllegalStateException("Unexpected value: " + settingsService.getBisqEasyOfferbookMessageTypeFilter().get());
                 }
             } else {
+                String senderUserProfileId = senderUserProfile.get().getId();
+                if (bannedUserService.isUserProfileBanned(senderUserProfileId) ||
+                        userProfileService.isChatUserIgnored(senderUserProfileId)) {
+                    return false;
+                }
                 isCorrectMessageType = true;
             }
 

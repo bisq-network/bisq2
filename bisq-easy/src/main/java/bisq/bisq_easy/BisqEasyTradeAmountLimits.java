@@ -42,6 +42,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class BisqEasyTradeAmountLimits {
@@ -231,16 +232,21 @@ public class BisqEasyTradeAmountLimits {
             Market market,
             Direction direction) {
 
-        BisqEasyOfferbookChannel channel = bisqEasyOfferbookChannelService.findChannel(market).orElseThrow();
+        Optional<BisqEasyOfferbookChannel> optionalChannel = bisqEasyOfferbookChannelService.findChannel(market);
+        if (optionalChannel.isEmpty()) {
+            log.warn("Channel for market {} not found", market);
+            return new Pair<>(Optional.empty(), Optional.empty());
+        }
+        BisqEasyOfferbookChannel channel = optionalChannel.get();
+        Set<String> myUserIdentityIds = userIdentityService.getUserIdentities().stream()
+                .map(userIdentity -> userIdentity.getUserProfile().getId())
+                .collect(Collectors.toSet());
         List<BisqEasyOffer> filteredOffers = channel.getBisqEasyOffers()
                 .filter(offer -> {
                     if (!offer.getTakersDirection().equals(direction)) {
                         return false;
                     }
-                    if (!offer.getMarket().equals(market)) {
-                        return false;
-                    }
-                    if (!isValidMakerProfile(userProfileService, userIdentityService, offer)) {
+                    if (!isValidMakerProfile(userProfileService, userIdentityService, offer, myUserIdentityIds)) {
                         return false;
                     }
 
@@ -286,6 +292,7 @@ public class BisqEasyTradeAmountLimits {
                         Monetary fiatAmountFromSellersReputationScore = usdToFiat(marketPriceService, offerMarket, usdAmountFromSellersReputationScore).orElseThrow();
                         return Optional.of(fiatAmountFromSellersReputationScore);
                     } catch (Exception e) {
+                        log.warn("Failed to evaluate highest amount for offer {}: {}", offer.getId(), e.getMessage(), e);
                         return Optional.<Monetary>empty();
                     }
                 })
@@ -297,7 +304,8 @@ public class BisqEasyTradeAmountLimits {
 
     private static boolean isValidMakerProfile(UserProfileService userProfileService,
                                                UserIdentityService userIdentityService,
-                                               BisqEasyOffer peersOffer) {
+                                               BisqEasyOffer peersOffer,
+                                               Set<String> myUserIdentityIds) {
         Optional<UserProfile> optionalMakersUserProfile = userProfileService.findUserProfile(peersOffer.getMakersUserProfileId());
         if (optionalMakersUserProfile.isEmpty()) {
             return false;
@@ -306,9 +314,7 @@ public class BisqEasyTradeAmountLimits {
         if (userProfileService.isChatUserIgnored(makersUserProfile)) {
             return false;
         }
-        if (userIdentityService.getUserIdentities().stream()
-                .map(userIdentity -> userIdentity.getUserProfile().getId())
-                .anyMatch(userProfileId -> userProfileId.equals(optionalMakersUserProfile.get().getId()))) {
+        if (myUserIdentityIds.contains(makersUserProfile.getId())) {
             return false;
         }
 

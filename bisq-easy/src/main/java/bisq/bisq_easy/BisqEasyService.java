@@ -187,11 +187,12 @@ public class BisqEasyService implements Service {
             selectedMarketPin.unbind();
             authorizedAlertDataSetPin.unbind();
         }
-
-        return getStorePendingMessagesInMailboxFuture()
-                .thenCompose(e -> bisqEasyNotificationsService.shutdown())
-                .thenCompose(e -> bisqEasyOfferbookMessageService.shutdown())
-                .thenCompose(e -> bisqEasySellersReputationBasedTradeAmountService.shutdown());
+        return getStorePendingMessagesInMailboxFuture().exceptionally(e -> false) // continue even if flush fails
+                .thenCompose(v -> CompletableFutureUtils.allOf( // shut down in parallel
+                        bisqEasyNotificationsService.shutdown().exceptionally(e -> false),
+                        bisqEasyOfferbookMessageService.shutdown().exceptionally(e -> false),
+                        bisqEasySellersReputationBasedTradeAmountService.shutdown().exceptionally(e -> false)))
+                .thenApply(list -> list.stream().allMatch(Boolean::booleanValue));
     }
 
     public boolean isDeleteUserIdentityProhibited(UserIdentity userIdentity) {

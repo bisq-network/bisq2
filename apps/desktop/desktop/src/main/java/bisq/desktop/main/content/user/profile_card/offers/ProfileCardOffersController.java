@@ -66,7 +66,7 @@ public class ProfileCardOffersController implements Controller {
         model.getOfferbookListItems().setAll(bisqEasyOfferbookMessageService.getAllOfferbookMessagesWithOffer(userProfile.getId())
                 .map(userChatMessageWithOffer -> new ProfileCardOfferListItem(
                         userChatMessageWithOffer, userProfile, reputationService, marketPriceService))
-                .collect(Collectors.toSet()));
+                .collect(Collectors.toList()));
     }
 
     public String getNumberOffers() {

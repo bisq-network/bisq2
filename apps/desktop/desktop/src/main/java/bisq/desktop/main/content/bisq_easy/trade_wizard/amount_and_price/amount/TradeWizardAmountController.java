@@ -66,7 +66,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -494,6 +497,10 @@ public class TradeWizardAmountController implements Controller {
 
         Monetary minQuoteSideAmount = amountSelectionController.getMinQuoteSideAmount().get();
         Monetary maxOrFixedQuoteSideAmount = amountSelectionController.getMaxOrFixedQuoteSideAmount().get();
+        // Prevent NPE: nothing to calculate until both ends of the range are set
+        if (minQuoteSideAmount == null || maxOrFixedQuoteSideAmount == null) {
+            return;
+        }
 
         Market market = model.getMarket();
         long requiredReputationScoreForMaxOrFixedAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreByFiatAmount(marketPriceService, market, maxOrFixedQuoteSideAmount).orElse(0L);
@@ -651,6 +658,11 @@ public class TradeWizardAmountController implements Controller {
     private void applyLowestAndHighestAmountInAvailableOffers() {
         Monetary selectedAmount = amountSelectionController.getMaxOrFixedQuoteSideAmount().get();
         if (selectedAmount == null) {
+            return;
+        }
+
+        if (model.getMarket() == null) {
+            log.warn("Market not yet set – skipping offer amount range calculation");
             return;
         }
 

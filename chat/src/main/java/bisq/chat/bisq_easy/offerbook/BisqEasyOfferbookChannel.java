@@ -27,6 +27,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @Getter
@@ -81,8 +82,10 @@ public final class BisqEasyOfferbookChannel extends PublicChatChannel<BisqEasyOf
     }
 
     public Stream<BisqEasyOffer> getBisqEasyOffers() {
-        //noinspection OptionalGetWithoutIsPresent
-        return getBisqEasyOfferbookMessagesWithOffer().map(e -> e.getBisqEasyOffer().get());
+        return getBisqEasyOfferbookMessagesWithOffer()
+                .map(BisqEasyOfferbookMessage::getBisqEasyOffer)
+                .filter(Optional::isPresent)
+                .map(Optional::get);
     }
 
     public Stream<BisqEasyOfferbookMessage> getBisqEasyOfferbookMessagesWithOffer() {
