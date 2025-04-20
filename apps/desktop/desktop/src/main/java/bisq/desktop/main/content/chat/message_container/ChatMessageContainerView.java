@@ -58,8 +58,8 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
     private final Button sendButton = new Button();
     private final Pane messagesListView;
     private final VBox emptyMessageList;
+    private final BisqTooltip myProfileNickNameTooltip = new BisqTooltip();
     private ImageView myProfileCatHashImageView;
-    private BisqTooltip myProfileNickNameTooltip;
     private ChatMentionPopupMenu userMentionPopup;
     private Pane userProfileSelectionRoot;
     private Subscription focusInputTextFieldPin, caretPositionPin, myUserProfilePin;
@@ -161,8 +161,6 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         myProfileCatHashImageView.setFitHeight(CAT_HASH_IMAGE_SIZE);
         myProfileCatHashImageView.getStyleClass().add("hand-cursor");
         HBox.setMargin(myProfileCatHashImageView, new Insets(-4, 0, 4, 0));
-
-        myProfileNickNameTooltip = new BisqTooltip();
         Tooltip.install(myProfileCatHashImageView, myProfileNickNameTooltip);
 
         HBox sendMessageBox = createAndGetSendMessageBox();
