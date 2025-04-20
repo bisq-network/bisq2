@@ -80,7 +80,8 @@ public class BisqEasyOfferbookMessageService implements Service {
     }
 
     public Stream<BisqEasyOfferbookMessage> getOfferbookMessagesWithOffer(BisqEasyOfferbookChannel channel) {
-        return channel.getBisqEasyOfferbookMessagesWithOffer().filter(this::isValid);
+        return channel.getBisqEasyOfferbookMessagesWithOffer()
+                .filter(this::isValid);
     }
 
     public Stream<BisqEasyOfferbookMessage> getAllOfferbookMessagesWithOffer(String userProfileId) {
@@ -109,9 +110,11 @@ public class BisqEasyOfferbookMessageService implements Service {
     }
 
     public boolean isValid(BisqEasyOfferbookMessage message) {
-        return isTextMessage(message) ||
-                isBuyOffer(message) ||
-                hasSellerSufficientReputation(message);
+        return isNotBanned(message) &&
+                isNotIgnored(message) &&
+                (isTextMessage(message) ||
+                        isBuyOffer(message) ||
+                        hasSellerSufficientReputation(message));
     }
 
 }
