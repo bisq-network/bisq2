@@ -654,14 +654,6 @@ public class TradeWizardAmountController implements Controller {
             return;
         }
 
-        Set<BisqEasyOffer> allAvailableSellOffers = getAllAvailableSellOffers(bisqEasyOfferbookChannelService,
-                reputationService,
-                userIdentityService,
-                userProfileService,
-                marketPriceService,
-                model.getMarket(),
-                model.getDirection());
-
         Pair<Optional<Monetary>, Optional<Monetary>> availableOfferAmountRange = getLowestAndHighestAmountInAvailableOffers(bisqEasyOfferbookChannelService,
                 reputationService,
                 userIdentityService,
