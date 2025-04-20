@@ -93,6 +93,7 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
         userProfileIdOfScoreUpdatePin = EasyBind.subscribe(model.getScoreChangeTrigger(), trigger -> {
             if (trigger != null) {
                 richTableView.refresh();
+                richTableView.sort();
             }
         });
 
