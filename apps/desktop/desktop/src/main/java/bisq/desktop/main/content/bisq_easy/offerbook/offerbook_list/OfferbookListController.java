@@ -33,6 +33,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.i18n.Res;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
+import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -101,8 +102,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
 
     @Override
     public void onDeactivate() {
-        model.getOfferbookListItems().forEach(OfferbookListItem::dispose);
-        model.getOfferbookListItems().clear();
+        disposeAndClearOfferbookListItems();
         model.getChatMessageIds().clear();
 
         showBuyOffersPin.unbind();
@@ -118,6 +118,11 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         userProfileIdWithScoreChangePin.unbind();
     }
 
+    private void disposeAndClearOfferbookListItems() {
+        model.getOfferbookListItems().forEach(OfferbookListItem::dispose);
+        model.getOfferbookListItems().clear();
+    }
+
     public void setSelectedChannel(BisqEasyOfferbookChannel channel) {
         model.getFiatAmountTitle().set(Res.get("bisqEasy.offerbook.offerList.table.columns.fiatAmount",
                 channel.getMarket().getQuoteCurrencyCode()).toUpperCase());
@@ -129,7 +134,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         if (offerMessagesPin != null) {
             offerMessagesPin.unbind();
         }
-        model.getOfferbookListItems().clear();
+        disposeAndClearOfferbookListItems();
         model.getChatMessageIds().clear();
         offerMessagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
@@ -172,8 +177,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
             @Override
             public void clear() {
                 UIThread.runOnNextRenderFrame(() -> {
-                    model.getOfferbookListItems().forEach(OfferbookListItem::dispose);
-                    model.getOfferbookListItems().clear();
+                    OfferbookListController.this.disposeAndClearOfferbookListItems();
                     model.getChatMessageIds().clear();
                 });
             }
@@ -272,8 +276,10 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
 
             boolean myOffersOnly = model.getShowMyOffersOnly().get();
             if (myOffersOnly) {
-                UserProfile mySelectedUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-                boolean isMyOffer = item.getSenderUserProfile().equals(mySelectedUserProfile);
+                UserProfile selectedProfile = Optional.ofNullable(userIdentityService.getSelectedUserIdentity())
+                        .map(UserIdentity::getUserProfile)
+                        .orElse(null);
+                boolean isMyOffer = item.getSenderUserProfile().equals(selectedProfile);
                 if (!isMyOffer) {
                     return false;
                 }
