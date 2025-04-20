@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.bisq_easy.BisqEasyMarketFilter;
+import bisq.bisq_easy.BisqEasyOfferbookMessageService;
 import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -73,6 +74,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private final Predicate<MarketChannelItem> marketChannelItemsPredicate;
     private final Predicate<MarketChannelItem> favouriteMarketChannelItemsPredicate;
+    private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
 
     private OfferbookListController offerbookListController;
     private Pin bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin, marketPriceByCurrencyMapPin,
@@ -91,6 +93,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         favouriteMarketsService = serviceProvider.getFavouriteMarketsService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         bisqEasySellersReputationBasedTradeAmountService = serviceProvider.getBisqEasyService().getBisqEasySellersReputationBasedTradeAmountService();
+        bisqEasyOfferbookMessageService = serviceProvider.getBisqEasyService().getBisqEasyOfferbookMessageService();
 
         bisqEasyOfferbookModel = getModel();
         createMarketChannels();
@@ -362,7 +365,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                         marketPriceService,
                         userProfileService,
                         reputationService,
-                        bisqEasySellersReputationBasedTradeAmountService))
+                        bisqEasyOfferbookMessageService))
                 .collect(Collectors.toList());
         model.getMarketChannelItems().setAll(marketChannelItems);
     }

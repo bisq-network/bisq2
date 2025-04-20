@@ -18,6 +18,7 @@
 package bisq.http_api;
 
 import bisq.account.AccountService;
+import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
@@ -67,6 +68,7 @@ public class HttpApiService implements Service {
                           SupportService supportedService,
                           TradeService tradeService,
                           SettingsService settingsService,
+                          BisqEasyService bisqEasyService,
                           OpenTradeItemsService openTradeItemsService,
                           AccountService accountService) {
         boolean restApiConfigEnabled = restApiConfig.isEnabled();
@@ -98,9 +100,9 @@ public class HttpApiService implements Service {
                         explorerRestApi,
                         paymentAccountsRestApi,
                         reputationRestApi);
-                this.restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig));
+                restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig));
             } else {
-                this.restApiService = Optional.empty();
+                restApiService = Optional.empty();
             }
 
             if (webSocketConfigEnabled) {
@@ -114,21 +116,22 @@ public class HttpApiService implements Service {
                         explorerRestApi,
                         paymentAccountsRestApi,
                         reputationRestApi);
-                this.webSocketService = Optional.of(new WebSocketService(webSocketConfig,
+                webSocketService = Optional.of(new WebSocketService(webSocketConfig,
                         webSocketConfig.getRestApiBaseAddress(),
                         webSocketResourceConfig,
                         bondedRolesService,
                         chatService,
                         tradeService,
                         userService,
+                        bisqEasyService,
                         openTradeItemsService));
             } else {
-                this.webSocketService = Optional.empty();
+                webSocketService = Optional.empty();
             }
 
         } else {
-            this.restApiService = Optional.empty();
-            this.webSocketService = Optional.empty();
+            restApiService = Optional.empty();
+            webSocketService = Optional.empty();
         }
     }
 

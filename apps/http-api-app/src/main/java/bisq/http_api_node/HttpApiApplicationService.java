@@ -178,6 +178,7 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                 supportService,
                 tradeService,
                 settingsService,
+                bisqEasyService,
                 openTradeItemsService,
                 accountService);
     }

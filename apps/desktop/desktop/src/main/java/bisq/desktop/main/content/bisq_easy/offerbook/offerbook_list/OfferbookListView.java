@@ -138,7 +138,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         subheader.setAlignment(Pos.CENTER_LEFT);
         subheader.getChildren().addAll(offerDirectionFilterMenu, paymentsFilterMenu, showOnlyMyMessagesHBox);
 
-        tableView = new BisqTableView<>(model.getSortedOfferbookListItems());
+        tableView = new BisqTableView<>(model.getFilteredOfferbookListItems());
         tableView.getStyleClass().add("offers-list");
         tableView.allowVerticalScrollbar();
         tableView.hideHorizontalScrollbar();

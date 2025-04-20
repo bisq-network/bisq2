@@ -550,19 +550,6 @@ public class TradeWizardAmountController implements Controller {
             // Wizard
 
             applyLowestAndHighestAmountInAvailableOffers();
-
-            //long numMatchingOffers = getNumMatchingOffers(maxOrFixedQuoteSideAmount);
-            //String numOffers = Res.getPluralization("bisqEasy.tradeWizard.amount.numOffers", numMatchingOffers);
-
-          /*  boolean weakSecurity = maxOrFixedQuoteSideAmount.isLessThanOrEqual(MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION);
-            String formatted = formatQuoteAmountWithCode(MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION);
-            model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.wizard.info", formatted));
-            if (weakSecurity) {
-                model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.wizard.info", formatted));
-            } else {
-                model.getAmountLimitInfo().set(null);
-            }
-            model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.wizard.overlay.info", formattedMaxOrFixedAmount, formatted) + "\n\n");*/
         }
     }
 

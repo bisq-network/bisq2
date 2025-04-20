@@ -20,7 +20,6 @@ package bisq.bisq_easy;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
@@ -32,38 +31,11 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.PaymentMethodSpecFormatter;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
-import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
-import bisq.user.profile.UserProfile;
-import bisq.user.profile.UserProfileService;
 
 import java.util.List;
-import java.util.Optional;
 
 public class BisqEasyServiceUtil {
-
-    public static boolean authorNotBannedOrIgnored(UserProfileService userProfileService,
-                                                   BannedUserService bannedUserService,
-                                                   BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-        String authorUserProfileId = bisqEasyOfferbookMessage.getAuthorUserProfileId();
-        Optional<UserProfile> senderUserProfile = userProfileService.findUserProfile(authorUserProfileId);
-        if (senderUserProfile.isEmpty() ||
-                !bisqEasyOfferbookMessage.hasBisqEasyOffer()) {
-            return false;
-        }
-
-        UserProfile userProfile = senderUserProfile.get();
-        boolean isSenderBanned = bannedUserService.isUserProfileBanned(authorUserProfileId)
-                || bannedUserService.isUserProfileBanned(userProfile);
-        if (isSenderBanned) {
-            return false;
-        }
-
-        if (userProfileService.getIgnoredUserProfileIds().contains(userProfile.getId())) {
-            return false;
-        }
-        return true;
-    }
 
     public static boolean isMaker(UserIdentityService userIdentityService, BisqEasyOffer bisqEasyOffer) {
         return bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());

@@ -80,6 +80,8 @@ public class BisqEasyService implements Service {
 
     private final Set<String> bannedAccountDataSet = new HashSet<>();
     private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
+    private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
+
     private Pin difficultyAdjustmentFactorPin, ignoreDiffAdjustmentFromSecManagerPin,
             mostRecentDiffAdjustmentValueOrDefaultPin, selectedMarketPin, authorizedAlertDataSetPin;
 
@@ -123,6 +125,7 @@ public class BisqEasyService implements Service {
         bisqEasySellersReputationBasedTradeAmountService = new BisqEasySellersReputationBasedTradeAmountService(userService.getUserProfileService(),
                 userService.getReputationService(),
                 marketPriceService);
+        bisqEasyOfferbookMessageService = new BisqEasyOfferbookMessageService(chatService, userService, bisqEasySellersReputationBasedTradeAmountService);
     }
 
 
@@ -171,6 +174,7 @@ public class BisqEasyService implements Service {
             }
         });
         return bisqEasySellersReputationBasedTradeAmountService.initialize()
+                .thenCompose(result -> bisqEasyOfferbookMessageService.initialize())
                 .thenCompose(result -> bisqEasyNotificationsService.initialize());
     }
 
@@ -185,7 +189,9 @@ public class BisqEasyService implements Service {
         }
 
         return getStorePendingMessagesInMailboxFuture()
-                .thenCompose(e -> bisqEasyNotificationsService.shutdown());
+                .thenCompose(e -> bisqEasyNotificationsService.shutdown())
+                .thenCompose(e -> bisqEasyOfferbookMessageService.shutdown())
+                .thenCompose(e -> bisqEasySellersReputationBasedTradeAmountService.shutdown());
     }
 
     public boolean isDeleteUserIdentityProhibited(UserIdentity userIdentity) {
