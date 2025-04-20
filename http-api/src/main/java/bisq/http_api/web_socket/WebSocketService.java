@@ -17,6 +17,7 @@
 
 package bisq.http_api.web_socket;
 
+import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
@@ -117,6 +118,7 @@ public class WebSocketService implements Service {
                             ChatService chatService,
                             TradeService tradeService,
                             UserService userService,
+                            BisqEasyService bisqEasyService,
                             OpenTradeItemsService openTradeItemsService) {
         this.config = config;
         this.restApiResourceConfig = restApiResourceConfig;
@@ -130,6 +132,7 @@ public class WebSocketService implements Service {
                 chatService,
                 tradeService,
                 userService,
+                bisqEasyService,
                 openTradeItemsService);
         webSocketRestApiService = new WebSocketRestApiService(objectMapper, restApiBaseAddress);
         webSocketConnectionHandler = new WebSocketConnectionHandler(subscriptionService, webSocketRestApiService);

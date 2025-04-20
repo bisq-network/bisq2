@@ -20,8 +20,7 @@ package bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethodUtil;
 import bisq.account.payment_method.FiatPaymentRail;
-import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
-import bisq.bisq_easy.BisqEasyServiceUtil;
+import bisq.bisq_easy.BisqEasyOfferbookMessageService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
@@ -34,7 +33,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.i18n.Res;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
-import bisq.user.banned.BannedUserService;
+import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -60,8 +59,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
     private final MarketPriceService marketPriceService;
     private final ReputationService reputationService;
     private final UserIdentityService userIdentityService;
-    private final BannedUserService bannedUserService;
-    private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
+    private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
     private Pin showBuyOffersPin, showOfferListExpandedSettingsPin, offerMessagesPin, showMyOffersOnlyPin,
             userIdentityPin, userProfileIdWithScoreChangePin;
     private Subscription showBuyOffersFromModelPin, activeMarketPaymentsCountPin, showMyOffersOnlyFromModelPin;
@@ -72,8 +70,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         reputationService = serviceProvider.getUserService().getReputationService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        bannedUserService = serviceProvider.getUserService().getBannedUserService();
-        bisqEasySellersReputationBasedTradeAmountService = serviceProvider.getBisqEasyService().getBisqEasySellersReputationBasedTradeAmountService();
+        bisqEasyOfferbookMessageService = serviceProvider.getBisqEasyService().getBisqEasyOfferbookMessageService();
 
         model = new OfferbookListModel();
         view = new OfferbookListView(model, this);
@@ -105,7 +102,8 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
 
     @Override
     public void onDeactivate() {
-        model.getOfferbookListItems().forEach(OfferbookListItem::dispose);
+        disposeAndClearOfferbookListItems();
+        model.getChatMessageIds().clear();
 
         showBuyOffersPin.unbind();
         showOfferListExpandedSettingsPin.unbind();
@@ -120,12 +118,12 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         userProfileIdWithScoreChangePin.unbind();
     }
 
-    public void setSelectedChannel(BisqEasyOfferbookChannel channel) {
+    private void disposeAndClearOfferbookListItems() {
+        model.getOfferbookListItems().forEach(OfferbookListItem::dispose);
         model.getOfferbookListItems().clear();
-        if (offerMessagesPin != null) {
-            offerMessagesPin.unbind();
-        }
+    }
 
+    public void setSelectedChannel(BisqEasyOfferbookChannel channel) {
         model.getFiatAmountTitle().set(Res.get("bisqEasy.offerbook.offerList.table.columns.fiatAmount",
                 channel.getMarket().getQuoteCurrencyCode()).toUpperCase());
         model.getChannel().set(channel);
@@ -133,19 +131,27 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         model.getAvailableMarketPayments().setAll(FiatPaymentMethodUtil.getPaymentMethods(channel.getMarket().getQuoteCurrencyCode()));
         applyCookiePaymentFilters();
 
+        if (offerMessagesPin != null) {
+            offerMessagesPin.unbind();
+        }
+        disposeAndClearOfferbookListItems();
+        model.getChatMessageIds().clear();
         offerMessagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-                if (BisqEasyServiceUtil.authorNotBannedOrIgnored(userProfileService, bannedUserService, bisqEasyOfferbookMessage) &&
-                        bisqEasyOfferbookMessage.hasBisqEasyOffer()) {
+            public void add(BisqEasyOfferbookMessage offerbookMessage) {
+                if (offerbookMessage.hasBisqEasyOffer() && bisqEasyOfferbookMessageService.isValid(offerbookMessage)) {
                     UIThread.runOnNextRenderFrame(() -> {
-                        if (model.getOfferbookListItems().stream()
-                                .noneMatch(item -> item.getBisqEasyOfferbookMessage().equals(bisqEasyOfferbookMessage))) {
-                            OfferbookListItem item = new OfferbookListItem(bisqEasyOfferbookMessage,
-                                    userProfileService.findUserProfile(bisqEasyOfferbookMessage.getAuthorUserProfileId()).orElseThrow(), // authorNotBannedOrIgnored guarantees it is present
-                                    reputationService,
-                                    marketPriceService);
-                            model.getOfferbookListItems().add(item);
+                        String messageId = offerbookMessage.getId();
+                        if (!model.getChatMessageIds().contains(messageId)) {
+                            userProfileService.findUserProfile(offerbookMessage.getAuthorUserProfileId())
+                                    .ifPresent(authorUserProfile -> {
+                                        OfferbookListItem item = new OfferbookListItem(offerbookMessage,
+                                                authorUserProfile,
+                                                reputationService,
+                                                marketPriceService);
+                                        model.getOfferbookListItems().add(item);
+                                        model.getChatMessageIds().add(messageId);
+                                    });
                         }
                     });
                 }
@@ -162,6 +168,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
                         toRemove.ifPresent(item -> {
                             item.dispose();
                             model.getOfferbookListItems().remove(item);
+                            model.getChatMessageIds().remove(offerMessage.getId());
                         });
                     });
                 }
@@ -170,8 +177,8 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
             @Override
             public void clear() {
                 UIThread.runOnNextRenderFrame(() -> {
-                    model.getOfferbookListItems().forEach(OfferbookListItem::dispose);
-                    model.getOfferbookListItems().clear();
+                    disposeAndClearOfferbookListItems();
+                    model.getChatMessageIds().clear();
                 });
             }
         });
@@ -253,21 +260,32 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
 
     private void updatePredicate() {
         model.getFilteredOfferbookListItems().setPredicate(item -> {
-            // Apply filters
-            boolean matchesDirection = model.getShowBuyOffers().get() == item.isBuyOffer();
-            boolean paymentFiltersApplied = model.getActiveMarketPaymentsCount().get() != 0;
-            boolean matchesPaymentFilters = paymentFiltersApplied && item.getFiatPaymentMethods().stream()
-                    .anyMatch(payment -> (payment.isCustomPaymentMethod() && model.getIsCustomPaymentsSelected().get())
-                            || model.getSelectedMarketPayments().contains(payment));
-            boolean myOffersOnly = model.getShowMyOffersOnly().get();
-            UserProfile mySelectedUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-            boolean isMyOffer = item.getSenderUserProfile().equals(mySelectedUserProfile);
-
-            BisqEasyOfferbookMessage chatMessage = item.getBisqEasyOfferbookMessage();
-            if (!chatMessage.isMyMessage(userIdentityService) && !bisqEasySellersReputationBasedTradeAmountService.hasSellerSufficientReputation(chatMessage)) {
+            if (model.getShowBuyOffers().get() != item.isBuyOffer()) {
                 return false;
             }
-            return matchesDirection && (!paymentFiltersApplied || matchesPaymentFilters) && (!myOffersOnly || isMyOffer);
+
+            boolean paymentFiltersApplied = model.getActiveMarketPaymentsCount().get() != 0;
+            if (paymentFiltersApplied) {
+                boolean matchesPaymentFilters = item.getFiatPaymentMethods().stream()
+                        .anyMatch(payment -> (payment.isCustomPaymentMethod() && model.getIsCustomPaymentsSelected().get())
+                                || model.getSelectedMarketPayments().contains(payment));
+                if (!matchesPaymentFilters) {
+                    return false;
+                }
+            }
+
+            boolean myOffersOnly = model.getShowMyOffersOnly().get();
+            if (myOffersOnly) {
+                UserProfile selectedProfile = Optional.ofNullable(userIdentityService.getSelectedUserIdentity())
+                        .map(UserIdentity::getUserProfile)
+                        .orElse(null);
+                boolean isMyOffer = item.getSenderUserProfile().equals(selectedProfile);
+                if (!isMyOffer) {
+                    return false;
+                }
+            }
+
+            return true;
         });
     }
 
