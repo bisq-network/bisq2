@@ -21,6 +21,7 @@ import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
+import bisq.desktop.main.content.bisq_musig.offerbook.BisqMusigOfferbookController;
 import bisq.desktop.main.content.bisq_musig.onboarding.BisqMusigOnboardingController;
 import lombok.Getter;
 
@@ -50,6 +51,7 @@ public class BisqMusigController extends ContentTabController<BisqMusigModel> {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
             case BISQ_MUSIG_ONBOARDING -> Optional.of(new BisqMusigOnboardingController(serviceProvider));
+            case BISQ_MUSIG_OFFERBOOK -> Optional.of(new BisqMusigOfferbookController(serviceProvider));
             default -> Optional.empty();
         };
     }
