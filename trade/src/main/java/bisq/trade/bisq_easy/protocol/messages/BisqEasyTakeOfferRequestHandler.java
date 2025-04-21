@@ -119,8 +119,8 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
             String v1_tradeId = Trade.createId(takersOffer.getId(), takersContract.getTaker().getNetworkId().getId(), takersContract.getTakeOfferDate());
             boolean hasTradeWithSameTradeId = bisqEasyTradeService.getTrades().stream().anyMatch(trade ->
                     trade.getId().equals(v0_tradeId) || trade.getId().equals(v1_tradeId));
-            if (hasTradeWithSameTradeId) {
-                String errorMessage = String.format("A trade with the same tradeId already exist.\n" +
+            if (!hasTradeWithSameTradeId) {
+                String errorMessage = String.format("The trade not exist.\n" +
                                 "takersOffer=%s; takerNetworkId=%s; v1_tradeId=%s; v0_tradeId=%s",
                         takersOffer, takersContract.getTaker().getNetworkId(), v0_tradeId, v1_tradeId);
                 log.error(errorMessage);
