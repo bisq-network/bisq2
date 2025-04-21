@@ -139,10 +139,10 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         offerMessagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
             public void add(BisqEasyOfferbookMessage offerbookMessage) {
-                if (offerbookMessage.hasBisqEasyOffer() && bisqEasyOfferbookMessageService.isValid(offerbookMessage)) {
+                if (!model.getChatMessageIds().contains(offerbookMessage.getId()) &&
+                        offerbookMessage.hasBisqEasyOffer()) {
                     UIThread.runOnNextRenderFrame(() -> {
-                        String messageId = offerbookMessage.getId();
-                        if (!model.getChatMessageIds().contains(messageId)) {
+                        if (bisqEasyOfferbookMessageService.isValid(offerbookMessage)) {
                             userProfileService.findUserProfile(offerbookMessage.getAuthorUserProfileId())
                                     .ifPresent(authorUserProfile -> {
                                         OfferbookListItem item = new OfferbookListItem(offerbookMessage,
@@ -150,7 +150,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
                                                 reputationService,
                                                 marketPriceService);
                                         model.getOfferbookListItems().add(item);
-                                        model.getChatMessageIds().add(messageId);
+                                        model.getChatMessageIds().add(offerbookMessage.getId());
                                     });
                         }
                     });
