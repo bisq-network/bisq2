@@ -33,7 +33,6 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
-import bisq.trade.TradeService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.protocol.events.TradeMessageHandler;
@@ -117,7 +116,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
             // found we throw an exception.
             // We also check if there is not a trade already present with the same trade ID to avoid that we would
             // create a duplicated trade. We check for both the version 0 and version 1 trade ID to cover all edge cases.
-            BisqEasyTradeService bisqEasyTradeService = ((TradeService) serviceProvider).getBisqEasyTradeService();
+            BisqEasyTradeService bisqEasyTradeService = serviceProvider.getBisqEasyTradeService();
             // After TRADE_ID_V1_ACTIVATION_DATE we might have trades in the open trades list which have an id created
             // with the createId_V0 method, thus we need to check for both.
             String v0_tradeId = Trade.createId(takersOffer.getId(), takersContract.getTaker().getNetworkId().getId());
