@@ -19,6 +19,7 @@ package bisq.trade;
 
 import bisq.bonded_roles.BondedRolesService;
 import bisq.settings.SettingsService;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.UserService;
 
 public interface ServiceProvider {
@@ -41,4 +42,6 @@ public interface ServiceProvider {
     UserService getUserService();
 
     SettingsService getSettingsService();
+
+    BisqEasyTradeService getBisqEasyTradeService();
 }
