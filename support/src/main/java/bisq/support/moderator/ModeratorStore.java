@@ -22,22 +22,32 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Slf4j
 public final class ModeratorStore implements PersistableStore<ModeratorStore> {
+    private static final int VERSION = 1;
+    @Getter(AccessLevel.PACKAGE)
     private final ObservableSet<ReportToModeratorMessage> reportToModeratorMessages = new ObservableSet<>();
+    @Getter(AccessLevel.PACKAGE)
+    private final TreeMap<String, BannedUserModeratorData> bannedUserModeratorDataMap = new TreeMap<>();
 
-    public ModeratorStore() {
-        this(new HashSet<>());
+    ModeratorStore() {
+        this(new HashSet<>(), new TreeMap<>());
     }
 
-    private ModeratorStore(Set<ReportToModeratorMessage> reportToModeratorMessages) {
+    private ModeratorStore(Set<ReportToModeratorMessage> reportToModeratorMessages,
+                           Map<String, BannedUserModeratorData> bannedUserModeratorDataMap) {
         this.reportToModeratorMessages.addAll(reportToModeratorMessages);
+        this.bannedUserModeratorDataMap.putAll(bannedUserModeratorDataMap);
     }
 
     @Override
@@ -45,18 +55,35 @@ public final class ModeratorStore implements PersistableStore<ModeratorStore> {
         return bisq.support.protobuf.ModeratorStore.newBuilder()
                 .addAllReportToModeratorMessages(reportToModeratorMessages.stream()
                         .map(e -> e.toValueProto(serializeForHash))
+                        .collect(Collectors.toList()))
+                .addAllBannedUserModeratorData(bannedUserModeratorDataMap.values().stream()
+                        .map(e -> e.toProto(serializeForHash))
                         .collect(Collectors.toList()));
     }
 
     @Override
     public bisq.support.protobuf.ModeratorStore toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return getBuilder(serializeForHash).build();
     }
 
     public static ModeratorStore fromProto(bisq.support.protobuf.ModeratorStore proto) {
-        return new ModeratorStore(proto.getReportToModeratorMessagesList().stream()
+        Set<ReportToModeratorMessage> messages = proto.getReportToModeratorMessagesList().stream()
                 .map(ReportToModeratorMessage::fromProto)
-                .collect(Collectors.toSet()));
+                .collect(Collectors.toSet());
+
+        Map<String, BannedUserModeratorData> bannedDataMap = new TreeMap<>();
+        if (proto.getBannedUserModeratorDataCount() > 0) {
+            bannedDataMap = proto.getBannedUserModeratorDataList().stream()
+                    .map(BannedUserModeratorData::fromProto)
+                    .collect(Collectors.toMap(
+                            BannedUserModeratorData::getAccusedUserProfileId,
+                            data -> data,
+                            (existing, replacement) -> replacement,
+                            TreeMap::new
+                    ));
+        }
+
+        return new ModeratorStore(messages, bannedDataMap);
     }
 
     @Override
@@ -72,15 +99,19 @@ public final class ModeratorStore implements PersistableStore<ModeratorStore> {
 
     @Override
     public ModeratorStore getClone() {
-        return new ModeratorStore(new HashSet<>(reportToModeratorMessages));
+        return new ModeratorStore(new HashSet<>(reportToModeratorMessages),
+                new TreeMap<>(bannedUserModeratorDataMap));
     }
 
     @Override
     public void applyPersisted(ModeratorStore persisted) {
         reportToModeratorMessages.setAll(persisted.getReportToModeratorMessages());
+        bannedUserModeratorDataMap.clear();
+        bannedUserModeratorDataMap.putAll(persisted.getBannedUserModeratorDataMap());
     }
 
-    ObservableSet<ReportToModeratorMessage> getReportToModeratorMessages() {
-        return reportToModeratorMessages;
+    @Override
+    public int getVersion() {
+        return VERSION;
     }
 }

@@ -31,6 +31,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.components.overlay.TextInputDialog;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.DateColumnUtil;
 import bisq.desktop.components.table.DateTableItem;
@@ -122,7 +123,13 @@ public class ReportToModeratorTable {
         }
 
         void onBan(ReportToModeratorMessage message) {
-            moderatorService.banReportedUser(message);
+            new TextInputDialog(Res.get("authorizedRole.moderator.banDialog.headline"))
+                    .setPromptText(Res.get("authorizedRole.moderator.banDialog.reason.prompt"))
+                    .setInputFieldDescription(Res.get("authorizedRole.moderator.banDialog.details"))
+                    .setConfirmButtonText(Res.get("authorizedRole.moderator.banDialog.action.ban"))
+                    .setMaxLength(500)
+                    .onResult(banReason -> moderatorService.banReportedUser(message, banReason))
+                    .show();
         }
 
         void onDeleteMessage(ReportToModeratorMessage message) {
