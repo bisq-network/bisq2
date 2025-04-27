@@ -75,13 +75,10 @@ public class SelectableLabel extends StackPane {
         label.setCursor(Cursor.TEXT);
         textArea.setContextMenu(new ContextMenu());
         textArea.setText(text);
+        textArea.setEditable(false);
         textArea.getStyleClass().addAll("selectable-label", "hide-vertical-scrollbar");
         label.boundsInParentProperty().addListener(labelBoundsListener);
         getStyleClass().addListener(new WeakListChangeListener<>(styleClassListener));
-    }
-
-    public void setEditable(boolean editable){
-        this.textArea.setEditable(editable);
     }
 
     public String getText() {

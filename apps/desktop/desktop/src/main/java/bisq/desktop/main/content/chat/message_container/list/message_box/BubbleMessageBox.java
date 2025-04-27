@@ -323,7 +323,6 @@ public abstract class BubbleMessageBox extends MessageBox {
         label.setWrapText(true);
         label.setPadding(new Insets(10));
         label.getStyleClass().addAll("text-fill-white", "medium-text", "font-default");
-        label.setEditable(false);
         return label;
     }
 
