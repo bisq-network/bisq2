@@ -492,32 +492,6 @@
     -fx-text-fill: -fx-mid-text-color !important;
 }
 
-.close-icon-link {
-    -fx-text-fill: grey;
-    -fx-font-family: "IBM Plex Sans";
-    -fx-font-size: 1em;
-
-    -fx-padding: 0 4px 0 4px;
-    -fx-underline: false;
-    -fx-border-color: transparent;
-    -fx-background-color: transparent;
-    -fx-opacity: 0.7;
-}
-
-.close-icon-link:hover {
-    -fx-text-fill: -bisq-white !important;
-    -fx-underline: false;
-    -fx-opacity: 1.0;
-    -fx-background-color: -bisq-mid-grey-10 !important;
-    -fx-background-radius: 2;
-}
-
-.close-icon-link:visited {
-    -fx-text-fill: grey;
-    -fx-underline: false;
-     -fx-opacity: 0.7;
-}
-
 
 /*******************************************************************************
  * Chat guide                                                                  *

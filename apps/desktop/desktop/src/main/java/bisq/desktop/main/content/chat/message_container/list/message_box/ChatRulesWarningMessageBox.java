@@ -20,6 +20,7 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
@@ -36,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class ChatRulesWarningMessageBox extends MessageBox {
     private final Hyperlink learnMoreLink;
-    private final Hyperlink closeIcon;
+    private final BisqMenuItem closeIcon;
     private final Tooltip closeTooltip = new BisqTooltip(Res.get("action.dontShowAgain"));
 
     public ChatRulesWarningMessageBox(
@@ -64,11 +65,11 @@ public final class ChatRulesWarningMessageBox extends MessageBox {
         messageContentVBox.setFillWidth(true);
         messageContentVBox.setAlignment(Pos.CENTER_LEFT);
 
-        closeIcon = new Hyperlink("X");
-        closeIcon.getStyleClass().add("close-icon-link");
+        closeIcon = new BisqMenuItem("close-mini-grey", "close-mini-white");
+        closeIcon.useIconOnly(20);
         closeIcon.setCursor(Cursor.HAND);
         Tooltip.install(closeIcon, closeTooltip);
-        closeIcon.setOnAction(e -> {
+        closeIcon.setOnMouseClicked(e -> {
             controller.onDismissChatRulesWarning();
             e.consume();
         });
