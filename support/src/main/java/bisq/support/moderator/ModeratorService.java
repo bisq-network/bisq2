@@ -28,7 +28,6 @@ import bisq.chat.ChatService;
 import bisq.chat.Citation;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.common.application.Service;
-import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
@@ -52,6 +51,7 @@ import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.security.KeyPair;
 import java.util.Optional;
 import java.util.Set;
@@ -85,9 +85,8 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
     private final ModeratorStore persistableStore = new ModeratorStore();
     @Getter
     private final Persistence<ModeratorStore> persistence;
-
-    private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
-    private Pin rateLimitExceedingUserProfileIdMapPin;
+    @Nullable
+    private Pin rateLimitExceedingUserProfileIdMapPin, bondedRolesPin;
 
     public ModeratorService(ModeratorService.Config config,
                             PersistenceService persistenceService,
@@ -130,6 +129,12 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
             rateLimitExceedingUserProfileIdMapPin.unbind();
             rateLimitExceedingUserProfileIdMapPin = null;
         }
+
+        if (bondedRolesPin != null) {
+            bondedRolesPin.unbind();
+            bondedRolesPin = null;
+        }
+
         networkService.removeConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
@@ -156,11 +161,24 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         persist();
     }
 
-    public CompletableFuture<BroadcastResult> banReportedUser(ReportToModeratorMessage message) {
+    public CompletableFuture<BroadcastResult> banReportedUser(ReportToModeratorMessage message, String banReason) {
+        UserProfile accusedUserProfile = message.getAccusedUserProfile();
+        String accusedUserId = accusedUserProfile.getId();
+        BannedUserModeratorData moderatorData = new BannedUserModeratorData(
+                message.getReporterUserProfileId(),
+                accusedUserId,
+                message.getMessage(),
+                banReason);
+        persistableStore.getBannedUserModeratorDataMap().put(accusedUserId, moderatorData);
+        persist();
+
         UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
         KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
-        BannedUserProfileData data = new BannedUserProfileData(message.getAccusedUserProfile(), staticPublicKeysProvided);
-        return networkService.publishAuthorizedData(data, keyPair);
+
+        BannedUserProfileData publicData = new BannedUserProfileData(
+                accusedUserProfile,
+                staticPublicKeysProvided);
+        return networkService.publishAuthorizedData(publicData, keyPair);
     }
 
     public CompletableFuture<BroadcastResult> unBanReportedUser(BannedUserProfileData data) {
@@ -193,6 +211,10 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         return persistableStore.getReportToModeratorMessages();
     }
 
+    public Optional<BannedUserModeratorData> findBannedUserModeratorData(String accusedUserProfileId) {
+        return Optional.ofNullable(persistableStore.getBannedUserModeratorDataMap().get(accusedUserProfileId));
+    }
+
     private void processReportToModeratorMessage(ReportToModeratorMessage message) {
         if (bannedUserService.isUserProfileBanned(message.getReporterUserProfileId())) {
             log.warn("Message ignored as sender is banned");
@@ -204,7 +226,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
 
     private void addObserverIfModerator() {
         Set<String> myUserProfileIds = userIdentityService.getMyUserProfileIds();
-        authorizedBondedRolesService.getBondedRoles().addObserver(new CollectionObserver<>() {
+        bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addObserver(new CollectionObserver<>() {
             @Override
             public void add(BondedRole bondedRole) {
                 AuthorizedBondedRole authorizedBondedRole = bondedRole.getAuthorizedBondedRole();

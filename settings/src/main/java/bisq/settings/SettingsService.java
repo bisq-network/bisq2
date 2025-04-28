@@ -17,6 +17,7 @@
 
 package bisq.settings;
 
+import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.Market;
@@ -25,6 +26,7 @@ import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.observable.Observable;
+import bisq.common.observable.Pin;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.i18n.Res;
@@ -38,8 +40,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -70,6 +74,8 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     private final Observable<Boolean> cookieChanged = new Observable<>(false);
     private boolean isInitialized;
 
+    private final Set<Pin> pins = new HashSet<>();
+
     public SettingsService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
         instance = this;
@@ -82,32 +88,38 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+        if (isInitialized) {
+            log.info("SettingsService already initialized, skipping initialization");
+            return CompletableFuture.completedFuture(true);
+        }
+
         // If used with FxBindings.bindBiDir we need to trigger persist call
-        getIsTacAccepted().addObserver(value -> persist());
-        getChatNotificationType().addObserver(value -> persist());
-        getUseAnimations().addObserver(value -> persist());
-        getPreventStandbyMode().addObserver(value -> persist());
-        getCloseMyOfferWhenTaken().addObserver(value -> persist());
-        getConsumedAlertIds().addObserver(this::persist);
-        getSupportedLanguageCodes().addObserver(this::persist);
-        getSelectedMarket().addObserver(value -> persist());
-        getTradeRulesConfirmed().addObserver(value -> persist());
-        getLanguageCode().addObserver(value -> persist());
-        getDifficultyAdjustmentFactor().addObserver(value -> persist());
-        getIgnoreDiffAdjustmentFromSecManager().addObserver(value -> persist());
-        getFavouriteMarkets().addObserver(this::persist);
-        getMaxTradePriceDeviation().addObserver(value -> persist());
-        getShowBuyOffers().addObserver(value -> persist());
-        getShowOfferListExpanded().addObserver(value -> persist());
-        getShowMarketSelectionListCollapsed().addObserver(value -> persist());
-        getBackupLocation().addObserver(value -> persist());
-        getShowMyOffersOnly().addObserver(value -> persist());
-        getTotalMaxBackupSizeInMB().addObserver(value -> {
+        pins.add(getIsTacAccepted().addObserver(value -> persist()));
+        pins.add(getChatNotificationType().addObserver(value -> persist()));
+        pins.add(getUseAnimations().addObserver(value -> persist()));
+        pins.add(getPreventStandbyMode().addObserver(value -> persist()));
+        pins.add(getCloseMyOfferWhenTaken().addObserver(value -> persist()));
+        pins.add(getConsumedAlertIds().addObserver(this::persist));
+        pins.add(getSupportedLanguageCodes().addObserver(this::persist));
+        pins.add(getSelectedMarket().addObserver(value -> persist()));
+        pins.add(getTradeRulesConfirmed().addObserver(value -> persist()));
+        pins.add(getLanguageCode().addObserver(value -> persist()));
+        pins.add(getDifficultyAdjustmentFactor().addObserver(value -> persist()));
+        pins.add(getIgnoreDiffAdjustmentFromSecManager().addObserver(value -> persist()));
+        pins.add(getFavouriteMarkets().addObserver(this::persist));
+        pins.add(getMaxTradePriceDeviation().addObserver(value -> persist()));
+        pins.add(getShowBuyOffers().addObserver(value -> persist()));
+        pins.add(getShowOfferListExpanded().addObserver(value -> persist()));
+        pins.add(getShowMarketSelectionListCollapsed().addObserver(value -> persist()));
+        pins.add(getBackupLocation().addObserver(value -> persist()));
+        pins.add(getShowMyOffersOnly().addObserver(value -> persist()));
+        pins.add(getTotalMaxBackupSizeInMB().addObserver(value -> {
             BackupService.setTotalMaxBackupSize(ByteUnit.MB.toBytes(value));
             persist();
-        });
-        getBisqEasyOfferbookMessageTypeFilter().addObserver(value -> persist());
-        getNumDaysAfterRedactingTradeData().addObserver(value -> persist());
+        }));
+        pins.add(getBisqEasyOfferbookMessageTypeFilter().addObserver(value -> persist()));
+        pins.add(getNumDaysAfterRedactingTradeData().addObserver(value -> persist()));
+        pins.add(getMuSigActivated().addObserver(value -> persist()));
 
         isInitialized = true;
 
@@ -115,6 +127,14 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        if (!isInitialized) {
+            return CompletableFuture.completedFuture(true);
+        }
+
+        pins.forEach(Pin::unbind);
+        pins.clear();
+
+        isInitialized = false;
         return CompletableFuture.completedFuture(true);
     }
 
@@ -239,6 +259,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.numDaysAfterRedactingTradeData;
     }
 
+    public ReadOnlyObservable<Boolean> getMuSigActivated() {
+        return persistableStore.muSigActivated;
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Setters
@@ -332,6 +356,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         if (value >= MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA && value <= MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA) {
             persistableStore.numDaysAfterRedactingTradeData.set(value);
         }
+    }
+
+    public void setMuSigActivated(boolean muSigActivated) {
+        persistableStore.muSigActivated.set(DevMode.isDevMode() && muSigActivated);
     }
 
 

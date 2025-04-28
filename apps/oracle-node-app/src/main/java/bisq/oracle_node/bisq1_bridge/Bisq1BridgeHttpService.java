@@ -22,9 +22,9 @@ import bisq.common.application.Service;
 import bisq.common.data.Pair;
 import bisq.common.encoding.Base64;
 import bisq.common.encoding.Hex;
+import bisq.common.network.TransportType;
 import bisq.common.threading.ExecutorFactory;
 import bisq.network.NetworkService;
-import bisq.common.network.TransportType;
 import bisq.network.http.BaseHttpClient;
 import bisq.oracle_node.bisq1_bridge.dto.BondedReputationDto;
 import bisq.oracle_node.bisq1_bridge.dto.BondedRoleVerificationDto;
@@ -37,6 +37,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -69,6 +70,7 @@ public class Bisq1BridgeHttpService implements Service {
     private final AtomicInteger lastRequestedBondedReputationBlockHeight = new AtomicInteger(0);
     private final NetworkService networkService;
     private final String url;
+    @Nullable
     private BaseHttpClient httpClient;
 
     public Bisq1BridgeHttpService(Bisq1BridgeHttpService.Config httpServiceConfig, NetworkService networkService) {
@@ -97,6 +99,7 @@ public class Bisq1BridgeHttpService implements Service {
         log.info("shutdown");
         if (httpClient != null) {
             httpClient.shutdown();
+            httpClient = null;
         }
         executorService.shutdownNow();
         return CompletableFuture.completedFuture(true);

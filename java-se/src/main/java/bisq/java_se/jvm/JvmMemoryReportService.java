@@ -27,6 +27,7 @@ import bisq.java_se.utils.ThreadProfiler;
 import com.sun.management.UnixOperatingSystemMXBean;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.lang.management.ManagementFactory;
 import java.util.Comparator;
 import java.util.Optional;
@@ -38,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 public class JvmMemoryReportService implements MemoryReportService {
     private final int memoryReportIntervalSec;
     private final boolean includeThreadListInMemoryReport;
+    @Nullable
     private Scheduler scheduler;
 
     public JvmMemoryReportService(int memoryReportIntervalSec, boolean includeThreadListInMemoryReport) {
@@ -58,6 +60,7 @@ public class JvmMemoryReportService implements MemoryReportService {
     public CompletableFuture<Boolean> shutdown() {
         if (scheduler != null) {
             scheduler.stop();
+            scheduler = null;
         }
         return CompletableFuture.completedFuture(true);
     }

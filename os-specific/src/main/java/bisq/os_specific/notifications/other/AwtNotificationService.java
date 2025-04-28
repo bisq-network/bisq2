@@ -26,6 +26,7 @@ import java.awt.SystemTray;
 import java.awt.TrayIcon;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -33,6 +34,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class AwtNotificationService implements OsSpecificNotificationService {
     private boolean isSupported;
     private TrayIcon trayIcon;
+    private final ExecutorService initializationExecutor =
+            ExecutorFactory.newSingleThreadExecutor("initialize-NotificationService");
 
     public AwtNotificationService() {
     }
@@ -52,12 +55,21 @@ public class AwtNotificationService implements OsSpecificNotificationService {
                 log.warn("AwtNotificationService not supported.", e);
                 isSupported = false;
             }
-        }, ExecutorFactory.newSingleThreadExecutor("initialize-NotificationService"));
+        }, initializationExecutor);
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (isSupported && trayIcon != null) {
+            try {
+                SystemTray.getSystemTray().remove(trayIcon);
+            } catch (Exception e) {
+                log.error("Failed to remove tray icon during shutdown", e);
+            }
+            trayIcon = null;
+        }
+        initializationExecutor.shutdownNow();
         return CompletableFuture.completedFuture(true);
     }
 

@@ -151,8 +151,16 @@ public class I2PTransportService implements TransportService {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (!initializeCalled) {
+            return CompletableFuture.completedFuture(true);
+        }
         initializeCalled = false;
         setTransportState(TransportState.STOPPING);
+
+        initializeServerSocketTimestampByNetworkId.clear();
+        initializedServerSocketTimestampByNetworkId.clear();
+        timestampByTransportState.clear();
+
         if (i2pClient == null) {
             return CompletableFuture.completedFuture(true);
         }

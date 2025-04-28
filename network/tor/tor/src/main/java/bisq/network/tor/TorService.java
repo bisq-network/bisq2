@@ -182,6 +182,10 @@ public class TorService implements Service {
         return CompletableFuture.supplyAsync(() -> {
             torController.shutdown();
             torProcess.ifPresent(EmbeddedTorProcess::waitUntilExited);
+            torProcess = Optional.empty();
+            torSocksProxyFactory = Optional.empty();
+            publishedOnionServices.clear();
+            externalTorConfigMap.clear();
             return true;
         });
     }

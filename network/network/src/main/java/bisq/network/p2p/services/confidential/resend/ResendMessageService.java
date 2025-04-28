@@ -33,6 +33,7 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -53,7 +54,10 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     private final Map<String, Pin> messageDeliveryStatusPinByMessageId = new HashMap<>();
     private final Map<String, Scheduler> schedulerByMessageId = new HashMap<>();
     private final Set<Pin> nodeStatePins = new HashSet<>();
+    @Nullable
     private Pin messageDeliveryStatusByMessageIdPin;
+    @Nullable
+    private Scheduler resendMessageAllFailedMessagesScheduler;
     private volatile boolean isShutdown;
 
     public ResendMessageService(PersistenceService persistenceService,
@@ -98,12 +102,16 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
         networkService.getDefaultNodeStateByTransportType().forEach((key, value) -> {
             Pin pin = value.addObserver(state -> {
                 if (state == Node.State.RUNNING) {
+                    if (resendMessageAllFailedMessagesScheduler != null) {
+                        resendMessageAllFailedMessagesScheduler.stop();
+                    }
+
                     // We get messages with CONNECTING, SENT or TRY_ADD_TO_MAILBOX converted to FAILED and thus
                     // get a resend triggered. After 1 sec after init we get the state update and a 15 sec scheduler
                     // for resend gets started. We delay here 10 sec. and filter out those which got already scheduled.
                     // For messages which have been in FAILED and no change got triggered we run the resend if the
                     // MAX_RESENDS has not got exceeded.
-                    Scheduler.run(this::resendMessageAllFailedMessages)
+                    resendMessageAllFailedMessagesScheduler = Scheduler.run(this::resendMessageAllFailedMessages)
                             .host(this)
                             .runnableName("resendMessageAllFailedMessages")
                             .after(10, TimeUnit.SECONDS);
@@ -118,12 +126,18 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
             return;
         }
         isShutdown = true;
+        if (resendMessageAllFailedMessagesScheduler != null) {
+            resendMessageAllFailedMessagesScheduler.stop();
+            resendMessageAllFailedMessagesScheduler = null;
+        }
         if (messageDeliveryStatusByMessageIdPin != null) {
             messageDeliveryStatusByMessageIdPin.unbind();
+            messageDeliveryStatusByMessageIdPin = null;
         }
         messageDeliveryStatusPinByMessageId.values().forEach(Pin::unbind);
         messageDeliveryStatusPinByMessageId.clear();
         nodeStatePins.forEach(Pin::unbind);
+        nodeStatePins.clear();
         // Clone to avoid ConcurrentModificationException
         List<Scheduler> schedulers = new ArrayList<>(schedulerByMessageId.values());
         schedulers.forEach(Scheduler::stop);

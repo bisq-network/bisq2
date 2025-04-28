@@ -74,6 +74,7 @@ public abstract class PrivateChatChannelService<
     @Override
     public CompletableFuture<Boolean> shutdown() {
         networkService.removeConfidentialMessageListener(this);
+        unprocessedReactions.clear();
         return CompletableFuture.completedFuture(true);
     }
 

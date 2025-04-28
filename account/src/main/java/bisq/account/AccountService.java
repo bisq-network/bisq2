@@ -64,6 +64,7 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        accounts.clear();
         return CompletableFuture.completedFuture(true);
     }
 
