@@ -9,6 +9,7 @@ fun readPropertiesFile(filePath: String): Properties {
 
 plugins {
     id("bisq.java-library")
+    id("bisq.gradle.dev.setup.BisqDevSetupPlugin")
     id("bisq.gradle.desktop.regtest.BisqDesktopRegtestPlugin")
     application
     id("bisq.gradle.packaging.PackagingPlugin")
