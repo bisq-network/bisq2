@@ -3,6 +3,9 @@ pluginManagement {
         gradlePluginPortal()
     }
     includeBuild("../build-logic")
+    includeBuild("build-logic") {
+        name = "apps-build-logic"
+    }
 }
 
 dependencyResolutionManagement {
