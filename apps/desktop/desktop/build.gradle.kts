@@ -3,11 +3,6 @@ plugins {
     alias(libs.plugins.openjfx)
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-}
-
 javafx {
     version = "21.0.6"
     modules = listOf("javafx.controls", "javafx.media")
