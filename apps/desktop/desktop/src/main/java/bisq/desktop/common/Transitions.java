@@ -239,18 +239,16 @@ public class Transitions {
     }
 
     public static void fadeOutAndRemove(Node node, int duration, Runnable finishedHandler) {
+        if (!getUseAnimations()) {
+            // When animations are disabled, skip animation and execute removal immediately
+            removeNodeAndRunHandler(node, finishedHandler);
+            return;
+        }
+
+        // With animations enabled, set up fade transition
         FadeTransition fade = fadeOut(node, getDuration(duration), finishedHandler);
         fade.setInterpolator(Interpolator.EASE_IN);
-        fade.setOnFinished(actionEvent -> {
-            if (node.getParent() != null) {
-                ((Pane) (node.getParent())).getChildren().remove(node);
-            } else {
-                log.error("parent is null at {}", node);
-            }
-            if (finishedHandler != null) {
-                finishedHandler.run();
-            }
-        });
+        fade.setOnFinished(actionEvent -> removeNodeAndRunHandler(node, finishedHandler));
     }
 
     public static void blur(Node node) {
@@ -335,29 +333,30 @@ public class Transitions {
         if (node != null) {
             node.setMouseTransparent(false);
             Effect effect = node.getEffect();
-            if (effect instanceof GaussianBlur gaussianBlur) {
-                if (node.getId() == null) {
-                    node.setId(StringUtils.createUid());
-                }
-                Timeline timeline = new Timeline();
-                removeEffectTimeLineByNodeId.put(node.getId(), timeline);
-                KeyValue kv1 = new KeyValue(gaussianBlur.radiusProperty(), 0.0);
-                KeyFrame kf1 = new KeyFrame(Duration.millis(getDuration(duration)), kv1);
-                timeline.getKeyFrames().add(kf1);
-
-                ColorAdjust darken = (ColorAdjust) gaussianBlur.getInput();
-                KeyValue kv2 = new KeyValue(darken.brightnessProperty(), 0.0);
-                KeyFrame kf2 = new KeyFrame(Duration.millis(getDuration(duration)), kv2);
-                timeline.getKeyFrames().add(kf2);
-                timeline.setOnFinished(actionEvent -> {
-                    node.setEffect(null);
-                    removeEffectTimeLineByNodeId.remove(node.getId());
-                    node.setId(null);
-                });
-                timeline.play();
-            } else {
+            if (!getUseAnimations() || !(effect instanceof GaussianBlur gaussianBlur)) {
                 node.setEffect(null);
+                return;
             }
+
+            if (node.getId() == null) {
+                node.setId(StringUtils.createUid());
+            }
+            Timeline timeline = new Timeline();
+            removeEffectTimeLineByNodeId.put(node.getId(), timeline);
+            KeyValue kv1 = new KeyValue(gaussianBlur.radiusProperty(), 0.0);
+            KeyFrame kf1 = new KeyFrame(Duration.millis(getDuration(duration)), kv1);
+            timeline.getKeyFrames().add(kf1);
+
+            ColorAdjust darken = (ColorAdjust) gaussianBlur.getInput();
+            KeyValue kv2 = new KeyValue(darken.brightnessProperty(), 0.0);
+            KeyFrame kf2 = new KeyFrame(Duration.millis(getDuration(duration)), kv2);
+            timeline.getKeyFrames().add(kf2);
+            timeline.setOnFinished(actionEvent -> {
+                node.setEffect(null);
+                removeEffectTimeLineByNodeId.remove(node.getId());
+                node.setId(null);
+            });
+            timeline.play();
         }
     }
 
@@ -1042,6 +1041,17 @@ public class Transitions {
             if (finishedHandler != null) {
                 finishedHandler.run();
             }
+        }
+    }
+
+    private static void removeNodeAndRunHandler(Node node, Runnable finishedHandler) {
+        if (node.getParent() != null) {
+            ((Pane) (node.getParent())).getChildren().remove(node);
+        } else {
+            log.error("parent is null at {}", node);
+        }
+        if (finishedHandler != null) {
+            finishedHandler.run();
         }
     }
 }
