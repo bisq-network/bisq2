@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.controls;
 
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import javafx.beans.property.DoubleProperty;
@@ -101,23 +102,28 @@ public class ProgressBarWithLabel extends VBox {
             if (scheduler != null) {
                 scheduler.stop();
             }
-            scheduler = UIScheduler.run(() -> {
+            if (Transitions.useAnimations() && animateEllipsis) {
+                scheduler = UIScheduler.run(() -> {
+                    label.setText(getText() + postFix);
+                    switch (postFix) {
+                        case "   ":
+                            postFix = ".  ";
+                            break;
+                        case ".  ":
+                            postFix = ".. ";
+                            break;
+                        case ".. ":
+                            postFix = "...";
+                            break;
+                        default:
+                            postFix = "   ";
+                            break;
+                    }
+                }).periodically(300, TimeUnit.MILLISECONDS);
+            } else {
+                postFix = "...";
                 label.setText(getText() + postFix);
-                switch (postFix) {
-                    case "   ":
-                        postFix = ".  ";
-                        break;
-                    case ".  ":
-                        postFix = ".. ";
-                        break;
-                    case ".. ":
-                        postFix = "...";
-                        break;
-                    default:
-                        postFix = "   ";
-                        break;
-                }
-            }).periodically(300, TimeUnit.MILLISECONDS);
+            }
         } else {
             postFix = "";
             if (scheduler != null) {

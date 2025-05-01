@@ -52,7 +52,7 @@ public class ViewTransition {
         this.newView = newView;
         oldViewRoot = oldView != null ? oldView.getRoot() : null;
         newViewRoot = newView.getRoot();
-        if (!Transitions.getUseAnimations()) {
+        if (!Transitions.useAnimations()) {
             if (oldView != null) {
                 remove(oldViewRoot);
                 if (oldView instanceof TransitionedView) {
