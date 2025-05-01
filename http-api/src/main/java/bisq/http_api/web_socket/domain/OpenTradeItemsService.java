@@ -192,11 +192,6 @@ public class OpenTradeItemsService implements Service {
                     "This is expected as we get called both when a trade is added and the associated channel.");
             return;
         }
-        if (trade.getContract() == null) {
-            // TODO should we throw an exception?
-            log.error("Contract is null for trade {}", trade);
-            return;
-        }
 
         TradeItemPresentationDto item = TradeItemPresentationDtoFactory.create(trade, channel, userProfileService, reputationService);
         items.add(item);
