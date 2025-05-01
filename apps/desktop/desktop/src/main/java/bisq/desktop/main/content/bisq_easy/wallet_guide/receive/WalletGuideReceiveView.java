@@ -29,7 +29,6 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -41,7 +40,6 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
     private final Button backButton, closeButton;
     private final Hyperlink link1, link2;
     private final Carousel imageCarousel;
-    private final HBox indicators;
 
     public WalletGuideReceiveView(WalletGuideReceiveModel model, WalletGuideReceiveController controller) {
         super(new HBox(20), model, controller);
@@ -73,12 +71,9 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
         VBox.setMargin(link2, new Insets(0, 0, 0, 0));
         vBox.getChildren().addAll(headline, content, link1, link2, buttons);
 
-        // Right content pane - carousel
-        // Get images and configure them to desired size
         ImageView image1 = ImageUtil.getImageViewById("blue-wallet-tx");
         ImageView image2 = ImageUtil.getImageViewById("blue-wallet-qr");
 
-        // Set consistent dimensions for both images - smartphone-like aspect ratio
         double imageWidth = 250;
         double imageHeight = 430;
 
@@ -90,56 +85,17 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
         image2.setFitHeight(imageHeight);
         image2.setPreserveRatio(true);
 
-        // Create small indicator dots
-        indicators = new HBox(6);
-        indicators.setAlignment(Pos.CENTER);
-        indicators.getStyleClass().add("carousel-indicators");
-
-        // Configure carousel
         imageCarousel = new Carousel();
         imageCarousel.setTransitionDuration(Duration.millis(400));
         imageCarousel.setDisplayDuration(Duration.millis(3000));
-
-        // Add images to carousel
+        imageCarousel.getShowBottomDots().set(true);
         imageCarousel.addItem(image1);
         imageCarousel.addItem(image2);
 
-        // Set up the indicator dots
-        for (int i = 0; i < 2; i++) {
-            StackPane dot = new StackPane();
-            dot.getStyleClass().add("carousel-indicator");
-            if (i == 0) {
-                dot.getStyleClass().add("active");
-            }
-
-            final int index = i;
-            dot.setOnMouseClicked(e -> {
-                imageCarousel.goToIndex(index);
-                e.consume();
-            });
-
-            indicators.getChildren().add(dot);
-        }
-
-        // Listen to index changes to update indicators
-        imageCarousel.currentIndexProperty().addListener((obs, oldVal, newVal) -> {
-            for (int i = 0; i < indicators.getChildren().size(); i++) {
-                StackPane dot = (StackPane) indicators.getChildren().get(i);
-                if (i == newVal.intValue()) {
-                    if (!dot.getStyleClass().contains("active")) {
-                        dot.getStyleClass().add("active");
-                    }
-                } else {
-                    dot.getStyleClass().remove("active");
-                }
-            }
-        });
-
-        // Container for carousel and indicators
-        VBox carouselContainer = new VBox(5);
+        VBox carouselContainer = new VBox();
         carouselContainer.setAlignment(Pos.CENTER);
         carouselContainer.getStyleClass().add("carousel-container");
-        carouselContainer.getChildren().addAll(imageCarousel, indicators);
+        carouselContainer.getChildren().add(imageCarousel);
         carouselContainer.setPadding(new Insets(10, 0, 0, 0));
 
         root.getChildren().addAll(vBox, carouselContainer);
@@ -153,7 +109,6 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
         link1.setOnAction(e -> controller.onOpenLink1());
         link2.setOnAction(e -> controller.onOpenLink2());
 
-        // Start the carousel
         imageCarousel.start();
     }
 
@@ -164,7 +119,6 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
         link1.setOnAction(null);
         link2.setOnAction(null);
 
-        // Stop the carousel when the view is detached
         imageCarousel.stop();
     }
 }

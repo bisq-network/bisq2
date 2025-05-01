@@ -65,7 +65,7 @@ public class WalletGuideView extends TabView<WalletGuideModel, WalletGuideContro
         closeIconButton.setOnAction(e -> controller.onClose());
 
         root.setPrefWidth(OverlayModel.WIDTH);
-        root.setPrefHeight(OverlayModel.HEIGHT + 70);  // Increased from 40 to 80 for more height
+        root.setPrefHeight(OverlayModel.HEIGHT + 70);
     }
 
     @Override

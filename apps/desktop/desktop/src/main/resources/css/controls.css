@@ -1171,9 +1171,8 @@
     -fx-opacity: 1.0;
 }
 
-/* Compact Navigation Arrows */
 .carousel-nav-arrow {
-    -fx-background-color: rgba(0, 0, 0, 0.3);
+    -fx-background-color: -bisq-gray-7;
     -fx-background-radius: 2;
     -fx-min-width: 20px;
     -fx-min-height: 32px;
@@ -1191,24 +1190,15 @@
 }
 
 .carousel-nav-arrow:hover {
-    -fx-background-color: rgba(86, 174, 72, 0.5);
+    -fx-background-color: -bisq-green-hover;
     -fx-opacity: 0.9;
 }
 
 .carousel-nav-arrow:pressed {
-    -fx-background-color: rgba(86, 174, 72, 0.7);
+    -fx-background-color: -bisq-green-pressed;
     -fx-opacity: 1.0;
 }
 
-.carousel-nav-arrow-left {
-    -fx-translate-x: 0;
-}
-
-.carousel-nav-arrow-right {
-    -fx-translate-x: 0;
-}
-
-/* Container for the carousel with minimal spacing */
 .carousel-container {
     -fx-spacing: 5;
     -fx-padding: 0;

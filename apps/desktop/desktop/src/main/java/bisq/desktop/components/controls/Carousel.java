@@ -28,11 +28,10 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,10 +43,13 @@ public class Carousel extends BorderPane {
     private final List<Node> items = new ArrayList<>();
     private final IntegerProperty currentIndex = new SimpleIntegerProperty(0);
     private final BooleanProperty isPlaying = new SimpleBooleanProperty(false);
+    @Getter
+    private final BooleanProperty showBottomDots = new SimpleBooleanProperty(true);
     private final StackPane itemStackPane;
-    private final Rectangle clipRectangle;
     private final Button leftArrowButton;
     private final Button rightArrowButton;
+    @Getter
+    private final HBox indicatorsHBox;
 
     @Setter
     private Duration transitionDuration = Duration.millis(400);
@@ -66,7 +68,7 @@ public class Carousel extends BorderPane {
     public Carousel(List<Node> items) {
         getStyleClass().add("carousel");
 
-        clipRectangle = new Rectangle();
+        Rectangle clipRectangle = new Rectangle();
 
         itemStackPane = new StackPane();
         itemStackPane.getStyleClass().add("carousel-item-container");
@@ -76,33 +78,38 @@ public class Carousel extends BorderPane {
         itemStackPane.setClip(clipRectangle);
 
         leftArrowButton = new Button("❮");
-        leftArrowButton.getStyleClass().addAll("carousel-nav-arrow", "carousel-nav-arrow-left");
+        leftArrowButton.getStyleClass().addAll("carousel-nav-arrow");
         leftArrowButton.setOnAction(e -> previous());
 
         rightArrowButton = new Button("❯");
-        rightArrowButton.getStyleClass().addAll("carousel-nav-arrow", "carousel-nav-arrow-right");
+        rightArrowButton.getStyleClass().addAll("carousel-nav-arrow");
         rightArrowButton.setOnAction(e -> next());
 
-        setCenter(itemStackPane);
+        indicatorsHBox = new HBox(6);
+        indicatorsHBox.setAlignment(Pos.CENTER);
+        indicatorsHBox.getStyleClass().add("carousel-indicators");
+
+        VBox contentBox = new VBox(5);
+        contentBox.setAlignment(Pos.CENTER);
+        contentBox.getChildren().addAll(itemStackPane, indicatorsHBox);
+
+        setCenter(contentBox);
         setLeft(leftArrowButton);
         setRight(rightArrowButton);
 
         BorderPane.setAlignment(leftArrowButton, Pos.CENTER);
         BorderPane.setAlignment(rightArrowButton, Pos.CENTER);
 
+        indicatorsHBox.visibleProperty().bind(showBottomDots);
+        indicatorsHBox.managedProperty().bind(showBottomDots);
+
         if (!items.isEmpty()) {
             for (Node item : items) {
                 addItem(item);
             }
         }
-    }
 
-    private void updateArrowVisibility() {
-        boolean visible = items.size() > 1;
-        leftArrowButton.setVisible(visible);
-        leftArrowButton.setManaged(visible);
-        rightArrowButton.setVisible(visible);
-        rightArrowButton.setManaged(visible);
+        currentIndex.addListener((obs, oldVal, newVal) -> updateIndicators());
     }
 
     public void addItem(Node item) {
@@ -134,6 +141,7 @@ public class Carousel extends BorderPane {
             setupInitialItem();
         }
 
+        updateIndicators();
         updateArrowVisibility();
     }
 
@@ -181,10 +189,6 @@ public class Carousel extends BorderPane {
         transitionToIndex(index, index > currentIndex.get());
     }
 
-    public IntegerProperty currentIndexProperty() {
-        return currentIndex;
-    }
-
     private void setupInitialItem() {
         if (items.isEmpty()) {
             return;
@@ -193,6 +197,36 @@ public class Carousel extends BorderPane {
         itemStackPane.getChildren().clear();
         currentNode = items.get(currentIndex.get());
         itemStackPane.getChildren().add(currentNode);
+    }
+
+    private void updateIndicators() {
+        indicatorsHBox.getChildren().clear();
+
+        if (items.size() <= 1) {
+            return;
+        }
+
+        for (int i = 0; i < items.size(); i++) {
+            StackPane dot = new StackPane();
+            dot.getStyleClass().add("carousel-indicator");
+
+            if (i == currentIndex.get()) {
+                dot.getStyleClass().add("active");
+            }
+
+            final int index = i;
+            dot.setOnMouseClicked(e -> goToIndex(index));
+
+            indicatorsHBox.getChildren().add(dot);
+        }
+    }
+
+    private void updateArrowVisibility() {
+        boolean visible = items.size() > 1;
+        leftArrowButton.setVisible(visible);
+        leftArrowButton.setManaged(visible);
+        rightArrowButton.setVisible(visible);
+        rightArrowButton.setManaged(visible);
     }
 
     private void transitionToIndex(int targetIndex, boolean goingForward) {
