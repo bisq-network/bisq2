@@ -23,22 +23,21 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import bisq.wallets.json_rpc.RpcConfig;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public final class LiquidWalletStore implements PersistableStore<LiquidWalletStore> {
-    @Getter
-    @Setter
+@Getter(AccessLevel.PACKAGE)
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
+final class LiquidWalletStore implements PersistableStore<LiquidWalletStore> {
+    @Setter(AccessLevel.PACKAGE)
     private Optional<RpcConfig> rpcConfig = Optional.empty();
-    @Getter
     private final ObservableArray<String> walletAddresses = new ObservableArray<>();
-
-    public LiquidWalletStore() {
-    }
 
     private LiquidWalletStore(Optional<RpcConfig> rpcConfig, List<String> walletAddresses) {
         this.rpcConfig = rpcConfig;

@@ -21,7 +21,9 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,14 +32,12 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 @Slf4j
-@Getter
-public final class AccountAgeStore implements PersistableStore<AccountAgeStore> {
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
+@Getter(AccessLevel.PACKAGE)
+final class AccountAgeStore implements PersistableStore<AccountAgeStore> {
     private final Set<String> jsonRequests = new CopyOnWriteArraySet<>();
-    @Setter
+    @Setter(AccessLevel.PACKAGE)
     private long lastRequested = 0;
-
-    public AccountAgeStore() {
-    }
 
     private AccountAgeStore(Set<String> jsonRequests, long lastRequested) {
         this.lastRequested = lastRequested;

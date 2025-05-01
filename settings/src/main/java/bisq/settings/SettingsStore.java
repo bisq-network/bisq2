@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 import static bisq.settings.SettingsService.*;
 
 @Slf4j
-public final class SettingsStore implements PersistableStore<SettingsStore> {
+final class SettingsStore implements PersistableStore<SettingsStore> {
     final Cookie cookie;
     final Map<String, Boolean> dontShowAgainMap = new ConcurrentHashMap<>();
     final Observable<Boolean> useAnimations = new Observable<>();
@@ -69,7 +69,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<ChatMessageType> bisqEasyOfferbookMessageTypeFilter = new Observable<>();
     final Observable<Integer> numDaysAfterRedactingTradeData = new Observable<>();
 
-    public SettingsStore() {
+    SettingsStore() {
         this(new Cookie(),
                 new HashMap<>(),
                 true,
@@ -99,7 +99,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA);
     }
 
-    public SettingsStore(Cookie cookie,
+    SettingsStore(Cookie cookie,
                          Map<String, Boolean> dontShowAgainMap,
                          boolean useAnimations,
                          Market selectedMarket,

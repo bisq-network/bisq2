@@ -43,7 +43,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Persists my user profiles and the selected user profile.
  */
 @Slf4j
-public final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
+final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
     // For plain text those data are set. If encryption is used the protobuf lists are not filled.
     private final Observable<UserIdentity> selectedUserIdentityObservable = new Observable<>();
     private final ObservableSet<UserIdentity> userIdentities = new ObservableSet<>();

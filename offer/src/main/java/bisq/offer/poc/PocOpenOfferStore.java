@@ -21,19 +21,19 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.Message;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
 import java.util.Set;
 
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-public final class PocOpenOfferStore implements PersistableStore<PocOpenOfferStore> {
-    @Getter
+final class PocOpenOfferStore implements PersistableStore<PocOpenOfferStore> {
+    @Getter(AccessLevel.PACKAGE)
     private final ObservableSet<PocOpenOffer> openOffers = new ObservableSet<>();
-
-    public PocOpenOfferStore() {
-    }
 
     private PocOpenOfferStore(Set<PocOpenOffer> openOffers) {
         this.openOffers.addAll(openOffers);
@@ -56,11 +56,11 @@ public final class PocOpenOfferStore implements PersistableStore<PocOpenOfferSto
         return null;
     }
 
-    public void add(PocOpenOffer openOffer) {
+    void add(PocOpenOffer openOffer) {
         openOffers.add(openOffer);
     }
 
-    public void remove(PocOpenOffer openOffer) {
+    void remove(PocOpenOffer openOffer) {
         openOffers.remove(openOffer);
     }
 

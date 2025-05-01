@@ -22,18 +22,18 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Getter
+@Getter(AccessLevel.PACKAGE)
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 public class CommonPublicChatChannelStore implements PersistableStore<CommonPublicChatChannelStore> {
     private final ObservableSet<CommonPublicChatChannel> channels = new ObservableSet<>();
-
-    CommonPublicChatChannelStore() {
-    }
 
     private CommonPublicChatChannelStore(Set<CommonPublicChatChannel> privateDiscussionChannels) {
         setAll(privateDiscussionChannels);
@@ -80,7 +80,7 @@ public class CommonPublicChatChannelStore implements PersistableStore<CommonPubl
         return new CommonPublicChatChannelStore(new HashSet<>(channels));
     }
 
-    public void setAll(Set<CommonPublicChatChannel> privateDiscussionChannels) {
+    void setAll(Set<CommonPublicChatChannel> privateDiscussionChannels) {
         this.channels.setAll(privateDiscussionChannels);
     }
 }

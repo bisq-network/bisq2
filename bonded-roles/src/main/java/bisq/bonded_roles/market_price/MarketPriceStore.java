@@ -25,19 +25,21 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Getter(AccessLevel.PACKAGE)
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-public final class MarketPriceStore implements PersistableStore<MarketPriceStore> {
+final class MarketPriceStore implements PersistableStore<MarketPriceStore> {
     private final ObservableHashMap<Market, MarketPrice> marketPriceByCurrencyMap = new ObservableHashMap<>();
     private final Observable<Market> selectedMarket = new Observable<>(MarketRepository.getDefault());
-
-    public MarketPriceStore() {
-    }
 
     private MarketPriceStore(Map<Market, MarketPrice> marketPriceByCurrencyMap, Market selectedMarket) {
         this.marketPriceByCurrencyMap.putAll(marketPriceByCurrencyMap);
@@ -90,13 +92,5 @@ public final class MarketPriceStore implements PersistableStore<MarketPriceStore
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         marketPriceByCurrencyMap.putAll(map);
         selectedMarket.set(persisted.getSelectedMarket().get());
-    }
-
-    ObservableHashMap<Market, MarketPrice> getMarketPriceByCurrencyMap() {
-        return marketPriceByCurrencyMap;
-    }
-
-    Observable<Market> getSelectedMarket() {
-        return selectedMarket;
     }
 }
