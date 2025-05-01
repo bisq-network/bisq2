@@ -17,12 +17,11 @@
 
 package bisq.desktop.main.content.bisq_easy.wallet_guide.receive;
 
-import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.Carousel;
 import bisq.i18n.Res;
-import javafx.animation.FadeTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -41,10 +40,8 @@ import lombok.extern.slf4j.Slf4j;
 public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, WalletGuideReceiveController> {
     private final Button backButton, closeButton;
     private final Hyperlink link1, link2;
-    private final ImageView image2;
-    private final FadeTransition fadeTransition1;
-    private final FadeTransition fadeTransition2;
-    private UIScheduler scheduler1, scheduler2, scheduler3;
+    private final Carousel imageCarousel;
+    private final HBox indicators;
 
     public WalletGuideReceiveView(WalletGuideReceiveModel model, WalletGuideReceiveController controller) {
         super(new HBox(20), model, controller);
@@ -69,24 +66,84 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
         closeButton.setDefaultButton(true);
 
         HBox buttons = new HBox(20, backButton, closeButton);
+
         VBox.setMargin(headline, new Insets(0, 0, -5, 0));
+        VBox.setMargin(content, new Insets(0, 0, 5, 0));
         VBox.setMargin(link1, new Insets(-10, 0, -22.5, 0));
         VBox.setMargin(link2, new Insets(0, 0, 0, 0));
         vBox.getChildren().addAll(headline, content, link1, link2, buttons);
 
+        // Right content pane - carousel
+        // Get images and configure them to desired size
         ImageView image1 = ImageUtil.getImageViewById("blue-wallet-tx");
-        image2 = ImageUtil.getImageViewById("blue-wallet-qr");
-        StackPane images = new StackPane(image1, image2);
-        images.setAlignment(Pos.TOP_LEFT);
-        root.getChildren().addAll(vBox, images);
+        ImageView image2 = ImageUtil.getImageViewById("blue-wallet-qr");
 
-        fadeTransition1 = new FadeTransition(Duration.millis(1000), image2);
-        fadeTransition1.setFromValue(0);
-        fadeTransition1.setToValue(1);
+        // Set consistent dimensions for both images - smartphone-like aspect ratio
+        double imageWidth = 250;
+        double imageHeight = 430;
 
-        fadeTransition2 = new FadeTransition(Duration.millis(1000), image2);
-        fadeTransition2.setFromValue(1);
-        fadeTransition2.setToValue(0);
+        image1.setFitWidth(imageWidth);
+        image1.setFitHeight(imageHeight);
+        image1.setPreserveRatio(true);
+
+        image2.setFitWidth(imageWidth);
+        image2.setFitHeight(imageHeight);
+        image2.setPreserveRatio(true);
+
+        // Create small indicator dots
+        indicators = new HBox(6);
+        indicators.setAlignment(Pos.CENTER);
+        indicators.getStyleClass().add("carousel-indicators");
+
+        // Configure carousel
+        imageCarousel = new Carousel();
+        imageCarousel.setTransitionDuration(Duration.millis(400));
+        imageCarousel.setDisplayDuration(Duration.millis(3000));
+
+        // Add images to carousel
+        imageCarousel.addItem(image1);
+        imageCarousel.addItem(image2);
+
+        // Set up the indicator dots
+        for (int i = 0; i < 2; i++) {
+            StackPane dot = new StackPane();
+            dot.getStyleClass().add("carousel-indicator");
+            if (i == 0) {
+                dot.getStyleClass().add("active");
+            }
+
+            final int index = i;
+            dot.setOnMouseClicked(e -> {
+                imageCarousel.goToIndex(index);
+                e.consume();
+            });
+
+            indicators.getChildren().add(dot);
+        }
+
+        // Listen to index changes to update indicators
+        imageCarousel.currentIndexProperty().addListener((obs, oldVal, newVal) -> {
+            for (int i = 0; i < indicators.getChildren().size(); i++) {
+                StackPane dot = (StackPane) indicators.getChildren().get(i);
+                if (i == newVal.intValue()) {
+                    if (!dot.getStyleClass().contains("active")) {
+                        dot.getStyleClass().add("active");
+                    }
+                } else {
+                    dot.getStyleClass().remove("active");
+                }
+            }
+        });
+
+        // Container for carousel and indicators
+        VBox carouselContainer = new VBox(5);
+        carouselContainer.setAlignment(Pos.CENTER);
+        carouselContainer.getStyleClass().add("carousel-container");
+        carouselContainer.getChildren().addAll(imageCarousel, indicators);
+        carouselContainer.setPadding(new Insets(10, 0, 0, 0));
+
+        root.getChildren().addAll(vBox, carouselContainer);
+        root.setAlignment(Pos.TOP_CENTER);
     }
 
     @Override
@@ -96,21 +153,8 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
         link1.setOnAction(e -> controller.onOpenLink1());
         link2.setOnAction(e -> controller.onOpenLink2());
 
-        // TODO (low prio) create carousel component for it (See https://github.com/bisq-network/bisq2/issues/1262)
-        image2.setOpacity(0);
-        scheduler1 = UIScheduler.run(fadeTransition1::playFromStart).after(2000);
-        fadeTransition1.setOnFinished(e -> {
-            if (scheduler2 != null) {
-                scheduler2.stop();
-            }
-            scheduler2 = UIScheduler.run(fadeTransition2::playFromStart).after(2000);
-        });
-        fadeTransition2.setOnFinished(e -> {
-            if (scheduler3 != null) {
-                scheduler3.stop();
-            }
-            scheduler3 = UIScheduler.run(fadeTransition1::playFromStart).after(2000);
-        });
+        // Start the carousel
+        imageCarousel.start();
     }
 
     @Override
@@ -120,14 +164,7 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
         link1.setOnAction(null);
         link2.setOnAction(null);
 
-        scheduler1.stop();
-        fadeTransition1.stop();
-        fadeTransition2.stop();
-        if (scheduler2 != null) {
-            scheduler2.stop();
-        }
-        if (scheduler3 != null) {
-            scheduler3.stop();
-        }
+        // Stop the carousel when the view is detached
+        imageCarousel.stop();
     }
 }
