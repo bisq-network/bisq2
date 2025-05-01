@@ -111,7 +111,7 @@ public class Transitions {
             return fadeTransition;
         }
 
-        if (!getUseAnimations()) {
+        if (!useAnimations()) {
             node.setOpacity(1);
             if (finishedHandler != null) {
                 finishedHandler.run();
@@ -152,7 +152,7 @@ public class Transitions {
         double startX = node.getTranslateX();
         double targetX = slideOutRight ? node.getWidth() : -node.getWidth();
         node.setOpacity(1);
-        if (!getUseAnimations()) {
+        if (!useAnimations()) {
             node.setOpacity(1);
             node.setTranslateX(startX);
             if (finishedHandler != null) {
@@ -239,7 +239,7 @@ public class Transitions {
     }
 
     public static void fadeOutAndRemove(Node node, int duration, Runnable finishedHandler) {
-        if (!getUseAnimations()) {
+        if (!useAnimations()) {
             // When animations are disabled, skip animation and execute removal immediately
             removeNodeAndRunHandler(node, finishedHandler);
             return;
@@ -333,7 +333,7 @@ public class Transitions {
         if (node != null) {
             node.setMouseTransparent(false);
             Effect effect = node.getEffect();
-            if (!getUseAnimations() || !(effect instanceof GaussianBlur gaussianBlur)) {
+            if (!useAnimations() || !(effect instanceof GaussianBlur gaussianBlur)) {
                 node.setEffect(null);
                 return;
             }
@@ -361,7 +361,7 @@ public class Transitions {
     }
 
     public static int getDuration(int duration) {
-        return getUseAnimations() ? duration : 1;
+        return useAnimations() ? duration : 1;
     }
 
     public static void crossFade(Node node1, Node node2) {
@@ -371,7 +371,7 @@ public class Transitions {
 
 
     public static void flapOut(Node node, Runnable onFinishedHandler) {
-        if (getUseAnimations()) {
+        if (useAnimations()) {
             double duration = getDuration(DEFAULT_DURATION);
             Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
 
@@ -500,7 +500,7 @@ public class Transitions {
     public static Timeline slideInTop(Region node, int duration, Runnable onFinishedHandler) {
         double targetY = 0;
         Timeline timeline = new Timeline();
-        if (getUseAnimations()) {
+        if (useAnimations()) {
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             double start = -node.getHeight();
             node.setTranslateY(start);
@@ -537,7 +537,7 @@ public class Transitions {
     public static Timeline slideOutTop(Region node, int duration, Runnable onFinishedHandler) {
         double targetY = -node.getHeight();
         Timeline timeline = new Timeline();
-        if (getUseAnimations()) {
+        if (useAnimations()) {
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             double start = 0;
             node.setTranslateY(start);
@@ -561,7 +561,7 @@ public class Transitions {
         double targetY = -node.getHeight();
         double startY = 0;
         Timeline timeline = new Timeline();
-        if (getUseAnimations()) {
+        if (useAnimations()) {
             node.setTranslateY(startY);
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             keyFrames.add(new KeyFrame(Duration.millis(0),
@@ -600,7 +600,7 @@ public class Transitions {
     public static Timeline slideInHorizontal(Region node, int duration, Runnable onFinishedHandler, boolean slideLeft) {
         Timeline timeline = new Timeline();
         double end = node.getLayoutX();
-        if (getUseAnimations()) {
+        if (useAnimations()) {
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             double start = slideLeft ?
                     node.getLayoutX() - node.getWidth() :
@@ -633,7 +633,7 @@ public class Transitions {
     public static Timeline slideOutBottom(Region node, Runnable onFinishedHandler) {
         double end = node.getHeight();
         Timeline timeline = new Timeline();
-        if (getUseAnimations()) {
+        if (useAnimations()) {
             double duration = getDuration(DEFAULT_DURATION / 2);
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             node.setTranslateY(0);
@@ -664,7 +664,7 @@ public class Transitions {
 
     public static void slideDownFromCenterTop(Region node, Runnable onFinishedHandler) {
         double end = -node.getHeight();
-        if (getUseAnimations()) {
+        if (useAnimations()) {
             double duration = getDuration(DEFAULT_DURATION);
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
@@ -688,7 +688,7 @@ public class Transitions {
     }
 
     public static void moveLeft(Region node, int targetX, int duration) {
-        if (getUseAnimations()) {
+        if (useAnimations()) {
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             double startX = node.getLayoutX();
@@ -705,7 +705,7 @@ public class Transitions {
     }
 
     public static void animateLeftNavigationWidth(Region node, double targetWidth, int duration) {
-        if (getUseAnimations()) {
+        if (useAnimations()) {
             double startWidth = node.getWidth();
             Interpolator interpolator = startWidth > targetWidth ? Interpolator.EASE_IN : Interpolator.EASE_OUT;
             Timeline timeline = new Timeline();
@@ -724,7 +724,7 @@ public class Transitions {
     }
 
     public static void animateLeftSubNavigation(Region node, double targetX, int duration) {
-        if (getUseAnimations()) {
+        if (useAnimations()) {
             double startX = node.getLayoutX();
             Interpolator interpolator = startX > targetX ? Interpolator.EASE_IN : Interpolator.EASE_OUT;
             Timeline timeline = new Timeline();
@@ -744,7 +744,7 @@ public class Transitions {
 
     public static void animateNavigationButtonMarks(Region node, double targetHeight, double targetY) {
         double startY = node.getLayoutY();
-        if (getUseAnimations() || startY == 0) {
+        if (useAnimations() || startY == 0) {
             double duration = getDuration(DEFAULT_DURATION / 4);
             double startHeight = node.getHeight();
             Timeline timeline = new Timeline();
@@ -781,7 +781,7 @@ public class Transitions {
     }
 
     public static void animateTabButtonMarks(Region node, double targetWidth, double targetX) {
-        if (getUseAnimations()) {
+        if (useAnimations()) {
             double startWidth = node.getWidth();
             double startX = node.getLayoutX();
             double duration = getDuration(DEFAULT_DURATION / 4);
@@ -829,7 +829,7 @@ public class Transitions {
     }
 
     public static void animateHeight(Region node, double startHeight, double targetHeight, double duration, @Nullable Runnable onFinishedHandler) {
-        if (getUseAnimations()) {
+        if (useAnimations()) {
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             keyFrames.add(new KeyFrame(Duration.millis(0),
@@ -856,7 +856,7 @@ public class Transitions {
     }
 
     public static void animateMaxHeight(Region node, double startHeight, double targetHeight, double duration, @Nullable Runnable onFinishedHandler) {
-        if (getUseAnimations()) {
+        if (useAnimations()) {
             node.setMinHeight(startHeight);
             node.setMaxHeight(startHeight);
             Timeline timeline = new Timeline();
@@ -882,7 +882,7 @@ public class Transitions {
 
     public static Timeline animateScaleY(Region node, double start, double target, double duration, @Nullable Runnable onFinishedHandler) {
         Timeline timeline = new Timeline();
-        if (getUseAnimations()) {
+        if (useAnimations()) {
             node.setScaleY(start);
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             keyFrames.add(new KeyFrame(Duration.millis(duration),
@@ -906,7 +906,7 @@ public class Transitions {
     }
 
     public static void animatePrefWidth(Region node, double targetWidth, double duration, @Nullable Runnable finishedHandler) {
-        if (getUseAnimations()) {
+        if (useAnimations()) {
             double startWidth = node.getPrefWidth();
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
@@ -933,7 +933,7 @@ public class Transitions {
     }
 
     public static void animateLayoutY(Region node, double targetY, double duration, @Nullable Runnable finishedHandler) {
-        if (getUseAnimations()) {
+        if (useAnimations()) {
             double startY = node.getLayoutY();
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
@@ -961,7 +961,7 @@ public class Transitions {
                                  double targetOpacity,
                                  double fromScale, double targetScale) {
         Timeline timeline = new Timeline();
-        if (getUseAnimations()) {
+        if (useAnimations()) {
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(node.opacityProperty(), fromOpacity, Interpolator.LINEAR),
@@ -986,7 +986,7 @@ public class Transitions {
         return timeline;
     }
 
-    public static boolean getUseAnimations() {
+    public static boolean useAnimations() {
         return settingsService.getUseAnimations().get();
     }
 
@@ -995,7 +995,7 @@ public class Transitions {
     }
 
     public static void animateWidth(Pane pane, double initialWidth, double finalWidth, long duration, @Nullable Runnable finishedHandler) {
-        if (getUseAnimations()) {
+        if (useAnimations()) {
             Timeline timeline = new Timeline(
                     new KeyFrame(Duration.millis(0),
                             new KeyValue(pane.prefWidthProperty(), initialWidth, Interpolator.LINEAR),
@@ -1027,7 +1027,7 @@ public class Transitions {
     }
 
     public static void animateDividerPosition(SplitPane.Divider splitPaneDivider, double initialPosition, double finalPosition, long duration, @Nullable Runnable finishedHandler) {
-        if (getUseAnimations()) {
+        if (useAnimations()) {
             Timeline timeline = new Timeline(
                     new KeyFrame(Duration.millis(0), new KeyValue(splitPaneDivider.positionProperty(), initialPosition, Interpolator.LINEAR)),
                     new KeyFrame(Duration.millis(duration), new KeyValue(splitPaneDivider.positionProperty(), finalPosition, Interpolator.EASE_OUT))

@@ -99,7 +99,7 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
 
         // TODO (low prio) create carousel component for it (See https://github.com/bisq-network/bisq2/issues/1262)
         image2.setOpacity(0);
-        if (Transitions.getUseAnimations()) {
+        if (Transitions.useAnimations()) {
             scheduler1 = UIScheduler.run(fadeTransition1::playFromStart).after(2000);
             fadeTransition1.setOnFinished(e -> {
                 if (scheduler2 != null) {

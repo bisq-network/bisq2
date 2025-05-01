@@ -102,7 +102,7 @@ public class ProgressBarWithLabel extends VBox {
             if (scheduler != null) {
                 scheduler.stop();
             }
-            if (Transitions.getUseAnimations() && animateEllipsis) {
+            if (Transitions.useAnimations() && animateEllipsis) {
                 scheduler = UIScheduler.run(() -> {
                     label.setText(getText() + postFix);
                     switch (postFix) {

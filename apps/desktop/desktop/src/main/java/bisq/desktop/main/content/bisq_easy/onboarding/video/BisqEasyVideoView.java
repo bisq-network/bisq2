@@ -394,7 +394,7 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
             largeReplay.setOpacity(0);
         }
         pausePlayTimeline = new Timeline();
-        if (Transitions.getUseAnimations()) {
+        if (Transitions.useAnimations()) {
             ObservableList<KeyFrame> keyFrames = pausePlayTimeline.getKeyFrames();
             if (imageView.getOpacity() == 0) {
                 keyFrames.add(new KeyFrame(Duration.millis(0),
@@ -468,7 +468,7 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
         }
         if (controlsVBox.getOpacity() == 0) {
             restartCheckActivityScheduler();
-            if (Transitions.getUseAnimations()) {
+            if (Transitions.useAnimations()) {
                 showControlsTimeline = new Timeline();
                 ObservableList<KeyFrame> keyFrames = showControlsTimeline.getKeyFrames();
                 keyFrames.add(new KeyFrame(Duration.millis(0),
@@ -490,7 +490,7 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
             controlsVBox.setOpacity(1);
         }
         if (mediaPlayer != null && mediaPlayer.getStatus() == MediaPlayer.Status.PLAYING && controlsVBox.getOpacity() > 0) {
-            if (Transitions.getUseAnimations()) {
+            if (Transitions.useAnimations()) {
                 hideControlsTimeline = new Timeline();
                 ObservableList<KeyFrame> keyFrames = hideControlsTimeline.getKeyFrames();
                 keyFrames.add(new KeyFrame(Duration.millis(0),
@@ -524,7 +524,7 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
     }
 
     private void showVolumeSlider() {
-        if (Transitions.getUseAnimations()) {
+        if (Transitions.useAnimations()) {
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             keyFrames.add(new KeyFrame(Duration.millis(0),
@@ -542,7 +542,7 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
     }
 
     private void hideVolumeSlider() {
-        if (Transitions.getUseAnimations()) {
+        if (Transitions.useAnimations()) {
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             keyFrames.add(new KeyFrame(Duration.millis(0),
