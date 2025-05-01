@@ -111,7 +111,7 @@ public class Transitions {
             return fadeTransition;
         }
 
-        if (!useAnimations()) {
+        if (dontUseAnimations()) {
             node.setOpacity(1);
             if (finishedHandler != null) {
                 finishedHandler.run();
@@ -152,7 +152,7 @@ public class Transitions {
         double startX = node.getTranslateX();
         double targetX = slideOutRight ? node.getWidth() : -node.getWidth();
         node.setOpacity(1);
-        if (!useAnimations()) {
+        if (dontUseAnimations()) {
             node.setOpacity(1);
             node.setTranslateX(startX);
             if (finishedHandler != null) {
@@ -239,7 +239,7 @@ public class Transitions {
     }
 
     public static void fadeOutAndRemove(Node node, int duration, Runnable finishedHandler) {
-        if (!useAnimations()) {
+        if (dontUseAnimations()) {
             // When animations are disabled, skip animation and execute removal immediately
             removeNodeAndRunHandler(node, finishedHandler);
             return;
@@ -333,7 +333,7 @@ public class Transitions {
         if (node != null) {
             node.setMouseTransparent(false);
             Effect effect = node.getEffect();
-            if (!useAnimations() || !(effect instanceof GaussianBlur gaussianBlur)) {
+            if (dontUseAnimations() || !(effect instanceof GaussianBlur gaussianBlur)) {
                 node.setEffect(null);
                 return;
             }
@@ -984,6 +984,10 @@ public class Transitions {
             node.setScaleY(targetScale);
         }
         return timeline;
+    }
+
+    public static boolean dontUseAnimations() {
+        return !useAnimations();
     }
 
     public static boolean useAnimations() {
