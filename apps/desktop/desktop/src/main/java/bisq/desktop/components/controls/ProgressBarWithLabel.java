@@ -98,7 +98,7 @@ public class ProgressBarWithLabel extends VBox {
     }
 
     private void animatePostfix() {
-        if (progressBar.getProgress() == -11) {
+        if (progressBar.getProgress() == -1) {
             if (scheduler != null) {
                 scheduler.stop();
             }
