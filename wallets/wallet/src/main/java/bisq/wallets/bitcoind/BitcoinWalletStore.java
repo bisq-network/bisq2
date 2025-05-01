@@ -22,7 +22,9 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,16 +32,14 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-public final class BitcoinWalletStore implements PersistableStore<BitcoinWalletStore> {
-    @Getter
-    @Setter
+final class BitcoinWalletStore implements PersistableStore<BitcoinWalletStore> {
+    @Getter(AccessLevel.PACKAGE)
+    @Setter(AccessLevel.PACKAGE)
     private Optional<RpcConfig> rpcConfig = Optional.empty();
-    @Getter
+    @Getter(AccessLevel.PACKAGE)
     private final ObservableSet<String> receiveAddresses = new ObservableSet<>();
-
-    public BitcoinWalletStore() {
-    }
 
     private BitcoinWalletStore(Optional<RpcConfig> rpcConfig, Set<String> receiveAddresses) {
         this.rpcConfig = rpcConfig;

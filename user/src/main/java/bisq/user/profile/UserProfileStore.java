@@ -23,7 +23,9 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -36,16 +38,14 @@ import java.util.stream.Collectors;
 /**
  * Persists my user profiles and the selected user profile.
  */
+@Getter(AccessLevel.PACKAGE)
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-@Getter
-public final class UserProfileStore implements PersistableStore<UserProfileStore> {
+final class UserProfileStore implements PersistableStore<UserProfileStore> {
     private final Map<String, Set<String>> nymsByNickName = new ConcurrentHashMap<>();
     private final ObservableSet<String> ignoredUserProfileIds = new ObservableSet<>();
     private final ObservableHashMap<String, UserProfile> userProfileById = new ObservableHashMap<>();
     private final Object lock = new Object();
-
-    public UserProfileStore() {
-    }
 
     private UserProfileStore(Map<String, Set<String>> nymsByNickName,
                              Set<String> ignoredUserProfileIds,

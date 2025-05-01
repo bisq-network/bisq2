@@ -22,6 +22,8 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
@@ -29,10 +31,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public final class BannedUserStore implements PersistableStore<BannedUserStore> {
+final class BannedUserStore implements PersistableStore<BannedUserStore> {
+    @Getter(AccessLevel.PACKAGE)
     private final ObservableSet<BannedUserProfileData> bannedUserProfileDataSet = new ObservableSet<>();
 
-    public BannedUserStore() {
+    BannedUserStore() {
         this(new HashSet<>());
     }
 
@@ -79,9 +82,5 @@ public final class BannedUserStore implements PersistableStore<BannedUserStore> 
     public void applyPersisted(BannedUserStore persisted) {
         bannedUserProfileDataSet.clear();
         bannedUserProfileDataSet.addAll(persisted.getBannedUserProfileDataSet());
-    }
-
-    ObservableSet<BannedUserProfileData> getBannedUserProfileDataSet() {
-        return bannedUserProfileDataSet;
     }
 }
