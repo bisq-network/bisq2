@@ -28,8 +28,6 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class TextInputDialog extends Popup {
-    private static final int PREFERRED_WIDTH = 520;
-
     private final MaterialTextArea inputTextArea = new MaterialTextArea();
     @Nullable
     private Consumer<String> inputHandler;
@@ -39,7 +37,6 @@ public class TextInputDialog extends Popup {
     }
 
     public TextInputDialog(String headline, String text) {
-        //inputTextArea.setPrefWidth(PREFERRED_WIDTH);
         inputTextArea.setMinHeight(100);
         inputTextArea.setMaxHeight(inputTextArea.getMinHeight());
 
@@ -55,8 +52,8 @@ public class TextInputDialog extends Popup {
             if (inputTextArea.validate()) {
                 if (inputHandler != null) {
                     inputHandler.accept(inputTextArea.getText());
-                    hide();
                 }
+                hide();
             }
         });
     }
