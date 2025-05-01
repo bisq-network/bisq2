@@ -28,7 +28,6 @@ import bisq.chat.ChatService;
 import bisq.chat.Citation;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.common.application.Service;
-import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
@@ -86,7 +85,6 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
     @Getter
     private final Persistence<ModeratorStore> persistence;
 
-    private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
     private Pin rateLimitExceedingUserProfileIdMapPin;
 
     public ModeratorService(ModeratorService.Config config,
@@ -156,11 +154,24 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         persist();
     }
 
-    public CompletableFuture<BroadcastResult> banReportedUser(ReportToModeratorMessage message) {
+    public CompletableFuture<BroadcastResult> banReportedUser(ReportToModeratorMessage message, String banReason) {
+        UserProfile accusedUserProfile = message.getAccusedUserProfile();
+        String accusedUserId = accusedUserProfile.getId();
+        BannedUserModeratorData moderatorData = new BannedUserModeratorData(
+                message.getReporterUserProfileId(),
+                accusedUserId,
+                message.getMessage(),
+                banReason);
+        persistableStore.getBannedUserModeratorDataMap().put(accusedUserId, moderatorData);
+        persist();
+
         UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
         KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
-        BannedUserProfileData data = new BannedUserProfileData(message.getAccusedUserProfile(), staticPublicKeysProvided);
-        return networkService.publishAuthorizedData(data, keyPair);
+
+        BannedUserProfileData publicData = new BannedUserProfileData(
+                accusedUserProfile,
+                staticPublicKeysProvided);
+        return networkService.publishAuthorizedData(publicData, keyPair);
     }
 
     public CompletableFuture<BroadcastResult> unBanReportedUser(BannedUserProfileData data) {
@@ -191,6 +202,10 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
 
     public ObservableSet<ReportToModeratorMessage> getReportToModeratorMessages() {
         return persistableStore.getReportToModeratorMessages();
+    }
+
+    public Optional<BannedUserModeratorData> findBannedUserModeratorData(String accusedUserProfileId) {
+        return Optional.ofNullable(persistableStore.getBannedUserModeratorDataMap().get(accusedUserProfileId));
     }
 
     private void processReportToModeratorMessage(ReportToModeratorMessage message) {
