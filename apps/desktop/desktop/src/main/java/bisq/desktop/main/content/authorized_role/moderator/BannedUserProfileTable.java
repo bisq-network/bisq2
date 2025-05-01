@@ -41,18 +41,14 @@ import bisq.user.banned.BannedUserProfileData;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
+import javafx.scene.Cursor;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
@@ -262,15 +258,16 @@ public class BannedUserProfileTable {
         private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getBanReasonCellFactory() {
             return column -> new TableCell<>() {
                 private final Label banReason = new Label();
-                private final Button icon = BisqIconButton.createIconButton(AwesomeIcon.EXTERNAL_LINK);
+                private final Button icon = BisqIconButton.createInfoIconButton();
+
                 private final HBox hBox = new HBox(banReason, icon);
                 private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
 
                 {
-                    icon.setMinWidth(30);
-                    HBox.setHgrow(icon, Priority.ALWAYS);
+                    icon.setMouseTransparent(true);
                     HBox.setMargin(icon, new Insets(0, 10, 0, 10));
                     hBox.setAlignment(Pos.CENTER_LEFT);
+                    hBox.setCursor(Cursor.HAND);
                 }
 
                 @Override
@@ -282,20 +279,24 @@ public class BannedUserProfileTable {
                         banReason.setText(StringUtils.truncate(banReasonText, 30));
                         banReason.setMaxHeight(30);
                         tooltip.setText(banReasonText);
-                        banReason.setTooltip(tooltip);
+                        Tooltip.install(hBox, tooltip);
 
-                        icon.setOnAction(e -> new Popup()
-                                .headline(Res.get("authorizedRole.moderator.bannedUserProfile.table.banReason.popup.headline"))
-                                .information(banReasonText)
-                                .actionButtonText(Res.get("action.copyToClipboard"))
-                                .onAction(() -> ClipboardUtil.copyToClipboard(banReasonText))
-                                .show());
+                        hBox.setOnMouseClicked(e -> onShowPopup(banReasonText));
                         setGraphic(hBox);
                     } else {
-                        icon.setOnAction(null);
-                        banReason.setTooltip(null);
+                        hBox.setOnMouseClicked(null);
+                        Tooltip.uninstall(hBox, tooltip);
                         setGraphic(null);
                     }
+                }
+
+                private static void onShowPopup(String text) {
+                    new Popup()
+                            .headline(Res.get("authorizedRole.moderator.bannedUserProfile.table.banReason.popup.headline"))
+                            .information(text)
+                            .actionButtonText(Res.get("action.copyToClipboard"))
+                            .onAction(() -> ClipboardUtil.copyToClipboard(text))
+                            .show();
                 }
             };
         }
