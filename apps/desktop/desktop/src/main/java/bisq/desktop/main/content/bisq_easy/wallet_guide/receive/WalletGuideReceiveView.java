@@ -98,8 +98,8 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
         link2.setOnAction(e -> controller.onOpenLink2());
 
         // TODO (low prio) create carousel component for it (See https://github.com/bisq-network/bisq2/issues/1262)
+        image2.setOpacity(0);
         if (Transitions.getUseAnimations()) {
-            image2.setOpacity(0);
             scheduler1 = UIScheduler.run(fadeTransition1::playFromStart).after(2000);
             fadeTransition1.setOnFinished(e -> {
                 if (scheduler2 != null) {
@@ -114,7 +114,13 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
                 scheduler3 = UIScheduler.run(fadeTransition1::playFromStart).after(2000);
             });
         } else {
-            image2.setOpacity(1);
+            scheduler1 = UIScheduler.run(() -> {
+                if (image2.getOpacity() == 0) {
+                    image2.setOpacity(1);
+                } else {
+                    image2.setOpacity(0);
+                }
+            }).periodically(2000);
         }
     }
 
@@ -125,9 +131,11 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
         link1.setOnAction(null);
         link2.setOnAction(null);
 
-        scheduler1.stop();
         fadeTransition1.stop();
         fadeTransition2.stop();
+        if (scheduler1 != null) {
+            scheduler1.stop();
+        }
         if (scheduler2 != null) {
             scheduler2.stop();
         }
