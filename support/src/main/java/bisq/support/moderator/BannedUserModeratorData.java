@@ -51,7 +51,7 @@ public final class BannedUserModeratorData implements PersistableProto {
         return bisq.support.protobuf.BannedUserModeratorData.newBuilder()
                 .setReporterUserProfileId(reporterUserProfileId)
                 .setAccusedUserProfileId(accusedUserProfileId)
-                .setReportMessage(reportersMessage)
+                .setReportersMessage(reportersMessage)
                 .setBanReason(banReason);
     }
 
@@ -64,7 +64,7 @@ public final class BannedUserModeratorData implements PersistableProto {
         return new BannedUserModeratorData(
                 proto.getReporterUserProfileId(),
                 proto.getAccusedUserProfileId(),
-                proto.getReportMessage(),
+                proto.getReportersMessage(),
                 proto.getBanReason());
     }
 

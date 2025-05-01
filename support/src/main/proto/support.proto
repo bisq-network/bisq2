@@ -43,7 +43,7 @@ message ReportToModeratorMessage {
 message BannedUserModeratorData {
   string reporterUserProfileId = 1;
   string accusedUserProfileId = 2;
-  string reportMessage = 3;
+  string reportersMessage = 3;
   string banReason = 4;
 }
 
