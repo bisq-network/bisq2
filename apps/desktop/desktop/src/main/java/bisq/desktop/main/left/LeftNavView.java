@@ -378,7 +378,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             UIScheduler.run(() -> Transitions.animateNavigationButtonMarks(selectionMarker,
                             buttonForHeight.getHeight(),
                             calculateTargetY()))
-                    .after(Transitions.getDuration(Transitions.DEFAULT_DURATION / 2));
+                    .after(Transitions.effectiveDuration(Transitions.DEFAULT_DURATION / 2));
         }
         updateSubmenu();
     }

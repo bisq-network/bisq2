@@ -307,20 +307,20 @@
     -fx-image: url("/images/new.png");
 }
 
-#expand-white {
-    -fx-image: url("/images/icons/expand-white.png");
+#arrows-left-white {
+    -fx-image: url("/images/icons/arrows-left-white.png");
 }
 
-#expand-grey {
-    -fx-image: url("/images/icons/expand-grey.png");
+#arrows-left-grey {
+    -fx-image: url("/images/icons/arrows-left-grey.png");
 }
 
-#collapse-white {
-    -fx-image: url("/images/icons/collapse-white.png");
+#arrows-right-white {
+    -fx-image: url("/images/icons/arrows-right-white.png");
 }
 
-#collapse-grey {
-    -fx-image: url("/images/icons/collapse-grey.png");
+#arrows-right-grey {
+    -fx-image: url("/images/icons/arrows-right-grey.png");
 }
 
 

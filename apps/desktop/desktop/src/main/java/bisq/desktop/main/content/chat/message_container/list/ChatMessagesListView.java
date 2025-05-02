@@ -200,7 +200,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
     }
 
     private void fadeInScrollDownBadge() {
-        if (!Transitions.getUseAnimations()) {
+        if (!Transitions.useAnimations()) {
             scrollDownBadge.setOpacity(1);
             return;
         }

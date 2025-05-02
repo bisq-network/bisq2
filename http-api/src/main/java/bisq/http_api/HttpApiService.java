@@ -18,16 +18,19 @@
 package bisq.http_api;
 
 import bisq.account.AccountService;
+import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.http_api.rest_api.RestApiResourceConfig;
 import bisq.http_api.rest_api.RestApiService;
+import bisq.http_api.rest_api.domain.chat.trade.TradeChatMessagesRestApi;
 import bisq.http_api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
 import bisq.http_api.rest_api.domain.offers.OfferbookRestApi;
 import bisq.http_api.rest_api.domain.payment_accounts.PaymentAccountsRestApi;
+import bisq.http_api.rest_api.domain.reputation.ReputationRestApi;
 import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
 import bisq.http_api.rest_api.domain.trades.TradeRestApi;
 import bisq.http_api.rest_api.domain.user_identity.UserIdentityRestApi;
@@ -65,6 +68,7 @@ public class HttpApiService implements Service {
                           SupportService supportedService,
                           TradeService tradeService,
                           SettingsService settingsService,
+                          BisqEasyService bisqEasyService,
                           OpenTradeItemsService openTradeItemsService,
                           AccountService accountService) {
         boolean restApiConfigEnabled = restApiConfig.isEnabled();
@@ -78,49 +82,56 @@ public class HttpApiService implements Service {
                     userService,
                     supportedService,
                     tradeService);
+            TradeChatMessagesRestApi tradeChatMessagesRestApi = new TradeChatMessagesRestApi(chatService, userService);
             UserIdentityRestApi userIdentityRestApi = new UserIdentityRestApi(securityService, userService.getUserIdentityService());
             MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
             SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
             PaymentAccountsRestApi paymentAccountsRestApi = new PaymentAccountsRestApi(accountService);
+            ReputationRestApi reputationRestApi = new ReputationRestApi(userService.getReputationService());
             ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
             if (restApiConfigEnabled) {
                 var restApiResourceConfig = new RestApiResourceConfig(restApiConfig.getRestApiBaseUrl(),
                         offerbookRestApi,
                         tradeRestApi,
+                        tradeChatMessagesRestApi,
                         userIdentityRestApi,
                         marketPriceRestApi,
                         settingsRestApi,
                         explorerRestApi,
-                        paymentAccountsRestApi);
-                this.restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig));
+                        paymentAccountsRestApi,
+                        reputationRestApi);
+                restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig));
             } else {
-                this.restApiService = Optional.empty();
+                restApiService = Optional.empty();
             }
 
             if (webSocketConfigEnabled) {
                 var webSocketResourceConfig = new WebSocketRestApiResourceConfig(webSocketConfig.getRestApiBaseUrl(),
                         offerbookRestApi,
                         tradeRestApi,
+                        tradeChatMessagesRestApi,
                         userIdentityRestApi,
                         marketPriceRestApi,
                         settingsRestApi,
                         explorerRestApi,
-                        paymentAccountsRestApi);
-                this.webSocketService = Optional.of(new WebSocketService(webSocketConfig,
+                        paymentAccountsRestApi,
+                        reputationRestApi);
+                webSocketService = Optional.of(new WebSocketService(webSocketConfig,
                         webSocketConfig.getRestApiBaseAddress(),
                         webSocketResourceConfig,
                         bondedRolesService,
                         chatService,
                         tradeService,
                         userService,
+                        bisqEasyService,
                         openTradeItemsService));
             } else {
-                this.webSocketService = Optional.empty();
+                webSocketService = Optional.empty();
             }
 
         } else {
-            this.restApiService = Optional.empty();
-            this.webSocketService = Optional.empty();
+            restApiService = Optional.empty();
+            webSocketService = Optional.empty();
         }
     }
 

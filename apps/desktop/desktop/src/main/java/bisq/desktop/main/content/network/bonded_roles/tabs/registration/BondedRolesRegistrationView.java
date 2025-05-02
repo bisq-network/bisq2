@@ -113,6 +113,7 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
         requestCancellationButton.setPrefWidth(180);
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));
+        learnMore.setTooltip(new BisqTooltip("https://bisq.wiki/Bisq_2_Roles"));
 
         buttons = new HBox(20, requestRegistrationButton, requestCancellationButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);

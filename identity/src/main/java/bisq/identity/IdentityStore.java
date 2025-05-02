@@ -21,6 +21,9 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -28,15 +31,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
+@Getter(AccessLevel.PACKAGE)
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-public final class IdentityStore implements PersistableStore<IdentityStore> {
+final class IdentityStore implements PersistableStore<IdentityStore> {
     // Is only empty before we get initialize called the first time
     private Optional<Identity> defaultIdentity = Optional.empty();
     private final Map<String, Identity> activeIdentityByTag = new ConcurrentHashMap<>();
     private final Set<Identity> retired = new CopyOnWriteArraySet<>();
-
-    public IdentityStore() {
-    }
 
     private IdentityStore(Optional<Identity> defaultIdentity,
                           Map<String, Identity> activeIdentityByTag,
@@ -96,18 +98,6 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
 
         retired.clear();
         retired.addAll(persisted.getRetired());
-    }
-
-    Map<String, Identity> getActiveIdentityByTag() {
-        return activeIdentityByTag;
-    }
-
-    Set<Identity> getRetired() {
-        return retired;
-    }
-
-    Optional<Identity> getDefaultIdentity() {
-        return defaultIdentity;
     }
 
     void setDefaultIdentity(Identity defaultIdentity) {

@@ -173,7 +173,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected Button actionButton, secondaryActionButton;
     private HBox buttonBox;
     protected Button closeButton;
-    private Region content;
+    protected Region content;
 
     private HPos buttonAlignment = HPos.RIGHT;
 

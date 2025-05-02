@@ -90,6 +90,10 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
     }
 
     private boolean hasSellerSufficientReputation(BisqEasyOffer bisqEasyOffer, boolean useCache) {
+        if (bisqEasyOffer.getDirection().isBuy()) {
+            return true;
+        }
+
         String offerId = bisqEasyOffer.getId();
         String makersUserProfileId = bisqEasyOffer.getMakersUserProfileId();
         if (useCache) {
@@ -103,33 +107,32 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
             }
         }
 
-        if (bisqEasyOffer.getDirection().isSell()) {
-            Optional<Long> requiredReputationScoreForMaxOrFixedAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreForMaxOrFixedAmount(marketPriceService, bisqEasyOffer);
-            if (requiredReputationScoreForMaxOrFixedAmount.isPresent()) {
-                Optional<Long> requiredReputationScoreForMinAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreForMinAmount(marketPriceService, bisqEasyOffer);
-                long requiredReputationScoreForMaxOrFixed = requiredReputationScoreForMaxOrFixedAmount.get();
-                long requiredReputationScoreForMinOrFixed = requiredReputationScoreForMinAmount.orElse(requiredReputationScoreForMaxOrFixed);
-                long sellersScore = userProfileService.findUserProfile(makersUserProfileId)
-                        .map(reputationService::getReputationScore)
-                        .map(ReputationScore::getTotalScore)
-                        .orElse(0L);
-                boolean hasInsufficientReputation = BisqEasyTradeAmountLimits.withTolerance(sellersScore) < requiredReputationScoreForMinOrFixed;
-                if (hasInsufficientReputation) {
-                    if (useCache) {
-                        // The compute method invocation is performed atomically.
-                        sellOffersWithInsufficientReputationByMakersProfileId
-                                .compute(makersUserProfileId, (k, set) -> {
-                                    if (set == null) {
-                                        set = ConcurrentHashMap.newKeySet();
-                                    }
-                                    set.add(offerId);
-                                    return set;
-                                });
-                    }
-                    return false;
+        Optional<Long> requiredReputationScoreForMaxOrFixedAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreForMaxOrFixedAmount(marketPriceService, bisqEasyOffer);
+        if (requiredReputationScoreForMaxOrFixedAmount.isPresent()) {
+            Optional<Long> requiredReputationScoreForMinAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreForMinAmount(marketPriceService, bisqEasyOffer);
+            long requiredReputationScoreForMaxOrFixed = requiredReputationScoreForMaxOrFixedAmount.get();
+            long requiredReputationScoreForMinOrFixed = requiredReputationScoreForMinAmount.orElse(requiredReputationScoreForMaxOrFixed);
+            long sellersScore = userProfileService.findUserProfile(makersUserProfileId)
+                    .map(reputationService::getReputationScore)
+                    .map(ReputationScore::getTotalScore)
+                    .orElse(0L);
+            boolean hasInsufficientReputation = BisqEasyTradeAmountLimits.withTolerance(sellersScore) < requiredReputationScoreForMinOrFixed;
+            if (hasInsufficientReputation) {
+                if (useCache) {
+                    // The compute method invocation is performed atomically.
+                    sellOffersWithInsufficientReputationByMakersProfileId
+                            .compute(makersUserProfileId, (k, set) -> {
+                                if (set == null) {
+                                    set = ConcurrentHashMap.newKeySet();
+                                }
+                                set.add(offerId);
+                                return set;
+                            });
                 }
+                return false;
             }
         }
+
         return true;
     }
 

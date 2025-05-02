@@ -476,6 +476,13 @@
     -fx-background-color: -bisq-dark-grey-40;
 }
 
+/*******************************************************************************
+ * BisqEasyOpenTradesView.tableView.BaseAmount (btc)                           *
+ ******************************************************************************/
+
+.bisq-easy-open-trades-bitcoin-amount-display {
+    -fx-font-size: 1.0em !important;
+}
 
 /*******************************************************************************
  * Header                                                                      *
@@ -493,6 +500,32 @@
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 1.4em;
+}
+
+.bisq-easy-open-trades-header-value-bitcoin-amount-display-significant-digits {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.4em;
+}
+
+.bisq-easy-open-trades-header-value-bitcoin-amount-display-leading-zeros {
+    -fx-font-size: 1.4em;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-open-trades-header-value-bitcoin-amount-display-integer {
+    -fx-font-size: 1.4em;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-open-trades-header-code-bitcoin-amount-display {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.15em;
 }
 
 .bisq-easy-open-trades-header-code {
@@ -694,6 +727,40 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.bisq-easy-trade-state-headline-bitcoin-amount-display {
+    -fx-fill: -fx-light-text-color;
+    -fx-font-size: 1.7em;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-trade-state-headline-bitcoin-amount-display-leading-zeros {
+    -fx-font-size: 1.7em;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-trade-state-headline-bitcoin-amount-display-integer {
+    -fx-font-size: 1.7em;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-trade-state-base-amount-bitcoin-amount-display {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-trade-state-base-amount-bitcoin-amount-display-leading-zeros {
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-trade-state-base-amount-bitcoin-amount-display-integer {
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
 
 /*******************************************************************************
  * Trade completed                                                             *

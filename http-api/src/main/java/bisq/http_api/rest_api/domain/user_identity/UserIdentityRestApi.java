@@ -29,6 +29,7 @@ import bisq.security.pow.ProofOfWork;
 import bisq.user.identity.NymIdGenerator;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -135,7 +136,9 @@ public class UserIdentityRestApi extends RestApiBase {
                     request.getTerms(),
                     request.getStatement()).get();
 
-            asyncResponse.resume(buildResponse(Response.Status.CREATED, new CreateUserIdentityResponse(userIdentity.getId())));
+            UserProfile userProfile = userIdentity.getUserProfile();
+            UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(userProfile);
+            asyncResponse.resume(buildResponse(Response.Status.CREATED, new CreateUserIdentityResponse(userProfileDto)));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             asyncResponse.resume(buildErrorResponse("Thread was interrupted."));

@@ -17,18 +17,19 @@
 
 package bisq.http_api.rest_api.domain.user_identity;
 
+import bisq.dto.user.profile.UserProfileDto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 @Getter
-@Schema(name = "UserProfileResponse", description = "Response payload containing the user profile ID.")
+@Schema(name = "UserProfileResponse", description = "Response payload containing the user profile.")
 public class CreateUserIdentityResponse {
-    private final String userProfileId;
+    private final UserProfileDto userProfile;
 
     @JsonCreator
-    public CreateUserIdentityResponse(@JsonProperty("userProfileId") String userProfileId) {
-        this.userProfileId = userProfileId;
+    public CreateUserIdentityResponse(@JsonProperty("userProfile") UserProfileDto userProfile) {
+        this.userProfile = userProfile;
     }
 }

@@ -19,6 +19,7 @@ package bisq.desktop.main.content.user.profile_card.overview;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -31,8 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel, ProfileCardOverviewController> {
-    private final Label totalBaseToBuyLabel, totalBaseToSellLabel, profileAgeLabel, lastUserActivityLabel,
-            statementLabel, sellingLimitLabel, tradeTermsTextArea;
+    private final Label profileAgeLabel, lastUserActivityLabel, statementLabel, sellingLimitLabel, tradeTermsTextArea;
+    private final BitcoinAmountDisplay totalBaseToBuyBitcoinAmountDisplay, totalBaseToSellBitcoinAmountDisplay;
 
     public ProfileCardOverviewView(ProfileCardOverviewModel model,
                                    ProfileCardOverviewController controller) {
@@ -44,17 +45,17 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
         profileAgeLabel = new Label();
         VBox profileAgeBox = createAndGetTitleAndMetricBox("user.profileCard.details.profileAge", profileAgeLabel);
 
-        totalBaseToBuyLabel = new Label();
-        Label toBuyUnitLabel = new Label("BTC");
-        VBox totalBaseToBuyBox = createAndGetTitleAndMetricBox("user.profileCard.overview.totalBuying", totalBaseToBuyLabel, toBuyUnitLabel);
+        totalBaseToBuyBitcoinAmountDisplay = new BitcoinAmountDisplay();
+        configureBitcoinAmountDisplay(totalBaseToBuyBitcoinAmountDisplay);
+        VBox totalBaseToBuyBox = createAndGetTitleAndBtcMetricBox("user.profileCard.overview.totalBuying", totalBaseToBuyBitcoinAmountDisplay);
 
-        Label toSellUnitLabel = new Label("BTC");
-        totalBaseToSellLabel = new Label();
-        VBox totalBaseToSellBox = createAndGetTitleAndMetricBox("user.profileCard.overview.totalSelling", totalBaseToSellLabel, toSellUnitLabel);
+        totalBaseToSellBitcoinAmountDisplay = new BitcoinAmountDisplay();
+        configureBitcoinAmountDisplay(totalBaseToSellBitcoinAmountDisplay);
+        VBox totalBaseToSellBox = createAndGetTitleAndBtcMetricBox("user.profileCard.overview.totalSelling", totalBaseToSellBitcoinAmountDisplay);
 
         sellingLimitLabel = new Label();
         Label sellingLimitUnitLabel = new Label("USD");
-        VBox sellingLimitBox = createAndGetTitleAndMetricBox("user.profileCard.overview.sellingLimit", sellingLimitLabel, sellingLimitUnitLabel);
+        VBox sellingLimitBox = createAndGetTitleAndMetricBox(sellingLimitLabel, sellingLimitUnitLabel);
 
         HBox metricsHBox = new HBox(
                 lastUserActivityBox,
@@ -66,14 +67,16 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
                 totalBaseToSellBox,
                 Spacer.fillHBox(),
                 sellingLimitBox);
+        metricsHBox.setAlignment(Pos.BASELINE_CENTER);
 
         statementLabel = new Label();
-        VBox statementBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.statement", statementLabel, 20);
+        VBox statementBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.statement", statementLabel, 40);
+        statementBox.setPadding(new Insets(5, 0, 0, 0));
 
         tradeTermsTextArea = new Label();
         VBox tradeTermsBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.tradeTerms", tradeTermsTextArea, 80);
 
-        VBox contentBox = new VBox(20, metricsHBox, getLine(), statementBox, tradeTermsBox);
+        VBox contentBox = new VBox(10, metricsHBox, getLine(), statementBox, tradeTermsBox);
         contentBox.getStyleClass().add("bisq-common-bg");
         contentBox.setAlignment(Pos.TOP_LEFT);
         contentBox.setMinHeight(307);
@@ -88,8 +91,8 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
     @Override
     protected void onViewAttached() {
         profileAgeLabel.setText(model.getProfileAge());
-        totalBaseToBuyLabel.setText(model.getTotalBaseOfferAmountToBuy());
-        totalBaseToSellLabel.setText(model.getTotalBaseOfferAmountToSell());
+        totalBaseToBuyBitcoinAmountDisplay.setBtcAmount(model.getTotalBaseOfferAmountToBuy());
+        totalBaseToSellBitcoinAmountDisplay.setBtcAmount(model.getTotalBaseOfferAmountToSell());
         sellingLimitLabel.setText(model.getSellingLimit());
         statementLabel.setText(model.getStatement());
         tradeTermsTextArea.setText(model.getTradeTerms());
@@ -104,6 +107,17 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
         lastUserActivityLabel.textProperty().unbind();
     }
 
+    private void configureBitcoinAmountDisplay(BitcoinAmountDisplay bitcoinAmountDisplay) {
+        bitcoinAmountDisplay.getBtcCode().getStyleClass().clear();
+        bitcoinAmountDisplay.getBtcCode().setStyle("-fx-fill: -fx-mid-text-color;\n" +
+                "-fx-text-fill: -fx-mid-text-color;");
+        bitcoinAmountDisplay.getBtcCode().getStyleClass().addAll("text-fill-grey-dimmed", "medium-text");
+        bitcoinAmountDisplay.getLeadingZeros().getStyleClass().addAll("text-fill-grey-dimmed", "metric");
+        bitcoinAmountDisplay.getSignificantDigits().getStyleClass().addAll("text-fill-white", "metric");
+        bitcoinAmountDisplay.getIntegerPart().getStyleClass().addAll("text-fill-grey-dimmed", "metric");
+        bitcoinAmountDisplay.applySmallCompactConfig();
+    }
+
     private VBox createAndGetTitleAndMetricBox(String title, Label detailsLabel) {
         Label titleLabel = new Label(Res.get(title).toUpperCase());
         titleLabel.getStyleClass().addAll("text-fill-grey-dimmed", "compact-text", "font-light");
@@ -113,8 +127,17 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
         return vBox;
     }
 
-    private VBox createAndGetTitleAndMetricBox(String title, Label detailsLabel, Label unitLabel) {
+    private VBox createAndGetTitleAndBtcMetricBox(String title, BitcoinAmountDisplay bitcoinAmountDisplay) {
         Label titleLabel = new Label(Res.get(title).toUpperCase());
+        titleLabel.getStyleClass().addAll("text-fill-grey-dimmed", "compact-text", "font-light");
+
+        VBox vBox = new VBox(titleLabel, bitcoinAmountDisplay);
+        vBox.setAlignment(Pos.CENTER);
+        return vBox;
+    }
+
+    private VBox createAndGetTitleAndMetricBox(Label detailsLabel, Label unitLabel) {
+        Label titleLabel = new Label(Res.get("user.profileCard.overview.sellingLimit").toUpperCase());
         titleLabel.getStyleClass().addAll("text-fill-grey-dimmed", "compact-text", "font-light");
         detailsLabel.getStyleClass().addAll("text-fill-white", "metric");
         unitLabel.getStyleClass().addAll("text-fill-grey-dimmed", "medium-text");

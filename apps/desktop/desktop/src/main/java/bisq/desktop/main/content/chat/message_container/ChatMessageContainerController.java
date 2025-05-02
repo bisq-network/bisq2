@@ -33,6 +33,7 @@ import bisq.desktop.main.content.chat.message_container.components.CitationBlock
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.desktop.main.content.components.UserProfileSelection;
+import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.i18n.Res;
 import bisq.settings.ChatMessageType;
 import bisq.settings.SettingsService;
@@ -74,7 +75,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
 
         citationBlock = new CitationBlock(serviceProvider);
 
-        UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider);
+        UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider, true);
 
         chatMessagesListController = new ChatMessagesListController(serviceProvider,
                 this::mentionUserHandler,
@@ -204,6 +205,10 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         model.getCaretPosition().set(content.length());
     }
 
+    void onOpenProfileCard(UserProfile userProfile) {
+        Navigation.navigateTo(NavigationTarget.PROFILE_CARD, new ProfileCardController.InitData(userProfile));
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Private
@@ -212,7 +217,16 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     private void applyUserProfileOrChannelChange() {
         boolean multipleProfiles = userIdentityService.getUserIdentities().size() > 1;
         ChatChannel<?> selectedChatChannel = model.getSelectedChannel().get();
-        model.getUserProfileSelectionVisible().set(multipleProfiles && selectedChatChannel instanceof PublicChatChannel);
+        model.getShouldShowUserProfileSelection().set(multipleProfiles && selectedChatChannel instanceof PublicChatChannel);
+
+        if (selectedChatChannel instanceof TwoPartyPrivateChatChannel twoPartyPrivateChatChannel) {
+            UserProfile myProfile = userProfileService.getManagedUserProfile(twoPartyPrivateChatChannel.getMyUserIdentity().getUserProfile());
+            model.getMyUserProfile().set(myProfile);
+            model.getShouldShowUserProfile().set(true);
+        } else {
+            model.getMyUserProfile().set(null);
+            model.getShouldShowUserProfile().set(false);
+        }
 
         if (chatMessagesPin != null) {
             chatMessagesPin.unbind();
@@ -282,7 +296,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
 
     private void maybeSwitchUserProfile() {
         UIThread.run(() -> {
-            if (model.getUserProfileSelectionVisible().get()) {
+            if (model.getShouldShowUserProfileSelection().get()) {
                 List<UserIdentity> myUserProfilesInChannel = getMyUserProfilesInChannel();
                 if (!myUserProfilesInChannel.isEmpty()) {
                     userIdentityService.selectChatUserIdentity(myUserProfilesInChannel.get(0));

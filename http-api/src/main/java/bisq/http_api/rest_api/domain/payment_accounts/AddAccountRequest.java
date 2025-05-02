@@ -17,8 +17,4 @@
 
 package bisq.http_api.rest_api.domain.payment_accounts;
 
-import java.util.Set;
-
-public record AddAccountRequest(
-        String accountName,
-        String accountData) { }
+public record AddAccountRequest(String accountName, String accountData) { }

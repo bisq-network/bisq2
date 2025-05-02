@@ -32,7 +32,6 @@ import bisq.offer.Offer;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
 import bisq.trade.ServiceProvider;
-import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.protocol.events.TradeMessageHandler;
@@ -111,21 +110,12 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
                 .filter(offer -> offer.equals(takersOffer))
                 .findAny();
         if (matchingOfferInChannel.isEmpty()) {
-            BisqEasyTradeService bisqEasyTradeService = (BisqEasyTradeService) serviceProvider;
-            // After TRADE_ID_V1_ACTIVATION_DATE we might have trades in the open trades list which have an id created
-            // with the createId_V0 method, thus we need to check for both.
-            String v0_tradeId = Trade.createId(takersOffer.getId(), takersContract.getTaker().getNetworkId().getId());
-            String v1_tradeId = Trade.createId(takersOffer.getId(), takersContract.getTaker().getNetworkId().getId(), takersContract.getTakeOfferDate());
-            boolean hasTradeWithSameTradeId = bisqEasyTradeService.getTrades().stream().anyMatch(trade ->
-                    trade.getId().equals(v0_tradeId) || trade.getId().equals(v1_tradeId));
-            if (hasTradeWithSameTradeId) {
-                String errorMessage = String.format("A trade with the same tradeId already exist.\n" +
-                                "takersOffer=%s; takerNetworkId=%s; v1_tradeId=%s; v0_tradeId=%s",
-                        takersOffer, takersContract.getTaker().getNetworkId(), v0_tradeId, v1_tradeId);
-                log.error(errorMessage);
-                throw new RuntimeException(errorMessage);
-            }
-
+            // If we do not find the offer it might be that another user has taken the offer recently and the offer has
+            // been removed in the meantime. For this case we check if we find the offer in another open trade. If not
+            // found we throw an exception.
+            // We also check if there is not a trade already present with the same trade ID to avoid that we would
+            // create a duplicated trade. We check for both the version 0 and version 1 trade ID to cover all edge cases.
+            BisqEasyTradeService bisqEasyTradeService = serviceProvider.getBisqEasyTradeService();
             boolean hasOfferInTrades = bisqEasyTradeService.getTrades().stream().anyMatch(trade ->
                     trade.getOffer().getId().equals(takersOffer.getId()));
             boolean closeMyOfferWhenTaken = serviceProvider.getSettingsService().getCloseMyOfferWhenTaken().get();

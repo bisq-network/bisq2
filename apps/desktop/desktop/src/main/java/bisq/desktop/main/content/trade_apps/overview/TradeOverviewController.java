@@ -67,19 +67,19 @@ public class TradeOverviewController implements Controller {
                 NavigationTarget.BISQ_MU_SIG,
                 TradeProtocolType.BISQ_MU_SIG,
                 new Pair<>(10000L, 700000L),
-                "Q2/25"
+                "Q4/25"
         );
         ProtocolListItem submarine = new ProtocolListItem(TradeAppsAttributes.Type.SUBMARINE,
                 NavigationTarget.SUBMARINE,
                 TradeProtocolType.SUBMARINE,
                 new Pair<>(10000L, 700000L),
-                "Q3/25"
+                "Q2/26"
         );
         ProtocolListItem liquidFiat = new ProtocolListItem(TradeAppsAttributes.Type.BISQ_LIGHTNING,
                 NavigationTarget.BISQ_LIGHTNING,
                 TradeProtocolType.BISQ_LIGHTNING,
                 new Pair<>(10000L, 700000L),
-                "Q3/25"
+                "Q4/26"
         );
         return List.of(bisqEasy,
                 bisqMuSig,
@@ -92,25 +92,25 @@ public class TradeOverviewController implements Controller {
                 NavigationTarget.MORE_TRADE_PROTOCOLS,
                 TradeProtocolType.LIQUID_MU_SIG,
                 new Pair<>(10000L, 700000L),
-                "Q3/25"
+                "Q3/26"
         );
         ProtocolListItem moneroSwap = new ProtocolListItem(TradeAppsAttributes.Type.MONERO_SWAP,
                 NavigationTarget.MORE_TRADE_PROTOCOLS,
                 TradeProtocolType.MONERO_SWAP,
                 new Pair<>(10000L, 700000L),
-                "Q4/25"
+                "Q2/27"
         );
         ProtocolListItem liquidSwap = new ProtocolListItem(TradeAppsAttributes.Type.LIQUID_SWAP,
                 NavigationTarget.MORE_TRADE_PROTOCOLS,
                 TradeProtocolType.LIQUID_SWAP,
                 new Pair<>(10000L, 700000L),
-                "Q3/25"
+                "Q3/27"
         );
         ProtocolListItem bsqSwap = new ProtocolListItem(TradeAppsAttributes.Type.BSQ_SWAP,
                 NavigationTarget.MORE_TRADE_PROTOCOLS,
                 TradeProtocolType.BSQ_SWAP,
                 new Pair<>(10000L, 700000L),
-                "Q4/25"
+                "Q4/27"
         );
         return List.of(liquidMuSig,
                 moneroSwap,

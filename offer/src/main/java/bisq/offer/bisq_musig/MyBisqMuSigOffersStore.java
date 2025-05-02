@@ -22,20 +22,20 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-public final class MyBisqMuSigOffersStore implements PersistableStore<MyBisqMuSigOffersStore> {
-    @Getter
+final class MyBisqMuSigOffersStore implements PersistableStore<MyBisqMuSigOffersStore> {
+    @Getter(AccessLevel.PACKAGE)
     private final ObservableSet<BisqMuSigOffer> offers = new ObservableSet<>();
-
-    public MyBisqMuSigOffersStore() {
-    }
 
     private MyBisqMuSigOffersStore(Set<BisqMuSigOffer> offers) {
         this.offers.addAll(offers);
@@ -81,11 +81,11 @@ public final class MyBisqMuSigOffersStore implements PersistableStore<MyBisqMuSi
         };
     }
 
-    public void add(BisqMuSigOffer offer) {
+    void add(BisqMuSigOffer offer) {
         offers.add(offer);
     }
 
-    public void remove(BisqMuSigOffer offer) {
+    void remove(BisqMuSigOffer offer) {
         offers.remove(offer);
     }
 }

@@ -4,12 +4,6 @@ plugins {
     id("bisq.java-integration-tests")
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-}
-
 dependencies {
     implementation("bisq:persistence")
 

@@ -15,14 +15,6 @@ plugins {
     alias(libs.plugins.openjfx)
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-}
-
 
 application {
     mainClass.set("bisq.desktop_app_launcher.DesktopAppLauncher")

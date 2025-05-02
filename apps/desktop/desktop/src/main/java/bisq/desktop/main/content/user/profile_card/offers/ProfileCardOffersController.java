@@ -17,10 +17,9 @@
 
 package bisq.desktop.main.content.user.profile_card.offers;
 
-import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
+import bisq.bisq_easy.BisqEasyOfferbookMessageService;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookSelectionService;
@@ -32,8 +31,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.stream.Collectors;
 
 public class ProfileCardOffersController implements Controller {
     @Getter
@@ -43,7 +41,7 @@ public class ProfileCardOffersController implements Controller {
     private final ReputationService reputationService;
     private final MarketPriceService marketPriceService;
     private final BisqEasyOfferbookSelectionService bisqEasyOfferbookChannelSelectionService;
-    private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
+    private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
 
     public ProfileCardOffersController(ServiceProvider serviceProvider) {
         model = new ProfileCardOffersModel();
@@ -52,7 +50,7 @@ public class ProfileCardOffersController implements Controller {
         bisqEasyOfferbookChannelSelectionService = serviceProvider.getChatService().getBisqEasyOfferbookChannelSelectionService();
         reputationService = serviceProvider.getUserService().getReputationService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
-        bisqEasySellersReputationBasedTradeAmountService = serviceProvider.getBisqEasyService().getBisqEasySellersReputationBasedTradeAmountService();
+        bisqEasyOfferbookMessageService = serviceProvider.getBisqEasyService().getBisqEasyOfferbookMessageService();
     }
 
     @Override
@@ -65,24 +63,14 @@ public class ProfileCardOffersController implements Controller {
     }
 
     public void setUserProfile(UserProfile userProfile) {
-        model.getOfferbookListItems().clear();
-
-        List<ProfileCardOfferListItem> userOffers = new ArrayList<>();
-        for (BisqEasyOfferbookChannel market : bisqEasyOfferbookChannelService.getChannels()) {
-            userOffers.addAll(market.getChatMessages().stream()
-                    .filter(chatMessage -> chatMessage.hasBisqEasyOffer()
-                            && chatMessage.getAuthorUserProfileId().equals(userProfile.getId()))
-                    .map(userChatMessageWithOffer -> new ProfileCardOfferListItem(
-                            userChatMessageWithOffer, userProfile, reputationService, marketPriceService))
-                    .toList());
-        }
-        model.getOfferbookListItems().addAll(userOffers);
-        model.getFilteredOfferbookListItems().setPredicate(item ->
-                bisqEasySellersReputationBasedTradeAmountService.hasSellerSufficientReputation(item.getBisqEasyOfferbookMessage()));
+        model.getOfferbookListItems().setAll(bisqEasyOfferbookMessageService.getAllOfferbookMessagesWithOffer(userProfile.getId())
+                .map(userChatMessageWithOffer -> new ProfileCardOfferListItem(
+                        userChatMessageWithOffer, userProfile, reputationService, marketPriceService))
+                .collect(Collectors.toList()));
     }
 
     public String getNumberOffers() {
-        return String.valueOf((long) model.getFilteredOfferbookListItems().size());
+        return String.valueOf(model.getOfferbookListItems().size());
     }
 
     void onGoToOfferbookMessage(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {

@@ -17,9 +17,13 @@
 
 package bisq.http_api.web_socket.domain.offers;
 
+import bisq.bisq_easy.BisqEasyOfferbookMessageService;
+import bisq.bisq_easy.BisqEasyService;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.http_api.web_socket.domain.SimpleObservableWebSocketService;
 import bisq.http_api.web_socket.subscription.SubscriberRepository;
@@ -34,17 +38,35 @@ import java.util.HashMap;
 public class NumOffersWebSocketService extends SimpleObservableWebSocketService<ObservableHashMap<String, Integer>, HashMap<String, Integer>> {
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
 
+    private final ObservableHashMap<String, Integer> numOffersByCurrencyCode = new ObservableHashMap<>();
+    private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
+
     public NumOffersWebSocketService(ObjectMapper objectMapper,
-                                        SubscriberRepository subscriberRepository,
-                                        ChatService chatService,
-                                        UserService userService) {
+                                     SubscriberRepository subscriberRepository,
+                                     ChatService chatService,
+                                     UserService userService,
+                                     BisqEasyService bisqEasyService) {
         super(objectMapper, subscriberRepository, Topic.NUM_OFFERS);
         this.bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
+        bisqEasyOfferbookMessageService = bisqEasyService.getBisqEasyOfferbookMessageService();
+
+        bisqEasyOfferbookChannelService.getChannels().addObserver(() -> {
+            bisqEasyOfferbookChannelService.getChannels().forEach(
+                    channel -> {
+                        var code = channel.getMarket().getQuoteCurrencyCode();
+                        ObservableSet<BisqEasyOfferbookMessage> chatMessages = channel.getChatMessages();
+                        chatMessages.addObserver(() -> {
+                            var numOffers = (int) bisqEasyOfferbookMessageService.getOffers(channel).count();
+                            numOffersByCurrencyCode.put(code, numOffers);
+                        });
+                    }
+            );
+        });
     }
 
     @Override
     protected ObservableHashMap<String, Integer> getObservable() {
-        return bisqEasyOfferbookChannelService.getNumOffersByCurrencyCode();
+        return numOffersByCurrencyCode;
     }
 
     @Override

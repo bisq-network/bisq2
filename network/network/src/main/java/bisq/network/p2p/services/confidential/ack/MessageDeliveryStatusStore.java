@@ -23,6 +23,9 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -30,13 +33,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+@Getter(AccessLevel.PACKAGE)
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-public final class MessageDeliveryStatusStore implements PersistableStore<MessageDeliveryStatusStore> {
+final class MessageDeliveryStatusStore implements PersistableStore<MessageDeliveryStatusStore> {
     private final ObservableHashMap<String, Observable<MessageDeliveryStatus>> messageDeliveryStatusByMessageId = new ObservableHashMap<>();
     private final Map<String, Long> creationDateByMessageId = new ConcurrentHashMap<>();
-
-    MessageDeliveryStatusStore() {
-    }
 
     MessageDeliveryStatusStore(Map<String, Observable<MessageDeliveryStatus>> messageDeliveryStatusByMessageId,
                                Map<String, Long> creationDateByMessageId) {
@@ -90,13 +92,5 @@ public final class MessageDeliveryStatusStore implements PersistableStore<Messag
     @Override
     public MessageDeliveryStatusStore getClone() {
         return new MessageDeliveryStatusStore(new HashMap<>(messageDeliveryStatusByMessageId), new HashMap<>(creationDateByMessageId));
-    }
-
-    ObservableHashMap<String, Observable<MessageDeliveryStatus>> getMessageDeliveryStatusByMessageId() {
-        return messageDeliveryStatusByMessageId;
-    }
-
-    Map<String, Long> getCreationDateByMessageId() {
-        return creationDateByMessageId;
     }
 }

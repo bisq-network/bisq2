@@ -2,12 +2,6 @@ plugins {
     id("bisq.java-library")
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-}
-
 dependencies {
     implementation("bitcoind:core")
     implementation("bitcoind:bitcoind")

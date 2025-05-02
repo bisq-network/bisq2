@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.chat.message_container.list;
 
-import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
+import bisq.bisq_easy.BisqEasyOfferbookMessageService;
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
@@ -47,6 +47,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
+import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
@@ -84,7 +85,7 @@ import static bisq.chat.ChatMessageType.TAKE_BISQ_EASY_OFFER;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class ChatMessagesListController implements bisq.desktop.common.view.Controller {
+public class ChatMessagesListController implements Controller {
     private final ChatService chatService;
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
@@ -102,13 +103,14 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private final NetworkService networkService;
     private final Optional<ResendMessageService> resendMessageService;
     private final MarketPriceService marketPriceService;
-    private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final LeavePrivateChatManager leavePrivateChatManager;
     private final DontShowAgainService dontShowAgainService;
+    private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
     private Pin selectedChannelPin, chatMessagesPin, bisqEasyOfferbookMessageTypeFilterPin, highlightedMessagePin;
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
             layoutChildrenDonePin;
+    private static final String DONT_SHOW_CHAT_RULES_WARNING_KEY = "privateChatRulesWarning";
 
     public ChatMessagesListController(ServiceProvider serviceProvider,
                                       Consumer<UserProfile> mentionUserHandler,
@@ -127,7 +129,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         networkService = serviceProvider.getNetworkService();
         resendMessageService = serviceProvider.getNetworkService().getResendMessageService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
-        bisqEasySellersReputationBasedTradeAmountService = serviceProvider.getBisqEasyService().getBisqEasySellersReputationBasedTradeAmountService();
+        bisqEasyOfferbookMessageService = serviceProvider.getBisqEasyService().getBisqEasyOfferbookMessageService();
         authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
 
@@ -144,7 +146,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         model.getSortedChatMessages().setComparator(ChatMessageListItem::compareTo);
 
         bisqEasyOfferbookMessageTypeFilterPin = settingsService.getBisqEasyOfferbookMessageTypeFilter()
-                .addObserver(filter -> UIThread.run(this::applyPredicate));
+                .addObserver(filter -> UIThread.run(this::updatePredicate));
 
         if (selectedChannelPin != null) {
             selectedChannelPin.unbind();
@@ -281,17 +283,14 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     // API - called from client
     /* --------------------------------------------------------------------- */
 
+    // When user got ignored or un-ignored we need to trigger an update.
     public void refreshMessages() {
-        model.getChatMessages().setAll(new ArrayList<>(model.getChatMessages()));
-        model.getChatMessageIds().clear();
-        model.getChatMessageIds().addAll(model.getChatMessages().stream()
-                .map(e -> e.getChatMessage().getId())
-                .collect(Collectors.toSet()));
+        updatePredicate();
     }
 
     public void setSearchPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
         model.setSearchPredicate(Objects.requireNonNullElseGet(predicate, () -> e -> true));
-        applyPredicate();
+        updatePredicate();
     }
 
 
@@ -361,6 +360,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             String maxFiatAmount = OfferAmountFormatter.formatQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer, true);
             boolean isAmountRangeOffer = bisqEasyOffer.getAmountSpec() instanceof RangeAmountSpec;
             long sellersScore;
+            String learnMore = Res.get("chat.message.takeOffer.reputation.warning.learnMore");
             if (bisqEasyOffer.getTakersDirection().isBuy()) {
                 // I am as taker the buyer. We check if seller has the required reputation
                 sellersScore = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId())
@@ -376,7 +376,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                                             : "chat.message.takeOffer.buyer.invalidOffer.fixedAmount.text",
                                     sellersScore,
                                     isAmountRangeOffer ? requiredReputationScoreForMinOrFixed : requiredReputationScoreForMaxOrFixed,
-                                    isAmountRangeOffer ? minFiatAmount : maxFiatAmount))
+                                    isAmountRangeOffer ? minFiatAmount : maxFiatAmount) + "\n\n" + learnMore)
                             .show();
                 } else {
                     Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
@@ -386,14 +386,17 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 sellersScore = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
                 boolean canSellerTakeOffer = sellersScore >= requiredReputationScoreForMinOrFixed;
                 if (!canSellerTakeOffer) {
+                    String buildReputation = Res.get("chat.message.takeOffer.seller.insufficientScore.warning.buildReputation");
+                    String message = Res.get(isAmountRangeOffer
+                                    ? "chat.message.takeOffer.seller.insufficientScore.rangeAmount.warning"
+                                    : "chat.message.takeOffer.seller.insufficientScore.fixedAmount.warning",
+                            sellersScore,
+                            isAmountRangeOffer ? requiredReputationScoreForMinOrFixed : requiredReputationScoreForMaxOrFixed,
+                            isAmountRangeOffer ? minFiatAmount : maxFiatAmount) + "\n\n" + learnMore + "\n\n" + buildReputation;
+
                     new Popup()
                             .headline(Res.get("chat.message.takeOffer.seller.insufficientScore.headline"))
-                            .warning(Res.get(isAmountRangeOffer
-                                            ? "chat.message.takeOffer.seller.insufficientScore.rangeAmount.warning"
-                                            : "chat.message.takeOffer.seller.insufficientScore.fixedAmount.warning",
-                                    sellersScore,
-                                    isAmountRangeOffer ? requiredReputationScoreForMinOrFixed : requiredReputationScoreForMaxOrFixed,
-                                    isAmountRangeOffer ? minFiatAmount : maxFiatAmount))
+                            .warning(message)
                             .onAction(() -> Navigation.navigateTo(NavigationTarget.BUILD_REPUTATION))
                             .actionButtonText(Res.get("bisqEasy.offerbook.offerList.popup.offersWithInsufficientReputationWarning.buildReputation"))
                             .show();
@@ -560,6 +563,20 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         Navigation.navigateTo(NavigationTarget.CHAT_RULES);
     }
 
+    public void onDismissChatRulesWarning() {
+        dontShowAgainService.putDontShowAgain(DONT_SHOW_CHAT_RULES_WARNING_KEY, true);
+
+         model.getSortedChatMessages().stream()
+                .filter(item -> item.getChatMessage().getChatMessageType() == ChatMessageType.CHAT_RULES_WARNING)
+                .findFirst()
+                .ifPresent(itemToRemove -> {
+                    UIThread.run(() -> {
+                        itemToRemove.dispose();
+                        model.getChatMessages().remove(itemToRemove);
+                    });
+                });
+    }
+
     public void onClickQuoteMessage(Optional<String> chatMessageId) {
         chatMessageId.ifPresent(messageId -> {
             model.getChatMessages().forEach(item -> {
@@ -584,15 +601,15 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
     private void handleScrollValueChanged() {
         double scrollValue = model.getScrollValue().get();
-        model.getHasUnreadMessages().set(model.getNumReadMessages() < model.getChatMessages().size());
+        model.getHasUnreadMessages().set(model.getNumReadMessages() < model.getFilteredChatMessages().size());
         boolean isAtBottom = scrollValue == 1d;
         model.getShowScrolledDownButton().set(!isAtBottom && model.getScrollBarVisible().get());
         model.setAutoScrollToBottom(isAtBottom);
         if (isAtBottom) {
-            model.setNumReadMessages(model.getChatMessages().size());
+            model.setNumReadMessages(model.getFilteredChatMessages().size());
         }
 
-        int numUnReadMessages = model.getChatMessages().size() - model.getNumReadMessages();
+        int numUnReadMessages = model.getFilteredChatMessages().size() - model.getNumReadMessages();
         model.getNumUnReadMessages().set(numUnReadMessages > 0 ? String.valueOf(numUnReadMessages) : "");
     }
 
@@ -621,52 +638,21 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 .ifPresent(channel -> Navigation.navigateTo(NavigationTarget.CHAT_PRIVATE));
     }
 
-    private void applyPredicate() {
-        Predicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate = item -> {
-            Optional<UserProfile> senderUserProfile = item.getSenderUserProfile();
-            if (senderUserProfile.isEmpty()) {
-                return false;
-            }
-            ChatMessage chatMessage = item.getChatMessage();
-            if (bannedUserService.isUserProfileBanned(chatMessage.getAuthorUserProfileId()) ||
-                    bannedUserService.isUserProfileBanned(senderUserProfile.get())) {
-                return false;
-            }
-
-            boolean messageTypePredicate = true; // messageTypeFilter == bisq.settings.ChatMessageType.ALL
-            if (chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-                bisq.settings.ChatMessageType messageTypeFilter = settingsService.getBisqEasyOfferbookMessageTypeFilter().get();
-                if (messageTypeFilter == bisq.settings.ChatMessageType.TEXT) {
-                    messageTypePredicate = !bisqEasyOfferbookMessage.hasBisqEasyOffer();
-                } else if (messageTypeFilter == bisq.settings.ChatMessageType.OFFER) {
-                    messageTypePredicate = bisqEasyOfferbookMessage.hasBisqEasyOffer();
-                }
-            }
-
-            // We do not display the take offer message as it has no text and is used only for sending the offer
-            // to the peer and signalling the take offer event.
-            if (chatMessage.getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {
-                return false;
-            }
-
-            if (!chatMessage.isMyMessage(userIdentityService) &&
-                    !bisqEasySellersReputationBasedTradeAmountService.hasSellerSufficientReputation(chatMessage)) {
-                return false;
-            }
-
-            return messageTypePredicate
-                    && !userProfileService.getIgnoredUserProfileIds().contains(senderUserProfile.get().getId())
-                    && userProfileService.findUserProfile(senderUserProfile.get().getId()).isPresent();
-        };
-        model.getFilteredChatMessages().setPredicate(item -> model.getSearchPredicate().test(item) &&
-                predicate.test(item));
+    private void updatePredicate() {
+        model.getFilteredChatMessages().setPredicate(item ->
+                model.getSearchPredicate().test(item) && getPredicate().test(item));
+        // Re‑evaluate unread counters after the underlying list changed
+        handleScrollValueChanged();
     }
 
     private <M extends ChatMessage, C extends ChatChannel<M>> Pin bindChatMessages(C channel) {
         // We clear and fill the list at channel change. The addObserver triggers the add method for each item,
         // but as we have a contains() check there it will not have any effect.
-        model.getChatMessages().addAll(channel.getChatMessages().stream()
+
+        Set<ChatMessageListItem<M, C>> items = channel.getChatMessages().stream()
                 .filter(chatMessage -> chatMessage.getChatMessageType() != TAKE_BISQ_EASY_OFFER)
+                .filter(chatMessage -> !(chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) ||
+                        bisqEasyOfferbookMessageService.isValid(bisqEasyOfferbookMessage))
                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage,
                         channel,
                         marketPriceService,
@@ -677,34 +663,39 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                         networkService,
                         resendMessageService,
                         authorizedBondedRolesService))
+                .collect(Collectors.toCollection(LinkedHashSet::new)); // preserve insertion order
+        model.getChatMessages().addAll(items);
+        model.getChatMessageIds().clear();
+        model.getChatMessageIds().addAll(items.stream()
+                .map(e -> e.getChatMessage().getId())
                 .collect(Collectors.toSet()));
 
-        boolean isMediator = false;
-        if (channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
-            if (bisqEasyOpenTradeChannel.isMediator()) {
-                isMediator = true;
-            }
-        }
-        if (!isMediator) {
+        boolean shouldShowWarningMessageForNoneMediator = dontShowAgainService.showAgain(DONT_SHOW_CHAT_RULES_WARNING_KEY)
+                && !(channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel
+                && bisqEasyOpenTradeChannel.isMediator());
+
+        if (shouldShowWarningMessageForNoneMediator) {
             addChatRulesWarningMessageListItemInPrivateChats(channel);
         }
 
-        model.getChatMessageIds().clear();
-        model.getChatMessageIds().addAll(model.getChatMessages().stream()
-                .map(e -> e.getChatMessage().getId())
-                .collect(Collectors.toSet()));
         maybeScrollDownOnNewItemAdded();
 
         return channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
             public void add(M chatMessage) {
                 UIThread.run(() -> {
+                    // Avoid to add already existing items
                     if (model.getChatMessageIds().contains(chatMessage.getId())) {
                         return;
                     }
                     if (chatMessage.getChatMessageType() == TAKE_BISQ_EASY_OFFER) {
                         return;
                     }
+                    if (chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage &&
+                            !bisqEasyOfferbookMessageService.isValid(bisqEasyOfferbookMessage)) {
+                        return;
+                    }
+
                     ChatMessageListItem<M, C> item = new ChatMessageListItem<>(chatMessage,
                             channel,
                             marketPriceService,
@@ -716,15 +707,15 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                             resendMessageService,
                             authorizedBondedRolesService);
                     model.getChatMessages().add(item);
+                    model.getChatMessageIds().add(chatMessage.getId());
                     maybeScrollDownOnNewItemAdded();
                 });
             }
 
             @Override
             public void remove(Object element) {
-                if (element instanceof ChatMessage) {
-                    UIThread.run(() -> {
-                        ChatMessage chatMessage = (ChatMessage) element;
+                UIThread.run(() -> {
+                    if (element instanceof ChatMessage chatMessage) {
                         Optional<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> toRemove =
                                 model.getChatMessages().stream()
                                         .filter(item -> item.getChatMessage().getId().equals(chatMessage.getId()))
@@ -734,8 +725,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                             model.getChatMessages().remove(item);
                             model.getChatMessageIds().remove(item.getChatMessage().getId());
                         });
-                    });
-                }
+                    }
+                });
             }
 
             @Override
@@ -855,5 +846,36 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 networkService,
                 Optional.empty(),
                 authorizedBondedRolesService);
+    }
+
+
+    private Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> getPredicate() {
+        return item -> {
+            Optional<UserProfile> senderUserProfile = item.getSenderUserProfile();
+            if (senderUserProfile.isEmpty()) {
+                return false;
+            }
+            ChatMessage chatMessage = item.getChatMessage();
+
+            boolean isCorrectMessageType;
+            if (chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+                switch (settingsService.getBisqEasyOfferbookMessageTypeFilter().get()) {
+                    case OFFER -> isCorrectMessageType = bisqEasyOfferbookMessage.hasBisqEasyOffer();
+                    case TEXT -> isCorrectMessageType = !bisqEasyOfferbookMessage.hasBisqEasyOffer();
+                    case ALL -> isCorrectMessageType = true;
+                    default ->
+                            throw new IllegalStateException("Unexpected value: " + settingsService.getBisqEasyOfferbookMessageTypeFilter().get());
+                }
+            } else {
+                String senderUserProfileId = senderUserProfile.get().getId();
+                if (bannedUserService.isUserProfileBanned(senderUserProfileId) ||
+                        userProfileService.isChatUserIgnored(senderUserProfileId)) {
+                    return false;
+                }
+                isCorrectMessageType = true;
+            }
+
+            return isCorrectMessageType;
+        };
     }
 }

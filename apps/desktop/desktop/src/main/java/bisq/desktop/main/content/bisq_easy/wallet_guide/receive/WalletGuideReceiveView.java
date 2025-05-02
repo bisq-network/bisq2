@@ -17,9 +17,11 @@
 
 package bisq.desktop.main.content.bisq_easy.wallet_guide.receive;
 
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import javafx.animation.FadeTransition;
 import javafx.geometry.Insets;
@@ -61,6 +63,8 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
 
         link1 = new Hyperlink(Res.get("bisqEasy.walletGuide.receive.link1"));
         link2 = new Hyperlink(Res.get("bisqEasy.walletGuide.receive.link2"));
+        link1.setTooltip(new BisqTooltip("https://www.youtube.com/watch?v=NqY3wBhloH4"));
+        link2.setTooltip(new BisqTooltip("https://www.youtube.com/watch?v=imMX7i4qpmg"));
         backButton = new Button(Res.get("action.back"));
         closeButton = new Button(Res.get("action.close"));
         closeButton.setDefaultButton(true);
@@ -95,19 +99,29 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
 
         // TODO (low prio) create carousel component for it (See https://github.com/bisq-network/bisq2/issues/1262)
         image2.setOpacity(0);
-        scheduler1 = UIScheduler.run(fadeTransition1::playFromStart).after(2000);
-        fadeTransition1.setOnFinished(e -> {
-            if (scheduler2 != null) {
-                scheduler2.stop();
-            }
-            scheduler2 = UIScheduler.run(fadeTransition2::playFromStart).after(2000);
-        });
-        fadeTransition2.setOnFinished(e -> {
-            if (scheduler3 != null) {
-                scheduler3.stop();
-            }
-            scheduler3 = UIScheduler.run(fadeTransition1::playFromStart).after(2000);
-        });
+        if (Transitions.useAnimations()) {
+            scheduler1 = UIScheduler.run(fadeTransition1::playFromStart).after(2000);
+            fadeTransition1.setOnFinished(e -> {
+                if (scheduler2 != null) {
+                    scheduler2.stop();
+                }
+                scheduler2 = UIScheduler.run(fadeTransition2::playFromStart).after(2000);
+            });
+            fadeTransition2.setOnFinished(e -> {
+                if (scheduler3 != null) {
+                    scheduler3.stop();
+                }
+                scheduler3 = UIScheduler.run(fadeTransition1::playFromStart).after(2000);
+            });
+        } else {
+            scheduler1 = UIScheduler.run(() -> {
+                if (image2.getOpacity() == 0) {
+                    image2.setOpacity(1);
+                } else {
+                    image2.setOpacity(0);
+                }
+            }).periodically(2000);
+        }
     }
 
     @Override
@@ -117,9 +131,11 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
         link1.setOnAction(null);
         link2.setOnAction(null);
 
-        scheduler1.stop();
         fadeTransition1.stop();
         fadeTransition2.stop();
+        if (scheduler1 != null) {
+            scheduler1.stop();
+        }
         if (scheduler2 != null) {
             scheduler2.stop();
         }

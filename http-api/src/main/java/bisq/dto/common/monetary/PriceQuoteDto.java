@@ -19,5 +19,12 @@ package bisq.dto.common.monetary;
 
 import bisq.dto.common.currency.MarketDto;
 
-public record PriceQuoteDto(long value, MarketDto market) {
+public record PriceQuoteDto(
+        long value,
+        MonetaryDto baseSideMonetary,
+        MonetaryDto quoteSideMonetary,
+        int precision,
+        int lowPrecision,
+        MarketDto market
+) {
 }

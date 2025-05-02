@@ -68,7 +68,6 @@ public class UserService implements Service {
                 bondedRolesService.getAuthorizedBondedRolesService());
     }
 
-
     /* --------------------------------------------------------------------- */
     // Service
     /* --------------------------------------------------------------------- */

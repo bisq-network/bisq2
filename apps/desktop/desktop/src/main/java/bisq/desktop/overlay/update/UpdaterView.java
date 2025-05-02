@@ -20,6 +20,7 @@ package bisq.desktop.overlay.update;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.Switch;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -80,6 +81,7 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
         furtherInfo.getStyleClass().add("updater-text");
 
         downloadUrl = new Hyperlink();
+        downloadUrl.setTooltip(new BisqTooltip(model.getDownloadUrl().get()));
         downloadUrl.getStyleClass().add("updater-text");
 
         downloadButton = new Button(Res.get("updater.download"));

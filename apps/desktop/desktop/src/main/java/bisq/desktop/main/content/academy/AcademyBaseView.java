@@ -22,6 +22,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Hyperlink;
@@ -46,6 +47,7 @@ public abstract class AcademyBaseView<M extends Model, C extends Controller> ext
         headline.setWrapText(true);
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));
+        learnMore.setTooltip(new BisqTooltip(getUrl()));
         learnMore.getStyleClass().addAll("font-size-12", "text-fill-green");
         VBox.setMargin(learnMore, new Insets(25, 0, 0,0));
 

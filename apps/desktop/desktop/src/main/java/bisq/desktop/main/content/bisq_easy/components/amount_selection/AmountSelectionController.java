@@ -456,6 +456,7 @@ public class AmountSelectionController implements Controller {
         long rightMarkerQuoteSideValue = Optional.ofNullable(model.getRightMarkerQuoteSideValue()).orElse(minRangeMonetary).getValue();
         double right = rightMarkerQuoteSideValue - minRangeMonetaryValue;
         double rightPercentage = range != 0 ? 100 * right / range : 0;
+
         if (model.getDirection().isSell()) {
             // Adjust values to match slider knob better
             if (rightPercentage < 2) {

@@ -22,20 +22,20 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Getter(AccessLevel.PACKAGE)
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-@Getter
 final class MediatorStore implements PersistableStore<MediatorStore> {
     private final ObservableSet<MediationCase> mediationCases = new ObservableSet<>();
-
-    MediatorStore() {
-    }
 
     private MediatorStore(Set<MediationCase> mediationCases) {
         this.mediationCases.setAll(mediationCases);

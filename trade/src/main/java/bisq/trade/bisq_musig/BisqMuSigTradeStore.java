@@ -21,7 +21,9 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -30,13 +32,11 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-public final class BisqMuSigTradeStore implements PersistableStore<BisqMuSigTradeStore> {
-    @Getter
+final class BisqMuSigTradeStore implements PersistableStore<BisqMuSigTradeStore> {
+    @Getter(AccessLevel.PACKAGE)
     private final Map<String, BisqMuSigTrade> tradeById = new ConcurrentHashMap<>();
-
-    public BisqMuSigTradeStore() {
-    }
 
     private BisqMuSigTradeStore(Map<String, BisqMuSigTrade> tradeById) {
         this.tradeById.putAll(tradeById);
@@ -85,15 +85,14 @@ public final class BisqMuSigTradeStore implements PersistableStore<BisqMuSigTrad
         };
     }
 
-
-    public void add(BisqMuSigTrade trade) {
+    void add(BisqMuSigTrade trade) {
         String tradeId = trade.getId();
         if (!tradeById.containsKey(tradeId)) {
             tradeById.put(tradeId, trade);
         }
     }
 
-    public Optional<BisqMuSigTrade> findTrade(String tradeId) {
+    Optional<BisqMuSigTrade> findTrade(String tradeId) {
         return Optional.ofNullable(tradeById.get(tradeId));
     }
 }

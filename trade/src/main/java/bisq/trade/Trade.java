@@ -70,7 +70,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         return UUID.nameUUIDFromBytes(DigestUtil.hash(combined.getBytes(StandardCharsets.UTF_8))).toString();
     }
 
-    private static String createId_V1(String offerId, String takerPubKeyHash, Optional<Long> takeOfferDate) {
+    public static String createId_V1(String offerId, String takerPubKeyHash, Optional<Long> takeOfferDate) {
         String combined = offerId + takerPubKeyHash + takeOfferDate.map(String::valueOf).orElse("");
         return UUID.nameUUIDFromBytes(DigestUtil.hash(combined.getBytes(StandardCharsets.UTF_8))).toString();
     }

@@ -96,6 +96,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         createNewProfileButton.getStyleClass().addAll("outlined-button");
 
         learnMore = new Hyperlink(Res.get("user.userProfile.learnMore"));
+        learnMore.setTooltip(new BisqTooltip("https://bisq.wiki/Identity"));
 
         VBox buttons = new VBox(5, createNewProfileButton, learnMore);
         buttons.setAlignment(Pos.TOP_RIGHT);

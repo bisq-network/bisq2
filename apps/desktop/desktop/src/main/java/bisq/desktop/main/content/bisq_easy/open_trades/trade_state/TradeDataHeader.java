@@ -18,11 +18,13 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.common.currency.TradeCurrency;
 import bisq.common.data.Triple;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
@@ -38,8 +40,10 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import lombok.Getter;
@@ -48,7 +52,9 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 public class TradeDataHeader {
     private final Controller controller;
@@ -169,8 +175,10 @@ public class TradeDataHeader {
         private final Triple<Text, Text, VBox> direction, tradeId;
         private final UserProfileDisplay peersUserProfileDisplay;
         private final Label peerDescription;
-        private final Triple<Triple<Text, Text, Text>, HBox, VBox> leftAmount, rightAmount;
+        private final Triple<Triple<Text, Node, Text>, HBox, VBox> leftAmount, rightAmount;
         private Subscription userProfilePin, reputationScorePin;
+        private final BitcoinAmountDisplay leftBitcoinAmountDisplay, rightBitcoinAmountDisplay;
+        private final Set<Subscription> amountAndCodePins = new HashSet<>();
 
         private View(Model model, Controller controller) {
             super(new HBox(40), model, controller);
@@ -195,6 +203,19 @@ public class TradeDataHeader {
             rightAmount = getAmountElements();
             tradeId = getElements(Res.get("bisqEasy.tradeState.header.tradeId"));
 
+            direction.getThird().setTranslateY(8);
+            leftAmount.getThird().setTranslateY(8);
+            rightAmount.getThird().setTranslateY(8);
+            tradeId.getThird().setTranslateY(8);
+
+            StackPane leftAmountPane = (StackPane) leftAmount.getFirst().getSecond();
+            leftBitcoinAmountDisplay = (BitcoinAmountDisplay) leftAmountPane.getChildren().getFirst();
+            configureBitcoinAmountDisplay(leftBitcoinAmountDisplay);
+
+            StackPane rightAmountPane = (StackPane) rightAmount.getFirst().getSecond();
+            rightBitcoinAmountDisplay = (BitcoinAmountDisplay) rightAmountPane.getChildren().getFirst();
+            configureBitcoinAmountDisplay(rightBitcoinAmountDisplay);
+
             root.getChildren().addAll(peerVBox,
                     direction.getThird(),
                     leftAmount.getThird(),
@@ -207,33 +228,146 @@ public class TradeDataHeader {
             peerDescription.setText(model.getPeerDescription());
 
             direction.getSecond().textProperty().bind(model.getDirection());
-            leftAmount.getFirst().getFirst().textProperty().bind(model.getLeftAmountDescription());
-            leftAmount.getFirst().getSecond().textProperty().bind(model.getLeftAmount());
-            leftAmount.getFirst().getThird().textProperty().bind(model.getLeftCode());
-            rightAmount.getFirst().getFirst().textProperty().bind(model.getRightAmountDescription());
-            rightAmount.getFirst().getSecond().textProperty().bind(model.getRightAmount());
-            rightAmount.getFirst().getThird().textProperty().bind(model.getRightCode());
+
             tradeId.getSecond().textProperty().bind(model.getTradeId());
+
+            setupAmountDisplay(
+                    leftAmount,
+                    leftBitcoinAmountDisplay,
+                    model.getLeftAmountDescription(),
+                    model.getLeftAmount(),
+                    model.getLeftCode()
+            );
+
+            setupAmountDisplay(
+                    rightAmount,
+                    rightBitcoinAmountDisplay,
+                    model.getRightAmountDescription(),
+                    model.getRightAmount(),
+                    model.getRightCode()
+            );
 
             userProfilePin = EasyBind.subscribe(model.getPeersUserProfile(), peersUserProfileDisplay::setUserProfile);
             reputationScorePin = EasyBind.subscribe(model.getReputationScore(), peersUserProfileDisplay::setReputationScore);
+
+            refreshBitcoinAmountDisplayComponents();
         }
 
         @Override
         protected void onViewDetached() {
             direction.getSecond().textProperty().unbind();
             leftAmount.getFirst().getFirst().textProperty().unbind();
-            leftAmount.getFirst().getSecond().textProperty().unbind();
-            leftAmount.getFirst().getThird().textProperty().unbind();
             rightAmount.getFirst().getFirst().textProperty().unbind();
-            rightAmount.getFirst().getSecond().textProperty().unbind();
-            rightAmount.getFirst().getThird().textProperty().unbind();
             tradeId.getSecond().textProperty().unbind();
+            amountAndCodePins.forEach(Subscription::unsubscribe);
+            amountAndCodePins.clear();
 
             userProfilePin.unsubscribe();
             reputationScorePin.unsubscribe();
 
             peersUserProfileDisplay.dispose();
+        }
+
+        private void refreshBitcoinAmountDisplayComponents() {
+            updateAmountDisplayWithCurrency(
+                    leftAmount,
+                    leftBitcoinAmountDisplay,
+                    model.getLeftAmount().get(),
+                    model.getLeftCode().get(),
+                    false);
+
+            updateAmountDisplayWithCurrency(
+                    rightAmount,
+                    rightBitcoinAmountDisplay,
+                    model.getRightAmount().get(),
+                    model.getRightCode().get(),
+                    false);
+        }
+
+        private void configureBitcoinAmountDisplay(BitcoinAmountDisplay btcText) {
+            btcText.getIntegerPart().getStyleClass().add("bisq-easy-open-trades-header-value-bitcoin-amount-display-integer");
+            btcText.getLeadingZeros().getStyleClass().add("bisq-easy-open-trades-header-value-bitcoin-amount-display-leading-zeros");
+            btcText.getBtcCode().getStyleClass().add("bisq-easy-open-trades-header-code-bitcoin-amount-display");
+            btcText.getSignificantDigits().getStyleClass().add("bisq-easy-open-trades-header-value-bitcoin-amount-display-significant-digits");
+
+            btcText.setBaselineAlignment();
+            btcText.setFixedHeight(28);
+        }
+
+        private void updateAmountDisplayWithCurrency(
+                Triple<Triple<Text, Node, Text>, HBox, VBox> amountComponents,
+                BitcoinAmountDisplay btcText,
+                String amount,
+                String currencyCode,
+                boolean updateCodeText) {
+
+            boolean isBtc = TradeCurrency.isBtc(currencyCode);
+            updateAmountDisplay(amountComponents, btcText, amount, isBtc);
+
+            if (updateCodeText && !isBtc) {
+                Text codeText = amountComponents.getFirst().getThird();
+                codeText.setText(currencyCode);
+            }
+        }
+
+        private void updateAmountDisplay(
+                Triple<Triple<Text, Node, Text>, HBox, VBox> amountComponents,
+                BitcoinAmountDisplay btcText,
+                String amount,
+                boolean isBtc) {
+
+            StackPane amountPane = (StackPane) amountComponents.getFirst().getSecond();
+            Text regularText = (Text) amountPane.getChildren().get(1);
+            Text codeText = amountComponents.getFirst().getThird();
+            HBox container = amountComponents.getSecond();
+
+            btcText.setVisible(isBtc);
+            btcText.setManaged(isBtc);
+            regularText.setVisible(!isBtc);
+            regularText.setManaged(!isBtc);
+            codeText.setVisible(!isBtc);
+
+            if (isBtc) {
+                btcText.setBtcAmount(amount);
+                configureBitcoinAmountDisplay(btcText);
+                container.setTranslateY(0);
+            } else {
+                regularText.setText(amount);
+                HBox.setMargin(codeText, new Insets(0, 0, 0, 5));
+            }
+
+            container.requestLayout();
+        }
+
+        private void setupAmountDisplay(
+                Triple<Triple<Text, Node, Text>, HBox, VBox> amountComponents,
+                BitcoinAmountDisplay btcText,
+                StringProperty descriptionProperty,
+                StringProperty amountProperty,
+                StringProperty codeProperty) {
+
+            Text descriptionLabel = amountComponents.getFirst().getFirst();
+            descriptionLabel.textProperty().bind(descriptionProperty);
+            amountAndCodePins.add(EasyBind.subscribe(amountProperty, newVal -> {
+                if (newVal != null) {
+                    updateAmountDisplayWithCurrency(
+                            amountComponents,
+                            btcText,
+                            newVal,
+                            codeProperty.get(),
+                            false);
+                }
+            }));
+
+            amountAndCodePins.add(EasyBind.subscribe(codeProperty,
+                            newVal -> updateAmountDisplayWithCurrency(
+                                    amountComponents,
+                                    btcText,
+                                    amountProperty.get(),
+                                    newVal,
+                                    true)
+                    )
+            );
         }
 
         private Triple<Text, Text, VBox> getElements() {
@@ -245,32 +379,41 @@ public class TradeDataHeader {
             descriptionLabel.getStyleClass().add("bisq-easy-open-trades-header-description");
             Text valueLabel = new Text();
             valueLabel.getStyleClass().add("bisq-easy-open-trades-header-value");
-            VBox.setMargin(descriptionLabel, new Insets(2, 0, 1.5, 0));
+            VBox.setMargin(descriptionLabel, new Insets(0, 0, 5, 0));
             VBox vBox = new VBox(descriptionLabel, valueLabel);
-            vBox.setAlignment(Pos.CENTER_LEFT);
+            vBox.setAlignment(Pos.TOP_LEFT);
             vBox.setMinHeight(HEIGHT);
             vBox.setMaxHeight(HEIGHT);
             return new Triple<>(descriptionLabel, valueLabel, vBox);
         }
 
-        private Triple<Triple<Text, Text, Text>, HBox, VBox> getAmountElements() {
+        private Triple<Triple<Text, Node, Text>, HBox, VBox> getAmountElements() {
             Text descriptionLabel = new Text();
             descriptionLabel.getStyleClass().add("bisq-easy-open-trades-header-description");
-            Text amount = new Text();
-            amount.getStyleClass().add("bisq-easy-open-trades-header-value");
+            BitcoinAmountDisplay bitcoinAmountDisplay = new BitcoinAmountDisplay();
+            configureBitcoinAmountDisplay(bitcoinAmountDisplay);
+            Text regularAmountText = new Text();
+            regularAmountText.getStyleClass().add("bisq-easy-open-trades-header-value");
+            StackPane amountPane = new StackPane(bitcoinAmountDisplay, regularAmountText);
+            amountPane.setAlignment(Pos.BASELINE_LEFT);
+            amountPane.setMinHeight(18);
+            amountPane.setPrefHeight(18);
+            amountPane.setMaxHeight(18);
+
             Text code = new Text();
             code.getStyleClass().add("bisq-easy-open-trades-header-code");
 
-            HBox.setMargin(code, new Insets(0.5, 0, 0, 0));
-            HBox hBox = new HBox(5, amount, code);
+            HBox hBox = new HBox(amountPane, code);
             hBox.setAlignment(Pos.BASELINE_LEFT);
-            VBox.setMargin(descriptionLabel, new Insets(1.5, 0, 1, 0));
+
+            VBox.setMargin(descriptionLabel, new Insets(0, 0, 5, 0));
+
             VBox vBox = new VBox(descriptionLabel, hBox);
             vBox.setFillWidth(true);
-            vBox.setAlignment(Pos.CENTER_LEFT);
+            vBox.setAlignment(Pos.TOP_LEFT);
             vBox.setMinHeight(HEIGHT);
             vBox.setMaxHeight(HEIGHT);
-            return new Triple<>(new Triple<>(descriptionLabel, amount, code), hBox, vBox);
+            return new Triple<>(new Triple<>(descriptionLabel, amountPane, code), hBox, vBox);
         }
     }
 }

@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.top;
 
-import bisq.common.data.Triple;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -30,7 +30,7 @@ import javafx.scene.layout.Pane;
 
 public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> {
     public static final int HEIGHT = 57;
-    private final Label balanceLabel;
+    private BitcoinAmountDisplay balanceBitcoinAmountDisplay;
 
     public TopPanelView(TopPanelModel model,
                         TopPanelController controller,
@@ -48,9 +48,7 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
         Pane userProfileSelectionRoot = userProfileSelection.getRoot();
         HBox.setMargin(userProfileSelectionRoot, new Insets(6.5, 15, 0, 0));
 
-        Triple<HBox, Label, Label> balanceTriple = createBalanceBox();
-        HBox balanceBox = balanceTriple.getFirst();
-        balanceLabel = balanceTriple.getSecond();
+        HBox balanceBox = createBalanceBox();
         HBox.setMargin(balanceBox, new Insets(0, 0, 0, 30));
 
         root.getChildren().addAll(Spacer.fillHBox(), marketPriceComponent, userProfileSelectionRoot);
@@ -62,27 +60,29 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
 
     @Override
     protected void onViewAttached() {
-        balanceLabel.textProperty().bind(model.getFormattedBalanceProperty());
+        balanceBitcoinAmountDisplay.getBtcAmount().bind(model.getFormattedBalanceProperty());
     }
 
     @Override
     protected void onViewDetached() {
-        balanceLabel.textProperty().unbind();
+        balanceBitcoinAmountDisplay.getBtcAmount().unbind();
     }
 
-    private Triple<HBox, Label, Label> createBalanceBox() {
+    private HBox createBalanceBox() {
         Label titleLabel = new Label(Res.get("topPanel.wallet.balance").toUpperCase());
         titleLabel.getStyleClass().add("bisq-text-18");
 
-        Label valueLabel = new Label();
-        valueLabel.setId("bisq-text-20");
+        balanceBitcoinAmountDisplay = new BitcoinAmountDisplay();
+        configureBitcoinAmountDisplay(balanceBitcoinAmountDisplay);
 
-        Label codeLabel = new Label("BTC");
-        codeLabel.setId("bisq-text-20");
-        HBox.setMargin(codeLabel, new Insets(0, 0, 0, -10));
-
-        HBox hBox = new HBox(12, titleLabel, valueLabel, codeLabel);
+        HBox hBox = new HBox(12, titleLabel, balanceBitcoinAmountDisplay);
+        balanceBitcoinAmountDisplay.setTranslateY(4);
         hBox.setAlignment(Pos.CENTER_LEFT);
-        return new Triple<>(hBox, valueLabel, codeLabel);
+
+        return hBox;
+    }
+
+    private void configureBitcoinAmountDisplay(BitcoinAmountDisplay btcText) {
+        btcText.applyMicroCompactConfig();
     }
 }
