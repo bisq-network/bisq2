@@ -15,24 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.protocol.events;
+package bisq.trade.mu_sig.events.seller_as_maker;
 
-import bisq.network.SendMessageResult;
-import bisq.trade.ServiceProvider;
-import bisq.trade.Trade;
-import bisq.trade.protocol.messages.TradeMessage;
-import lombok.extern.slf4j.Slf4j;
+import bisq.trade.mu_sig.events.MuSigTradeEvent;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-import java.util.concurrent.CompletableFuture;
+@ToString(callSuper = true)
+@Getter
+@EqualsAndHashCode(callSuper = true)
+public class MuSigSellersCooperativeCloseTimeoutEvent extends MuSigTradeEvent {
 
-@Slf4j
-public abstract class SendTradeMessageHandler<M extends Trade<?, ?, ?>> extends TradeEventHandler<M> implements TradeMessageSender<M> {
-
-    protected SendTradeMessageHandler(ServiceProvider serviceProvider, M model) {
-        super(serviceProvider, model);
-    }
-
-    protected CompletableFuture<SendMessageResult> sendMessage(TradeMessage message) {
-        return sendMessage(message, serviceProvider, trade);
+    public MuSigSellersCooperativeCloseTimeoutEvent() {
     }
 }

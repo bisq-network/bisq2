@@ -23,29 +23,71 @@ import bisq.contract.Role;
 import bisq.contract.TwoPartyContract;
 import bisq.network.identity.NetworkId;
 import bisq.offer.bisq_musig.BisqMuSigOffer;
+import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
+import bisq.offer.payment_method.FiatPaymentMethodSpec;
+import bisq.offer.price.spec.PriceSpec;
+import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+
+import java.util.Optional;
 
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class BisqMuSigContract extends TwoPartyContract<BisqMuSigOffer> {
 
+    private final long baseSideAmount;
+    private final long quoteSideAmount;
+    private final BitcoinPaymentMethodSpec baseSidePaymentMethodSpec;
+    private final FiatPaymentMethodSpec quoteSidePaymentMethodSpec;
+    private final Optional<UserProfile> mediator;
+    private final PriceSpec priceSpec;
+    private final long marketPrice;
+
     public BisqMuSigContract(long takeOfferDate,
-                             BisqMuSigOffer offer,
-                             NetworkId takerNetworkId) {
+                            BisqMuSigOffer offer,
+                            NetworkId takerNetworkId,
+                            long baseSideAmount,
+                            long quoteSideAmount,
+                            BitcoinPaymentMethodSpec baseSidePaymentMethodSpec,
+                            FiatPaymentMethodSpec quoteSidePaymentMethodSpec,
+                            Optional<UserProfile> mediator,
+                            PriceSpec priceSpec,
+                            long marketPrice) {
         this(takeOfferDate,
                 offer,
-                TradeProtocolType.BISQ_MU_SIG,
-                new Party(Role.TAKER, takerNetworkId));
+                TradeProtocolType.BISQ_EASY,
+                new Party(Role.TAKER, takerNetworkId),
+                baseSideAmount,
+                quoteSideAmount,
+                baseSidePaymentMethodSpec,
+                quoteSidePaymentMethodSpec,
+                mediator,
+                priceSpec,
+                marketPrice);
     }
 
-    private BisqMuSigContract(long takeOfferDate,
-                              BisqMuSigOffer offer,
-                              TradeProtocolType protocolType,
-                              Party taker) {
+    public BisqMuSigContract(long takeOfferDate,
+                             BisqMuSigOffer offer,
+                            TradeProtocolType protocolType,
+                            Party taker,
+                            long baseSideAmount,
+                            long quoteSideAmount,
+                            BitcoinPaymentMethodSpec baseSidePaymentMethodSpec,
+                            FiatPaymentMethodSpec quoteSidePaymentMethodSpec,
+                            Optional<UserProfile> mediator,
+                            PriceSpec priceSpec,
+                            long marketPrice) {
         super(takeOfferDate, offer, protocolType, taker);
+        this.baseSideAmount = baseSideAmount;
+        this.quoteSideAmount = quoteSideAmount;
+        this.baseSidePaymentMethodSpec = baseSidePaymentMethodSpec;
+        this.quoteSidePaymentMethodSpec = quoteSidePaymentMethodSpec;
+        this.mediator = mediator;
+        this.priceSpec = priceSpec;
+        this.marketPrice = marketPrice;
 
         verify();
     }
@@ -69,10 +111,11 @@ public class BisqMuSigContract extends TwoPartyContract<BisqMuSigOffer> {
 
     public static BisqMuSigContract fromProto(bisq.contract.protobuf.Contract proto) {
         bisq.contract.protobuf.TwoPartyContract twoPartyContractProto = proto.getTwoPartyContract();
-        return new BisqMuSigContract(proto.getTakeOfferDate(),
+        return null;
+        /*new BisqMuSigContract(proto.getTakeOfferDate(),
                 BisqMuSigOffer.fromProto(proto.getOffer()),
                 TradeProtocolType.fromProto(proto.getTradeProtocolType()),
-                Party.fromProto(twoPartyContractProto.getTaker()));
+                Party.fromProto(twoPartyContractProto.getTaker()));*/
     }
 
 }
