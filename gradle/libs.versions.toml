@@ -35,7 +35,7 @@ glassfish-jaxb-runtime-lib = { strictly = '4.0.5' }
 
 grizzly-websockets-server-lib = { strictly = '2.4.4' }
 
-google-gson-lib = { strictly = '2.9.0' }
+google-gson-lib = { strictly = '2.10.1' }
 google-guava-lib = { strictly = '33.2.1-jre' }
 
 grpc = { strictly = '1.61.0' }
