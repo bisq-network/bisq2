@@ -101,7 +101,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         slider = new Slider();
         slider.setMin(model.getSliderMin());
         slider.setMax(model.getSliderMax());
-        slider.getStyleClass().add("price-slider");
+        slider.getStyleClass().add(model.getDirection().isSell() ? "price-slider-seller" : "price-slider-buyer");
 
         minSliderValue = new Label();
         minSliderValue.getStyleClass().add("range-value");

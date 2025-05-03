@@ -1058,7 +1058,8 @@
     -fx-padding: 0 0 5 0;
 }
 
-.slider.price-slider .thumb,
+.slider.price-slider-seller .thumb,
+.slider.price-slider-buyer .thumb,
 .slider.max-or-fixed-amount-slider .thumb {
     -fx-background-color: -bisq-white;
     -fx-background-insets: 2.5;
@@ -1079,8 +1080,25 @@
     -fx-pref-height: 0;
 }
 
-.slider.price-slider {
+.slider.price-slider-seller,
+.slider.price-slider-buyer {
     -track-color: -bisq-dark-grey-50;
+}
+
+/* TODO: Improve price slider seller direction */
+.slider.price-slider-seller .track {
+    -fx-background-color: linear-gradient(to right, -bisq2-green 30%, yellow 40%, red 90%);
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 0, 0;
+    -fx-padding: 0 0 0 0;
+}
+
+/* TODO: Implement price slider buyer direction */
+.slider.price-slider-buyer .track {
+    -fx-background-color: linear-gradient(to right, -bisq2-green 30%, yellow 40%, red 90%);
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 0, 0;
+    -fx-padding: 0 0 0 0;
 }
 
 .amount-selection .range-value,
