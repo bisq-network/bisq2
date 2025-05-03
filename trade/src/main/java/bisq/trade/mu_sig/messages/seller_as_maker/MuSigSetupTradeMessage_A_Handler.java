@@ -47,23 +47,23 @@ public class MuSigSetupTradeMessage_A_Handler extends TradeMessageHandler<MuSigT
         MuSigSetupTradeMessage_A message = (MuSigSetupTradeMessage_A) event;
         verifyMessage(message);
 
-        // Request PubKeyShares from rust server
-        PubKeySharesRequest pubKeySharesRequest = new PubKeySharesRequest(trade.getId(), trade.getTradeRole());
-        GrpcStubMock stub = new GrpcStubMock();
-        PubKeySharesResponse sellerPubKeyShareResponse = stub.initTrade(pubKeySharesRequest);
+         MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
+        PubKeySharesResponse sellerPubKeyShareResponse = stub.initTrade(PubKeySharesRequest.newBuilder()
+                .setTradeId(trade.getId())
+                .setMyRole(Role.SELLER_AS_MAKER)
+                .build());
 
-        // Request NonceSharesMessage from rust server
-        PubKeySharesResponse buyerPubKeyShareResponse = message.getPubKeySharesResponse();
-        NonceSharesRequest sellerNonceSharesRequest = new NonceSharesRequest(trade.getId(),
-                buyerPubKeyShareResponse.getBuyerOutputPubKeyShare(),
-                buyerPubKeyShareResponse.getSellerOutputPubKeyShare(),
-                50_000,// setDepositTxFeeRate 12.5 sats per vbyte
-                40_000,// setPreparedTxFeeRate 10.0 sats per vbyte
-                200_000, //setTradeAmount
-                30_000, //setBuyersSecurityDeposit
-                30_000 //setSellersSecurityDeposit
-        );
-        NonceSharesMessage sellerNonceShareMessage = stub.getNonceShares(sellerNonceSharesRequest);
+        PubKeySharesResponse buyerPubKeySharesResponse = message.getPubKeySharesResponse();
+        NonceSharesMessage sellerNonceSharesMessage = stub.getNonceShares(NonceSharesRequest.newBuilder()
+                .setTradeId(trade.getId())
+                .setBuyerOutputPeersPubKeyShare(buyerPubKeySharesResponse.getBuyerOutputPubKeyShare())
+                .setSellerOutputPeersPubKeyShare(buyerPubKeySharesResponse.getSellerOutputPubKeyShare())
+                .setDepositTxFeeRate(50_000)  // 12.5 sats per vbyte
+                .setPreparedTxFeeRate(40_000) // 10.0 sats per vbyte
+                .setTradeAmount(200_000)
+                .setBuyersSecurityDeposit(30_000)
+                .setSellersSecurityDeposit(30_000)
+                .build());
 
         BisqMuSigContract contract = message.getContract();
         ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
@@ -73,9 +73,9 @@ public class MuSigSetupTradeMessage_A_Handler extends TradeMessageHandler<MuSigT
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
             commitToModel(takersContractSignatureData,
                     makersContractSignatureData,
-                    buyerPubKeyShareResponse,
+                    buyerPubKeySharesResponse,
                     sellerPubKeyShareResponse,
-                    sellerNonceShareMessage);
+                    sellerNonceSharesMessage);
 
             MuSigSetupTradeMessage_B response = new MuSigSetupTradeMessage_B(StringUtils.createUid(),
                     trade.getId(),

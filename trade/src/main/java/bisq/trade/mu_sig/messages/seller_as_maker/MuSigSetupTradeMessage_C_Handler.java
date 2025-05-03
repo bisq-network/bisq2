@@ -27,10 +27,11 @@ import bisq.trade.mu_sig.messages.MuSigSetupTradeMessage_C;
 import bisq.trade.mu_sig.messages.MuSigSetupTradeMessage_D;
 import bisq.trade.protocol.events.TradeMessageHandler;
 import bisq.trade.protocol.events.TradeMessageSender;
+import com.google.common.collect.ImmutableMap;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class MuSigSetupTradeMessage_C_Handler extends TradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_C>
@@ -48,17 +49,18 @@ public class MuSigSetupTradeMessage_C_Handler extends TradeMessageHandler<MuSigT
         MuSigTradeParty buyerAsTake = trade.getTaker();
         PartialSignaturesMessage buyerPartialSignaturesMessage = message.getPartialSignaturesMessage();
 
-        PartialSignaturesRequest partialSignaturesRequest = new PartialSignaturesRequest(trade.getId(),
-                buyerAsTake.getNonceSharesMessage(),
-                mockReceivers());
-        GrpcStubMock stub = new GrpcStubMock();
-        PartialSignaturesMessage sellerPartialSignaturesMessage = stub.getPartialSignatures(partialSignaturesRequest);
+         MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
+        PartialSignaturesMessage sellerPartialSignaturesMessage = stub.getPartialSignatures(PartialSignaturesRequest.newBuilder()
+                .setTradeId(trade.getId())
+                .setPeersNonceShares(buyerAsTake.getNonceSharesMessage())
+                .addAllReceivers(mockReceivers())
+                .build());
 
-        PartialSignaturesMessage redeactedBuyerPartialSignaturesMessage = clearSwapTxInputPartialSignature(buyerPartialSignaturesMessage);
-        DepositTxSignatureRequest depositTxSignatureRequest = new DepositTxSignatureRequest(
-                trade.getId(),
-                redeactedBuyerPartialSignaturesMessage);
-        DepositPsbt sellerDepositPsbt = stub.signDepositTx(depositTxSignatureRequest);
+        DepositPsbt sellerDepositPsbt = stub.signDepositTx(DepositTxSignatureRequest.newBuilder()
+                .setTradeId( trade.getId())
+                // REDACT buyer's swapTxInputPartialSignature:
+                .setPeersPartialSignatures(buyerPartialSignaturesMessage.toBuilder().clearSwapTxInputPartialSignature())
+                .build());
 
         commitToModel(sellerPartialSignaturesMessage, sellerDepositPsbt, buyerPartialSignaturesMessage);
 
@@ -88,21 +90,14 @@ public class MuSigSetupTradeMessage_C_Handler extends TradeMessageHandler<MuSigT
         buyerAsTaker.setPartialSignaturesMessage(buyerPartialSignaturesMessage);
     }
 
-    private PartialSignaturesMessage clearSwapTxInputPartialSignature(PartialSignaturesMessage partialSignaturesMessage) {
-        // REDACT buyer's swapTxInputPartialSignature:
-        return new PartialSignaturesMessage(
-                partialSignaturesMessage.getPeersWarningTxBuyerInputPartialSignature(),
-                partialSignaturesMessage.getPeersWarningTxSellerInputPartialSignature(),
-                partialSignaturesMessage.getPeersRedirectTxInputPartialSignature(),
-                Optional.empty()
-        );
-    }
-
-    private List<ReceiverAddressAndAmount> mockReceivers() {
-        return List.of(
-                new ReceiverAddressAndAmount("tb1pwxlp4v9v7v03nx0e7vunlc87d4936wnyqegw0fuahudypan64wys5stxh7", 200_000),
-                new ReceiverAddressAndAmount("tb1qpg889v22f3gefuvwpe3963t5a00nvfmkhlgqw5", 80_000),
-                new ReceiverAddressAndAmount("2N2x2bA28AsLZZEHss4SjFoyToQV5YYZsJM", 12_345)
-        );
+    private static List<ReceiverAddressAndAmount> mockReceivers() {
+        return ImmutableMap.of(
+                        "tb1pwxlp4v9v7v03nx0e7vunlc87d4936wnyqegw0fuahudypan64wys5stxh7", 200_000,
+                        "tb1qpg889v22f3gefuvwpe3963t5a00nvfmkhlgqw5", 80_000,
+                        "2N2x2bA28AsLZZEHss4SjFoyToQV5YYZsJM", 12_345
+                )
+                .entrySet().stream()
+                .map(e -> ReceiverAddressAndAmount.newBuilder().setAddress(e.getKey()).setAmount(e.getValue()).build())
+                .collect(Collectors.toList());
     }
 }

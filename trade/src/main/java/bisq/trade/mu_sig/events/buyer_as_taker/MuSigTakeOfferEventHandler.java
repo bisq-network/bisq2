@@ -23,9 +23,10 @@ import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_musig.BisqMuSigContract;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
-import bisq.trade.mu_sig.grpc.GrpcStubMock;
+import bisq.trade.mu_sig.grpc.MusigGrpc;
 import bisq.trade.mu_sig.grpc.PubKeySharesRequest;
 import bisq.trade.mu_sig.grpc.PubKeySharesResponse;
+import bisq.trade.mu_sig.grpc.Role;
 import bisq.trade.mu_sig.messages.MuSigSetupTradeMessage_A;
 import bisq.trade.protocol.events.SendTradeMessageHandler;
 
@@ -39,10 +40,11 @@ public class MuSigTakeOfferEventHandler extends SendTradeMessageHandler<MuSigTra
 
     @Override
     public void handle(Event event) {
-        // Request PubKeyShares from rust server
-        PubKeySharesRequest pubKeySharesRequest = new PubKeySharesRequest(trade.getId(), trade.getTradeRole());
-        GrpcStubMock stub = new GrpcStubMock();
-        PubKeySharesResponse pubKeySharesResponse = stub.initTrade(pubKeySharesRequest);
+        MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
+        PubKeySharesResponse buyerPubKeySharesResponse = stub.initTrade(PubKeySharesRequest.newBuilder()
+                .setTradeId(trade.getId())
+                .setMyRole(Role.BUYER_AS_TAKER)
+                .build());
 
         BisqMuSigContract contract = trade.getContract();
         try {
@@ -56,7 +58,7 @@ public class MuSigTakeOfferEventHandler extends SendTradeMessageHandler<MuSigTra
                     trade.getPeer().getNetworkId(),
                     contract,
                     contractSignatureData,
-                    pubKeySharesResponse));
+                    buyerPubKeySharesResponse));
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }

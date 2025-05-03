@@ -22,13 +22,13 @@ import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
-import bisq.trade.mu_sig.grpc.*;
+import bisq.trade.mu_sig.grpc.CloseTradeRequest;
+import bisq.trade.mu_sig.grpc.CloseTradeResponse;
+import bisq.trade.mu_sig.grpc.MusigGrpc;
 import bisq.trade.mu_sig.messages.MuSigCooperativeClosureMessage_G;
 import bisq.trade.protocol.events.TradeMessageHandler;
 import bisq.trade.protocol.events.TradeMessageSender;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Optional;
 
 @Slf4j
 public class MuSigCooperativeClosureMessage_G_Handler extends TradeMessageHandler<MuSigTrade, MuSigCooperativeClosureMessage_G>
@@ -49,11 +49,13 @@ public class MuSigCooperativeClosureMessage_G_Handler extends TradeMessageHandle
 
         // ClosureType.COOPERATIVE
         // *** SELLER CLOSES TRADE ***
-        CloseTradeResponse closeTradeResponse = message.getCloseTradeResponse();
-        GrpcStubMock stub = new GrpcStubMock();
-        byte[] peerOutputPrvKeyShare = closeTradeResponse.getPeerOutputPrvKeyShare();
-        CloseTradeRequest closeTradeRequest = new CloseTradeRequest(trade.getId(), Optional.of(peerOutputPrvKeyShare), Optional.empty());
-        CloseTradeResponse buyersCloseTradeResponse = stub.closeTrade(closeTradeRequest);
+        CloseTradeResponse buyersCloseTradeResponse = message.getCloseTradeResponse();
+         MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
+
+        CloseTradeResponse sellersCloseTradeResponse = stub.closeTrade(CloseTradeRequest.newBuilder()
+                .setTradeId(trade.getId())
+                .setMyOutputPeersPrvKeyShare(buyersCloseTradeResponse.getPeerOutputPrvKeyShare())
+                .build());
 
         MuSigCooperativeClosureMessage_G response = new MuSigCooperativeClosureMessage_G(StringUtils.createUid(),
                 trade.getId(),

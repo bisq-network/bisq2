@@ -26,7 +26,7 @@ dependencies {
 }
 
 val grpcPluginId = "grpc"
-val grpcArtifact = "io.grpc:protoc-gen-grpc-java:1.61.0"
+val grpcArtifact = "io.grpc:protoc-gen-grpc-java:1.61.0" //1.71.0
 val protocArtifact = "com.google.protobuf:protoc:4.28.2"
 
 protobuf {
@@ -55,3 +55,14 @@ sourceSets["main"].java.srcDirs(
     "build/generated/source/proto/main/grpc",
     "build/generated/source/proto/main/java"
 )
+
+tasks.named<JavaCompile>("compileJava") {
+    dependsOn("generateProto")
+}
+
+idea {
+    module {
+        generatedSourceDirs.add(file("build/generated/source/proto/main/java"))
+        generatedSourceDirs.add(file("build/generated/source/proto/main/grpc"))
+    }
+}

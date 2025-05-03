@@ -1,0 +1,139 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+syntax = "proto3";
+
+package trade.grpc;
+option java_package = "bisq.trade.mu_sig.grpc";
+option java_multiple_files = true;
+
+service Musig {
+  rpc InitTrade (PubKeySharesRequest) returns (PubKeySharesResponse);
+
+  rpc GetNonceShares (NonceSharesRequest) returns (NonceSharesMessage);
+
+  rpc GetPartialSignatures (PartialSignaturesRequest) returns (PartialSignaturesMessage);
+
+  rpc SignDepositTx (DepositTxSignatureRequest) returns (DepositPsbt);
+
+  rpc PublishDepositTx (PublishDepositTxRequest) returns (stream TxConfirmationStatus);
+
+  rpc SignSwapTx (SwapTxSignatureRequest) returns (SwapTxSignatureResponse);
+
+  rpc CloseTrade (CloseTradeRequest) returns (CloseTradeResponse);
+}
+
+//TODO we can use TradeRole
+enum Role {
+  SELLER_AS_MAKER = 0;
+  SELLER_AS_TAKER = 1;
+  BUYER_AS_MAKER = 2;
+  BUYER_AS_TAKER = 3;
+}
+
+message PubKeySharesRequest {
+  string tradeId = 1;
+  Role myRole = 2;
+}
+
+message PubKeySharesResponse {
+  bytes buyerOutputPubKeyShare = 1;
+  bytes sellerOutputPubKeyShare = 2;
+  uint32 currentBlockHeight = 3;
+}
+
+message NonceSharesRequest {
+  string tradeId = 1;
+  bytes buyerOutputPeersPubKeyShare = 2;
+  bytes sellerOutputPeersPubKeyShare = 3;
+  uint64 depositTxFeeRate = 4;       // sats per kwu
+  uint64 preparedTxFeeRate = 5;      // sats per kwu
+  uint64 tradeAmount = 6;            // sats
+  uint64 buyersSecurityDeposit = 7;  // sats
+  uint64 sellersSecurityDeposit = 8; // sats
+}
+
+message NonceSharesMessage {
+  string warningTxFeeBumpAddress = 1;
+  string redirectTxFeeBumpAddress = 2;
+  bytes halfDepositPsbt = 3;
+  bytes swapTxInputNonceShare = 4;
+  bytes buyersWarningTxBuyerInputNonceShare = 5;
+  bytes buyersWarningTxSellerInputNonceShare = 6;
+  bytes sellersWarningTxBuyerInputNonceShare = 7;
+  bytes sellersWarningTxSellerInputNonceShare = 8;
+  bytes buyersRedirectTxInputNonceShare = 9;
+  bytes sellersRedirectTxInputNonceShare = 10;
+}
+
+message ReceiverAddressAndAmount {
+  string address = 1;
+  uint64 amount = 2; // sats
+}
+
+message PartialSignaturesRequest {
+  string tradeId = 1;
+  NonceSharesMessage peersNonceShares = 2;
+  repeated ReceiverAddressAndAmount receivers = 3;
+}
+
+message PartialSignaturesMessage {
+  bytes peersWarningTxBuyerInputPartialSignature = 1;
+  bytes peersWarningTxSellerInputPartialSignature = 2;
+  bytes peersRedirectTxInputPartialSignature = 3;
+  optional bytes swapTxInputPartialSignature = 4;
+}
+
+message DepositTxSignatureRequest {
+  string tradeId = 1;
+  PartialSignaturesMessage peersPartialSignatures = 2;
+}
+
+message DepositPsbt {
+  bytes depositPsbt = 1;
+}
+
+message PublishDepositTxRequest {
+  string tradeId = 1;
+  DepositPsbt depositPsbt = 2;
+}
+
+message TxConfirmationStatus {
+  bytes tx = 1;
+  uint32 currentBlockHeight = 2;
+  uint32 numConfirmations = 3;
+}
+
+message SwapTxSignatureRequest {
+  string tradeId = 1;
+  bytes swapTxInputPeersPartialSignature = 2;
+}
+
+message SwapTxSignatureResponse {
+  bytes swapTx = 1;
+  bytes peerOutputPrvKeyShare = 2;
+}
+
+message CloseTradeRequest {
+  string tradeId = 1;
+  optional bytes myOutputPeersPrvKeyShare = 2;
+  optional bytes swapTx = 3;
+}
+
+message CloseTradeResponse {
+  bytes peerOutputPrvKeyShare = 1;
+}
