@@ -15,24 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.protocol.events;
+package bisq.trade.mu_sig.grpc;
 
-import bisq.network.SendMessageResult;
-import bisq.trade.ServiceProvider;
-import bisq.trade.Trade;
-import bisq.trade.protocol.messages.TradeMessage;
-import lombok.extern.slf4j.Slf4j;
+import lombok.Getter;
+import java.util.Objects;
 
-import java.util.concurrent.CompletableFuture;
+@Getter
+public class SwapTxSignatureRequest {
 
-@Slf4j
-public abstract class SendTradeMessageHandler<M extends Trade<?, ?, ?>> extends TradeEventHandler<M> implements TradeMessageSender<M> {
+    private final String tradeId;
+    private final byte[] swapTxInputPeersPartialSignature;
 
-    protected SendTradeMessageHandler(ServiceProvider serviceProvider, M model) {
-        super(serviceProvider, model);
-    }
-
-    protected CompletableFuture<SendMessageResult> sendMessage(TradeMessage message) {
-        return sendMessage(message, serviceProvider, trade);
+    public SwapTxSignatureRequest(String tradeId, byte[] swapTxInputPeersPartialSignature) {
+        this.tradeId = Objects.requireNonNull(tradeId);
+        this.swapTxInputPeersPartialSignature = Objects.requireNonNull(swapTxInputPeersPartialSignature);
     }
 }
+

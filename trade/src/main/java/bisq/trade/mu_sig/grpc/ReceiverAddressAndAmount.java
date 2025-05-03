@@ -15,24 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.protocol.events;
+package bisq.trade.mu_sig.grpc;
 
-import bisq.network.SendMessageResult;
-import bisq.trade.ServiceProvider;
-import bisq.trade.Trade;
-import bisq.trade.protocol.messages.TradeMessage;
-import lombok.extern.slf4j.Slf4j;
+import lombok.Getter;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.Objects;
 
-@Slf4j
-public abstract class SendTradeMessageHandler<M extends Trade<?, ?, ?>> extends TradeEventHandler<M> implements TradeMessageSender<M> {
+@Getter
+public class ReceiverAddressAndAmount {
 
-    protected SendTradeMessageHandler(ServiceProvider serviceProvider, M model) {
-        super(serviceProvider, model);
-    }
+    private final String address;
+    private final long amount; // sats
 
-    protected CompletableFuture<SendMessageResult> sendMessage(TradeMessage message) {
-        return sendMessage(message, serviceProvider, trade);
+    public ReceiverAddressAndAmount(String address, long amount) {
+        this.address = Objects.requireNonNull(address);
+        this.amount = amount;
     }
 }

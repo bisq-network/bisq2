@@ -20,13 +20,13 @@ package bisq.trade.protocol.events;
 import bisq.network.SendMessageResult;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
+import bisq.trade.protocol.messages.TradeMessage;
 import bisq.user.banned.BannedUserService;
 
 import java.util.concurrent.CompletableFuture;
 
 public interface TradeMessageSender<M extends Trade<?, ?, ?>> {
-    default CompletableFuture<SendMessageResult> sendMessage(BisqEasyTradeMessage message, ServiceProvider serviceProvider, M trade) {
+    default CompletableFuture<SendMessageResult> sendMessage(TradeMessage message, ServiceProvider serviceProvider, M trade) {
         BannedUserService bannedUserService = serviceProvider.getUserService().getBannedUserService();
         // If one of the twt traders is banned we block any trade message sending
         if (bannedUserService.isNetworkIdBanned(message.getSender()) ||
