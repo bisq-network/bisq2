@@ -49,6 +49,7 @@ import bisq.trade.Trade;
 import bisq.trade.mu_sig.events.MuSigTradeEvent;
 import bisq.trade.mu_sig.events.buyer_as_taker.MuSigPaymentInitiatedEvent;
 import bisq.trade.mu_sig.events.buyer_as_taker.MuSigTakeOfferEvent;
+import bisq.trade.mu_sig.grpc.MusigGrpc;
 import bisq.trade.mu_sig.messages.MuSigTradeMessage;
 import bisq.trade.mu_sig.messages.ignore.MuSigTakeOfferRequest;
 import bisq.trade.mu_sig.protocol.MuSigBuyerAsTakerProtocol;
@@ -58,6 +59,9 @@ import bisq.trade.mu_sig.protocol.ignore.MuSigBuyerAsMakerProtocol;
 import bisq.trade.mu_sig.protocol.ignore.MuSigSellerAsTakerProtocol;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
+import io.grpc.Grpc;
+import io.grpc.InsecureChannelCredentials;
+import io.grpc.ManagedChannel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -95,6 +99,9 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
     private final Set<MuSigTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
     private final Map<String, Scheduler> cooperativeCloseTimeoutSchedulerByTradeId = new ConcurrentHashMap<>();
+    @Getter
+    private MusigGrpc.MusigBlockingStub musigStub;
+    private ManagedChannel grpcChannel;
 
     public MuSigTradeService(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
@@ -119,6 +126,19 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
                 .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
                 .forEach(this::onMessage);
         networkService.addConfidentialMessageListener(this);
+
+        //todo add host/port to config
+        grpcChannel = Grpc.newChannelBuilderForAddress(
+                "127.0.0.1",
+                50051,
+                InsecureChannelCredentials.create()
+        ).build();
+
+        try {
+            musigStub = MusigGrpc.newBlockingStub(grpcChannel);
+        } finally {
+            grpcChannel.shutdown();
+        }
 
         authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
             @Override
@@ -176,6 +196,10 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
         if (numDaysAfterRedactingTradeDataScheduler != null) {
             numDaysAfterRedactingTradeDataScheduler.stop();
             numDaysAfterRedactingTradeDataScheduler = null;
+        }
+        if (grpcChannel != null) {
+            grpcChannel.shutdown();
+            grpcChannel = null;
         }
 
         networkService.removeConfidentialMessageListener(this);

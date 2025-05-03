@@ -23,14 +23,11 @@ import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.grpc.*;
-import bisq.trade.mu_sig.messages.MuSigPaymentReceivedMessage_F;
 import bisq.trade.mu_sig.messages.MuSigCooperativeClosureMessage_G;
+import bisq.trade.mu_sig.messages.MuSigPaymentReceivedMessage_F;
 import bisq.trade.protocol.events.TradeMessageHandler;
 import bisq.trade.protocol.events.TradeMessageSender;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 public class MuSigPaymentReceivedMessage_F_Handler extends TradeMessageHandler<MuSigTrade, MuSigPaymentReceivedMessage_F>
@@ -52,10 +49,12 @@ public class MuSigPaymentReceivedMessage_F_Handler extends TradeMessageHandler<M
         // ClosureType.COOPERATIVE
         // *** BUYER CLOSES TRADE ***
         SwapTxSignatureResponse swapTxSignatureResponse = message.getSwapTxSignatureResponse();
-        GrpcStubMock stub = new GrpcStubMock();
-        byte[] peerOutputPrvKeyShare = swapTxSignatureResponse.getPeerOutputPrvKeyShare();
-        CloseTradeRequest closeTradeRequest = new CloseTradeRequest(trade.getId(), Optional.of(peerOutputPrvKeyShare), Optional.empty());
-        CloseTradeResponse buyersCloseTradeResponse = stub.closeTrade(closeTradeRequest);
+         MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
+
+        CloseTradeResponse buyersCloseTradeResponse = stub.closeTrade(CloseTradeRequest.newBuilder()
+                .setTradeId(trade.getId())
+                .setMyOutputPeersPrvKeyShare(swapTxSignatureResponse.getPeerOutputPrvKeyShare())
+                .build());
 
         MuSigCooperativeClosureMessage_G response = new MuSigCooperativeClosureMessage_G(StringUtils.createUid(),
                 trade.getId(),
@@ -81,23 +80,5 @@ public class MuSigPaymentReceivedMessage_F_Handler extends TradeMessageHandler<M
         sellerAsMaker.setDepositPsbt(sellerDepositPsbt);
 
         buyerAsTaker.setPartialSignaturesMessage(redeactedBuyerPartialSignaturesMessage);
-    }
-
-    private PartialSignaturesMessage clearSwapTxInputPartialSignature(PartialSignaturesMessage partialSignaturesMessage) {
-        // REDACT buyer's swapTxInputPartialSignature:
-        return new PartialSignaturesMessage(
-                partialSignaturesMessage.getPeersWarningTxBuyerInputPartialSignature(),
-                partialSignaturesMessage.getPeersWarningTxSellerInputPartialSignature(),
-                partialSignaturesMessage.getPeersRedirectTxInputPartialSignature(),
-                Optional.empty()
-        );
-    }
-
-    private List<ReceiverAddressAndAmount> mockReceivers() {
-        return List.of(
-                new ReceiverAddressAndAmount("tb1pwxlp4v9v7v03nx0e7vunlc87d4936wnyqegw0fuahudypan64wys5stxh7", 200_000),
-                new ReceiverAddressAndAmount("tb1qpg889v22f3gefuvwpe3963t5a00nvfmkhlgqw5", 80_000),
-                new ReceiverAddressAndAmount("2N2x2bA28AsLZZEHss4SjFoyToQV5YYZsJM", 12_345)
-        );
     }
 }

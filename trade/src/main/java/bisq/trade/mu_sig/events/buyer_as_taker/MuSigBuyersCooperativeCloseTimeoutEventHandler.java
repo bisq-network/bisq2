@@ -23,10 +23,9 @@ import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.grpc.CloseTradeRequest;
 import bisq.trade.mu_sig.grpc.CloseTradeResponse;
-import bisq.trade.mu_sig.grpc.GrpcStubMock;
+import bisq.trade.mu_sig.grpc.MusigGrpc;
 import bisq.trade.protocol.events.SendTradeMessageHandler;
-
-import java.util.Optional;
+import com.google.protobuf.ByteString;
 
 public class MuSigBuyersCooperativeCloseTimeoutEventHandler extends SendTradeMessageHandler<MuSigTrade> {
 
@@ -44,10 +43,13 @@ public class MuSigBuyersCooperativeCloseTimeoutEventHandler extends SendTradeMes
         // Buyer never got Message F from seller -- picks up Swap Tx from bitcoin network instead.
         // *** BUYER CLOSES TRADE ***
         // TODO get swap tx from bitcoin network
-        byte[] swapTx = new byte[]{};
-        CloseTradeRequest closeTradeRequest = new CloseTradeRequest(trade.getId(), Optional.empty(), Optional.of(swapTx));
-        GrpcStubMock stub = new GrpcStubMock();
-        CloseTradeResponse buyersCloseTradeResponse = stub.closeTrade(closeTradeRequest);
+        //ByteString swapTx = swapTxSignatureResponse.getSwapTx();
+        ByteString swapTx = null;
+        MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
+        CloseTradeResponse buyersCloseTradeResponse = stub.closeTrade(CloseTradeRequest.newBuilder()
+                .setTradeId(trade.getId())
+                .setSwapTx(swapTx)
+                .build());
     }
 
     private void commitToModel() {

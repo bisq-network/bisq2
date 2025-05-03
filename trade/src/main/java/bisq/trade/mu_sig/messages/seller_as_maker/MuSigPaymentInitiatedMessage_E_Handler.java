@@ -23,7 +23,7 @@ import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.events.seller_as_maker.MuSigSellersCooperativeCloseTimeoutEvent;
-import bisq.trade.mu_sig.grpc.GrpcStubMock;
+import bisq.trade.mu_sig.grpc.MusigGrpc;
 import bisq.trade.mu_sig.grpc.SwapTxSignatureRequest;
 import bisq.trade.mu_sig.grpc.SwapTxSignatureResponse;
 import bisq.trade.mu_sig.messages.MuSigPaymentInitiatedMessage_E;
@@ -45,26 +45,26 @@ public class MuSigPaymentInitiatedMessage_E_Handler extends TradeMessageHandler<
         MuSigPaymentInitiatedMessage_E message = (MuSigPaymentInitiatedMessage_E) event;
         verifyMessage(message);
 
-        MuSigTradeParty buyerAsTake = trade.getTaker();
+        MuSigTradeParty buyerAsTaker = trade.getTaker();
 
-        buyerAsTake.getPartialSignaturesMessage().getSwapTxInputPartialSignature()
-                .ifPresent(swapTxInputPartialSignature -> {
-                    SwapTxSignatureRequest swapTxSignatureRequest = new SwapTxSignatureRequest(trade.getId(), swapTxInputPartialSignature);
-                    GrpcStubMock stub = new GrpcStubMock();
-                    SwapTxSignatureResponse swapTxSignatureResponse = stub.signSwapTx(swapTxSignatureRequest);
+        MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
+        SwapTxSignatureResponse swapTxSignatureResponse = stub.signSwapTx(SwapTxSignatureRequest.newBuilder()
+                .setTradeId(trade.getId())
+                // NOW send the redacted buyer's swapTxInputPartialSignature:
+                .setSwapTxInputPeersPartialSignature(buyerAsTaker.getPartialSignaturesMessage().getSwapTxInputPartialSignature())
+                .build());
 
-                    //ClosureType.COOPERATIVE
+        //ClosureType.COOPERATIVE
 
-                    MuSigPaymentReceivedMessage_F response = new MuSigPaymentReceivedMessage_F(StringUtils.createUid(),
-                            trade.getId(),
-                            trade.getProtocolVersion(),
-                            trade.getMyIdentity().getNetworkId(),
-                            trade.getPeer().getNetworkId(),
-                            swapTxSignatureResponse);
-                    sendMessage(response, serviceProvider, trade);
+        MuSigPaymentReceivedMessage_F response = new MuSigPaymentReceivedMessage_F(StringUtils.createUid(),
+                trade.getId(),
+                trade.getProtocolVersion(),
+                trade.getMyIdentity().getNetworkId(),
+                trade.getPeer().getNetworkId(),
+                swapTxSignatureResponse);
+        sendMessage(response, serviceProvider, trade);
 
-                    serviceProvider.getMuSigTradeService().startCooperativeCloseTimeout(trade, new MuSigSellersCooperativeCloseTimeoutEvent());
-                });
+        serviceProvider.getMuSigTradeService().startCooperativeCloseTimeout(trade, new MuSigSellersCooperativeCloseTimeoutEvent());
     }
 
     @Override

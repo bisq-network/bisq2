@@ -23,10 +23,8 @@ import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.grpc.CloseTradeRequest;
 import bisq.trade.mu_sig.grpc.CloseTradeResponse;
-import bisq.trade.mu_sig.grpc.GrpcStubMock;
+import bisq.trade.mu_sig.grpc.MusigGrpc;
 import bisq.trade.protocol.events.SendTradeMessageHandler;
-
-import java.util.Optional;
 
 public class MuSigSellersCooperativeCloseTimeoutEventHandler extends SendTradeMessageHandler<MuSigTrade> {
 
@@ -42,10 +40,11 @@ public class MuSigSellersCooperativeCloseTimeoutEventHandler extends SendTradeMe
 
         // ClosureType.UNCOOPERATIVE
         // *** SELLER FORCE-CLOSES TRADE ***
-        GrpcStubMock stub = new GrpcStubMock();
+         MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
         //TODO isn't here the swap Tx needed to pass?
-        CloseTradeRequest closeTradeRequest = new CloseTradeRequest(trade.getId(), Optional.empty(), Optional.empty());
-        CloseTradeResponse buyersCloseTradeResponse = stub.closeTrade(closeTradeRequest);
+        CloseTradeResponse sellersCloseTradeResponse = stub.closeTrade(CloseTradeRequest.newBuilder()
+                .setTradeId(trade.getId())
+                .build());
     }
 
     private void commitToModel() {

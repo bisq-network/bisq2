@@ -43,20 +43,22 @@ public class MuSigSetupTradeMessage_D_Handler extends TradeMessageHandler<MuSigT
         verifyMessage(message);
 
         MuSigTradeParty buyerAsTake = trade.getTaker();
-        PartialSignaturesMessage redeactedSellerPartialSignaturesMessage = message.getPartialSignaturesMessage();
 
-        GrpcStubMock stub = new GrpcStubMock();
-        DepositTxSignatureRequest depositTxSignatureRequest = new DepositTxSignatureRequest(
-                trade.getId(),
-                redeactedSellerPartialSignaturesMessage);
-        DepositPsbt buyerDepositPsbt = stub.signDepositTx(depositTxSignatureRequest);
+         MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
+
+        PartialSignaturesMessage sellerPartialSignaturesMessage = message.getPartialSignaturesMessage();
+        var buyerDepositPsbt = stub.signDepositTx(DepositTxSignatureRequest.newBuilder()
+                .setTradeId( trade.getId())
+                .setPeersPartialSignatures(sellerPartialSignaturesMessage)
+                .build());
 
         // *** BUYER BROADCASTS DEPOSIT TX ***
-        PublishDepositTxRequest publishDepositTxRequest = new PublishDepositTxRequest(trade.getId(), buyerDepositPsbt);
-        Iterator<TxConfirmationStatus> depositTxConfirmationIter = stub.publishDepositTx(publishDepositTxRequest);
-        //depositTxConfirmationIter.forEachRemaining(reply -> System.out.println("Got reply: " + reply));
+        Iterator<TxConfirmationStatus> depositTxConfirmationIter = stub.publishDepositTx(PublishDepositTxRequest.newBuilder()
+                .setTradeId(trade.getId())
+                .setDepositPsbt(buyerDepositPsbt)
+                .build());
 
-        commitToModel(buyerDepositPsbt, redeactedSellerPartialSignaturesMessage);
+        commitToModel(buyerDepositPsbt, sellerPartialSignaturesMessage);
     }
 
     @Override
