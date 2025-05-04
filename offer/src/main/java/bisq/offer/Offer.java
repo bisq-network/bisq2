@@ -18,6 +18,7 @@
 package bisq.offer;
 
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.currency.Market;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -36,7 +37,11 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -57,6 +62,15 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
     protected final List<B> baseSidePaymentMethodSpecs;
     protected final List<Q> quoteSidePaymentMethodSpecs;
     protected final List<OfferOption> offerOptions;
+    @ExcludeForHash
+    @EqualsAndHashCode.Exclude
+    private final int version;
+    @ExcludeForHash
+    @EqualsAndHashCode.Exclude
+    private final String tradeProtocolVersion;
+    @ExcludeForHash
+    @EqualsAndHashCode.Exclude
+    private final String appVersion;
 
     public Offer(String id,
                  long date,
@@ -68,7 +82,10 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
                  List<TradeProtocolType> protocolTypes,
                  List<B> baseSidePaymentMethodSpecs,
                  List<Q> quoteSidePaymentMethodSpecs,
-                 List<OfferOption> offerOptions) {
+                 List<OfferOption> offerOptions,
+                 int version,
+                 String tradeProtocolVersion,
+                 String appVersion) {
         this.id = id;
         this.date = date;
         this.makerNetworkId = makerNetworkId;
@@ -81,6 +98,9 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
         this.baseSidePaymentMethodSpecs = new ArrayList<>(baseSidePaymentMethodSpecs);
         this.quoteSidePaymentMethodSpecs = new ArrayList<>(quoteSidePaymentMethodSpecs);
         this.offerOptions = new ArrayList<>(offerOptions);
+        this.version = version;
+        this.tradeProtocolVersion = tradeProtocolVersion;
+        this.appVersion = appVersion;
 
         // All lists need to sort deterministically as the data is used in the proof of work check
         Collections.sort(this.protocolTypes);
@@ -123,7 +143,10 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
                         .collect(Collectors.toList()))
                 .addAllOfferOptions(offerOptions.stream()
                         .map(e -> e.toProto(serializeForHash))
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList()))
+                .setVersion(version)
+                .setTradeProtocolVersion(tradeProtocolVersion)
+                .setAppVersion(appVersion);
     }
 
 
