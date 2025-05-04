@@ -94,7 +94,7 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
 
     @Override
     public bisq.trade.protobuf.Trade.Builder getBuilder(boolean serializeForHash) {
-        return getTradeBuilder(serializeForHash).setBisqMuSigTrade(bisq.trade.protobuf.BisqMuSigTrade.newBuilder());
+        return getTradeBuilder(serializeForHash).setMuSigTrade(bisq.trade.protobuf.MuSigTrade.newBuilder());
     }
 
     @Override
@@ -108,8 +108,8 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
                 proto.getId(),
                 TradeRole.fromProto(proto.getTradeRole()),
                 Identity.fromProto(proto.getMyIdentity()),
-                TradeParty.protoToBisqMuSigTradeParty(proto.getTaker()),
-                TradeParty.protoToBisqMuSigTradeParty(proto.getMaker()));
+                TradeParty.protoToMuSigTradeParty(proto.getTaker()),
+                TradeParty.protoToMuSigTradeParty(proto.getMaker()));
         if (proto.hasErrorMessage()) {
             trade.setErrorMessage(proto.getErrorMessage());
         }

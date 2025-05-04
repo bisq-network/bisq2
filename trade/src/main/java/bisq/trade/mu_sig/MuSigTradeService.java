@@ -229,9 +229,9 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
             }
 
             if (muSigTradeMessage instanceof MuSigTakeOfferRequest) {
-                handleBisqMuSigTakeOfferMessage((MuSigTakeOfferRequest) muSigTradeMessage);
+                handleMuSigTakeOfferMessage((MuSigTakeOfferRequest) muSigTradeMessage);
             } else {
-                handleBisqMuSigTradeMessage(muSigTradeMessage);
+                handleMuSigTradeMessage(muSigTradeMessage);
             }
         }
     }
@@ -241,7 +241,7 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
     // Message event
     /* --------------------------------------------------------------------- */
 
-    private void handleBisqMuSigTakeOfferMessage(MuSigTakeOfferRequest message) {
+    private void handleMuSigTakeOfferMessage(MuSigTakeOfferRequest message) {
         MuSigContract MuSigContract = message.getMuSigContract();
         MuSigProtocol protocol = createProtocol(MuSigContract, message.getSender(), message.getReceiver());
         protocol.handle(message);
@@ -249,11 +249,11 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
 
         if (!pendingMessages.isEmpty()) {
             log.info("We have pendingMessages. We try to re-process them now.");
-            pendingMessages.forEach(this::handleBisqMuSigTradeMessage);
+            pendingMessages.forEach(this::handleMuSigTradeMessage);
         }
     }
 
-    private void handleBisqMuSigTradeMessage(MuSigTradeMessage message) {
+    private void handleMuSigTradeMessage(MuSigTradeMessage message) {
         String tradeId = message.getTradeId();
         findProtocol(tradeId).ifPresentOrElse(protocol -> {
                     protocol.handle(message);
@@ -266,7 +266,7 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
 
                     if (!pendingMessages.isEmpty()) {
                         log.info("We have pendingMessages. We try to re-process them now.");
-                        pendingMessages.forEach(this::handleBisqMuSigTradeMessage);
+                        pendingMessages.forEach(this::handleMuSigTradeMessage);
                     }
                 },
                 () -> {
@@ -281,15 +281,15 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
     // Events
     /* --------------------------------------------------------------------- */
 
-    public MuSigProtocol createBisqMuSigProtocol(Identity takerIdentity,
-                                                 MuSigOffer muSigOffer,
-                                                 Monetary baseSideAmount,
-                                                 Monetary quoteSideAmount,
-                                                 BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
-                                                 FiatPaymentMethodSpec fiatPaymentMethodSpec,
-                                                 Optional<UserProfile> mediator,
-                                                 PriceSpec priceSpec,
-                                                 long marketPrice) {
+    public MuSigProtocol createMuSigProtocol(Identity takerIdentity,
+                                             MuSigOffer muSigOffer,
+                                             Monetary baseSideAmount,
+                                             Monetary quoteSideAmount,
+                                             BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
+                                             FiatPaymentMethodSpec fiatPaymentMethodSpec,
+                                             Optional<UserProfile> mediator,
+                                             PriceSpec priceSpec,
+                                             long marketPrice) {
         verifyTradingNotOnHalt();
         verifyMinVersionForTrading();
 
@@ -309,7 +309,7 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
         NetworkId makerNetworkId = contract.getMaker().getNetworkId();
         MuSigTrade muSigTrade = new MuSigTrade(contract, isBuyer, true, takerIdentity, muSigOffer, takerNetworkId, makerNetworkId);
         checkArgument(findProtocol(muSigTrade.getId()).isEmpty(),
-                "We received the BisqMuSigTakeOfferRequest for an already existing protocol");
+                "We received the MuSigTakeOfferRequest for an already existing protocol");
 
         checkArgument(!tradeExists(muSigTrade.getId()), "A trade with that ID exists already");
         persistableStore.addTrade(muSigTrade);
@@ -318,11 +318,11 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
     }
 
     public void takeOffer(MuSigTrade trade) {
-        handleBisqMuSigTradeEvent(trade, new MuSigTakeOfferEvent());
+        handleMuSigTradeEvent(trade, new MuSigTakeOfferEvent());
     }
 
     public void buyerConfirmFiatSent(MuSigTrade trade) {
-        handleBisqMuSigTradeEvent(trade, new MuSigPaymentInitiatedEvent());
+        handleMuSigTradeEvent(trade, new MuSigPaymentInitiatedEvent());
     }
 
 
@@ -330,7 +330,7 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
         stopCooperativeCloseTimeout(trade);
         cooperativeCloseTimeoutSchedulerByTradeId.put(trade.getId(),
                 Scheduler.run(() ->
-                                handleBisqMuSigTradeEvent(trade, event))
+                                handleMuSigTradeEvent(trade, event))
                         .after(1000));
     }
 
@@ -341,7 +341,7 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
         }
     }
 
-    private void handleBisqMuSigTradeEvent(MuSigTrade trade, MuSigTradeEvent event) {
+    private void handleMuSigTradeEvent(MuSigTrade trade, MuSigTradeEvent event) {
         verifyTradingNotOnHalt();
         verifyMinVersionForTrading();
         String tradeId = trade.getId();
@@ -402,13 +402,13 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
 
     private MuSigProtocol createProtocol(MuSigContract contract, NetworkId sender, NetworkId receiver) {
         // We only create the data required for the protocol creation.
-        // Verification will happen in the BisqMuSigTakeOfferRequestHandler
+        // Verification will happen in the MuSigTakeOfferRequestHandler
         MuSigOffer offer = contract.getOffer();
         boolean isBuyer = offer.getMakersDirection().isBuy();
         Identity myIdentity = identityService.findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
         MuSigTrade muSigTrade = new MuSigTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);
         String tradeId = muSigTrade.getId();
-        checkArgument(findProtocol(tradeId).isEmpty(), "We received the BisqMuSigTakeOfferRequest for an already existing protocol");
+        checkArgument(findProtocol(tradeId).isEmpty(), "We received the MuSigTakeOfferRequest for an already existing protocol");
         checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
         persistableStore.addTrade(muSigTrade);
         return createAndAddTradeProtocol(muSigTrade);

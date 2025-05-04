@@ -15,17 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_musig.offerbook;
+package bisq.desktop.main.content.mu_sig.offerbook;
 
 import bisq.desktop.main.content.chat.ChatView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
-public class BisqMusigOfferbookView extends ChatView<BisqMusigOfferbookView, BisqMusigOfferbookModel> {
-    public BisqMusigOfferbookView(BisqMusigOfferbookModel model,
-                                  BisqMusigOfferbookController controller,
-                                  VBox chatMessagesComponent,
-                                  Pane channelSidebar) {
+public class MuSigOfferbookView extends ChatView<MuSigOfferbookView, MuSigOfferbookModel> {
+    public MuSigOfferbookView(MuSigOfferbookModel model,
+                              MuSigOfferbookController controller,
+                              VBox chatMessagesComponent,
+                              Pane channelSidebar) {
         super(model, controller, chatMessagesComponent, channelSidebar);
     }
 }

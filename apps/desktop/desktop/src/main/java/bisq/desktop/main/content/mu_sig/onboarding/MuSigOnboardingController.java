@@ -15,19 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_musig;
+package bisq.desktop.main.content.mu_sig.onboarding;
 
-import bisq.bisq_easy.NavigationTarget;
-import bisq.desktop.main.content.ContentTabView;
-import bisq.i18n.Res;
+import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.view.Controller;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqMusigView extends ContentTabView<BisqMusigModel, BisqMusigController> {
-    public BisqMusigView(BisqMusigModel model, BisqMusigController controller) {
-        super(model, controller);
+public class MuSigOnboardingController implements Controller {
+    @Getter
+    private final MuSigOnboardingView view;
+    private final MuSigOnboardingModel model;
 
-        addTab(Res.get("bisqMusig.dashboard"), NavigationTarget.BISQ_MUSIG_ONBOARDING);
-        addTab(Res.get("bisqMusig.offerbook"), NavigationTarget.BISQ_MUSIG_OFFERBOOK);
+    public MuSigOnboardingController(ServiceProvider serviceProvider) {
+        model = new MuSigOnboardingModel();
+        view = new MuSigOnboardingView(model, this);
+    }
+
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
     }
 }

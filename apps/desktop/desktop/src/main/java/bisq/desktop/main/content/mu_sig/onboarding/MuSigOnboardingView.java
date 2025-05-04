@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_musig.onboarding;
+package bisq.desktop.main.content.mu_sig.onboarding;
 
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
@@ -25,11 +25,11 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqMusigOnboardingView extends View<VBox, BisqMusigOnboardingModel, BisqMusigOnboardingController> {
-    public BisqMusigOnboardingView(BisqMusigOnboardingModel model, BisqMusigOnboardingController controller) {
+public class MuSigOnboardingView extends View<VBox, MuSigOnboardingModel, MuSigOnboardingController> {
+    public MuSigOnboardingView(MuSigOnboardingModel model, MuSigOnboardingController controller) {
         super(new VBox(), model, controller);
 
-        Label headlineLabel = new Label(Res.get("bisqMusig.onboarding.top.headline"));
+        Label headlineLabel = new Label(Res.get("muSig.onboarding.top.headline"));
         headlineLabel.getStyleClass().addAll("font-light", "font-size-25", "text-color-light");
 
         VBox contentBox = new VBox(20);

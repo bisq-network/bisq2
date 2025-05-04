@@ -15,17 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_musig.offerbook;
+package bisq.chat.mu_sig;
 
-import bisq.chat.ChatChannelDomain;
-import bisq.desktop.main.content.chat.ChatModel;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
-@Getter
-public class BisqMusigOfferbookModel extends ChatModel {
-    public BisqMusigOfferbookModel(ChatChannelDomain chatChannelDomain) {
-        super(chatChannelDomain);
-    }
+public interface MuSigOfferMessage {
 }
