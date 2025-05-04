@@ -88,7 +88,7 @@ message BisqEasyContract {
 }
 
 
-// BisqMuSig
+// MuSig
 message MuSigContract {
   uint64 baseSideAmount = 1;
   uint64 quoteSideAmount = 2;

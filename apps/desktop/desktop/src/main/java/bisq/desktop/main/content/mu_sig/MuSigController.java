@@ -15,26 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_musig;
+package bisq.desktop.main.content.mu_sig;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
-import bisq.desktop.main.content.bisq_musig.offerbook.BisqMusigOfferbookController;
-import bisq.desktop.main.content.bisq_musig.onboarding.BisqMusigOnboardingController;
+import bisq.desktop.main.content.mu_sig.offerbook.MuSigOfferbookController;
+import bisq.desktop.main.content.mu_sig.onboarding.MuSigOnboardingController;
 import lombok.Getter;
 
 import java.util.Optional;
 
-public class BisqMusigController extends ContentTabController<BisqMusigModel> {
+public class MuSigController extends ContentTabController<MuSigModel> {
     @Getter
-    private final BisqMusigView view;
+    private final MuSigView view;
 
-    public BisqMusigController(ServiceProvider serviceProvider) {
-        super(new BisqMusigModel(), NavigationTarget.BISQ_MUSIG, serviceProvider);
+    public MuSigController(ServiceProvider serviceProvider) {
+        super(new MuSigModel(), NavigationTarget.BISQ_MUSIG, serviceProvider);
 
-        view = new BisqMusigView(model, this);
+        view = new MuSigView(model, this);
     }
 
     @Override
@@ -50,8 +50,8 @@ public class BisqMusigController extends ContentTabController<BisqMusigModel> {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case BISQ_MUSIG_ONBOARDING -> Optional.of(new BisqMusigOnboardingController(serviceProvider));
-            case BISQ_MUSIG_OFFERBOOK -> Optional.of(new BisqMusigOfferbookController(serviceProvider));
+            case BISQ_MUSIG_ONBOARDING -> Optional.of(new MuSigOnboardingController(serviceProvider));
+            case BISQ_MUSIG_OFFERBOOK -> Optional.of(new MuSigOfferbookController(serviceProvider));
             default -> Optional.empty();
         };
     }

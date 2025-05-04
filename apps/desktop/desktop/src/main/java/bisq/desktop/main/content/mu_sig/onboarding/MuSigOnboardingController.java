@@ -15,17 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_musig.offerbook;
+package bisq.desktop.main.content.mu_sig.onboarding;
 
-import bisq.desktop.main.content.chat.ChatView;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
+import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.view.Controller;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public class BisqMusigOfferbookView extends ChatView<BisqMusigOfferbookView, BisqMusigOfferbookModel> {
-    public BisqMusigOfferbookView(BisqMusigOfferbookModel model,
-                                  BisqMusigOfferbookController controller,
-                                  VBox chatMessagesComponent,
-                                  Pane channelSidebar) {
-        super(model, controller, chatMessagesComponent, channelSidebar);
+@Slf4j
+public class MuSigOnboardingController implements Controller {
+    @Getter
+    private final MuSigOnboardingView view;
+    private final MuSigOnboardingModel model;
+
+    public MuSigOnboardingController(ServiceProvider serviceProvider) {
+        model = new MuSigOnboardingModel();
+        view = new MuSigOnboardingView(model, this);
+    }
+
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
     }
 }
