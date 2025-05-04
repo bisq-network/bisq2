@@ -140,7 +140,6 @@ message Offer {
   oneof message {
     BisqEasyOffer bisqEasyOffer = 30;
     MuSigOffer muSigOffer = 31;
-    SubmarineOffer submarineOffer = 32;
   }
 }
 
@@ -159,8 +158,4 @@ message MuSigOffer {
 
 message MyMuSigOffersStore {
   repeated Offer offers = 1;
-}
-
-// Submarine
-message SubmarineOffer {
 }
