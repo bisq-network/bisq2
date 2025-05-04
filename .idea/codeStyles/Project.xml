@@ -6,10 +6,8 @@
       <option name="HTML_ALIGN_ATTRIBUTES" value="false" />
     </HTMLCodeStyleSettings>
     <JavaCodeStyleSettings>
-      <option name="NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND" value="2" />
-      <option name="PACKAGES_TO_USE_IMPORT_ON_DEMAND">
-        <value />
-      </option>
+      <option name="CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND" value="9999" />
+      <option name="NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND" value="9999" />
       <option name="ENABLE_JAVADOC_FORMATTING" value="false" />
     </JavaCodeStyleSettings>
     <JetCodeStyleSettings>

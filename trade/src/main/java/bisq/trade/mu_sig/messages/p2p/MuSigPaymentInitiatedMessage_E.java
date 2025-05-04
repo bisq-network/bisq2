@@ -15,10 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages;
+package bisq.trade.mu_sig.messages.p2p;
 
 import bisq.network.identity.NetworkId;
-import bisq.trade.mu_sig.grpc.CloseTradeResponse;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,18 +27,15 @@ import lombok.extern.slf4j.Slf4j;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public final class MuSigCooperativeClosureMessage_G extends MuSigTradeMessage {
+public final class MuSigPaymentInitiatedMessage_E extends MuSigTradeMessage {
     public final static int MAX_LENGTH = 1000;
-    private final CloseTradeResponse closeTradeResponse;
 
-    public MuSigCooperativeClosureMessage_G(String id,
-                                            String tradeId,
-                                            String protocolVersion,
-                                            NetworkId sender,
-                                            NetworkId receiver,
-                                            CloseTradeResponse closeTradeResponse) {
+    public MuSigPaymentInitiatedMessage_E(String id,
+                                          String tradeId,
+                                          String protocolVersion,
+                                          NetworkId sender,
+                                          NetworkId receiver) {
         super(id, tradeId, protocolVersion, sender, receiver);
-        this.closeTradeResponse = closeTradeResponse;
 
         verify();
     }
@@ -47,7 +43,6 @@ public final class MuSigCooperativeClosureMessage_G extends MuSigTradeMessage {
     @Override
     public void verify() {
         super.verify();
-
     }
 
     @Override

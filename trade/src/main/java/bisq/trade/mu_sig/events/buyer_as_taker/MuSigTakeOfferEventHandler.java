@@ -25,9 +25,9 @@ import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.grpc.MusigGrpc;
 import bisq.trade.mu_sig.grpc.PubKeySharesRequest;
-import bisq.trade.mu_sig.grpc.PubKeySharesResponse;
 import bisq.trade.mu_sig.grpc.Role;
-import bisq.trade.mu_sig.messages.MuSigSetupTradeMessage_A;
+import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
+import bisq.trade.mu_sig.messages.p2p.MuSigSetupTradeMessage_A;
 import bisq.trade.protocol.events.SendTradeMessageHandler;
 
 import java.security.GeneralSecurityException;
@@ -41,16 +41,17 @@ public class MuSigTakeOfferEventHandler extends SendTradeMessageHandler<MuSigTra
     @Override
     public void handle(Event event) {
         MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
-        PubKeySharesResponse buyerPubKeySharesResponse = stub.initTrade(PubKeySharesRequest.newBuilder()
+        PubKeySharesResponse buyerPubKeySharesResponse = PubKeySharesResponse.fromProto(stub.initTrade(PubKeySharesRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setMyRole(Role.BUYER_AS_TAKER)
-                .build());
+                .build()));
 
         BisqMuSigContract contract = trade.getContract();
         try {
             ContractSignatureData contractSignatureData = serviceProvider.getContractService().signContract(contract,
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
-            commitToModel(contractSignatureData);
+            commitToModel(contractSignatureData,buyerPubKeySharesResponse);
+
             sendMessage(new MuSigSetupTradeMessage_A(StringUtils.createUid(),
                     trade.getId(),
                     trade.getProtocolVersion(),
@@ -64,7 +65,9 @@ public class MuSigTakeOfferEventHandler extends SendTradeMessageHandler<MuSigTra
         }
     }
 
-    private void commitToModel(ContractSignatureData contractSignatureData) {
+    private void commitToModel(ContractSignatureData contractSignatureData,
+                               PubKeySharesResponse buyerPubKeySharesResponse) {
         trade.getTaker().getContractSignatureData().set(contractSignatureData);
+        trade.getTaker().setPubKeySharesResponse(buyerPubKeySharesResponse);
     }
 }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.ignore;
+package bisq.trade.mu_sig.messages.p2p.not_used_yet;
 
 import bisq.common.fsm.Event;
 import bisq.contract.ContractSignatureData;
