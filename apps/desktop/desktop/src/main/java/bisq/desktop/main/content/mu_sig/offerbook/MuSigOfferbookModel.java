@@ -15,16 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_musig;
+package bisq.desktop.main.content.mu_sig.offerbook;
 
-import bisq.bisq_easy.NavigationTarget;
-import bisq.desktop.main.content.ContentTabModel;
+import bisq.chat.ChatChannelDomain;
+import bisq.desktop.main.content.chat.ChatModel;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
-public class BisqMusigModel extends ContentTabModel {
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.BISQ_MUSIG_ONBOARDING;
+public class MuSigOfferbookModel extends ChatModel {
+    public MuSigOfferbookModel(ChatChannelDomain chatChannelDomain) {
+        super(chatChannelDomain);
     }
 }

@@ -63,7 +63,7 @@ public class TradeOverviewController implements Controller {
                 new Pair<>(10000L, 700000L),
                 ""
         );
-        ProtocolListItem bisqMuSig = new ProtocolListItem(TradeAppsAttributes.Type.BISQ_MU_SIG,
+        ProtocolListItem muSig = new ProtocolListItem(TradeAppsAttributes.Type.MU_SIG,
                 NavigationTarget.BISQ_MU_SIG,
                 TradeProtocolType.BISQ_MU_SIG,
                 new Pair<>(10000L, 700000L),
@@ -82,7 +82,7 @@ public class TradeOverviewController implements Controller {
                 "Q4/26"
         );
         return List.of(bisqEasy,
-                bisqMuSig,
+                muSig,
                 submarine,
                 liquidFiat);
     }
