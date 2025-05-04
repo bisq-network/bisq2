@@ -75,7 +75,7 @@ message ChatMessage {
     CommonPublicChatMessage commonPublicChatMessage = 21;
     BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage = 22;
     BisqEasyOfferbookMessage bisqEasyOfferbookMessage = 23;
-    BisqMusigOfferbookMessage bisqMusigOfferbookMessage = 24;
+    MuSigOfferbookMessage muSigOfferbookMessage = 24;
   }
 }
 
@@ -154,8 +154,8 @@ message BisqEasyOfferbookChannelStore {
   repeated ChatChannel channels = 1;
 }
 
-message BisqMusigOfferbookMessage {
-  offer.Offer bisqMusigOffer = 1;
+message MuSigOfferbookMessage {
+  offer.Offer muSigOffer = 1;
 }
 
 // ChatChannelSelection

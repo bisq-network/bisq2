@@ -94,7 +94,7 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
 
     @Override
     public bisq.trade.protobuf.Trade.Builder getBuilder(boolean serializeForHash) {
-        return getTradeBuilder(serializeForHash).setBisqMuSigTrade(bisq.trade.protobuf.BisqMuSigTrade.newBuilder());
+        return getTradeBuilder(serializeForHash).setMuSigTrade(bisq.trade.protobuf.MuSigTrade.newBuilder());
     }
 
     @Override

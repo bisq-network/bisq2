@@ -149,7 +149,7 @@ message MuSigOffer {
   repeated string supportedLanguageCodes = 1;
 }
 
-message MyBisqMuSigOffersStore {
+message MyMuSigOffersStore {
   repeated Offer offers = 1;
 }
 

@@ -30,13 +30,13 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class MyBisqMuSigOffersService implements PersistenceClient<MyBisqMuSigOffersStore>, Service {
+public class MyMuSigOffersService implements PersistenceClient<MyMuSigOffersStore>, Service {
     @Getter
-    private final MyBisqMuSigOffersStore persistableStore = new MyBisqMuSigOffersStore();
+    private final MyMuSigOffersStore persistableStore = new MyMuSigOffersStore();
     @Getter
-    private final Persistence<MyBisqMuSigOffersStore> persistence;
+    private final Persistence<MyMuSigOffersStore> persistence;
 
-    public MyBisqMuSigOffersService(PersistenceService persistenceService) {
+    public MyMuSigOffersService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
 
