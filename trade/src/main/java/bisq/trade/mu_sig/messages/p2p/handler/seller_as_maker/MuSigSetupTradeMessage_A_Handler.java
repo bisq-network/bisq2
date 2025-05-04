@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.seller_as_maker;
+package bisq.trade.mu_sig.messages.p2p.handler.seller_as_maker;
 
 import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
@@ -25,11 +25,17 @@ import bisq.contract.bisq_musig.BisqMuSigContract;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
-import bisq.trade.mu_sig.grpc.*;
-import bisq.trade.mu_sig.messages.MuSigSetupTradeMessage_A;
-import bisq.trade.mu_sig.messages.MuSigSetupTradeMessage_B;
+import bisq.trade.mu_sig.grpc.MusigGrpc;
+import bisq.trade.mu_sig.grpc.NonceSharesRequest;
+import bisq.trade.mu_sig.grpc.PubKeySharesRequest;
+import bisq.trade.mu_sig.grpc.Role;
+import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
+import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
+import bisq.trade.mu_sig.messages.p2p.MuSigSetupTradeMessage_A;
+import bisq.trade.mu_sig.messages.p2p.MuSigSetupTradeMessage_B;
 import bisq.trade.protocol.events.TradeMessageHandler;
 import bisq.trade.protocol.events.TradeMessageSender;
+import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
@@ -47,45 +53,50 @@ public class MuSigSetupTradeMessage_A_Handler extends TradeMessageHandler<MuSigT
         MuSigSetupTradeMessage_A message = (MuSigSetupTradeMessage_A) event;
         verifyMessage(message);
 
-         MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
-        PubKeySharesResponse sellerPubKeyShareResponse = stub.initTrade(PubKeySharesRequest.newBuilder()
+
+        MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
+        PubKeySharesResponse sellerPubKeyShareResponse = PubKeySharesResponse.fromProto(stub.initTrade(PubKeySharesRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setMyRole(Role.SELLER_AS_MAKER)
-                .build());
+                .build()));
 
         PubKeySharesResponse buyerPubKeySharesResponse = message.getPubKeySharesResponse();
-        NonceSharesMessage sellerNonceSharesMessage = stub.getNonceShares(NonceSharesRequest.newBuilder()
+        NonceSharesMessage sellerNonceSharesMessage = NonceSharesMessage.fromProto(stub.getNonceShares(NonceSharesRequest.newBuilder()
                 .setTradeId(trade.getId())
-                .setBuyerOutputPeersPubKeyShare(buyerPubKeySharesResponse.getBuyerOutputPubKeyShare())
-                .setSellerOutputPeersPubKeyShare(buyerPubKeySharesResponse.getSellerOutputPubKeyShare())
+                .setBuyerOutputPeersPubKeyShare(ByteString.copyFrom(buyerPubKeySharesResponse.getBuyerOutputPubKeyShare()))
+                .setSellerOutputPeersPubKeyShare(ByteString.copyFrom(buyerPubKeySharesResponse.getSellerOutputPubKeyShare()))
                 .setDepositTxFeeRate(50_000)  // 12.5 sats per vbyte
                 .setPreparedTxFeeRate(40_000) // 10.0 sats per vbyte
                 .setTradeAmount(200_000)
                 .setBuyersSecurityDeposit(30_000)
                 .setSellersSecurityDeposit(30_000)
-                .build());
+                .build()));
 
-        BisqMuSigContract contract = message.getContract();
+        BisqMuSigContract takersContract = message.getContract();
         ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
         ContractService contractService = serviceProvider.getContractService();
         try {
-            ContractSignatureData makersContractSignatureData = contractService.signContract(contract,
+            BisqMuSigContract makersContract = trade.getContract();
+            ContractSignatureData makersContractSignatureData = contractService.signContract(makersContract,
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
+
+            // TODO verify both contracts are the same, and verify peers signature
+
             commitToModel(takersContractSignatureData,
                     makersContractSignatureData,
                     buyerPubKeySharesResponse,
                     sellerPubKeyShareResponse,
                     sellerNonceSharesMessage);
 
-            MuSigSetupTradeMessage_B response = new MuSigSetupTradeMessage_B(StringUtils.createUid(),
+            MuSigSetupTradeMessage_B responseMessage = new MuSigSetupTradeMessage_B(StringUtils.createUid(),
                     trade.getId(),
                     trade.getProtocolVersion(),
                     trade.getMyIdentity().getNetworkId(),
                     trade.getPeer().getNetworkId(),
-                    contract,
+                    makersContract,
                     makersContractSignatureData,
                     sellerPubKeyShareResponse);
-            sendMessage(response, serviceProvider, trade);
+            sendMessage(responseMessage, serviceProvider, trade);
 
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);

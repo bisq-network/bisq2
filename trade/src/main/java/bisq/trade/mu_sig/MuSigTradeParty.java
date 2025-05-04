@@ -19,10 +19,7 @@ package bisq.trade.mu_sig;
 
 import bisq.network.identity.NetworkId;
 import bisq.trade.TradeParty;
-import bisq.trade.mu_sig.grpc.DepositPsbt;
-import bisq.trade.mu_sig.grpc.NonceSharesMessage;
-import bisq.trade.mu_sig.grpc.PartialSignaturesMessage;
-import bisq.trade.mu_sig.grpc.PubKeySharesResponse;
+import bisq.trade.mu_sig.messages.grpc.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,6 +37,10 @@ public class MuSigTradeParty extends TradeParty {
     private PartialSignaturesMessage partialSignaturesMessage;
     @Setter
     private DepositPsbt depositPsbt;
+    @Setter
+    private SwapTxSignatureResponse swapTxSignatureResponse;
+    @Setter
+    private CloseTradeResponse closeTradeResponse;
 
     public MuSigTradeParty(NetworkId networkId) {
         super(networkId);

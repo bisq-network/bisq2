@@ -15,9 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages;
+package bisq.trade.mu_sig.messages.p2p;
 
+import bisq.contract.ContractSignatureData;
+import bisq.contract.bisq_musig.BisqMuSigContract;
 import bisq.network.identity.NetworkId;
+import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -27,15 +30,24 @@ import lombok.extern.slf4j.Slf4j;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public final class MuSigPaymentInitiatedMessage_E extends MuSigTradeMessage {
+public final class MuSigSetupTradeMessage_A extends MuSigTradeMessage {
     public final static int MAX_LENGTH = 1000;
+    private final BisqMuSigContract contract;
+    private final ContractSignatureData contractSignatureData;
+    private final PubKeySharesResponse pubKeySharesResponse;
 
-    public MuSigPaymentInitiatedMessage_E(String id,
-                                          String tradeId,
-                                          String protocolVersion,
-                                          NetworkId sender,
-                                          NetworkId receiver) {
+    public MuSigSetupTradeMessage_A(String id,
+                                    String tradeId,
+                                    String protocolVersion,
+                                    NetworkId sender,
+                                    NetworkId receiver,
+                                    BisqMuSigContract contract,
+                                    ContractSignatureData contractSignatureData,
+                                    PubKeySharesResponse pubKeySharesResponse) {
         super(id, tradeId, protocolVersion, sender, receiver);
+        this.contract = contract;
+        this.contractSignatureData = contractSignatureData;
+        this.pubKeySharesResponse = pubKeySharesResponse;
 
         verify();
     }

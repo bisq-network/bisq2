@@ -15,24 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.seller_as_maker;
+package bisq.trade.mu_sig.messages.p2p.handler.seller_as_maker;
 
 import bisq.common.fsm.Event;
-import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.grpc.CloseTradeRequest;
-import bisq.trade.mu_sig.grpc.CloseTradeResponse;
 import bisq.trade.mu_sig.grpc.MusigGrpc;
-import bisq.trade.mu_sig.messages.MuSigCooperativeClosureMessage_G;
+import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
+import bisq.trade.mu_sig.messages.p2p.MuSigCooperativeClosureMessage_G;
 import bisq.trade.protocol.events.TradeMessageHandler;
-import bisq.trade.protocol.events.TradeMessageSender;
+import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MuSigCooperativeClosureMessage_G_Handler extends TradeMessageHandler<MuSigTrade, MuSigCooperativeClosureMessage_G>
-        implements TradeMessageSender<MuSigTrade> {
+public class MuSigCooperativeClosureMessage_G_Handler extends TradeMessageHandler<MuSigTrade, MuSigCooperativeClosureMessage_G> {
 
     public MuSigCooperativeClosureMessage_G_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -45,25 +43,16 @@ public class MuSigCooperativeClosureMessage_G_Handler extends TradeMessageHandle
 
         serviceProvider.getMuSigTradeService().stopCooperativeCloseTimeout(trade);
 
-        MuSigTradeParty buyerAsTake = trade.getTaker();
-
         // ClosureType.COOPERATIVE
         // *** SELLER CLOSES TRADE ***
-        CloseTradeResponse buyersCloseTradeResponse = message.getCloseTradeResponse();
-         MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
-
-        CloseTradeResponse sellersCloseTradeResponse = stub.closeTrade(CloseTradeRequest.newBuilder()
+        CloseTradeResponse buyerCloseTradeResponse = message.getCloseTradeResponse();
+        MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
+        CloseTradeResponse sellersCloseTradeResponse = CloseTradeResponse.fromProto(stub.closeTrade(CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
-                .setMyOutputPeersPrvKeyShare(buyersCloseTradeResponse.getPeerOutputPrvKeyShare())
-                .build());
+                .setMyOutputPeersPrvKeyShare(ByteString.copyFrom( buyerCloseTradeResponse.getPeerOutputPrvKeyShare()))
+                .build()));
 
-        MuSigCooperativeClosureMessage_G response = new MuSigCooperativeClosureMessage_G(StringUtils.createUid(),
-                trade.getId(),
-                trade.getProtocolVersion(),
-                trade.getMyIdentity().getNetworkId(),
-                trade.getPeer().getNetworkId(),
-                buyersCloseTradeResponse);
-        sendMessage(response, serviceProvider, trade);
+        commitToModel(sellersCloseTradeResponse, buyerCloseTradeResponse);
     }
 
     @Override
@@ -71,6 +60,12 @@ public class MuSigCooperativeClosureMessage_G_Handler extends TradeMessageHandle
         super.verifyMessage(message);
     }
 
-    private void commitToModel() {
+    private void commitToModel(CloseTradeResponse sellersCloseTradeResponse,
+                               CloseTradeResponse buyerCloseTradeResponse) {
+        MuSigTradeParty buyerAsTaker = trade.getTaker();
+        MuSigTradeParty sellerAsMaker = trade.getMaker();
+
+        sellerAsMaker.setCloseTradeResponse(sellersCloseTradeResponse);
+        buyerAsTaker.setCloseTradeResponse(buyerCloseTradeResponse);
     }
 }

@@ -15,10 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages;
+package bisq.trade.mu_sig.messages.p2p.not_used_yet;
 
+import bisq.contract.ContractSignatureData;
+import bisq.contract.bisq_musig.BisqMuSigContract;
 import bisq.network.identity.NetworkId;
-import bisq.trade.mu_sig.grpc.PartialSignaturesMessage;
+import bisq.trade.mu_sig.messages.p2p.MuSigTradeMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,18 +30,21 @@ import lombok.extern.slf4j.Slf4j;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public final class MuSigSetupTradeMessage_C extends MuSigTradeMessage {
-    public final static int MAX_LENGTH = 1000;
-    private final PartialSignaturesMessage partialSignaturesMessage;
+public final class MuSigTakeOfferRequest extends MuSigTradeMessage {
+    private final BisqMuSigContract bisqMuSigContract;
+    private final ContractSignatureData contractSignatureData;
 
-    public MuSigSetupTradeMessage_C(String id,
-                                    String tradeId,
-                                    String protocolVersion,
-                                    NetworkId sender,
-                                    NetworkId receiver,
-                                    PartialSignaturesMessage partialSignaturesMessage) {
+    public MuSigTakeOfferRequest(String id,
+                                 String tradeId,
+                                 String protocolVersion,
+                                 NetworkId sender,
+                                 NetworkId receiver,
+                                 BisqMuSigContract bisqMuSigContract,
+                                 ContractSignatureData contractSignatureData) {
         super(id, tradeId, protocolVersion, sender, receiver);
-        this.partialSignaturesMessage = partialSignaturesMessage;
+
+        this.bisqMuSigContract = bisqMuSigContract;
+        this.contractSignatureData = contractSignatureData;
 
         verify();
     }
@@ -47,7 +52,6 @@ public final class MuSigSetupTradeMessage_C extends MuSigTradeMessage {
     @Override
     public void verify() {
         super.verify();
-
     }
 
     @Override
@@ -65,16 +69,16 @@ public final class MuSigSetupTradeMessage_C extends MuSigTradeMessage {
         return bisq.trade.protobuf.BisqEasyAccountDataMessage.newBuilder();
     }
 
-    /*public static MuSigMessageA fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        bisq.trade.protobuf.BisqEasyAccountDataMessage bisqEasyAccountDataMessage = proto.getBisqEasyTradeMessage().getBisqEasyAccountDataMessage();
-        return new MuSigMessageA(
+    /*public static BisqMuSigTakeOfferRequest fromProto(bisq.trade.protobuf.TradeMessage proto) {
+        bisq.trade.protobuf.BisqMuSigTakeOfferRequest bisqMuSigTakeOfferRequest = proto.getBisqMuSigTradeMessage().getBisqMuSigTakeOfferRequest();
+        return new BisqMuSigTakeOfferRequest(
                 proto.getId(),
                 proto.getTradeId(),
                 proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
-                bisqEasyAccountDataMessage.getPaymentAccountData(),
-                BisqEasyOffer.fromProto(bisqEasyAccountDataMessage.getBisqEasyOffer()));
+                BisqMuSigContract.fromProto(bisqMuSigTakeOfferRequest.getBisqMuSigContract()),
+                ContractSignatureData.fromProto(bisqMuSigTakeOfferRequest.getContractSignatureData()));
     }*/
 
     @Override

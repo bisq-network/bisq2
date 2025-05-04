@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages;
+package bisq.trade.mu_sig.messages.p2p;
 
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.identity.NetworkId;

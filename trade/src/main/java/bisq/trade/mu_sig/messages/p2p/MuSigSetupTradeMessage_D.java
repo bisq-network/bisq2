@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages;
+package bisq.trade.mu_sig.messages.p2p;
 
 import bisq.network.identity.NetworkId;
-import bisq.trade.mu_sig.grpc.SwapTxSignatureResponse;
+import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,18 +28,18 @@ import lombok.extern.slf4j.Slf4j;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public final class MuSigPaymentReceivedMessage_F extends MuSigTradeMessage {
+public final class MuSigSetupTradeMessage_D extends MuSigTradeMessage {
     public final static int MAX_LENGTH = 1000;
-    private final SwapTxSignatureResponse swapTxSignatureResponse;
+    private final PartialSignaturesMessage partialSignaturesMessage;
 
-    public MuSigPaymentReceivedMessage_F(String id,
-                                         String tradeId,
-                                         String protocolVersion,
-                                         NetworkId sender,
-                                         NetworkId receiver,
-                                         SwapTxSignatureResponse swapTxSignatureResponse) {
+    public MuSigSetupTradeMessage_D(String id,
+                                    String tradeId,
+                                    String protocolVersion,
+                                    NetworkId sender,
+                                    NetworkId receiver,
+                                    PartialSignaturesMessage partialSignaturesMessage) {
         super(id, tradeId, protocolVersion, sender, receiver);
-        this.swapTxSignatureResponse = swapTxSignatureResponse;
+        this.partialSignaturesMessage = partialSignaturesMessage;
 
         verify();
     }

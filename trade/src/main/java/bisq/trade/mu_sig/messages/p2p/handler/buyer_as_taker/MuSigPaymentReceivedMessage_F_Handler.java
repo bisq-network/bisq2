@@ -15,18 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.buyer_as_taker;
+package bisq.trade.mu_sig.messages.p2p.handler.buyer_as_taker;
 
 import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
-import bisq.trade.mu_sig.grpc.*;
-import bisq.trade.mu_sig.messages.MuSigCooperativeClosureMessage_G;
-import bisq.trade.mu_sig.messages.MuSigPaymentReceivedMessage_F;
+import bisq.trade.mu_sig.grpc.CloseTradeRequest;
+import bisq.trade.mu_sig.grpc.MusigGrpc;
+import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
+import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
+import bisq.trade.mu_sig.messages.p2p.MuSigCooperativeClosureMessage_G;
+import bisq.trade.mu_sig.messages.p2p.MuSigPaymentReceivedMessage_F;
 import bisq.trade.protocol.events.TradeMessageHandler;
 import bisq.trade.protocol.events.TradeMessageSender;
+import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -44,25 +48,24 @@ public class MuSigPaymentReceivedMessage_F_Handler extends TradeMessageHandler<M
 
         serviceProvider.getMuSigTradeService().stopCooperativeCloseTimeout(trade);
 
-        MuSigTradeParty sellerAsMaker = trade.getMaker();
-
         // ClosureType.COOPERATIVE
         // *** BUYER CLOSES TRADE ***
-        SwapTxSignatureResponse swapTxSignatureResponse = message.getSwapTxSignatureResponse();
-         MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
-
-        CloseTradeResponse buyersCloseTradeResponse = stub.closeTrade(CloseTradeRequest.newBuilder()
+        SwapTxSignatureResponse sellerSwapTxSignatureResponse = message.getSwapTxSignatureResponse();
+        MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
+        CloseTradeResponse buyersCloseTradeResponse = CloseTradeResponse.fromProto(stub.closeTrade(CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
-                .setMyOutputPeersPrvKeyShare(swapTxSignatureResponse.getPeerOutputPrvKeyShare())
-                .build());
+                .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(sellerSwapTxSignatureResponse.getPeerOutputPrvKeyShare()))
+                .build()));
 
-        MuSigCooperativeClosureMessage_G response = new MuSigCooperativeClosureMessage_G(StringUtils.createUid(),
+        commitToModel(buyersCloseTradeResponse, sellerSwapTxSignatureResponse);
+
+        MuSigCooperativeClosureMessage_G responseMessage = new MuSigCooperativeClosureMessage_G(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 buyersCloseTradeResponse);
-        sendMessage(response, serviceProvider, trade);
+        sendMessage(responseMessage, serviceProvider, trade);
     }
 
     @Override
@@ -70,15 +73,12 @@ public class MuSigPaymentReceivedMessage_F_Handler extends TradeMessageHandler<M
         super.verifyMessage(message);
     }
 
-    private void commitToModel(PartialSignaturesMessage sellerPartialSignaturesMessage,
-                               DepositPsbt sellerDepositPsbt,
-                               PartialSignaturesMessage redeactedBuyerPartialSignaturesMessage) {
+    private void commitToModel(CloseTradeResponse buyersCloseTradeResponse,
+                               SwapTxSignatureResponse sellerSwapTxSignatureResponse) {
         MuSigTradeParty buyerAsTaker = trade.getTaker();
         MuSigTradeParty sellerAsMaker = trade.getMaker();
 
-        sellerAsMaker.setPartialSignaturesMessage(sellerPartialSignaturesMessage);
-        sellerAsMaker.setDepositPsbt(sellerDepositPsbt);
-
-        buyerAsTaker.setPartialSignaturesMessage(redeactedBuyerPartialSignaturesMessage);
+        buyerAsTaker.setCloseTradeResponse(buyersCloseTradeResponse);
+        sellerAsMaker.setSwapTxSignatureResponse(sellerSwapTxSignatureResponse);
     }
 }

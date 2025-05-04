@@ -15,23 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.buyer_as_taker;
+package bisq.trade.mu_sig.messages.p2p.handler.buyer_as_taker;
 
 import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.grpc.*;
-import bisq.trade.mu_sig.messages.MuSigSetupTradeMessage_D;
+import bisq.trade.mu_sig.messages.grpc.DepositPsbt;
+import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
+import bisq.trade.mu_sig.messages.p2p.MuSigSetupTradeMessage_D;
 import bisq.trade.protocol.events.TradeMessageHandler;
-import bisq.trade.protocol.events.TradeMessageSender;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Iterator;
 
 @Slf4j
-public class MuSigSetupTradeMessage_D_Handler extends TradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_D>
-        implements TradeMessageSender<MuSigTrade> {
+public class MuSigSetupTradeMessage_D_Handler extends TradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_D> {
 
     public MuSigSetupTradeMessage_D_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -42,20 +42,17 @@ public class MuSigSetupTradeMessage_D_Handler extends TradeMessageHandler<MuSigT
         MuSigSetupTradeMessage_D message = (MuSigSetupTradeMessage_D) event;
         verifyMessage(message);
 
-        MuSigTradeParty buyerAsTake = trade.getTaker();
-
-         MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
-
         PartialSignaturesMessage sellerPartialSignaturesMessage = message.getPartialSignaturesMessage();
-        var buyerDepositPsbt = stub.signDepositTx(DepositTxSignatureRequest.newBuilder()
-                .setTradeId( trade.getId())
-                .setPeersPartialSignatures(sellerPartialSignaturesMessage)
-                .build());
+        MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
+        DepositPsbt buyerDepositPsbt = DepositPsbt.fromProto(stub.signDepositTx(DepositTxSignatureRequest.newBuilder()
+                .setTradeId(trade.getId())
+                .setPeersPartialSignatures(sellerPartialSignaturesMessage.toProto(true))
+                .build()));
 
         // *** BUYER BROADCASTS DEPOSIT TX ***
         Iterator<TxConfirmationStatus> depositTxConfirmationIter = stub.publishDepositTx(PublishDepositTxRequest.newBuilder()
                 .setTradeId(trade.getId())
-                .setDepositPsbt(buyerDepositPsbt)
+                .setDepositPsbt(buyerDepositPsbt.toProto(true))
                 .build());
 
         commitToModel(buyerDepositPsbt, sellerPartialSignaturesMessage);
@@ -67,11 +64,11 @@ public class MuSigSetupTradeMessage_D_Handler extends TradeMessageHandler<MuSigT
     }
 
     private void commitToModel(DepositPsbt buyerDepositPsbt,
-                               PartialSignaturesMessage redeactedSellerPartialSignaturesMessage) {
+                               PartialSignaturesMessage sellerPartialSignaturesMessage) {
         MuSigTradeParty buyerAsTaker = trade.getTaker();
         MuSigTradeParty sellerAsMaker = trade.getMaker();
 
         buyerAsTaker.setDepositPsbt(buyerDepositPsbt);
-        sellerAsMaker.setPartialSignaturesMessage(redeactedSellerPartialSignaturesMessage);
+        sellerAsMaker.setPartialSignaturesMessage(sellerPartialSignaturesMessage);
     }
 }
