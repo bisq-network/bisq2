@@ -105,10 +105,10 @@ public final class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
     @Override
     protected bisq.contract.protobuf.TwoPartyContract.Builder getTwoPartyContractBuilder(boolean serializeForHash) {
         return super.getTwoPartyContractBuilder(serializeForHash)
-                .setBisqEasyContract(tomuSigContractProto(serializeForHash));
+                .setBisqEasyContract(toBisqEasyContractProto(serializeForHash));
     }
 
-    private bisq.contract.protobuf.BisqEasyContract tomuSigContractProto(boolean serializeForHash) {
+    private bisq.contract.protobuf.BisqEasyContract toBisqEasyContractProto(boolean serializeForHash) {
         return resolveBuilder(getBisqEasyContractBuilder(serializeForHash), serializeForHash).build();
     }
 

@@ -48,15 +48,15 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
     private final long marketPrice;
 
     public MuSigContract(long takeOfferDate,
-                            MuSigOffer offer,
-                            NetworkId takerNetworkId,
-                            long baseSideAmount,
-                            long quoteSideAmount,
-                            BitcoinPaymentMethodSpec baseSidePaymentMethodSpec,
-                            FiatPaymentMethodSpec quoteSidePaymentMethodSpec,
-                            Optional<UserProfile> mediator,
-                            PriceSpec priceSpec,
-                            long marketPrice) {
+                         MuSigOffer offer,
+                         NetworkId takerNetworkId,
+                         long baseSideAmount,
+                         long quoteSideAmount,
+                         BitcoinPaymentMethodSpec baseSidePaymentMethodSpec,
+                         FiatPaymentMethodSpec quoteSidePaymentMethodSpec,
+                         Optional<UserProfile> mediator,
+                         PriceSpec priceSpec,
+                         long marketPrice) {
         this(takeOfferDate,
                 offer,
                 TradeProtocolType.BISQ_EASY,
@@ -71,16 +71,16 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
     }
 
     public MuSigContract(long takeOfferDate,
-                             MuSigOffer offer,
-                            TradeProtocolType protocolType,
-                            Party taker,
-                            long baseSideAmount,
-                            long quoteSideAmount,
-                            BitcoinPaymentMethodSpec baseSidePaymentMethodSpec,
-                            FiatPaymentMethodSpec quoteSidePaymentMethodSpec,
-                            Optional<UserProfile> mediator,
-                            PriceSpec priceSpec,
-                            long marketPrice) {
+                         MuSigOffer offer,
+                         TradeProtocolType protocolType,
+                         Party taker,
+                         long baseSideAmount,
+                         long quoteSideAmount,
+                         BitcoinPaymentMethodSpec baseSidePaymentMethodSpec,
+                         FiatPaymentMethodSpec quoteSidePaymentMethodSpec,
+                         Optional<UserProfile> mediator,
+                         PriceSpec priceSpec,
+                         long marketPrice) {
         super(takeOfferDate, offer, protocolType, taker);
         this.baseSideAmount = baseSideAmount;
         this.quoteSideAmount = quoteSideAmount;
@@ -100,16 +100,35 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
 
     @Override
     public bisq.contract.protobuf.Contract.Builder getBuilder(boolean serializeForHash) {
-        var bisqEasyContract = bisq.contract.protobuf.MuSigContract.newBuilder();
-        var twoPartyContract = getTwoPartyContractBuilder(serializeForHash).setMuSigContract(bisqEasyContract);
-        return getContractBuilder(serializeForHash).setTwoPartyContract(twoPartyContract);
+        return getContractBuilder(serializeForHash).setTwoPartyContract(toTwoPartyContract(serializeForHash));
+    }
+
+    @Override
+    protected bisq.contract.protobuf.TwoPartyContract.Builder getTwoPartyContractBuilder(boolean serializeForHash) {
+        return super.getTwoPartyContractBuilder(serializeForHash)
+                .setMuSigContract(toMuSigContractProto(serializeForHash));
+    }
+
+    private bisq.contract.protobuf.MuSigContract toMuSigContractProto(boolean serializeForHash) {
+        return resolveBuilder(getMuSigContractBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.contract.protobuf.MuSigContract.Builder getMuSigContractBuilder(boolean serializeForHash) {
+        bisq.contract.protobuf.MuSigContract.Builder builder = bisq.contract.protobuf.MuSigContract.newBuilder()
+                .setBaseSideAmount(baseSideAmount)
+                .setQuoteSideAmount(quoteSideAmount)
+                .setBaseSidePaymentMethodSpec(baseSidePaymentMethodSpec.toProto(serializeForHash))
+                .setQuoteSidePaymentMethodSpec(quoteSidePaymentMethodSpec.toProto(serializeForHash))
+                .setPriceSpec(priceSpec.toProto(serializeForHash))
+                .setMarketPrice(marketPrice);
+        mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto(serializeForHash)));
+        return builder;
     }
 
     @Override
     public bisq.contract.protobuf.Contract toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
-
 
     public static MuSigContract fromProto(bisq.contract.protobuf.Contract proto) {
         bisq.contract.protobuf.TwoPartyContract twoPartyContractProto = proto.getTwoPartyContract();

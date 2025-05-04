@@ -69,7 +69,7 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                 List.of(TradeProtocolType.MUSIG),
                 PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec(),
                 PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(fiatPaymentMethods),
-                OfferOptionUtil.fromTradeTerms(makersTradeTerms)
+                OfferOptionUtil.fromTradeTerms(makersTradeTerms) //todo
         );
     }
 

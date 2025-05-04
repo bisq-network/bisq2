@@ -27,9 +27,7 @@ import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.platform.Version;
 import bisq.common.timer.Scheduler;
-import bisq.common.util.StringUtils;
 import bisq.contract.bisq_musig.MuSigContract;
-import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -463,14 +461,9 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
         long redactDateForNotCompletedTrades = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numDaysForNotCompletedTrades);
         long numChanges = getTrades().stream()
                 .filter(trade -> {
-                    if (StringUtils.isEmpty(trade.getPaymentAccountData().get())) {
-                        return false;
-                    }
                     boolean doRedaction = trade.getTradeCompletedDate().map(date -> date < redactDate)
                             .orElse(trade.getContract().getTakeOfferDate() < redactDateForNotCompletedTrades);
-                    if (doRedaction) {
-                        trade.getPaymentAccountData().set(Res.get("data.redacted"));
-                    }
+                    //todo
                     return doRedaction;
                 })
                 .count();

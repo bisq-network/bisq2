@@ -41,14 +41,6 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTradeParty> {
-    @Getter
-    private final Observable<String> paymentAccountData = new Observable<>();
-    @Getter
-    private final Observable<String> bitcoinPaymentData = new Observable<>(); // btc address in case of mainChain, or LN invoice if LN is used
-    // paymentProof can be null in Observable
-    @Getter
-    private final Observable<String> paymentProof = new Observable<>(); // txId in case of mainChain, or preimage if LN is used
-
     // The role who cancelled or rejected the trade
     @Getter
     private final Observable<Role> interruptTradeInitiator = new Observable<>();
@@ -76,7 +68,7 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
                 new MuSigTradeParty(takerNetworkId),
                 new MuSigTradeParty(makerNetworkId));
 
-        stateObservable().addObserver(s -> tradeState.set((MuSigTradeState) s));
+        stateObservable().addObserver(state -> tradeState.set((MuSigTradeState) state));
     }
 
     public MuSigTrade(MuSigContract contract,
@@ -94,7 +86,7 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
 
     @Override
     public bisq.trade.protobuf.Trade.Builder getBuilder(boolean serializeForHash) {
-        return getTradeBuilder(serializeForHash).setMuSigTrade(bisq.trade.protobuf.MuSigTrade.newBuilder());
+        return getTradeBuilder(serializeForHash).setMuSigTrade(toMuSigTradeProto(serializeForHash));
     }
 
     @Override
@@ -102,7 +94,19 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
         return resolveProto(serializeForHash);
     }
 
+    private bisq.trade.protobuf.MuSigTrade toMuSigTradeProto(boolean serializeForHash) {
+        return resolveBuilder(getMuSigTradeBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.trade.protobuf.MuSigTrade.Builder getMuSigTradeBuilder(boolean serializeForHash) {
+        var builder = bisq.trade.protobuf.MuSigTrade.newBuilder();
+        Optional.ofNullable(interruptTradeInitiator.get()).ifPresent(e -> builder.setInterruptTradeInitiator(e.toProtoEnum()));
+        tradeCompletedDate.ifPresent(builder::setTradeCompletedDate);
+        return builder;
+    }
+
     public static MuSigTrade fromProto(bisq.trade.protobuf.Trade proto) {
+        bisq.trade.protobuf.MuSigTrade muSigTradeProto = proto.getMuSigTrade();
         MuSigTrade trade = new MuSigTrade(MuSigContract.fromProto(proto.getContract()),
                 ProtobufUtils.enumFromProto(MuSigTradeState.class, proto.getState()),
                 proto.getId(),
@@ -121,6 +125,13 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
         }
         if (proto.hasPeersErrorStackTrace()) {
             trade.setPeersErrorStackTrace(proto.getPeersErrorStackTrace());
+        }
+
+        if (muSigTradeProto.hasInterruptTradeInitiator()) {
+            trade.getInterruptTradeInitiator().set(Role.fromProto(muSigTradeProto.getInterruptTradeInitiator()));
+        }
+        if (muSigTradeProto.hasTradeCompletedDate()) {
+            trade.setTradeCompletedDate(Optional.of(muSigTradeProto.getTradeCompletedDate()));
         }
         return trade;
     }
