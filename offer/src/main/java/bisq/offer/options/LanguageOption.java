@@ -17,41 +17,40 @@
 
 package bisq.offer.options;
 
-import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-//todo should be part of payment spec?
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class FiatPaymentOption implements OfferOption {
-    private final String countyCodeOfBank;
-    private final String bankName;
+public final class LanguageOption implements OfferOption {
 
-    // TODO Should be maker payment account restrictions
-    // add String makerPaymentAccountId?
+    private final List<String> supportedLanguageCodes;
 
-    public FiatPaymentOption(String countyCodeOfBank, String bankName) {
-        this.countyCodeOfBank = countyCodeOfBank;
-        this.bankName = bankName;
+    public LanguageOption(List<String> supportedLanguageCodes) {
+        this.supportedLanguageCodes = supportedLanguageCodes;
 
         verify();
     }
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateCode(countyCodeOfBank);
-        NetworkDataValidation.validateText(bankName, 100);
+        checkArgument(supportedLanguageCodes.size() < 10,
+                "supportedLanguageCodes must be < 10");
+        checkArgument(supportedLanguageCodes.toString().length() < 100,
+                "supportedLanguageCodes.toString().length() must be < 100");
     }
 
-    @Override
     public bisq.offer.protobuf.OfferOption.Builder getBuilder(boolean serializeForHash) {
         return getOfferOptionBuilder(serializeForHash)
-                .setFiatPaymentOption(bisq.offer.protobuf.FiatPaymentOption.newBuilder()
-                        .setCountyCodeOfBank(countyCodeOfBank)
-                        .setBankName(bankName));
+                .setLanguageOption(bisq.offer.protobuf.LanguageOption.newBuilder()
+                        .addAllSupportedLanguageCodes(supportedLanguageCodes));
     }
 
     @Override
@@ -59,7 +58,7 @@ public final class FiatPaymentOption implements OfferOption {
         return resolveProto(serializeForHash);
     }
 
-    public static FiatPaymentOption fromProto(bisq.offer.protobuf.FiatPaymentOption proto) {
-        return new FiatPaymentOption(proto.getCountyCodeOfBank(), proto.getBankName());
+    public static LanguageOption fromProto(bisq.offer.protobuf.LanguageOption proto) {
+        return new LanguageOption(new ArrayList<>(proto.getSupportedLanguageCodesList()));
     }
 }

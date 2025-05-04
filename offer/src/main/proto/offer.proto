@@ -105,6 +105,10 @@ message FiatPaymentOption {
   string bankName = 2;
 }
 
+message LanguageOption {
+  repeated string supportedLanguageCodes = 1;
+}
+
 message OfferOption {
   oneof message {
     TradeTermsOption tradeTermsOption = 1;
@@ -112,22 +116,26 @@ message OfferOption {
     CollateralOption collateralOption = 4;
     FiatPaymentOption fiatPaymentOption = 5;
     FeeOption feeOption = 6;
+    LanguageOption languageOption = 7;
   }
 }
 
 // Offer
 message Offer {
   string id = 1;
-  sint64 date = 2;
-  network.identity.NetworkId makerNetworkId = 3;
-  common.Market market = 4;
-  Direction direction = 5;
-  AmountSpec amountSpec = 6;
-  PriceSpec priceSpec = 7;
-  repeated account.TradeProtocolType protocolTypes = 8;
-  repeated PaymentMethodSpec baseSidePaymentSpecs = 9;
-  repeated PaymentMethodSpec quoteSidePaymentSpecs = 10;
-  repeated OfferOption offerOptions = 11;
+  uint32 tradeProtocolVersion = 2;
+  string appVersion = 3;
+  sint64 date = 4;
+  network.identity.NetworkId makerNetworkId = 5;
+  common.Market market = 6;
+  Direction direction = 7;
+  AmountSpec amountSpec = 8;
+  PriceSpec priceSpec = 9;
+  repeated account.TradeProtocolType protocolTypes = 10;
+  repeated PaymentMethodSpec baseSidePaymentSpecs = 11;
+  repeated PaymentMethodSpec quoteSidePaymentSpecs = 12;
+  repeated OfferOption offerOptions = 13;
+
   oneof message {
     BisqEasyOffer bisqEasyOffer = 30;
     MuSigOffer muSigOffer = 31;
@@ -146,7 +154,6 @@ message BisqEasyOffer {
 
 // MuSig
 message MuSigOffer {
-  repeated string supportedLanguageCodes = 1;
 }
 
 message MyMuSigOffersStore {

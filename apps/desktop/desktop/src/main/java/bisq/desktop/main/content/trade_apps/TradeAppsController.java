@@ -54,7 +54,7 @@ public class TradeAppsController extends ContentTabController<TradeAppsModel> {
             case TRADE_PROTOCOLS_OVERVIEW -> Optional.of(new TradeOverviewController(serviceProvider));
             case BISQ_EASY_INFO -> Optional.of(new ProtocolRoadmapController(TradeProtocolType.BISQ_EASY,
                     "https://bisq.wiki/Trade_Protocols#Bisq_Easy"));
-            case BISQ_MU_SIG -> Optional.of(new ProtocolRoadmapController(TradeProtocolType.BISQ_MU_SIG,
+            case MUSIG -> Optional.of(new ProtocolRoadmapController(TradeProtocolType.MUSIG,
                     "https://bisq.wiki/Trade_Protocols#Bisq_MuSig"));
             case SUBMARINE -> Optional.of(new ProtocolRoadmapController(TradeProtocolType.SUBMARINE,
                     "https://bisq.wiki/Trade_Protocols#Submarine_Swaps"));

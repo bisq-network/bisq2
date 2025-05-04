@@ -137,7 +137,7 @@ public class DtoMappings {
             }
             return switch (value) {
                 case BISQ_EASY -> TradeProtocolType.BISQ_EASY;
-                case BISQ_MU_SIG -> TradeProtocolType.BISQ_MU_SIG;
+                case MUSIG -> TradeProtocolType.MUSIG;
                 case SUBMARINE -> TradeProtocolType.SUBMARINE;
                 case LIQUID_MU_SIG -> TradeProtocolType.LIQUID_MU_SIG;
                 case BISQ_LIGHTNING -> TradeProtocolType.BISQ_LIGHTNING;
@@ -154,7 +154,7 @@ public class DtoMappings {
             }
             return switch (value) {
                 case BISQ_EASY -> TradeProtocolTypeDto.BISQ_EASY;
-                case BISQ_MU_SIG -> TradeProtocolTypeDto.BISQ_MU_SIG;
+                case MUSIG -> TradeProtocolTypeDto.MUSIG;
                 case SUBMARINE -> TradeProtocolTypeDto.SUBMARINE;
                 case LIQUID_MU_SIG -> TradeProtocolTypeDto.LIQUID_MU_SIG;
                 case BISQ_LIGHTNING -> TradeProtocolTypeDto.BISQ_LIGHTNING;
