@@ -194,7 +194,7 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     }
 
     private void animateDisplay(Runnable onFinishedHandler) {
-        double duration = model.getDuration(400);
+        double duration = Transitions.effectiveDuration(400);
         Timeline timeline = new Timeline();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
 
@@ -225,7 +225,7 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     }
 
     private void animateHide(Runnable onFinishedHandler) {
-        double duration = model.getDuration(Transitions.DEFAULT_DURATION / 2d);
+        double duration = Transitions.effectiveDuration(Transitions.DEFAULT_DURATION / 2);
         Timeline timeline = new Timeline();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
         double endScale = 0.25;

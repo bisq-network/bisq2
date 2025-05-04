@@ -54,11 +54,11 @@ class LeftNavSubButton extends LeftNavButton {
     public void setHorizontalExpanded(boolean menuExpanded, int duration) {
         if (menuExpanded) {
             Tooltip.uninstall(this, tooltip);
-            Transitions.animateLeftSubNavigation(buttonLabel, LABEL_X_POS_EXPANDED, duration);
+            Transitions.animateLeftSubNavigation(buttonLabel, LABEL_X_POS_EXPANDED, Transitions.effectiveDuration(duration));
             buttonLabel.setText(fullTitle);
         } else {
             Tooltip.install(this, tooltip);
-            Transitions.animateLeftSubNavigation(buttonLabel, LABEL_X_POS_COLLAPSED, duration);
+            Transitions.animateLeftSubNavigation(buttonLabel, LABEL_X_POS_COLLAPSED, Transitions.effectiveDuration(duration));
             buttonLabel.setText(fullTitle.substring(0, 1));
         }
     }

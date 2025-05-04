@@ -6,6 +6,7 @@ import bisq.common.data.Triple;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
@@ -354,8 +355,8 @@ public class NetworkInfo {
                     Timeline fadeIn = new Timeline();
                     ObservableList<KeyFrame> fadeInKeyFrames = fadeIn.getKeyFrames();
                     fadeInKeyFrames.add(new KeyFrame(Duration.millis(0), new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR)));
-                    fadeInKeyFrames.add(new KeyFrame(Duration.millis(4000), new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR)));
-                    fadeInKeyFrames.add(new KeyFrame(Duration.millis(5000), new KeyValue(node.opacityProperty(), 0, Interpolator.EASE_OUT)));
+                    fadeInKeyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(4000)), new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR)));
+                    fadeInKeyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(5000)), new KeyValue(node.opacityProperty(), 0, Interpolator.EASE_OUT)));
                     fadeIn.setOnFinished(e -> {
                         inventoryRequestsLabel.getStyleClass().remove("bisq-text-green");
                         inventoryRequestsLabel.getStyleClass().add("bisq-text-grey-9");
@@ -364,8 +365,8 @@ public class NetworkInfo {
                         Timeline fadeOut = new Timeline();
                         ObservableList<KeyFrame> fadeOutKeyFrames = fadeOut.getKeyFrames();
                         fadeOutKeyFrames.add(new KeyFrame(Duration.millis(0), new KeyValue(node.opacityProperty(), 0, Interpolator.LINEAR)));
-                        fadeOutKeyFrames.add(new KeyFrame(Duration.millis(1000), new KeyValue(node.opacityProperty(), 0, Interpolator.LINEAR)));
-                        fadeOutKeyFrames.add(new KeyFrame(Duration.millis(3000), new KeyValue(node.opacityProperty(), 1, Interpolator.EASE_OUT)));
+                        fadeOutKeyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(1000)), new KeyValue(node.opacityProperty(), 0, Interpolator.LINEAR)));
+                        fadeOutKeyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(3000)), new KeyValue(node.opacityProperty(), 1, Interpolator.EASE_OUT)));
                         fadeOut.play();
                     });
                     fadeIn.play();

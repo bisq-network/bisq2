@@ -24,6 +24,7 @@ import bisq.common.encoding.BitcoinURIScheme;
 import bisq.common.observable.Pin;
 import bisq.common.util.ExceptionUtil;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
@@ -454,20 +455,25 @@ public class BuyerState1a extends BaseState {
             webcamStateAnimationTimeline.setCycleCount(Integer.MAX_VALUE);
             ObservableList<KeyFrame> keyFrames = webcamStateAnimationTimeline.getKeyFrames();
             int delay = 0;
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), 0, Interpolator.LINEAR)));
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
-            delay += 300;
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
-            delay += 600;
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
-            delay += 300;
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), 0, Interpolator.EASE_OUT)));
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.translateXProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
-            delay += 600;
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), 0, Interpolator.EASE_OUT)));
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
+            int effectiveDuration = Transitions.effectiveDuration(delay);
+            keyFrames.add(new KeyFrame(Duration.millis(effectiveDuration), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), 0, Interpolator.LINEAR)));
+            keyFrames.add(new KeyFrame(Duration.millis(effectiveDuration), new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
+            delay += Transitions.effectiveDuration(300);
+            effectiveDuration = Transitions.effectiveDuration(delay);
+            keyFrames.add(new KeyFrame(Duration.millis(effectiveDuration), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
+            keyFrames.add(new KeyFrame(Duration.millis(effectiveDuration), new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
+            delay += Transitions.effectiveDuration(600);
+            effectiveDuration = Transitions.effectiveDuration(delay);
+            keyFrames.add(new KeyFrame(Duration.millis(effectiveDuration), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
+            keyFrames.add(new KeyFrame(Duration.millis(effectiveDuration), new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
+            delay += Transitions.effectiveDuration(300);
+            effectiveDuration = Transitions.effectiveDuration(delay);
+            keyFrames.add(new KeyFrame(Duration.millis(effectiveDuration), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), 0, Interpolator.EASE_OUT)));
+            keyFrames.add(new KeyFrame(Duration.millis(effectiveDuration), new KeyValue(webcamStateMarkerLine.translateXProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
+            delay += Transitions.effectiveDuration(600);
+            effectiveDuration = Transitions.effectiveDuration(delay);
+            keyFrames.add(new KeyFrame(Duration.millis(effectiveDuration), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), 0, Interpolator.EASE_OUT)));
+            keyFrames.add(new KeyFrame(Duration.millis(effectiveDuration), new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
         }
     }
 }

@@ -244,26 +244,21 @@ public class TabButton extends Pane implements Toggle {
         double rightX = numMessagesBadge.getWidth() + 8;
         double end = animateIn ? rightX : 0;
         double opacityEnd = animateIn ? 1 : 0;
-        if (Transitions.useAnimations()) {
-            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
-            double start = animateIn ? 0 : rightX;
-            double opacityStart = animateIn ? 0 : 1;
-            keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(node.opacityProperty(), opacityStart, Interpolator.EASE_IN),
-                    new KeyValue(node.translateXProperty(), start, Interpolator.EASE_IN)
-            ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(node.opacityProperty(), opacityEnd, Interpolator.EASE_OUT),
-                    new KeyValue(node.translateXProperty(), end, Interpolator.EASE_OUT)
-            ));
+        ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+        double start = animateIn ? 0 : rightX;
+        double opacityStart = animateIn ? 0 : 1;
+        keyFrames.add(new KeyFrame(Duration.millis(0),
+                new KeyValue(node.opacityProperty(), opacityStart, Interpolator.EASE_IN),
+                new KeyValue(node.translateXProperty(), start, Interpolator.EASE_IN)
+        ));
+        keyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(duration)),
+                new KeyValue(node.opacityProperty(), opacityEnd, Interpolator.EASE_OUT),
+                new KeyValue(node.translateXProperty(), end, Interpolator.EASE_OUT)
+        ));
 
-            timeline.setOnFinished(e -> onFinishedHandler.run());
-            timeline.play();
-        } else {
-            node.setTranslateX(end);
-            node.setOpacity(opacityEnd);
-            onFinishedHandler.run();
-        }
+        timeline.setOnFinished(e -> onFinishedHandler.run());
+        timeline.play();
+
         return timeline;
     }
 

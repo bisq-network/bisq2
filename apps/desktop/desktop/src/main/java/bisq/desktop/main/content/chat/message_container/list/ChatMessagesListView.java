@@ -200,11 +200,6 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
     }
 
     private void fadeInScrollDownBadge() {
-        if (!Transitions.useAnimations()) {
-            scrollDownBadge.setOpacity(1);
-            return;
-        }
-
         fadeInScrollDownBadgeTimeline = new Timeline();
         scrollDownBadge.setOpacity(0);
         ObservableList<KeyFrame> keyFrames = fadeInScrollDownBadgeTimeline.getKeyFrames();
@@ -213,10 +208,10 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         ));
         // Add a delay before starting fade-in to deal with a render delay when adding a
         // list item.
-        keyFrames.add(new KeyFrame(Duration.millis(100),
+        keyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(100)),
                 new KeyValue(scrollDownBadge.opacityProperty(), 0, Interpolator.EASE_OUT)
         ));
-        keyFrames.add(new KeyFrame(Duration.millis(400),
+        keyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(400)),
                 new KeyValue(scrollDownBadge.opacityProperty(), 1, Interpolator.EASE_OUT)
         ));
         fadeInScrollDownBadgeTimeline.play();

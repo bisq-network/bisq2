@@ -25,6 +25,7 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.CssConfig;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.qr.QrCodeDisplay;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -34,7 +35,6 @@ import bisq.desktop.components.controls.validator.*;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
-import bisq.settings.SettingsService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -82,14 +82,11 @@ public class SellerState3a extends BaseState {
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
-        private final SettingsService settingsService;
 
         private Controller(ServiceProvider serviceProvider,
                            BisqEasyTrade bisqEasyTrade,
                            BisqEasyOpenTradeChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
-
-            settingsService = serviceProvider.getSettingsService();
         }
 
         @Override
@@ -106,7 +103,6 @@ public class SellerState3a extends BaseState {
         public void onActivate() {
             super.onActivate();
 
-            model.setUseAnimations(settingsService.getUseAnimations().get());
             model.setApplicationRoot(OverlayController.getInstance().getApplicationRoot());
 
             BitcoinPaymentRail paymentRail = getPaymentRail();
@@ -248,8 +244,6 @@ public class SellerState3a extends BaseState {
         private Image largeQrCodeImage;
         @Setter
         private Image smallQrCodeImage;
-        @Setter
-        private boolean useAnimations;
         @Setter
         private Region applicationRoot;
         @Setter
@@ -519,7 +513,7 @@ public class SellerState3a extends BaseState {
         }
 
         private void startShowAnimation(Node node, Stage qrCodeWindow) {
-            double duration = model.isUseAnimations() ? 400 : 0;
+            double duration = Transitions.effectiveDuration(400);
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
 

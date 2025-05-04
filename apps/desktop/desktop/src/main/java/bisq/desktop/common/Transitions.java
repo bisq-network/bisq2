@@ -373,7 +373,8 @@ public class Transitions {
     }
 
     public static int effectiveDuration(int duration) {
-        return useAnimations() ? duration : 1;
+        // sometimes duration can be zero, Math.min allows returning 0 in such a case
+        return useAnimations() ? duration : Math.min(1, duration);
     }
 
     public static void crossFade(Node node1, Node node2) {

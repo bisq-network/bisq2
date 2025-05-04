@@ -52,21 +52,6 @@ public class ViewTransition {
         this.newView = newView;
         oldViewRoot = oldView != null ? oldView.getRoot() : null;
         newViewRoot = newView.getRoot();
-        if (!Transitions.useAnimations()) {
-            if (oldView != null) {
-                remove(oldViewRoot);
-                if (oldView instanceof TransitionedView) {
-                    ((TransitionedView) oldView).onOutTransitionStarted();
-                    ((TransitionedView) oldView).onOutTransitionCompleted();
-                }
-            }
-            newViewRoot.setOpacity(1);
-            if (newView instanceof TransitionedView) {
-                ((TransitionedView) newView).onInTransitionStarted();
-                ((TransitionedView) newView).onInTransitionCompleted();
-            }
-            return;
-        }
 
         int defaultDuration = Transitions.DEFAULT_DURATION;
         newViewRoot.setOpacity(0);

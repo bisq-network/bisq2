@@ -21,6 +21,7 @@ import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
@@ -47,7 +48,10 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -296,11 +300,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     }
 
     private void collapseListView() {
-        if (model.isUseAnimations()) {
-            UIScheduler.run(this::applyCollapsedViewChanges).after(SPLITPANE_ANIMATION_DURATION);
-        } else {
-            applyCollapsedViewChanges();
-        }
+        UIScheduler.run(this::applyCollapsedViewChanges).after(Transitions.effectiveDuration((int) SPLITPANE_ANIMATION_DURATION));
     }
 
     private void applyCollapsedViewChanges() {

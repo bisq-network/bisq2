@@ -161,8 +161,6 @@ public abstract class Overlay<T extends Overlay<T>> {
     @Getter
     protected final BooleanProperty isHiddenProperty = new SimpleBooleanProperty();
 
-    protected boolean useAnimation = true;
-
     protected Label headlineIcon, headlineLabel, messageLabel;
     protected String headline, message;
     protected String closeButtonText, actionButtonText,
@@ -558,11 +556,6 @@ public abstract class Overlay<T extends Overlay<T>> {
         return cast();
     }
 
-    public T useAnimation(boolean useAnimation) {
-        this.useAnimation = useAnimation;
-        return cast();
-    }
-
     public T setHeadlineStyle(String headlineStyle) {
         this.headlineStyle = headlineStyle;
         return cast();
@@ -663,7 +656,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
         rootContainer.setOpacity(0);
         Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
-        double duration = getDuration(400);
+        double duration = Transitions.effectiveDuration(400);
         Timeline timeline = new Timeline();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
 
@@ -730,7 +723,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     protected void animateHide(Runnable onFinishedHandler) {
         Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
-        double duration = getDuration(200);
+        double duration = Transitions.effectiveDuration(200);
         Timeline timeline = new Timeline();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
 
@@ -1122,10 +1115,6 @@ public abstract class Overlay<T extends Overlay<T>> {
         }
         this.message = StringUtils.extractHyperlinks(message, messageHyperlinks);
         setTruncatedMessage();
-    }
-
-    protected double getDuration(double duration) {
-        return useAnimation && settingsService.getUseAnimations().get() ? duration : 1;
     }
 
     public boolean isDisplayed() {

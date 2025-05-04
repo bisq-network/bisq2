@@ -394,27 +394,25 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
             largeReplay.setOpacity(0);
         }
         pausePlayTimeline = new Timeline();
-        if (Transitions.useAnimations()) {
-            ObservableList<KeyFrame> keyFrames = pausePlayTimeline.getKeyFrames();
-            if (imageView.getOpacity() == 0) {
-                keyFrames.add(new KeyFrame(Duration.millis(0),
-                        new KeyValue(imageView.opacityProperty(), 0, Interpolator.LINEAR),
-                        new KeyValue(imageView.scaleXProperty(), 0.25, Interpolator.LINEAR),
-                        new KeyValue(imageView.scaleYProperty(), 0.25, Interpolator.LINEAR)
-                ));
-            }
-            keyFrames.add(new KeyFrame(Duration.millis(Transitions.DEFAULT_DURATION / 2d),
-                    new KeyValue(imageView.opacityProperty(), 1, Interpolator.EASE_BOTH),
-                    new KeyValue(imageView.scaleXProperty(), 0.5, Interpolator.LINEAR),
-                    new KeyValue(imageView.scaleYProperty(), 0.5, Interpolator.LINEAR)
+        ObservableList<KeyFrame> keyFrames = pausePlayTimeline.getKeyFrames();
+        if (imageView.getOpacity() == 0) {
+            keyFrames.add(new KeyFrame(Duration.millis(0),
+                    new KeyValue(imageView.opacityProperty(), 0, Interpolator.LINEAR),
+                    new KeyValue(imageView.scaleXProperty(), 0.25, Interpolator.LINEAR),
+                    new KeyValue(imageView.scaleYProperty(), 0.25, Interpolator.LINEAR)
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(Transitions.DEFAULT_DURATION),
-                    new KeyValue(imageView.opacityProperty(), 0, Interpolator.EASE_BOTH),
-                    new KeyValue(imageView.scaleXProperty(), 1, Interpolator.LINEAR),
-                    new KeyValue(imageView.scaleYProperty(), 1, Interpolator.LINEAR)
-            ));
-            pausePlayTimeline.play();
         }
+        keyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(Transitions.DEFAULT_DURATION / 2)),
+                new KeyValue(imageView.opacityProperty(), 1, Interpolator.EASE_BOTH),
+                new KeyValue(imageView.scaleXProperty(), 0.5, Interpolator.LINEAR),
+                new KeyValue(imageView.scaleYProperty(), 0.5, Interpolator.LINEAR)
+        ));
+        keyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(Transitions.DEFAULT_DURATION)),
+                new KeyValue(imageView.opacityProperty(), 0, Interpolator.EASE_BOTH),
+                new KeyValue(imageView.scaleXProperty(), 1, Interpolator.LINEAR),
+                new KeyValue(imageView.scaleYProperty(), 1, Interpolator.LINEAR)
+        ));
+        pausePlayTimeline.play();
     }
 
     private void pause() {
@@ -468,19 +466,15 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
         }
         if (controlsVBox.getOpacity() == 0) {
             restartCheckActivityScheduler();
-            if (Transitions.useAnimations()) {
-                showControlsTimeline = new Timeline();
-                ObservableList<KeyFrame> keyFrames = showControlsTimeline.getKeyFrames();
-                keyFrames.add(new KeyFrame(Duration.millis(0),
-                        new KeyValue(controlsVBox.opacityProperty(), 0, Interpolator.LINEAR)
-                ));
-                keyFrames.add(new KeyFrame(Duration.millis(Transitions.DEFAULT_DURATION / 2d),
-                        new KeyValue(controlsVBox.opacityProperty(), 1, Interpolator.EASE_BOTH)
-                ));
-                showControlsTimeline.play();
-            } else {
-                controlsVBox.setOpacity(1);
-            }
+            showControlsTimeline = new Timeline();
+            ObservableList<KeyFrame> keyFrames = showControlsTimeline.getKeyFrames();
+            keyFrames.add(new KeyFrame(Duration.millis(0),
+                    new KeyValue(controlsVBox.opacityProperty(), 0, Interpolator.LINEAR)
+            ));
+            keyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(Transitions.DEFAULT_DURATION / 2)),
+                    new KeyValue(controlsVBox.opacityProperty(), 1, Interpolator.EASE_BOTH)
+            ));
+            showControlsTimeline.play();
         }
     }
 
@@ -490,19 +484,15 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
             controlsVBox.setOpacity(1);
         }
         if (mediaPlayer != null && mediaPlayer.getStatus() == MediaPlayer.Status.PLAYING && controlsVBox.getOpacity() > 0) {
-            if (Transitions.useAnimations()) {
-                hideControlsTimeline = new Timeline();
-                ObservableList<KeyFrame> keyFrames = hideControlsTimeline.getKeyFrames();
-                keyFrames.add(new KeyFrame(Duration.millis(0),
-                        new KeyValue(controlsVBox.opacityProperty(), 1, Interpolator.LINEAR)
-                ));
-                keyFrames.add(new KeyFrame(Duration.millis(Transitions.DEFAULT_DURATION),
-                        new KeyValue(controlsVBox.opacityProperty(), 0, Interpolator.EASE_BOTH)
-                ));
-                hideControlsTimeline.play();
-            } else {
-                controlsVBox.setOpacity(0);
-            }
+            hideControlsTimeline = new Timeline();
+            ObservableList<KeyFrame> keyFrames = hideControlsTimeline.getKeyFrames();
+            keyFrames.add(new KeyFrame(Duration.millis(0),
+                    new KeyValue(controlsVBox.opacityProperty(), 1, Interpolator.LINEAR)
+            ));
+            keyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(Transitions.DEFAULT_DURATION)),
+                    new KeyValue(controlsVBox.opacityProperty(), 0, Interpolator.EASE_BOTH)
+            ));
+            hideControlsTimeline.play();
         }
     }
 
@@ -524,39 +514,31 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
     }
 
     private void showVolumeSlider() {
-        if (Transitions.useAnimations()) {
-            Timeline timeline = new Timeline();
-            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
-            keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(volumeSlider.translateXProperty(), -SLIDER_WIDTH, Interpolator.LINEAR),
-                    new KeyValue(volumePane.prefWidthProperty(), 0, Interpolator.LINEAR)
-            ));
-            keyFrames.add(new KeyFrame(Duration.millis(Transitions.DEFAULT_DURATION / 2d),
-                    new KeyValue(volumeSlider.translateXProperty(), 0, Interpolator.EASE_BOTH),
-                    new KeyValue(volumePane.prefWidthProperty(), SLIDER_WIDTH, Interpolator.EASE_BOTH)
-            ));
-            timeline.play();
-        } else {
-            volumeSlider.setTranslateX(0);
-        }
+        Timeline timeline = new Timeline();
+        ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+        keyFrames.add(new KeyFrame(Duration.millis(0),
+                new KeyValue(volumeSlider.translateXProperty(), -SLIDER_WIDTH, Interpolator.LINEAR),
+                new KeyValue(volumePane.prefWidthProperty(), 0, Interpolator.LINEAR)
+        ));
+        keyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(Transitions.DEFAULT_DURATION / 2)),
+                new KeyValue(volumeSlider.translateXProperty(), 0, Interpolator.EASE_BOTH),
+                new KeyValue(volumePane.prefWidthProperty(), SLIDER_WIDTH, Interpolator.EASE_BOTH)
+        ));
+        timeline.play();
     }
 
     private void hideVolumeSlider() {
-        if (Transitions.useAnimations()) {
-            Timeline timeline = new Timeline();
-            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
-            keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(volumeSlider.translateXProperty(), 0, Interpolator.LINEAR),
-                    new KeyValue(volumePane.prefWidthProperty(), SLIDER_WIDTH, Interpolator.LINEAR)
-            ));
-            keyFrames.add(new KeyFrame(Duration.millis(Transitions.DEFAULT_DURATION / 2d),
-                    new KeyValue(volumeSlider.translateXProperty(), -SLIDER_WIDTH, Interpolator.EASE_BOTH),
-                    new KeyValue(volumePane.prefWidthProperty(), 0, Interpolator.EASE_BOTH)
-            ));
-            timeline.play();
-        } else {
-            volumeSlider.setTranslateX(-SLIDER_WIDTH);
-        }
+        Timeline timeline = new Timeline();
+        ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+        keyFrames.add(new KeyFrame(Duration.millis(0),
+                new KeyValue(volumeSlider.translateXProperty(), 0, Interpolator.LINEAR),
+                new KeyValue(volumePane.prefWidthProperty(), SLIDER_WIDTH, Interpolator.LINEAR)
+        ));
+        keyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(Transitions.DEFAULT_DURATION / 2)),
+                new KeyValue(volumeSlider.translateXProperty(), -SLIDER_WIDTH, Interpolator.EASE_BOTH),
+                new KeyValue(volumePane.prefWidthProperty(), 0, Interpolator.EASE_BOTH)
+        ));
+        timeline.play();
     }
 
     private double getTotalDuration() {
