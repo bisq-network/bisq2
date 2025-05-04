@@ -67,7 +67,7 @@ public abstract class TradeParty implements PersistableProto {
 
     public static MuSigTradeParty protoToBisqMuSigTradeParty(bisq.trade.protobuf.TradeParty proto) {
         return switch (proto.getMessageCase()) {
-            case BISQMUSIGTRADEPARTY -> MuSigTradeParty.fromProto(proto);
+            case MUSIGTRADEPARTY -> MuSigTradeParty.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);
         };

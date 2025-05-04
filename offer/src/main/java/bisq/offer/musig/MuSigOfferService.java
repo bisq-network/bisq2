@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Getter
 public class MuSigOfferService implements Service {
-    private final MyBisqMuSigOffersService myBisqMuSigOffersService;
+    private final MyMuSigOffersService myMuSigOffersService;
     private final OfferMessageService offerMessageService;
     @Getter
     private final ObservableSet<MuSigOffer> offers = new ObservableSet<>();
@@ -47,7 +47,7 @@ public class MuSigOfferService implements Service {
     public MuSigOfferService(PersistenceService persistenceService,
                              OfferMessageService offerMessageService) {
         this.offerMessageService = offerMessageService;
-        myBisqMuSigOffersService = new MyBisqMuSigOffersService(persistenceService);
+        myMuSigOffersService = new MyMuSigOffersService(persistenceService);
         offersObserver = new CollectionObserver<>() {
             @Override
             public void add(Offer<?, ?> element) {
@@ -84,12 +84,12 @@ public class MuSigOfferService implements Service {
                 .runnableName("republishMyOffers")
                 .after(5000, TimeUnit.MILLISECONDS);
 
-        return myBisqMuSigOffersService.initialize();
+        return myMuSigOffersService.initialize();
     }
 
     public CompletableFuture<Boolean> shutdown() {
         offersObserverPin.unbind();
-        return removeAllOfferFromNetwork().thenCompose(e -> myBisqMuSigOffersService.shutdown());
+        return removeAllOfferFromNetwork().thenCompose(e -> myMuSigOffersService.shutdown());
     }
 
 
@@ -104,7 +104,7 @@ public class MuSigOfferService implements Service {
     }
 
     public CompletableFuture<BroadcastResult> publishOffer(MuSigOffer offer) {
-        myBisqMuSigOffersService.add(offer);
+        myMuSigOffersService.add(offer);
         return offerMessageService.addToNetwork(offer);
     }
 
@@ -115,7 +115,7 @@ public class MuSigOfferService implements Service {
     }
 
     public CompletableFuture<BroadcastResult> removeOffer(MuSigOffer offer) {
-        myBisqMuSigOffersService.remove(offer);
+        myMuSigOffersService.remove(offer);
         return offerMessageService.removeFromNetwork(offer);
     }
 

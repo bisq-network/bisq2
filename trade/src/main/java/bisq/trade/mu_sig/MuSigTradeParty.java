@@ -48,8 +48,8 @@ public class MuSigTradeParty extends TradeParty {
 
     @Override
     public bisq.trade.protobuf.TradeParty.Builder getBuilder(boolean serializeForHash) {
-        bisq.trade.protobuf.BisqMuSigTradeParty.Builder builder = bisq.trade.protobuf.BisqMuSigTradeParty.newBuilder();
-        return getTradePartyBuilder(serializeForHash).setBisqMuSigTradeParty(builder);
+        bisq.trade.protobuf.MuSigTradeParty.Builder builder = bisq.trade.protobuf.MuSigTradeParty.newBuilder();
+        return getTradePartyBuilder(serializeForHash).setMuSigTradeParty(builder);
     }
 
     public static MuSigTradeParty fromProto(bisq.trade.protobuf.TradeParty proto) {

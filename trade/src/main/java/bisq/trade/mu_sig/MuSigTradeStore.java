@@ -56,19 +56,19 @@ final class MuSigTradeStore implements PersistableStore<MuSigTradeStore> {
     }
 
     @Override
-    public bisq.trade.protobuf.BisqMuSigTradeStore.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.protobuf.BisqMuSigTradeStore.newBuilder()
+    public bisq.trade.protobuf.MuSigTradeStore.Builder getBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.MuSigTradeStore.newBuilder()
                 .putAllTradeById(tradeById.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
                                 e -> e.getValue().toProto(serializeForHash))));
     }
 
     @Override
-    public bisq.trade.protobuf.BisqMuSigTradeStore toProto(boolean serializeForHash) {
+    public bisq.trade.protobuf.MuSigTradeStore toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
 
-    public static MuSigTradeStore fromProto(bisq.trade.protobuf.BisqMuSigTradeStore proto) {
+    public static MuSigTradeStore fromProto(bisq.trade.protobuf.MuSigTradeStore proto) {
         var tradeById = proto.getTradeByIdMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         e -> MuSigTrade.fromProto(e.getValue())));
@@ -79,7 +79,7 @@ final class MuSigTradeStore implements PersistableStore<MuSigTradeStore> {
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.trade.protobuf.BisqMuSigTradeStore.class));
+                return fromProto(any.unpack(bisq.trade.protobuf.MuSigTradeStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

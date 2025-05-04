@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.bisq_musig;
+package bisq.chat.mu_sig;
 
-public interface BisqMusigOfferMessage {
+public interface MuSigOfferMessage {
 }

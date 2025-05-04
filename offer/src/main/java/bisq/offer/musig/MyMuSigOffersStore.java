@@ -33,48 +33,48 @@ import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-final class MyBisqMuSigOffersStore implements PersistableStore<MyBisqMuSigOffersStore> {
+final class MyMuSigOffersStore implements PersistableStore<MyMuSigOffersStore> {
     @Getter(AccessLevel.PACKAGE)
     private final ObservableSet<MuSigOffer> offers = new ObservableSet<>();
 
-    private MyBisqMuSigOffersStore(Set<MuSigOffer> offers) {
+    private MyMuSigOffersStore(Set<MuSigOffer> offers) {
         this.offers.addAll(offers);
     }
 
 
     @Override
-    public MyBisqMuSigOffersStore getClone() {
-        return new MyBisqMuSigOffersStore(new HashSet<>(offers));
+    public MyMuSigOffersStore getClone() {
+        return new MyMuSigOffersStore(new HashSet<>(offers));
     }
 
     @Override
-    public void applyPersisted(MyBisqMuSigOffersStore persisted) {
+    public void applyPersisted(MyMuSigOffersStore persisted) {
         offers.clear();
         offers.addAll(persisted.getOffers());
     }
 
     @Override
-    public bisq.offer.protobuf.MyBisqMuSigOffersStore.Builder getBuilder(boolean serializeForHash) {
-        return bisq.offer.protobuf.MyBisqMuSigOffersStore.newBuilder()
+    public bisq.offer.protobuf.MyMuSigOffersStore.Builder getBuilder(boolean serializeForHash) {
+        return bisq.offer.protobuf.MyMuSigOffersStore.newBuilder()
                 .addAllOffers(offers.stream()
                         .map(e -> e.toProto(serializeForHash))
                         .collect(Collectors.toList()));
     }
 
     @Override
-    public bisq.offer.protobuf.MyBisqMuSigOffersStore toProto(boolean serializeForHash) {
+    public bisq.offer.protobuf.MyMuSigOffersStore toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
 
-    public static MyBisqMuSigOffersStore fromProto(bisq.offer.protobuf.MyBisqMuSigOffersStore proto) {
-        return new MyBisqMuSigOffersStore(proto.getOffersList().stream().map(MuSigOffer::fromProto).collect(Collectors.toSet()));
+    public static MyMuSigOffersStore fromProto(bisq.offer.protobuf.MyMuSigOffersStore proto) {
+        return new MyMuSigOffersStore(proto.getOffersList().stream().map(MuSigOffer::fromProto).collect(Collectors.toSet()));
     }
 
     @Override
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.offer.protobuf.MyBisqMuSigOffersStore.class));
+                return fromProto(any.unpack(bisq.offer.protobuf.MyMuSigOffersStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
