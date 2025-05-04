@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.p2p;
+package bisq.trade.mu_sig.messages.network;
 
 import bisq.network.identity.NetworkId;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
@@ -47,35 +47,33 @@ public final class MuSigSetupTradeMessage_D extends MuSigTradeMessage {
     @Override
     public void verify() {
         super.verify();
-
     }
 
     @Override
-    protected bisq.trade.protobuf.BisqEasyTradeMessage.Builder getBisqEasyTradeMessageBuilder(boolean serializeForHash) {
-        return bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
-                .setBisqEasyAccountDataMessage(toBisqEasyAccountDataMessageProto(serializeForHash));
+    protected bisq.trade.protobuf.MuSigTradeMessage.Builder getMuSigTradeMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.MuSigTradeMessage.newBuilder()
+                .setMuSigSetupTradeMessageD(toMuSigSetupTradeMessage_DProto(serializeForHash));
     }
 
-    private bisq.trade.protobuf.BisqEasyAccountDataMessage toBisqEasyAccountDataMessageProto(boolean serializeForHash) {
-        bisq.trade.protobuf.BisqEasyAccountDataMessage.Builder builder = getBisqEasyAccountDataMessageBuilder(serializeForHash);
+    private bisq.trade.protobuf.MuSigSetupTradeMessage_D toMuSigSetupTradeMessage_DProto(boolean serializeForHash) {
+        bisq.trade.protobuf.MuSigSetupTradeMessage_D.Builder builder = getMuSigSetupTradeMessage_D(serializeForHash);
         return resolveBuilder(builder, serializeForHash).build();
     }
 
-    private bisq.trade.protobuf.BisqEasyAccountDataMessage.Builder getBisqEasyAccountDataMessageBuilder(boolean serializeForHash) {
-        return bisq.trade.protobuf.BisqEasyAccountDataMessage.newBuilder();
+    private bisq.trade.protobuf.MuSigSetupTradeMessage_D.Builder getMuSigSetupTradeMessage_D(boolean serializeForHash) {
+        return bisq.trade.protobuf.MuSigSetupTradeMessage_D.newBuilder();
     }
 
-    /*public static MuSigMessageA fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        bisq.trade.protobuf.BisqEasyAccountDataMessage bisqEasyAccountDataMessage = proto.getBisqEasyTradeMessage().getBisqEasyAccountDataMessage();
-        return new MuSigMessageA(
+    public static MuSigSetupTradeMessage_D fromProto(bisq.trade.protobuf.TradeMessage proto) {
+        bisq.trade.protobuf.MuSigSetupTradeMessage_D muSigMessageProto = proto.getMuSigTradeMessage().getMuSigSetupTradeMessageD();
+        return new MuSigSetupTradeMessage_D(
                 proto.getId(),
                 proto.getTradeId(),
                 proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
-                bisqEasyAccountDataMessage.getPaymentAccountData(),
-                BisqEasyOffer.fromProto(bisqEasyAccountDataMessage.getBisqEasyOffer()));
-    }*/
+                PartialSignaturesMessage.fromProto(muSigMessageProto.getPartialSignaturesMessage()));
+    }
 
     @Override
     public double getCostFactor() {

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.bisq_musig;
+package bisq.offer.musig;
 
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;
@@ -36,30 +36,30 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Getter
-public class BisqMuSigOfferService implements Service {
+public class MuSigOfferService implements Service {
     private final MyBisqMuSigOffersService myBisqMuSigOffersService;
     private final OfferMessageService offerMessageService;
     @Getter
-    private final ObservableSet<BisqMuSigOffer> offers = new ObservableSet<>();
+    private final ObservableSet<MuSigOffer> offers = new ObservableSet<>();
     private final CollectionObserver<Offer<?, ?>> offersObserver;
     private Pin offersObserverPin;
 
-    public BisqMuSigOfferService(PersistenceService persistenceService,
-                                 OfferMessageService offerMessageService) {
+    public MuSigOfferService(PersistenceService persistenceService,
+                             OfferMessageService offerMessageService) {
         this.offerMessageService = offerMessageService;
         myBisqMuSigOffersService = new MyBisqMuSigOffersService(persistenceService);
         offersObserver = new CollectionObserver<>() {
             @Override
             public void add(Offer<?, ?> element) {
-                if (element instanceof BisqMuSigOffer) {
-                    processAddedOffer((BisqMuSigOffer) element);
+                if (element instanceof MuSigOffer) {
+                    processAddedOffer((MuSigOffer) element);
                 }
             }
 
             @Override
             public void remove(Object element) {
-                if (element instanceof BisqMuSigOffer) {
-                    processRemovedOffer((BisqMuSigOffer) element);
+                if (element instanceof MuSigOffer) {
+                    processRemovedOffer((MuSigOffer) element);
                 }
             }
 
@@ -103,7 +103,7 @@ public class BisqMuSigOfferService implements Service {
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("Offer with not found. OfferID=" + offerId)));
     }
 
-    public CompletableFuture<BroadcastResult> publishOffer(BisqMuSigOffer offer) {
+    public CompletableFuture<BroadcastResult> publishOffer(MuSigOffer offer) {
         myBisqMuSigOffersService.add(offer);
         return offerMessageService.addToNetwork(offer);
     }
@@ -114,12 +114,12 @@ public class BisqMuSigOfferService implements Service {
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("Offer with not found. OfferID=" + offerId)));
     }
 
-    public CompletableFuture<BroadcastResult> removeOffer(BisqMuSigOffer offer) {
+    public CompletableFuture<BroadcastResult> removeOffer(MuSigOffer offer) {
         myBisqMuSigOffersService.remove(offer);
         return offerMessageService.removeFromNetwork(offer);
     }
 
-    public Optional<BisqMuSigOffer> findOffer(String offerId) {
+    public Optional<MuSigOffer> findOffer(String offerId) {
         return offers.stream().filter(offer -> offer.getId().equals(offerId)).findAny();
     }
 
@@ -128,11 +128,11 @@ public class BisqMuSigOfferService implements Service {
     // Private
     /* --------------------------------------------------------------------- */
 
-    private boolean processAddedOffer(BisqMuSigOffer offer) {
+    private boolean processAddedOffer(MuSigOffer offer) {
         return offers.add(offer);
     }
 
-    private boolean processRemovedOffer(BisqMuSigOffer offer) {
+    private boolean processRemovedOffer(MuSigOffer offer) {
         return offers.remove(offer);
     }
 

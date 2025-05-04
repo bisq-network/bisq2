@@ -38,19 +38,19 @@ public class TxConfirmationStatus implements Proto {
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.TxConfirmationStatus.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.mu_sig.grpc.TxConfirmationStatus.newBuilder()
+    public bisq.trade.protobuf.TxConfirmationStatus.Builder getBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.TxConfirmationStatus.newBuilder()
                 .setTx(ByteString.copyFrom(tx))
                 .setCurrentBlockHeight(currentBlockHeight)
                 .setNumConfirmations(numConfirmations);
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.TxConfirmationStatus toProto(boolean serializeForHash) {
+    public bisq.trade.protobuf.TxConfirmationStatus toProto(boolean serializeForHash) {
         return getBuilder(serializeForHash).build();
     }
 
-    public static TxConfirmationStatus fromProto(bisq.trade.mu_sig.grpc.TxConfirmationStatus proto) {
+    public static TxConfirmationStatus fromProto(bisq.trade.protobuf.TxConfirmationStatus proto) {
         return new TxConfirmationStatus(proto.getTx().toByteArray(),
                 proto.getCurrentBlockHeight(),
                 proto.getNumConfirmations());

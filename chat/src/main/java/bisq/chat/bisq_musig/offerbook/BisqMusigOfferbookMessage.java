@@ -23,7 +23,7 @@ import bisq.chat.bisq_musig.BisqMusigOfferMessage;
 import bisq.chat.pub.PublicChatMessage;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.offer.bisq_musig.BisqMuSigOffer;
+import bisq.offer.musig.MuSigOffer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -39,17 +39,17 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @EqualsAndHashCode(callSuper = true)
 public class BisqMusigOfferbookMessage extends PublicChatMessage implements BisqMusigOfferMessage {
     private transient final MetaData metaData = new MetaData(TTL_10_DAYS, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
-    private final BisqMuSigOffer bisqMusigOffer;
+    private final MuSigOffer musigOffer;
 
     public BisqMusigOfferbookMessage(String channelId,
                                      String authorUserProfileId,
-                                     BisqMuSigOffer bisqMusigOffer,
+                                     MuSigOffer musigOffer,
                                      long date) {
         this(StringUtils.createUid(),
                 ChatChannelDomain.BISQ_MUSIG_OFFERBOOK,
                 channelId,
                 authorUserProfileId,
-                bisqMusigOffer,
+                musigOffer,
                 date,
                 ChatMessageType.TEXT);
     }
@@ -58,7 +58,7 @@ public class BisqMusigOfferbookMessage extends PublicChatMessage implements Bisq
                                      ChatChannelDomain chatChannelDomain,
                                      String channelId,
                                      String authorUserProfileId,
-                                     BisqMuSigOffer bisqMusigOffer,
+                                     MuSigOffer musigOffer,
                                      long date,
                                      ChatMessageType chatMessageType) {
         super(messageId,
@@ -70,7 +70,7 @@ public class BisqMusigOfferbookMessage extends PublicChatMessage implements Bisq
                 date,
                 false,
                 chatMessageType);
-        this.bisqMusigOffer = bisqMusigOffer;
+        this.musigOffer = musigOffer;
     }
 
     @Override
@@ -85,7 +85,7 @@ public class BisqMusigOfferbookMessage extends PublicChatMessage implements Bisq
 
     private bisq.chat.protobuf.BisqMusigOfferbookMessage.Builder getBisqMusigOfferbookMessageBuilder(boolean serializeForHash) {
         return bisq.chat.protobuf.BisqMusigOfferbookMessage.newBuilder()
-                .setBisqMusigOffer(bisqMusigOffer.toProto(serializeForHash));
+                .setBisqMusigOffer(musigOffer.toProto(serializeForHash));
     }
 
     public static BisqMusigOfferbookMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
@@ -94,7 +94,7 @@ public class BisqMusigOfferbookMessage extends PublicChatMessage implements Bisq
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelId(),
                 baseProto.getAuthorUserProfileId(),
-                BisqMuSigOffer.fromProto(baseProto.getBisqMusigOfferbookMessage().getBisqMusigOffer()),
+                MuSigOffer.fromProto(baseProto.getBisqMusigOfferbookMessage().getBisqMusigOffer()),
                 baseProto.getDate(),
                 ChatMessageType.fromProto(baseProto.getChatMessageType()));
     }

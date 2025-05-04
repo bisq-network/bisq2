@@ -40,8 +40,8 @@ public class PartialSignaturesRequest implements Proto {
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.PartialSignaturesRequest.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.mu_sig.grpc.PartialSignaturesRequest.newBuilder()
+    public bisq.trade.protobuf.PartialSignaturesRequest.Builder getBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.PartialSignaturesRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setPeersNonceShares(peersNonceShares.toProto(serializeForHash))
                 .addAllReceivers(receivers.stream()
@@ -50,11 +50,11 @@ public class PartialSignaturesRequest implements Proto {
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.PartialSignaturesRequest toProto(boolean serializeForHash) {
+    public bisq.trade.protobuf.PartialSignaturesRequest toProto(boolean serializeForHash) {
         return getBuilder(serializeForHash).build();
     }
 
-    public static PartialSignaturesRequest fromProto(bisq.trade.mu_sig.grpc.PartialSignaturesRequest proto) {
+    public static PartialSignaturesRequest fromProto(bisq.trade.protobuf.PartialSignaturesRequest proto) {
         return new PartialSignaturesRequest(proto.getTradeId(),
                 NonceSharesMessage.fromProto(proto.getPeersNonceShares()),
                 proto.getReceiversList().stream()

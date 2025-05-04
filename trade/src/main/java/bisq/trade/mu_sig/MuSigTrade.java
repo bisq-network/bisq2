@@ -21,10 +21,10 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.ProtobufUtils;
 import bisq.contract.Role;
-import bisq.contract.bisq_musig.BisqMuSigContract;
+import bisq.contract.bisq_musig.MuSigContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
-import bisq.offer.bisq_musig.BisqMuSigOffer;
+import bisq.offer.musig.MuSigOffer;
 import bisq.trade.Trade;
 import bisq.trade.TradeParty;
 import bisq.trade.TradeRole;
@@ -40,7 +40,7 @@ import java.util.Optional;
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class MuSigTrade extends Trade<BisqMuSigOffer, BisqMuSigContract, MuSigTradeParty> {
+public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTradeParty> {
     @Getter
     private final Observable<String> paymentAccountData = new Observable<>();
     @Getter
@@ -60,11 +60,11 @@ public final class MuSigTrade extends Trade<BisqMuSigOffer, BisqMuSigContract, M
     @Getter
     private Optional<Long> tradeCompletedDate = Optional.empty();
 
-    public MuSigTrade(BisqMuSigContract contract,
+    public MuSigTrade(MuSigContract contract,
                       boolean isBuyer,
                       boolean isTaker,
                       Identity myIdentity,
-                      BisqMuSigOffer offer,
+                      MuSigOffer offer,
                       NetworkId takerNetworkId,
                       NetworkId makerNetworkId) {
         super(contract,
@@ -79,7 +79,7 @@ public final class MuSigTrade extends Trade<BisqMuSigOffer, BisqMuSigContract, M
         stateObservable().addObserver(s -> tradeState.set((MuSigTradeState) s));
     }
 
-    public MuSigTrade(BisqMuSigContract contract,
+    public MuSigTrade(MuSigContract contract,
                       MuSigTradeState state,
                       String id,
                       TradeRole tradeRole,
@@ -103,7 +103,7 @@ public final class MuSigTrade extends Trade<BisqMuSigOffer, BisqMuSigContract, M
     }
 
     public static MuSigTrade fromProto(bisq.trade.protobuf.Trade proto) {
-        MuSigTrade trade = new MuSigTrade(BisqMuSigContract.fromProto(proto.getContract()),
+        MuSigTrade trade = new MuSigTrade(MuSigContract.fromProto(proto.getContract()),
                 ProtobufUtils.enumFromProto(MuSigTradeState.class, proto.getState()),
                 proto.getId(),
                 TradeRole.fromProto(proto.getTradeRole()),

@@ -32,17 +32,17 @@ public class DepositPsbt implements Proto {
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.DepositPsbt.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.mu_sig.grpc.DepositPsbt.newBuilder()
+    public bisq.trade.protobuf.DepositPsbt.Builder getBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.DepositPsbt.newBuilder()
                 .setDepositPsbt(ByteString.copyFrom(depositPsbt));
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.DepositPsbt toProto(boolean serializeForHash) {
+    public bisq.trade.protobuf.DepositPsbt toProto(boolean serializeForHash) {
         return getBuilder(serializeForHash).build();
     }
 
-    public static DepositPsbt fromProto(bisq.trade.mu_sig.grpc.DepositPsbt proto) {
+    public static DepositPsbt fromProto(bisq.trade.protobuf.DepositPsbt proto) {
         return new DepositPsbt(proto.getDepositPsbt().toByteArray());
     }
 }

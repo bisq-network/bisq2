@@ -28,7 +28,7 @@ import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.platform.Version;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
-import bisq.contract.bisq_musig.BisqMuSigContract;
+import bisq.contract.bisq_musig.MuSigContract;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
@@ -36,7 +36,7 @@ import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
-import bisq.offer.bisq_musig.BisqMuSigOffer;
+import bisq.offer.musig.MuSigOffer;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
@@ -49,14 +49,14 @@ import bisq.trade.Trade;
 import bisq.trade.mu_sig.events.MuSigTradeEvent;
 import bisq.trade.mu_sig.events.buyer_as_taker.MuSigPaymentInitiatedEvent;
 import bisq.trade.mu_sig.events.buyer_as_taker.MuSigTakeOfferEvent;
-import bisq.trade.mu_sig.grpc.MusigGrpc;
-import bisq.trade.mu_sig.messages.p2p.MuSigTradeMessage;
-import bisq.trade.mu_sig.messages.p2p.not_used_yet.MuSigTakeOfferRequest;
+import bisq.trade.mu_sig.messages.network.MuSigTradeMessage;
+import bisq.trade.mu_sig.messages.network.not_used_yet.MuSigTakeOfferRequest;
 import bisq.trade.mu_sig.protocol.MuSigBuyerAsTakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigProtocol;
 import bisq.trade.mu_sig.protocol.MuSigSellerAsMakerProtocol;
 import bisq.trade.mu_sig.protocol.ignore.MuSigBuyerAsMakerProtocol;
 import bisq.trade.mu_sig.protocol.ignore.MuSigSellerAsTakerProtocol;
+import bisq.trade.protobuf.MusigGrpc;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
 import io.grpc.Grpc;
@@ -65,7 +65,11 @@ import io.grpc.ManagedChannel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -238,8 +242,8 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
     /* --------------------------------------------------------------------- */
 
     private void handleBisqMuSigTakeOfferMessage(MuSigTakeOfferRequest message) {
-        BisqMuSigContract bisqMuSigContract = message.getBisqMuSigContract();
-        MuSigProtocol protocol = createProtocol(bisqMuSigContract, message.getSender(), message.getReceiver());
+        MuSigContract MuSigContract = message.getMuSigContract();
+        MuSigProtocol protocol = createProtocol(MuSigContract, message.getSender(), message.getReceiver());
         protocol.handle(message);
         persist();
 
@@ -278,7 +282,7 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
     /* --------------------------------------------------------------------- */
 
     public MuSigProtocol createBisqMuSigProtocol(Identity takerIdentity,
-                                                 BisqMuSigOffer bisqMuSigOffer,
+                                                 MuSigOffer muSigOffer,
                                                  Monetary baseSideAmount,
                                                  Monetary quoteSideAmount,
                                                  BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
@@ -290,9 +294,9 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
         verifyMinVersionForTrading();
 
         NetworkId takerNetworkId = takerIdentity.getNetworkId();
-        BisqMuSigContract contract = new BisqMuSigContract(
+        MuSigContract contract = new MuSigContract(
                 System.currentTimeMillis(),
-                bisqMuSigOffer,
+                muSigOffer,
                 takerNetworkId,
                 baseSideAmount.getValue(),
                 quoteSideAmount.getValue(),
@@ -301,9 +305,9 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
                 mediator,
                 priceSpec,
                 marketPrice);
-        boolean isBuyer = bisqMuSigOffer.getTakersDirection().isBuy();
+        boolean isBuyer = muSigOffer.getTakersDirection().isBuy();
         NetworkId makerNetworkId = contract.getMaker().getNetworkId();
-        MuSigTrade muSigTrade = new MuSigTrade(contract, isBuyer, true, takerIdentity, bisqMuSigOffer, takerNetworkId, makerNetworkId);
+        MuSigTrade muSigTrade = new MuSigTrade(contract, isBuyer, true, takerIdentity, muSigOffer, takerNetworkId, makerNetworkId);
         checkArgument(findProtocol(muSigTrade.getId()).isEmpty(),
                 "We received the BisqMuSigTakeOfferRequest for an already existing protocol");
 
@@ -365,18 +369,18 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
         return persistableStore.tradeExists(tradeId);
     }
 
-    public boolean wasOfferAlreadyTaken(BisqMuSigOffer bisqMuSigOffer, NetworkId takerNetworkId) {
+    public boolean wasOfferAlreadyTaken(MuSigOffer muSigOffer, NetworkId takerNetworkId) {
         if (new Date().after(Trade.TRADE_ID_V1_ACTIVATION_DATE)) {
             // We do only check if we have a trade with same offer and takerNetworkId.
             // As we include after TRADE_ID_V1_ACTIVATION_DATE the takeOffer date in the trade ID we might have
             // multiple trades with the same offer and takerNetworkId combination.
             // To verify that we do not have the same trade we need to use the tradeExists method.
             return getTrades().stream().anyMatch(trade ->
-                    trade.getOffer().getId().equals(bisqMuSigOffer.getId()) &&
+                    trade.getOffer().getId().equals(muSigOffer.getId()) &&
                             trade.getTaker().getNetworkId().getId().equals(takerNetworkId.getId())
             );
         } else {
-            String tradeId = Trade.createId(bisqMuSigOffer.getId(), takerNetworkId.getId());
+            String tradeId = Trade.createId(muSigOffer.getId(), takerNetworkId.getId());
             return tradeExists(tradeId);
         }
     }
@@ -396,10 +400,10 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
     // TradeProtocol factory
     /* --------------------------------------------------------------------- */
 
-    private MuSigProtocol createProtocol(BisqMuSigContract contract, NetworkId sender, NetworkId receiver) {
+    private MuSigProtocol createProtocol(MuSigContract contract, NetworkId sender, NetworkId receiver) {
         // We only create the data required for the protocol creation.
         // Verification will happen in the BisqMuSigTakeOfferRequestHandler
-        BisqMuSigOffer offer = contract.getOffer();
+        MuSigOffer offer = contract.getOffer();
         boolean isBuyer = offer.getMakersDirection().isBuy();
         Identity myIdentity = identityService.findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
         MuSigTrade muSigTrade = new MuSigTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);

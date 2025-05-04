@@ -34,18 +34,18 @@ public class PublishDepositTxRequest implements Proto {
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.PublishDepositTxRequest.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.mu_sig.grpc.PublishDepositTxRequest.newBuilder()
+    public bisq.trade.protobuf.PublishDepositTxRequest.Builder getBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.PublishDepositTxRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setDepositPsbt(depositPsbt.toProto(serializeForHash));
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.PublishDepositTxRequest toProto(boolean serializeForHash) {
+    public bisq.trade.protobuf.PublishDepositTxRequest toProto(boolean serializeForHash) {
         return getBuilder(serializeForHash).build();
     }
 
-    public static PublishDepositTxRequest fromProto(bisq.trade.mu_sig.grpc.PublishDepositTxRequest proto) {
+    public static PublishDepositTxRequest fromProto(bisq.trade.protobuf.PublishDepositTxRequest proto) {
         return new PublishDepositTxRequest(proto.getTradeId(),
                 DepositPsbt.fromProto(proto.getDepositPsbt()));
     }

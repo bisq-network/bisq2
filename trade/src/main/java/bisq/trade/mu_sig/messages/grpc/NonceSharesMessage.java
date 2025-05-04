@@ -59,8 +59,8 @@ public class NonceSharesMessage implements Proto {
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.NonceSharesMessage.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.mu_sig.grpc.NonceSharesMessage.newBuilder()
+    public bisq.trade.protobuf.NonceSharesMessage.Builder getBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.NonceSharesMessage.newBuilder()
                 .setWarningTxFeeBumpAddress(warningTxFeeBumpAddress)
                 .setRedirectTxFeeBumpAddress(redirectTxFeeBumpAddress)
                 .setHalfDepositPsbt(ByteString.copyFrom(halfDepositPsbt))
@@ -74,11 +74,11 @@ public class NonceSharesMessage implements Proto {
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.NonceSharesMessage toProto(boolean serializeForHash) {
+    public bisq.trade.protobuf.NonceSharesMessage toProto(boolean serializeForHash) {
         return getBuilder(serializeForHash).build();
     }
 
-    public static NonceSharesMessage fromProto(bisq.trade.mu_sig.grpc.NonceSharesMessage proto) {
+    public static NonceSharesMessage fromProto(bisq.trade.protobuf.NonceSharesMessage proto) {
         return new NonceSharesMessage(proto.getWarningTxFeeBumpAddress(),
                 proto.getRedirectTxFeeBumpAddress(),
                 proto.getHalfDepositPsbt().toByteArray(),

@@ -33,18 +33,18 @@ public class ReceiverAddressAndAmount implements Proto {
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.ReceiverAddressAndAmount.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.mu_sig.grpc.ReceiverAddressAndAmount.newBuilder()
+    public bisq.trade.protobuf.ReceiverAddressAndAmount.Builder getBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.ReceiverAddressAndAmount.newBuilder()
                 .setAddress(address)
                 .setAmount(amount);
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.ReceiverAddressAndAmount toProto(boolean serializeForHash) {
+    public bisq.trade.protobuf.ReceiverAddressAndAmount toProto(boolean serializeForHash) {
         return getBuilder(serializeForHash).build();
     }
 
-    public static ReceiverAddressAndAmount fromProto(bisq.trade.mu_sig.grpc.ReceiverAddressAndAmount proto) {
+    public static ReceiverAddressAndAmount fromProto(bisq.trade.protobuf.ReceiverAddressAndAmount proto) {
         return new ReceiverAddressAndAmount(proto.getAddress(), proto.getAmount());
     }
 }

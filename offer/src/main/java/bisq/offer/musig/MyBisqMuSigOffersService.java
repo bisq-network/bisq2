@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.bisq_musig;
+package bisq.offer.musig;
 
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
@@ -58,21 +58,21 @@ public class MyBisqMuSigOffersService implements PersistenceClient<MyBisqMuSigOf
     // API
     /* --------------------------------------------------------------------- */
 
-    public void add(BisqMuSigOffer offer) {
+    public void add(MuSigOffer offer) {
         persistableStore.add(offer);
         persist();
     }
 
-    public void remove(BisqMuSigOffer offer) {
+    public void remove(MuSigOffer offer) {
         persistableStore.remove(offer);
         persist();
     }
 
-    public ObservableSet<BisqMuSigOffer> getOffers() {
+    public ObservableSet<MuSigOffer> getOffers() {
         return persistableStore.getOffers();
     }
 
-    public Optional<BisqMuSigOffer> findOffer(String offerId) {
+    public Optional<MuSigOffer> findOffer(String offerId) {
         return getOffers().stream()
                 .filter(offer -> offer.getId().equals(offerId))
                 .findAny();

@@ -38,11 +38,11 @@ public enum Role implements ProtoEnum {
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.Role toProtoEnum() {
-        return bisq.trade.mu_sig.grpc.Role.valueOf(getProtobufEnumPrefix() + name());
+    public bisq.trade.protobuf.Role toProtoEnum() {
+        return bisq.trade.protobuf.Role.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static Role fromProto(bisq.trade.mu_sig.grpc.Role proto) {
+    public static Role fromProto(bisq.trade.protobuf.Role proto) {
         return ProtobufUtils.enumFromProto(Role.class, proto.name(), BUYER_AS_TAKER);
     }
 

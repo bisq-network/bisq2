@@ -39,19 +39,19 @@ public class CloseTradeRequest implements Proto {
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.CloseTradeRequest.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.mu_sig.grpc.CloseTradeRequest.newBuilder()
+    public bisq.trade.protobuf.CloseTradeRequest.Builder getBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.CloseTradeRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(myOutputPeersPrvKeyShare))
                 .setSwapTx(ByteString.copyFrom(swapTx));
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.CloseTradeRequest toProto(boolean serializeForHash) {
+    public bisq.trade.protobuf.CloseTradeRequest toProto(boolean serializeForHash) {
         return getBuilder(serializeForHash).build();
     }
 
-    public static CloseTradeRequest fromProto(bisq.trade.mu_sig.grpc.CloseTradeRequest proto) {
+    public static CloseTradeRequest fromProto(bisq.trade.protobuf.CloseTradeRequest proto) {
         return new CloseTradeRequest(
                 proto.getTradeId(),
                 proto.getMyOutputPeersPrvKeyShare().toByteArray(),
