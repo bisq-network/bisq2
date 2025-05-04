@@ -105,6 +105,10 @@ message FiatPaymentOption {
   string bankName = 2;
 }
 
+message LanguageOption {
+  repeated string supportedLanguageCodes = 1;
+}
+
 message OfferOption {
   oneof message {
     TradeTermsOption tradeTermsOption = 1;
@@ -112,6 +116,7 @@ message OfferOption {
     CollateralOption collateralOption = 4;
     FiatPaymentOption fiatPaymentOption = 5;
     FeeOption feeOption = 6;
+    LanguageOption languageOption = 7;
   }
 }
 
@@ -146,7 +151,6 @@ message BisqEasyOffer {
 
 // MuSig
 message MuSigOffer {
-  repeated string supportedLanguageCodes = 1;
 }
 
 message MyMuSigOffersStore {

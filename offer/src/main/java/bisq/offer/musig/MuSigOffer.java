@@ -21,7 +21,6 @@ import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.util.StringUtils;
-import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
@@ -38,8 +37,6 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,16 +45,13 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymentMethodSpec> {
-    private final List<String> supportedLanguageCodes;
-
     public MuSigOffer(NetworkId makerNetworkId,
                       Direction direction,
                       Market market,
                       AmountSpec amountSpec,
                       PriceSpec priceSpec,
                       List<FiatPaymentMethod> fiatPaymentMethods,
-                      String makersTradeTerms,
-                      List<String> supportedLanguageCodes) {
+                      String makersTradeTerms) {
         this(StringUtils.createUid(),
                 System.currentTimeMillis(),
                 makerNetworkId,
@@ -65,15 +59,16 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                 market,
                 amountSpec,
                 priceSpec,
-                List.of(TradeProtocolType.BISQ_MU_SIG),
+                List.of(TradeProtocolType.MUSIG),
                 PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec(),
                 PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(fiatPaymentMethods),
-                OfferOptionUtil.fromTradeTerms(makersTradeTerms),
-                supportedLanguageCodes
+                OfferOptionUtil.fromTradeTerms(makersTradeTerms)
         );
     }
 
     private MuSigOffer(String id,
+                      // String tradeProtocolVersion,
+                     //  String appVersion,
                        long date,
                        NetworkId makerNetworkId,
                        Direction direction,
@@ -83,8 +78,9 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                        List<TradeProtocolType> protocolTypes,
                        List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
                        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs,
-                       List<OfferOption> offerOptions,
-                       List<String> supportedLanguageCodes) {
+                       List<OfferOption> offerOptions
+                      // long blockHeightAtOfferCreation
+                       ) {
         super(id,
                 date,
                 makerNetworkId,
@@ -97,24 +93,20 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                 quoteSidePaymentMethodSpecs,
                 offerOptions);
 
-        // We might get an immutable list, but we need to sort it, so wrap it into an ArrayList
-        this.supportedLanguageCodes = new ArrayList<>(supportedLanguageCodes);
-        Collections.sort(this.supportedLanguageCodes);
-
         verify();
     }
+    //                        String makerPaymentAccountId,
+
 
     @Override
     public void verify() {
         super.verify();
-
-        NetworkDataValidation.validateText(supportedLanguageCodes.toString(), 100);
     }
 
     @Override
     public bisq.offer.protobuf.Offer.Builder getBuilder(boolean serializeForHash) {
         return getOfferBuilder(serializeForHash).setMuSigOffer(
-                bisq.offer.protobuf.MuSigOffer.newBuilder().addAllSupportedLanguageCodes(supportedLanguageCodes));
+                bisq.offer.protobuf.MuSigOffer.newBuilder());
     }
 
     @Override
@@ -145,7 +137,6 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                 protocolTypes,
                 baseSidePaymentMethodSpecs,
                 quoteSidePaymentMethodSpecs,
-                offerOptions,
-                new ArrayList<>(proto.getBisqEasyOffer().getSupportedLanguageCodesList()));
+                offerOptions);
     }
 }
