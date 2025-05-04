@@ -15,16 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.p2p.handler.seller_as_maker;
+package bisq.trade.mu_sig.messages.network.handler.seller_as_maker;
 
 import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
-import bisq.trade.mu_sig.grpc.CloseTradeRequest;
-import bisq.trade.mu_sig.grpc.MusigGrpc;
+import bisq.trade.protobuf.CloseTradeRequest;
+import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
-import bisq.trade.mu_sig.messages.p2p.MuSigCooperativeClosureMessage_G;
+import bisq.trade.mu_sig.messages.network.MuSigCooperativeClosureMessage_G;
 import bisq.trade.protocol.events.TradeMessageHandler;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;

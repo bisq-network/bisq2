@@ -21,14 +21,14 @@ import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.events.seller_as_maker.MuSigSellersCooperativeCloseTimeoutEvent;
 import bisq.trade.mu_sig.events.seller_as_maker.MuSigSellersCooperativeCloseTimeoutEventHandler;
-import bisq.trade.mu_sig.messages.p2p.MuSigCooperativeClosureMessage_G;
-import bisq.trade.mu_sig.messages.p2p.MuSigPaymentInitiatedMessage_E;
-import bisq.trade.mu_sig.messages.p2p.MuSigSetupTradeMessage_A;
-import bisq.trade.mu_sig.messages.p2p.MuSigSetupTradeMessage_C;
-import bisq.trade.mu_sig.messages.p2p.handler.seller_as_maker.MuSigCooperativeClosureMessage_G_Handler;
-import bisq.trade.mu_sig.messages.p2p.handler.seller_as_maker.MuSigPaymentInitiatedMessage_E_Handler;
-import bisq.trade.mu_sig.messages.p2p.handler.seller_as_maker.MuSigSetupTradeMessage_A_Handler;
-import bisq.trade.mu_sig.messages.p2p.handler.seller_as_maker.MuSigSetupTradeMessage_C_Handler;
+import bisq.trade.mu_sig.messages.network.MuSigCooperativeClosureMessage_G;
+import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
+import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
+import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_C;
+import bisq.trade.mu_sig.messages.network.handler.seller_as_maker.MuSigCooperativeClosureMessage_G_Handler;
+import bisq.trade.mu_sig.messages.network.handler.seller_as_maker.MuSigPaymentInitiatedMessage_E_Handler;
+import bisq.trade.mu_sig.messages.network.handler.seller_as_maker.MuSigSetupTradeMessage_A_Handler;
+import bisq.trade.mu_sig.messages.network.handler.seller_as_maker.MuSigSetupTradeMessage_C_Handler;
 
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.*;
 

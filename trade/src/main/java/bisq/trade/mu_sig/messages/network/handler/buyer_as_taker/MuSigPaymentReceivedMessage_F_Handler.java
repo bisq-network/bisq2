@@ -15,19 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.p2p.handler.buyer_as_taker;
+package bisq.trade.mu_sig.messages.network.handler.buyer_as_taker;
 
 import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
-import bisq.trade.mu_sig.grpc.CloseTradeRequest;
-import bisq.trade.mu_sig.grpc.MusigGrpc;
+import bisq.trade.protobuf.CloseTradeRequest;
+import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
 import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
-import bisq.trade.mu_sig.messages.p2p.MuSigCooperativeClosureMessage_G;
-import bisq.trade.mu_sig.messages.p2p.MuSigPaymentReceivedMessage_F;
+import bisq.trade.mu_sig.messages.network.MuSigCooperativeClosureMessage_G;
+import bisq.trade.mu_sig.messages.network.MuSigPaymentReceivedMessage_F;
 import bisq.trade.protocol.events.TradeMessageHandler;
 import bisq.trade.protocol.events.TradeMessageSender;
 import com.google.protobuf.ByteString;

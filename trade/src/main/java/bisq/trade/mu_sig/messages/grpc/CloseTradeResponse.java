@@ -32,17 +32,17 @@ public class CloseTradeResponse implements Proto {
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.CloseTradeResponse.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.mu_sig.grpc.CloseTradeResponse.newBuilder()
+    public bisq.trade.protobuf.CloseTradeResponse.Builder getBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.CloseTradeResponse.newBuilder()
                 .setPeerOutputPrvKeyShare(ByteString.copyFrom(peerOutputPrvKeyShare));
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.CloseTradeResponse toProto(boolean serializeForHash) {
+    public bisq.trade.protobuf.CloseTradeResponse toProto(boolean serializeForHash) {
         return getBuilder(serializeForHash).build();
     }
 
-    public static CloseTradeResponse fromProto(bisq.trade.mu_sig.grpc.CloseTradeResponse proto) {
+    public static CloseTradeResponse fromProto(bisq.trade.protobuf.CloseTradeResponse proto) {
         return new CloseTradeResponse(proto.getPeerOutputPrvKeyShare().toByteArray());
     }
 }

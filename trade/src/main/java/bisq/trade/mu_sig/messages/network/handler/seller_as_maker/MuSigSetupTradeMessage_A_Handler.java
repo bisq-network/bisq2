@@ -15,24 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.p2p.handler.seller_as_maker;
+package bisq.trade.mu_sig.messages.network.handler.seller_as_maker;
 
 import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
-import bisq.contract.bisq_musig.BisqMuSigContract;
+import bisq.contract.bisq_musig.MuSigContract;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
-import bisq.trade.mu_sig.grpc.MusigGrpc;
-import bisq.trade.mu_sig.grpc.NonceSharesRequest;
-import bisq.trade.mu_sig.grpc.PubKeySharesRequest;
-import bisq.trade.mu_sig.grpc.Role;
+import bisq.trade.protobuf.MusigGrpc;
+import bisq.trade.protobuf.NonceSharesRequest;
+import bisq.trade.protobuf.PubKeySharesRequest;
+import bisq.trade.protobuf.Role;
 import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
-import bisq.trade.mu_sig.messages.p2p.MuSigSetupTradeMessage_A;
-import bisq.trade.mu_sig.messages.p2p.MuSigSetupTradeMessage_B;
+import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
+import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_B;
 import bisq.trade.protocol.events.TradeMessageHandler;
 import bisq.trade.protocol.events.TradeMessageSender;
 import com.google.protobuf.ByteString;
@@ -72,11 +72,11 @@ public class MuSigSetupTradeMessage_A_Handler extends TradeMessageHandler<MuSigT
                 .setSellersSecurityDeposit(30_000)
                 .build()));
 
-        BisqMuSigContract takersContract = message.getContract();
+        MuSigContract takersContract = message.getContract();
         ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
         ContractService contractService = serviceProvider.getContractService();
         try {
-            BisqMuSigContract makersContract = trade.getContract();
+            MuSigContract makersContract = trade.getContract();
             ContractSignatureData makersContractSignatureData = contractService.signContract(makersContract,
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
 

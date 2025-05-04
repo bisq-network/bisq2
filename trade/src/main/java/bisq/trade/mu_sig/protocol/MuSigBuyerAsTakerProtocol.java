@@ -20,12 +20,12 @@ package bisq.trade.mu_sig.protocol;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.events.buyer_as_taker.*;
-import bisq.trade.mu_sig.messages.p2p.MuSigPaymentReceivedMessage_F;
-import bisq.trade.mu_sig.messages.p2p.MuSigSetupTradeMessage_B;
-import bisq.trade.mu_sig.messages.p2p.MuSigSetupTradeMessage_D;
-import bisq.trade.mu_sig.messages.p2p.handler.buyer_as_taker.MuSigPaymentReceivedMessage_F_Handler;
-import bisq.trade.mu_sig.messages.p2p.handler.buyer_as_taker.MuSigSetupTradeMessage_B_Handler;
-import bisq.trade.mu_sig.messages.p2p.handler.buyer_as_taker.MuSigSetupTradeMessage_D_Handler;
+import bisq.trade.mu_sig.messages.network.MuSigPaymentReceivedMessage_F;
+import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_B;
+import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
+import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigPaymentReceivedMessage_F_Handler;
+import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigSetupTradeMessage_B_Handler;
+import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigSetupTradeMessage_D_Handler;
 
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.*;
 

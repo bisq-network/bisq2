@@ -33,18 +33,18 @@ public class PubKeySharesRequest implements Proto {
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.PubKeySharesRequest.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.mu_sig.grpc.PubKeySharesRequest.newBuilder()
+    public bisq.trade.protobuf.PubKeySharesRequest.Builder getBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.PubKeySharesRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setMyRole(myRole.toProtoEnum());
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.PubKeySharesRequest toProto(boolean serializeForHash) {
+    public bisq.trade.protobuf.PubKeySharesRequest toProto(boolean serializeForHash) {
         return getBuilder(serializeForHash).build();
     }
 
-    public static PubKeySharesRequest fromProto(bisq.trade.mu_sig.grpc.PubKeySharesRequest proto) {
+    public static PubKeySharesRequest fromProto(bisq.trade.protobuf.PubKeySharesRequest proto) {
         return new PubKeySharesRequest(proto.getTradeId(),
                 Role.fromProto(proto.getMyRole()));
     }

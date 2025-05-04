@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.bisq_musig;
+package bisq.offer.musig;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
@@ -35,9 +35,9 @@ import java.util.stream.Collectors;
 @Slf4j
 final class MyBisqMuSigOffersStore implements PersistableStore<MyBisqMuSigOffersStore> {
     @Getter(AccessLevel.PACKAGE)
-    private final ObservableSet<BisqMuSigOffer> offers = new ObservableSet<>();
+    private final ObservableSet<MuSigOffer> offers = new ObservableSet<>();
 
-    private MyBisqMuSigOffersStore(Set<BisqMuSigOffer> offers) {
+    private MyBisqMuSigOffersStore(Set<MuSigOffer> offers) {
         this.offers.addAll(offers);
     }
 
@@ -67,7 +67,7 @@ final class MyBisqMuSigOffersStore implements PersistableStore<MyBisqMuSigOffers
     }
 
     public static MyBisqMuSigOffersStore fromProto(bisq.offer.protobuf.MyBisqMuSigOffersStore proto) {
-        return new MyBisqMuSigOffersStore(proto.getOffersList().stream().map(BisqMuSigOffer::fromProto).collect(Collectors.toSet()));
+        return new MyBisqMuSigOffersStore(proto.getOffersList().stream().map(MuSigOffer::fromProto).collect(Collectors.toSet()));
     }
 
     @Override
@@ -81,11 +81,11 @@ final class MyBisqMuSigOffersStore implements PersistableStore<MyBisqMuSigOffers
         };
     }
 
-    void add(BisqMuSigOffer offer) {
+    void add(MuSigOffer offer) {
         offers.add(offer);
     }
 
-    void remove(BisqMuSigOffer offer) {
+    void remove(MuSigOffer offer) {
         offers.remove(offer);
     }
 }

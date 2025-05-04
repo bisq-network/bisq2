@@ -22,9 +22,10 @@ import bisq.contract.Party;
 import bisq.contract.Role;
 import bisq.contract.TwoPartyContract;
 import bisq.network.identity.NetworkId;
-import bisq.offer.bisq_musig.BisqMuSigOffer;
+import bisq.offer.musig.MuSigOffer;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
+import bisq.offer.payment_method.PaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -36,7 +37,7 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class BisqMuSigContract extends TwoPartyContract<BisqMuSigOffer> {
+public class MuSigContract extends TwoPartyContract<MuSigOffer> {
 
     private final long baseSideAmount;
     private final long quoteSideAmount;
@@ -46,8 +47,8 @@ public class BisqMuSigContract extends TwoPartyContract<BisqMuSigOffer> {
     private final PriceSpec priceSpec;
     private final long marketPrice;
 
-    public BisqMuSigContract(long takeOfferDate,
-                            BisqMuSigOffer offer,
+    public MuSigContract(long takeOfferDate,
+                            MuSigOffer offer,
                             NetworkId takerNetworkId,
                             long baseSideAmount,
                             long quoteSideAmount,
@@ -69,8 +70,8 @@ public class BisqMuSigContract extends TwoPartyContract<BisqMuSigOffer> {
                 marketPrice);
     }
 
-    public BisqMuSigContract(long takeOfferDate,
-                             BisqMuSigOffer offer,
+    public MuSigContract(long takeOfferDate,
+                             MuSigOffer offer,
                             TradeProtocolType protocolType,
                             Party taker,
                             long baseSideAmount,
@@ -99,8 +100,8 @@ public class BisqMuSigContract extends TwoPartyContract<BisqMuSigOffer> {
 
     @Override
     public bisq.contract.protobuf.Contract.Builder getBuilder(boolean serializeForHash) {
-        var bisqEasyContract = bisq.contract.protobuf.BisqMuSigContract.newBuilder();
-        var twoPartyContract = getTwoPartyContractBuilder(serializeForHash).setBisqMuSigContract(bisqEasyContract);
+        var bisqEasyContract = bisq.contract.protobuf.MuSigContract.newBuilder();
+        var twoPartyContract = getTwoPartyContractBuilder(serializeForHash).setMuSigContract(bisqEasyContract);
         return getContractBuilder(serializeForHash).setTwoPartyContract(twoPartyContract);
     }
 
@@ -109,13 +110,23 @@ public class BisqMuSigContract extends TwoPartyContract<BisqMuSigOffer> {
         return resolveProto(serializeForHash);
     }
 
-    public static BisqMuSigContract fromProto(bisq.contract.protobuf.Contract proto) {
+
+    public static MuSigContract fromProto(bisq.contract.protobuf.Contract proto) {
         bisq.contract.protobuf.TwoPartyContract twoPartyContractProto = proto.getTwoPartyContract();
-        return null;
-        /*new BisqMuSigContract(proto.getTakeOfferDate(),
-                BisqMuSigOffer.fromProto(proto.getOffer()),
+        bisq.contract.protobuf.MuSigContract muSigContractProto = twoPartyContractProto.getMuSigContract();
+        return new MuSigContract(proto.getTakeOfferDate(),
+                MuSigOffer.fromProto(proto.getOffer()),
                 TradeProtocolType.fromProto(proto.getTradeProtocolType()),
-                Party.fromProto(twoPartyContractProto.getTaker()));*/
+                Party.fromProto(twoPartyContractProto.getTaker()),
+                muSigContractProto.getBaseSideAmount(),
+                muSigContractProto.getQuoteSideAmount(),
+                PaymentMethodSpec.protoToBitcoinPaymentMethodSpec(muSigContractProto.getBaseSidePaymentMethodSpec()),
+                PaymentMethodSpec.protoToFiatPaymentMethodSpec(muSigContractProto.getQuoteSidePaymentMethodSpec()),
+                muSigContractProto.hasMediator() ?
+                        Optional.of(UserProfile.fromProto(muSigContractProto.getMediator())) :
+                        Optional.empty(),
+                PriceSpec.fromProto(muSigContractProto.getPriceSpec()),
+                muSigContractProto.getMarketPrice());
     }
 
 }

@@ -53,8 +53,8 @@ public class NonceSharesRequest implements Proto {
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.NonceSharesRequest.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.mu_sig.grpc.NonceSharesRequest.newBuilder()
+    public bisq.trade.protobuf.NonceSharesRequest.Builder getBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.NonceSharesRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setBuyerOutputPeersPubKeyShare(ByteString.copyFrom(buyerOutputPeersPubKeyShare))
                 .setSellerOutputPeersPubKeyShare(ByteString.copyFrom(sellerOutputPeersPubKeyShare))
@@ -66,11 +66,11 @@ public class NonceSharesRequest implements Proto {
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.NonceSharesRequest toProto(boolean serializeForHash) {
+    public bisq.trade.protobuf.NonceSharesRequest toProto(boolean serializeForHash) {
         return getBuilder(serializeForHash).build();
     }
 
-    public static NonceSharesRequest fromProto(bisq.trade.mu_sig.grpc.NonceSharesRequest proto) {
+    public static NonceSharesRequest fromProto(bisq.trade.protobuf.NonceSharesRequest proto) {
         return new NonceSharesRequest(proto.getTradeId(),
                 proto.getBuyerOutputPeersPubKeyShare().toByteArray(),
                 proto.getSellerOutputPeersPubKeyShare().toByteArray(),
