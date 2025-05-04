@@ -24,7 +24,6 @@ import bisq.contract.ContractSignatureData;
 import bisq.network.identity.NetworkId;
 import bisq.trade.bisq_easy.BisqEasyTradeParty;
 import bisq.trade.mu_sig.MuSigTradeParty;
-import bisq.trade.submarine.SubmarineTradeParty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -68,14 +67,6 @@ public abstract class TradeParty implements PersistableProto {
     public static MuSigTradeParty protoToMuSigTradeParty(bisq.trade.protobuf.TradeParty proto) {
         return switch (proto.getMessageCase()) {
             case MUSIGTRADEPARTY -> MuSigTradeParty.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-            default -> throw new UnresolvableProtobufMessageException(proto);
-        };
-    }
-
-    public static SubmarineTradeParty protoToSubmarineTradeParty(bisq.trade.protobuf.TradeParty proto) {
-        return switch (proto.getMessageCase()) {
-            case SUBMARINETRADEPARTY -> SubmarineTradeParty.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);
         };

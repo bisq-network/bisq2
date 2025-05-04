@@ -52,7 +52,6 @@ message TwoPartyContract {
   oneof message {
     BisqEasyContract bisqEasyContract = 10;
     MuSigContract muSigContract = 11;
-    SubmarineContract submarineContract = 12;
   }
 }
 
@@ -97,9 +96,4 @@ message MuSigContract {
   optional user.UserProfile mediator = 12;
   offer.PriceSpec priceSpec = 13;
   uint64 marketPrice = 14;
-}
-
-
-// Submarine
-message SubmarineContract {
 }

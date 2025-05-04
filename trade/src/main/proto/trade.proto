@@ -32,7 +32,6 @@ message TradeParty {
   oneof message {
     BisqEasyTradeParty bisqEasyTradeParty = 20;
     MuSigTradeParty muSigTradeParty = 21;
-    SubmarineTradeParty submarineTradeParty = 22;
   }
 }
 
@@ -59,7 +58,6 @@ message Trade {
   oneof message {
     BisqEasyTrade bisqEasyTrade = 30;
     MuSigTrade muSigTrade = 31;
-    SubmarineTrade submarineTrade = 32;
   }
 }
 message TradeMessage {
@@ -70,8 +68,7 @@ message TradeMessage {
   network.identity.NetworkId receiver = 5;
   oneof message {
     BisqEasyTradeMessage bisqEasyTradeMessage = 20;
-    SubmarineTradeMessage submarineTradeMessage = 21;
-    MuSigTradeMessage muSigTradeMessage = 23;
+    MuSigTradeMessage muSigTradeMessage = 21;
   }
 }
 
@@ -320,19 +317,4 @@ message MuSigPaymentReceivedMessage_F {
 
 message MuSigCooperativeClosureMessage_G {
   CloseTradeResponse closeTradeResponse = 1;
-}
-
-
-
-// Submarine
-message SubmarineTradeMessage {
-}
-message SubmarineTradeParty {
-}
-
-message SubmarineTrade {
-}
-
-message SubmarineTradeStore {
-  map<string, Trade> tradeById = 1;
 }

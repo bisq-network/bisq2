@@ -27,7 +27,6 @@ import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
 import bisq.trade.mu_sig.messages.network.MuSigTradeMessage;
-import bisq.trade.submarine.messages.SubmarineTradeMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -79,7 +78,6 @@ public abstract class TradeMessage implements MailboxMessage, ExternalNetworkMes
         return switch (proto.getMessageCase()) {
             case BISQEASYTRADEMESSAGE -> BisqEasyTradeMessage.fromProto(proto);
             case MUSIGTRADEMESSAGE -> MuSigTradeMessage.fromProto(proto);
-            case SUBMARINETRADEMESSAGE -> SubmarineTradeMessage.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> {
                 log.error("Invalid protobuf message: {}", proto.getMessageCase());
