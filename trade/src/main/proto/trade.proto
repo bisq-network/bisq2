@@ -144,6 +144,8 @@ message MuSigTradeParty {
 }
 
 message MuSigTrade {
+  optional contract.Role interruptTradeInitiator = 1;
+  optional sint64 tradeCompletedDate = 2;
 }
 
 message MuSigTradeStore {
