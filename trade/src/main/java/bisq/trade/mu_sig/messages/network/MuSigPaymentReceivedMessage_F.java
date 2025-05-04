@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.p2p;
+package bisq.trade.mu_sig.messages.network;
 
 import bisq.network.identity.NetworkId;
 import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
@@ -47,35 +47,33 @@ public final class MuSigPaymentReceivedMessage_F extends MuSigTradeMessage {
     @Override
     public void verify() {
         super.verify();
-
     }
 
     @Override
-    protected bisq.trade.protobuf.BisqEasyTradeMessage.Builder getBisqEasyTradeMessageBuilder(boolean serializeForHash) {
-        return bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
-                .setBisqEasyAccountDataMessage(toBisqEasyAccountDataMessageProto(serializeForHash));
+    protected bisq.trade.protobuf.MuSigTradeMessage.Builder getMuSigTradeMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.MuSigTradeMessage.newBuilder()
+                .setMuSigPaymentReceivedMessageF(toMuSigPaymentReceivedMessage_FProto(serializeForHash));
     }
 
-    private bisq.trade.protobuf.BisqEasyAccountDataMessage toBisqEasyAccountDataMessageProto(boolean serializeForHash) {
-        bisq.trade.protobuf.BisqEasyAccountDataMessage.Builder builder = getBisqEasyAccountDataMessageBuilder(serializeForHash);
+    private bisq.trade.protobuf.MuSigPaymentReceivedMessage_F toMuSigPaymentReceivedMessage_FProto(boolean serializeForHash) {
+        bisq.trade.protobuf.MuSigPaymentReceivedMessage_F.Builder builder = getMuSigPaymentReceivedMessage_F(serializeForHash);
         return resolveBuilder(builder, serializeForHash).build();
     }
 
-    private bisq.trade.protobuf.BisqEasyAccountDataMessage.Builder getBisqEasyAccountDataMessageBuilder(boolean serializeForHash) {
-        return bisq.trade.protobuf.BisqEasyAccountDataMessage.newBuilder();
+    private bisq.trade.protobuf.MuSigPaymentReceivedMessage_F.Builder getMuSigPaymentReceivedMessage_F(boolean serializeForHash) {
+        return bisq.trade.protobuf.MuSigPaymentReceivedMessage_F.newBuilder();
     }
 
-    /*public static MuSigMessageA fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        bisq.trade.protobuf.BisqEasyAccountDataMessage bisqEasyAccountDataMessage = proto.getBisqEasyTradeMessage().getBisqEasyAccountDataMessage();
-        return new MuSigMessageA(
+    public static MuSigPaymentReceivedMessage_F fromProto(bisq.trade.protobuf.TradeMessage proto) {
+        bisq.trade.protobuf.MuSigPaymentReceivedMessage_F muSigMessageProto = proto.getMuSigTradeMessage().getMuSigPaymentReceivedMessageF();
+        return new MuSigPaymentReceivedMessage_F(
                 proto.getId(),
                 proto.getTradeId(),
                 proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
-                bisqEasyAccountDataMessage.getPaymentAccountData(),
-                BisqEasyOffer.fromProto(bisqEasyAccountDataMessage.getBisqEasyOffer()));
-    }*/
+                SwapTxSignatureResponse.fromProto(muSigMessageProto.getSwapTxSignatureResponse()));
+    }
 
     @Override
     public double getCostFactor() {

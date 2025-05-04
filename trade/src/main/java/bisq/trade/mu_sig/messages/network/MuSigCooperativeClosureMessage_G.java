@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.p2p;
+package bisq.trade.mu_sig.messages.network;
 
 import bisq.network.identity.NetworkId;
 import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
@@ -47,35 +47,33 @@ public final class MuSigCooperativeClosureMessage_G extends MuSigTradeMessage {
     @Override
     public void verify() {
         super.verify();
-
     }
 
     @Override
-    protected bisq.trade.protobuf.BisqEasyTradeMessage.Builder getBisqEasyTradeMessageBuilder(boolean serializeForHash) {
-        return bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
-                .setBisqEasyAccountDataMessage(toBisqEasyAccountDataMessageProto(serializeForHash));
+    protected bisq.trade.protobuf.MuSigTradeMessage.Builder getMuSigTradeMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.MuSigTradeMessage.newBuilder()
+                .setMuSigCooperativeClosureMessageG(toMuSigCooperativeClosureMessage_GProto(serializeForHash));
     }
 
-    private bisq.trade.protobuf.BisqEasyAccountDataMessage toBisqEasyAccountDataMessageProto(boolean serializeForHash) {
-        bisq.trade.protobuf.BisqEasyAccountDataMessage.Builder builder = getBisqEasyAccountDataMessageBuilder(serializeForHash);
+    private bisq.trade.protobuf.MuSigCooperativeClosureMessage_G toMuSigCooperativeClosureMessage_GProto(boolean serializeForHash) {
+        bisq.trade.protobuf.MuSigCooperativeClosureMessage_G.Builder builder = getMuSigCooperativeClosureMessage_G(serializeForHash);
         return resolveBuilder(builder, serializeForHash).build();
     }
 
-    private bisq.trade.protobuf.BisqEasyAccountDataMessage.Builder getBisqEasyAccountDataMessageBuilder(boolean serializeForHash) {
-        return bisq.trade.protobuf.BisqEasyAccountDataMessage.newBuilder();
+    private bisq.trade.protobuf.MuSigCooperativeClosureMessage_G.Builder getMuSigCooperativeClosureMessage_G(boolean serializeForHash) {
+        return bisq.trade.protobuf.MuSigCooperativeClosureMessage_G.newBuilder();
     }
 
-    /*public static MuSigMessageA fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        bisq.trade.protobuf.BisqEasyAccountDataMessage bisqEasyAccountDataMessage = proto.getBisqEasyTradeMessage().getBisqEasyAccountDataMessage();
-        return new MuSigMessageA(
+    public static MuSigCooperativeClosureMessage_G fromProto(bisq.trade.protobuf.TradeMessage proto) {
+        bisq.trade.protobuf.MuSigCooperativeClosureMessage_G muSigMessageProto = proto.getMuSigTradeMessage().getMuSigCooperativeClosureMessageG();
+        return new MuSigCooperativeClosureMessage_G(
                 proto.getId(),
                 proto.getTradeId(),
                 proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
-                bisqEasyAccountDataMessage.getPaymentAccountData(),
-                BisqEasyOffer.fromProto(bisqEasyAccountDataMessage.getBisqEasyOffer()));
-    }*/
+                CloseTradeResponse.fromProto(muSigMessageProto.getCloseTradeResponse()));
+    }
 
     @Override
     public double getCostFactor() {

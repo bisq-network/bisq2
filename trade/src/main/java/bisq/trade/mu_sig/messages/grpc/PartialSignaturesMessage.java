@@ -41,8 +41,8 @@ public class PartialSignaturesMessage implements Proto {
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.PartialSignaturesMessage.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.mu_sig.grpc.PartialSignaturesMessage.newBuilder()
+    public bisq.trade.protobuf.PartialSignaturesMessage.Builder getBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.PartialSignaturesMessage.newBuilder()
                 .setPeersWarningTxBuyerInputPartialSignature(ByteString.copyFrom(peersWarningTxBuyerInputPartialSignature))
                 .setPeersWarningTxSellerInputPartialSignature(ByteString.copyFrom(peersWarningTxSellerInputPartialSignature))
                 .setPeersRedirectTxInputPartialSignature(ByteString.copyFrom(peersRedirectTxInputPartialSignature))
@@ -50,11 +50,11 @@ public class PartialSignaturesMessage implements Proto {
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.PartialSignaturesMessage toProto(boolean serializeForHash) {
+    public bisq.trade.protobuf.PartialSignaturesMessage toProto(boolean serializeForHash) {
         return getBuilder(serializeForHash).build();
     }
 
-    public static PartialSignaturesMessage fromProto(bisq.trade.mu_sig.grpc.PartialSignaturesMessage proto) {
+    public static PartialSignaturesMessage fromProto(bisq.trade.protobuf.PartialSignaturesMessage proto) {
         return new PartialSignaturesMessage(proto.getPeersWarningTxBuyerInputPartialSignature().toByteArray(),
                 proto.getPeersWarningTxSellerInputPartialSignature().toByteArray(),
                 proto.getPeersRedirectTxInputPartialSignature().toByteArray(),

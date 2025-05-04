@@ -34,18 +34,18 @@ public class DepositTxSignatureRequest implements Proto {
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.DepositTxSignatureRequest.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.mu_sig.grpc.DepositTxSignatureRequest.newBuilder()
+    public bisq.trade.protobuf.DepositTxSignatureRequest.Builder getBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.DepositTxSignatureRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setPeersPartialSignatures(peersPartialSignatures.toProto(serializeForHash));
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.DepositTxSignatureRequest toProto(boolean serializeForHash) {
+    public bisq.trade.protobuf.DepositTxSignatureRequest toProto(boolean serializeForHash) {
         return getBuilder(serializeForHash).build();
     }
 
-    public static DepositTxSignatureRequest fromProto(bisq.trade.mu_sig.grpc.DepositTxSignatureRequest proto) {
+    public static DepositTxSignatureRequest fromProto(bisq.trade.protobuf.DepositTxSignatureRequest proto) {
         return new DepositTxSignatureRequest(proto.getTradeId(),
                 PartialSignaturesMessage.fromProto(proto.getPeersPartialSignatures()));
     }

@@ -34,18 +34,18 @@ public class SwapTxSignatureRequest implements Proto {
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.SwapTxSignatureRequest.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.mu_sig.grpc.SwapTxSignatureRequest.newBuilder()
+    public bisq.trade.protobuf.SwapTxSignatureRequest.Builder getBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.SwapTxSignatureRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setSwapTxInputPeersPartialSignature(ByteString.copyFrom(swapTxInputPeersPartialSignature));
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.SwapTxSignatureRequest toProto(boolean serializeForHash) {
+    public bisq.trade.protobuf.SwapTxSignatureRequest toProto(boolean serializeForHash) {
         return getBuilder(serializeForHash).build();
     }
 
-    public static SwapTxSignatureRequest fromProto(bisq.trade.mu_sig.grpc.SwapTxSignatureRequest proto) {
+    public static SwapTxSignatureRequest fromProto(bisq.trade.protobuf.SwapTxSignatureRequest proto) {
         return new SwapTxSignatureRequest(proto.getTradeId(), proto.getSwapTxInputPeersPartialSignature().toByteArray());
     }
 }

@@ -21,9 +21,9 @@ import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
-import bisq.trade.mu_sig.grpc.CloseTradeRequest;
-import bisq.trade.mu_sig.grpc.CloseTradeResponse;
-import bisq.trade.mu_sig.grpc.MusigGrpc;
+import bisq.trade.protobuf.CloseTradeRequest;
+import bisq.trade.protobuf.CloseTradeResponse;
+import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protocol.events.TradeEventHandler;
 
 public class MuSigSellersCooperativeCloseTimeoutEventHandler extends TradeEventHandler<MuSigTrade> {

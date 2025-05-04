@@ -20,14 +20,14 @@ package bisq.trade.mu_sig.events.buyer_as_taker;
 import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractSignatureData;
-import bisq.contract.bisq_musig.BisqMuSigContract;
+import bisq.contract.bisq_musig.MuSigContract;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
-import bisq.trade.mu_sig.grpc.MusigGrpc;
-import bisq.trade.mu_sig.grpc.PubKeySharesRequest;
-import bisq.trade.mu_sig.grpc.Role;
+import bisq.trade.protobuf.MusigGrpc;
+import bisq.trade.protobuf.PubKeySharesRequest;
+import bisq.trade.protobuf.Role;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
-import bisq.trade.mu_sig.messages.p2p.MuSigSetupTradeMessage_A;
+import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
 import bisq.trade.protocol.events.SendTradeMessageHandler;
 
 import java.security.GeneralSecurityException;
@@ -46,7 +46,7 @@ public class MuSigTakeOfferEventHandler extends SendTradeMessageHandler<MuSigTra
                 .setMyRole(Role.BUYER_AS_TAKER)
                 .build()));
 
-        BisqMuSigContract contract = trade.getContract();
+        MuSigContract contract = trade.getContract();
         try {
             ContractSignatureData contractSignatureData = serviceProvider.getContractService().signContract(contract,
                     trade.getMyIdentity().getKeyBundle().getKeyPair());

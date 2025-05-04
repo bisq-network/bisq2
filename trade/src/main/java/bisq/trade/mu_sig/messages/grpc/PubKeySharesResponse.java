@@ -38,19 +38,19 @@ public class PubKeySharesResponse implements Proto {
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.PubKeySharesResponse.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.mu_sig.grpc.PubKeySharesResponse.newBuilder()
+    public bisq.trade.protobuf.PubKeySharesResponse.Builder getBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.PubKeySharesResponse.newBuilder()
                 .setBuyerOutputPubKeyShare(ByteString.copyFrom(buyerOutputPubKeyShare))
                 .setSellerOutputPubKeyShare(ByteString.copyFrom(sellerOutputPubKeyShare))
                 .setCurrentBlockHeight(currentBlockHeight);
     }
 
     @Override
-    public bisq.trade.mu_sig.grpc.PubKeySharesResponse toProto(boolean serializeForHash) {
+    public bisq.trade.protobuf.PubKeySharesResponse toProto(boolean serializeForHash) {
         return getBuilder(serializeForHash).build();
     }
 
-    public static PubKeySharesResponse fromProto(bisq.trade.mu_sig.grpc.PubKeySharesResponse proto) {
+    public static PubKeySharesResponse fromProto(bisq.trade.protobuf.PubKeySharesResponse proto) {
         return new PubKeySharesResponse(proto.getBuyerOutputPubKeyShare().toByteArray(),
                 proto.getSellerOutputPubKeyShare().toByteArray(),
                 proto.getCurrentBlockHeight());

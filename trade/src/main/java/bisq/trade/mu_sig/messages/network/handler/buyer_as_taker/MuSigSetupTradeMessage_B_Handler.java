@@ -15,24 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.p2p.handler.buyer_as_taker;
+package bisq.trade.mu_sig.messages.network.handler.buyer_as_taker;
 
 import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractSignatureData;
-import bisq.contract.bisq_musig.BisqMuSigContract;
+import bisq.contract.bisq_musig.MuSigContract;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
-import bisq.trade.mu_sig.grpc.MusigGrpc;
-import bisq.trade.mu_sig.grpc.NonceSharesRequest;
-import bisq.trade.mu_sig.grpc.PartialSignaturesRequest;
-import bisq.trade.mu_sig.grpc.ReceiverAddressAndAmount;
+import bisq.trade.protobuf.MusigGrpc;
+import bisq.trade.protobuf.NonceSharesRequest;
+import bisq.trade.protobuf.PartialSignaturesRequest;
+import bisq.trade.protobuf.ReceiverAddressAndAmount;
 import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
-import bisq.trade.mu_sig.messages.p2p.MuSigSetupTradeMessage_B;
-import bisq.trade.mu_sig.messages.p2p.MuSigSetupTradeMessage_C;
+import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_B;
+import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_C;
 import bisq.trade.protocol.events.TradeMessageHandler;
 import bisq.trade.protocol.events.TradeMessageSender;
 import com.google.common.collect.ImmutableMap;
@@ -76,7 +76,7 @@ public class MuSigSetupTradeMessage_B_Handler extends TradeMessageHandler<MuSigT
                 .addAllReceivers(mockReceivers())
                 .build()));
 
-        BisqMuSigContract makersContract = message.getContract();
+        MuSigContract makersContract = message.getContract();
         ContractSignatureData makersContractSignatureData = message.getContractSignatureData();
 
         // TODO verify both contracts are the same, and verify peers signature

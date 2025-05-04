@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.bisq_musig;
+package bisq.offer.musig;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
@@ -44,14 +44,14 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 @Getter
-public final class BisqMuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymentMethodSpec> {
-    public BisqMuSigOffer(NetworkId makerNetworkId,
-                          Direction direction,
-                          Market market,
-                          AmountSpec amountSpec,
-                          PriceSpec priceSpec,
-                          List<FiatPaymentMethod> fiatPaymentMethods,
-                          String makersTradeTerms) {
+public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymentMethodSpec> {
+    public MuSigOffer(NetworkId makerNetworkId,
+                      Direction direction,
+                      Market market,
+                      AmountSpec amountSpec,
+                      PriceSpec priceSpec,
+                      List<FiatPaymentMethod> fiatPaymentMethods,
+                      String makersTradeTerms) {
         this(StringUtils.createUid(),
                 System.currentTimeMillis(),
                 makerNetworkId,
@@ -66,17 +66,17 @@ public final class BisqMuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPa
         );
     }
 
-    private BisqMuSigOffer(String id,
-                           long date,
-                           NetworkId makerNetworkId,
-                           Direction direction,
-                           Market market,
-                           AmountSpec amountSpec,
-                           PriceSpec priceSpec,
-                           List<TradeProtocolType> protocolTypes,
-                           List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
-                           List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs,
-                           List<OfferOption> offerOptions) {
+    private MuSigOffer(String id,
+                       long date,
+                       NetworkId makerNetworkId,
+                       Direction direction,
+                       Market market,
+                       AmountSpec amountSpec,
+                       PriceSpec priceSpec,
+                       List<TradeProtocolType> protocolTypes,
+                       List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
+                       List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs,
+                       List<OfferOption> offerOptions) {
         super(id,
                 date,
                 makerNetworkId,
@@ -99,8 +99,8 @@ public final class BisqMuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPa
 
     @Override
     public bisq.offer.protobuf.Offer.Builder getBuilder(boolean serializeForHash) {
-        return getOfferBuilder(serializeForHash).setBisqMuSigOffer(
-                bisq.offer.protobuf.BisqMuSigOffer.newBuilder());
+        return getOfferBuilder(serializeForHash).setMuSigOffer(
+                bisq.offer.protobuf.MuSigOffer.newBuilder());
     }
 
     @Override
@@ -108,7 +108,7 @@ public final class BisqMuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPa
         return resolveProto(serializeForHash);
     }
 
-    public static BisqMuSigOffer fromProto(bisq.offer.protobuf.Offer proto) {
+    public static MuSigOffer fromProto(bisq.offer.protobuf.Offer proto) {
         List<TradeProtocolType> protocolTypes = proto.getProtocolTypesList().stream()
                 .map(TradeProtocolType::fromProto)
                 .collect(Collectors.toList());
@@ -121,7 +121,7 @@ public final class BisqMuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPa
         List<OfferOption> offerOptions = proto.getOfferOptionsList().stream()
                 .map(OfferOption::fromProto)
                 .collect(Collectors.toList());
-        return new BisqMuSigOffer(proto.getId(),
+        return new MuSigOffer(proto.getId(),
                 proto.getDate(),
                 NetworkId.fromProto(proto.getMakerNetworkId()),
                 Direction.fromProto(proto.getDirection()),

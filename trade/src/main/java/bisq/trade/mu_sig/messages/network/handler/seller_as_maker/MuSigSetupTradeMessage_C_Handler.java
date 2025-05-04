@@ -15,19 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.p2p.handler.seller_as_maker;
+package bisq.trade.mu_sig.messages.network.handler.seller_as_maker;
 
 import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
-import bisq.trade.mu_sig.grpc.*;
+import bisq.trade.protobuf.*;
 import bisq.trade.mu_sig.messages.grpc.DepositPsbt;
 import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
-import bisq.trade.mu_sig.messages.p2p.MuSigSetupTradeMessage_C;
-import bisq.trade.mu_sig.messages.p2p.MuSigSetupTradeMessage_D;
+import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_C;
+import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
 import bisq.trade.protocol.events.TradeMessageHandler;
 import bisq.trade.protocol.events.TradeMessageSender;
 import com.google.common.collect.ImmutableMap;
