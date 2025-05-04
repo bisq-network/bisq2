@@ -19,6 +19,7 @@ package bisq.offer.musig;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.common.application.BuildVersion;
 import bisq.common.currency.Market;
 import bisq.common.util.StringUtils;
 import bisq.network.identity.NetworkId;
@@ -45,7 +46,11 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymentMethodSpec> {
-    public MuSigOffer(NetworkId makerNetworkId,
+    private final int tradeProtocolVersion;
+    private final String appVersion;
+
+    public MuSigOffer(int tradeProtocolVersion,
+                      NetworkId makerNetworkId,
                       Direction direction,
                       Market market,
                       AmountSpec amountSpec,
@@ -53,6 +58,8 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                       List<FiatPaymentMethod> fiatPaymentMethods,
                       String makersTradeTerms) {
         this(StringUtils.createUid(),
+                tradeProtocolVersion,
+                BuildVersion.VERSION,
                 System.currentTimeMillis(),
                 makerNetworkId,
                 direction,
@@ -67,8 +74,8 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
     }
 
     private MuSigOffer(String id,
-                      // String tradeProtocolVersion,
-                     //  String appVersion,
+                       int tradeProtocolVersion,
+                       String appVersion,
                        long date,
                        NetworkId makerNetworkId,
                        Direction direction,
@@ -79,8 +86,7 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                        List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
                        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs,
                        List<OfferOption> offerOptions
-                      // long blockHeightAtOfferCreation
-                       ) {
+    ) {
         super(id,
                 date,
                 makerNetworkId,
@@ -93,10 +99,11 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                 quoteSidePaymentMethodSpecs,
                 offerOptions);
 
+        this.tradeProtocolVersion = tradeProtocolVersion;
+        this.appVersion = appVersion;
+
         verify();
     }
-    //                        String makerPaymentAccountId,
-
 
     @Override
     public void verify() {
@@ -128,6 +135,8 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                 .map(OfferOption::fromProto)
                 .collect(Collectors.toList());
         return new MuSigOffer(proto.getId(),
+                proto.getTradeProtocolVersion(),
+                proto.getAppVersion(),
                 proto.getDate(),
                 NetworkId.fromProto(proto.getMakerNetworkId()),
                 Direction.fromProto(proto.getDirection()),
