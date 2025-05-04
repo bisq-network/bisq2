@@ -123,18 +123,19 @@ message OfferOption {
 // Offer
 message Offer {
   string id = 1;
-  uint32 tradeProtocolVersion = 2;
-  string appVersion = 3;
-  sint64 date = 4;
-  network.identity.NetworkId makerNetworkId = 5;
-  common.Market market = 6;
-  Direction direction = 7;
-  AmountSpec amountSpec = 8;
-  PriceSpec priceSpec = 9;
-  repeated account.TradeProtocolType protocolTypes = 10;
-  repeated PaymentMethodSpec baseSidePaymentSpecs = 11;
-  repeated PaymentMethodSpec quoteSidePaymentSpecs = 12;
-  repeated OfferOption offerOptions = 13;
+  sint64 date = 2;
+  network.identity.NetworkId makerNetworkId = 3;
+  common.Market market = 4;
+  Direction direction = 5;
+  AmountSpec amountSpec = 6;
+  PriceSpec priceSpec = 7;
+  repeated account.TradeProtocolType protocolTypes = 8;
+  repeated PaymentMethodSpec baseSidePaymentSpecs = 9;
+  repeated PaymentMethodSpec quoteSidePaymentSpecs = 10;
+  repeated OfferOption offerOptions = 11;
+  sint32 version = 12;
+  string tradeProtocolVersion = 13;
+  string appVersion = 14;
 
   oneof message {
     BisqEasyOffer bisqEasyOffer = 30;

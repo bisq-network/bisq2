@@ -49,8 +49,7 @@ final class MyMuSigOffersStore implements PersistableStore<MyMuSigOffersStore> {
 
     @Override
     public void applyPersisted(MyMuSigOffersStore persisted) {
-        offers.clear();
-        offers.addAll(persisted.getOffers());
+        offers.setAll(persisted.getOffers());
     }
 
     @Override

@@ -71,7 +71,10 @@ public final class SubmarineOffer extends Offer<BitcoinPaymentMethodSpec, FiatPa
                 protocolTypes,
                 baseSidePaymentMethodSpecs,
                 quoteSidePaymentMethodSpecs,
-                offerOptions);
+                offerOptions,
+                0,
+                "",
+                "");
         verify();
     }
 

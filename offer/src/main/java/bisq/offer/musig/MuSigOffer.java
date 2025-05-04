@@ -46,20 +46,18 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymentMethodSpec> {
-    private final int tradeProtocolVersion;
-    private final String appVersion;
+    private static final int VERSION = 0;
 
-    public MuSigOffer(int tradeProtocolVersion,
-                      NetworkId makerNetworkId,
+    public MuSigOffer(NetworkId makerNetworkId,
                       Direction direction,
                       Market market,
                       AmountSpec amountSpec,
                       PriceSpec priceSpec,
                       List<FiatPaymentMethod> fiatPaymentMethods,
-                      String makersTradeTerms) {
+                      String makersTradeTerms,
+                      String tradeProtocolVersion
+    ) {
         this(StringUtils.createUid(),
-                tradeProtocolVersion,
-                BuildVersion.VERSION,
                 System.currentTimeMillis(),
                 makerNetworkId,
                 direction,
@@ -69,13 +67,14 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                 List.of(TradeProtocolType.MUSIG),
                 PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec(),
                 PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(fiatPaymentMethods),
-                OfferOptionUtil.fromTradeTerms(makersTradeTerms) //todo
+                OfferOptionUtil.fromTradeTerms(makersTradeTerms), //todo
+                VERSION,
+                tradeProtocolVersion,
+                BuildVersion.VERSION
         );
     }
 
     private MuSigOffer(String id,
-                       int tradeProtocolVersion,
-                       String appVersion,
                        long date,
                        NetworkId makerNetworkId,
                        Direction direction,
@@ -85,7 +84,10 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                        List<TradeProtocolType> protocolTypes,
                        List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
                        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs,
-                       List<OfferOption> offerOptions
+                       List<OfferOption> offerOptions,
+                       int version,
+                       String tradeProtocolVersion,
+                       String appVersion
     ) {
         super(id,
                 date,
@@ -97,10 +99,10 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                 protocolTypes,
                 baseSidePaymentMethodSpecs,
                 quoteSidePaymentMethodSpecs,
-                offerOptions);
-
-        this.tradeProtocolVersion = tradeProtocolVersion;
-        this.appVersion = appVersion;
+                offerOptions,
+                version,
+                tradeProtocolVersion,
+                appVersion);
 
         verify();
     }
@@ -109,6 +111,7 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
     public void verify() {
         super.verify();
     }
+
 
     @Override
     public bisq.offer.protobuf.Offer.Builder getBuilder(boolean serializeForHash) {
@@ -135,8 +138,6 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                 .map(OfferOption::fromProto)
                 .collect(Collectors.toList());
         return new MuSigOffer(proto.getId(),
-                proto.getTradeProtocolVersion(),
-                proto.getAppVersion(),
                 proto.getDate(),
                 NetworkId.fromProto(proto.getMakerNetworkId()),
                 Direction.fromProto(proto.getDirection()),
@@ -146,6 +147,9 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                 protocolTypes,
                 baseSidePaymentMethodSpecs,
                 quoteSidePaymentMethodSpecs,
-                offerOptions);
+                offerOptions,
+                proto.getVersion(),
+                proto.getTradeProtocolVersion(),
+                proto.getAppVersion());
     }
 }

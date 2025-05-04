@@ -66,7 +66,13 @@ import bisq.dto.contract.bisq_easy.BisqEasyContractDto;
 import bisq.dto.identity.IdentityDto;
 import bisq.dto.network.identity.NetworkIdDto;
 import bisq.dto.offer.DirectionDto;
-import bisq.dto.offer.amount.spec.*;
+import bisq.dto.offer.amount.spec.AmountSpecDto;
+import bisq.dto.offer.amount.spec.BaseSideFixedAmountSpecDto;
+import bisq.dto.offer.amount.spec.BaseSideRangeAmountSpecDto;
+import bisq.dto.offer.amount.spec.FixedAmountSpecDto;
+import bisq.dto.offer.amount.spec.QuoteSideFixedAmountSpecDto;
+import bisq.dto.offer.amount.spec.QuoteSideRangeAmountSpecDto;
+import bisq.dto.offer.amount.spec.RangeAmountSpecDto;
 import bisq.dto.offer.bisq_easy.BisqEasyOfferDto;
 import bisq.dto.offer.options.OfferOptionDto;
 import bisq.dto.offer.options.ReputationOptionDto;
@@ -78,7 +84,12 @@ import bisq.dto.offer.price.spec.FixPriceSpecDto;
 import bisq.dto.offer.price.spec.FloatPriceSpecDto;
 import bisq.dto.offer.price.spec.MarketPriceSpecDto;
 import bisq.dto.offer.price.spec.PriceSpecDto;
-import bisq.dto.security.keys.*;
+import bisq.dto.security.keys.KeyBundleDto;
+import bisq.dto.security.keys.KeyPairDto;
+import bisq.dto.security.keys.PrivateKeyDto;
+import bisq.dto.security.keys.PubKeyDto;
+import bisq.dto.security.keys.PublicKeyDto;
+import bisq.dto.security.keys.TorKeyPairDto;
 import bisq.dto.security.pow.ProofOfWorkDto;
 import bisq.dto.settings.SettingsDto;
 import bisq.dto.trade.TradeRoleDto;
@@ -91,7 +102,13 @@ import bisq.dto.user.reputation.ReputationScoreDto;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
-import bisq.offer.amount.spec.*;
+import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
+import bisq.offer.amount.spec.BaseSideRangeAmountSpec;
+import bisq.offer.amount.spec.FixedAmountSpec;
+import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
+import bisq.offer.amount.spec.QuoteSideRangeAmountSpec;
+import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.options.OfferOption;
 import bisq.offer.options.ReputationOption;
@@ -761,7 +778,10 @@ public class DtoMappings {
                     value.baseSidePaymentMethodSpecs().stream().map(BitcoinPaymentMethodSpecMapping::toBisq2Model).collect(Collectors.toList()),
                     value.quoteSidePaymentMethodSpecs().stream().map(FiatPaymentMethodSpecMapping::toBisq2Model).collect(Collectors.toList()),
                     value.offerOptions().stream().map(OfferOptionMapping::toBisq2Model).collect(Collectors.toList()),
-                    value.supportedLanguageCodes());
+                    value.supportedLanguageCodes(),
+                    value.version(),
+                    value.tradeProtocolVersion(),
+                    value.appVersion());
         }
 
         public static BisqEasyOfferDto fromBisq2Model(BisqEasyOffer value) {
@@ -776,7 +796,10 @@ public class DtoMappings {
                     value.getBaseSidePaymentMethodSpecs().stream().map(BitcoinPaymentMethodSpecMapping::fromBisq2Model).collect(Collectors.toList()),
                     value.getQuoteSidePaymentMethodSpecs().stream().map(FiatPaymentMethodSpecMapping::fromBisq2Model).collect(Collectors.toList()),
                     value.getOfferOptions().stream().map(OfferOptionMapping::fromBisq2Model).collect(Collectors.toList()),
-                    value.getSupportedLanguageCodes());
+                    value.getSupportedLanguageCodes(),
+                    value.getVersion(),
+                    value.getTradeProtocolVersion(),
+                    value.getAppVersion());
         }
     }
 
