@@ -98,6 +98,7 @@ public class LeftNavController implements Controller {
         selectedUserIdentityPin.unbind();
         isNewReleaseAvailablePin.unbind();
         changedChatNotificationPin.unbind();
+        isMuSigActivatedPin.unbind();
     }
 
     public void setNavigationTarget(NavigationTarget navigationTarget) {

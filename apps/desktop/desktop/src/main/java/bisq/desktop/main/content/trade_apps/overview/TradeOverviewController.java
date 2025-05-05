@@ -27,7 +27,6 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.trade_apps.more.MoreProtocolsController;
 import bisq.mu_sig.MuSigService;
-import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;
 
@@ -71,11 +70,11 @@ public class TradeOverviewController implements Controller {
     }
 
     void onActivateMuSig() {
-        settingsService.setCookie(CookieKey.MU_SIG_ACTIVATED, true);
+        settingsService.setMuSigActivated(true);
     }
 
     void onDeactivateMuSig() {
-        settingsService.setCookie(CookieKey.MU_SIG_ACTIVATED, false);
+        settingsService.setMuSigActivated(false);
     }
 
     private List<ProtocolListItem> getMainProtocols() {
