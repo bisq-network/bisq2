@@ -520,16 +520,16 @@
     -fx-image: url("/images/navigation/nav-list-hover.png");
 }
 
-#nav-bisq-musig {
-    -fx-image: url("/images/navigation/nav-bisq-musig.png");
+#nav-musig {
+    -fx-image: url("/images/navigation/nav-musig.png");
 }
 
-#nav-bisq-musig-active {
-    -fx-image: url("/images/navigation/nav-bisq-musig-active.png");
+#nav-musig-active {
+    -fx-image: url("/images/navigation/nav-musig-active.png");
 }
 
-#nav-bisq-musig-hover {
-    -fx-image: url("/images/navigation/nav-bisq-musig-hover.png");
+#nav-musig-hover {
+    -fx-image: url("/images/navigation/nav-musig-hover.png");
 }
 
 
@@ -779,8 +779,8 @@
     -fx-image: url("/images/protocols/protocol-bisq-easy.png");
 }
 
-#protocol-bisq-mu-sig {
-    -fx-image: url("/images/protocols/protocol-bisq-mu-sig.png");
+#protocol-mu-sig {
+    -fx-image: url("/images/protocols/protocol-mu-sig.png");
 }
 
 #protocol-submarine {

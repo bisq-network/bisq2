@@ -32,7 +32,7 @@ public class MuSigController extends ContentTabController<MuSigModel> {
     private final MuSigView view;
 
     public MuSigController(ServiceProvider serviceProvider) {
-        super(new MuSigModel(), NavigationTarget.BISQ_MUSIG, serviceProvider);
+        super(new MuSigModel(), NavigationTarget.MU_SIG, serviceProvider);
 
         view = new MuSigView(model, this);
     }
@@ -50,8 +50,8 @@ public class MuSigController extends ContentTabController<MuSigModel> {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case BISQ_MUSIG_ONBOARDING -> Optional.of(new MuSigOnboardingController(serviceProvider));
-            case BISQ_MUSIG_OFFERBOOK -> Optional.of(new MuSigOfferbookController(serviceProvider));
+            case MU_SIG_ONBOARDING -> Optional.of(new MuSigOnboardingController(serviceProvider));
+            case MU_SIG_OFFERBOOK -> Optional.of(new MuSigOfferbookController(serviceProvider));
             default -> Optional.empty();
         };
     }

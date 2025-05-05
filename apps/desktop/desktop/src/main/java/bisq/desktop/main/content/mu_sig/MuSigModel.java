@@ -25,6 +25,6 @@ import lombok.Getter;
 public class MuSigModel extends ContentTabModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.BISQ_MUSIG_ONBOARDING;
+        return NavigationTarget.MU_SIG_ONBOARDING;
     }
 }

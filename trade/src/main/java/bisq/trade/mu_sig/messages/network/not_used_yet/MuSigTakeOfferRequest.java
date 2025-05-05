@@ -18,7 +18,7 @@
 package bisq.trade.mu_sig.messages.network.not_used_yet;
 
 import bisq.contract.ContractSignatureData;
-import bisq.contract.bisq_musig.MuSigContract;
+import bisq.contract.mu_sig.MuSigContract;
 import bisq.network.identity.NetworkId;
 import bisq.trade.mu_sig.messages.network.MuSigTradeMessage;
 import lombok.EqualsAndHashCode;
@@ -77,7 +77,7 @@ public final class MuSigTakeOfferRequest extends MuSigTradeMessage {
                 proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
-                bisq.contract.bisq_musig.MuSigContract.fromProto(muSigMessageProto.getContract()),
+                bisq.contract.mu_sig.MuSigContract.fromProto(muSigMessageProto.getContract()),
                 ContractSignatureData.fromProto(muSigMessageProto.getContractSignatureData()));
     }
 

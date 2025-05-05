@@ -28,7 +28,7 @@ public final class MuSigOfferbookController extends ChatController<MuSigOfferboo
     private final MuSigOfferbookModel muSigOfferbookModel;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
-        super(serviceProvider, ChatChannelDomain.BISQ_MUSIG_OFFERBOOK, NavigationTarget.BISQ_MUSIG_OFFERBOOK);
+        super(serviceProvider, ChatChannelDomain.MU_SIG_OFFERBOOK, NavigationTarget.MU_SIG_OFFERBOOK);
 
         muSigOfferbookModel = getModel();
     }

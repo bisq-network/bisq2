@@ -75,8 +75,8 @@ public class LeavePrivateChatManager {
         return switch (chatChannelDomain) {
             case BISQ_EASY_OFFERBOOK ->
                     throw new IllegalArgumentException("BISQ_EASY_OFFERBOOK is not supported at LeavePrivateChatChannelService");
-            case BISQ_MUSIG_OFFERBOOK ->
-                    throw new IllegalArgumentException("BISQ_MUSIG_OFFERBOOK is not supported at LeavePrivateChatChannelService");
+            case MU_SIG_OFFERBOOK ->
+                    throw new IllegalArgumentException("MU_SIG_OFFERBOOK is not supported at LeavePrivateChatChannelService");
             case BISQ_EASY_OPEN_TRADES -> bisqEasyOpenTradeChannelService;
             case BISQ_EASY_PRIVATE_CHAT, DISCUSSION, EVENTS, SUPPORT ->
                     twoPartyPrivateChatChannelServices.get(chatChannelDomain);
