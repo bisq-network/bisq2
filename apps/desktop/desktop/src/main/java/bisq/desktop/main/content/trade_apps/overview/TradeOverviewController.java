@@ -20,10 +20,13 @@ package bisq.desktop.main.content.trade_apps.overview;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.common.data.Pair;
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.trade_apps.more.MoreProtocolsController;
+import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
 import lombok.Getter;
 
 import java.util.List;
@@ -33,18 +36,25 @@ public class TradeOverviewController implements Controller {
     private final TradeOverviewView view;
     @Getter
     private final TradeOverviewModel model;
+    private final SettingsService settingsService;
+    private Pin cookieChangedPin;
 
     public TradeOverviewController(ServiceProvider serviceProvider) {
+        settingsService = serviceProvider.getSettingsService();
         this.model = new TradeOverviewModel(getMainProtocols(), getMoreProtocols());
         this.view = new TradeOverviewView(model, this);
     }
 
     @Override
     public void onActivate() {
+        cookieChangedPin = settingsService.getCookieChanged().addObserver(cookieChanged -> {
+            model.getIsMuSigActivated().set(settingsService.getCookie().asBoolean(CookieKey.MU_SIG_ACTIVATED).orElse(false));
+        });
     }
 
     @Override
     public void onDeactivate() {
+        cookieChangedPin.unbind();
     }
 
     void onSelect(ProtocolListItem protocolListItem) {
@@ -54,6 +64,14 @@ public class TradeOverviewController implements Controller {
         } else {
             Navigation.navigateTo(navigationTarget);
         }
+    }
+
+    void onActivateMuSig(ProtocolListItem protocolListItem) {
+        settingsService.setCookie(CookieKey.MU_SIG_ACTIVATED, true);
+    }
+
+    void onDeactivateMuSig(ProtocolListItem protocolListItem) {
+        settingsService.setCookie(CookieKey.MU_SIG_ACTIVATED, false);
     }
 
     private List<ProtocolListItem> getMainProtocols() {
