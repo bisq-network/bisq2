@@ -36,7 +36,11 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -58,7 +62,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final int menuTop;
     private final LeftNavButton authorizedRole;
     private final Label version;
-    private Subscription navigationTargetSubscription, menuExpandedSubscription, selectedNavigationButtonPin, newVersionAvailablePin;
+    private final LeftNavButton muSigLeftNavButton;
+    private Subscription navigationTargetSubscription, menuExpandedSubscription,
+            selectedNavigationButtonPin, newVersionAvailablePin, isMuSigActivatedPin;
 
     public LeftNavView(LeftNavModel model, LeftNavController controller, VBox networkInfoRoot) {
         super(new AnchorPane(), model, controller);
@@ -80,6 +86,10 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         LeftNavButton bisqEasy = createNavigationButton(Res.get("navigation.bisqEasy"),
                 "nav-bisq-easy",
                 NavigationTarget.BISQ_EASY, false);
+
+        muSigLeftNavButton = createNavigationButton(Res.get("navigation.muSig"),
+                "nav-musig",
+                NavigationTarget.MU_SIG, false);
 
         LeftNavButton reputation = createNavigationButton(Res.get("navigation.reputation"),
                 "nav-reputation",
@@ -153,7 +163,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
-        mainMenuItems.getChildren().addAll(dashBoard, bisqEasy, reputation, protocols,
+        mainMenuItems.getChildren().addAll(dashBoard, bisqEasy, muSigLeftNavButton, reputation, protocols,
                 learn, chat, support, user, network, settings, authorizedRole);
         if (model.isWalletEnabled()) {
             mainMenuItems.getChildren().add(3, wallet);
@@ -185,6 +195,11 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         });
         horizontalExpandIcon.setVisible(false);
         horizontalExpandIcon.setManaged(false);
+
+        isMuSigActivatedPin = EasyBind.subscribe(model.getIsMuSigActivated(), isMuSigActivated -> {
+            muSigLeftNavButton.setManaged(isMuSigActivated);
+            muSigLeftNavButton.setVisible(isMuSigActivated);
+        });
 
         menuExpandedSubscription = EasyBind.subscribe(model.getMenuHorizontalExpanded(), menuExpanded -> {
             int width = menuExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
@@ -292,6 +307,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         menuExpandedSubscription.unsubscribe();
         selectedNavigationButtonPin.unsubscribe();
         newVersionAvailablePin.unsubscribe();
+        isMuSigActivatedPin.unsubscribe();
         root.setOnMouseEntered(null);
         root.setOnMouseExited(null);
     }

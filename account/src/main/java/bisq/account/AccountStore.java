@@ -35,7 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
-final class AccountStore implements PersistableStore<AccountStore> {
+public final class AccountStore implements PersistableStore<AccountStore> {
     @Getter(AccessLevel.PACKAGE)
     private final Map<String, Account<?, ? extends PaymentMethod<?>>> accountByName = new ConcurrentHashMap<>();
     @Getter(AccessLevel.PACKAGE)

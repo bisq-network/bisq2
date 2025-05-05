@@ -77,7 +77,12 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -177,7 +182,8 @@ public class TradeWizardReviewController implements Controller {
                 new ArrayList<>(bitcoinPaymentMethods),
                 new ArrayList<>(fiatPaymentMethods),
                 userIdentity.getUserProfile().getTerms(),
-                new ArrayList<>(settingsService.getSupportedLanguageCodes()));
+                new ArrayList<>(settingsService.getSupportedLanguageCodes()),
+                BisqEasyProtocol.VERSION);
         model.setBisqEasyOffer(bisqEasyOffer);
 
         Optional<BisqEasyOfferbookChannel> optionalChannel = bisqEasyOfferbookChannelService.findChannel(market);

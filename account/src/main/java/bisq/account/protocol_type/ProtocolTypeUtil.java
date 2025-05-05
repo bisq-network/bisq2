@@ -42,8 +42,8 @@ public class ProtocolTypeUtil {
         if (isLNSwapSupported(market)) {
             result.add(TradeProtocolType.LIGHTNING_ESCROW);
         }
-        if (isBisqMuSigSupported(market)) {
-            result.add(TradeProtocolType.BISQ_MU_SIG);
+        if (isMuSigSupported(market)) {
+            result.add(TradeProtocolType.MU_SIG);
         }
 
         result.sort(Comparator.comparingInt(TradeProtocolType::ordinal));
@@ -80,7 +80,7 @@ public class ProtocolTypeUtil {
         return false;//TODO (deferred) need some liquid asset lookup table
     }
 
-    private static boolean isBisqMuSigSupported(Market market) {
+    private static boolean isMuSigSupported(Market market) {
         return market.getQuoteCurrencyCode().equals("BTC") || market.getBaseCurrencyCode().equals("BTC");
     }
 }

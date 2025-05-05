@@ -48,6 +48,7 @@ public class LeftNavModel implements Model {
     private final BooleanProperty menuHorizontalExpanded = new SimpleBooleanProperty();
     private final BooleanProperty authorizedRoleVisible = new SimpleBooleanProperty(false);
     private final BooleanProperty isNewReleaseAvailable = new SimpleBooleanProperty(false);
+    private final BooleanProperty isMuSigActivated= new SimpleBooleanProperty();
 
     public LeftNavModel(boolean isWalletEnabled) {
         this.isWalletEnabled = isWalletEnabled;

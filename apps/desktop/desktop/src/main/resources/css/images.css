@@ -520,6 +520,18 @@
     -fx-image: url("/images/navigation/nav-list-hover.png");
 }
 
+#nav-musig {
+    -fx-image: url("/images/navigation/nav-musig.png");
+}
+
+#nav-musig-active {
+    -fx-image: url("/images/navigation/nav-musig-active.png");
+}
+
+#nav-musig-hover {
+    -fx-image: url("/images/navigation/nav-musig-hover.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Onboarding */
@@ -767,8 +779,8 @@
     -fx-image: url("/images/protocols/protocol-bisq-easy.png");
 }
 
-#protocol-bisq-mu-sig {
-    -fx-image: url("/images/protocols/protocol-bisq-mu-sig.png");
+#protocol-mu-sig {
+    -fx-image: url("/images/protocols/protocol-mu-sig.png");
 }
 
 #protocol-submarine {
