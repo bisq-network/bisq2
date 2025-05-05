@@ -108,7 +108,7 @@ final class MyMuSigOffersStore implements PersistableStore<MyMuSigOffersStore> {
 
     synchronized void removeOffer(MuSigOffer offer) {
         offers.remove(offer);
-        deactivatedOfferIds.remove(offer.getId());
+        deactivateOffer(offer);
     }
 
     synchronized Set<MuSigOffer> getActivatedOffers() {

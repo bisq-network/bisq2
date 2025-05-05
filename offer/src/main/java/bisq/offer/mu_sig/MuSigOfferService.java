@@ -83,11 +83,13 @@ public class MuSigOfferService implements Service {
 
     // Publish offer to network after it had been deactivated
     public CompletableFuture<BroadcastResult> activateOffer(MuSigOffer offer) {
+        myMuSigOffersService.activateOffer(offer);
         return muSigOfferbookService.publishToNetwork(offer);
     }
 
     // Removes offer from network but leaves it in my offers
     public CompletableFuture<BroadcastResult> deactivateOffer(MuSigOffer offer) {
+        myMuSigOffersService.deactivateOffer(offer);
         return muSigOfferbookService.removeFromNetwork(offer);
     }
 
