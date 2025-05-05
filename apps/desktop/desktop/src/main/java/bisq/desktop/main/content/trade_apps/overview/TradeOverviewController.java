@@ -64,8 +64,8 @@ public class TradeOverviewController implements Controller {
                 ""
         );
         ProtocolListItem muSig = new ProtocolListItem(TradeAppsAttributes.Type.MU_SIG,
-                NavigationTarget.MUSIG,
-                TradeProtocolType.MUSIG,
+                NavigationTarget.MU_SIG_PROTOCOL,
+                TradeProtocolType.MU_SIG,
                 new Pair<>(10000L, 700000L),
                 "Q4/25"
         );

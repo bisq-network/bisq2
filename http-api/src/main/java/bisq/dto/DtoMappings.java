@@ -154,7 +154,7 @@ public class DtoMappings {
             }
             return switch (value) {
                 case BISQ_EASY -> TradeProtocolType.BISQ_EASY;
-                case MUSIG -> TradeProtocolType.MUSIG;
+                case MU_SIG -> TradeProtocolType.MU_SIG;
                 case SUBMARINE -> TradeProtocolType.SUBMARINE;
                 case LIQUID_MU_SIG -> TradeProtocolType.LIQUID_MU_SIG;
                 case BISQ_LIGHTNING -> TradeProtocolType.BISQ_LIGHTNING;
@@ -171,7 +171,7 @@ public class DtoMappings {
             }
             return switch (value) {
                 case BISQ_EASY -> TradeProtocolTypeDto.BISQ_EASY;
-                case MUSIG -> TradeProtocolTypeDto.MUSIG;
+                case MU_SIG -> TradeProtocolTypeDto.MU_SIG;
                 case SUBMARINE -> TradeProtocolTypeDto.SUBMARINE;
                 case LIQUID_MU_SIG -> TradeProtocolTypeDto.LIQUID_MU_SIG;
                 case BISQ_LIGHTNING -> TradeProtocolTypeDto.BISQ_LIGHTNING;
@@ -196,7 +196,7 @@ public class DtoMappings {
                 case BISQ_EASY_OPEN_TRADES -> ChatChannelDomain.BISQ_EASY_OPEN_TRADES;
                 case DISCUSSION -> ChatChannelDomain.DISCUSSION;
                 case SUPPORT -> ChatChannelDomain.SUPPORT;
-                case BISQ_MUSIG_OFFERBOOK -> ChatChannelDomain.BISQ_MUSIG_OFFERBOOK;
+                case MU_SIG_OFFERBOOK -> ChatChannelDomain.MU_SIG_OFFERBOOK;
             };
         }
 
@@ -209,7 +209,7 @@ public class DtoMappings {
                 case BISQ_EASY_OPEN_TRADES -> ChatChannelDomainDto.BISQ_EASY_OPEN_TRADES;
                 case DISCUSSION -> ChatChannelDomainDto.DISCUSSION;
                 case SUPPORT -> ChatChannelDomainDto.SUPPORT;
-                case BISQ_MUSIG_OFFERBOOK -> ChatChannelDomainDto.BISQ_MUSIG_OFFERBOOK;
+                case MU_SIG_OFFERBOOK -> ChatChannelDomainDto.MU_SIG_OFFERBOOK;
                 case BISQ_EASY_PRIVATE_CHAT -> ChatChannelDomainDto.DISCUSSION;
                 case EVENTS -> ChatChannelDomainDto.DISCUSSION;
             };

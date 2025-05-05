@@ -18,7 +18,7 @@
 package bisq.trade.mu_sig.messages.network;
 
 import bisq.contract.ContractSignatureData;
-import bisq.contract.bisq_musig.MuSigContract;
+import bisq.contract.mu_sig.MuSigContract;
 import bisq.network.identity.NetworkId;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
 import lombok.EqualsAndHashCode;

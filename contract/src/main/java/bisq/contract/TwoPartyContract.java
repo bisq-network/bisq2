@@ -20,7 +20,7 @@ package bisq.contract;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.bisq_easy.BisqEasyContract;
-import bisq.contract.bisq_musig.MuSigContract;
+import bisq.contract.mu_sig.MuSigContract;
 import bisq.offer.Offer;
 import lombok.Getter;
 import lombok.ToString;
