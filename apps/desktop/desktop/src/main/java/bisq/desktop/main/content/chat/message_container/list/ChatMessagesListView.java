@@ -103,10 +103,8 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         scrollDownBadge.getStyleClass().add("chat-messages-badge");
         scrollDownBadge.setPosition(Pos.BOTTOM_RIGHT);
         scrollDownBadge.setBadgeInsets(new Insets(20, 10, -2, 55));
-        scrollDownBadge.setCursor(Cursor.HAND);
 
         scrollDownTooltip = new BisqTooltip(Res.get("chat.listView.scrollDown"));
-        Tooltip.install(scrollDownBadge, scrollDownTooltip);
 
         StackPane.setAlignment(scrollDownBadge, Pos.BOTTOM_CENTER);
         StackPane.setAlignment(scrollDownBackground, Pos.BOTTOM_CENTER);
@@ -136,11 +134,13 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
             }
         });
 
+        Tooltip.install(scrollDownBadge, scrollDownTooltip);
+
         scrollDownBackground.visibleProperty().bind(model.getShowScrolledDownButton());
         scrollDownBackground.managedProperty().bind(model.getShowScrolledDownButton());
 
         scrollDownBadge.textProperty().bind(model.getNumUnReadMessages());
-        scrollDownBadge.setOpacity(0);
+        hideScrollDownBadge();
 
         showScrolledDownButtonPin = EasyBind.subscribe(model.getShowScrolledDownButton(), showScrolledDownButton -> {
             if (showScrolledDownButton == null) {
@@ -152,7 +152,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
             if (showScrolledDownButton) {
                 fadeInScrollDownBadge();
             } else {
-                scrollDownBadge.setOpacity(0);
+                hideScrollDownBadge();
             }
         });
         hasUnreadMessagesPin = EasyBind.subscribe(model.getHasUnreadMessages(), hasUnreadMessages -> {
@@ -191,17 +191,27 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         hasUnreadMessagesPin.unsubscribe();
         showScrolledDownButtonPin.unsubscribe();
 
+        Tooltip.uninstall(scrollDownBadge, scrollDownTooltip);
+
         scrollDownBadge.setOnMouseClicked(null);
         if (fadeInScrollDownBadgeTimeline != null) {
             fadeInScrollDownBadgeTimeline.stop();
             fadeInScrollDownBadgeTimeline = null;
-            scrollDownBadge.setOpacity(0);
+            hideScrollDownBadge();
         }
+    }
+
+    private void hideScrollDownBadge() {
+        scrollDownBadge.setCursor(Cursor.DEFAULT);
+        scrollDownBadge.setOpacity(0);
+        scrollDownTooltip.setOpacity(0);
     }
 
     private void fadeInScrollDownBadge() {
         if (!Transitions.useAnimations()) {
+            scrollDownBadge.setCursor(Cursor.HAND);
             scrollDownBadge.setOpacity(1);
+            scrollDownTooltip.setOpacity(1);
             return;
         }
 
@@ -220,5 +230,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
                 new KeyValue(scrollDownBadge.opacityProperty(), 1, Interpolator.EASE_OUT)
         ));
         fadeInScrollDownBadgeTimeline.play();
+        scrollDownBadge.setCursor(Cursor.HAND);
+        scrollDownTooltip.setOpacity(1);
     }
 }

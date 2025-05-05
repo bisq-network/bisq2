@@ -372,12 +372,15 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     }
 
     private void updateMarketPrice() {
-        Market selectedMarket = bisqEasyOfferbookModel.getSelectedMarketChannelItem().get().getMarket();
-        if (selectedMarket != null) {
-            marketPriceService
-                    .findMarketPrice(selectedMarket)
-                    .ifPresent(marketPrice ->
-                            model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true)));
+        MarketChannelItem selectedMarketChannelItem = model.getSelectedMarketChannelItem().get();
+        if (selectedMarketChannelItem != null) {
+            Market selectedMarket = selectedMarketChannelItem.getMarket();
+            if (selectedMarket != null) {
+                marketPriceService
+                        .findMarketPrice(selectedMarket)
+                        .ifPresent(marketPrice ->
+                                model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true)));
+            }
         }
     }
 
