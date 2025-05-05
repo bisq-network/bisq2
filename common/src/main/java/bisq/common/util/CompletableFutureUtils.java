@@ -66,8 +66,7 @@ public class CompletableFutureUtils {
      * complete exceptionally or got cancelled.
      */
     public static <T> CompletableFuture<T> anyOf(Collection<CompletableFuture<T>> collection) {
-        //noinspection unchecked
-        return anyOf(collection.toArray(new CompletableFuture[0]));
+        return anyOf(collection.stream());
     }
 
     public static <T> CompletableFuture<T> anyOf(Stream<CompletableFuture<T>> stream) {
@@ -97,7 +96,7 @@ public class CompletableFutureUtils {
     }
 
     public static <T> CompletableFuture<T> logOnFailure(CompletableFuture<T> future, @Nullable String errorMessage) {
-        return future.whenComplete((result, throwable) -> {
+        future.whenComplete((result, throwable) -> {
             if (throwable != null) {
                 if (errorMessage == null) {
                     log.error("Executing future failed", throwable);
@@ -106,6 +105,8 @@ public class CompletableFutureUtils {
                 }
             }
         });
+
+        return future;
     }
     /*public static <T> boolean isCompleted(CompletableFuture<T> future) {
         return future.state() == Future.State.SUCCESS;
