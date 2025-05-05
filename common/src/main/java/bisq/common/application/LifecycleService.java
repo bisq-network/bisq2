@@ -103,10 +103,6 @@ public abstract class LifecycleService implements Service {
         return state.get();
     }
 
-    public boolean canRetryActivate() {
-        return getState() == DEACTIVATED || getState() == DEACTIVATING_FAILED;
-    }
-
     public void resetStateToAllowActivate() {
         state.set(DEACTIVATED);
     }
