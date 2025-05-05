@@ -92,7 +92,9 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
                             Set<Address> seedNodeAddresses,
                             BanList banList) {
         this.config = config;
-        this.seedNodeAddresses = seedNodeAddresses;
+        this.seedNodeAddresses = seedNodeAddresses.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
         this.banList = banList;
 
         persistence = persistenceService.getOrCreatePersistence(this,
@@ -243,6 +245,10 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     }
 
     public boolean isNotBanned(Address address) {
+        // Special handling for I2P addresses during initial integration phase
+        if (address.getTransportType() == TransportType.I2P) {
+                  return true;  // Temporarily bypass ban checks for I2P addresses
+              }
         return banList.isNotBanned(address);
     }
 

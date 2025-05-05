@@ -12,6 +12,7 @@ import java.util.Map;
 public class I2pLogs2Slf4j extends Log {
 
     private static final Map<Integer, Level> I2P_TO_SLF4J = new HashMap<>();
+
     static {
         I2P_TO_SLF4J.put(Log.DEBUG, Level.DEBUG);
         I2P_TO_SLF4J.put(Log.INFO, Level.INFO);
@@ -46,7 +47,7 @@ public class I2pLogs2Slf4j extends Log {
             levelField = log.getClass().getDeclaredField("level");
             levelField.setAccessible(true);
             lvl = (ch.qos.logback.classic.Level) levelField.get(log);
-            if(lvl == null) {
+            if (lvl == null) {
                 parentField = log.getClass().getDeclaredField("parent");
                 parentField.setAccessible(true);
                 parent = (ch.qos.logback.classic.Logger) parentField.get(log);
@@ -70,39 +71,39 @@ public class I2pLogs2Slf4j extends Log {
     @Override
     public void log(int priority, String msg) {
         Level translatedPriority = I2P_TO_SLF4J.get(priority);
-        if(translatedPriority.toInt() == Level.DEBUG.toInt())
+        if (translatedPriority.toInt() == Level.DEBUG.toInt())
             delegate.debug(msg);
-        if(translatedPriority.toInt() == Level.WARN.toInt())
+        if (translatedPriority.toInt() == Level.WARN.toInt())
             delegate.warn(msg);
-        if(translatedPriority.toInt() == Level.ERROR.toInt())
+        if (translatedPriority.toInt() == Level.ERROR.toInt())
             delegate.error(msg);
-        if(translatedPriority.toInt() == Level.INFO.toInt())
+        if (translatedPriority.toInt() == Level.INFO.toInt())
             delegate.info(msg);
     }
 
     @Override
     public void log(int priority, String msg, Throwable t) {
         Level translatedPriority = I2P_TO_SLF4J.get(priority);
-        if(translatedPriority.toInt() == Level.DEBUG.toInt())
+        if (translatedPriority.toInt() == Level.DEBUG.toInt())
             delegate.debug(msg, t);
-        if(translatedPriority.toInt() == Level.WARN.toInt())
+        if (translatedPriority.toInt() == Level.WARN.toInt())
             delegate.warn(msg, t);
-        if(translatedPriority.toInt() == Level.ERROR.toInt())
+        if (translatedPriority.toInt() == Level.ERROR.toInt())
             delegate.error(msg, t);
-        if(translatedPriority.toInt() == Level.INFO.toInt())
+        if (translatedPriority.toInt() == Level.INFO.toInt())
             delegate.info(msg, t);
     }
 
     @Override
     public boolean shouldLog(int priority) {
         Level translatedPriority = I2P_TO_SLF4J.get(priority);
-        if(translatedPriority.toInt() == Level.DEBUG.toInt())
+        if (translatedPriority.toInt() == Level.DEBUG.toInt())
             return delegate.isDebugEnabled();
-        if(translatedPriority.toInt() == Level.WARN.toInt())
+        if (translatedPriority.toInt() == Level.WARN.toInt())
             return delegate.isWarnEnabled();
-        if(translatedPriority.toInt() == Level.ERROR.toInt())
+        if (translatedPriority.toInt() == Level.ERROR.toInt())
             return delegate.isErrorEnabled();
-        if(translatedPriority.toInt() == Level.INFO.toInt())
+        if (translatedPriority.toInt() == Level.INFO.toInt())
             return delegate.isInfoEnabled();
         return false;
     }
