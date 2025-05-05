@@ -18,30 +18,39 @@
 package bisq.mu_sig;
 
 import bisq.account.AccountService;
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.chat.ChatService;
 import bisq.common.application.DevMode;
 import bisq.common.application.Service;
+import bisq.common.currency.Market;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.contract.ContractService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.network.identity.NetworkId;
+import bisq.offer.Direction;
 import bisq.offer.OfferService;
+import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.mu_sig.MuSigOffer;
+import bisq.offer.options.OfferOption;
+import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.PersistenceService;
 import bisq.presentation.notifications.SystemNotificationService;
 import bisq.security.SecurityService;
-import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
+import bisq.trade.mu_sig.protocol.MuSigProtocol;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -108,9 +117,8 @@ public class MuSigService implements Service {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        cookieChangedPin = settingsService.getCookieChanged().addObserver(cookieChanged -> {
-            muSigActivated.set(DevMode.isDevMode() &&
-                    settingsService.getCookie().asBoolean(CookieKey.MU_SIG_ACTIVATED).orElse(true));
+        cookieChangedPin = settingsService.getMuSigActivated().addObserver(activated -> {
+            muSigActivated.set(DevMode.isDevMode() && activated);
             if (muSigActivated.get()) {
                 activate();
             } else {
@@ -131,10 +139,29 @@ public class MuSigService implements Service {
     }
 
     private void activate() {
+        log.info("activate");
         tradeService.initializeMuSigTradeService();
     }
 
     private void deactivate() {
+        log.info("deactivate");
         tradeService.shutdownMuSigTradeService();
+    }
+
+    public MuSigOffer createAndGetMuSigOffer(Direction direction,
+                                             Market market,
+                                             AmountSpec amountSpec,
+                                             PriceSpec priceSpec,
+                                             List<FiatPaymentMethod> fiatPaymentMethods,
+                                             List<OfferOption> offerOptions) {
+        NetworkId makerNetworkId = userIdentityService.getSelectedUserIdentity().getUserProfile().getNetworkId();
+        return new MuSigOffer(makerNetworkId,
+                direction,
+                market,
+                amountSpec,
+                priceSpec,
+                fiatPaymentMethods,
+                offerOptions,
+                MuSigProtocol.VERSION);
     }
 }

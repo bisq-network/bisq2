@@ -27,7 +27,6 @@ import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.options.OfferOption;
-import bisq.offer.options.OfferOptionUtil;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpec;
@@ -54,7 +53,7 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                       AmountSpec amountSpec,
                       PriceSpec priceSpec,
                       List<FiatPaymentMethod> fiatPaymentMethods,
-                      String makersTradeTerms,
+                      List<OfferOption> offerOptions,
                       String tradeProtocolVersion
     ) {
         this(StringUtils.createUid(),
@@ -67,7 +66,7 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                 List.of(TradeProtocolType.MU_SIG),
                 PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec(),
                 PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(fiatPaymentMethods),
-                OfferOptionUtil.fromTradeTerms(makersTradeTerms), //todo
+                offerOptions,
                 VERSION,
                 tradeProtocolVersion,
                 BuildVersion.VERSION
