@@ -88,6 +88,17 @@ public class TradeService implements Service, ServiceProvider {
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         return bisqEasyTradeService.shutdown();
+    }
+
+    public CompletableFuture<Boolean> initializeMuSigTradeService() {
+        log.info("initialize MuSigTradeService");
+        return muSigTradeService.initialize();
+    }
+
+    public CompletableFuture<Boolean> shutdownMuSigTradeService() {
+        log.info("shutdown MuSigTradeService");
+        return muSigTradeService.shutdown();
     }
 }
