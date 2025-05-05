@@ -21,15 +21,16 @@ import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
-public class ObservableArray<S> extends ObservableCollection<S> implements List<S> {
+public class ObservableArray<S> extends ObservableCollection<S> implements List<S>, ReadOnlyObservableArray<S> {
     public ObservableArray() {
         super();
     }
@@ -40,17 +41,21 @@ public class ObservableArray<S> extends ObservableCollection<S> implements List<
 
     @Override
     protected Collection<S> createCollection() {
-        return new CopyOnWriteArrayList<>();
+        return Collections.synchronizedList(new ArrayList<>());
     }
 
     public List<S> getList() {
         return (List<S>) collection;
     }
 
+    @Override
+    public List<S> getUnmodifiableList() {
+        return Collections.unmodifiableList(getList());
+    }
+
 
     /* --------------------------------------------------------------------- */
     // List implementation
-
     /* --------------------------------------------------------------------- */
 
     @Override

@@ -17,33 +17,8 @@
 
 package bisq.common.observable.collection;
 
-import lombok.EqualsAndHashCode;
-
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
-@EqualsAndHashCode(callSuper = true)
-public class ObservableSet<S> extends ObservableCollection<S> implements Set<S>, ReadOnlyObservableSet<S> {
-    public ObservableSet() {
-        super();
-    }
-
-    public ObservableSet(Collection<S> values) {
-        super(values);
-    }
-
-    @Override
-    protected Collection<S> createCollection() {
-        return ConcurrentHashMap.newKeySet();
-    }
-
-    public Set<S> getSet() {
-        return (Set<S>) collection;
-    }
-
-    public Set<S> getUnmodifiableSet() {
-        return Collections.unmodifiableSet(getSet());
-    }
+public interface ReadOnlyObservableSet<S> extends ReadOnlyObservableCollection<S> {
+    Set<S> getUnmodifiableSet() ;
 }

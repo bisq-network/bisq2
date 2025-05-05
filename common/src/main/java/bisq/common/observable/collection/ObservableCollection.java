@@ -31,7 +31,7 @@ import java.util.function.Function;
 
 @Slf4j
 @EqualsAndHashCode
-public abstract class ObservableCollection<S> implements Collection<S> {
+public abstract class ObservableCollection<S> implements Collection<S>, ReadOnlyObservableCollection<S> {
     protected final Collection<S> collection = createCollection();
 
     // Must be a list, not a set as otherwise if 2 instances of the same component is using it, one would get replaced.
