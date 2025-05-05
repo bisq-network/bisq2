@@ -203,11 +203,15 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
             grpcChannel.shutdown();
             grpcChannel = null;
         }
+        musigStub = null;
 
         networkService.removeConfidentialMessageListener(this);
 
         cooperativeCloseTimeoutSchedulerByTradeId.values().forEach(Scheduler::stop);
         cooperativeCloseTimeoutSchedulerByTradeId.clear();
+
+        tradeProtocolById.clear();
+        pendingMessages.clear();
 
         return CompletableFuture.completedFuture(true);
     }

@@ -19,14 +19,14 @@ package bisq.desktop.main.content.trade_apps.overview;
 
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.bisq_easy.NavigationTarget;
-import bisq.common.application.DevMode;
 import bisq.common.data.Pair;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.trade_apps.more.MoreProtocolsController;
-import bisq.settings.CookieKey;
+import bisq.mu_sig.MuSigService;
 import bisq.settings.SettingsService;
 import lombok.Getter;
 
@@ -38,26 +38,26 @@ public class TradeOverviewController implements Controller {
     @Getter
     private final TradeOverviewModel model;
     private final SettingsService settingsService;
-    private Pin cookieChangedPin;
+    private final MuSigService muSigService;
+    private Pin isMuSigActivatedPin;
 
     public TradeOverviewController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
+        muSigService = serviceProvider.getMuSigService();
+
         this.model = new TradeOverviewModel(getMainProtocols(), getMoreProtocols());
         this.view = new TradeOverviewView(model, this);
     }
 
     @Override
     public void onActivate() {
-        cookieChangedPin = settingsService.getCookieChanged().addObserver(cookieChanged -> {
-            if (DevMode.isDevMode()) {
-                model.getIsMuSigActivated().set(settingsService.getCookie().asBoolean(CookieKey.MU_SIG_ACTIVATED).orElse(false));
-            }
-        });
+        isMuSigActivatedPin = FxBindings.bind(model.getIsMuSigActivated())
+                .to(muSigService.getMuSigActivated());
     }
 
     @Override
     public void onDeactivate() {
-        cookieChangedPin.unbind();
+        isMuSigActivatedPin.unbind();
     }
 
     void onSelect(ProtocolListItem protocolListItem) {
@@ -69,12 +69,12 @@ public class TradeOverviewController implements Controller {
         }
     }
 
-    void onActivateMuSig(ProtocolListItem protocolListItem) {
-        settingsService.setCookie(CookieKey.MU_SIG_ACTIVATED, true);
+    void onActivateMuSig() {
+        settingsService.setMuSigActivated(true);
     }
 
-    void onDeactivateMuSig(ProtocolListItem protocolListItem) {
-        settingsService.setCookie(CookieKey.MU_SIG_ACTIVATED, false);
+    void onDeactivateMuSig() {
+        settingsService.setMuSigActivated(false);
     }
 
     private List<ProtocolListItem> getMainProtocols() {

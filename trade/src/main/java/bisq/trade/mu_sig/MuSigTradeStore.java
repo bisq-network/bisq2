@@ -43,7 +43,6 @@ final class MuSigTradeStore implements PersistableStore<MuSigTradeStore> {
         this.tradeById.putAll(tradeById);
     }
 
-
     @Override
     public MuSigTradeStore getClone() {
         return new MuSigTradeStore(new HashMap<>(tradeById));

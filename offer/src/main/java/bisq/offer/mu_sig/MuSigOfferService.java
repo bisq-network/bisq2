@@ -47,6 +47,7 @@ public class MuSigOfferService implements Service {
     public MuSigOfferService(PersistenceService persistenceService,
                              OfferMessageService offerMessageService) {
         this.offerMessageService = offerMessageService;
+
         myMuSigOffersService = new MyMuSigOffersService(persistenceService);
         offersObserver = new CollectionObserver<>() {
             @Override

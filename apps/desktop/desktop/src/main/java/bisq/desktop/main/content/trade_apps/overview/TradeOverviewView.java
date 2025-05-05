@@ -52,7 +52,6 @@ public class TradeOverviewView extends View<VBox, TradeOverviewModel, TradeOverv
     private static final int HORIZONTAL_GAP = 25;
     private Subscription isMuSigActivatedPin;
     private Button muSigButton;
-    private ProtocolListItem muSigProtocolListItem;
 
     public TradeOverviewView(TradeOverviewModel model, TradeOverviewController controller) {
         super(new VBox(), model, controller);
@@ -223,7 +222,6 @@ public class TradeOverviewView extends View<VBox, TradeOverviewModel, TradeOverv
 
         if (protocolListItem.getTradeAppsAttributesType() == TradeAppsAttributes.Type.MU_SIG) {
             muSigButton = button;
-            muSigProtocolListItem = protocolListItem;
             maybeSetupActivationButton();
         }
 
@@ -275,12 +273,12 @@ public class TradeOverviewView extends View<VBox, TradeOverviewModel, TradeOverv
         if (DevMode.isDevMode()) {
             isMuSigActivatedPin = EasyBind.subscribe(model.getIsMuSigActivated(), isMuSigActivated -> {
                 if (isMuSigActivated) {
-                    muSigButton.setOnAction(e -> controller.onDeactivateMuSig(muSigProtocolListItem));
+                    muSigButton.setOnAction(e -> controller.onDeactivateMuSig());
                     muSigButton.setText(Res.get("tradeApps.deactivate"));
                     muSigButton.setDefaultButton(false);
                     muSigButton.getStyleClass().add("outlined-button");
                 } else {
-                    muSigButton.setOnAction(e -> controller.onActivateMuSig(muSigProtocolListItem));
+                    muSigButton.setOnAction(e -> controller.onActivateMuSig());
                     muSigButton.setText(Res.get("tradeApps.activate"));
                     muSigButton.setDefaultButton(true);
                 }
