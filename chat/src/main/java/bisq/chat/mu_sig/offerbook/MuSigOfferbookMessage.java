@@ -19,7 +19,6 @@ package bisq.chat.mu_sig.offerbook;
 
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
-import bisq.chat.mu_sig.MuSigOfferMessage;
 import bisq.chat.pub.PublicChatMessage;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -31,13 +30,16 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-import static bisq.network.p2p.services.data.storage.MetaData.*;
+import static bisq.network.p2p.services.data.storage.MetaData.LOW_PRIORITY;
+import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_10_000;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 
 @Slf4j
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class MuSigOfferbookMessage extends PublicChatMessage implements MuSigOfferMessage {
+//TODO remove
+public class MuSigOfferbookMessage extends PublicChatMessage {
     private transient final MetaData metaData = new MetaData(TTL_10_DAYS, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
     private final MuSigOffer muSigOffer;
 

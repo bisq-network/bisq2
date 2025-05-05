@@ -18,7 +18,7 @@
 package bisq.offer.mu_sig;
 
 import bisq.common.application.Service;
-import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -27,6 +27,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -58,18 +59,34 @@ public class MyMuSigOffersService implements PersistenceClient<MyMuSigOffersStor
     // API
     /* --------------------------------------------------------------------- */
 
-    public void add(MuSigOffer offer) {
-        persistableStore.add(offer);
+    public void addOffer(MuSigOffer offer) {
+        persistableStore.addOffer(offer);
         persist();
     }
 
-    public void remove(MuSigOffer offer) {
-        persistableStore.remove(offer);
+    public void removeOffer(MuSigOffer offer) {
+        persistableStore.removeOffer(offer);
         persist();
     }
 
-    public ObservableSet<MuSigOffer> getOffers() {
+    public void activateOffer(MuSigOffer offer) {
+        persistableStore.activateOffer(offer);
+    }
+
+    public void deactivateOffer(MuSigOffer offer) {
+        persistableStore.deactivateOffer(offer);
+    }
+
+    public Set<MuSigOffer> getOffers() {
         return persistableStore.getOffers();
+    }
+
+    public Set<MuSigOffer> getActivatedOffers() {
+        return persistableStore.getActivatedOffers();
+    }
+
+    public ReadOnlyObservableSet<MuSigOffer> getObservableOffers() {
+        return persistableStore.getOffersAsObservableSet();
     }
 
     public Optional<MuSigOffer> findOffer(String offerId) {

@@ -18,14 +18,10 @@
 package bisq.offer.mu_sig;
 
 import bisq.common.application.Service;
-import bisq.common.observable.Pin;
-import bisq.common.observable.collection.CollectionObserver;
-import bisq.common.observable.collection.ObservableSet;
 import bisq.common.timer.Scheduler;
-import bisq.common.util.CompletableFutureUtils;
+import bisq.identity.IdentityService;
+import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.BroadcastResult;
-import bisq.offer.Offer;
-import bisq.offer.OfferMessageService;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,37 +33,15 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Getter
 public class MuSigOfferService implements Service {
+    private final MuSigOfferbookService muSigOfferbookService;
     private final MyMuSigOffersService myMuSigOffersService;
-    private final OfferMessageService offerMessageService;
-    @Getter
-    private final ObservableSet<MuSigOffer> offers = new ObservableSet<>();
-    private final CollectionObserver<Offer<?, ?>> offersObserver;
-    private Pin offersObserverPin;
+    private Scheduler republishMyOffersScheduler;
 
     public MuSigOfferService(PersistenceService persistenceService,
-                             OfferMessageService offerMessageService) {
-        this.offerMessageService = offerMessageService;
-
-        myMuSigOffersService = new MyMuSigOffersService(persistenceService);
-        offersObserver = new CollectionObserver<>() {
-            @Override
-            public void add(Offer<?, ?> element) {
-                if (element instanceof MuSigOffer) {
-                    processAddedOffer((MuSigOffer) element);
-                }
-            }
-
-            @Override
-            public void remove(Object element) {
-                if (element instanceof MuSigOffer) {
-                    processRemovedOffer((MuSigOffer) element);
-                }
-            }
-
-            @Override
-            public void clear() {
-            }
-        };
+                             NetworkService networkService,
+                             IdentityService identityService) {
+        this.muSigOfferbookService = new MuSigOfferbookService(networkService, identityService);
+        this.myMuSigOffersService = new MyMuSigOffersService(persistenceService);
     }
 
 
@@ -76,21 +50,19 @@ public class MuSigOfferService implements Service {
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
-        offersObserverPin = offerMessageService.getOffers().addObserver(offersObserver);
-
         republishMyOffers();
-        // Do again once we assume we better connected
-        Scheduler.run(this::republishMyOffers)
+        stopRepublishMyOffersScheduler();
+        republishMyOffersScheduler = Scheduler.run(this::republishMyOffers)
                 .host(this)
                 .runnableName("republishMyOffers")
-                .after(5000, TimeUnit.MILLISECONDS);
+                .periodically(1, 60, TimeUnit.MINUTES);
 
-        return myMuSigOffersService.initialize();
+        return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        offersObserverPin.unbind();
-        return removeAllOfferFromNetwork().thenCompose(e -> myMuSigOffersService.shutdown());
+        stopRepublishMyOffersScheduler();
+        return CompletableFuture.completedFuture(true);
     }
 
 
@@ -98,15 +70,25 @@ public class MuSigOfferService implements Service {
     // API
     /* --------------------------------------------------------------------- */
 
-    public CompletableFuture<BroadcastResult> publishOffer(String offerId) {
+    public CompletableFuture<BroadcastResult> publishAndAddOffer(String offerId) {
         return findOffer(offerId)
-                .map(this::publishOffer)
+                .map(this::publishAndAddOffer)
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("Offer with not found. OfferID=" + offerId)));
     }
 
-    public CompletableFuture<BroadcastResult> publishOffer(MuSigOffer offer) {
-        myMuSigOffersService.add(offer);
-        return offerMessageService.addToNetwork(offer);
+    public CompletableFuture<BroadcastResult> publishAndAddOffer(MuSigOffer offer) {
+        myMuSigOffersService.addOffer(offer);
+        return muSigOfferbookService.publishToNetwork(offer);
+    }
+
+    // Publish offer to network after it had been deactivated
+    public CompletableFuture<BroadcastResult> activateOffer(MuSigOffer offer) {
+        return muSigOfferbookService.publishToNetwork(offer);
+    }
+
+    // Removes offer from network but leaves it in my offers
+    public CompletableFuture<BroadcastResult> deactivateOffer(MuSigOffer offer) {
+        return muSigOfferbookService.removeFromNetwork(offer);
     }
 
     public CompletableFuture<BroadcastResult> removeOffer(String offerId) {
@@ -116,12 +98,20 @@ public class MuSigOfferService implements Service {
     }
 
     public CompletableFuture<BroadcastResult> removeOffer(MuSigOffer offer) {
-        myMuSigOffersService.remove(offer);
-        return offerMessageService.removeFromNetwork(offer);
+        myMuSigOffersService.removeOffer(offer);
+        return muSigOfferbookService.removeFromNetwork(offer);
     }
 
     public Optional<MuSigOffer> findOffer(String offerId) {
-        return offers.stream().filter(offer -> offer.getId().equals(offerId)).findAny();
+        return muSigOfferbookService.findOffer(offerId);
+    }
+
+    public void republishMyOffers() {
+        myMuSigOffersService.getActivatedOffers().forEach(this::publishAndAddOffer);
+    }
+
+    public MuSigOffer cloneOffer(MuSigOffer offer) {
+        return MuSigOffer.fromProto(offer.toProto(true));
     }
 
 
@@ -129,21 +119,10 @@ public class MuSigOfferService implements Service {
     // Private
     /* --------------------------------------------------------------------- */
 
-    private boolean processAddedOffer(MuSigOffer offer) {
-        return offers.add(offer);
-    }
-
-    private boolean processRemovedOffer(MuSigOffer offer) {
-        return offers.remove(offer);
-    }
-
-    private void republishMyOffers() {
-        getOffers().forEach(offerMessageService::removeFromNetwork);
-    }
-
-    private CompletableFuture<Boolean> removeAllOfferFromNetwork() {
-        return CompletableFutureUtils.allOf(getOffers().stream()
-                        .map(offerMessageService::removeFromNetwork))
-                .thenApply(resultList -> true);
+    private void stopRepublishMyOffersScheduler() {
+        if (republishMyOffersScheduler != null) {
+            republishMyOffersScheduler.stop();
+            republishMyOffersScheduler = null;
+        }
     }
 }

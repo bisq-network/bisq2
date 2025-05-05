@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer;
+package bisq.offer.mu_sig;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -33,12 +33,11 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
 @ToString
 @Getter
 @EqualsAndHashCode
-public final class OfferMessage implements DistributedData {
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+public final class MuSigOfferMessage implements DistributedData {
     private transient final MetaData metaData = new MetaData(TTL_2_DAYS, getClass().getSimpleName());
-    private final Offer<?, ?> offer;
+    private final MuSigOffer offer;
 
-    public OfferMessage(Offer<?, ?> offer) {
+    public MuSigOfferMessage(MuSigOffer offer) {
         this.offer = offer;
 
         verify();
@@ -49,24 +48,24 @@ public final class OfferMessage implements DistributedData {
     }
 
     @Override
-    public bisq.offer.protobuf.OfferMessage.Builder getBuilder(boolean serializeForHash) {
-        return bisq.offer.protobuf.OfferMessage.newBuilder()
+    public bisq.offer.protobuf.MuSigOfferMessage.Builder getBuilder(boolean serializeForHash) {
+        return bisq.offer.protobuf.MuSigOfferMessage.newBuilder()
                 .setOffer(offer.toProto(serializeForHash));
     }
 
     @Override
-    public bisq.offer.protobuf.OfferMessage toProto(boolean serializeForHash) {
+    public bisq.offer.protobuf.MuSigOfferMessage toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
 
-    public static OfferMessage fromProto(bisq.offer.protobuf.OfferMessage proto) {
-        return new OfferMessage(Offer.fromProto(proto.getOffer()));
+    public static MuSigOfferMessage fromProto(bisq.offer.protobuf.MuSigOfferMessage proto) {
+        return new MuSigOfferMessage(MuSigOffer.fromProto(proto.getOffer()));
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return OfferMessage.fromProto(any.unpack(bisq.offer.protobuf.OfferMessage.class));
+                return MuSigOfferMessage.fromProto(any.unpack(bisq.offer.protobuf.MuSigOfferMessage.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

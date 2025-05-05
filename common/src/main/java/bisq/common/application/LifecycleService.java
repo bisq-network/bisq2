@@ -115,6 +115,10 @@ public abstract class LifecycleService implements Service {
         state.set(ACTIVATED);
     }
 
+    public boolean isActivated() {
+        return getState() == ACTIVATED;
+    }
+
     protected abstract CompletableFuture<Boolean> doActivate();
 
     protected abstract CompletableFuture<Boolean> doDeactivate();
