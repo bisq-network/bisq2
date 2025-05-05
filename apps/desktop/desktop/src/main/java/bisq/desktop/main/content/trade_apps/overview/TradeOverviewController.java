@@ -19,6 +19,7 @@ package bisq.desktop.main.content.trade_apps.overview;
 
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.bisq_easy.NavigationTarget;
+import bisq.common.application.DevMode;
 import bisq.common.data.Pair;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -48,7 +49,9 @@ public class TradeOverviewController implements Controller {
     @Override
     public void onActivate() {
         cookieChangedPin = settingsService.getCookieChanged().addObserver(cookieChanged -> {
-            model.getIsMuSigActivated().set(settingsService.getCookie().asBoolean(CookieKey.MU_SIG_ACTIVATED).orElse(false));
+            if (DevMode.isDevMode()) {
+                model.getIsMuSigActivated().set(settingsService.getCookie().asBoolean(CookieKey.MU_SIG_ACTIVATED).orElse(false));
+            }
         });
     }
 
