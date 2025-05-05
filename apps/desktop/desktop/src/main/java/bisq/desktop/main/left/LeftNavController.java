@@ -25,6 +25,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.application.ApplicationVersion;
+import bisq.common.application.DevMode;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
@@ -53,8 +54,7 @@ public class LeftNavController implements Controller {
     private final UpdaterService updaterService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
     private final SettingsService settingsService;
-    private Pin bondedRolesPin, selectedUserIdentityPin, isNewReleaseAvailablePin;
-    private Pin changedChatNotificationPin;
+    private Pin bondedRolesPin, selectedUserIdentityPin, isNewReleaseAvailablePin, changedChatNotificationPin, cookieChangedPin;
 
     public LeftNavController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
@@ -85,6 +85,12 @@ public class LeftNavController implements Controller {
         });
 
         model.getMenuHorizontalExpanded().set(settingsService.getCookie().asBoolean(CookieKey.MENU_HORIZONTAL_EXPANDED).orElse(true));
+
+        cookieChangedPin = settingsService.getCookieChanged().addObserver(cookieChanged -> {
+            if (DevMode.isDevMode()) {
+                model.getIsMuSigActivated().set(settingsService.getCookie().asBoolean(CookieKey.MU_SIG_ACTIVATED).orElse(false));
+            }
+        });
     }
 
     @Override

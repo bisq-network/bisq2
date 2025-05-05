@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.trade_apps.overview;
 
+import bisq.common.application.DevMode;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.utils.GridPaneUtil;
@@ -41,12 +42,17 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeOverviewView extends View<VBox, TradeOverviewModel, TradeOverviewController> {
     private static final int VERTICAL_MARGIN = 30;
     private static final int VERTICAL_GAP = 25;
     private static final int HORIZONTAL_GAP = 25;
+    private Subscription isMuSigActivatedPin;
+    private Button muSigButton;
+    private ProtocolListItem muSigProtocolListItem;
 
     public TradeOverviewView(TradeOverviewModel model, TradeOverviewController controller) {
         super(new VBox(), model, controller);
@@ -120,10 +126,15 @@ public class TradeOverviewView extends View<VBox, TradeOverviewModel, TradeOverv
 
     @Override
     protected void onViewAttached() {
+        maybeSetupActivationButton();
     }
 
     @Override
     protected void onViewDetached() {
+        if (isMuSigActivatedPin != null) {
+            isMuSigActivatedPin.unsubscribe();
+            isMuSigActivatedPin = null;
+        }
     }
 
     private void getProtocolBox(GridPane gridPane,
@@ -209,6 +220,13 @@ public class TradeOverviewView extends View<VBox, TradeOverviewModel, TradeOverv
             button.setText(Res.get("action.learnMore"));
             button.getStyleClass().add("outlined-button");
         }
+
+        if (protocolListItem.getTradeAppsAttributesType() == TradeAppsAttributes.Type.MU_SIG) {
+            muSigButton = button;
+            muSigProtocolListItem = protocolListItem;
+            maybeSetupActivationButton();
+        }
+
         GridPane.setMargin(button, new Insets(7, VERTICAL_MARGIN, HORIZONTAL_GAP, VERTICAL_MARGIN));
         gridPane.add(button, columnIndex, ++rowIndex, 3, 1);
     }
@@ -251,5 +269,22 @@ public class TradeOverviewView extends View<VBox, TradeOverviewModel, TradeOverv
         Tooltip.install(hBox, tooltip);
 
         return hBox;
+    }
+
+    private void maybeSetupActivationButton() {
+        if (DevMode.isDevMode()) {
+            isMuSigActivatedPin = EasyBind.subscribe(model.getIsMuSigActivated(), isMuSigActivated -> {
+                if (isMuSigActivated) {
+                    muSigButton.setOnAction(e -> controller.onDeactivateMuSig(muSigProtocolListItem));
+                    muSigButton.setText(Res.get("tradeApps.deactivate"));
+                    muSigButton.setDefaultButton(false);
+                    muSigButton.getStyleClass().add("outlined-button");
+                } else {
+                    muSigButton.setOnAction(e -> controller.onActivateMuSig(muSigProtocolListItem));
+                    muSigButton.setText(Res.get("tradeApps.activate"));
+                    muSigButton.setDefaultButton(true);
+                }
+            });
+        }
     }
 }

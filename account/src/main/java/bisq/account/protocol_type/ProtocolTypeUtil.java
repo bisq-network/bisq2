@@ -43,7 +43,7 @@ public class ProtocolTypeUtil {
             result.add(TradeProtocolType.LIGHTNING_ESCROW);
         }
         if (isMuSigSupported(market)) {
-            result.add(TradeProtocolType.MUSIG);
+            result.add(TradeProtocolType.MU_SIG);
         }
 
         result.sort(Comparator.comparingInt(TradeProtocolType::ordinal));

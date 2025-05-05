@@ -19,11 +19,15 @@ package bisq.desktop.main.content.trade_apps.overview;
 
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.bisq_easy.NavigationTarget;
+import bisq.common.application.DevMode;
 import bisq.common.data.Pair;
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.trade_apps.more.MoreProtocolsController;
+import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
 import lombok.Getter;
 
 import java.util.List;
@@ -33,18 +37,27 @@ public class TradeOverviewController implements Controller {
     private final TradeOverviewView view;
     @Getter
     private final TradeOverviewModel model;
+    private final SettingsService settingsService;
+    private Pin cookieChangedPin;
 
     public TradeOverviewController(ServiceProvider serviceProvider) {
+        settingsService = serviceProvider.getSettingsService();
         this.model = new TradeOverviewModel(getMainProtocols(), getMoreProtocols());
         this.view = new TradeOverviewView(model, this);
     }
 
     @Override
     public void onActivate() {
+        cookieChangedPin = settingsService.getCookieChanged().addObserver(cookieChanged -> {
+            if (DevMode.isDevMode()) {
+                model.getIsMuSigActivated().set(settingsService.getCookie().asBoolean(CookieKey.MU_SIG_ACTIVATED).orElse(false));
+            }
+        });
     }
 
     @Override
     public void onDeactivate() {
+        cookieChangedPin.unbind();
     }
 
     void onSelect(ProtocolListItem protocolListItem) {
@@ -56,6 +69,14 @@ public class TradeOverviewController implements Controller {
         }
     }
 
+    void onActivateMuSig(ProtocolListItem protocolListItem) {
+        settingsService.setCookie(CookieKey.MU_SIG_ACTIVATED, true);
+    }
+
+    void onDeactivateMuSig(ProtocolListItem protocolListItem) {
+        settingsService.setCookie(CookieKey.MU_SIG_ACTIVATED, false);
+    }
+
     private List<ProtocolListItem> getMainProtocols() {
         ProtocolListItem bisqEasy = new ProtocolListItem(TradeAppsAttributes.Type.BISQ_EASY,
                 NavigationTarget.BISQ_EASY,
@@ -64,8 +85,8 @@ public class TradeOverviewController implements Controller {
                 ""
         );
         ProtocolListItem muSig = new ProtocolListItem(TradeAppsAttributes.Type.MU_SIG,
-                NavigationTarget.MUSIG,
-                TradeProtocolType.MUSIG,
+                NavigationTarget.MU_SIG_PROTOCOL,
+                TradeProtocolType.MU_SIG,
                 new Pair<>(10000L, 700000L),
                 "Q4/25"
         );

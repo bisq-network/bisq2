@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.musig;
+package bisq.offer.mu_sig;
 
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;

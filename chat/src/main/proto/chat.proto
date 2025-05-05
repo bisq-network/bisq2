@@ -51,7 +51,7 @@ enum ChatChannelDomain {
   CHATCHANNELDOMAIN_DISCUSSION = 4;
   CHATCHANNELDOMAIN_EVENTS = 5 [deprecated = true]; // Dropped in 2.1.1, all messages will fall back on domain DISCUSSION
   CHATCHANNELDOMAIN_SUPPORT = 6;
-  CHATCHANNELDOMAIN_BISQ_MUSIG_OFFERBOOK = 7;
+  CHATCHANNELDOMAIN_MU_SIG_OFFERBOOK = 7;
 }
 
 message Citation {

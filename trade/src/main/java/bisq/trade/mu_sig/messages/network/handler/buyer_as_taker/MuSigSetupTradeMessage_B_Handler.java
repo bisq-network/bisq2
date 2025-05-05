@@ -20,7 +20,7 @@ package bisq.trade.mu_sig.messages.network.handler.buyer_as_taker;
 import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractSignatureData;
-import bisq.contract.bisq_musig.MuSigContract;
+import bisq.contract.mu_sig.MuSigContract;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;

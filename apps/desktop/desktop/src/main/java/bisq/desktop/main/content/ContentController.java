@@ -72,7 +72,7 @@ public class ContentController extends NavigationController {
         return switch (navigationTarget) {
             case DASHBOARD -> Optional.of(new DashboardController(serviceProvider));
             case BISQ_EASY -> Optional.of(new BisqEasyController(serviceProvider));
-            case BISQ_MUSIG -> Optional.of(new MuSigController(serviceProvider));
+            case MU_SIG -> Optional.of(new MuSigController(serviceProvider));
             case REPUTATION -> Optional.of(new ReputationController(serviceProvider));
             case TRADE_PROTOCOLS -> Optional.of(new TradeAppsController(serviceProvider));
             case ACADEMY -> Optional.of(new AcademyController(serviceProvider));

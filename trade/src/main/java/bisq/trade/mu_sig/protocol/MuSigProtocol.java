@@ -25,10 +25,10 @@ import bisq.trade.protocol.TradeProtocol;
 import java.lang.reflect.InvocationTargetException;
 
 public abstract class MuSigProtocol extends TradeProtocol<MuSigTrade> {
-    private static final String version = "1.0.0";
+    public static final String VERSION = "1.0.0";
 
     public MuSigProtocol(ServiceProvider serviceProvider, MuSigTrade model) {
-        super(version, serviceProvider, model);
+        super(VERSION, serviceProvider, model);
     }
 
     @Override

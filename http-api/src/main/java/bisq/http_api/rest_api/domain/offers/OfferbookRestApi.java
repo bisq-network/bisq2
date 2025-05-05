@@ -30,13 +30,14 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.dto.DtoMappings;
-import bisq.dto.presentation.offerbook.OfferItemPresentationDtoFactory;
 import bisq.dto.presentation.offerbook.OfferItemPresentationDto;
+import bisq.dto.presentation.offerbook.OfferItemPresentationDtoFactory;
 import bisq.http_api.rest_api.domain.RestApiBase;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.PriceSpec;
+import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -49,14 +50,24 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -182,7 +193,8 @@ public class OfferbookRestApi extends RestApiBase {
                     bitcoinPaymentMethods,
                     fiatPaymentMethods,
                     userProfile.getTerms(),
-                    supportedLanguageCodes);
+                    supportedLanguageCodes,
+                    BisqEasyProtocol.VERSION);
             String channelId = bisqEasyOfferbookChannelService.findChannel(market).orElseThrow().getId();
             BisqEasyOfferbookMessage myOfferMessage = new BisqEasyOfferbookMessage(channelId,
                     userProfile.getId(),

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.musig;
+package bisq.offer.mu_sig;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
@@ -49,8 +49,7 @@ final class MyMuSigOffersStore implements PersistableStore<MyMuSigOffersStore> {
 
     @Override
     public void applyPersisted(MyMuSigOffersStore persisted) {
-        offers.clear();
-        offers.addAll(persisted.getOffers());
+        offers.setAll(persisted.getOffers());
     }
 
     @Override
