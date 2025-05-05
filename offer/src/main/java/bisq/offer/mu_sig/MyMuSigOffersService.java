@@ -71,10 +71,12 @@ public class MyMuSigOffersService implements PersistenceClient<MyMuSigOffersStor
 
     public void activateOffer(MuSigOffer offer) {
         persistableStore.activateOffer(offer);
+        persist();
     }
 
     public void deactivateOffer(MuSigOffer offer) {
         persistableStore.deactivateOffer(offer);
+        persist();
     }
 
     public Set<MuSigOffer> getOffers() {
