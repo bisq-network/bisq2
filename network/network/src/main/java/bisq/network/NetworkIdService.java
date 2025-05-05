@@ -156,7 +156,9 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
             case TOR -> isDefault ?
                     defaultPortByTransportType.computeIfAbsent(TransportType.TOR, key -> NetworkUtils.selectRandomPort()) :
                     NetworkUtils.selectRandomPort();
-            case I2P -> throw new RuntimeException("I2P not unsupported yet");
+            case I2P -> isDefault ?
+                    defaultPortByTransportType.computeIfAbsent(TransportType.I2P, key-> NetworkUtils.selectRandomPort()) :
+                    NetworkUtils.selectRandomPort();
             case CLEAR -> isDefault ?
                     defaultPortByTransportType.computeIfAbsent(TransportType.CLEAR, key -> NetworkUtils.findFreeSystemPort()) :
                     NetworkUtils.findFreeSystemPort();
@@ -167,7 +169,7 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
         //return new Address(keyBundle.getI2pKeyPair().getDestination(), port);
         return switch (transportType) {
             case TOR -> new Address(keyBundle.getTorKeyPair().getOnionAddress(), port);
-            case I2P -> throw new RuntimeException("I2P not unsupported yet");
+            case I2P -> new Address(keyBundle.getI2PKeyPair().getDestination(), port);
             case CLEAR -> FacadeProvider.getClearNetAddressTypeFacade().toMyLocalAddress(port);
         };
     }
