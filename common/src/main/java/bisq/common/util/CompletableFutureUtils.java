@@ -37,7 +37,8 @@ public class CompletableFutureUtils {
      * and we return a list of all results. Order of result list is same as order of the futures passed (not completion order).
      */
     public static <T> CompletableFuture<List<T>> allOf(Collection<CompletableFuture<T>> collection) {
-        return allOf(collection.stream());
+        //noinspection unchecked
+        return allOf(collection.toArray(new CompletableFuture[0]));
     }
 
     public static <T> CompletableFuture<List<T>> allOf(Stream<CompletableFuture<T>> stream) {
@@ -65,7 +66,8 @@ public class CompletableFutureUtils {
      * complete exceptionally or got cancelled.
      */
     public static <T> CompletableFuture<T> anyOf(Collection<CompletableFuture<T>> collection) {
-        return anyOf(collection.stream());
+        //noinspection unchecked
+        return anyOf(collection.toArray(new CompletableFuture[0]));
     }
 
     public static <T> CompletableFuture<T> anyOf(Stream<CompletableFuture<T>> stream) {
