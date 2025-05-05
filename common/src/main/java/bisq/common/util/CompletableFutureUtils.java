@@ -17,6 +17,7 @@ package bisq.common.util;/*
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -65,12 +66,11 @@ public class CompletableFutureUtils {
      * complete exceptionally or got cancelled.
      */
     public static <T> CompletableFuture<T> anyOf(Collection<CompletableFuture<T>> collection) {
-        //noinspection unchecked
-        return anyOf(collection.toArray(new CompletableFuture[0]));
+        return anyOf(collection.stream());
     }
 
-    public static <T> CompletableFuture<T> anyOf(Stream<CompletableFuture<T>> collection) {
-        return anyOf(collection.collect(Collectors.toList()));
+    public static <T> CompletableFuture<T> anyOf(Stream<CompletableFuture<T>> stream) {
+        return anyOf(stream.collect(Collectors.toList()));
     }
 
     @SafeVarargs
@@ -91,6 +91,23 @@ public class CompletableFutureUtils {
         return resultFuture;
     }
 
+    public static <T> CompletableFuture<T> logOnFailure(CompletableFuture<T> future) {
+        return logOnFailure(future, null);
+    }
+
+    public static <T> CompletableFuture<T> logOnFailure(CompletableFuture<T> future, @Nullable String errorMessage) {
+        future.whenComplete((result, throwable) -> {
+            if (throwable != null) {
+                if (errorMessage == null) {
+                    log.error("Executing future failed", throwable);
+                } else {
+                    log.error(errorMessage, throwable);
+                }
+            }
+        });
+
+        return future;
+    }
     /*public static <T> boolean isCompleted(CompletableFuture<T> future) {
         return future.state() == Future.State.SUCCESS;
     }*/
