@@ -29,6 +29,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+/**
+ * Abstract base class for observable collections that notify registered {@link CollectionObserver}s on changes.
+ * <p>
+ * Subclasses must define the underlying collection via {@link #createCollection()}.
+ * <p>
+ * Thread-safety depends on the concrete collection implementation returned by {@code createCollection()}.
+ * Observers are stored in a {@link java.util.concurrent.CopyOnWriteArrayList}, making registration and notification thread-safe.
+ *
+ * @param <S> the element type of the collection
+ */
 @Slf4j
 @EqualsAndHashCode
 public abstract class ObservableCollection<S> implements Collection<S>, ReadOnlyObservableCollection<S> {
@@ -69,8 +79,7 @@ public abstract class ObservableCollection<S> implements Collection<S>, ReadOnly
                                              Function<S, T> mapFunction,
                                              Consumer<Runnable> executor) {
         CollectionChangeMapper<S, T> collectionChangeMapper = new CollectionChangeMapper<>(collection, filterFunction, mapFunction, executor);
-        collectionChangeMapper.clear();
-        collectionChangeMapper.addAll(this);
+        collectionChangeMapper.setAll(this);
         observers.add(collectionChangeMapper);
         return () -> observers.remove(collectionChangeMapper);
     }

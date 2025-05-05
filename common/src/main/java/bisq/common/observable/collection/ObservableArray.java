@@ -28,6 +28,24 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
 
+/**
+ * A thread-safe observable list backed by a {@link java.util.Collections#synchronizedList(List)} wrapper around an {@link java.util.ArrayList}.
+ * <p>
+ * Observers are notified upon changes such as element additions, removals, and full resets.
+ * <p>
+ * While all operations on the internal list are synchronized, users must manually synchronize on the list
+ * when performing compound actions like iteration:
+ *
+ * <pre>{@code
+ * synchronized (observableArray.getList()) {
+ *     for (S item : observableArray.getList()) {
+ *         ...
+ *     }
+ * }
+ * }</pre>
+ *
+ * @param <S> the type of elements in this list
+ */
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 public class ObservableArray<S> extends ObservableCollection<S> implements List<S>, ReadOnlyObservableArray<S> {
