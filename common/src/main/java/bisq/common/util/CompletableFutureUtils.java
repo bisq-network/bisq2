@@ -66,7 +66,8 @@ public class CompletableFutureUtils {
      * complete exceptionally or got cancelled.
      */
     public static <T> CompletableFuture<T> anyOf(Collection<CompletableFuture<T>> collection) {
-        return anyOf(collection.stream());
+        //noinspection unchecked
+        return anyOf(collection.toArray(new CompletableFuture[0]));
     }
 
     public static <T> CompletableFuture<T> anyOf(Stream<CompletableFuture<T>> stream) {
