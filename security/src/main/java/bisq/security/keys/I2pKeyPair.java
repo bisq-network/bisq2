@@ -9,7 +9,9 @@ import lombok.ToString;
 
 public class I2pKeyPair implements PersistableProto {
     @ToString.Exclude
+    @Getter
     private final byte[] privateKey;
+    @Getter
     private final byte[] publicKey;
     @EqualsAndHashCode.Include
     @Getter

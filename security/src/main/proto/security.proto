@@ -57,7 +57,7 @@ message KeyBundle {
   string keyId = 1;
   KeyPair keyPair = 2;
   TorKeyPair torKeyPair = 3;
-  /*I2PKeyPair i2PKeyPair = 4;*/
+  I2PKeyPair i2PKeyPair = 4;
 }
 message KeyBundleStore {
   string secretUid = 1;

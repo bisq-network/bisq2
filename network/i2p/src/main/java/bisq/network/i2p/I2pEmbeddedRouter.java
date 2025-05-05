@@ -223,6 +223,7 @@ public class I2pEmbeddedRouter {
         p.put("i2np.ntcp.nodelay", "true");
         p.put("router.encType","4");
         p.put("router.useShortTBM","true");
+        p.put("router.floodfillParticipant","true");
 
         // Copy reseed certificates
         String embeddedRouterCertPath = i2pDirBasePath + "/certificates/reseed";
@@ -251,6 +252,31 @@ public class I2pEmbeddedRouter {
         return routerContext.commSystem().getStatus();
     }
 
+    public void restart() {
+        if(router==null) {
+            router = routerContext.router();
+            if(router==null) {
+                log.warn("Unable to restart I2P Router. Router instance not found in RouterContext.");
+                return ;
+            }
+        } else {
+            log.info("Soft restart of I2P Router...");
+            router.restart();
+            int maxWaitSec = 10 * 60; // 10 minutes
+            int currentWait = 0;
+            while(!routerContext.router().isAlive()) {
+                currentWait+=10;
+                if(currentWait > maxWaitSec) {
+                    log.warn("Restart failed.");
+                    return ;
+                }
+            }
+            log.info("Router hiddenMode="+router.isHidden());
+            log.info("I2P Router soft restart completed.");
+        }
+        return ;
+    }
+
     private void reportRouterStatus() {
         if(i2pRouterStatus == CommSystemFacade.Status.OK ||
                 i2pRouterStatus == CommSystemFacade.Status.IPV4_DISABLED_IPV6_OK ||
@@ -269,7 +295,7 @@ public class I2pEmbeddedRouter {
         }
         else if(i2pRouterStatus == CommSystemFacade.Status.DISCONNECTED) {
             log.warn("I2P Router status - {}", i2pRouterStatus.toStatusString());
-            //todo - create a restart() routine?
+            restart();
         }
         else {
             log.warn("Not connected to I2P Network.");
