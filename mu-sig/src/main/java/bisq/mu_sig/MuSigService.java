@@ -24,6 +24,7 @@ import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.chat.ChatService;
 import bisq.common.application.DevMode;
 import bisq.common.application.Service;
+import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.contract.ContractService;
 import bisq.identity.IdentityService;
@@ -64,6 +65,7 @@ public class MuSigService implements Service {
     private final MarketPriceService marketPriceService;
     private final AlertService alertService;
 
+    private final Observable<Boolean> muSigActivated = new Observable<>(false);
     private Pin cookieChangedPin;
 
     public MuSigService(PersistenceService persistenceService,
@@ -107,12 +109,12 @@ public class MuSigService implements Service {
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         cookieChangedPin = settingsService.getCookieChanged().addObserver(cookieChanged -> {
-            if (DevMode.isDevMode()) {
-                if (settingsService.getCookie().asBoolean(CookieKey.MU_SIG_ACTIVATED).orElse(false)) {
-                    activate();
-                } else {
-                    deactivate();
-                }
+            muSigActivated.set(DevMode.isDevMode() &&
+                    settingsService.getCookie().asBoolean(CookieKey.MU_SIG_ACTIVATED).orElse(true));
+            if (muSigActivated.get()) {
+                activate();
+            } else {
+                deactivate();
             }
         });
         return CompletableFuture.completedFuture(true);
