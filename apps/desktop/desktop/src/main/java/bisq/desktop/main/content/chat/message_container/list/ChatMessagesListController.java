@@ -379,7 +379,7 @@ public class ChatMessagesListController implements Controller {
                                     isAmountRangeOffer ? minFiatAmount : maxFiatAmount) + "\n\n" + learnMore)
                             .show();
                 } else {
-                    Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
+                    Navigation.navigateTo(NavigationTarget.BISQ_EASY_TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
                 }
             } else {
                 //  I am as taker the seller. We check if my reputation permits to take the offer
@@ -401,7 +401,7 @@ public class ChatMessagesListController implements Controller {
                             .actionButtonText(Res.get("bisqEasy.offerbook.offerList.popup.offersWithInsufficientReputationWarning.buildReputation"))
                             .show();
                 } else {
-                    Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
+                    Navigation.navigateTo(NavigationTarget.BISQ_EASY_TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
                 }
             }
         } else {

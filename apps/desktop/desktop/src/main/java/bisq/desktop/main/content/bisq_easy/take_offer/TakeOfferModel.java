@@ -60,6 +60,6 @@ public class TakeOfferModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.TAKE_OFFER_AMOUNT;
+        return NavigationTarget.BISQ_EASY_TAKE_OFFER_AMOUNT;
     }
 }

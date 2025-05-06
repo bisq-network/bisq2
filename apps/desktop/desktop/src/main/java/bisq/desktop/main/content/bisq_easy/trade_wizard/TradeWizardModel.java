@@ -59,7 +59,7 @@ public class TradeWizardModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.TRADE_WIZARD_DIRECTION_AND_MARKET;
+        return NavigationTarget.BISQ_EASY_TRADE_WIZARD_DIRECTION_AND_MARKET;
     }
 
     public void reset() {
