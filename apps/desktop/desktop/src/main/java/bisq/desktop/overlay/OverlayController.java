@@ -17,7 +17,8 @@
 
 package bisq.desktop.overlay;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.KeyHandlerUtil;
@@ -133,10 +134,13 @@ public class OverlayController extends NavigationController {
             case TAC -> Optional.of(new TacController(serviceProvider));
             case UPDATER -> Optional.of(new UpdaterController(serviceProvider));
             case ONBOARDING -> Optional.of(new OnboardingController(serviceProvider));
-            case TRADE_WIZARD -> Optional.of(new TradeWizardController(serviceProvider));
-            case TAKE_OFFER -> Optional.of(new TakeOfferController(serviceProvider));
+            case BISQ_EASY_TRADE_WIZARD -> Optional.of(new TradeWizardController(serviceProvider));
+            case BISQ_EASY_TAKE_OFFER -> Optional.of(new TakeOfferController(serviceProvider));
             case BISQ_EASY_VIDEO -> Optional.of(new BisqEasyVideoController(serviceProvider));
             case BISQ_EASY_GUIDE -> Optional.of(new BisqEasyGuideController(serviceProvider));
+
+            case MU_SIG_CREATE_OFFER -> Optional.of(new MuSigCreateOfferController(serviceProvider));
+
             case WALLET_GUIDE -> Optional.of(new WalletGuideController(serviceProvider));
             case BISQ_EASY_TRADE_DETAILS -> Optional.of(new TradeDetailsController(serviceProvider));
             case MEDIATION_CASE_DETAILS -> Optional.of(new MediationCaseDetailsController(serviceProvider));

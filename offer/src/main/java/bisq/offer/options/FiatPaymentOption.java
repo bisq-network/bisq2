@@ -30,6 +30,9 @@ public final class FiatPaymentOption implements OfferOption {
     private final String countyCodeOfBank;
     private final String bankName;
 
+    // TODO Should be maker payment account restrictions
+    // add String makerPaymentAccountId?
+
     public FiatPaymentOption(String countyCodeOfBank, String bankName) {
         this.countyCodeOfBank = countyCodeOfBank;
         this.bankName = bankName;

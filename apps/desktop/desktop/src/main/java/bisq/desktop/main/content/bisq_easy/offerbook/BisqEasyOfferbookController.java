@@ -20,7 +20,7 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 import bisq.bisq_easy.BisqEasyMarketFilter;
 import bisq.bisq_easy.BisqEasyOfferbookMessageService;
 import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
@@ -96,7 +96,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         bisqEasyOfferbookMessageService = serviceProvider.getBisqEasyService().getBisqEasyOfferbookMessageService();
 
         bisqEasyOfferbookModel = getModel();
-        createMarketChannels();
 
         marketChannelItemsPredicate = item ->
                 model.getMarketFilterPredicate().test(item) &&
@@ -129,6 +128,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     public void onActivate() {
         super.onActivate();
 
+        createMarketChannels();
         model.getMarketSelectorSearchText().set("");
 
         showMarketSelectionListCollapsedSettingsPin = FxBindings.bindBiDir(model.getShowMarketSelectionListCollapsed())
@@ -283,6 +283,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         model.getMarketChannelItems().removeListener(marketChannelItemListener);
         marketNumOffersListeners.forEach((item, changeListener) -> item.getNumOffers().removeListener(changeListener));
         model.getMarketChannelItems().forEach(MarketChannelItem::dispose);
+        model.getMarketChannelItems().clear();
 
         resetSelectedChildTarget();
     }
@@ -326,7 +327,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         ChatChannel<? extends ChatMessage> chatChannel = model.getSelectedChannel();
         checkArgument(chatChannel instanceof BisqEasyOfferbookChannel,
                 "channel must be instanceof BisqEasyPublicChatChannel at onCreateOfferButtonClicked");
-        Navigation.navigateTo(NavigationTarget.TRADE_WIZARD, new TradeWizardController.InitData(true));
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_WIZARD, new TradeWizardController.InitData(true));
     }
 
     void onSortMarkets(MarketSortType marketSortType) {
@@ -371,12 +372,15 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     }
 
     private void updateMarketPrice() {
-        Market selectedMarket = bisqEasyOfferbookModel.getSelectedMarketChannelItem().get().getMarket();
-        if (selectedMarket != null) {
-            marketPriceService
-                    .findMarketPrice(selectedMarket)
-                    .ifPresent(marketPrice ->
-                            model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true)));
+        MarketChannelItem selectedMarketChannelItem = model.getSelectedMarketChannelItem().get();
+        if (selectedMarketChannelItem != null) {
+            Market selectedMarket = selectedMarketChannelItem.getMarket();
+            if (selectedMarket != null) {
+                marketPriceService
+                        .findMarketPrice(selectedMarket)
+                        .ifPresent(marketPrice ->
+                                model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true)));
+            }
         }
     }
 
@@ -425,54 +429,4 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                     .ifPresent(MarketChannelItem::refreshNotifications);
         });
     }
-
-/*
-    private void bindOfferMessages(BisqEasyOfferbookChannel channel) {
-        model.getOfferbookListItems().clear();
-        offerMessagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
-            @Override
-            public void add(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-                Optional<UserProfile> userProfile = userProfileService.findUserProfile(bisqEasyOfferbookMessage.getAuthorUserProfileId());
-                boolean shouldAddOfferMessage = bisqEasyOfferbookMessage.hasBisqEasyOffer()
-                        && bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent()
-                        && userProfile.isPresent();
-                if (shouldAddOfferMessage) {
-                    UIThread.runOnNextRenderFrame(() -> {
-                        if (model.getOfferbookListItems().stream()
-                                .noneMatch(item -> item.getBisqEasyOfferbookMessage().equals(bisqEasyOfferbookMessage))) {
-                            OfferbookListItem item = new OfferbookListItem(bisqEasyOfferbookMessage,
-                                    userProfile.get(),
-                                    reputationService,
-                                    marketPriceService);
-                            model.getOfferbookListItems().add(item);
-                        }
-                    });
-                }
-            }
-
-            @Override
-            public void remove(Object element) {
-                if (element instanceof BisqEasyOfferbookMessage && ((BisqEasyOfferbookMessage) element).hasBisqEasyOffer()) {
-                    UIThread.runOnNextRenderFrame(() -> {
-                        BisqEasyOfferbookMessage offerMessage = (BisqEasyOfferbookMessage) element;
-                        Optional<OfferbookListItem> toRemove = model.getOfferbookListItems().stream()
-                                .filter(item -> item.getBisqEasyOfferbookMessage().getId().equals(offerMessage.getId()))
-                                .findAny();
-                        toRemove.ifPresent(item -> {
-                            item.dispose();
-                            model.getOfferbookListItems().remove(item);
-                        });
-                    });
-                }
-            }
-
-            @Override
-            public void clear() {
-                UIThread.runOnNextRenderFrame(() -> {
-                    model.getOfferbookListItems().forEach(OfferbookListItem::dispose);
-                    model.getOfferbookListItems().clear();
-                });
-            }
-        });
-    }*/
 }

@@ -181,6 +181,7 @@ public class TorService implements Service {
         log.info("shutdown");
         return CompletableFuture.supplyAsync(() -> {
             torController.shutdown();
+            torController = null;
             torProcess.ifPresent(EmbeddedTorProcess::waitUntilExited);
             torProcess = Optional.empty();
             torSocksProxyFactory = Optional.empty();

@@ -20,7 +20,7 @@ package bisq.trade.protocol.events;
 import bisq.network.SendMessageResult;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
+import bisq.trade.protocol.messages.TradeMessage;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
@@ -32,7 +32,7 @@ public abstract class SendTradeMessageHandler<M extends Trade<?, ?, ?>> extends 
         super(serviceProvider, model);
     }
 
-    protected CompletableFuture<SendMessageResult> sendMessage(BisqEasyTradeMessage message) {
+    protected CompletableFuture<SendMessageResult> sendMessage(TradeMessage message) {
         return sendMessage(message, serviceProvider, trade);
     }
 }

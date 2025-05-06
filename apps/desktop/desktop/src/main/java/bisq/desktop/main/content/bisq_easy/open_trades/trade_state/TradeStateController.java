@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;

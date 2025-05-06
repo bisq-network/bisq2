@@ -108,6 +108,9 @@ public class Bisq1BridgeHttpService implements Service {
     public CompletableFuture<List<ProofOfBurnDto>> requestProofOfBurnTxs() {
         return CompletableFuture.supplyAsync(() -> {
                     try {
+                        if (httpClient == null) {
+                            throw new IllegalStateException("Bisq1BridgeHttpService is not initialized during calling requestProofOfBurnTxs()");
+                        }
                         String path = "api/v1/proof-of-burn/get-proof-of-burn/" + (lastRequestedProofOfBurnBlockHeight.get() + 1);
                         log.info("Request Bisq DAO node: {}/{}", httpClient.getBaseUrl(), path);
                         String response = httpClient.get(path,
@@ -134,6 +137,9 @@ public class Bisq1BridgeHttpService implements Service {
     public CompletableFuture<List<BondedReputationDto>> requestBondedReputations() {
         return CompletableFuture.supplyAsync(() -> {
                     try {
+                        if (httpClient == null) {
+                            throw new IllegalStateException("Bisq1BridgeHttpService is not initialized during calling requestBondedReputations()");
+                        }
                         String path = "api/v1/bonded-reputation/get-bonded-reputation/" + (lastRequestedBondedReputationBlockHeight.get() + 1);
                         log.info("Request Bisq DAO node: {}/{}", httpClient.getBaseUrl(), path);
                         String response = httpClient.get(path,
@@ -160,6 +166,9 @@ public class Bisq1BridgeHttpService implements Service {
     public CompletableFuture<Optional<Long>> requestAccountAgeWitness(String hashAsHex) {
         return CompletableFuture.supplyAsync(() -> {
             try {
+                if (httpClient == null) {
+                    throw new IllegalStateException("Bisq1BridgeHttpService is not initialized during calling requestAccountAgeWitness()");
+                }
                 String path = "api/v1/account-age/get-date/" + hashAsHex;
                 log.info("Request account age witness: {}", path);
                 String response = httpClient.get(path,
@@ -178,6 +187,9 @@ public class Bisq1BridgeHttpService implements Service {
     public CompletableFuture<Optional<Long>> requestSignedWitnessDate(String hashAsHex) {
         return CompletableFuture.supplyAsync(() -> {
             try {
+                if (httpClient == null) {
+                    throw new IllegalStateException("Bisq1BridgeHttpService is not initialized during calling requestSignedWitnessDate()");
+                }
                 String path = "api/v1/signed-witness/get-date/" + hashAsHex;
                 log.info("Request signed-witness: {}", path);
                 String response = httpClient.get(path,
@@ -198,6 +210,9 @@ public class Bisq1BridgeHttpService implements Service {
                                                                                       String profileId,
                                                                                       String signatureBase64) {
         return CompletableFuture.supplyAsync(() -> {
+            if (httpClient == null) {
+                throw new IllegalStateException("Bisq1BridgeHttpService is not initialized during calling requestBondedRoleVerification()");
+            }
             // We cannot use URLEncoding as it would convert a + into a space (+ and / can appear in base64 encoding)
             String signatureAsHex = Hex.encode(Base64.decode(signatureBase64));
             //todo (Critical) URLEncoding for userName

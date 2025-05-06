@@ -19,7 +19,7 @@ package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.bisq_easy.BisqEasyOfferbookMessageService;
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.*;
@@ -110,6 +110,7 @@ public class ChatMessagesListController implements Controller {
     private Pin selectedChannelPin, chatMessagesPin, bisqEasyOfferbookMessageTypeFilterPin, highlightedMessagePin;
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
             layoutChildrenDonePin;
+    private static final String DONT_SHOW_CHAT_RULES_WARNING_KEY = "privateChatRulesWarning";
 
     public ChatMessagesListController(ServiceProvider serviceProvider,
                                       Consumer<UserProfile> mentionUserHandler,
@@ -378,7 +379,7 @@ public class ChatMessagesListController implements Controller {
                                     isAmountRangeOffer ? minFiatAmount : maxFiatAmount) + "\n\n" + learnMore)
                             .show();
                 } else {
-                    Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
+                    Navigation.navigateTo(NavigationTarget.BISQ_EASY_TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
                 }
             } else {
                 //  I am as taker the seller. We check if my reputation permits to take the offer
@@ -400,7 +401,7 @@ public class ChatMessagesListController implements Controller {
                             .actionButtonText(Res.get("bisqEasy.offerbook.offerList.popup.offersWithInsufficientReputationWarning.buildReputation"))
                             .show();
                 } else {
-                    Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
+                    Navigation.navigateTo(NavigationTarget.BISQ_EASY_TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
                 }
             }
         } else {
@@ -562,6 +563,20 @@ public class ChatMessagesListController implements Controller {
         Navigation.navigateTo(NavigationTarget.CHAT_RULES);
     }
 
+    public void onDismissChatRulesWarning() {
+        dontShowAgainService.putDontShowAgain(DONT_SHOW_CHAT_RULES_WARNING_KEY, true);
+
+         model.getSortedChatMessages().stream()
+                .filter(item -> item.getChatMessage().getChatMessageType() == ChatMessageType.CHAT_RULES_WARNING)
+                .findFirst()
+                .ifPresent(itemToRemove -> {
+                    UIThread.run(() -> {
+                        itemToRemove.dispose();
+                        model.getChatMessages().remove(itemToRemove);
+                    });
+                });
+    }
+
     public void onClickQuoteMessage(Optional<String> chatMessageId) {
         chatMessageId.ifPresent(messageId -> {
             model.getChatMessages().forEach(item -> {
@@ -655,13 +670,11 @@ public class ChatMessagesListController implements Controller {
                 .map(e -> e.getChatMessage().getId())
                 .collect(Collectors.toSet()));
 
-        boolean isMediator = false;
-        if (channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
-            if (bisqEasyOpenTradeChannel.isMediator()) {
-                isMediator = true;
-            }
-        }
-        if (!isMediator) {
+        boolean shouldShowWarningMessageForNoneMediator = dontShowAgainService.showAgain(DONT_SHOW_CHAT_RULES_WARNING_KEY)
+                && !(channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel
+                && bisqEasyOpenTradeChannel.isMediator());
+
+        if (shouldShowWarningMessageForNoneMediator) {
             addChatRulesWarningMessageListItemInPrivateChats(channel);
         }
 

@@ -21,21 +21,27 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
+import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.support.mediation.MediatorService;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentity;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -45,8 +51,11 @@ public class BisqEasyNotificationsService implements Service {
     private final ChatNotificationService chatNotificationService;
     private final MediatorService mediatorService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
+    private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     private final SettingsService settingsService;
-
+    private final BisqEasyTradeService bisqEasyTradeService;
+    @Nullable
+    private Pin tradesPin, channelsPin, cookieChangedPin, favouriteMarketsPin;
     @Getter
     private final Observable<Boolean> isNotificationPanelVisible = new Observable<>(false);
     @Getter
@@ -55,14 +64,20 @@ public class BisqEasyNotificationsService implements Service {
     // If any new notification gets added the panel will also be shown again.
     private final ObservableSet<ChatNotification> dismissedNotifications = new ObservableSet<>();
 
+    private final Set<ChatNotification> orphanedNotifications = new CopyOnWriteArraySet<>();
+
     public BisqEasyNotificationsService(ChatNotificationService chatNotificationService,
                                         MediatorService mediatorService,
                                         BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService,
-                                        SettingsService settingsService) {
+                                        SettingsService settingsService,
+                                        BisqEasyTradeService bisqEasyTradeService,
+                                        BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService) {
         this.chatNotificationService = chatNotificationService;
         this.mediatorService = mediatorService;
         this.bisqEasyOfferbookChannelService = bisqEasyOfferbookChannelService;
         this.settingsService = settingsService;
+        this.bisqEasyTradeService = bisqEasyTradeService;
+        this.bisqEasyOpenTradeChannelService = bisqEasyOpenTradeChannelService;
     }
 
 
@@ -76,26 +91,39 @@ public class BisqEasyNotificationsService implements Service {
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
 
-        settingsService.getCookieChanged().addObserver(cookieChanged -> updateBisqEasyOfferbookPredicate());
-        settingsService.getFavouriteMarkets().addObserver(this::updateBisqEasyOfferbookPredicate);
+        tradesPin = bisqEasyTradeService.getTrades().addObserver(this::handleTradesOrTradeChannelsChange);
+        channelsPin = bisqEasyOpenTradeChannelService.getChannels().addObserver(this::handleTradesOrTradeChannelsChange);
+
+        cookieChangedPin = settingsService.getCookieChanged().addObserver(cookieChanged ->
+                updateBisqEasyOfferbookPredicate());
+        favouriteMarketsPin = settingsService.getFavouriteMarkets().addObserver(this::updateBisqEasyOfferbookPredicate);
 
         return CompletableFuture.completedFuture(true);
     }
 
-    private void handleNotification(ChatNotification notification) {
-        if (notification == null) {
-            return;
-        }
-
-        tradeNotifications.setAll(chatNotificationService.getNotConsumedNotifications(ChatChannelDomain.BISQ_EASY_OPEN_TRADES)
-                .filter(chatNotification -> !dismissedNotifications.contains(chatNotification))
-                .collect(Collectors.toSet()));
-        updateNotificationVisibilityState();
-    }
-
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        settingsService.getCookieChanged().removeObserver(cookieChanged -> updateBisqEasyOfferbookPredicate());
+
+        if (tradesPin != null) {
+            tradesPin.unbind();
+            tradesPin = null;
+        }
+
+        if (channelsPin != null) {
+            channelsPin.unbind();
+            channelsPin = null;
+        }
+
+        if (cookieChangedPin != null) {
+            cookieChangedPin.unbind();
+            cookieChangedPin = null;
+        }
+
+        if (favouriteMarketsPin != null) {
+            favouriteMarketsPin.unbind();
+            favouriteMarketsPin = null;
+        }
+
         return CompletableFuture.completedFuture(true);
     }
 
@@ -126,8 +154,8 @@ public class BisqEasyNotificationsService implements Service {
                 .flatMap(chatNotification -> chatNotification.getTradeId().stream());
     }
 
-    public long getNumNotifications(NavigationTarget navigationTarget) {
-        return ChatChannelDomainNavigationTargetMapper.fromNavigationTarget(navigationTarget).stream()
+    public long getNumNotifications(Set<ChatChannelDomain> chatChannelDomains) {
+        return chatChannelDomains.stream()
                 .flatMap(chatNotificationService::getNotConsumedNotifications)
                 .count();
     }
@@ -144,11 +172,50 @@ public class BisqEasyNotificationsService implements Service {
         updateNotificationVisibilityState();
     }
 
+    private void handleNotification(@Nullable ChatNotification notification) {
+        if (notification != null) {
+            processNotifications(chatNotificationService.getNotConsumedNotifications(ChatChannelDomain.BISQ_EASY_OPEN_TRADES));
+        }
+    }
+
+    private void handleTradesOrTradeChannelsChange() {
+        Set<ChatNotification> allNotifications = new HashSet<>(orphanedNotifications);
+        Set<ChatNotification> unconsumedNotifications = chatNotificationService
+                .getNotConsumedNotifications(ChatChannelDomain.BISQ_EASY_OPEN_TRADES)
+                .collect(Collectors.toSet());
+        allNotifications.addAll(unconsumedNotifications);
+        processNotifications(allNotifications.stream());
+    }
+
+    private void processNotifications(Stream<ChatNotification> notifications) {
+        tradeNotifications.setAll(notifications
+                .filter(chatNotification -> !dismissedNotifications.contains(chatNotification))
+                .flatMap(notification -> {
+                    if (notification.getTradeId()
+                            .flatMap(bisqEasyTradeService::findTrade)
+                            .filter(trade -> bisqEasyOpenTradeChannelService.findChannelByTradeId(trade.getId()).isPresent())
+                            .isPresent()) {
+                        orphanedNotifications.remove(notification);
+                        return Stream.of(notification);
+                    } else {
+                        // In case we received a notification without the associated trade or trade channel present, we
+                        // store it for later reprocessing when the trade or trade channel changes, to allow to apply
+                        // the notification. This can happen if the notification arrives before we have received the
+                        // messages which trigger the trade or trade channel creation.
+                        // Besides that, we might receive notifications for closed trades, those we would ignore.
+                        orphanedNotifications.add(notification);
+                        return Stream.empty();
+                    }
+                })
+                .collect(Collectors.toSet()));
+        updateNotificationVisibilityState();
+    }
+
     private void updateNotificationVisibilityState() {
         isNotificationPanelVisible.set(!tradeNotifications.isEmpty());
     }
 
-    public void updateBisqEasyOfferbookPredicate() {
+    private void updateBisqEasyOfferbookPredicate() {
         String cookie = settingsService.getCookie().asString(CookieKey.MARKETS_FILTER).orElse(null);
         boolean isFavoritesOnlyFilterSet = BisqEasyMarketFilter.FAVOURITES.name().equals(cookie);
         boolean isMarketsWithOffersFilterSet = BisqEasyMarketFilter.WITH_OFFERS.name().equals(cookie);

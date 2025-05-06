@@ -23,10 +23,24 @@ import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * A thread-safe observable map based on {@link java.util.concurrent.ConcurrentHashMap}.
+ * <p>
+ * Observers can register to be notified when entries are added, removed, or cleared.
+ * <p>
+ * All core map operations (`put`, `remove`, `clear`) trigger notifications to all registered {@link HashMapObserver}s.
+ * Iteration over keys/values/entries is weakly consistent and does not throw {@link java.util.ConcurrentModificationException}.
+ *
+ * @param <K> the type of keys
+ * @param <V> the type of values
+ */
 @EqualsAndHashCode
 public class ObservableHashMap<K, V> implements Map<K, V> {
     @Getter

@@ -18,7 +18,7 @@
 package bisq.desktop.main;
 
 import bisq.application.ApplicationService;
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.observable.Observable;

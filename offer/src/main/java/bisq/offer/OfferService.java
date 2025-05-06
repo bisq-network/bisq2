@@ -20,6 +20,7 @@ package bisq.offer;
 import bisq.common.application.Service;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.offer.mu_sig.MuSigOfferService;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -33,9 +34,12 @@ import java.util.concurrent.CompletableFuture;
 @Getter
 public class OfferService implements Service {
 
-    public OfferService(NetworkService networkService, IdentityService identityService, PersistenceService persistenceService) {
-        // offerMessageService = new OfferMessageService(networkService, identityService);
-        // bisqMuSigOfferService = new BisqMuSigOfferService(persistenceService, offerMessageService);
+    private final MuSigOfferService muSigOfferService;
+
+    public OfferService(NetworkService networkService,
+                        IdentityService identityService,
+                        PersistenceService persistenceService) {
+        muSigOfferService = new MuSigOfferService(persistenceService, networkService, identityService);
     }
 
 
@@ -49,5 +53,15 @@ public class OfferService implements Service {
 
     public CompletableFuture<Boolean> shutdown() {
         return CompletableFuture.completedFuture(true);
+    }
+
+    public CompletableFuture<Boolean> initializeMuSigOfferService() {
+        log.info("initialize MuSigTradeService");
+        return muSigOfferService.initialize();
+    }
+
+    public CompletableFuture<Boolean> shutdownMuSigOfferService() {
+        log.info("shutdown MuSigTradeService");
+        return muSigOfferService.shutdown();
     }
 }

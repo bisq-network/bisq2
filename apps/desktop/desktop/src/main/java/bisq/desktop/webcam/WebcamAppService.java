@@ -84,8 +84,7 @@ public class WebcamAppService implements Service {
         stopSchedulers();
         unbind();
         qrCodeListeningServer.stopServer();
-        model.getLocalException().set(null);
-        model.getLastHeartBeatTimestamp().set(0L);
+        model.reset();
         return webcamProcessLauncher.shutdown()
                 .thenApply(terminatedGraceFully -> {
                     state.set(TERMINATED);

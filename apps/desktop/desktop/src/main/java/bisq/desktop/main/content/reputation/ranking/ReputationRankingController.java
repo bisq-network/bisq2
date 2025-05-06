@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.reputation.ranking;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.common.data.Pair;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.HashMapObserver;

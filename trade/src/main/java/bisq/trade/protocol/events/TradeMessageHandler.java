@@ -20,11 +20,11 @@ package bisq.trade.protocol.events;
 import bisq.network.identity.NetworkId;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
+import bisq.trade.protocol.messages.TradeMessage;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public abstract class TradeMessageHandler<M extends Trade<?, ?, ?>, S extends BisqEasyTradeMessage> extends TradeEventHandler<M> {
+public abstract class TradeMessageHandler<M extends Trade<?, ?, ?>, S extends TradeMessage> extends TradeEventHandler<M> {
 
     protected TradeMessageHandler(ServiceProvider serviceProvider, M model) {
         super(serviceProvider, model);
