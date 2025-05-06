@@ -62,7 +62,7 @@ public class OfferbookListItem {
     private final ReputationService reputationService;
     private final UserProfile senderUserProfile;
     private final String userNickname, formattedRangeQuoteAmount, bitcoinPaymentMethodsAsString,
-            fiatPaymentMethodsAsString, authorUserProfileId, marketCurrencyCode, offerType,
+            fiatPaymentMethodsAsString, authorUserProfileId, quoteCurrencyCode, offerType,
             formattedOfferAge, offerAgeTooltipText;
     private final ReputationScore reputationScore;
     private final List<FiatPaymentMethod> fiatPaymentMethods;
@@ -98,7 +98,7 @@ public class OfferbookListItem {
         formattedRangeQuoteAmount = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
         isFixPrice = bisqEasyOffer.getPriceSpec() instanceof FixPriceSpec;
         authorUserProfileId = bisqEasyOfferbookMessage.getAuthorUserProfileId();
-        marketCurrencyCode = bisqEasyOffer.getMarket().getQuoteCurrencyCode();
+        quoteCurrencyCode = bisqEasyOffer.getMarket().getQuoteCurrencyCode();
         offerType = bisqEasyOffer.getDirection().isBuy()
                 ? Res.get("bisqEasy.offerbook.offerList.table.columns.offerType.buy")
                 : Res.get("bisqEasy.offerbook.offerList.table.columns.offerType.sell");
@@ -126,6 +126,7 @@ public class OfferbookListItem {
     private void updatePriceSpecAsPercent() {
         priceSpecAsPercent = PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer).orElseThrow();
         formattedPercentagePrice = PercentageFormatter.formatToPercentWithSignAndSymbol(priceSpecAsPercent);
+        log.error("formattedPercentagePrice "+formattedPercentagePrice);
         String offerPrice = OfferPriceFormatter.formatQuote(marketPriceService, bisqEasyOffer);
         priceTooltipText = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(bisqEasyOffer.getPriceSpec(), offerPrice);
     }

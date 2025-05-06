@@ -28,6 +28,7 @@ import bisq.common.application.LifecycleService;
 import bisq.common.currency.Market;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
 import bisq.identity.Identity;
@@ -57,13 +58,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static bisq.common.util.CompletableFutureUtils.logOnFailure;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-@Getter
 public class MuSigService extends LifecycleService {
     private final PersistenceService persistenceService;
     private final SecurityService securityService;
@@ -83,9 +84,10 @@ public class MuSigService extends LifecycleService {
     private final MarketPriceService marketPriceService;
     private final AlertService alertService;
     private final MuSigOfferService muSigOfferService;
-
-    private final Observable<Boolean> muSigActivated = new Observable<>(false);
     private final BannedUserService bannedUserService;
+
+    @Getter
+    private final Observable<Boolean> muSigActivated = new Observable<>(false);
     private Pin muSigActivatedPin;
 
     public MuSigService(PersistenceService persistenceService,
@@ -177,6 +179,14 @@ public class MuSigService extends LifecycleService {
     // API
     /* --------------------------------------------------------------------- */
 
+    public Set<MuSigOffer> getOffers() {
+        return muSigOfferService.getMuSigOfferbookService().getOffers();
+    }
+
+    public ReadOnlyObservableSet<MuSigOffer> getObservableOffers() {
+        return muSigOfferService.getMuSigOfferbookService().getObservableOffers();
+    }
+
     public MuSigOffer createAndGetMuSigOffer(Direction direction,
                                              Market market,
                                              AmountSpec amountSpec,
@@ -210,6 +220,10 @@ public class MuSigService extends LifecycleService {
     public void republishMyOffers() {
         checkArgument(isActivated());
         muSigOfferService.republishMyOffers();
+    }
+
+    public void takeOffer(MuSigOffer offer) {
+
     }
 
     private void validateUserProfile(MuSigOffer muSigOffer) {

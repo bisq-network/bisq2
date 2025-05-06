@@ -50,19 +50,24 @@ public class MuSigOfferService implements Service {
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
-        republishMyOffers();
-        stopRepublishMyOffersScheduler();
-        republishMyOffersScheduler = Scheduler.run(this::republishMyOffers)
-                .host(this)
-                .runnableName("republishMyOffers")
-                .periodically(1, 60, TimeUnit.MINUTES);
+        return muSigOfferbookService.initialize()
+                .thenCompose(e -> myMuSigOffersService.initialize())
+                .whenComplete((result, throwable) -> {
+                    republishMyOffers();
+                    stopRepublishMyOffersScheduler();
+                    republishMyOffersScheduler = Scheduler.run(this::republishMyOffers)
+                            .host(this)
+                            .runnableName("republishMyOffers")
+                            .periodically(1, 60, TimeUnit.MINUTES);
+                });
 
-        return CompletableFuture.completedFuture(true);
+
     }
 
     public CompletableFuture<Boolean> shutdown() {
         stopRepublishMyOffersScheduler();
-        return CompletableFuture.completedFuture(true);
+        return muSigOfferbookService.shutdown()
+                .thenCompose(e -> myMuSigOffersService.shutdown());
     }
 
 
