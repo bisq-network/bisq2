@@ -17,7 +17,12 @@
 
 package bisq.desktop.main.content.mu_sig.offerbook;
 
+import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -35,4 +40,9 @@ public class MuSigOfferbookModel implements Model {
     private final ObservableList<MuSigOfferListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<MuSigOfferListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<MuSigOfferListItem> sortedList = new SortedList<>(filteredList);
+
+    private final ObservableList<Market> markets =  FXCollections.observableArrayList();
+    private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
+    private final StringProperty priceTableHeader = new SimpleStringProperty();
+    private final StringProperty quoteCurrencyTableHeader = new SimpleStringProperty();
 }

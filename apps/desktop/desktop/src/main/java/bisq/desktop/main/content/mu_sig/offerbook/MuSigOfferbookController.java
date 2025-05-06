@@ -18,18 +18,24 @@
 package bisq.desktop.main.content.mu_sig.offerbook;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.currency.Market;
+import bisq.common.currency.MarketRepository;
+import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.navigation.NavigationTarget;
+import bisq.i18n.Res;
 import bisq.mu_sig.MuSigService;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.settings.SettingsService;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Locale;
 import java.util.Optional;
 
 @Slf4j
@@ -40,13 +46,14 @@ public class MuSigOfferbookController implements Controller {
     private final MuSigService muSigService;
     private final MarketPriceService marketPriceService;
     private final UserProfileService userProfileService;
-    private final ServiceProvider serviceProvider;
+    private final SettingsService settingsService;
+    private Pin selectedMarketPin, offersPin;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
         muSigService = serviceProvider.getMuSigService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
-        this.serviceProvider = serviceProvider;
+        settingsService = serviceProvider.getSettingsService();
 
         model = new MuSigOfferbookModel();
         view = new MuSigOfferbookView(model, this);
@@ -54,7 +61,22 @@ public class MuSigOfferbookController implements Controller {
 
     @Override
     public void onActivate() {
-        muSigService.getObservableOffers().addObserver(new CollectionObserver<>() {
+        model.getMarkets().setAll(MarketRepository.getAllFiatMarkets());
+
+        selectedMarketPin = settingsService.getSelectedMarket().addObserver(market -> {
+            if (market != null) {
+                UIThread.run(() -> {
+                    model.getSelectedMarket().set(market);
+                    model.getPriceTableHeader().set(Res.get("muSig.offerbook.table.price", market.getMarketCodes()).toUpperCase(Locale.ROOT));
+                    model.getQuoteCurrencyTableHeader().set(Res.get("muSig.offerbook.table.quoteCurrencyAmount", market.getQuoteCurrencyCode()));
+                    model.getFilteredList().setPredicate(item ->
+                            item.getOffer().getMarket().equals(market)
+                    );
+                });
+            }
+        });
+
+        offersPin = muSigService.getObservableOffers().addObserver(new CollectionObserver<>() {
             @Override
             public void add(MuSigOffer muSigOffer) {
                 UIThread.run(() -> {
@@ -72,7 +94,7 @@ public class MuSigOfferbookController implements Controller {
                     UIThread.run(() -> {
                         String offerId = muSigOffer.getId();
                         Optional<MuSigOfferListItem> toRemove = model.getListItems().stream()
-                                .filter(e -> e.getOfferId().equals(offerId))
+                                .filter(e -> e.getDirection().equals(offerId))
                                 .findAny();
                         toRemove.ifPresent(offer -> {
                             model.getListItems().remove(offer);
@@ -94,6 +116,8 @@ public class MuSigOfferbookController implements Controller {
 
     @Override
     public void onDeactivate() {
+        selectedMarketPin.unbind();
+        offersPin.unbind();
         model.getListItems().forEach(MuSigOfferListItem::dispose);
         model.getListItems().clear();
         model.getOfferIds().clear();
@@ -101,40 +125,13 @@ public class MuSigOfferbookController implements Controller {
 
     void onCreateOffer() {
         Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER);
-        /*
-        Direction direction = Direction.BUY;
-        Market market = MarketRepository.getUSDBitcoinMarket();
-        AmountSpec amountSpec = new BaseSideFixedAmountSpec(500000 + new Random().nextInt(500000));
-        PriceSpec priceSpec = new MarketPriceSpec();
-        List<FiatPaymentMethod> fiatPaymentMethods = List.of(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ZELLE));
-        List<OfferOption> offerOptions = List.of();
-        MuSigOffer offer = muSigService.createAndGetMuSigOffer(direction,
-                market,
-                amountSpec,
-                priceSpec,
-                fiatPaymentMethods,
-                offerOptions);
-        muSigService.publishOffer(offer).whenComplete((result, throwable) -> {
-            if (throwable == null) {
-                log.error("Offer publishing. {}", result);
-                result.forEach(future -> {
-                    future.whenComplete((res, t) -> {
-                        if (t == null) {
-                            log.error("Offer published. result={}", res);
-                        } else {
-                            log.error("Offer publishing failed with", throwable);
-                        }
-                    });
-                });
-            } else {
-                log.error("Offer publishing failed", throwable);
-            }
-        });
-        */
-
     }
 
     void onTakeOffer(MuSigOffer offer) {
         muSigService.takeOffer(offer);
+    }
+
+    public void onSelectMarket(Market market) {
+        settingsService.setSelectedMarket(market);
     }
 }

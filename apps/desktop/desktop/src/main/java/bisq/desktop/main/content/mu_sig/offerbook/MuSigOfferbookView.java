@@ -17,53 +17,69 @@
 
 package bisq.desktop.main.content.mu_sig.offerbook;
 
+import bisq.common.currency.Market;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.RichTableView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
+import javafx.util.StringConverter;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 
 public class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, MuSigOfferbookController> {
     private final RichTableView<MuSigOfferListItem> richTableView;
     private final Button createOfferButton;
+    private final AutoCompleteComboBox<Market> marketSelection;
     private BisqTableColumn<MuSigOfferListItem> scoreColumn, valueColumn;
+    private BisqTableColumn<MuSigOfferListItem> priceColumn, quoteCurrencyAmountColumn;
+    private Subscription priceTableHeaderPin, quoteCurrencyTableHeaderPin;
 
     public MuSigOfferbookView(MuSigOfferbookModel model,
                               MuSigOfferbookController controller) {
-        super(new VBox(), model, controller);
+        super(new VBox(20), model, controller);
 
-        Label headlineLabel = new Label(Res.get("muSig.offerbook.headline.buy"));
-        headlineLabel.getStyleClass().add("bisq-text-3");
+       /* Label headlineLabel = new Label(Res.get("muSig.offerbook.headline.buy"));
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");*/
 
         createOfferButton = new Button(Res.get("muSig.offerbook.headline.buy"));
         createOfferButton.setDefaultButton(true);
 
-        HBox hBox = new HBox(headlineLabel, Spacer.fillHBox(), createOfferButton);
+        marketSelection = new AutoCompleteComboBox<>(model.getMarkets(), Res.get("muSig.offerbook.market.select"));
+        marketSelection.setPrefWidth(300);
+        marketSelection.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(Market market) {
+                return market != null ? market.getQuoteCurrencyDisplayName() : "";
+            }
+
+            @Override
+            public Market fromString(String string) {
+                return null;
+            }
+        });
+
+        HBox hBox = new HBox(marketSelection, Spacer.fillHBox(), createOfferButton);
         hBox.setAlignment(Pos.CENTER);
 
         richTableView = new RichTableView<>(model.getSortedList());
         configTableView();
 
-        VBox contentBox = new VBox(10);
-        contentBox.getStyleClass().add("bisq-common-bg");
         VBox.setVgrow(richTableView, Priority.ALWAYS);
-        contentBox.getChildren().addAll(hBox, richTableView);
-
-        VBox.setVgrow(contentBox, Priority.ALWAYS);
-        root.getChildren().addAll(contentBox);
-        root.setPadding(new Insets(-20, 20, 0, 20));
+        root.getChildren().addAll(hBox, richTableView);
+        root.setPadding(new Insets(0, 40, 0, 40));
     }
 
     @Override
@@ -71,31 +87,65 @@ public class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, MuSigOff
         richTableView.initialize();
         richTableView.resetSearch();
 
+        marketSelection.getSelectionModel().select(model.getSelectedMarket().get());
+        marketSelection.setOnChangeConfirmed(e -> {
+            if (marketSelection.getSelectionModel().getSelectedItem() == null) {
+                marketSelection.getSelectionModel().select(model.getSelectedMarket().get());
+                return;
+            }
+            controller.onSelectMarket(marketSelection.getSelectionModel().getSelectedItem());
+        });
+
+
         createOfferButton.setOnAction(e -> controller.onCreateOffer());
+        priceTableHeaderPin = EasyBind.subscribe(model.getPriceTableHeader(), title -> {
+            priceColumn.applyTitle(title);
+        });
+        quoteCurrencyTableHeaderPin = EasyBind.subscribe(model.getQuoteCurrencyTableHeader(), title -> {
+            quoteCurrencyAmountColumn.applyTitle(title);
+        });
+
+
+        marketSelection.setOnChangeConfirmed(null);
+        marketSelection.resetValidation();
     }
 
     @Override
     protected void onViewDetached() {
         richTableView.dispose();
+        priceTableHeaderPin.unsubscribe();
+        quoteCurrencyTableHeaderPin.unsubscribe();
+
+        marketSelection.setOnChangeConfirmed(null);
+        marketSelection.resetValidation();
+
+        createOfferButton.setOnAction(null);
     }
 
     private void configTableView() {
         richTableView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
-                .title(Res.get("muSig.offerbook.table.price", "EUR"))
+                .title(Res.get("muSig.offerbook.table.direction"))
                 .left()
-                .comparator(Comparator.comparing(MuSigOfferListItem::getPriceSpecAsString))
-                .valueSupplier(MuSigOfferListItem::getPriceSpecAsString)
+                .comparator(Comparator.comparing(MuSigOfferListItem::getDirection))
+                .valueSupplier(MuSigOfferListItem::getDirection)
                 .build());
+        priceColumn = new BisqTableColumn.Builder<MuSigOfferListItem>()
+                .comparator(Comparator.comparing(MuSigOfferListItem::getPrice))
+                .valueSupplier(MuSigOfferListItem::getPrice)
+                .tooltipSupplier(MuSigOfferListItem::getPriceTooltip)
+                .build();
+        richTableView.getColumns().add(priceColumn);
         richTableView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title(Res.get("muSig.offerbook.table.btcAmount"))
                 .comparator(Comparator.comparing(MuSigOfferListItem::getBaseAmountAsString))
                 .valueSupplier(MuSigOfferListItem::getBaseAmountAsString)
                 .build());
-        richTableView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
-                .title(Res.get("muSig.offerbook.table.otherAmount", "EUR"))
+        quoteCurrencyAmountColumn = new BisqTableColumn.Builder<MuSigOfferListItem>()
+                .title(Res.get("muSig.offerbook.table.quoteCurrencyAmount", "EUR"))
                 .comparator(Comparator.comparing(MuSigOfferListItem::getQuoteAmountAsString))
                 .valueSupplier(MuSigOfferListItem::getQuoteAmountAsString)
-                .build());
+                .build();
+        richTableView.getColumns().add(quoteCurrencyAmountColumn);
         richTableView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title(Res.get("muSig.offerbook.table.paymentMethod"))
                 .comparator(Comparator.comparing(MuSigOfferListItem::getPaymentMethod))

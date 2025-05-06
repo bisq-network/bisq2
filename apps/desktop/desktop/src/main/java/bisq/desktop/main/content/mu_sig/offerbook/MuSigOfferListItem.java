@@ -44,6 +44,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Locale;
+
 @Getter
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -52,8 +54,9 @@ public class MuSigOfferListItem {
     private final MuSigOffer offer;
     private final MarketPriceService marketPriceService;
 
-    private final String offerId;
-    private final String priceSpecAsString;
+    private final String direction;
+    private  String price;
+    private  String priceTooltip;
     private final String baseAmountAsString;
     private final String quoteAmountAsString;
     private final String paymentMethod;
@@ -69,7 +72,7 @@ public class MuSigOfferListItem {
         this.offer = offer;
         quoteCurrencyCode = offer.getMarket().getQuoteCurrencyCode();
 
-        offerId = offer.getId();
+        direction = offer.getDirection().getDisplayString().toUpperCase(Locale.ROOT);
         this.marketPriceService = marketPriceService;
         // ImageUtil.getImageViewById(fiatPaymentMethod.getName());
         paymentMethod = PaymentMethodSpecUtil.getPaymentMethods(offer.getQuoteSidePaymentMethodSpecs()).stream().findFirst()
@@ -86,7 +89,6 @@ public class MuSigOfferListItem {
         Market market = offer.getMarket();
         quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
         baseAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
-        priceSpecAsString = PriceSpecFormatter.getFormattedPriceSpec(priceSpec);
 
         Monetary quoteSideMinAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, offer).orElseThrow();
         String formattedRangeQuoteAmount = OfferAmountFormatter.formatQuoteAmount(marketPriceService, offer, false);
@@ -118,6 +120,10 @@ public class MuSigOfferListItem {
         priceSpecAsPercent = PriceUtil.findPercentFromMarketPrice(marketPriceService, offer).orElseThrow();
         formattedPercentagePrice = PercentageFormatter.formatToPercentWithSignAndSymbol(priceSpecAsPercent);
         String offerPrice = OfferPriceFormatter.formatQuote(marketPriceService, offer);
-        priceTooltipText = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(offer.getPriceSpec(), offerPrice);
+        priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(offer.getPriceSpec(), offerPrice);
+
+        PriceSpec priceSpec = offer.getPriceSpec();
+        price = PriceSpecFormatter.getFormattedPrice(priceSpec, marketPriceService);
+        priceTooltipText = PriceSpecFormatter.getFormattedPriceSpec(priceSpec);
     }
 }
