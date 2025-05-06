@@ -37,9 +37,9 @@ public class ReputationWebSocketService extends SimpleObservableWebSocketService
 
     public ReputationWebSocketService(ObjectMapper objectMapper,
                                       SubscriberRepository subscriberRepository,
-                                      ReputationService _reputationService) {
+                                      ReputationService reputationService) {
         super(objectMapper, subscriberRepository, Topic.USER_REPUTATION);
-        reputationService = _reputationService;
+        this.reputationService = reputationService;
     }
 
     @Override
@@ -49,13 +49,11 @@ public class ReputationWebSocketService extends SimpleObservableWebSocketService
 
     @Override
     protected Map<String, ReputationScoreDto> toPayload(Map<String, Long> observable) {
-        return getObservable()
+        return observable
                 .entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        entry -> DtoMappings.ReputationScoreMapping.fromBisq2Model(reputationService.getReputationScore(entry.getKey())),
-                        (existing, replacement) -> existing,
-                        HashMap::new
+                        entry -> DtoMappings.ReputationScoreMapping.fromBisq2Model(reputationService.getReputationScore(entry.getKey()))
                 ));
     }
 
