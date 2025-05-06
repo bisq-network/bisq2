@@ -210,7 +210,7 @@ public class I2PTransportService implements TransportService {
 
     @Override
     public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle) {
-        int port = networkId.getAddressByTransportTypeMap().get(TransportType.I2P).getPort();
+        int port = 1234; //hard coding the port for now
         initializeServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
         log.debug("Create serverSocket");
         try {

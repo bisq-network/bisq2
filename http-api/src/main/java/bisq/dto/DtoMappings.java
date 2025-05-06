@@ -84,6 +84,7 @@ import bisq.dto.offer.price.spec.FixPriceSpecDto;
 import bisq.dto.offer.price.spec.FloatPriceSpecDto;
 import bisq.dto.offer.price.spec.MarketPriceSpecDto;
 import bisq.dto.offer.price.spec.PriceSpecDto;
+import bisq.dto.security.keys.I2pKeyPairDto;
 import bisq.dto.security.keys.KeyBundleDto;
 import bisq.dto.security.keys.KeyPairDto;
 import bisq.dto.security.keys.PrivateKeyDto;
@@ -1068,8 +1069,8 @@ public class DtoMappings {
             return new KeyBundle(
                     value.keyId(),
                     KeyPairMapping.toBisq2Model(value.keyPair()),
-                    TorKeyPairMapping.toBisq2Model(value.torKeyPair()
-                    ), I2pKeyPairMapping.toBisq2Model(value.i2pKeyPair()));
+                    TorKeyPairMapping.toBisq2Model(value.torKeyPair()),
+                    I2pKeyPairMapping.toBisq2Model(value.i2pKeyPair()));
         }
 
         public static KeyBundleDto fromBisq2Model(KeyBundle value) {

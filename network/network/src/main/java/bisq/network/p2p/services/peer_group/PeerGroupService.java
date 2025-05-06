@@ -243,7 +243,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     }
 
     public boolean isNotBanned(Address address) {
-        return banList.isNotBanned(address);
+        return true;
     }
 
     public int getMinNumReportedPeers() {
