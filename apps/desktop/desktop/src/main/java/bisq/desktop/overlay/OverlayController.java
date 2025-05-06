@@ -17,6 +17,7 @@
 
 package bisq.desktop.overlay;
 
+import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
@@ -137,6 +138,9 @@ public class OverlayController extends NavigationController {
             case BISQ_EASY_TAKE_OFFER -> Optional.of(new TakeOfferController(serviceProvider));
             case BISQ_EASY_VIDEO -> Optional.of(new BisqEasyVideoController(serviceProvider));
             case BISQ_EASY_GUIDE -> Optional.of(new BisqEasyGuideController(serviceProvider));
+
+            case MU_SIG_CREATE_OFFER -> Optional.of(new MuSigCreateOfferController(serviceProvider));
+
             case WALLET_GUIDE -> Optional.of(new WalletGuideController(serviceProvider));
             case BISQ_EASY_TRADE_DETAILS -> Optional.of(new TradeDetailsController(serviceProvider));
             case MEDIATION_CASE_DETAILS -> Optional.of(new MediationCaseDetailsController(serviceProvider));
