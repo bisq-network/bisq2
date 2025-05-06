@@ -17,7 +17,7 @@
 
 package bisq.desktop.common.view;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Styles;
 import bisq.desktop.common.Transitions;
@@ -244,7 +244,7 @@ public class TabButton extends Pane implements Toggle {
         double rightX = numMessagesBadge.getWidth() + 8;
         double end = animateIn ? rightX : 0;
         double opacityEnd = animateIn ? 1 : 0;
-        if (Transitions.getUseAnimations()) {
+        if (Transitions.useAnimations()) {
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             double start = animateIn ? 0 : rightX;
             double opacityStart = animateIn ? 0 : 1;

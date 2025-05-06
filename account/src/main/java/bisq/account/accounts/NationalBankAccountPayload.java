@@ -14,9 +14,9 @@ import static bisq.common.util.OptionalUtils.toOptional;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class NationalBankAccountPayload extends BankAccountPayload {
+public final class NationalBankAccountPayload extends BankAccountPayload {
 
-    protected NationalBankAccountPayload(String id,
+    public NationalBankAccountPayload(String id,
                                          String paymentMethodName,
                                          String countryCode,
                                          Optional<String> holderName,

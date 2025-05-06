@@ -20,8 +20,7 @@ package bisq.contract;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.bisq_easy.BisqEasyContract;
-import bisq.contract.bisq_musig.BisqMuSigContract;
-import bisq.contract.submarine.SubmarineContract;
+import bisq.contract.mu_sig.MuSigContract;
 import bisq.offer.Offer;
 import lombok.Getter;
 import lombok.ToString;
@@ -47,8 +46,7 @@ public abstract class TwoPartyContract<T extends Offer<?, ?>> extends Contract<T
     public static TwoPartyContract<?> fromProto(bisq.contract.protobuf.Contract proto) {
         return switch (proto.getTwoPartyContract().getMessageCase()) {
             case BISQEASYCONTRACT -> BisqEasyContract.fromProto(proto);
-            case BISQMUSIGCONTRACT -> BisqMuSigContract.fromProto(proto);
-            case SUBMARINECONTRACT -> SubmarineContract.fromProto(proto);
+            case MUSIGCONTRACT -> MuSigContract.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

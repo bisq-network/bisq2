@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.authorized_role.moderator;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.chat.ChatChannelDomain;
 import bisq.common.observable.Pin;
@@ -30,7 +30,9 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.components.overlay.TextInputDialog;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.DateColumnUtil;
 import bisq.desktop.components.table.DateTableItem;
@@ -122,7 +124,16 @@ public class ReportToModeratorTable {
         }
 
         void onBan(ReportToModeratorMessage message) {
-            moderatorService.banReportedUser(message);
+            int maxLength = 1000;
+            new TextInputDialog(Res.get("authorizedRole.moderator.banDialog.headline"))
+                    .promptText(Res.get("authorizedRole.moderator.banDialog.reason.prompt"))
+                    .description(Res.get("authorizedRole.moderator.banDialog.description"))
+                    .helpText(Res.get("authorizedRole.moderator.banDialog.helpText"))
+                    .onResult(banReason -> moderatorService.banReportedUser(message, banReason))
+                    .validator(new TextMaxLengthValidator(maxLength, Res.get("validation.tooLong", maxLength)))
+                    .actionButtonText(Res.get("authorizedRole.moderator.banDialog.action.ban"))
+                    .width(800)
+                    .show();
         }
 
         void onDeleteMessage(ReportToModeratorMessage message) {
@@ -322,12 +333,11 @@ public class ReportToModeratorTable {
                         tooltip.setText(item.getMessage());
                         message.setTooltip(tooltip);
 
-                       // icon.setOnAction(e -> ClipboardUtil.copyToClipboard(item.getMessage()));
                         icon.setOnAction(e -> new Popup()
                                 .headline(Res.get("authorizedRole.moderator.table.message.popup.headline"))
                                 .information(item.getMessage())
                                 .actionButtonText(Res.get("action.copyToClipboard"))
-                                .onAction(()-> ClipboardUtil.copyToClipboard(item.getMessage()))
+                                .onAction(() -> ClipboardUtil.copyToClipboard(item.getMessage()))
                                 .show());
                         setGraphic(hBox);
                     } else {

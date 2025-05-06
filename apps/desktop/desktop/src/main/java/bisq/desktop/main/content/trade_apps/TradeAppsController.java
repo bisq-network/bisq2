@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.trade_apps;
 
 import bisq.account.protocol_type.TradeProtocolType;
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
@@ -54,7 +54,7 @@ public class TradeAppsController extends ContentTabController<TradeAppsModel> {
             case TRADE_PROTOCOLS_OVERVIEW -> Optional.of(new TradeOverviewController(serviceProvider));
             case BISQ_EASY_INFO -> Optional.of(new ProtocolRoadmapController(TradeProtocolType.BISQ_EASY,
                     "https://bisq.wiki/Trade_Protocols#Bisq_Easy"));
-            case BISQ_MU_SIG -> Optional.of(new ProtocolRoadmapController(TradeProtocolType.BISQ_MU_SIG,
+            case MU_SIG_PROTOCOL -> Optional.of(new ProtocolRoadmapController(TradeProtocolType.MU_SIG,
                     "https://bisq.wiki/Trade_Protocols#Bisq_MuSig"));
             case SUBMARINE -> Optional.of(new ProtocolRoadmapController(TradeProtocolType.SUBMARINE,
                     "https://bisq.wiki/Trade_Protocols#Submarine_Swaps"));

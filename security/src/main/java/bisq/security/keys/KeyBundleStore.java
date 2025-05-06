@@ -22,6 +22,9 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.StringUtils;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -30,17 +33,16 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-public final class KeyBundleStore implements PersistableStore<KeyBundleStore> {
+final class KeyBundleStore implements PersistableStore<KeyBundleStore> {
     // Secret uid used for deriving keyIds
     // As the keyID is public in the mailbox message we do not want to leak any information of the user identity
     // to the network.
     // Once we have persisted the stores we use the secretUid from the persisted data
+    @Getter(AccessLevel.PACKAGE)
     private String secretUid = StringUtils.createUid();
     private final Map<String, KeyBundle> keyBundleById = new ConcurrentHashMap<>();
-
-    public KeyBundleStore() {
-    }
 
     private KeyBundleStore(String secretUid,
                            Map<String, KeyBundle> keyBundleById) {
@@ -92,21 +94,17 @@ public final class KeyBundleStore implements PersistableStore<KeyBundleStore> {
         keyBundleById.putAll(persisted.keyBundleById);
     }
 
-    public Optional<KeyBundle> findKeyBundle(String keyId) {
+    Optional<KeyBundle> findKeyBundle(String keyId) {
         synchronized (keyBundleById) {
             return Optional.ofNullable(keyBundleById.get(keyId));
         }
     }
 
-    public void putKeyBundle(String keyId, KeyBundle keyBundle) {
+    void putKeyBundle(String keyId, KeyBundle keyBundle) {
         synchronized (keyBundleById) {
             if (keyBundleById.put(keyId, keyBundle) != null) {
                 log.warn("We had already an entry for key ID {}", keyId);
             }
         }
-    }
-
-    String getSecretUid() {
-        return secretUid;
     }
 }

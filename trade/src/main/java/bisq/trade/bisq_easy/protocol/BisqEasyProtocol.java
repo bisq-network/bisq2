@@ -27,10 +27,10 @@ import bisq.trade.protocol.TradeProtocol;
 import java.lang.reflect.InvocationTargetException;
 
 public abstract class BisqEasyProtocol extends TradeProtocol<BisqEasyTrade> {
-    private static final String version = "1.0.0";
+    public static final String VERSION = "1.0.0";
 
     public BisqEasyProtocol(ServiceProvider serviceProvider, BisqEasyTrade model) {
-        super(version, serviceProvider, model);
+        super(VERSION, serviceProvider, model);
     }
 
     @Override

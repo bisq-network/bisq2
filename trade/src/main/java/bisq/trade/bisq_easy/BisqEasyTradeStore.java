@@ -22,7 +22,9 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
@@ -31,17 +33,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Getter(AccessLevel.PACKAGE)
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
 final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
-    @Getter
     private final ObservableSet<BisqEasyTrade> trades = new ObservableSet<>();
 
     // We keep track of all trades by storing the trade IDs to avoid that the same trade can be taken again.
-    @Getter
     private final ObservableSet<String> tradeIds = new ObservableSet<>();
-
-    BisqEasyTradeStore() {
-    }
 
     private BisqEasyTradeStore(Set<BisqEasyTrade> trades, Set<String> tradeIds) {
         this.trades.setAll(trades);

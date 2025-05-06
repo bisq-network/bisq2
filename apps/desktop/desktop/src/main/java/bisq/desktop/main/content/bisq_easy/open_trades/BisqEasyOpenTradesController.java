@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
@@ -292,11 +292,6 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
             if (findListItem(trade).isPresent()) {
                 log.debug("We got called handleTradeAndChannelAdded but we have that trade list item already. " +
                         "This is expected as we get called both when a trade is added and the associated channel.");
-                return;
-            }
-            if (trade.getContract() == null) {
-                // TODO should we throw an exception?
-                log.error("Contract is null for trade {}", trade);
                 return;
             }
 

@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.take_offer;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
@@ -71,7 +71,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     private Subscription takersBaseSideAmountPin, takersQuoteSideAmountPin, selectedBitcoinPaymentMethodSpecPin, selectedFiatPaymentMethodSpecPin;
 
     public TakeOfferController(ServiceProvider serviceProvider) {
-        super(NavigationTarget.TAKE_OFFER);
+        super(NavigationTarget.BISQ_EASY_TAKE_OFFER);
 
         overlayController = OverlayController.getInstance();
 
@@ -102,17 +102,17 @@ public class TakeOfferController extends NavigationController implements InitWit
 
         model.getChildTargets().clear();
         if (model.isAmountVisible()) {
-            model.getChildTargets().add(NavigationTarget.TAKE_OFFER_AMOUNT);
+            model.getChildTargets().add(NavigationTarget.BISQ_EASY_TAKE_OFFER_AMOUNT);
         }
         if (model.isPaymentMethodVisible()) {
-            model.getChildTargets().add(NavigationTarget.TAKE_OFFER_PAYMENT);
+            model.getChildTargets().add(NavigationTarget.BISQ_EASY_TAKE_OFFER_PAYMENT);
         } else {
             checkArgument(baseSidePaymentMethodSpecs.size() == 1);
             checkArgument(quoteSidePaymentMethodSpecs.size() == 1);
             takeOfferReviewController.setBitcoinPaymentMethodSpec(baseSidePaymentMethodSpecs.get(0));
             takeOfferReviewController.setFiatPaymentMethodSpec(quoteSidePaymentMethodSpecs.get(0));
         }
-        model.getChildTargets().add(NavigationTarget.TAKE_OFFER_REVIEW);
+        model.getChildTargets().add(NavigationTarget.BISQ_EASY_TAKE_OFFER_REVIEW);
     }
 
     @Override
@@ -147,7 +147,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     @Override
     protected void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
         model.getCloseButtonVisible().set(true);
-        boolean isTakeOfferReview = navigationTarget == NavigationTarget.TAKE_OFFER_REVIEW;
+        boolean isTakeOfferReview = navigationTarget == NavigationTarget.BISQ_EASY_TAKE_OFFER_REVIEW;
         model.getNextButtonText().set(isTakeOfferReview ?
                 Res.get("bisqEasy.takeOffer.review.takeOffer") :
                 Res.get("action.next"));
@@ -161,21 +161,21 @@ public class TakeOfferController extends NavigationController implements InitWit
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case TAKE_OFFER_AMOUNT -> {
+            case BISQ_EASY_TAKE_OFFER_AMOUNT -> {
                 if (!model.isAmountVisible()) {
-                    Navigation.navigateTo(NavigationTarget.TAKE_OFFER_PAYMENT);
+                    Navigation.navigateTo(NavigationTarget.BISQ_EASY_TAKE_OFFER_PAYMENT);
                     yield Optional.empty();
                 }
                 yield Optional.of(takeOfferAmountController);
             }
-            case TAKE_OFFER_PAYMENT -> {
+            case BISQ_EASY_TAKE_OFFER_PAYMENT -> {
                 if (!model.isPaymentMethodVisible()) {
-                    Navigation.navigateTo(NavigationTarget.TAKE_OFFER_REVIEW);
+                    Navigation.navigateTo(NavigationTarget.BISQ_EASY_TAKE_OFFER_REVIEW);
                     yield Optional.empty();
                 }
                 yield Optional.of(takeOfferPaymentController);
             }
-            case TAKE_OFFER_REVIEW -> Optional.of(takeOfferReviewController);
+            case BISQ_EASY_TAKE_OFFER_REVIEW -> Optional.of(takeOfferReviewController);
             default -> Optional.empty();
         };
     }
@@ -183,7 +183,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     void onNext() {
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
-            if (model.getSelectedChildTarget().get() == NavigationTarget.TAKE_OFFER_PAYMENT) {
+            if (model.getSelectedChildTarget().get() == NavigationTarget.BISQ_EASY_TAKE_OFFER_PAYMENT) {
                 if (!takeOfferPaymentController.isValid()) {
                     takeOfferPaymentController.handleInvalidInput();
                     return;
@@ -227,14 +227,14 @@ public class TakeOfferController extends NavigationController implements InitWit
         KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onNext);
     }
 
-    private void closeAndNavigateTo(NavigationTarget NavigationTarget) {
-        OverlayController.hide(() -> Navigation.navigateTo(NavigationTarget));
+    private void closeAndNavigateTo(NavigationTarget navigationTarget) {
+        OverlayController.hide(() -> Navigation.navigateTo(navigationTarget));
     }
 
     private void setMainButtonsVisibleState(boolean value) {
         NavigationTarget navigationTarget = model.getNavigationTarget();
         model.getBackButtonVisible().set(value && model.getChildTargets().indexOf(navigationTarget) > 0);
-        model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.TAKE_OFFER_REVIEW);
+        model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.BISQ_EASY_TAKE_OFFER_REVIEW);
         model.getCloseButtonVisible().set(value);
     }
 }
