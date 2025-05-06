@@ -17,30 +17,20 @@
 
 package bisq.desktop.main.content.mu_sig.offerbook;
 
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentRail;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.currency.Market;
-import bisq.common.currency.MarketRepository;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.mu_sig.MuSigService;
-import bisq.offer.Direction;
-import bisq.offer.amount.spec.AmountSpec;
-import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.offer.options.OfferOption;
-import bisq.offer.price.spec.MarketPriceSpec;
-import bisq.offer.price.spec.PriceSpec;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 
 @Slf4j
 public class MuSigOfferbookController implements Controller {
@@ -50,11 +40,13 @@ public class MuSigOfferbookController implements Controller {
     private final MuSigService muSigService;
     private final MarketPriceService marketPriceService;
     private final UserProfileService userProfileService;
+    private final ServiceProvider serviceProvider;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
         muSigService = serviceProvider.getMuSigService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
+        this.serviceProvider = serviceProvider;
 
         model = new MuSigOfferbookModel();
         view = new MuSigOfferbookView(model, this);
@@ -108,6 +100,8 @@ public class MuSigOfferbookController implements Controller {
     }
 
     void onCreateOffer() {
+        Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER);
+        /*
         Direction direction = Direction.BUY;
         Market market = MarketRepository.getUSDBitcoinMarket();
         AmountSpec amountSpec = new BaseSideFixedAmountSpec(500000 + new Random().nextInt(500000));
@@ -136,6 +130,8 @@ public class MuSigOfferbookController implements Controller {
                 log.error("Offer publishing failed", throwable);
             }
         });
+        */
+
     }
 
     void onTakeOffer(MuSigOffer offer) {

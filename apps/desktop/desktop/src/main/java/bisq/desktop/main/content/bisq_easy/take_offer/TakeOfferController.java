@@ -227,8 +227,8 @@ public class TakeOfferController extends NavigationController implements InitWit
         KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onNext);
     }
 
-    private void closeAndNavigateTo(NavigationTarget NavigationTarget) {
-        OverlayController.hide(() -> Navigation.navigateTo(NavigationTarget));
+    private void closeAndNavigateTo(NavigationTarget navigationTarget) {
+        OverlayController.hide(() -> Navigation.navigateTo(navigationTarget));
     }
 
     private void setMainButtonsVisibleState(boolean value) {
