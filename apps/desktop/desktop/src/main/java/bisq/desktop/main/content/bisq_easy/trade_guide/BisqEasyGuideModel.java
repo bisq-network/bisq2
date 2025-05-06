@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_guide;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.view.TabModel;
 import lombok.Getter;
 import lombok.Setter;

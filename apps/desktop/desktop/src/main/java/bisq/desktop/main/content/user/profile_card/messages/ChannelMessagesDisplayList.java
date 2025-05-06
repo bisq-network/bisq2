@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.profile_card.messages;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
 import bisq.chat.ChatService;

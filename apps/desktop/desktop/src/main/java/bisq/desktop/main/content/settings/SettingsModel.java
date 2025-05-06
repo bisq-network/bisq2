@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.settings;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.main.content.ContentTabModel;
 
 public class SettingsModel extends ContentTabModel {

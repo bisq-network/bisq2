@@ -1,6 +1,6 @@
 package bisq.desktop.main.left;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.common.data.Pair;
 import bisq.common.data.Triple;
 import bisq.common.network.TransportType;
