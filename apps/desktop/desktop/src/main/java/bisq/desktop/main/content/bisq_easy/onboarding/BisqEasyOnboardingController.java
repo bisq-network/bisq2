@@ -59,7 +59,7 @@ public class BisqEasyOnboardingController implements Controller {
     }
 
     void onOpenTradeWizard() {
-        Navigation.navigateTo(NavigationTarget.TRADE_WIZARD, new TradeWizardController.InitData(false));
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_WIZARD, new TradeWizardController.InitData(false));
     }
 
     void onOpenTradeGuide() {

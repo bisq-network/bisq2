@@ -133,8 +133,8 @@ public class OverlayController extends NavigationController {
             case TAC -> Optional.of(new TacController(serviceProvider));
             case UPDATER -> Optional.of(new UpdaterController(serviceProvider));
             case ONBOARDING -> Optional.of(new OnboardingController(serviceProvider));
-            case TRADE_WIZARD -> Optional.of(new TradeWizardController(serviceProvider));
-            case TAKE_OFFER -> Optional.of(new TakeOfferController(serviceProvider));
+            case BISQ_EASY_TRADE_WIZARD -> Optional.of(new TradeWizardController(serviceProvider));
+            case BISQ_EASY_TAKE_OFFER -> Optional.of(new TakeOfferController(serviceProvider));
             case BISQ_EASY_VIDEO -> Optional.of(new BisqEasyVideoController(serviceProvider));
             case BISQ_EASY_GUIDE -> Optional.of(new BisqEasyGuideController(serviceProvider));
             case WALLET_GUIDE -> Optional.of(new WalletGuideController(serviceProvider));
