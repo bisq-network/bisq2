@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 import static bisq.common.platform.PlatformUtils.EXIT_FAILURE;
+import java.util.Arrays;
 
 @Slf4j
 public class DesktopExecutable extends Executable<DesktopApplicationService> {

@@ -154,7 +154,8 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
         supportService = new SupportService(SupportService.Config.from(getConfig("support")),
                 persistenceService, networkService, chatService, userService, bondedRolesService);
 
-        tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
+        TradeService.Config tradeConfig = TradeService.Config.from(getConfig("trade"));
+        tradeService = new TradeService(tradeConfig, networkService, identityService, persistenceService, offerService,
                 contractService, supportService, chatService, bondedRolesService, userService, settingsService);
 
         bisqEasyService = new BisqEasyService(persistenceService,

@@ -126,8 +126,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 break;*/
             case NONE:
             default:
-                // walletService = Optional.empty();
-                walletService = Optional.of(new MockWalletService());
+                walletService = Optional.empty();
                 break;
         }
 
