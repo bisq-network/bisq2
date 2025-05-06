@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.authorized_role.mediator.details;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.main.content.authorized_role.mediator.MediationCaseListItem;
 import lombok.Getter;

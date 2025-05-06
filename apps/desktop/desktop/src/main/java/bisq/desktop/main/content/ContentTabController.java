@@ -18,7 +18,7 @@
 package bisq.desktop.main.content;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;

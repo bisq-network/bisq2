@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bisq_easy;
+package bisq.desktop.navigation;
 
 import lombok.Getter;
 

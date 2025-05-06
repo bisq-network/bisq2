@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bisq_easy;
+package bisq.desktop.navigation;
 
 import bisq.chat.ChatChannelDomain;
 
@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-public class ChatChannelDomainNavigationTargetMapper {
+public class NavigationUtil {
 
     public static Optional<NavigationTarget> fromChatChannelDomain(ChatChannelDomain chatChannelDomain) {
         return switch (chatChannelDomain) {
