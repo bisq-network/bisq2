@@ -330,7 +330,7 @@ public class MuSigCreateOfferReviewController implements Controller {
     }
 
     void onShowOfferbook() {
-        closeAndNavigateToHandler.accept(NavigationTarget.MU_SIG_OFFERBOOK);
+        closeAndNavigateToHandler.accept(NavigationTarget.MU_SIG_OFFERBOOK_BUY);
     }
 
     void onSelectBitcoinPaymentMethod(BitcoinPaymentMethod paymentMethod) {

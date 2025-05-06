@@ -15,28 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.onboarding;
+package bisq.desktop.main.content.mu_sig.market.payment_methods;
 
 import bisq.desktop.common.view.View;
-import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MuSigOnboardingView extends View<VBox, MuSigOnboardingModel, MuSigOnboardingController> {
-    public MuSigOnboardingView(MuSigOnboardingModel model, MuSigOnboardingController controller) {
+public class MuSigMarketByPaymentMethodView extends View<VBox, MuSigMarketByPaymentMethodModel, MuSigMarketByPaymentMethodController> {
+
+    public MuSigMarketByPaymentMethodView(MuSigMarketByPaymentMethodModel model,
+                                          MuSigMarketByPaymentMethodController controller) {
         super(new VBox(), model, controller);
 
-        Label headlineLabel = new Label(Res.get("muSig.onboarding.top.headline"));
-        headlineLabel.getStyleClass().addAll("font-light", "font-size-25", "text-color-light");
-
-        VBox contentBox = new VBox(20);
-        contentBox.getChildren().add(headlineLabel);
-        contentBox.getStyleClass().add("bisq-common-bg");
-        root.getChildren().addAll(contentBox);
-        root.setPadding(new Insets(0, 40, 20, 40));
+        root.getChildren().add(new Label(this.getClass().getSimpleName()));
+        root.getStyleClass().add("offerbook-container");
+        root.setPadding(new Insets(20, 20, 500, 20));
     }
 
     @Override

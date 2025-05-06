@@ -29,6 +29,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.mu_sig.MuSigService;
+import bisq.offer.Direction;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.settings.SettingsService;
 import bisq.user.profile.UserProfileService;
@@ -39,25 +40,29 @@ import java.util.Locale;
 import java.util.Optional;
 
 @Slf4j
-public class MuSigOfferbookController implements Controller {
+public abstract class MuSigOfferbookController<M extends MuSigOfferbookModel, V extends MuSigOfferbookView<?, ?>> implements Controller {
     @Getter
-    private final MuSigOfferbookView view;
-    private final MuSigOfferbookModel model;
-    private final MuSigService muSigService;
-    private final MarketPriceService marketPriceService;
-    private final UserProfileService userProfileService;
-    private final SettingsService settingsService;
-    private Pin selectedMarketPin, offersPin;
+    protected final V view;
+    protected final M model;
+    protected final MuSigService muSigService;
+    protected final MarketPriceService marketPriceService;
+    protected final UserProfileService userProfileService;
+    protected final SettingsService settingsService;
+    protected Pin selectedMarketPin, offersPin;
 
-    public MuSigOfferbookController(ServiceProvider serviceProvider) {
+    public MuSigOfferbookController(ServiceProvider serviceProvider, Direction direction) {
         muSigService = serviceProvider.getMuSigService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         settingsService = serviceProvider.getSettingsService();
 
-        model = new MuSigOfferbookModel();
-        view = new MuSigOfferbookView(model, this);
+        model = createAndGetModel(direction);
+        view = createAndGetView();
     }
+
+    protected abstract V createAndGetView();
+
+    protected abstract M createAndGetModel(Direction direction);
 
     @Override
     public void onActivate() {
@@ -68,10 +73,19 @@ public class MuSigOfferbookController implements Controller {
                 UIThread.run(() -> {
                     model.getSelectedMarket().set(market);
                     model.getPriceTableHeader().set(Res.get("muSig.offerbook.table.price", market.getMarketCodes()).toUpperCase(Locale.ROOT));
-                    model.getQuoteCurrencyTableHeader().set(Res.get("muSig.offerbook.table.quoteCurrencyAmount", market.getQuoteCurrencyCode()));
-                    model.getFilteredList().setPredicate(item ->
-                            item.getOffer().getMarket().equals(market)
-                    );
+                    String baseCurrencyCode = market.getBaseCurrencyCode();
+                    String quoteCurrencyCode = market.getQuoteCurrencyCode();
+
+                    if(model.getTakersDirection().isBuy()){
+                        model.getAmountToReceive().set(Res.get("muSig.offerbook.table.amountToReceive", baseCurrencyCode).toUpperCase(Locale.ROOT));
+                        model.getAmountToSend().set(Res.get("muSig.offerbook.table.amountToPay", quoteCurrencyCode).toUpperCase(Locale.ROOT));
+                    }else{
+                        model.getAmountToReceive().set(Res.get("muSig.offerbook.table.amountToReceive", quoteCurrencyCode).toUpperCase(Locale.ROOT));
+                        model.getAmountToSend().set(Res.get("muSig.offerbook.table.amountToSend", baseCurrencyCode).toUpperCase(Locale.ROOT));
+                    }
+
+
+                    updatePredicate();
                 });
             }
         });
@@ -94,7 +108,7 @@ public class MuSigOfferbookController implements Controller {
                     UIThread.run(() -> {
                         String offerId = muSigOffer.getId();
                         Optional<MuSigOfferListItem> toRemove = model.getListItems().stream()
-                                .filter(e -> e.getDirection().equals(offerId))
+                                .filter(item -> item.getOffer().getId().equals(offerId))
                                 .findAny();
                         toRemove.ifPresent(offer -> {
                             model.getListItems().remove(offer);
@@ -112,6 +126,14 @@ public class MuSigOfferbookController implements Controller {
                 });
             }
         });
+    }
+
+    private void updatePredicate() {
+        Market market = model.getSelectedMarket().get();
+        model.getFilteredList().setPredicate(item ->
+                item.getOffer().getDirection() == model.getTakersDirection().mirror() &&
+                        item.getOffer().getMarket().equals(market)
+        );
     }
 
     @Override

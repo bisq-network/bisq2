@@ -15,16 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig;
+package bisq.desktop.main.content.mu_sig.market.payment_methods;
 
-import bisq.desktop.navigation.NavigationTarget;
-import bisq.desktop.main.content.ContentTabModel;
+import bisq.desktop.common.view.Model;
 import lombok.Getter;
 
 @Getter
-public class MuSigModel extends ContentTabModel {
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.MU_SIG_OFFERBOOK_BUY;
-    }
+public class MuSigMarketByPaymentMethodModel implements Model {
 }
