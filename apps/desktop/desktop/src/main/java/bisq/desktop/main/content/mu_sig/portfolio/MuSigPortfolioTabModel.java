@@ -15,16 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig;
+package bisq.desktop.main.content.mu_sig.portfolio;
 
+import bisq.desktop.main.content.mu_sig.offerbook.MuSigLevel2TabModel;
 import bisq.desktop.navigation.NavigationTarget;
-import bisq.desktop.main.content.ContentTabModel;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
-public class MuSigModel extends ContentTabModel {
+public class MuSigPortfolioTabModel extends MuSigLevel2TabModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.MU_SIG_OFFERBOOK_BUY;
+        return NavigationTarget.MU_SIG_OPEN_OFFERS;
     }
 }

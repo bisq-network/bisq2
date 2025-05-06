@@ -15,16 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig;
+package bisq.desktop.main.content.mu_sig.offerbook.btc;
 
-import bisq.desktop.navigation.NavigationTarget;
-import bisq.desktop.main.content.ContentTabModel;
-import lombok.Getter;
+import bisq.desktop.main.content.mu_sig.offerbook.MuSigOfferbookView;
 
-@Getter
-public class MuSigModel extends ContentTabModel {
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.MU_SIG_OFFERBOOK_BUY;
+public class MuSigOfferbookBtcView extends MuSigOfferbookView<MuSigOfferbookBtcModel, MuSigOfferbookBtcController> {
+
+    public MuSigOfferbookBtcView(MuSigOfferbookBtcModel model, MuSigOfferbookBtcController controller) {
+        super(model, controller);
     }
 }

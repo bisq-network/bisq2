@@ -17,9 +17,14 @@
 
 package bisq.offer.price.spec;
 
+import bisq.bonded_roles.market_price.MarketPrice;
+import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.currency.Market;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
+
+import java.util.Optional;
 
 public class PriceSpecFormatter {
     public static String getFormattedPriceSpec(PriceSpec priceSpec) {
@@ -34,15 +39,41 @@ public class PriceSpecFormatter {
         } else if (priceSpec instanceof FloatPriceSpec floatPriceSpec) {
             String percent = PercentageFormatter.formatToPercentWithSymbol(Math.abs(floatPriceSpec.getPercentage()));
             priceInfo = Res.get(floatPriceSpec.getPercentage() >= 0
-                    ? abbreviated
-                        ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.plus"
-                        : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.above"
-                    : abbreviated
-                        ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.minus"
-                        : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.below"
+                            ? abbreviated
+                            ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.plus"
+                            : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.above"
+                            : abbreviated
+                            ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.minus"
+                            : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.below"
                     , percent);
         } else {
             priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.marketPrice");
+        }
+        return priceInfo;
+    }
+
+    public static String getFormattedPrice(PriceSpec priceSpec, MarketPriceService marketPriceService) {
+        String priceInfo = Res.get("data.na");
+        if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
+            priceInfo = PriceFormatter.format(fixPriceSpec.getPriceQuote());
+        } else {
+            Market selectedMarket = marketPriceService.getSelectedMarket().get();
+            if (selectedMarket != null) {
+                //  marketPrice.getMarket().getMarketCodes();
+                Optional<MarketPrice> marketPriceOptional = marketPriceService.findMarketPrice(selectedMarket);
+                String marketPriceString = marketPriceOptional
+                        .map(marketPrice -> PriceFormatter.format(marketPrice.getPriceQuote(), true))
+                        .orElse(Res.get("data.na"));
+                if (priceSpec instanceof FloatPriceSpec floatPriceSpec) {
+                    String percent = PercentageFormatter.formatToPercentWithSymbol(Math.abs(floatPriceSpec.getPercentage()));
+                    priceInfo = marketPriceString + " (" + Res.get(floatPriceSpec.getPercentage() >= 0
+                                    ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.plus"
+                                    : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.minus",
+                            percent) + ")";
+                } else {
+                    priceInfo = marketPriceString;
+                }
+            }
         }
         return priceInfo;
     }
@@ -55,8 +86,8 @@ public class PriceSpecFormatter {
         if (priceSpec instanceof FloatPriceSpec floatPriceSpec) {
             String percent = PercentageFormatter.formatToPercentWithSymbol(Math.abs(floatPriceSpec.getPercentage()));
             return Res.get(floatPriceSpec.getPercentage() >= 0
-                    ? "priceSpecFormatter.floatPrice.above"
-                    : "priceSpecFormatter.floatPrice.below",
+                            ? "priceSpecFormatter.floatPrice.above"
+                            : "priceSpecFormatter.floatPrice.below",
                     percent,
                     offerPrice);
         }

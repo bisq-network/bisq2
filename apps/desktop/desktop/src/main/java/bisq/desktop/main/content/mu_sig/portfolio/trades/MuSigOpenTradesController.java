@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.onboarding;
+package bisq.desktop.main.content.mu_sig.portfolio.trades;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -23,14 +23,14 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MuSigOnboardingController implements Controller {
+public class MuSigOpenTradesController implements Controller {
     @Getter
-    private final MuSigOnboardingView view;
-    private final MuSigOnboardingModel model;
+    private final MuSigOpenTradesView view;
+    private final MuSigOpenTradesModel model;
 
-    public MuSigOnboardingController(ServiceProvider serviceProvider) {
-        model = new MuSigOnboardingModel();
-        view = new MuSigOnboardingView(model, this);
+    public MuSigOpenTradesController(ServiceProvider serviceProvider) {
+        model = new MuSigOpenTradesModel();
+        view = new MuSigOpenTradesView(model, this);
     }
 
     @Override

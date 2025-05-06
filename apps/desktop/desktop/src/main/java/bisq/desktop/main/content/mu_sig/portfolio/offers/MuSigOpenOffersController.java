@@ -15,16 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig;
+package bisq.desktop.main.content.mu_sig.portfolio.offers;
 
-import bisq.desktop.navigation.NavigationTarget;
-import bisq.desktop.main.content.ContentTabModel;
+import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.view.Controller;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-@Getter
-public class MuSigModel extends ContentTabModel {
+@Slf4j
+public class MuSigOpenOffersController implements Controller {
+    @Getter
+    private final MuSigOpenOffersView view;
+    private final MuSigOpenOffersModel model;
+
+    public MuSigOpenOffersController(ServiceProvider serviceProvider) {
+        model = new MuSigOpenOffersModel();
+        view = new MuSigOpenOffersView(model, this);
+    }
+
     @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.MU_SIG_OFFERBOOK_BUY;
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
     }
 }
