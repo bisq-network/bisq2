@@ -17,39 +17,128 @@
 
 package bisq.desktop.main.content.mu_sig.offerbook;
 
-import bisq.bisq_easy.NavigationTarget;
-import bisq.chat.ChatChannelDomain;
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
+import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.currency.Market;
+import bisq.common.currency.MarketRepository;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.main.content.chat.ChatController;
+import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.view.Controller;
+import bisq.mu_sig.MuSigService;
+import bisq.offer.Direction;
+import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
+import bisq.offer.mu_sig.MuSigOffer;
+import bisq.offer.options.OfferOption;
+import bisq.offer.price.spec.MarketPriceSpec;
+import bisq.offer.price.spec.PriceSpec;
+import bisq.user.profile.UserProfileService;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+
 @Slf4j
-public final class MuSigOfferbookController extends ChatController<MuSigOfferbookView, MuSigOfferbookModel> {
-    private final MuSigOfferbookModel muSigOfferbookModel;
+public class MuSigOfferbookController implements Controller {
+    @Getter
+    private final MuSigOfferbookView view;
+    private final MuSigOfferbookModel model;
+    private final MuSigService muSigService;
+    private final MarketPriceService marketPriceService;
+    private final UserProfileService userProfileService;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
-        super(serviceProvider, ChatChannelDomain.MU_SIG_OFFERBOOK, NavigationTarget.MU_SIG_OFFERBOOK);
+        muSigService = serviceProvider.getMuSigService();
+        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
+        userProfileService = serviceProvider.getUserService().getUserProfileService();
 
-        muSigOfferbookModel = getModel();
-    }
-
-    @Override
-    public MuSigOfferbookModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
-        return null;
-    }
-
-    @Override
-    public MuSigOfferbookView createAndGetView() {
-        return null;
+        model = new MuSigOfferbookModel();
+        view = new MuSigOfferbookView(model, this);
     }
 
     @Override
     public void onActivate() {
-        super.onActivate();
+        muSigService.getObservableOffers().addObserver(new CollectionObserver<>() {
+            @Override
+            public void add(MuSigOffer muSigOffer) {
+                UIThread.run(() -> {
+                    String offerId = muSigOffer.getId();
+                    if (!model.getOfferIds().contains(offerId)) {
+                        model.getListItems().add(new MuSigOfferListItem(muSigOffer, marketPriceService, userProfileService));
+                        model.getOfferIds().add(offerId);
+                    }
+                });
+            }
+
+            @Override
+            public void remove(Object element) {
+                if (element instanceof MuSigOffer muSigOffer) {
+                    UIThread.run(() -> {
+                        String offerId = muSigOffer.getId();
+                        Optional<MuSigOfferListItem> toRemove = model.getListItems().stream()
+                                .filter(e -> e.getOfferId().equals(offerId))
+                                .findAny();
+                        toRemove.ifPresent(offer -> {
+                            model.getListItems().remove(offer);
+                            model.getOfferIds().remove(offerId);
+                        });
+                    });
+                }
+            }
+
+            @Override
+            public void clear() {
+                UIThread.run(() -> {
+                    model.getListItems().clear();
+                    model.getOfferIds().clear();
+                });
+            }
+        });
     }
 
     @Override
     public void onDeactivate() {
-        super.onDeactivate();
+        model.getListItems().forEach(MuSigOfferListItem::dispose);
+        model.getListItems().clear();
+        model.getOfferIds().clear();
+    }
+
+    void onCreateOffer() {
+        Direction direction = Direction.BUY;
+        Market market = MarketRepository.getUSDBitcoinMarket();
+        AmountSpec amountSpec = new BaseSideFixedAmountSpec(500000 + new Random().nextInt(500000));
+        PriceSpec priceSpec = new MarketPriceSpec();
+        List<FiatPaymentMethod> fiatPaymentMethods = List.of(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ZELLE));
+        List<OfferOption> offerOptions = List.of();
+        MuSigOffer offer = muSigService.createAndGetMuSigOffer(direction,
+                market,
+                amountSpec,
+                priceSpec,
+                fiatPaymentMethods,
+                offerOptions);
+        muSigService.publishOffer(offer).whenComplete((result, throwable) -> {
+            if (throwable == null) {
+                log.error("Offer publishing. {}", result);
+                result.forEach(future -> {
+                    future.whenComplete((res, t) -> {
+                        if (t == null) {
+                            log.error("Offer published. result={}", res);
+                        } else {
+                            log.error("Offer publishing failed with", throwable);
+                        }
+                    });
+                });
+            } else {
+                log.error("Offer publishing failed", throwable);
+            }
+        });
+    }
+
+    void onTakeOffer(MuSigOffer offer) {
+        muSigService.takeOffer(offer);
     }
 }

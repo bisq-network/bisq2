@@ -17,15 +17,22 @@
 
 package bisq.desktop.main.content.mu_sig.offerbook;
 
-import bisq.chat.ChatChannelDomain;
-import bisq.desktop.main.content.chat.ChatModel;
+import bisq.desktop.common.view.Model;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Slf4j
 @Getter
-public class MuSigOfferbookModel extends ChatModel {
-    public MuSigOfferbookModel(ChatChannelDomain chatChannelDomain) {
-        super(chatChannelDomain);
-    }
+public class MuSigOfferbookModel implements Model {
+    private final Set<String> offerIds = new HashSet<>();
+    private final ObservableList<MuSigOfferListItem> listItems = FXCollections.observableArrayList();
+    private final FilteredList<MuSigOfferListItem> filteredList = new FilteredList<>(listItems);
+    private final SortedList<MuSigOfferListItem> sortedList = new SortedList<>(filteredList);
 }
