@@ -1,0 +1,51 @@
+06-May-2025, 4:03:06 pm ERROR [2CP Reader 1] lient.impl.I2PSessionMuxedImpl: [I2PSessionMuxedImpl #5165(OPEN)]: Error occurred communicating with router: There was an error reading data
+java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:318)
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:346)
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:796)
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:1099)
+	at java.base/java.io.BufferedInputStream.fill(BufferedInputStream.java:291)
+	at java.base/java.io.BufferedInputStream.implRead(BufferedInputStream.java:325)
+	at java.base/java.io.BufferedInputStream.read(BufferedInputStream.java:312)
+	at net.i2p.data.DataHelper.readLong(DataHelper.java:678)
+	at net.i2p.data.i2cp.I2CPMessageHandler.readMessage(I2CPMessageHandler.java:43)
+	at net.i2p.data.i2cp.I2CPMessageReader$I2CPMessageReaderRunner.run2(I2CPMessageReader.java:182)
+	at net.i2p.data.i2cp.I2CPMessageReader$I2CPMessageReaderRunner.run(I2CPMessageReader.java:164)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+	at net.i2p.util.I2PThread.run(I2PThread.java:103)
+06-May-2025, 4:03:16 pm ERROR [2CP Reader 1] lient.impl.I2PSessionMuxedImpl: [I2PSessionMuxedImpl(CLOSED)]: Error reconnecting on attempt 1
+net.i2p.client.I2PSessionException: connect by other thread failed
+	at net.i2p.client.impl.I2PSessionImpl.connect(I2PSessionImpl.java:669)
+	at net.i2p.client.impl.I2PSessionImpl.reconnect(I2PSessionImpl.java:1464)
+	at net.i2p.client.impl.I2PSessionImpl2.reconnect(I2PSessionImpl2.java:490)
+	at net.i2p.client.impl.I2PSessionImpl.disconnect(I2PSessionImpl.java:1423)
+	at net.i2p.client.impl.I2PSessionImpl.disconnected(I2PSessionImpl.java:1403)
+	at net.i2p.data.i2cp.I2CPMessageReader$I2CPMessageReaderRunner.run2(I2CPMessageReader.java:197)
+	at net.i2p.data.i2cp.I2CPMessageReader$I2CPMessageReaderRunner.run(I2CPMessageReader.java:164)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+	at net.i2p.util.I2PThread.run(I2PThread.java:103)
+06-May-2025, 4:03:36 pm ^^^ 1 similar message omitted ^^^
+06-May-2025, 4:04:16 pm ERROR [2CP Reader 1] lient.impl.I2PSessionMuxedImpl: [I2PSessionMuxedImpl(OPENING)]: Error reconnecting on attempt 3
+net.i2p.client.I2PSessionException: [I2PSessionMuxedImpl(OPENING)]: Cannot connect to the router on 127.0.0.1:7654 and build tunnels
+	at net.i2p.client.impl.I2PSessionImpl.connect(I2PSessionImpl.java:838)
+	at net.i2p.client.impl.I2PSessionImpl.reconnect(I2PSessionImpl.java:1464)
+	at net.i2p.client.impl.I2PSessionImpl2.reconnect(I2PSessionImpl2.java:490)
+	at net.i2p.client.impl.I2PSessionImpl.disconnect(I2PSessionImpl.java:1423)
+	at net.i2p.client.impl.I2PSessionImpl.disconnected(I2PSessionImpl.java:1403)
+	at net.i2p.data.i2cp.I2CPMessageReader$I2CPMessageReaderRunner.run2(I2CPMessageReader.java:197)
+	at net.i2p.data.i2cp.I2CPMessageReader$I2CPMessageReaderRunner.run(I2CPMessageReader.java:164)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+	at net.i2p.util.I2PThread.run(I2PThread.java:103)
+Caused by: java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:589)
+	at java.base/sun.nio.ch.Net.connect(Net.java:578)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:583)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at java.base/java.net.Socket.connect(Socket.java:686)
+	at java.base/java.net.Socket.<init>(Socket.java:555)
+	at java.base/java.net.Socket.<init>(Socket.java:324)
+	at net.i2p.client.impl.I2PSessionImpl.connect(I2PSessionImpl.java:749)
+	... 8 more
+06-May-2025, 4:05:36 pm ^^^ 1 similar message omitted ^^^
