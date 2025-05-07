@@ -230,6 +230,6 @@ public class MuSigTakeOfferAmountController implements Controller {
         if (amountSelectionController.getRightMarkerQuoteSideValue() == null) {
             return;
         }
-        model.getIsWarningIconVisible().set(value.round(0).getValue() == amountSelectionController.getRightMarkerQuoteSideValue().round(0).getValue());
+        model.getIsWarningIconVisible().set(value.round(0).equals(amountSelectionController.getRightMarkerQuoteSideValue().round(0)));
     }
 }

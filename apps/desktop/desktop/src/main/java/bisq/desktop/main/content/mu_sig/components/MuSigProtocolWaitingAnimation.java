@@ -69,7 +69,9 @@ public class MuSigProtocolWaitingAnimation extends StackPane {
             if (newValue != null) {
                 focusListener = new ChangeListener<>() {
                     @Override
-                    public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                    public void changed(ObservableValue<? extends Boolean> observable,
+                                        Boolean oldValue,
+                                        Boolean newValue) {
                         if (newValue) {
                             rotate.playFromStart();
                             spinningCircle.setOpacity(0);
@@ -90,10 +92,13 @@ public class MuSigProtocolWaitingAnimation extends StackPane {
         sceneProperty().addListener(sceneListener);
     }
 
-    public void setState(MuSigProtocolWaitingState newMuSigProtocolWaitingState) {
-        if (muSigProtocolWaitingState != newMuSigProtocolWaitingState) {
-            muSigProtocolWaitingState = newMuSigProtocolWaitingState;
+    public void setState(MuSigProtocolWaitingState state) {
+        if (muSigProtocolWaitingState != state) {
+            muSigProtocolWaitingState = state;
             updateWaitingStateIcon();
+            if (spinningCircle != null) {
+                spinningCircle.setImage(ImageUtil.getImageViewById(getSpinningCircleIconId(state)).getImage());
+            }
         }
     }
 
@@ -123,8 +128,8 @@ public class MuSigProtocolWaitingAnimation extends StackPane {
         };
     }
 
-    private String getSpinningCircleIconId(MuSigProtocolWaitingState muSigProtocolWaitingState) {
-        return muSigProtocolWaitingState == MuSigProtocolWaitingState.TAKE_OFFER ? "take-bisq-easy-offer-circle" : "spinning-circle";
+    private String getSpinningCircleIconId(MuSigProtocolWaitingState state) {
+        return state == MuSigProtocolWaitingState.TAKE_OFFER ? "take-bisq-easy-offer-circle" : "spinning-circle";
     }
 
     public void play() {

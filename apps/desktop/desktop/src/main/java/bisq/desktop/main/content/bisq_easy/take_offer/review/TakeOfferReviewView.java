@@ -22,18 +22,23 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.TextFlowUtils;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferView;
-import bisq.desktop.components.controls.TextFlowUtils;
 import bisq.i18n.Res;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
@@ -52,8 +57,8 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
     private final Label priceDetails, bitcoinPaymentMethod, fiatPaymentMethod, fee, feeDetails;
     private final GridPane content;
     private final TextFlow price;
+    private final WaitingAnimation takeOfferSendMessageWaitingAnimation;
     private Subscription takeOfferStatusPin;
-    private WaitingAnimation takeOfferSendMessageWaitingAnimation;
     private boolean minWaitingTimePassed = false;
 
     TakeOfferReviewView(TakeOfferReviewModel model, TakeOfferReviewController controller, HBox reviewDataDisplay) {
@@ -158,7 +163,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         takeOfferStatus = new VBox();
         takeOfferStatus.setVisible(false);
 
-        sendTakeOfferMessageFeedback = new VBox(20);
+        sendTakeOfferMessageFeedback = new VBox(20);takeOfferSendMessageWaitingAnimation = new WaitingAnimation(WaitingState.TAKE_BISQ_EASY_OFFER);
         configSendTakeOfferMessageFeedback();
 
         takeOfferSuccessButton = new Button(Res.get("bisqEasy.takeOffer.review.takeOfferSuccessButton"));
@@ -230,7 +235,6 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
         Label headlineLabel = new Label(Res.get("bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.headline"));
         headlineLabel.getStyleClass().add("trade-wizard-take-offer-send-message-headline");
-        takeOfferSendMessageWaitingAnimation = new WaitingAnimation(WaitingState.TAKE_BISQ_EASY_OFFER);
         HBox title = new HBox(10, takeOfferSendMessageWaitingAnimation, headlineLabel);
         title.setAlignment(Pos.CENTER);
 

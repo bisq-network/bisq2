@@ -205,7 +205,12 @@ public final class MuSigOpenTradeMessage extends PrivateChatMessage<MuSigOpenTra
 
     @Override
     public boolean addChatMessageReaction(ChatMessageReaction chatMessageReaction) {
-        return addPrivateChatMessageReaction((MuSigOpenTradeMessageReaction) chatMessageReaction);
+        if (!(chatMessageReaction instanceof MuSigOpenTradeMessageReaction reaction)) {
+            log.warn("Ignoring unsupported reaction type {} for message {}",
+                    chatMessageReaction.getClass().getSimpleName(), getId());
+            return false;
+        }
+        return addPrivateChatMessageReaction(reaction);
     }
 
     @Override

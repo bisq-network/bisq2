@@ -235,6 +235,8 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
 
         if (isInMediation) {
             mediator.ifPresent(userProfile -> userProfileIdsOfSendingLeaveMessage.add(userProfile.getId()));
+        } else {
+            mediator.ifPresent(userProfile -> userProfileIdsOfSendingLeaveMessage.remove(userProfile.getId()));
         }
     }
 

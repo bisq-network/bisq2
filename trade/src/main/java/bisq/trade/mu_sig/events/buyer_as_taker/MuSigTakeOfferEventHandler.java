@@ -47,10 +47,11 @@ public class MuSigTakeOfferEventHandler extends MuSigSendTradeMessageHandler<MuS
     public void handle(Event event) {
         try {
             MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
-            PubKeySharesResponse buyerPubKeySharesResponse = PubKeySharesResponse.fromProto(stub.initTrade(PubKeySharesRequest.newBuilder()
+            bisq.trade.protobuf.PubKeySharesResponse proto = stub.initTrade(PubKeySharesRequest.newBuilder()
                     .setTradeId(trade.getId())
                     .setMyRole(Role.BUYER_AS_TAKER)
-                    .build()));
+                    .build());
+            PubKeySharesResponse buyerPubKeySharesResponse = PubKeySharesResponse.fromProto(proto);
 
             MuSigContract contract = trade.getContract();
 
@@ -83,6 +84,7 @@ public class MuSigTakeOfferEventHandler extends MuSigSendTradeMessageHandler<MuS
             }
 
         } catch (Exception e) {
+            log.error("{}.handle() failed", getClass().getSimpleName(), e);
             throw new RuntimeException(e);
         }
     }

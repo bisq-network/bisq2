@@ -155,76 +155,55 @@ public class MuSigTakeOfferReviewController implements Controller {
         Monetary takersQuoteSideAmount = model.getTakersQuoteSideAmount();
         FiatPaymentMethodSpec fiatPaymentMethodSpec = model.getFiatPaymentMethodSpec();
         BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = model.getBitcoinPaymentMethodSpec();
-        UIThread.run(() -> {
-            try {
-                MuSigTrade muSigTrade = muSigService.takeOffer(userIdentityService.getSelectedUserIdentity(),
-                        muSigOffer,
-                        takersBaseSideAmount,
-                        takersQuoteSideAmount,
-                        bitcoinPaymentMethodSpec,
-                        fiatPaymentMethodSpec);
-                mainButtonsVisibleHandler.accept(false);
-                model.setMuSigTrade(muSigTrade);
-                //todo
-                model.getTakeOfferStatus().set(MuSigTakeOfferReviewModel.TakeOfferStatus.SENT);
-                model.getTakeOfferStatus().set(MuSigTakeOfferReviewModel.TakeOfferStatus.SUCCESS);
-                MuSigContract contract = muSigTrade.getContract();
-                String tradeId = muSigTrade.getId();
 
-                if (timeoutScheduler != null) {
-                    timeoutScheduler.stop();
-                }
-                timeoutScheduler = UIScheduler.run(() -> {
-                            closeAndNavigateToHandler.accept(NavigationTarget.MU_SIG);
-                            throw new RuntimeException("Take offer message sending did not succeed after 2 minutes.");
-                        })
-                        .after(150, TimeUnit.SECONDS); // We have 120 seconds socket timeout, so we should never
-                // get triggered here, as the message will be sent as mailbox message
+        try {
+            MuSigTrade muSigTrade = muSigService.takeOffer(userIdentityService.getSelectedUserIdentity(),
+                    muSigOffer,
+                    takersBaseSideAmount,
+                    takersQuoteSideAmount,
+                    bitcoinPaymentMethodSpec,
+                    fiatPaymentMethodSpec);
+
+            mainButtonsVisibleHandler.accept(false);
+            model.setMuSigTrade(muSigTrade);
+            //todo
+           // model.getTakeOfferStatus().set(MuSigTakeOfferReviewModel.TakeOfferStatus.SENT);
+            model.getTakeOfferStatus().set(MuSigTakeOfferReviewModel.TakeOfferStatus.SUCCESS);
+            MuSigContract contract = muSigTrade.getContract();
+            String tradeId = muSigTrade.getId();
+
+            if (timeoutScheduler != null) {
+                timeoutScheduler.stop();
+            }
+            timeoutScheduler = UIScheduler.run(() -> {
+                        closeAndNavigateToHandler.accept(NavigationTarget.MU_SIG);
+                        // todo show popup
+                        throw new RuntimeException("Take offer message sending did not succeed after 2 minutes.");
+                    })
+                    .after(150, TimeUnit.SECONDS); // We have 120 seconds socket timeout, so we should never
+            // get triggered here, as the message will be sent as mailbox message
 
 
-                errorMessagePin = muSigTrade.errorMessageObservable().addObserver(errorMessage -> {
-                            if (errorMessage != null) {
-                                UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
-                                                errorMessage,
-                                                StringUtils.truncate(muSigTrade.getErrorStackTrace(), 2000)))
-                                        .show());
-                            }
+            errorMessagePin = muSigTrade.errorMessageObservable().addObserver(errorMessage -> {
+                        if (errorMessage != null) {
+                            UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
+                                            errorMessage,
+                                            StringUtils.truncate(muSigTrade.getErrorStackTrace(), 2000)))
+                                    .show());
                         }
-                );
-                peersErrorMessagePin = muSigTrade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
-                            if (peersErrorMessage != null) {
-                                UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.popup",
-                                                peersErrorMessage,
-                                                StringUtils.truncate(muSigTrade.getPeersErrorStackTrace(), 2000)))
-                                        .show());
-                            }
+                    }
+            );
+            peersErrorMessagePin = muSigTrade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
+                        if (peersErrorMessage != null) {
+                            UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.popup",
+                                            peersErrorMessage,
+                                            StringUtils.truncate(muSigTrade.getPeersErrorStackTrace(), 2000)))
+                                    .show());
                         }
-                );
-
-
-
-
-
-
-             /*   muSigOpenTradeChannelService.sendTakeOfferMessage(tradeId, muSigOffer, contract.getMediator())
-                        .thenAccept(result -> UIThread.run(() -> {
-                            timeoutScheduler.stop();
-
-                            // In case the user has switched to another market we want to select that market in the offer book
-                            ChatChannelSelectionService chatChannelSelectionService =
-                                    chatService.getChatChannelSelectionService(ChatChannelDomain.MU_SIG_OFFERBOOK);
-                            bisqEasyOfferbookChannelService.findChannel(contract.getOffer().getMarket())
-                                    .ifPresent(chatChannelSelectionService::selectChannel);
-                            model.getTakeOfferStatus().set(MuSigTakeOfferReviewModel.TakeOfferStatus.SUCCESS);
-                            bisqEasyOpenTradeChannelService.findChannelByTradeId(tradeId)
-                                    .ifPresent(channel -> {
-                                        String taker = userIdentityService.getSelectedUserIdentity().getUserProfile().getUserName();
-                                        String maker = channel.getPeer().getUserName();
-                                        String encoded = Res.encode("bisqEasy.takeOffer.tradeLogMessage", taker, maker);
-                                        chatService.getBisqEasyOpenTradeChannelService().sendTradeLogMessage(encoded, channel);
-                                    });
-                        }));*/
-            } catch (UserProfileBannedException e) {
+                    }
+            );
+        } catch (UserProfileBannedException e) {
+            UIThread.run(() -> {
                 if (muSigOffer.getMakersUserProfileId().equals(e.getUserProfileId())) {
                     new Popup().warning(Res.get("muSig.takeOffer.banned.maker.warning")).show();
                 } else {
@@ -232,7 +211,9 @@ public class MuSigTakeOfferReviewController implements Controller {
                     log.debug("Takers user profile was banned");
                 }
                 onCancelHandler.run();
-            } catch (RateLimitExceededException e) {
+            });
+        } catch (RateLimitExceededException e) {
+            UIThread.run(() -> {
                 if (muSigOffer.getMakersUserProfileId().equals(e.getUserProfileId())) {
                     new Popup().warning(Res.get("muSig.takeOffer.rateLimitsExceeded.maker.warning")).show();
                 } else {
@@ -240,14 +221,15 @@ public class MuSigTakeOfferReviewController implements Controller {
                     new Popup().warning(Res.get("muSig.takeOffer.rateLimitsExceeded.taker.warning", exceedsLimitInfo)).show();
                 }
                 onCancelHandler.run();
-            } catch (NoMediatorAvailableException e) {
-                new Popup().warning(Res.get("bisqEasy.takeOffer.noMediatorAvailable.warning"))
-                        .closeButtonText(Res.get("action.cancel"))
-                        .onClose(onCancelHandler)
-                        .actionButtonText(Res.get("confirmation.ok"))
-                        .onAction(() -> {
-                            try {
-                                //todo
+            });
+        } catch (NoMediatorAvailableException e) {
+            UIThread.run(() -> new Popup().warning(Res.get("bisqEasy.takeOffer.noMediatorAvailable.warning"))
+                    .closeButtonText(Res.get("action.cancel"))
+                    .onClose(onCancelHandler)
+                    .actionButtonText(Res.get("confirmation.ok"))
+                    .onAction(() -> {
+                        try {
+                            //todo
                            /* muSigService.takeOffer(muSigOffer,
                                     takersBaseSideAmount,
                                     takersQuoteSideAmount,
@@ -255,14 +237,13 @@ public class MuSigTakeOfferReviewController implements Controller {
                                     fiatPaymentMethodSpec,
                                     false
                             );*/
-                            } catch (Exception ignore) {
-                            }
-                        })
-                        .show();
-            } catch (NoMarketPriceAvailableException e) {
-                new Popup().warning(e.getMessage()).show();
-            }
-        });
+                        } catch (Exception ignore) {
+                        }
+                    })
+                    .show());
+        } catch (NoMarketPriceAvailableException e) {
+            UIThread.run(() -> new Popup().warning(e.getMessage()).show());
+        }
     }
 
 

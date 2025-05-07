@@ -107,7 +107,6 @@ public class BannedUserService implements PersistenceClient<BannedUserStore>, Se
         return persistableStore.getBannedUserProfileDataSet();
     }
 
-
     public boolean isUserProfileBanned(UserProfile userProfile) {
         return isUserProfileBanned(userProfile.getId());
     }

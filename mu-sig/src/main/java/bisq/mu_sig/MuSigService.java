@@ -323,14 +323,14 @@ public class MuSigService extends LifecycleService {
         if (muSigOpenTradeChannelService.findChannelByTradeId(tradeId).isPresent()) {
             log.warn("When taking an offer it is expected that no MuSigOpenTradeChannel for that trade ID exist yet. " +
                     "In case of failed take offer attempts though it might be that there is a channel present.");
+        } else {
+            Optional<UserProfile> makersUserProfile = userProfileService.findUserProfile(muSigTrade.getOffer().getMakersUserProfileId());
+            checkArgument(makersUserProfile.isPresent(), "Makers user profile is not present");
+            muSigOpenTradeChannelService.traderCreatesChannel(tradeId,
+                    takerIdentity,
+                    makersUserProfile.get(),
+                    mediator);
         }
-        Optional<UserProfile> makersUserProfile = userProfileService.findUserProfile(muSigTrade.getOffer().getMakersUserProfileId());
-        checkArgument(makersUserProfile.isPresent(), "Makers user profile is not present");
-
-        muSigOpenTradeChannelService.traderCreatesChannel(tradeId,
-                takerIdentity,
-                makersUserProfile.get(),
-                mediator);
 
         muSigTradeService.takeOffer(muSigTrade);
 

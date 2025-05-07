@@ -95,7 +95,8 @@ public class MuSigSetupTradeMessage_A_Handler extends TradeMessageHandler<MuSigT
                     trade.getPeer().getNetworkId(),
                     makersContract,
                     makersContractSignatureData,
-                    sellerPubKeyShareResponse);
+                    sellerPubKeyShareResponse,
+                    sellerNonceSharesMessage);
             sendMessage(responseMessage, serviceProvider, trade);
 
         } catch (GeneralSecurityException e) {

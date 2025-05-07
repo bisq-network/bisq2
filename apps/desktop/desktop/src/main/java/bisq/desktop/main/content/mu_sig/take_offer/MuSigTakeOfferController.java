@@ -138,8 +138,8 @@ public class MuSigTakeOfferController extends NavigationController implements In
     public void onDeactivate() {
         overlayController.setUseEscapeKeyHandler(true);
         overlayController.getApplicationRoot().removeEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
-        takersQuoteSideAmountPin.unsubscribe();
         takersBaseSideAmountPin.unsubscribe();
+        takersQuoteSideAmountPin.unsubscribe();
         selectedBitcoinPaymentMethodSpecPin.unsubscribe();
         selectedFiatPaymentMethodSpecPin.unsubscribe();
     }
@@ -181,7 +181,7 @@ public class MuSigTakeOfferController extends NavigationController implements In
     }
 
     void onNext() {
-        int nextIndex = model.getCurrentIndex().get() + 1;
+        int nextIndex = model.getCurrentIndex().get();
         if (nextIndex < model.getChildTargets().size()) {
             if (model.getSelectedChildTarget().get() == NavigationTarget.MU_SIG_TAKE_OFFER_PAYMENT) {
                 if (!muSigTakeOfferPaymentController.isValid()) {
@@ -224,7 +224,13 @@ public class MuSigTakeOfferController extends NavigationController implements In
 
     void onKeyPressed(KeyEvent keyEvent) {
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onClose);
-        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onNext);
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+            if (model.getSelectedChildTarget().get() == NavigationTarget.MU_SIG_TAKE_OFFER_REVIEW) {
+                onTakeOffer();
+            } else {
+                onNext();
+            }
+        });
     }
 
     private void closeAndNavigateTo(NavigationTarget navigationTarget) {

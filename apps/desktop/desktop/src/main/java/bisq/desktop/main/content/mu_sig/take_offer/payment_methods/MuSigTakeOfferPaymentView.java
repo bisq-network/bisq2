@@ -145,15 +145,16 @@ public class MuSigTakeOfferPaymentView extends View<VBox, MuSigTakeOfferPaymentM
 
     @Override
     protected void onViewDetached() {
-        fiatGridPane.getChildren().clear();
         fiatGridPane.getChildren().stream()
                 .filter(e -> e instanceof ChipToggleButton)
                 .map(e -> (ChipToggleButton) e)
                 .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));
-        bitcoinGridPane.getChildren().clear();
+        fiatGridPane.getChildren().clear();
+
         bitcoinGridPane.getChildren().stream()
                 .filter(e -> e instanceof ChipToggleButton)
                 .map(e -> (ChipToggleButton) e)
                 .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));
+        bitcoinGridPane.getChildren().clear();
     }
 }

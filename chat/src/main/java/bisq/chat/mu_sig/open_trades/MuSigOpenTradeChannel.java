@@ -72,6 +72,7 @@ public final class MuSigOpenTradeChannel extends PrivateGroupChatChannel<MuSigOp
                 nonRequestingTrader);
     }
 
+    @EqualsAndHashCode.Include
     private final String tradeId;
     private final Observable<Boolean> isInMediationObservable = new Observable<>(false);
     private final Set<UserProfile> traders;
@@ -224,6 +225,8 @@ public final class MuSigOpenTradeChannel extends PrivateGroupChatChannel<MuSigOp
 
         if (isInMediation) {
             mediator.ifPresent(userProfile -> userProfileIdsOfSendingLeaveMessage.add(userProfile.getId()));
+        } else {
+            mediator.ifPresent(userProfile -> userProfileIdsOfSendingLeaveMessage.remove(userProfile.getId()));
         }
     }
 

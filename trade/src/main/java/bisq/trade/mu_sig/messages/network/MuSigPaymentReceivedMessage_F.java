@@ -61,7 +61,8 @@ public final class MuSigPaymentReceivedMessage_F extends MuSigTradeMessage {
     }
 
     private bisq.trade.protobuf.MuSigPaymentReceivedMessage_F.Builder getMuSigPaymentReceivedMessage_F(boolean serializeForHash) {
-        return bisq.trade.protobuf.MuSigPaymentReceivedMessage_F.newBuilder();
+        return bisq.trade.protobuf.MuSigPaymentReceivedMessage_F.newBuilder()
+                .setSwapTxSignatureResponse(swapTxSignatureResponse.toProto(serializeForHash));
     }
 
     public static MuSigPaymentReceivedMessage_F fromProto(bisq.trade.protobuf.TradeMessage proto) {

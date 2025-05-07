@@ -57,11 +57,13 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
     private final Label priceDetails, bitcoinPaymentMethod, fiatPaymentMethod, fee, feeDetails;
     private final GridPane content;
     private final TextFlow price;
+    private final MuSigProtocolWaitingAnimation takeOfferSendMessageWaitingAnimation;
     private Subscription takeOfferStatusPin;
-    private MuSigProtocolWaitingAnimation takeOfferSendMessageWaitingAnimation;
     private boolean minWaitingTimePassed = false;
 
-    MuSigTakeOfferReviewView(MuSigTakeOfferReviewModel model, MuSigTakeOfferReviewController controller, HBox reviewDataDisplay) {
+    MuSigTakeOfferReviewView(MuSigTakeOfferReviewModel model,
+                             MuSigTakeOfferReviewController controller,
+                             HBox reviewDataDisplay) {
         super(new StackPane(), model, controller);
 
         content = new GridPane();
@@ -164,6 +166,7 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
         takeOfferStatus.setVisible(false);
 
         sendTakeOfferMessageFeedback = new VBox(20);
+        takeOfferSendMessageWaitingAnimation = new MuSigProtocolWaitingAnimation(MuSigProtocolWaitingState.TAKE_OFFER);
         configSendTakeOfferMessageFeedback();
 
         takeOfferSuccessButton = new Button(Res.get("bisqEasy.takeOffer.review.takeOfferSuccessButton"));
@@ -235,7 +238,6 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
 
         Label headlineLabel = new Label(Res.get("bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.headline"));
         headlineLabel.getStyleClass().add("trade-wizard-take-offer-send-message-headline");
-        takeOfferSendMessageWaitingAnimation = new MuSigProtocolWaitingAnimation(MuSigProtocolWaitingState.TAKE_OFFER);
         HBox title = new HBox(10, takeOfferSendMessageWaitingAnimation, headlineLabel);
         title.setAlignment(Pos.CENTER);
 

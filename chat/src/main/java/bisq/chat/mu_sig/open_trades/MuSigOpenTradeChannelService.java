@@ -154,7 +154,7 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
                     .map(mediator -> sendMessage(shortUid, text, citation, channel, mediator, chatMessageType, date))
                     .ifPresent(futures::add);
             return CompletableFutureUtils.allOf(futures)
-                    .thenApply(list -> list.get(0));
+                    .thenApply(list -> list.get(0)); //TODO return list?
         } else {
             return sendMessage(shortUid, text, citation, channel, channel.getPeer(), chatMessageType, date);
         }

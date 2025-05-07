@@ -239,7 +239,7 @@ public abstract class PrivateChatChannelService<
             log.warn("Sent a message to myself. This should never happen for private chat messages.");
             return false;
         }
-        if (bannedUserService.isUserProfileBanned(message.getSenderUserProfile().getNetworkId())) {
+        if (bannedUserService.isUserProfileBanned(message.getSenderUserProfile())) {
             log.warn("Message invalid as sender is banned");
             return false;
         }

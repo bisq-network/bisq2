@@ -26,6 +26,7 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeSelectionService;
 import bisq.chat.common.CommonChannelSelectionService;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.common.CommonPublicChatChannelService;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.chat.priv.LeavePrivateChatManager;
@@ -145,7 +146,8 @@ public class ChatService implements Service {
         log.info("initialize");
 
         List<CompletableFuture<Boolean>> list = new ArrayList<>(List.of(bisqEasyOfferbookChannelService.initialize(),
-                bisqEasyOpenTradeChannelService.initialize()));
+                bisqEasyOpenTradeChannelService.initialize(),
+                muSigOpenTradeChannelService.initialize()));
         list.addAll(commonPublicChatChannelServices.values().stream()
                 .map(CommonPublicChatChannelService::initialize)
                 .collect(Collectors.toList()));
@@ -165,7 +167,8 @@ public class ChatService implements Service {
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         List<CompletableFuture<Boolean>> list = new ArrayList<>(List.of(bisqEasyOfferbookChannelService.shutdown(),
-                bisqEasyOpenTradeChannelService.shutdown()));
+                bisqEasyOpenTradeChannelService.shutdown(),
+                muSigOpenTradeChannelService.shutdown()));
         list.addAll(commonPublicChatChannelServices.values().stream()
                 .map(CommonPublicChatChannelService::shutdown)
                 .toList());
@@ -193,6 +196,8 @@ public class ChatService implements Service {
             return Optional.ofNullable(bisqEasyOfferbookChannelService);
         } else if (chatChannel instanceof BisqEasyOpenTradeChannel) {
             return Optional.ofNullable(bisqEasyOpenTradeChannelService);
+        } else if (chatChannel instanceof MuSigOpenTradeChannel) {
+            return Optional.ofNullable(muSigOpenTradeChannelService);
         } else {
             throw new RuntimeException("Unexpected chatChannel instance. chatChannel=" + chatChannel);
         }
