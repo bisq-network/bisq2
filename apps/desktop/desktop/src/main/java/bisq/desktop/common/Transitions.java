@@ -283,7 +283,7 @@ public class Transitions {
     }
 
     public static void blur(Node node, int duration, double brightness, boolean removeNode, double blurRadius) {
-        // If there was a transition already playing we stop it and apply again our blur. 
+        // If there was a transition already playing we stop it and apply again our blur.
         if (node.getEffect() != null) {
             String nodeId = node.getId();
             if (nodeId == null) {
@@ -377,7 +377,7 @@ public class Transitions {
     }
 
     public static int effectiveDuration(int duration) {
-        return useAnimations() ? duration : 1;
+        return useAnimations() ? duration : 0;
     }
 
     public static void crossFade(Node node1, Node node2) {

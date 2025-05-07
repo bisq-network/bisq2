@@ -32,7 +32,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import javafx.util.Duration;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -86,9 +85,8 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
         image2.setPreserveRatio(true);
 
         imageCarousel = new Carousel();
-        imageCarousel.setTransitionDuration(Duration.millis(400));
-        imageCarousel.setDisplayDuration(Duration.millis(3000));
-        imageCarousel.getShowBottomDots().set(true);
+        imageCarousel.setTransitionDuration(400);
+        imageCarousel.setDisplayDuration(3000);
         imageCarousel.addItem(image1);
         imageCarousel.addItem(image2);
 

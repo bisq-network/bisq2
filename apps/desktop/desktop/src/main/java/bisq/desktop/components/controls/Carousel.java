@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.controls;
 
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import javafx.animation.ParallelTransition;
 import javafx.animation.TranslateTransition;
@@ -28,7 +29,11 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 import lombok.Getter;
@@ -45,6 +50,8 @@ public class Carousel extends BorderPane {
     private final BooleanProperty isPlaying = new SimpleBooleanProperty(false);
     @Getter
     private final BooleanProperty showBottomDots = new SimpleBooleanProperty(true);
+    @Getter
+    private final BooleanProperty showArrows = new SimpleBooleanProperty(true);
     private final StackPane itemStackPane;
     private final Button leftArrowButton;
     private final Button rightArrowButton;
@@ -52,9 +59,9 @@ public class Carousel extends BorderPane {
     private final HBox indicatorsHBox;
 
     @Setter
-    private Duration transitionDuration = Duration.millis(400);
+    private int transitionDuration = 400;
     @Setter
-    private Duration displayDuration = Duration.millis(3000);
+    private int displayDuration = 3000;
 
     private UIScheduler transitionScheduler;
     private boolean isTransitioning = false;
@@ -102,6 +109,11 @@ public class Carousel extends BorderPane {
 
         indicatorsHBox.visibleProperty().bind(showBottomDots);
         indicatorsHBox.managedProperty().bind(showBottomDots);
+
+        leftArrowButton.visibleProperty().bind(showArrows);
+        leftArrowButton.managedProperty().bind(showArrows);
+        rightArrowButton.visibleProperty().bind(showArrows);
+        rightArrowButton.managedProperty().bind(showArrows);
 
         if (!items.isEmpty()) {
             for (Node item : items) {
@@ -222,11 +234,12 @@ public class Carousel extends BorderPane {
     }
 
     private void updateArrowVisibility() {
-        boolean visible = items.size() > 1;
-        leftArrowButton.setVisible(visible);
-        leftArrowButton.setManaged(visible);
-        rightArrowButton.setVisible(visible);
-        rightArrowButton.setManaged(visible);
+        boolean hasMultipleItems = items.size() > 1;
+
+        // We don't need to set visibility directly here
+        // as it's controlled by the binding to showArrows property
+        leftArrowButton.setDisable(!hasMultipleItems);
+        rightArrowButton.setDisable(!hasMultipleItems);
     }
 
     private void transitionToIndex(int targetIndex, boolean goingForward) {
@@ -244,33 +257,47 @@ public class Carousel extends BorderPane {
         Node currentItem = items.get(currentIndex.get());
         Node targetItem = items.get(targetIndex);
 
-        nextNode = targetItem;
-        nextNode.setTranslateX(goingForward ? itemStackPane.getWidth() : -itemStackPane.getWidth());
-        itemStackPane.getChildren().add(nextNode);
-
-        ParallelTransition transition = createSlideTransition(currentItem, targetItem, goingForward);
-
-        transition.setOnFinished(e -> {
+        if (Transitions.dontUseAnimations()) {
             currentIndex.set(targetIndex);
             itemStackPane.getChildren().clear();
-            currentNode = nextNode;
+            currentNode = targetItem;
+            currentNode.setTranslateX(0);
             itemStackPane.getChildren().add(currentNode);
-            nextNode = null;
             isTransitioning = false;
-
             if (isPlaying.get()) {
                 scheduleNextTransition();
             }
-        });
+        } else {
+            nextNode = targetItem;
+            nextNode.setTranslateX(goingForward ? itemStackPane.getWidth() : -itemStackPane.getWidth());
+            itemStackPane.getChildren().add(nextNode);
 
-        transition.play();
+            ParallelTransition transition = createSlideTransition(currentItem, targetItem, goingForward);
+            transition.setOnFinished(e -> {
+                currentIndex.set(targetIndex);
+                itemStackPane.getChildren().clear();
+                currentNode = nextNode;
+                itemStackPane.getChildren().add(currentNode);
+                nextNode = null;
+                isTransitioning = false;
+
+                if (isPlaying.get()) {
+                    scheduleNextTransition();
+                }
+            });
+
+            transition.play();
+        }
     }
 
     private ParallelTransition createSlideTransition(Node currentItem, Node targetItem, boolean goingForward) {
-        TranslateTransition exitTransition = new TranslateTransition(transitionDuration, currentItem);
+        int effectiveDurationMs = Transitions.effectiveDuration(transitionDuration);
+        Duration duration = Duration.millis(effectiveDurationMs);
+
+        TranslateTransition exitTransition = new TranslateTransition(duration, currentItem);
         exitTransition.setToX(goingForward ? -itemStackPane.getWidth() : itemStackPane.getWidth());
 
-        TranslateTransition enterTransition = new TranslateTransition(transitionDuration, targetItem);
+        TranslateTransition enterTransition = new TranslateTransition(duration, targetItem);
         enterTransition.setToX(0);
 
         return new ParallelTransition(exitTransition, enterTransition);
@@ -281,6 +308,6 @@ public class Carousel extends BorderPane {
             transitionScheduler.stop();
         }
 
-        transitionScheduler = UIScheduler.run(this::next).after((long) displayDuration.toMillis());
+        transitionScheduler = UIScheduler.run(this::next).after(displayDuration);
     }
 }

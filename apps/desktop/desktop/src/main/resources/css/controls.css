@@ -1149,7 +1149,7 @@
 }
 
 .carousel-indicator {
-    -fx-background-color: -bisq-mid-grey-20;
+    -fx-background-color: transparent;
     -fx-background-radius: 3;
     -fx-min-width: 6;
     -fx-min-height: 6;
@@ -1172,7 +1172,7 @@
 }
 
 .carousel-nav-arrow {
-    -fx-background-color: -bisq-gray-7;
+    -fx-background-color: -bisq-dark-grey-30;
     -fx-background-radius: 2;
     -fx-min-width: 20px;
     -fx-min-height: 32px;
