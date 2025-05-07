@@ -205,10 +205,6 @@ public class I2pEmbeddedRouter {
                         log.error("Router died while starting");
                         throw new IOException("Router died while starting");
                     }
-                    if (System.currentTimeMillis() - startTime > timeoutMs) {
-                        throw new IOException("Router startup timed out.");
-                    }
-                //    Thread.sleep(300);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -226,7 +222,6 @@ public class I2pEmbeddedRouter {
     private void getPropertiesForEmbeddedRouter() throws IOException {
 
         if(System.getProperty("i2p.dir.base")==null) {
-            // Set up I2P Directories within RA Services Directory
             File homeDir = SystemSettings.getUserHomeDir();
             File i2pDir = new File(homeDir, ".bisq2");
             if (!i2pDir.exists() && !i2pDir.mkdir()) {
