@@ -1,7 +1,6 @@
 import bisq.gradle.common.getPlatform
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
-import java.util.Properties
+import java.util.*
 
 // Function to read properties from a file - TODO find a way to reuse this code instead of copying when needed
 fun readPropertiesFile(filePath: String): Properties {
@@ -50,6 +49,7 @@ dependencies {
     implementation("bisq:settings")
     implementation("bisq:presentation")
     implementation("bisq:bisq-easy")
+    implementation("bisq:mu-sig")
     implementation("bisq:application")
     implementation("bisq:evolution")
     implementation("bisq:os-specific")

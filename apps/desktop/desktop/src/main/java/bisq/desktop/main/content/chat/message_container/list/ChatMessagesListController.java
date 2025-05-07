@@ -22,7 +22,12 @@ import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.chat.*;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelSelectionService;
+import bisq.chat.ChatMessage;
+import bisq.chat.ChatMessageType;
+import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.BisqEasyOfferMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
@@ -37,7 +42,11 @@ import bisq.chat.priv.PrivateChatChannel;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatMessage;
-import bisq.chat.reactions.*;
+import bisq.chat.reactions.BisqEasyOfferbookMessageReaction;
+import bisq.chat.reactions.ChatMessageReaction;
+import bisq.chat.reactions.CommonPublicChatMessageReaction;
+import bisq.chat.reactions.PrivateChatMessageReaction;
+import bisq.chat.reactions.Reaction;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.observable.Pin;
@@ -76,7 +85,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -110,6 +124,7 @@ public class ChatMessagesListController implements Controller {
     private Pin selectedChannelPin, chatMessagesPin, bisqEasyOfferbookMessageTypeFilterPin, highlightedMessagePin;
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
             layoutChildrenDonePin;
+    private static final String DONT_SHOW_CHAT_RULES_WARNING_KEY = "privateChatRulesWarning";
 
     public ChatMessagesListController(ServiceProvider serviceProvider,
                                       Consumer<UserProfile> mentionUserHandler,
@@ -562,6 +577,20 @@ public class ChatMessagesListController implements Controller {
         Navigation.navigateTo(NavigationTarget.CHAT_RULES);
     }
 
+    public void onDismissChatRulesWarning() {
+        dontShowAgainService.putDontShowAgain(DONT_SHOW_CHAT_RULES_WARNING_KEY, true);
+
+        model.getSortedChatMessages().stream()
+                .filter(item -> item.getChatMessage().getChatMessageType() == ChatMessageType.CHAT_RULES_WARNING)
+                .findFirst()
+                .ifPresent(itemToRemove -> {
+                    UIThread.run(() -> {
+                        itemToRemove.dispose();
+                        model.getChatMessages().remove(itemToRemove);
+                    });
+                });
+    }
+
     public void onClickQuoteMessage(Optional<String> chatMessageId) {
         chatMessageId.ifPresent(messageId -> {
             model.getChatMessages().forEach(item -> {
@@ -655,13 +684,11 @@ public class ChatMessagesListController implements Controller {
                 .map(e -> e.getChatMessage().getId())
                 .collect(Collectors.toSet()));
 
-        boolean isMediator = false;
-        if (channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
-            if (bisqEasyOpenTradeChannel.isMediator()) {
-                isMediator = true;
-            }
-        }
-        if (!isMediator) {
+        boolean shouldShowWarningMessageForNoneMediator = dontShowAgainService.showAgain(DONT_SHOW_CHAT_RULES_WARNING_KEY)
+                && !(channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel
+                && bisqEasyOpenTradeChannel.isMediator());
+
+        if (shouldShowWarningMessageForNoneMediator) {
             addChatRulesWarningMessageListItemInPrivateChats(channel);
         }
 

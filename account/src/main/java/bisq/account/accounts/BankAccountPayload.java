@@ -1,7 +1,6 @@
 package bisq.account.accounts;
 
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;

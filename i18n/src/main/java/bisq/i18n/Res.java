@@ -22,7 +22,11 @@ import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -47,7 +51,8 @@ public class Res {
             "settings",
             "wallet",
             "authorized_role",
-            "payment_method"
+            "payment_method",
+            "mu_sig"
     );
 
     private static final List<ResourceBundle> bundles = new ArrayList<>();

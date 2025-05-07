@@ -22,18 +22,18 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Getter
+@Getter(AccessLevel.PACKAGE)
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 public class BisqEasyOpenTradeChannelStore implements PersistableStore<BisqEasyOpenTradeChannelStore> {
     private final ObservableSet<BisqEasyOpenTradeChannel> channels = new ObservableSet<>();
-
-    public BisqEasyOpenTradeChannelStore() {
-    }
 
     private BisqEasyOpenTradeChannelStore(Set<BisqEasyOpenTradeChannel> privateTradeChannels) {
         setAll(privateTradeChannels);
@@ -80,7 +80,7 @@ public class BisqEasyOpenTradeChannelStore implements PersistableStore<BisqEasyO
         return new BisqEasyOpenTradeChannelStore(new HashSet<>(channels));
     }
 
-    public void setAll(Set<BisqEasyOpenTradeChannel> privateTradeChannels) {
+    void setAll(Set<BisqEasyOpenTradeChannel> privateTradeChannels) {
         this.channels.setAll(privateTradeChannels);
     }
 }

@@ -22,7 +22,14 @@ import bisq.common.locale.LocaleRepository;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Currency;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -83,9 +90,17 @@ public class FiatCurrencyRepository {
         }
 
         // The language and variant components of the locale at Currency.getInstance are ignored.
-        Locale countryLocale = new Locale(locale.getLanguage(), countryCode);
-        Currency currency = Currency.getInstance(countryLocale);
-        return new FiatCurrency(currency);
+        Locale countryLocale = new Locale.Builder()
+                .setLanguage(locale.getLanguage())
+                .setRegion(countryCode)
+                .build();
+        try {
+            Currency currency = Currency.getInstance(countryLocale);
+            return new FiatCurrency(currency);
+        } catch (Exception e) {
+            log.error("Cannot derive currency from countryLocale {}. We call back to USD.", countryLocale, e);
+            return new FiatCurrency("USD");
+        }
     }
 
     public static Map<String, FiatCurrency> getCurrencyByCodeMap() {

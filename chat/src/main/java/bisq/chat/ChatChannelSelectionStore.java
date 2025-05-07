@@ -21,22 +21,22 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
 
+@Getter(AccessLevel.PACKAGE)
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-@Getter
-public final class ChatChannelSelectionStore implements PersistableStore<ChatChannelSelectionStore> {
+final class ChatChannelSelectionStore implements PersistableStore<ChatChannelSelectionStore> {
     @Nullable
-    @Setter
+    @Setter(AccessLevel.PACKAGE)
     private String selectedChannelId;
-
-    public ChatChannelSelectionStore() {
-    }
 
     private ChatChannelSelectionStore(@Nullable String selectedChannelId) {
         this.selectedChannelId = selectedChannelId;

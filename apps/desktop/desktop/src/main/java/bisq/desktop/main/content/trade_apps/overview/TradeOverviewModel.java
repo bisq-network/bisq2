@@ -18,6 +18,8 @@
 package bisq.desktop.main.content.trade_apps.overview;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
@@ -28,6 +30,7 @@ import java.util.List;
 public class TradeOverviewModel implements Model {
     private final ObservableList<ProtocolListItem> mainProtocols;
     private final ObservableList<ProtocolListItem> moreProtocols;
+    private final BooleanProperty isMuSigActivated = new SimpleBooleanProperty();
 
     public TradeOverviewModel(List<ProtocolListItem> mainProtocols, List<ProtocolListItem> moreProtocols) {
         this.mainProtocols = FXCollections.observableArrayList(mainProtocols);

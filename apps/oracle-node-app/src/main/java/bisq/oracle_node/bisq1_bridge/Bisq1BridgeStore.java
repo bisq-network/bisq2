@@ -23,7 +23,9 @@ import bisq.persistence.PersistableStore;
 import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
 import bisq.user.reputation.requests.AuthorizeSignedWitnessRequest;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
@@ -37,15 +39,13 @@ import java.util.stream.Collectors;
  * persisted as encrypted entries and the decryption key is help by another bonded role. So it would require the
  * cooperation of the oracle node operator with the key holder.
  */
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-public final class Bisq1BridgeStore implements PersistableStore<Bisq1BridgeStore> {
-    @Getter
+final class Bisq1BridgeStore implements PersistableStore<Bisq1BridgeStore> {
+    @Getter(AccessLevel.PACKAGE)
     private final Set<AuthorizeAccountAgeRequest> accountAgeRequests = new CopyOnWriteArraySet<>();
-    @Getter
+    @Getter(AccessLevel.PACKAGE)
     private final Set<AuthorizeSignedWitnessRequest> signedWitnessRequests = new CopyOnWriteArraySet<>();
-
-    public Bisq1BridgeStore() {
-    }
 
     private Bisq1BridgeStore(Set<AuthorizeAccountAgeRequest> accountAgeRequests, Set<AuthorizeSignedWitnessRequest> signedWitnessRequests) {
         this.accountAgeRequests.addAll(accountAgeRequests);

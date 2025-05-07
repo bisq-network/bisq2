@@ -27,10 +27,12 @@ import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.evolution.updater.UpdaterService;
+import bisq.mu_sig.MuSigService;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentity;
@@ -53,8 +55,8 @@ public class LeftNavController implements Controller {
     private final UpdaterService updaterService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
     private final SettingsService settingsService;
-    private Pin bondedRolesPin, selectedUserIdentityPin, isNewReleaseAvailablePin;
-    private Pin changedChatNotificationPin;
+    private final MuSigService muSigService;
+    private Pin bondedRolesPin, selectedUserIdentityPin, isNewReleaseAvailablePin, changedChatNotificationPin, isMuSigActivatedPin;
 
     public LeftNavController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
@@ -63,6 +65,7 @@ public class LeftNavController implements Controller {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         updaterService = serviceProvider.getUpdaterService();
         bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
+        muSigService = serviceProvider.getMuSigService();
 
         NetworkInfo networkInfo = new NetworkInfo(serviceProvider, this::onNavigationTargetSelected);
         model = new LeftNavModel(serviceProvider.getWalletService().isPresent());
@@ -85,6 +88,8 @@ public class LeftNavController implements Controller {
         });
 
         model.getMenuHorizontalExpanded().set(settingsService.getCookie().asBoolean(CookieKey.MENU_HORIZONTAL_EXPANDED).orElse(true));
+
+        isMuSigActivatedPin = FxBindings.bind(model.getIsMuSigActivated()).to(muSigService.getMuSigActivated());
     }
 
     @Override
@@ -93,6 +98,7 @@ public class LeftNavController implements Controller {
         selectedUserIdentityPin.unbind();
         isNewReleaseAvailablePin.unbind();
         changedChatNotificationPin.unbind();
+        isMuSigActivatedPin.unbind();
     }
 
     public void setNavigationTarget(NavigationTarget navigationTarget) {

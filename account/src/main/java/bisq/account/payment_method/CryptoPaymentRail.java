@@ -17,6 +17,7 @@
 
 package bisq.account.payment_method;
 
+//TODO Requires more thoughts
 public enum CryptoPaymentRail implements PaymentRail {
     CUSTOM,                             // Custom defined payment rail by the user
     BSQ,                                // BSQ (colored coin on the BTC blockchain)

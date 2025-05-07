@@ -294,11 +294,6 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
                         "This is expected as we get called both when a trade is added and the associated channel.");
                 return;
             }
-            if (trade.getContract() == null) {
-                // TODO should we throw an exception?
-                log.error("Contract is null for trade {}", trade);
-                return;
-            }
 
             model.getListItems().add(new OpenTradeListItem(channel,
                     trade,

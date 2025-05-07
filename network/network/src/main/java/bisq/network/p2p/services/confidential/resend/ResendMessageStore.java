@@ -21,6 +21,9 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -29,13 +32,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-public final class ResendMessageStore implements PersistableStore<ResendMessageStore> {
+final class ResendMessageStore implements PersistableStore<ResendMessageStore> {
+    @Getter(AccessLevel.PACKAGE)
     private final Map<String, ResendMessageData> resendMessageDataByMessageId = new ConcurrentHashMap<>();
+    @Getter(AccessLevel.PACKAGE)
     private final Map<String, AtomicInteger> numResendsByMessageId = new ConcurrentHashMap<>();
-
-    ResendMessageStore() {
-    }
 
     ResendMessageStore(Map<String, ResendMessageData> resendMessageDataByMessageId, Map<String, AtomicInteger> numResendsByMessageId) {
         this.resendMessageDataByMessageId.putAll(resendMessageDataByMessageId);
@@ -89,13 +92,5 @@ public final class ResendMessageStore implements PersistableStore<ResendMessageS
     @Override
     public ResendMessageStore getClone() {
         return new ResendMessageStore(new HashMap<>(resendMessageDataByMessageId), new HashMap<>(numResendsByMessageId));
-    }
-
-    Map<String, ResendMessageData> getResendMessageDataByMessageId() {
-        return resendMessageDataByMessageId;
-    }
-
-    Map<String, AtomicInteger> getNumResendsByMessageId() {
-        return numResendsByMessageId;
     }
 }

@@ -91,7 +91,7 @@ public class Badge extends StackPane {
         transition.setCycleCount(1);
         transition.setAutoReverse(true);
 
-        useAnimation = Transitions.getUseAnimations();
+        useAnimation = Transitions.useAnimations();
 
         getChildren().add(badge);
         getStyleClass().add("bisq-badge");
@@ -110,7 +110,7 @@ public class Badge extends StackPane {
     }
 
     public void setUseAnimation(boolean useAnimation) {
-        if (Transitions.getUseAnimations()) {
+        if (Transitions.useAnimations()) {
             this.useAnimation = useAnimation;
         }
     }

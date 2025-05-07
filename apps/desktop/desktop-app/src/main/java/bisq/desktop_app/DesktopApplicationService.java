@@ -39,6 +39,7 @@ import bisq.http_api.web_socket.WebSocketService;
 import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
+import bisq.mu_sig.MuSigService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
@@ -106,6 +107,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     private final WebcamAppService webcamAppService;
     private final HttpApiService httpApiService;
     private final OpenTradeItemsService openTradeItemsService;
+    private final MuSigService muSigService;
 
     public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
         super("desktop", args);
@@ -196,6 +198,21 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 systemNotificationService,
                 tradeService);
 
+        muSigService = new MuSigService(persistenceService,
+                securityService,
+                networkService,
+                identityService,
+                bondedRolesService,
+                accountService,
+                offerService,
+                contractService,
+                userService,
+                chatService,
+                settingsService,
+                supportService,
+                systemNotificationService,
+                tradeService);
+
         alertNotificationsService = new AlertNotificationsService(settingsService, bondedRolesService.getAlertService());
 
         favouriteMarketsService = new FavouriteMarketsService(settingsService);
@@ -223,6 +240,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 tradeService,
                 updaterService,
                 bisqEasyService,
+                muSigService,
                 alertNotificationsService,
                 favouriteMarketsService,
                 dontShowAgainService,
@@ -290,6 +308,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> tradeService.initialize())
                 .thenCompose(result -> updaterService.initialize())
                 .thenCompose(result -> bisqEasyService.initialize())
+                .thenCompose(result -> muSigService.initialize())
                 .thenCompose(result -> alertNotificationsService.initialize())
                 .thenCompose(result -> favouriteMarketsService.initialize())
                 .thenCompose(result -> dontShowAgainService.initialize())
@@ -328,6 +347,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> dontShowAgainService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> favouriteMarketsService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> alertNotificationsService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> muSigService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> bisqEasyService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> updaterService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> tradeService.shutdown().exceptionally(this::logError))

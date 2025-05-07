@@ -17,6 +17,7 @@
 
 package bisq.settings;
 
+import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.Market;
@@ -108,6 +109,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         });
         getBisqEasyOfferbookMessageTypeFilter().addObserver(value -> persist());
         getNumDaysAfterRedactingTradeData().addObserver(value -> persist());
+        getMuSigActivated().addObserver(value -> persist());
 
         isInitialized = true;
 
@@ -239,6 +241,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.numDaysAfterRedactingTradeData;
     }
 
+    public ReadOnlyObservable<Boolean> getMuSigActivated() {
+        return persistableStore.muSigActivated;
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Setters
@@ -332,6 +338,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         if (value >= MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA && value <= MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA) {
             persistableStore.numDaysAfterRedactingTradeData.set(value);
         }
+    }
+
+    public void setMuSigActivated(boolean muSigActivated) {
+        persistableStore.muSigActivated.set(DevMode.isDevMode() && muSigActivated);
     }
 
 

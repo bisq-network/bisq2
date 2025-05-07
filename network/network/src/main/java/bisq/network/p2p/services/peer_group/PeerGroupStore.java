@@ -17,11 +17,14 @@
 
 package bisq.network.p2p.services.peer_group;
 
+import bisq.common.network.Address;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.common.network.Address;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -29,12 +32,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-public final class PeerGroupStore implements PersistableStore<PeerGroupStore> {
+final class PeerGroupStore implements PersistableStore<PeerGroupStore> {
+    @Getter(AccessLevel.PACKAGE)
     private final Map<Address, Peer> persistedPeersByAddress = new ConcurrentHashMap<>();
-
-    public PeerGroupStore() {
-    }
 
     private PeerGroupStore(Map<Address, Peer> persistedPeersByAddress) {
         this.persistedPeersByAddress.putAll(persistedPeersByAddress);
@@ -79,9 +81,5 @@ public final class PeerGroupStore implements PersistableStore<PeerGroupStore> {
     public void applyPersisted(PeerGroupStore persisted) {
         persistedPeersByAddress.clear();
         persistedPeersByAddress.putAll(persisted.getPersistedPeersByAddress());
-    }
-
-    Map<Address, Peer> getPersistedPeersByAddress() {
-        return persistedPeersByAddress;
     }
 }

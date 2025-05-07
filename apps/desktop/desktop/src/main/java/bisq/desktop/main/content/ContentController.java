@@ -27,6 +27,7 @@ import bisq.desktop.main.content.authorized_role.AuthorizedRoleController;
 import bisq.desktop.main.content.bisq_easy.BisqEasyController;
 import bisq.desktop.main.content.chat.common.CommonChatTabController;
 import bisq.desktop.main.content.dashboard.DashboardController;
+import bisq.desktop.main.content.mu_sig.MuSigController;
 import bisq.desktop.main.content.network.NetworkController;
 import bisq.desktop.main.content.reputation.ReputationController;
 import bisq.desktop.main.content.settings.SettingsController;
@@ -71,6 +72,7 @@ public class ContentController extends NavigationController {
         return switch (navigationTarget) {
             case DASHBOARD -> Optional.of(new DashboardController(serviceProvider));
             case BISQ_EASY -> Optional.of(new BisqEasyController(serviceProvider));
+            case MU_SIG -> Optional.of(new MuSigController(serviceProvider));
             case REPUTATION -> Optional.of(new ReputationController(serviceProvider));
             case TRADE_PROTOCOLS -> Optional.of(new TradeAppsController(serviceProvider));
             case ACADEMY -> Optional.of(new AcademyController(serviceProvider));

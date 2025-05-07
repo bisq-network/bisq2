@@ -22,7 +22,9 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -30,13 +32,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-public final class TimestampStore implements PersistableStore<TimestampStore> {
-    @Getter
+final class TimestampStore implements PersistableStore<TimestampStore> {
+    @Getter(AccessLevel.PACKAGE)
     private final Map<String, Long> timestampsByProfileId = new ConcurrentHashMap<>();
-
-    public TimestampStore() {
-    }
 
     private TimestampStore(Map<String, Long> timestampsByProfileId) {
         this.timestampsByProfileId.putAll(timestampsByProfileId);
