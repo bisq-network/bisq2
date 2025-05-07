@@ -23,7 +23,6 @@ import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.price.spec.PriceSpec;
-import bisq.trade.bisq_easy.BisqEasyTrade;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
@@ -37,8 +36,6 @@ import java.util.List;
 class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private  MuSigOffer offer;
-    @Setter
-    private BisqEasyTrade bisqEasyTrade;
     @Setter
     private BitcoinPaymentMethod takersSelectedBitcoinPaymentMethod;
     @Setter
@@ -99,7 +96,6 @@ class MuSigCreateOfferReviewModel implements Model {
 
     public void reset() {
         offer = null;
-        bisqEasyTrade = null;
         takersSelectedBitcoinPaymentMethod = null;
         takersSelectedFiatPaymentMethod = null;
         minBaseSideAmount = null;

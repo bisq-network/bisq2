@@ -15,14 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.bisq_easy.private_chats;
+package bisq.chat.mu_sig.open_trades;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatMessage;
-import bisq.chat.priv.PrivateChatChannel;
-import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.persistence.PersistenceService;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
@@ -33,38 +31,39 @@ import java.util.stream.Stream;
 
 @Slf4j
 @Getter
-public class BisqEasyPrivateChatChannelSelectionService extends ChatChannelSelectionService {
-    private final TwoPartyPrivateChatChannelService channelService;
+public class MuSigOpenTradeSelectionService extends ChatChannelSelectionService {
+    private final MuSigOpenTradeChannelService channelService;
     private final UserIdentityService userIdentityService;
 
-    public BisqEasyPrivateChatChannelSelectionService(PersistenceService persistenceService,
-                                                      TwoPartyPrivateChatChannelService channelService,
-                                                      UserIdentityService userIdentityService) {
-        super(persistenceService, ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT);
-
-        this.userIdentityService = userIdentityService;
+    public MuSigOpenTradeSelectionService(PersistenceService persistenceService,
+                                          MuSigOpenTradeChannelService channelService,
+                                          UserIdentityService userIdentityService) {
+        super(persistenceService, ChatChannelDomain.MU_SIG_OPEN_TRADES);
         this.channelService = channelService;
+        this.userIdentityService = userIdentityService;
     }
 
     public CompletableFuture<Boolean> initialize() {
         if (selectedChannel.get() == null) {
             channelService.getDefaultChannel().ifPresent(this::selectChannel);
         }
+
         return super.initialize();
     }
 
     @Override
     public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
         if (chatChannel != null) {
-            PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) chatChannel;
-            userIdentityService.selectChatUserIdentity(privateChatChannel.getMyUserIdentity());
+            MuSigOpenTradeChannel openTradeChannel = (MuSigOpenTradeChannel) chatChannel;
+            userIdentityService.selectChatUserIdentity(openTradeChannel.getMyUserIdentity());
         }
+
         super.selectChannel(chatChannel);
     }
 
     @Override
     protected Stream<ChatChannel<?>> getAllChatChannels() {
-        // fixme (low prio): cannot return publicChatChannelService.getChannels().stream() due type issues
+        // fixme(low prio): cannot return publicChatChannelService.getChannels().stream() due type issues
         return Stream.concat(channelService.getChannels().stream(), Stream.empty());
     }
 }

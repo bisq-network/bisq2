@@ -187,7 +187,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
             verifyTradingNotOnHalt();
             verifyMinVersionForTrading();
 
-            if (bannedUserService.isNetworkIdBanned(bisqEasyTradeMessage.getSender())) {
+            if (bannedUserService.isUserProfileBanned(bisqEasyTradeMessage.getSender())) {
                 log.warn("Message ignored as sender is banned");
                 return;
             }

@@ -31,7 +31,8 @@ import java.util.Optional;
 @ToString
 @Getter
 @EqualsAndHashCode
-public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends PaymentRail>> implements NetworkProto {
+public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends PaymentRail>>
+        implements Comparable<PaymentMethodSpec<?>>, NetworkProto {
     protected final Optional<String> saltedMakerAccountId;
     protected final T paymentMethod;
 
@@ -98,5 +99,11 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
 
     public String getDisplayString() {
         return paymentMethod.getDisplayString();
+    }
+
+
+    @Override
+    public int compareTo(PaymentMethodSpec<?> o) {
+        return this.getDisplayString().compareTo(o.getDisplayString());
     }
 }

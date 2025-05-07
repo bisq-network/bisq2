@@ -209,7 +209,7 @@ public class MuSigCreateOfferAmountController implements Controller {
             model.getPriceQuote().set(amountSelectionController.getQuote().get());
         }
 
-        Boolean cookieValue = settingsService.getCookie().asBoolean(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED).orElse(false);
+        Boolean cookieValue = settingsService.getCookie().asBoolean(CookieKey.CREATE_MU_SIG_OFFER_IS_MIN_AMOUNT_ENABLED).orElse(false);
         model.getIsRangeAmountEnabled().set(cookieValue);
         model.getShouldShowHowToBuildReputationButton().set(model.getDirection().isSell());
 
@@ -320,7 +320,7 @@ public class MuSigCreateOfferAmountController implements Controller {
     private void updateIsRangeAmountEnabled(boolean useRangeAmount) {
         model.getIsRangeAmountEnabled().set(useRangeAmount);
         quoteSideAmountsChanged(!useRangeAmount);
-        settingsService.setCookie(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED, useRangeAmount);
+        settingsService.setCookie(CookieKey.CREATE_MU_SIG_OFFER_IS_MIN_AMOUNT_ENABLED, useRangeAmount);
     }
 
     private void applyAmountSpec() {

@@ -34,7 +34,7 @@ import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_B;
 import bisq.trade.protocol.events.TradeMessageHandler;
-import bisq.trade.protocol.events.TradeMessageSender;
+import bisq.trade.protocol.handler.TradeMessageSender;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -95,7 +95,8 @@ public class MuSigSetupTradeMessage_A_Handler extends TradeMessageHandler<MuSigT
                     trade.getPeer().getNetworkId(),
                     makersContract,
                     makersContractSignatureData,
-                    sellerPubKeyShareResponse);
+                    sellerPubKeyShareResponse,
+                    sellerNonceSharesMessage);
             sendMessage(responseMessage, serviceProvider, trade);
 
         } catch (GeneralSecurityException e) {

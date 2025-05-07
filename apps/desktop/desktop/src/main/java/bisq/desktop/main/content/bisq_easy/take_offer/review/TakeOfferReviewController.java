@@ -160,7 +160,7 @@ public class TakeOfferReviewController implements Controller {
 
     public void takeOffer(Runnable onCancelHandler) {
         BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
-        if (bannedUserService.isNetworkIdBanned(bisqEasyOffer.getMakerNetworkId())) {
+        if (bannedUserService.isUserProfileBanned(bisqEasyOffer.getMakerNetworkId())) {
             new Popup().warning(Res.get("bisqEasy.takeOffer.makerBanned.warning")).show();
             onCancelHandler.run();
             return;

@@ -90,10 +90,13 @@ public class WaitingAnimation extends StackPane {
         sceneProperty().addListener(sceneListener);
     }
 
-    public void setState(WaitingState newWaitingState) {
-        if (waitingState != newWaitingState) {
-            waitingState = newWaitingState;
+    public void setState(WaitingState state) {
+        if (waitingState != state) {
+            waitingState = state;
             updateWaitingStateIcon();
+            if (spinningCircle != null) {
+                spinningCircle.setImage(ImageUtil.getImageViewById(getSpinningCircleIconId(state)).getImage());
+            }
         }
     }
 
