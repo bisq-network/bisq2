@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.payment_methods;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.GridPaneUtil;
@@ -32,7 +31,6 @@ import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
-import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
@@ -40,16 +38,14 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
 public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOfferPaymentMethodsModel, MuSigCreateOfferPaymentMethodsController> {
     private static final double TWO_COLUMN_WIDTH = 20.75;
 
     private final ListChangeListener<FiatPaymentMethod> fiatPaymentMethodListener;
-    private final Label fiatSubtitleLabel, bitcoinSubtitleLabel, nonFoundLabel;
+    private final Label fiatSubtitleLabel,  nonFoundLabel;
     private final MuSigCreateOfferAddCustomPaymentMethodBox muSigCreateOfferAddCustomPaymentMethodBox;
-    private final GridPane fiatMethodsGridPane, bitcoinMethodsGridPane;
+    private final GridPane fiatMethodsGridPane;
 
     public MuSigCreateOfferPaymentMethodsView(MuSigCreateOfferPaymentMethodsModel model, MuSigCreateOfferPaymentMethodsController controller) {
         super(new VBox(), model, controller);
@@ -57,7 +53,7 @@ public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOf
         root.setAlignment(Pos.CENTER);
         root.getStyleClass().add("bisq-easy-trade-wizard-payment-methods-step");
 
-        Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethods.headline"));
+        Label headlineLabel = new Label(Res.get("muSig.createOffer.paymentMethods.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         fiatSubtitleLabel = new Label();
@@ -76,26 +72,14 @@ public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOf
 
         muSigCreateOfferAddCustomPaymentMethodBox = new MuSigCreateOfferAddCustomPaymentMethodBox();
 
-        bitcoinSubtitleLabel = new Label();
-        bitcoinSubtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        bitcoinSubtitleLabel.setAlignment(Pos.CENTER);
-        bitcoinSubtitleLabel.getStyleClass().add("bisq-text-3");
-        bitcoinSubtitleLabel.setWrapText(true);
-        bitcoinSubtitleLabel.setMaxWidth(600);
 
-        bitcoinMethodsGridPane = GridPaneUtil.getTwoColumnsGridPane(10, 10, new Insets(0));
-        bitcoinMethodsGridPane.getStyleClass().add("bitcoin-methods-grid-pane");
-        bitcoinMethodsGridPane.setAlignment(Pos.CENTER);
 
         VBox fiatVBox = new VBox(20, fiatSubtitleLabel, nonFoundLabel, fiatMethodsGridPane);
         fiatVBox.setAlignment(Pos.CENTER);
-        VBox btcVBox = new VBox(20, bitcoinSubtitleLabel, bitcoinMethodsGridPane);
-        btcVBox.setAlignment(Pos.CENTER);
 
         VBox.setMargin(headlineLabel, new Insets(0, 0, -5, 0));
         VBox.setMargin(fiatMethodsGridPane, new Insets(0, 60, 0, 60));
-        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, Spacer.fillVBox(), fiatVBox, Spacer.fillVBox(),
-                btcVBox, Spacer.fillVBox());
+        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, Spacer.fillVBox(), fiatVBox, Spacer.fillVBox());
 
         fiatPaymentMethodListener = c -> {
             c.next();
@@ -106,7 +90,6 @@ public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOf
     @Override
     protected void onViewAttached() {
         fiatSubtitleLabel.setText(model.getFiatSubtitleLabel());
-        bitcoinSubtitleLabel.setText(model.getBitcoinSubtitleLabel());
         muSigCreateOfferAddCustomPaymentMethodBox.getCustomPaymentMethodField().textProperty().bindBidirectional(model.getCustomFiatPaymentMethodName());
         nonFoundLabel.visibleProperty().bind(model.getIsPaymentMethodsEmpty());
         nonFoundLabel.managedProperty().bind(model.getIsPaymentMethodsEmpty());
@@ -120,7 +103,6 @@ public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOf
         root.setOnMousePressed(e -> root.requestFocus());
 
         setUpAndFillFiatPaymentMethods();
-        setUpAndFillBitcoinPaymentMethods();
     }
 
     @Override
@@ -132,10 +114,6 @@ public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOf
         fiatMethodsGridPane.managedProperty().unbind();
 
         fiatMethodsGridPane.getChildren().stream()
-                .filter(e -> e instanceof ChipButton)
-                .map(e -> (ChipButton) e)
-                .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));
-        bitcoinMethodsGridPane.getChildren().stream()
                 .filter(e -> e instanceof ChipButton)
                 .map(e -> (ChipButton) e)
                 .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));
@@ -198,50 +176,6 @@ public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOf
             col = i % numColumns;
             row = i / numColumns;
             fiatMethodsGridPane.add(muSigCreateOfferAddCustomPaymentMethodBox, col, row);
-        }
-    }
-
-    private void setUpAndFillBitcoinPaymentMethods() {
-        bitcoinMethodsGridPane.getChildren().clear();
-        bitcoinMethodsGridPane.getColumnConstraints().clear();
-        int numColumns = model.getSortedBitcoinPaymentMethods().size();
-        checkArgument(numColumns == 2, "Only 2 BTC settlement methods allowed for now.");
-        GridPaneUtil.setGridPaneMultiColumnsConstraints(bitcoinMethodsGridPane, numColumns, TWO_COLUMN_WIDTH);
-
-        int row = 0;
-        int col = 0;
-        for (BitcoinPaymentMethod bitcoinPaymentMethod : model.getSortedBitcoinPaymentMethods()) {
-            // enum name or custom name
-            ChipButton chipButton = new ChipButton(bitcoinPaymentMethod.getShortDisplayString());
-            if (!bitcoinPaymentMethod.getShortDisplayString().equals(bitcoinPaymentMethod.getDisplayString())) {
-                chipButton.setTooltip(new BisqTooltip(bitcoinPaymentMethod.getDisplayString()));
-            }
-            if (model.getSelectedBitcoinPaymentMethods().contains(bitcoinPaymentMethod)) {
-                chipButton.setSelected(true);
-            }
-            chipButton.setOnAction(() -> {
-                boolean wasAdded = controller.onToggleBitcoinPaymentMethod(bitcoinPaymentMethod, chipButton.isSelected());
-                if (!wasAdded) {
-                    UIThread.runOnNextRenderFrame(() -> chipButton.setSelected(false));
-                }
-            });
-            model.getAddedCustomBitcoinPaymentMethods().stream()
-                    .filter(customMethod -> customMethod.equals(bitcoinPaymentMethod))
-                    .findAny()
-                    .ifPresentOrElse(
-                            customMethod -> {
-                                ImageView closeIcon = chipButton.setRightIcon("remove-white");
-                                closeIcon.setOnMousePressed(e -> controller.onRemoveCustomBitcoinMethod(bitcoinPaymentMethod));
-                            },
-                            () -> {
-                                // Lookup for an image with the id of the enum name (REVOLUT)
-                                ImageView icon = ImageUtil.getImageViewById(bitcoinPaymentMethod.getName());
-                                ColorAdjust colorAdjust = new ColorAdjust();
-                                colorAdjust.setBrightness(-0.2);
-                                icon.setEffect(colorAdjust);
-                                chipButton.setLeftIcon(icon);
-                            });
-            bitcoinMethodsGridPane.add(chipButton, col++, row);
         }
     }
 }

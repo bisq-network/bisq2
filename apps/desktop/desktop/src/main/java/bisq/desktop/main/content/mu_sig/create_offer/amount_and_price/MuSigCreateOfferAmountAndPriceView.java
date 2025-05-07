@@ -31,8 +31,8 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class MuSigCreateOfferAmountAndPriceView extends View<VBox, MuSigCreateOfferAmountAndPriceModel, MuSigCreateOfferAmountAndPriceController> {
-    private final Label headline, amountAtPriceSymbol;
-    private final VBox priceSelection, priceOverlay, content, amountOverlay;
+    private final Label headline;
+    private final VBox priceOverlay, content, amountOverlay;
     private Subscription isAmountOverlayVisiblePin, isPriceOverlayVisiblePin;
 
     public MuSigCreateOfferAmountAndPriceView(MuSigCreateOfferAmountAndPriceModel model,
@@ -44,11 +44,10 @@ public class MuSigCreateOfferAmountAndPriceView extends View<VBox, MuSigCreateOf
         super(new VBox(), model, controller);
 
         this.amountOverlay = amountOverlay;
-        this.priceSelection = priceSelection;
         this.priceOverlay = priceOverlay;
         headline = new Label();
         headline.getStyleClass().add("bisq-text-headline-2");
-        amountAtPriceSymbol = new Label("@");
+        Label amountAtPriceSymbol = new Label("@");
         amountAtPriceSymbol.getStyleClass().add("amount-at-price-symbol");
 
         HBox amountAndPriceHBox = new HBox(20, amountSelection, amountAtPriceSymbol, priceSelection);

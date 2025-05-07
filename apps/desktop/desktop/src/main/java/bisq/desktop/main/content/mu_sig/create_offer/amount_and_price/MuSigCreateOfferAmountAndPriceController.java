@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.amount_and_price;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
 import bisq.desktop.ServiceProvider;
@@ -104,10 +103,6 @@ public class MuSigCreateOfferAmountAndPriceController implements Controller {
 
     public ReadOnlyObjectProperty<QuoteSideAmountSpec> getQuoteSideAmountSpec() {
         return muSigCreateOfferAmountController.getQuoteSideAmountSpec();
-    }
-
-    public void setBitcoinPaymentMethods(List<BitcoinPaymentMethod> bitcoinPaymentMethods) {
-        muSigCreateOfferAmountController.setBitcoinPaymentMethods(bitcoinPaymentMethods);
     }
 
     public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {

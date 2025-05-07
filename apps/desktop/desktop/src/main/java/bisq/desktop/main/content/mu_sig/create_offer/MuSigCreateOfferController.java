@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
 import bisq.desktop.ServiceProvider;
@@ -72,7 +71,6 @@ public class MuSigCreateOfferController extends NavigationController implements 
     private final MuSigCreateOfferPaymentMethodsController muSigCreateOfferPaymentMethodsController;
     private final MuSigCreateOfferReviewController muSigCreateOfferReviewController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
-    private final ListChangeListener<BitcoinPaymentMethod> bitcoinPaymentMethodsListener;
     private final ListChangeListener<FiatPaymentMethod> fiatPaymentMethodsListener;
     private Subscription priceSpecPin;
 
@@ -94,10 +92,6 @@ public class MuSigCreateOfferController extends NavigationController implements 
                 this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo);
 
-        bitcoinPaymentMethodsListener = c -> {
-            c.next();
-            handleBitcoinPaymentMethodsUpdate();
-        };
         fiatPaymentMethodsListener = c -> {
             c.next();
             handleFiatPaymentMethodsUpdate();
@@ -136,8 +130,6 @@ public class MuSigCreateOfferController extends NavigationController implements 
                 muSigCreateOfferAmountAndPriceController::updateQuoteSideAmountSpecWithPriceSpec);
         handleFiatPaymentMethodsUpdate();
         muSigCreateOfferPaymentMethodsController.getFiatPaymentMethods().addListener(fiatPaymentMethodsListener);
-        handleBitcoinPaymentMethodsUpdate();
-        muSigCreateOfferPaymentMethodsController.getBitcoinPaymentMethods().addListener(bitcoinPaymentMethodsListener);
     }
 
     @Override
@@ -147,14 +139,12 @@ public class MuSigCreateOfferController extends NavigationController implements 
 
         priceSpecPin.unsubscribe();
         muSigCreateOfferPaymentMethodsController.getFiatPaymentMethods().removeListener(fiatPaymentMethodsListener);
-        muSigCreateOfferPaymentMethodsController.getBitcoinPaymentMethods().removeListener(bitcoinPaymentMethodsListener);
     }
 
     @Override
     protected void onStartProcessNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
         if (navigationTarget == NavigationTarget.MU_SIG_CREATE_OFFER_REVIEW_OFFER) {
             muSigCreateOfferReviewController.setDataForCreateOffer(
-                    muSigCreateOfferPaymentMethodsController.getBitcoinPaymentMethods(),
                     muSigCreateOfferPaymentMethodsController.getFiatPaymentMethods(),
                     muSigCreateOfferAmountAndPriceController.getQuoteSideAmountSpec().get(),
                     muSigCreateOfferAmountAndPriceController.getPriceSpec().get()
@@ -277,11 +267,5 @@ public class MuSigCreateOfferController extends NavigationController implements 
         ObservableList<FiatPaymentMethod> fiatPaymentMethods = muSigCreateOfferPaymentMethodsController.getFiatPaymentMethods();
         muSigCreateOfferAmountAndPriceController.setFiatPaymentMethods(fiatPaymentMethods);
         muSigCreateOfferReviewController.setFiatPaymentMethods(fiatPaymentMethods);
-    }
-
-    private void handleBitcoinPaymentMethodsUpdate() {
-        ObservableList<BitcoinPaymentMethod> bitcoinPaymentMethods = muSigCreateOfferPaymentMethodsController.getBitcoinPaymentMethods();
-        muSigCreateOfferAmountAndPriceController.setBitcoinPaymentMethods(bitcoinPaymentMethods);
-        muSigCreateOfferReviewController.setBitcoinPaymentMethods(bitcoinPaymentMethods);
     }
 }

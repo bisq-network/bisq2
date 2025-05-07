@@ -17,8 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.review;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -32,7 +30,7 @@ import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
-import bisq.desktop.main.content.bisq_easy.components.ReviewDataDisplay;
+import bisq.desktop.main.content.mu_sig.components.MuSigReviewDataDisplay;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.mu_sig.MuSigService;
@@ -83,7 +81,7 @@ public class MuSigCreateOfferReviewController implements Controller {
     private final BisqEasyTradeService bisqEasyTradeService;
     private final BannedUserService bannedUserService;
     private final SettingsService settingsService;
-    private final ReviewDataDisplay reviewDataDisplay;
+    private final MuSigReviewDataDisplay muSigReviewDataDisplay;
     private final MediationRequestService mediationRequestService;
     private final MuSigService muSigService;
     private Pin errorMessagePin, peersErrorMessagePin;
@@ -104,15 +102,9 @@ public class MuSigCreateOfferReviewController implements Controller {
         mediationRequestService = serviceProvider.getSupportService().getMediationRequestService();
 
         priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
-        reviewDataDisplay = new ReviewDataDisplay();
+        muSigReviewDataDisplay = new MuSigReviewDataDisplay();
         model = new MuSigCreateOfferReviewModel();
-        view = new MuSigCreateOfferReviewView(model, this, reviewDataDisplay.getRoot());
-    }
-
-    public void setBitcoinPaymentMethods(List<BitcoinPaymentMethod> bitcoinPaymentMethods) {
-        if (bitcoinPaymentMethods != null) {
-            resetSelectedPaymentMethod();
-        }
+        view = new MuSigCreateOfferReviewView(model, this, muSigReviewDataDisplay.getRoot());
     }
 
     public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
@@ -135,11 +127,9 @@ public class MuSigCreateOfferReviewController implements Controller {
         model.setMarket(market);
     }
 
-    public void setDataForCreateOffer(List<BitcoinPaymentMethod> bitcoinPaymentMethods,
-                                      List<FiatPaymentMethod> fiatPaymentMethods,
+    public void setDataForCreateOffer(List<FiatPaymentMethod> fiatPaymentMethods,
                                       AmountSpec amountSpec,
                                       PriceSpec priceSpec) {
-        checkArgument(!bitcoinPaymentMethods.isEmpty(), "bitcoinPaymentMethods must not be empty");
         checkArgument(!fiatPaymentMethods.isEmpty(), "fiatPaymentMethods must not be empty");
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         Direction direction = model.getDirection();
@@ -156,7 +146,6 @@ public class MuSigCreateOfferReviewController implements Controller {
 
         applyData(direction,
                 market,
-                bitcoinPaymentMethods,
                 fiatPaymentMethods,
                 amountSpec,
                 priceSpec);
@@ -187,13 +176,11 @@ public class MuSigCreateOfferReviewController implements Controller {
     // direction is from user perspective not offer direction
     private void applyData(Direction direction,
                            Market market,
-                           List<BitcoinPaymentMethod> bitcoinPaymentMethods,
                            List<FiatPaymentMethod> fiatPaymentMethods,
                            AmountSpec amountSpec,
                            PriceSpec priceSpec) {
         String marketCodes = market.getMarketCodes();
 
-        model.setBitcoinPaymentMethods(bitcoinPaymentMethods);
         model.setFiatPaymentMethods(fiatPaymentMethods);
         model.setPriceSpec(priceSpec);
         priceInput.setMarket(market);
@@ -261,17 +248,11 @@ public class MuSigCreateOfferReviewController implements Controller {
 
         model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.maker"));
         model.setDetailsHeadline(Res.get("bisqEasy.tradeWizard.review.detailsHeadline.maker").toUpperCase());
-        model.setBitcoinPaymentMethodDescription(
-                bitcoinPaymentMethods.size() == 1
-                        ? Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription.btc")
-                        : Res.get("bisqEasy.tradeWizard.review.paymentMethodDescriptions.btc.maker")
-        );
         model.setFiatPaymentMethodDescription(
                 fiatPaymentMethods.size() == 1
                         ? Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription.fiat")
                         : Res.get("bisqEasy.tradeWizard.review.paymentMethodDescriptions.fiat.maker")
         );
-        model.setBitcoinPaymentMethod(PaymentMethodSpecFormatter.fromPaymentMethods(bitcoinPaymentMethods));
         model.setFiatPaymentMethod(PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods));
         model.setPriceDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.maker"));
         if (direction.isSell()) {
@@ -281,20 +262,18 @@ public class MuSigCreateOfferReviewController implements Controller {
         }
         toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
 
-        applyHeaderBitcoinPaymentMethod();
         applyHeaderFiatPaymentMethod();
 
         model.setRangeAmount(isRangeAmount);
-        reviewDataDisplay.setRangeAmount(isRangeAmount);
-        reviewDataDisplay.setDirection(Res.get("bisqEasy.tradeWizard.review.direction", Res.get(direction.isSell() ? "offer.sell" : "offer.buy").toUpperCase()));
-        reviewDataDisplay.setToSendAmountDescription(toSendAmountDescription.toUpperCase());
-        reviewDataDisplay.setToSendAmount(toSendAmount);
-        reviewDataDisplay.setToSendCode(toSendCode);
-        reviewDataDisplay.setToReceiveAmountDescription(toReceiveAmountDescription.toUpperCase());
-        reviewDataDisplay.setToReceiveAmount(toReceiveAmount);
-        reviewDataDisplay.setToReceiveCode(toReceiveCode);
-        reviewDataDisplay.setBitcoinPaymentMethodDescription(model.getBitcoinPaymentMethodDescription().toUpperCase());
-        reviewDataDisplay.setFiatPaymentMethodDescription(model.getFiatPaymentMethodDescription().toUpperCase());
+        muSigReviewDataDisplay.setRangeAmount(isRangeAmount);
+        muSigReviewDataDisplay.setDirection(Res.get("bisqEasy.tradeWizard.review.direction", Res.get(direction.isSell() ? "offer.sell" : "offer.buy").toUpperCase()));
+        muSigReviewDataDisplay.setToSendAmountDescription(toSendAmountDescription.toUpperCase());
+        muSigReviewDataDisplay.setToSendAmount(toSendAmount);
+        muSigReviewDataDisplay.setToSendCode(toSendCode);
+        muSigReviewDataDisplay.setToReceiveAmountDescription(toReceiveAmountDescription.toUpperCase());
+        muSigReviewDataDisplay.setToReceiveAmount(toReceiveAmount);
+        muSigReviewDataDisplay.setToReceiveCode(toReceiveCode);
+        muSigReviewDataDisplay.setFiatPaymentMethodDescription(model.getFiatPaymentMethodDescription().toUpperCase());
     }
 
     public void reset() {
@@ -305,22 +284,12 @@ public class MuSigCreateOfferReviewController implements Controller {
     public void onActivate() {
         model.getShowCreateOfferSuccess().set(false);
         Direction direction = model.getOffer().getDirection();
-        boolean isMainChain = model.getBitcoinPaymentMethods().stream().anyMatch(e -> e.getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN);
-        model.setFeeDetailsVisible(isMainChain);
         if (direction.isSell()) {
-            if (isMainChain) {
-                model.setFee(Res.get("bisqEasy.tradeWizard.review.sellerPaysMinerFee"));
-                model.setFeeDetails(Res.get("bisqEasy.tradeWizard.review.noTradeFeesLong"));
-            } else {
-                model.setFee(Res.get("bisqEasy.tradeWizard.review.noTradeFees"));
-            }
+            model.setFee(Res.get("bisqEasy.tradeWizard.review.sellerPaysMinerFee"));
+            model.setFeeDetails(Res.get("bisqEasy.tradeWizard.review.noTradeFeesLong"));
         } else {
-            if (isMainChain) {
-                model.setFee(Res.get("bisqEasy.tradeWizard.review.noTradeFees"));
-                model.setFeeDetails(Res.get("bisqEasy.tradeWizard.review.sellerPaysMinerFeeLong"));
-            } else {
-                model.setFee(Res.get("bisqEasy.tradeWizard.review.noTradeFees"));
-            }
+            model.setFee(Res.get("bisqEasy.tradeWizard.review.noTradeFees"));
+            model.setFeeDetails(Res.get("bisqEasy.tradeWizard.review.sellerPaysMinerFeeLong"));
         }
     }
 
@@ -341,34 +310,13 @@ public class MuSigCreateOfferReviewController implements Controller {
         closeAndNavigateToHandler.accept(NavigationTarget.MU_SIG_OFFERBOOK_BUY);
     }
 
-    void onSelectBitcoinPaymentMethod(BitcoinPaymentMethod paymentMethod) {
-        model.setTakersSelectedBitcoinPaymentMethod(paymentMethod);
-        applyHeaderBitcoinPaymentMethod();
-    }
-
     void onSelectFiatPaymentMethod(FiatPaymentMethod paymentMethod) {
         model.setTakersSelectedFiatPaymentMethod(paymentMethod);
         applyHeaderFiatPaymentMethod();
     }
 
     private void resetSelectedPaymentMethod() {
-        model.setTakersSelectedBitcoinPaymentMethod(null);
         model.setTakersSelectedFiatPaymentMethod(null);
-    }
-
-    private void applyHeaderBitcoinPaymentMethod() {
-        List<BitcoinPaymentMethod> bitcoinPaymentMethods = model.getBitcoinPaymentMethods();
-        String bitcoinPaymentMethodsString;
-        if (bitcoinPaymentMethods.size() > 2) {
-            bitcoinPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(bitcoinPaymentMethods.stream()
-                    .limit(2)
-                    .collect(Collectors.toList())) + ",...";
-        } else {
-            bitcoinPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(bitcoinPaymentMethods);
-        }
-        bitcoinPaymentMethodsString = StringUtils.truncate(bitcoinPaymentMethodsString, 40);
-        model.setHeaderBitcoinPaymentMethod(bitcoinPaymentMethodsString);
-        reviewDataDisplay.setBitcoinPaymentMethod(bitcoinPaymentMethodsString);
     }
 
     private void applyHeaderFiatPaymentMethod() {
@@ -383,7 +331,7 @@ public class MuSigCreateOfferReviewController implements Controller {
         }
         bitcoinPaymentMethodsString = StringUtils.truncate(bitcoinPaymentMethodsString, 40);
         model.setHeaderFiatPaymentMethod(bitcoinPaymentMethodsString);
-        reviewDataDisplay.setFiatPaymentMethod(bitcoinPaymentMethodsString);
+        muSigReviewDataDisplay.setFiatPaymentMethod(bitcoinPaymentMethodsString);
     }
 
     private void applyPriceDetails(PriceSpec priceSpec, Market market) {

@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.mu_sig.create_offer.payment_methods;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.BitcoinPaymentMethodUtil;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethodUtil;
@@ -43,8 +42,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 public class MuSigCreateOfferPaymentMethodsController implements Controller {
@@ -73,18 +70,7 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
         return model.getSelectedFiatPaymentMethods();
     }
 
-    public ObservableList<BitcoinPaymentMethod> getBitcoinPaymentMethods() {
-        return model.getSelectedBitcoinPaymentMethods();
-    }
-
     public boolean validate() {
-        if (model.getSelectedBitcoinPaymentMethods().isEmpty()) {
-            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.noBtcSettlementMethodSelected"))
-                    .owner(owner)
-                    .show();
-            return false;
-        }
-
         if (getCustomFiatPaymentMethodNameNotEmpty()) {
             return tryAddCustomFiatPaymentMethodAndNavigateNext();
         }
@@ -137,17 +123,8 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
         model.setFiatSubtitleLabel(model.getDirection().isBuy()
                 ? Res.get("bisqEasy.tradeWizard.paymentMethods.fiat.subTitle.buyer", model.getMarket().get().getQuoteCurrencyCode())
                 : Res.get("bisqEasy.tradeWizard.paymentMethods.fiat.subTitle.seller", model.getMarket().get().getQuoteCurrencyCode()));
-        model.setBitcoinSubtitleLabel(model.getDirection().isBuy()
-                ? Res.get("bisqEasy.tradeWizard.paymentMethods.bitcoin.subTitle.buyer")
-                : Res.get("bisqEasy.tradeWizard.paymentMethods.bitcoin.subTitle.seller"));
         model.getCustomFiatPaymentMethodName().set("");
         model.getSortedFiatPaymentMethods().setComparator(Comparator.comparing(PaymentMethod::getShortDisplayString));
-
-        List<BitcoinPaymentMethod> paymentMethods = Stream.of(BitcoinPaymentRail.MAIN_CHAIN, BitcoinPaymentRail.LN)
-                .map(BitcoinPaymentMethod::fromPaymentRail)
-                .collect(Collectors.toList());
-        model.getBitcoinPaymentMethods().setAll(paymentMethods);
-        model.getSortedBitcoinPaymentMethods().setComparator(Comparator.comparingInt(o -> o.getPaymentRail().ordinal()));
 
         addedCustomFiatPaymentMethodsListener = change -> updateCanAddCustomFiatPaymentMethod();
         model.getAddedCustomFiatPaymentMethods().addListener(addedCustomFiatPaymentMethodsListener);
@@ -168,18 +145,6 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
                         maybeAddCustomFiatPaymentMethod(fiatPaymentMethod);
                     }
                 }));
-        settingsService.getCookie().asString(CookieKey.CREATE_OFFER_BITCOIN_METHODS)
-                .ifPresent(names -> List.of(names.split(",")).forEach(name -> {
-                    if (name.isEmpty()) {
-                        return;
-                    }
-                    BitcoinPaymentMethod bitcoinPaymentMethod = BitcoinPaymentMethodUtil.getPaymentMethod(name);
-                    boolean isCustomPaymentMethod = bitcoinPaymentMethod.isCustomPaymentMethod();
-                    if (!isCustomPaymentMethod) {
-                        maybeAddBitcoinPaymentMethod(bitcoinPaymentMethod);
-                    }
-                }));
-        maybeAddMainChainPaymentMethodAsSelected();
     }
 
     @Override
@@ -280,42 +245,6 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
         return model.getMarket().get().getMarketCodes();
     }
 
-    boolean onToggleBitcoinPaymentMethod(BitcoinPaymentMethod bitcoinPaymentMethod, boolean isSelected) {
-        if (isSelected) {
-            if (model.getSelectedBitcoinPaymentMethods().size() >= 4) {
-                new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.maxMethodsReached")).show();
-                return false;
-            }
-            maybeAddBitcoinPaymentMethod(bitcoinPaymentMethod);
-        } else {
-            model.getSelectedBitcoinPaymentMethods().remove(bitcoinPaymentMethod);
-            setCreateOfferBitcoinMethodsCookie();
-        }
-        return true;
-    }
-
-    void onRemoveCustomBitcoinMethod(BitcoinPaymentMethod bitcoinPaymentMethod) {
-        model.getAddedCustomBitcoinPaymentMethods().remove(bitcoinPaymentMethod);
-        model.getSelectedBitcoinPaymentMethods().remove(bitcoinPaymentMethod);
-        model.getBitcoinPaymentMethods().remove(bitcoinPaymentMethod);
-        setCreateOfferBitcoinMethodsCookie();
-    }
-
-    private void maybeAddBitcoinPaymentMethod(BitcoinPaymentMethod bitcoinPaymentMethod) {
-        if (!model.getSelectedBitcoinPaymentMethods().contains(bitcoinPaymentMethod)) {
-            model.getSelectedBitcoinPaymentMethods().add(bitcoinPaymentMethod);
-            setCreateOfferBitcoinMethodsCookie();
-        }
-        if (!model.getBitcoinPaymentMethods().contains(bitcoinPaymentMethod)) {
-            model.getBitcoinPaymentMethods().add(bitcoinPaymentMethod);
-        }
-    }
-
-    private void setCreateOfferBitcoinMethodsCookie() {
-        settingsService.setCookie(CookieKey.CREATE_OFFER_BITCOIN_METHODS,
-                Joiner.on(",").join(PaymentMethodUtil.getPaymentMethodNames(model.getSelectedBitcoinPaymentMethods())));
-    }
-
     private void maybeRemoveCustomFiatPaymentMethods() {
         // To ensure backwards compatibility we need to drop custom fiat payment methods if the user has more than 3,
         // which is the max allowed number of custom fiat payment methods per market
@@ -326,11 +255,5 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
 
     private void updateCanAddCustomFiatPaymentMethod() {
         model.getCanAddCustomFiatPaymentMethod().set(model.getAddedCustomFiatPaymentMethods().size() < MAX_ALLOWED_CUSTOM_FIAT_PAYMENTS);
-    }
-
-    private void maybeAddMainChainPaymentMethodAsSelected() {
-        if (model.getSelectedBitcoinPaymentMethods().isEmpty()) {
-            model.getSelectedBitcoinPaymentMethods().add(MAIN_CHAIN_PAYMENT_METHOD);
-        }
     }
 }

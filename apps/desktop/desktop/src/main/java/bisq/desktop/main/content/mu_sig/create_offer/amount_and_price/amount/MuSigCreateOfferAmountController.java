@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.amount_and_price.amount;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
@@ -45,7 +44,6 @@ import bisq.offer.amount.spec.QuoteSideAmountSpec;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.amount.spec.QuoteSideRangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.PriceUtil;
@@ -135,12 +133,6 @@ public class MuSigCreateOfferAmountController implements Controller {
         amountSelectionController.setMarket(market);
         model.setMarket(market);
         applyQuoteSideMinMaxRange();
-    }
-
-    public void setBitcoinPaymentMethods(List<BitcoinPaymentMethod> bitcoinPaymentMethods) {
-        if (bitcoinPaymentMethods != null) {
-            model.setBitcoinPaymentMethods(bitcoinPaymentMethods);
-        }
     }
 
     public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
@@ -405,69 +397,6 @@ public class MuSigCreateOfferAmountController implements Controller {
         return bestOffersPrice;
     }
 
-    private boolean filterOffersByAmounts(BisqEasyOffer peersOffer) {
-        try {
-            Optional<UserProfile> optionalMakersUserProfile = userProfileService.findUserProfile(peersOffer.getMakersUserProfileId());
-            if (optionalMakersUserProfile.isEmpty()) {
-                return false;
-            }
-            UserProfile makersUserProfile = optionalMakersUserProfile.get();
-            if (userProfileService.isChatUserIgnored(makersUserProfile)) {
-                return false;
-            }
-            if (userIdentityService.getUserIdentities().stream()
-                    .map(userIdentity -> userIdentity.getUserProfile().getId())
-                    .anyMatch(userProfileId -> userProfileId.equals(optionalMakersUserProfile.get().getId()))) {
-                return false;
-            }
-
-            if (peersOffer.getDirection().equals(model.getDirection())) {
-                return false;
-            }
-
-            if (!peersOffer.getMarket().equals(model.getMarket())) {
-                return false;
-            }
-
-            Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
-            Optional<Monetary> peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
-            if (myQuoteSideMinOrFixedAmount.orElseThrow().getValue() > peersQuoteSideMaxOrFixedAmount.orElseThrow().getValue()) {
-                return false;
-            }
-
-            Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
-            Optional<Monetary> peersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
-            if (myQuoteSideMaxOrFixedAmount.orElseThrow().getValue() < peersQuoteSideMinOrFixedAmount.orElseThrow().getValue()) {
-                return false;
-            }
-
-            List<String> bitcoinPaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(peersOffer.getBaseSidePaymentMethodSpecs());
-            List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = PaymentMethodSpecUtil.createBitcoinPaymentMethodSpecs(model.getBitcoinPaymentMethods());
-            List<String> baseSidePaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(baseSidePaymentMethodSpecs);
-            if (baseSidePaymentMethodNames.stream().noneMatch(bitcoinPaymentMethodNames::contains)) {
-                return false;
-            }
-
-            List<String> fiatPaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(peersOffer.getQuoteSidePaymentMethodSpecs());
-            List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(model.getFiatPaymentMethods());
-            List<String> quoteSidePaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(quoteSidePaymentMethodSpecs);
-            if (quoteSidePaymentMethodNames.stream().noneMatch(fiatPaymentMethodNames::contains)) {
-                return false;
-            }
-
-            return MuSigTradeAmountLimits.checkOfferAmountLimitForMaxOrFixedAmount(reputationService,
-                            userIdentityService,
-                            userProfileService,
-                            marketPriceService,
-                            peersOffer)
-                    .map(Result::isValid)
-                    .orElse(false);
-        } catch (Throwable t) {
-            log.error("Error at TakeOfferPredicate", t);
-            return false;
-        }
-    }
-
     private Optional<PriceQuote> getMarketPriceQuote() {
         return marketPriceService.findMarketPriceQuote(model.getMarket());
     }
@@ -706,13 +635,6 @@ public class MuSigCreateOfferAmountController implements Controller {
     }
 
     private boolean isValidPaymentMethods(BisqEasyOffer peersOffer) {
-        List<String> bitcoinPaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(peersOffer.getBaseSidePaymentMethodSpecs());
-        List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = PaymentMethodSpecUtil.createBitcoinPaymentMethodSpecs(model.getBitcoinPaymentMethods());
-        List<String> baseSidePaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(baseSidePaymentMethodSpecs);
-        if (baseSidePaymentMethodNames.stream().noneMatch(bitcoinPaymentMethodNames::contains)) {
-            return false;
-        }
-
         List<String> fiatPaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(peersOffer.getQuoteSidePaymentMethodSpecs());
         List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(model.getFiatPaymentMethods());
         List<String> quoteSidePaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(quoteSidePaymentMethodSpecs);

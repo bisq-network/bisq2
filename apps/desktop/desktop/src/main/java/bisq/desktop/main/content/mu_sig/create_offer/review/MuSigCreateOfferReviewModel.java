@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.review;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
@@ -44,8 +43,6 @@ class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private  MuSigOffer offer;
     @Setter
-    private BitcoinPaymentMethod takersSelectedBitcoinPaymentMethod;
-    @Setter
     private FiatPaymentMethod takersSelectedFiatPaymentMethod;
     @Setter
     private Monetary minBaseSideAmount;
@@ -62,23 +59,15 @@ class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private PriceSpec priceSpec;
     @Setter
-    private List<BitcoinPaymentMethod> bitcoinPaymentMethods;
-    @Setter
     private List<FiatPaymentMethod> fiatPaymentMethods;
     @Setter
     private String headline;
-    @Setter
-    private String headerBitcoinPaymentMethod;
     @Setter
     private String headerFiatPaymentMethod;
     @Setter
     private String detailsHeadline;
     @Setter
     private boolean isRangeAmount;
-    @Setter
-    private String bitcoinPaymentMethodDescription;
-    @Setter
-    private String bitcoinPaymentMethod;
     @Setter
     private String fiatPaymentMethodDescription;
     @Setter
@@ -93,9 +82,6 @@ class MuSigCreateOfferReviewModel implements Model {
     private String fee;
     @Setter
     private String feeDetails;
-    @Setter
-    private boolean feeDetailsVisible;
-    private final ObservableList<BitcoinPaymentMethod> takersBitcoinPaymentMethods = FXCollections.observableArrayList();
     private final ObservableList<FiatPaymentMethod> takersFiatPaymentMethods = FXCollections.observableArrayList();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
     @Setter
@@ -103,7 +89,6 @@ class MuSigCreateOfferReviewModel implements Model {
 
     public void reset() {
         offer = null;
-        takersSelectedBitcoinPaymentMethod = null;
         takersSelectedFiatPaymentMethod = null;
         minBaseSideAmount = null;
         maxBaseSideAmount = null;
@@ -112,20 +97,16 @@ class MuSigCreateOfferReviewModel implements Model {
         maxQuoteSideAmount = null;
         fixQuoteSideAmount = null;
         priceSpec = null;
-        bitcoinPaymentMethods = null;
         fiatPaymentMethods = null;
         headline = null;
         detailsHeadline = null;
         priceDescription = null;
         price = null;
         priceDetails = null;
-        bitcoinPaymentMethodDescription = null;
-        bitcoinPaymentMethod = null;
         fiatPaymentMethodDescription = null;
         fiatPaymentMethod = null;
         fee = null;
         feeDetails = null;
-        takersBitcoinPaymentMethods.clear();
         takersFiatPaymentMethods.clear();
         showCreateOfferSuccess.set(false);
         marketPrice = 0;
