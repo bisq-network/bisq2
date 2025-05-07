@@ -21,9 +21,9 @@ import bisq.common.threading.ExecutorFactory;
 import bisq.presentation.notifications.OsSpecificNotificationService;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.swing.ImageIcon;
-import java.awt.SystemTray;
-import java.awt.TrayIcon;
+import javax.annotation.Nullable;
+import javax.swing.*;
+import java.awt.*;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -34,14 +34,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class AwtNotificationService implements OsSpecificNotificationService {
     private boolean isSupported;
     private TrayIcon trayIcon;
-    private final ExecutorService initializationExecutor =
-            ExecutorFactory.newSingleThreadExecutor("initialize-NotificationService");
+    @Nullable
+    private ExecutorService initializationExecutor;
 
     public AwtNotificationService() {
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        initializationExecutor = ExecutorFactory.newSingleThreadExecutor("initialize-NotificationService");
         CompletableFuture.runAsync(() -> {
             try {
                 checkArgument(SystemTray.isSupported(), "SystemTray is not supported");
@@ -69,7 +70,10 @@ public class AwtNotificationService implements OsSpecificNotificationService {
             }
             trayIcon = null;
         }
-        initializationExecutor.shutdownNow();
+        if (initializationExecutor != null) {
+            initializationExecutor.shutdownNow();
+            initializationExecutor = null;
+        }
         return CompletableFuture.completedFuture(true);
     }
 
