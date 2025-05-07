@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.protocol.events;
+package bisq.trade.protocol.handler;
 
 import bisq.network.SendMessageResult;
 import bisq.trade.ServiceProvider;
@@ -29,8 +29,8 @@ public interface TradeMessageSender<M extends Trade<?, ?, ?>> {
     default CompletableFuture<SendMessageResult> sendMessage(TradeMessage message, ServiceProvider serviceProvider, M trade) {
         BannedUserService bannedUserService = serviceProvider.getUserService().getBannedUserService();
         // If one of the twt traders is banned we block any trade message sending
-        if (bannedUserService.isNetworkIdBanned(message.getSender()) ||
-                bannedUserService.isNetworkIdBanned(trade.getPeer().getNetworkId())) {
+        if (bannedUserService.isUserProfileBanned(message.getSender()) ||
+                bannedUserService.isUserProfileBanned(trade.getPeer().getNetworkId())) {
             return CompletableFuture.failedFuture(new RuntimeException());
         }
 

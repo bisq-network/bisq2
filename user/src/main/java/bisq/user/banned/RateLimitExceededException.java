@@ -15,24 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.protocol.events;
+package bisq.user.banned;
 
-import bisq.network.SendMessageResult;
-import bisq.trade.ServiceProvider;
-import bisq.trade.Trade;
-import bisq.trade.protocol.messages.TradeMessage;
-import lombok.extern.slf4j.Slf4j;
+import lombok.Getter;
 
-import java.util.concurrent.CompletableFuture;
+@Getter
+public class RateLimitExceededException extends Exception {
+    private final String userProfileId;
 
-@Slf4j
-public abstract class SendTradeMessageHandler<M extends Trade<?, ?, ?>> extends TradeEventHandler<M> implements TradeMessageSender<M> {
-
-    protected SendTradeMessageHandler(ServiceProvider serviceProvider, M model) {
-        super(serviceProvider, model);
-    }
-
-    protected CompletableFuture<SendMessageResult> sendMessage(TradeMessage message) {
-        return sendMessage(message, serviceProvider, trade);
+    public RateLimitExceededException(String userProfileId) {
+        super("UserProfile with ID " + userProfileId + " has exceeded rate limit");
+        this.userProfileId = userProfileId;
     }
 }

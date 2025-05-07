@@ -196,7 +196,7 @@ public class DtoMappings {
                 case BISQ_EASY_OPEN_TRADES -> ChatChannelDomain.BISQ_EASY_OPEN_TRADES;
                 case DISCUSSION -> ChatChannelDomain.DISCUSSION;
                 case SUPPORT -> ChatChannelDomain.SUPPORT;
-                case MU_SIG_OFFERBOOK -> ChatChannelDomain.MU_SIG_OFFERBOOK;
+                case MU_SIG_OPEN_TRADES -> ChatChannelDomain.MU_SIG_OPEN_TRADES;
             };
         }
 
@@ -209,7 +209,7 @@ public class DtoMappings {
                 case BISQ_EASY_OPEN_TRADES -> ChatChannelDomainDto.BISQ_EASY_OPEN_TRADES;
                 case DISCUSSION -> ChatChannelDomainDto.DISCUSSION;
                 case SUPPORT -> ChatChannelDomainDto.SUPPORT;
-                case MU_SIG_OFFERBOOK -> ChatChannelDomainDto.MU_SIG_OFFERBOOK;
+                case MU_SIG_OPEN_TRADES -> ChatChannelDomainDto.MU_SIG_OPEN_TRADES;
                 case BISQ_EASY_PRIVATE_CHAT -> ChatChannelDomainDto.DISCUSSION;
                 case EVENTS -> ChatChannelDomainDto.DISCUSSION;
             };

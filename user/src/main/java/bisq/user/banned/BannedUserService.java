@@ -33,6 +33,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -106,17 +107,17 @@ public class BannedUserService implements PersistenceClient<BannedUserStore>, Se
         return persistableStore.getBannedUserProfileDataSet();
     }
 
-    public boolean isUserProfileBanned(String userProfileId) {
-        return getBannedUserProfileDataSet().stream().anyMatch(e -> e.getUserProfile().getId().equals(userProfileId));
-    }
 
     public boolean isUserProfileBanned(UserProfile userProfile) {
-        return getBannedUserProfileDataSet().stream().anyMatch(e -> e.getUserProfile().equals(userProfile));
+        return isUserProfileBanned(userProfile.getId());
     }
 
-    public boolean isNetworkIdBanned(NetworkId networkId) {
-        return getBannedUserProfileDataSet().stream()
-                .anyMatch(e -> e.getUserProfile().getNetworkId().equals(networkId));
+    public boolean isUserProfileBanned(NetworkId networkId) {
+        return isUserProfileBanned(networkId.getId());
+    }
+
+    public boolean isUserProfileBanned(String userProfileId) {
+        return getBannedUserProfileDataSet().stream().anyMatch(e -> e.getUserProfile().getId().equals(userProfileId));
     }
 
     public void checkRateLimit(String userProfileId, long timeStamp) {
@@ -138,6 +139,9 @@ public class BannedUserService implements PersistenceClient<BannedUserStore>, Se
         return rateLimitExceedingUserProfiles.contains(userProfileId);
     }
 
+    public Optional<String> getExceedsLimitInfo(String userProfileId) {
+        return rateLimiter.getExceedsLimitInfo(userProfileId);
+    }
 
     /* --------------------------------------------------------------------- */
     // Private
@@ -150,6 +154,7 @@ public class BannedUserService implements PersistenceClient<BannedUserStore>, Se
                 .findAny()
                 .ifPresent(rateLimitExceedingUserProfiles::remove);
     }
+
 
     private boolean isAuthorized(AuthorizedData authorizedData) {
         return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.MODERATOR);

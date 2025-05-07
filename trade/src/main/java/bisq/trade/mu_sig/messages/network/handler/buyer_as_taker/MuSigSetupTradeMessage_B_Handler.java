@@ -34,7 +34,7 @@ import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_B;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_C;
 import bisq.trade.protocol.events.TradeMessageHandler;
-import bisq.trade.protocol.events.TradeMessageSender;
+import bisq.trade.protocol.handler.TradeMessageSender;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;

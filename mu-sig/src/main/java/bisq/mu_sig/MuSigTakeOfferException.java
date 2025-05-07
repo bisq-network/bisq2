@@ -15,7 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.mu_sig;
+package bisq.mu_sig;
 
-public interface MuSigOfferMessage {
+public class MuSigTakeOfferException extends Exception{
+    public MuSigTakeOfferException(String message) {
+        super(message);
+    }
 }

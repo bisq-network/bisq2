@@ -420,7 +420,7 @@ public class TradeWizardReviewController implements Controller {
 
     public void takeOffer() {
         BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
-        if (bannedUserService.isNetworkIdBanned(bisqEasyOffer.getMakerNetworkId())) {
+        if (bannedUserService.isUserProfileBanned(bisqEasyOffer.getMakerNetworkId())) {
             new Popup().warning(Res.get("bisqEasy.takeOffer.makerBanned.warning")).show();
             return;
         }

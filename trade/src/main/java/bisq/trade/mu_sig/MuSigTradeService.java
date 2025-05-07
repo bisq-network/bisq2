@@ -20,6 +20,8 @@ package bisq.trade.mu_sig;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
@@ -56,6 +58,7 @@ import bisq.trade.mu_sig.protocol.ignore.MuSigBuyerAsMakerProtocol;
 import bisq.trade.mu_sig.protocol.ignore.MuSigSellerAsTakerProtocol;
 import bisq.trade.protobuf.MusigGrpc;
 import bisq.user.banned.BannedUserService;
+import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
@@ -84,6 +87,7 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
     private final SettingsService settingsService;
     private final BannedUserService bannedUserService;
     private final AlertService alertService;
+    private final MuSigOpenTradeChannelService muSigOpenTradeChannelService;
 
     @Getter
     private final MuSigTradeStore persistableStore = new MuSigTradeStore();
@@ -112,6 +116,7 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
         settingsService = serviceProvider.getSettingsService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         alertService = serviceProvider.getBondedRolesService().getAlertService();
+        muSigOpenTradeChannelService = serviceProvider.getChatService().getMuSigOpenTradeChannelService();
 
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
@@ -215,6 +220,8 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
 
         return CompletableFuture.completedFuture(true);
     }
+
+
     /* --------------------------------------------------------------------- */
     // MessageListener
     /* --------------------------------------------------------------------- */
@@ -225,7 +232,7 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
             verifyTradingNotOnHalt();
             verifyMinVersionForTrading();
 
-            if (bannedUserService.isNetworkIdBanned(muSigTradeMessage.getSender())) {
+            if (bannedUserService.isUserProfileBanned(muSigTradeMessage.getSender())) {
                 log.warn("Message ignored as sender is banned");
                 return;
             }
@@ -317,6 +324,23 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
         persistableStore.addTrade(muSigTrade);
 
         return createAndAddTradeProtocol(muSigTrade);
+    }
+
+    public MuSigOpenTradeChannel MuSigOpenTradeChannel(MuSigTrade trade,
+                                                       UserIdentity takerIdentity,
+                                                       UserProfile makerUserProfile,
+                                                       Optional<UserProfile> mediator) {
+        String tradeId = trade.getId();
+        checkArgument(muSigOpenTradeChannelService.findChannelByTradeId(tradeId).isEmpty(),
+                "When taking an offer it is expected that no MuSigOpenTradeChannel for that trade ID exist yet.");
+        return muSigOpenTradeChannelService.traderCreatesChannel(tradeId,
+                takerIdentity,
+                makerUserProfile,
+                mediator);
+    }
+
+    public Optional<MuSigOpenTradeChannel> findMuSigOpenTradeChannel(String tradeId) {
+        return muSigOpenTradeChannelService.findChannelByTradeId(tradeId);
     }
 
     public void takeOffer(MuSigTrade trade) {

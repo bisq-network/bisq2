@@ -26,6 +26,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.main.content.mu_sig.take_offer.MuSigTakeOfferController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.mu_sig.MuSigService;
@@ -150,7 +151,7 @@ public abstract class MuSigOfferbookController<M extends MuSigOfferbookModel, V 
     }
 
     void onTakeOffer(MuSigOffer offer) {
-        muSigService.takeOffer(offer);
+        Navigation.navigateTo(NavigationTarget.MU_SIG_TAKE_OFFER, new MuSigTakeOfferController.InitData(offer));
     }
 
     public void onSelectMarket(Market market) {

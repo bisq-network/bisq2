@@ -26,6 +26,7 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeSelectionService;
 import bisq.chat.common.CommonChannelSelectionService;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.common.CommonPublicChatChannelService;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.chat.priv.PrivateChatChannelService;
@@ -45,12 +46,17 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static bisq.chat.common.SubDomain.*;
+import static bisq.chat.common.SubDomain.DISCUSSION_BISQ;
+import static bisq.chat.common.SubDomain.SUPPORT_SUPPORT;
 
 @Slf4j
 public class ChatService implements Service {
@@ -65,6 +71,8 @@ public class ChatService implements Service {
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     @Getter
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
+    @Getter
+    private final MuSigOpenTradeChannelService muSigOpenTradeChannelService;
     @Getter
     private final Map<ChatChannelDomain, CommonPublicChatChannelService> commonPublicChatChannelServices = new HashMap<>();
     @Getter
@@ -102,6 +110,9 @@ public class ChatService implements Service {
         bisqEasyOpenTradeChannelService = new BisqEasyOpenTradeChannelService(persistenceService,
                 networkService,
                 userService);
+        muSigOpenTradeChannelService = new MuSigOpenTradeChannelService(persistenceService,
+                networkService,
+                userService);
         chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
                 new BisqEasyOpenTradeSelectionService(persistenceService, bisqEasyOpenTradeChannelService,
                         userIdentityService));
@@ -123,6 +134,7 @@ public class ChatService implements Service {
         addToChatChannelSelectionServices(ChatChannelDomain.SUPPORT);
 
         leavePrivateChatManager = new LeavePrivateChatManager(bisqEasyOpenTradeChannelService,
+                muSigOpenTradeChannelService,
                 twoPartyPrivateChatChannelServices,
                 chatChannelSelectionServices,
                 chatNotificationService);
