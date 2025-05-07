@@ -93,10 +93,14 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     }
 
     public void shutdown() {
+        if (isShutdownInProgress) {
+            return;
+        }
         isShutdownInProgress = true;
         nodesById.removeNodeListener(this);
         dataService.ifPresent(service -> service.removeListener(this));
         listeners.clear();
+        processedEnvelopePayloadMessages.clear();
     }
 
 

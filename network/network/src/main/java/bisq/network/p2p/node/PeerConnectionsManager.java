@@ -76,7 +76,9 @@ public class PeerConnectionsManager {
 
     public void shutdown() {
         server.ifPresent(ServerChannel::shutdown);
+        server = Optional.empty();
         outboundConnectionMultiplexer.ifPresent(OutboundConnectionMultiplexer::shutdown);
+        outboundConnectionMultiplexer = Optional.empty();
     }
 
     public Optional<Address> findMyAddress() {

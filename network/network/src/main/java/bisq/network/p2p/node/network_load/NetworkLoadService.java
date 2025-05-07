@@ -76,6 +76,9 @@ public class NetworkLoadService {
 
     public void shutdown() {
         scheduler.stop();
+        synchronized (lock) {
+            connectionMetricsByConnectionId.clear();
+        }
     }
 
     public NetworkLoad updateNetworkLoad() {

@@ -181,6 +181,10 @@ public class ChatService implements Service {
 
         list.add(chatNotificationService.shutdown());
 
+        commonPublicChatChannelServices.clear();
+        chatChannelSelectionServices.clear();
+        twoPartyPrivateChatChannelServices.clear();
+
         return CompletableFutureUtils.allOf(list).thenApply(result -> true);
     }
 

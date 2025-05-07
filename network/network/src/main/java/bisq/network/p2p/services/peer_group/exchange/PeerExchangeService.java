@@ -17,10 +17,10 @@
 
 package bisq.network.p2p.services.peer_group.exchange;
 
+import bisq.common.network.Address;
 import bisq.common.observable.Pin;
 import bisq.common.threading.ThreadName;
 import bisq.common.util.ExceptionUtil;
-import bisq.common.network.Address;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -30,6 +30,7 @@ import bisq.network.p2p.services.peer_group.Peer;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -59,7 +60,9 @@ public class PeerExchangeService implements Node.Listener {
     private final AtomicReference<Optional<PeerExchangeAttempt>> extendPeerGroupPeerExchangeAttempt = new AtomicReference<>(Optional.empty());
     private final AtomicReference<Optional<PeerExchangeAttempt>> retryPeerExchangeAttempt = new AtomicReference<>(Optional.empty());
     private final AtomicInteger numRetryAttempts = new AtomicInteger();
+    @Nullable
     private CountDownLatch minSuccessReachedLatch;
+    @Nullable
     private Pin minSuccessReachedPin;
     private volatile boolean isShutdownInProgress;
 
@@ -88,7 +91,9 @@ public class PeerExchangeService implements Node.Listener {
         }
         initialPeerExchangeAttempt.shutdown();
         extendPeerGroupPeerExchangeAttempt.get().ifPresent(PeerExchangeAttempt::shutdown);
+        extendPeerGroupPeerExchangeAttempt.set(Optional.empty());
         retryPeerExchangeAttempt.get().ifPresent(PeerExchangeAttempt::shutdown);
+        retryPeerExchangeAttempt.set(Optional.empty());
     }
 
 

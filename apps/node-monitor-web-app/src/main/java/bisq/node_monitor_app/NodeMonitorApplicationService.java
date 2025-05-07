@@ -23,6 +23,7 @@ import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
+import bisq.common.observable.Pin;
 import bisq.common.platform.OS;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
@@ -49,6 +50,7 @@ import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.awt.SystemTray;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -82,6 +84,8 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
     private final BisqEasyService bisqEasyService;
     private final NodeMonitorService nodeMonitorService;
     private Optional<RestApiService> restApiService = Optional.empty();
+    @Nullable
+    private Pin difficultyAdjustmentServicePin;
 
     public NodeMonitorApplicationService(String[] args) {
         super("node_monitor", args);
@@ -221,10 +225,10 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                     if (throwable == null) {
                         if (success) {
                             setState(State.APP_INITIALIZED);
-
-                            bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault -> networkService.getNetworkLoadServices().forEach(networkLoadService ->
-                                    networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
-
+                            difficultyAdjustmentServicePin = bondedRolesService.getDifficultyAdjustmentService()
+                                    .getMostRecentValueOrDefault()
+                                    .addObserver(mostRecentValueOrDefault -> networkService.getNetworkLoadServices().forEach(networkLoadService ->
+                                            networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
                             log.info("ApplicationService initialized");
                         } else {
                             setState(State.FAILED);
@@ -239,6 +243,11 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (difficultyAdjustmentServicePin != null) {
+            difficultyAdjustmentServicePin.unbind();
+            difficultyAdjustmentServicePin = null;
+        }
+
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> nodeMonitorService.shutdown()
                 .thenCompose(result -> restApiService.map(RestApiService::shutdown)

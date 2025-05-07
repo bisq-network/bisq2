@@ -71,6 +71,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     public void shutdown() {
         maybeLogMapState("shutdown", persistableStore);
         super.shutdown();
+        listeners.clear();
     }
 
     public DataStorageResult add(AddAuthenticatedDataRequest request) {

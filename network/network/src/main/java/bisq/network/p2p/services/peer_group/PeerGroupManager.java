@@ -175,7 +175,10 @@ public class PeerGroupManager implements Node.Listener {
         keepAliveService.shutdown();
         networkLoadExchangeService.shutdown();
         scheduler.ifPresent(Scheduler::stop);
+        scheduler = Optional.empty();
         maybeCreateConnectionsScheduler.ifPresent(Scheduler::stop);
+        maybeCreateConnectionsScheduler = Optional.empty();
+        listeners.clear();
         setState(State.TERMINATED);
     }
 

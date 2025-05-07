@@ -46,6 +46,8 @@ public class PruneExpiredEntriesService implements Service {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         scheduler.ifPresent(Scheduler::stop);
+        scheduler = Optional.empty();
+        tasks.clear();
         return CompletableFuture.completedFuture(true);
     }
 
