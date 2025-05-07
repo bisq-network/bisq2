@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.content.bisq_easy.private_chats;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.main.content.chat.priv.PrivateChatsController;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

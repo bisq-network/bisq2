@@ -32,7 +32,7 @@ import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protobuf.PartialSignaturesRequest;
 import bisq.trade.protobuf.ReceiverAddressAndAmount;
 import bisq.trade.protocol.events.TradeMessageHandler;
-import bisq.trade.protocol.events.TradeMessageSender;
+import bisq.trade.protocol.handler.TradeMessageSender;
 import com.google.common.collect.ImmutableMap;
 import lombok.extern.slf4j.Slf4j;
 

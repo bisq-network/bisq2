@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_guide;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
@@ -25,6 +24,7 @@ import bisq.desktop.main.content.bisq_easy.trade_guide.process.BisqEasyGuideProc
 import bisq.desktop.main.content.bisq_easy.trade_guide.rules.BisqEasyGuideRulesController;
 import bisq.desktop.main.content.bisq_easy.trade_guide.security.BisqEasyGuideSecurityController;
 import bisq.desktop.main.content.bisq_easy.trade_guide.welcome.BisqEasyGuideWelcomeController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.settings.SettingsService;
 import lombok.Getter;

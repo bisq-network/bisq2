@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.reputation.ranking;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.common.data.Pair;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.HashMapObserver;
@@ -29,6 +28,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;

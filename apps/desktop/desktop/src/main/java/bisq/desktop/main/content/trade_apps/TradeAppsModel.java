@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.trade_apps;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.main.content.ContentTabModel;
+import bisq.desktop.navigation.NavigationTarget;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;

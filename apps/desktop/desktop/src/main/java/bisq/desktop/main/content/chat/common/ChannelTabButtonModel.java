@@ -17,12 +17,12 @@
 
 package bisq.desktop.main.content.chat.common;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.common.CommonPublicChatChannelService;
 import bisq.desktop.main.content.chat.ChatUtil;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;

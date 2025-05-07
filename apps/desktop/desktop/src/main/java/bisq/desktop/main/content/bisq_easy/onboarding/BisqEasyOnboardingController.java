@@ -17,13 +17,13 @@
 
 package bisq.desktop.main.content.bisq_easy.onboarding;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;
@@ -59,7 +59,7 @@ public class BisqEasyOnboardingController implements Controller {
     }
 
     void onOpenTradeWizard() {
-        Navigation.navigateTo(NavigationTarget.TRADE_WIZARD, new TradeWizardController.InitData(false));
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_WIZARD, new TradeWizardController.InitData(false));
     }
 
     void onOpenTradeGuide() {

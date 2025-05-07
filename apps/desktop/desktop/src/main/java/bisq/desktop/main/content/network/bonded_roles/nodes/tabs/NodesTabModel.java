@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.network.bonded_roles.nodes.tabs;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.main.content.network.bonded_roles.tabs.BondedRolesTabModel;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

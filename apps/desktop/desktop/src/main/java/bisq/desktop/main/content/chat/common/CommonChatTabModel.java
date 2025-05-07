@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.chat.common;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.main.content.ContentTabModel;
+import bisq.desktop.navigation.NavigationTarget;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;

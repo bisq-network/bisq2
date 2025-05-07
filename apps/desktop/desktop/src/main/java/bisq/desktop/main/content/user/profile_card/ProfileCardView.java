@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.user.profile_card;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.view.TabButton;
 import bisq.desktop.common.view.TabView;
 import bisq.desktop.components.containers.Spacer;
@@ -26,6 +25,7 @@ import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.components.BondedRoleBadge;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;

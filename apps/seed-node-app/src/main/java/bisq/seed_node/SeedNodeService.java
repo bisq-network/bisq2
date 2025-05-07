@@ -31,6 +31,7 @@ import bisq.user.reputation.ReputationDataUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -76,6 +77,7 @@ public class SeedNodeService implements Service {
     private final IdentityService identityService;
     private final KeyBundleService keyBundleService;
     private final Optional<Config> optionalConfig;
+    @Nullable
     private Scheduler startupScheduler, scheduler;
 
     public SeedNodeService(Optional<Config> optionalConfig,
@@ -128,9 +130,11 @@ public class SeedNodeService implements Service {
     public CompletableFuture<Boolean> shutdown() {
         if (scheduler != null) {
             scheduler.stop();
+            scheduler = null;
         }
         if (startupScheduler != null) {
             startupScheduler.stop();
+            startupScheduler = null;
         }
         return CompletableFuture.completedFuture(true);
     }

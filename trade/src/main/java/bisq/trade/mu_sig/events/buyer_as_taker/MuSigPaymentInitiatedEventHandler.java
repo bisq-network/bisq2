@@ -22,7 +22,7 @@ import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
-import bisq.trade.protocol.events.SendTradeMessageHandler;
+import bisq.trade.protocol.handler.SendTradeMessageHandler;
 
 public class MuSigPaymentInitiatedEventHandler extends SendTradeMessageHandler<MuSigTrade> {
 

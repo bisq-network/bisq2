@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.bisq_easy;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.view.TabButton;
 import bisq.desktop.main.content.ContentTabView;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;
 

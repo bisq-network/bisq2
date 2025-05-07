@@ -103,7 +103,14 @@ public class ClearNetTransportService implements TransportService {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (!initializeCalled) {
+            return CompletableFuture.completedFuture(true);
+        }
+        initializeCalled = false;
         setTransportState(TransportState.STOPPING);
+        initializeServerSocketTimestampByNetworkId.clear();
+        initializedServerSocketTimestampByNetworkId.clear();
+        timestampByTransportState.clear();
         return CompletableFuture.supplyAsync(() -> true,
                         CompletableFuture.delayedExecutor(devModeDelayInMs, TimeUnit.MILLISECONDS))
                 .whenComplete((result, throwable) -> setTransportState(TransportState.TERMINATED));

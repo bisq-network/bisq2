@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.trade_apps.overview;
 
 import bisq.account.protocol_type.TradeProtocolType;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.common.data.Pair;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -26,6 +25,7 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.trade_apps.more.MoreProtocolsController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.mu_sig.MuSigService;
 import bisq.settings.SettingsService;
 import lombok.Getter;

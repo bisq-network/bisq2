@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.user.profile_card.offers;
 
 import bisq.bisq_easy.BisqEasyOfferbookMessageService;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
@@ -26,6 +25,7 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookSelectionService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;

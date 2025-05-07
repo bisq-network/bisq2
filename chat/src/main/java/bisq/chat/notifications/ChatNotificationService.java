@@ -17,7 +17,12 @@
 
 package bisq.chat.notifications;
 
-import bisq.chat.*;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatMessage;
+import bisq.chat.ChatMessageType;
+import bisq.chat.ChatService;
+import bisq.chat.ChatUtil;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
@@ -49,7 +54,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
@@ -85,6 +95,11 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
     @Setter
     private boolean isApplicationFocussed;
     private final Set<String> prunedAndExpiredChatMessageIds = new HashSet<>();
+    @Nullable
+    private Pin bisqEasyOpenTradeChannelServicePin, bisqEasyOfferbookChannelServicePin;
+    private final Set<Pin> commonPublicChatChannelServicePins = new HashSet<>();
+    private final Set<Pin> twoPartyPrivateChatChannelServicePins = new HashSet<>();
+    private final Set<Pin> prunedAndExpiredDataRequestPins = new HashSet<>();
 
     public ChatNotificationService(PersistenceService persistenceService,
                                    NetworkService networkService,
@@ -103,31 +118,34 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         networkService.getDataService().ifPresent(dataService ->
                 dataService.getStorageService().getStoresByStoreType(AUTHENTICATED_DATA_STORE)
                         .map(DataStorageService::getPrunedAndExpiredDataRequests)
-                        .forEach(prunedAndExpiredDataRequests -> prunedAndExpiredDataRequests.addObserver(new CollectionObserver<>() {
-                            @Override
-                            public void add(DataRequest element) {
-                                if (element instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
-                                    if (addAuthenticatedDataRequest.getDistributedData() instanceof ChatMessage chatMessage) {
-                                        String id = ChatNotification.createId(chatMessage.getChannelId(), chatMessage.getId());
-                                        // As we get called at pruning persistence which happens before initializing the services,
-                                        // We store the ids to apply the remove at out initialize method.
-                                        // For the cases when we get expired data during runtime we call removeNotification.
-                                        // For the pre-initialize state that would fail as our persisted data might be filled after
-                                        // the network data store.
-                                        prunedAndExpiredChatMessageIds.add(id);
-                                        removeNotification(id);
+                        .forEach(prunedAndExpiredDataRequests -> {
+                            Pin pin = prunedAndExpiredDataRequests.addObserver(new CollectionObserver<>() {
+                                @Override
+                                public void add(DataRequest element) {
+                                    if (element instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
+                                        if (addAuthenticatedDataRequest.getDistributedData() instanceof ChatMessage chatMessage) {
+                                            String id = ChatNotification.createId(chatMessage.getChannelId(), chatMessage.getId());
+                                            // As we get called at pruning persistence which happens before initializing the services,
+                                            // We store the ids to apply the remove at out initialize method.
+                                            // For the cases when we get expired data during runtime we call removeNotification.
+                                            // For the pre-initialize state that would fail as our persisted data might be filled after
+                                            // the network data store.
+                                            prunedAndExpiredChatMessageIds.add(id);
+                                            removeNotification(id);
+                                        }
                                     }
                                 }
-                            }
 
-                            @Override
-                            public void remove(Object element) {
-                            }
+                                @Override
+                                public void remove(Object element) {
+                                }
 
-                            @Override
-                            public void clear() {
-                            }
-                        })));
+                                @Override
+                                public void clear() {
+                                }
+                            });
+                            prunedAndExpiredDataRequestPins.add(pin);
+                        }));
     }
 
     @Override
@@ -148,26 +166,52 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         prunedAndExpiredChatMessageIds.clear();
 
         BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
-        bisqEasyOpenTradeChannelService.getChannels().addObserver(() ->
+        bisqEasyOpenTradeChannelServicePin = bisqEasyOpenTradeChannelService.getChannels().addObserver(() ->
                 onChannelsChanged(bisqEasyOpenTradeChannelService.getChannels()));
 
         BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
-        bisqEasyOfferbookChannelService.getChannels().addObserver(() ->
+        bisqEasyOfferbookChannelServicePin = bisqEasyOfferbookChannelService.getChannels().addObserver(() ->
                 onChannelsChanged(bisqEasyOfferbookChannelService.getChannels()));
 
         chatService.getCommonPublicChatChannelServices().values()
-                .forEach(commonPublicChatChannelService -> commonPublicChatChannelService.getChannels().addObserver(() ->
-                        onChannelsChanged(commonPublicChatChannelService.getChannels())));
-
+                .forEach(service -> {
+                    Pin pin = service.getChannels().addObserver(() ->
+                            onChannelsChanged(service.getChannels()));
+                    commonPublicChatChannelServicePins.add(pin);
+                });
         chatService.getTwoPartyPrivateChatChannelServices()
-                .forEach(twoPartyPrivateChatChannelService -> twoPartyPrivateChatChannelService.getChannels().addObserver(() ->
-                        onChannelsChanged(twoPartyPrivateChatChannelService.getChannels())));
-
+                .forEach(service -> {
+                    Pin pin = service.getChannels().addObserver(() ->
+                            onChannelsChanged(service.getChannels()));
+                    twoPartyPrivateChatChannelServicePins.add(pin);
+                });
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (bisqEasyOpenTradeChannelServicePin != null) {
+            bisqEasyOpenTradeChannelServicePin.unbind();
+            bisqEasyOpenTradeChannelServicePin = null;
+        }
+        if (bisqEasyOfferbookChannelServicePin != null) {
+            bisqEasyOfferbookChannelServicePin.unbind();
+            bisqEasyOfferbookChannelServicePin = null;
+        }
+        chatMessagesByChannelIdPins.values().forEach(Pin::unbind);
+        chatMessagesByChannelIdPins.clear();
+        commonPublicChatChannelServicePins.forEach(Pin::unbind);
+        commonPublicChatChannelServicePins.clear();
+        twoPartyPrivateChatChannelServicePins.forEach(Pin::unbind);
+        twoPartyPrivateChatChannelServicePins.clear();
+        prunedAndExpiredDataRequestPins.forEach(Pin::unbind);
+        prunedAndExpiredDataRequestPins.clear();
+
+        predicateByChatChannelDomain.clear();
+        prunedAndExpiredChatMessageIds.forEach(this::removeNotification);
+        prunedAndExpiredChatMessageIds.clear();
+
+        changedNotification.set(null);
         return CompletableFuture.completedFuture(true);
     }
 

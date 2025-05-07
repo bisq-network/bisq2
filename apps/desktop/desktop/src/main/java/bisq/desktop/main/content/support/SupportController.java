@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.support;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatService;
 import bisq.chat.common.CommonChannelSelectionService;
@@ -32,6 +31,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.chat.common.pub.CommonPublicChatController;
 import bisq.desktop.main.content.support.resources.ResourcesController;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

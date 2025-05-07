@@ -17,13 +17,13 @@
 
 package bisq.desktop.main.content.user.user_profile.create;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.user.user_profile.create.step1.CreateNewProfileStep1Controller;
 import bisq.desktop.main.content.user.user_profile.create.step2.CreateNewProfileStep2Controller;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

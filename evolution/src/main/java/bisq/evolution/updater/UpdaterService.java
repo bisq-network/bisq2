@@ -39,6 +39,7 @@ import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -50,7 +51,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 
-import static bisq.evolution.updater.UpdaterUtils.*;
+import static bisq.evolution.updater.UpdaterUtils.UPDATES_DIR;
+import static bisq.evolution.updater.UpdaterUtils.VERSION_FILE_NAME;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -68,12 +70,14 @@ public class UpdaterService implements Service {
     @Getter
     private final ObservableArray<DownloadItem> downloadItemList = new ObservableArray<>();
     private final ApplicationService.Config config;
+    @Nullable
     private ExecutorService executorService;
     private final CollectionObserver<ReleaseNotification> releaseNotificationsObserver;
     @Getter
     private boolean requireVersionForTrading;
     @Getter
     private Optional<String> minRequiredVersionForTrading = Optional.empty();
+    @Nullable
     private Pin releaseNotificationsPin, authorizedAlertDataSetPin;
 
     public UpdaterService(ApplicationService.Config config,
@@ -160,13 +164,18 @@ public class UpdaterService implements Service {
         log.info("shutdown");
         if (releaseNotificationsPin != null) {
             releaseNotificationsPin.unbind();
+            releaseNotificationsPin = null;
         }
         if (authorizedAlertDataSetPin != null) {
             authorizedAlertDataSetPin.unbind();
+            authorizedAlertDataSetPin = null;
         }
+        downloadItemList.clear();
+        releaseNotification.set(null);
         return CompletableFuture.supplyAsync(() -> {
             if (executorService != null) {
                 ExecutorFactory.shutdownAndAwaitTermination(executorService, 100);
+                executorService = null;
             }
             return true;
         });

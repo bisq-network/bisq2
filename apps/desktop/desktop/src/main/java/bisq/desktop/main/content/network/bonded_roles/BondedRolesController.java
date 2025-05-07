@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.network.bonded_roles;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.common.observable.Pin;
@@ -28,6 +27,7 @@ import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.network.NetworkService;
 import bisq.user.UserService;
 import bisq.user.profile.UserProfile;

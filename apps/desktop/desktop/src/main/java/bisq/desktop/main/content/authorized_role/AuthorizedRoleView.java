@@ -17,12 +17,16 @@
 
 package bisq.desktop.main.content.authorized_role;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.BondedRoleType;
-import bisq.desktop.common.view.*;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.TabButton;
+import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.ContentTabView;
 import bisq.desktop.main.content.authorized_role.mediator.MediatorView;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import javafx.collections.ListChangeListener;
 import javafx.scene.Parent;

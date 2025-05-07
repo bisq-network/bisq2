@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.left;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
@@ -27,6 +26,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.top.TopPanelView;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;

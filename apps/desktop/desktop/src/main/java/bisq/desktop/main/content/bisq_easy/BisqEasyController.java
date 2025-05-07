@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
@@ -32,6 +31,7 @@ import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookController
 import bisq.desktop.main.content.bisq_easy.onboarding.BisqEasyOnboardingController;
 import bisq.desktop.main.content.bisq_easy.open_trades.BisqEasyOpenTradesController;
 import bisq.desktop.main.content.bisq_easy.private_chats.BisqEasyPrivateChatsController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

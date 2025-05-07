@@ -29,7 +29,7 @@ import bisq.trade.mu_sig.messages.network.MuSigPaymentReceivedMessage_F;
 import bisq.trade.protobuf.CloseTradeRequest;
 import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protocol.events.TradeMessageHandler;
-import bisq.trade.protocol.events.TradeMessageSender;
+import bisq.trade.protocol.handler.TradeMessageSender;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 

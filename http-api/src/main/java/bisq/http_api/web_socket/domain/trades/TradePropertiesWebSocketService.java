@@ -29,7 +29,14 @@ import bisq.trade.bisq_easy.BisqEasyTradeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -38,7 +45,7 @@ import static bisq.http_api.web_socket.subscription.Topic.TRADE_PROPERTIES;
 @Slf4j
 public class TradePropertiesWebSocketService extends BaseWebSocketService {
     private final BisqEasyTradeService bisqEasyTradeService;
-
+    @Nullable
     private Pin tradesPin;
     private final Map<String, Set<Pin>> pinsByTradeId = new HashMap<>();
 
@@ -180,7 +187,10 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        tradesPin.unbind();
+        if (tradesPin != null) {
+            tradesPin.unbind();
+            tradesPin = null;
+        }
         pinsByTradeId.values().forEach(set -> set.forEach(Pin::unbind));
         pinsByTradeId.clear();
         return CompletableFuture.completedFuture(true);

@@ -18,7 +18,6 @@
 package bisq.desktop.main.notification;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
@@ -28,6 +27,7 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import com.google.common.base.Joiner;
 import lombok.Getter;

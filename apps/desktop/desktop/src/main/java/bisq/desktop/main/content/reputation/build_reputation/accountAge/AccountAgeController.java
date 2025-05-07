@@ -17,13 +17,13 @@
 
 package bisq.desktop.main.content.reputation.build_reputation.accountAge;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.reputation.build_reputation.accountAge.tab1.AccountAgeTab1Controller;
 import bisq.desktop.main.content.reputation.build_reputation.accountAge.tab2.AccountAgeTab2Controller;
 import bisq.desktop.main.content.reputation.build_reputation.accountAge.tab3.AccountAgeTab3Controller;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

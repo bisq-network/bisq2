@@ -17,8 +17,12 @@
 
 package bisq.desktop.main.content.chat.message_container;
 
-import bisq.bisq_easy.NavigationTarget;
-import bisq.chat.*;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelSelectionService;
+import bisq.chat.ChatMessage;
+import bisq.chat.ChatService;
+import bisq.chat.Citation;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.common.CommonPublicChatChannel;
@@ -34,6 +38,7 @@ import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.settings.ChatMessageType;
 import bisq.settings.SettingsService;

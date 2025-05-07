@@ -25,6 +25,7 @@ import bisq.http_api.web_socket.subscription.Topic;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -37,6 +38,7 @@ import java.util.concurrent.CompletableFuture;
  */
 @Slf4j
 public abstract class SimpleObservableWebSocketService<T, R> extends BaseWebSocketService {
+    @Nullable
     protected Pin pin;
 
     public SimpleObservableWebSocketService(ObjectMapper objectMapper,
@@ -59,7 +61,10 @@ public abstract class SimpleObservableWebSocketService<T, R> extends BaseWebSock
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        pin.unbind();
+        if (pin != null) {
+            pin.unbind();
+            pin = null;
+        }
         return CompletableFuture.completedFuture(true);
     }
 

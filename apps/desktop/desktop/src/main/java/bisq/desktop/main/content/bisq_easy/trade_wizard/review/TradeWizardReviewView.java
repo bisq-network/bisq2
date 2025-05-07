@@ -25,12 +25,12 @@ import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.TextFlowUtils;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferView;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
-import bisq.desktop.components.controls.TextFlowUtils;
 import bisq.i18n.Res;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -38,7 +38,11 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 import javafx.util.StringConverter;
@@ -61,15 +65,17 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     private final StackPane bitcoinPaymentMethodValuePane, fiatPaymentMethodValuePane;
     private final TextFlow price;
     private final HBox reviewDataDisplay;
+    private final WaitingAnimation takeOfferSendMessageWaitingAnimation;
     @Nullable
     private ComboBox<BitcoinPaymentMethod> bitcoinPaymentMethodsComboBox;
     @Nullable
     private ComboBox<FiatPaymentMethod> fiatPaymentMethodsComboBox;
-    private WaitingAnimation takeOfferSendMessageWaitingAnimation;
     private Subscription showCreateOfferSuccessPin, takeOfferStatusPin;
     private boolean minWaitingTimePassed = false;
 
-    TradeWizardReviewView(TradeWizardReviewModel model, TradeWizardReviewController controller, HBox reviewDataDisplay) {
+    TradeWizardReviewView(TradeWizardReviewModel model,
+                          TradeWizardReviewController controller,
+                          HBox reviewDataDisplay) {
         super(new StackPane(), model, controller);
 
         this.reviewDataDisplay = reviewDataDisplay;
@@ -180,6 +186,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         takeOfferStatus.setVisible(false);
 
         sendTakeOfferMessageFeedback = new VBox(20);
+        takeOfferSendMessageWaitingAnimation = new WaitingAnimation(WaitingState.TAKE_BISQ_EASY_OFFER);
         configSendTakeOfferMessageFeedback();
 
         takeOfferSuccessButton = new Button(Res.get("bisqEasy.tradeWizard.review.takeOfferSuccessButton"));
@@ -366,7 +373,6 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
 
         Label headlineLabel = new Label(Res.get("bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.headline"));
         headlineLabel.getStyleClass().add("trade-wizard-take-offer-send-message-headline");
-        takeOfferSendMessageWaitingAnimation = new WaitingAnimation(WaitingState.TAKE_BISQ_EASY_OFFER);
         HBox title = new HBox(10, takeOfferSendMessageWaitingAnimation, headlineLabel);
         title.setAlignment(Pos.CENTER);
 

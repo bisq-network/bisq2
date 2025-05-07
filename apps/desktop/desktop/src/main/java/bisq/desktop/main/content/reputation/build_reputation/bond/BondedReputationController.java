@@ -17,13 +17,13 @@
 
 package bisq.desktop.main.content.reputation.build_reputation.bond;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.reputation.build_reputation.bond.tab1.BondedReputationTab1Controller;
 import bisq.desktop.main.content.reputation.build_reputation.bond.tab2.BondedReputationTab2Controller;
 import bisq.desktop.main.content.reputation.build_reputation.bond.tab3.BondedReputationTab3Controller;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

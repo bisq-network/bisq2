@@ -18,13 +18,13 @@
 package bisq.desktop.main.content.trade_apps;
 
 import bisq.account.protocol_type.TradeProtocolType;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.trade_apps.more.MoreProtocolsController;
 import bisq.desktop.main.content.trade_apps.overview.TradeOverviewController;
 import bisq.desktop.main.content.trade_apps.roadmap.ProtocolRoadmapController;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

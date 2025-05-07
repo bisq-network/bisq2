@@ -17,7 +17,6 @@
 
 package bisq.desktop.common.view;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Styles;
 import bisq.desktop.common.Transitions;
@@ -26,6 +25,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.navigation.NavigationTarget;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;

@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
@@ -33,6 +32,7 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeDataHeader;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateController;
 import bisq.desktop.main.content.chat.ChatController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import bisq.trade.bisq_easy.BisqEasyTrade;

@@ -18,12 +18,12 @@
 package bisq.desktop.main.content;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.TabController;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

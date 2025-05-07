@@ -22,7 +22,13 @@ import bisq.common.threading.ExecutorFactory;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.sound.sampled.*;
+import javax.annotation.Nullable;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.SourceDataLine;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -32,6 +38,7 @@ import java.util.concurrent.ExecutorService;
 class SoundPlayer implements PreventStandbyMode {
     private final String baseDir;
     private volatile boolean isPlaying;
+    @Nullable
     private ExecutorService executor;
 
     SoundPlayer(ServiceProvider serviceProvider) {
@@ -48,9 +55,13 @@ class SoundPlayer implements PreventStandbyMode {
     }
 
     public void shutdown() {
+        if (!isPlaying) {
+            return;
+        }
         isPlaying = false;
         if (executor != null) {
             ExecutorFactory.shutdownAndAwaitTermination(executor, 10);
+            executor = null;
         }
     }
 

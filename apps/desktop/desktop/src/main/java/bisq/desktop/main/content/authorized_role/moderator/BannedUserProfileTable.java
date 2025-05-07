@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.authorized_role.moderator;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.chat.ChatChannelDomain;
 import bisq.common.observable.Pin;
@@ -33,6 +32,7 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.UserProfileIcon;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.network.SendMessageResult;
 import bisq.support.moderator.BannedUserModeratorData;

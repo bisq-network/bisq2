@@ -17,13 +17,13 @@
 
 package bisq.desktop.main.content.network.bonded_roles.roles.tabs;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.network.bonded_roles.roles.tabs.registration.RoleRegistrationController;
 import bisq.desktop.main.content.network.bonded_roles.tabs.BondedRolesTabController;
 import bisq.desktop.main.content.network.bonded_roles.tabs.BondedRolesTabView;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;

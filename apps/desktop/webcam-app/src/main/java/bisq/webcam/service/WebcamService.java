@@ -111,6 +111,7 @@ public class WebcamService implements Service {
                 .whenComplete((result, throwable) -> {
                     qrCode.set(null);
                     capturedImage.set(null);
+                    exception.set(null);
                 });
     }
 

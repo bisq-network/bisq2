@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.user.user_profile;
 
 import bisq.bisq_easy.BisqEasyService;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
@@ -30,6 +29,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.presentation.formatters.TimeFormatter;
@@ -46,7 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static bisq.bisq_easy.NavigationTarget.CREATE_PROFILE_STEP1;
+import static bisq.desktop.navigation.NavigationTarget.CREATE_PROFILE_STEP1;
 
 @Slf4j
 public class UserProfileController implements Controller {

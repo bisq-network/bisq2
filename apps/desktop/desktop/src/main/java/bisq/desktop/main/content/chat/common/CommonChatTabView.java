@@ -17,11 +17,11 @@
 
 package bisq.desktop.main.content.chat.common;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
 import bisq.desktop.main.content.ContentTabView;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import javafx.scene.Parent;
 import lombok.extern.slf4j.Slf4j;

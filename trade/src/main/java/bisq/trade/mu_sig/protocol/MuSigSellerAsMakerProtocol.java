@@ -17,12 +17,16 @@
 
 package bisq.trade.mu_sig.protocol;
 
+import bisq.common.fsm.FsmErrorEvent;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.events.MuSigFsmErrorEventHandler;
+import bisq.trade.mu_sig.events.MuSigReportErrorMessageHandler;
 import bisq.trade.mu_sig.events.seller_as_maker.MuSigSellersCooperativeCloseTimeoutEvent;
 import bisq.trade.mu_sig.events.seller_as_maker.MuSigSellersCooperativeCloseTimeoutEventHandler;
 import bisq.trade.mu_sig.messages.network.MuSigCooperativeClosureMessage_G;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
+import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_C;
 import bisq.trade.mu_sig.messages.network.handler.seller_as_maker.MuSigCooperativeClosureMessage_G_Handler;
@@ -30,6 +34,8 @@ import bisq.trade.mu_sig.messages.network.handler.seller_as_maker.MuSigPaymentIn
 import bisq.trade.mu_sig.messages.network.handler.seller_as_maker.MuSigSetupTradeMessage_A_Handler;
 import bisq.trade.mu_sig.messages.network.handler.seller_as_maker.MuSigSetupTradeMessage_C_Handler;
 
+import static bisq.trade.bisq_easy.protocol.BisqEasyTradeState.FAILED;
+import static bisq.trade.bisq_easy.protocol.BisqEasyTradeState.FAILED_AT_PEER;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.INIT;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.SELLER_AS_MAKER_CLOSED_TRADE;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.SELLER_AS_MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX;
@@ -42,6 +48,19 @@ public class MuSigSellerAsMakerProtocol extends MuSigProtocol {
 
     public MuSigSellerAsMakerProtocol(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
+    }
+
+    @Override
+    protected void configErrorHandling() {
+        fromAny()
+                .on(FsmErrorEvent.class)
+                .run(MuSigFsmErrorEventHandler.class)
+                .to(FAILED);
+
+        fromAny()
+                .on(MuSigReportErrorMessage.class)
+                .run(MuSigReportErrorMessageHandler.class)
+                .to(FAILED_AT_PEER);
     }
 
     public void configTransitions() {

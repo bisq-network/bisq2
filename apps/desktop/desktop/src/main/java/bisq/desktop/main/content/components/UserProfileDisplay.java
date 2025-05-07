@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.components;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import javafx.geometry.Pos;

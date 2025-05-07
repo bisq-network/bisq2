@@ -20,7 +20,7 @@ package bisq.chat;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.common.CommonPublicChatMessage;
-import bisq.chat.mu_sig.offerbook.MuSigOfferbookMessage;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeMessage;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.observable.collection.ObservableSet;
@@ -107,9 +107,9 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
         return switch (proto.getMessageCase()) {
             case TWOPARTYPRIVATECHATMESSAGE -> TwoPartyPrivateChatMessage.fromProto(proto);
             case BISQEASYOFFERBOOKMESSAGE -> BisqEasyOfferbookMessage.fromProto(proto);
-            case MUSIGOFFERBOOKMESSAGE -> MuSigOfferbookMessage.fromProto(proto);
             case BISQEASYOPENTRADEMESSAGE -> BisqEasyOpenTradeMessage.fromProto(proto);
             case COMMONPUBLICCHATMESSAGE -> CommonPublicChatMessage.fromProto(proto);
+            case MUSIGOPENTRADEMESSAGE -> MuSigOpenTradeMessage.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
@@ -120,7 +120,6 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
                 bisq.chat.protobuf.ChatMessage proto = any.unpack(bisq.chat.protobuf.ChatMessage.class);
                 return switch (proto.getMessageCase()) {
                     case BISQEASYOFFERBOOKMESSAGE -> BisqEasyOfferbookMessage.fromProto(proto);
-                    case MUSIGOFFERBOOKMESSAGE -> MuSigOfferbookMessage.fromProto(proto);
                     case COMMONPUBLICCHATMESSAGE -> CommonPublicChatMessage.fromProto(proto);
                     case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
                     default -> throw new UnresolvableProtobufMessageException(proto);
@@ -138,6 +137,7 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
                 return switch (proto.getMessageCase()) {
                     case TWOPARTYPRIVATECHATMESSAGE -> TwoPartyPrivateChatMessage.fromProto(proto);
                     case BISQEASYOPENTRADEMESSAGE -> BisqEasyOpenTradeMessage.fromProto(proto);
+                    case MUSIGOPENTRADEMESSAGE -> MuSigOpenTradeMessage.fromProto(proto);
                     case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
                     default -> throw new UnresolvableProtobufMessageException(proto);
                 };

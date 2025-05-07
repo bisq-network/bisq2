@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.user.profile_card;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
@@ -34,6 +33,7 @@ import bisq.desktop.main.content.user.profile_card.messages.ProfileCardMessagesC
 import bisq.desktop.main.content.user.profile_card.offers.ProfileCardOffersController;
 import bisq.desktop.main.content.user.profile_card.overview.ProfileCardOverviewController;
 import bisq.desktop.main.content.user.profile_card.reputation.ProfileCardReputationController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.user.UserService;

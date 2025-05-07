@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.settings;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
@@ -26,6 +25,7 @@ import bisq.desktop.main.content.settings.language.LanguageSettingsController;
 import bisq.desktop.main.content.settings.misc.MiscSettingsController;
 import bisq.desktop.main.content.settings.notifications.NotificationsSettingsController;
 import bisq.desktop.main.content.settings.trade.TradeSettingsController;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

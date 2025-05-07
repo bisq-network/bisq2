@@ -18,7 +18,6 @@
 package bisq.desktop;
 
 import bisq.application.State;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Observable;
 import bisq.desktop.common.Browser;
@@ -35,6 +34,7 @@ import bisq.desktop.components.cathash.JavaFxCatHashService;
 import bisq.desktop.components.overlay.Overlay;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.MainController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.tac.TacController;
 import bisq.desktop.overlay.unlock.UnlockController;

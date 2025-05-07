@@ -17,14 +17,14 @@
 
 package bisq.desktop.main.content.mu_sig;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.main.content.ContentTabModel;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
 
 @Getter
 public class MuSigModel extends ContentTabModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.MU_SIG_ONBOARDING;
+        return NavigationTarget.MU_SIG_OFFERBOOK_BUY;
     }
 }

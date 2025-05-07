@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.reputation.build_reputation.burn.tab3;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
@@ -27,6 +26,7 @@ import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.components.UserProfileSelection;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.user.identity.UserIdentityService;
 import javafx.scene.layout.Region;

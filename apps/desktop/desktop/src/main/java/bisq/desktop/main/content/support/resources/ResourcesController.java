@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.support.resources;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.common.file.FileUtils;
 import bisq.common.observable.Pin;
 import bisq.common.platform.PlatformUtils;
@@ -30,6 +29,7 @@ import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
 import bisq.settings.SettingsService;
@@ -38,7 +38,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;

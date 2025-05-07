@@ -18,7 +18,6 @@
 package bisq.desktop.main;
 
 import bisq.application.ApplicationService;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.observable.Observable;
@@ -34,6 +33,7 @@ import bisq.desktop.main.content.ContentController;
 import bisq.desktop.main.left.LeftNavController;
 import bisq.desktop.main.notification.NotificationPanelController;
 import bisq.desktop.main.top.TopPanelController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.evolution.updater.UpdaterService;
 import bisq.evolution.updater.UpdaterUtils;
 import lombok.Getter;

@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.academy;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
@@ -28,6 +27,7 @@ import bisq.desktop.main.content.academy.overview.OverviewAcademyController;
 import bisq.desktop.main.content.academy.privacy.PrivacyAcademyController;
 import bisq.desktop.main.content.academy.security.SecurityAcademyController;
 import bisq.desktop.main.content.academy.wallets.WalletsAcademyController;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

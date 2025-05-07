@@ -20,7 +20,6 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 import bisq.bisq_easy.BisqEasyMarketFilter;
 import bisq.bisq_easy.BisqEasyOfferbookMessageService;
 import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
@@ -44,6 +43,7 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list.OfferbookListController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.main.content.chat.ChatController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.ChatMessageType;
@@ -331,7 +331,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         ChatChannel<? extends ChatMessage> chatChannel = model.getSelectedChannel();
         checkArgument(chatChannel instanceof BisqEasyOfferbookChannel,
                 "channel must be instanceof BisqEasyPublicChatChannel at onCreateOfferButtonClicked");
-        Navigation.navigateTo(NavigationTarget.TRADE_WIZARD, new TradeWizardController.InitData(true));
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_WIZARD, new TradeWizardController.InitData(true));
     }
 
     void onSortMarkets(MarketSortType marketSortType) {

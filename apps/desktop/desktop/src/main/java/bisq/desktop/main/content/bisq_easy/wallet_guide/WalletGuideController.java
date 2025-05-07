@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.bisq_easy.wallet_guide;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
@@ -25,6 +24,7 @@ import bisq.desktop.main.content.bisq_easy.wallet_guide.create_wallet.WalletGuid
 import bisq.desktop.main.content.bisq_easy.wallet_guide.download.WalletGuideDownloadController;
 import bisq.desktop.main.content.bisq_easy.wallet_guide.intro.WalletGuideIntroController;
 import bisq.desktop.main.content.bisq_easy.wallet_guide.receive.WalletGuideReceiveController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

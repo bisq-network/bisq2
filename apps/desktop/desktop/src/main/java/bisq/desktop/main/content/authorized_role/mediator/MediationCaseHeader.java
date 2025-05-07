@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.authorized_role.mediator;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
@@ -29,6 +28,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.authorized_role.mediator.details.MediationCaseDetailsController;
 import bisq.desktop.main.content.components.UserProfileDisplay;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.settings.DontShowAgainService;
 import bisq.support.mediation.MediatorService;

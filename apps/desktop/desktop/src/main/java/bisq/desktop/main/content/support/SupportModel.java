@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.support;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.desktop.main.content.ContentTabModel;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;

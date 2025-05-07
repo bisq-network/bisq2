@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
+import bisq.desktop.navigation.NavigationTarget;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -59,7 +59,7 @@ public class TradeWizardModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.TRADE_WIZARD_DIRECTION_AND_MARKET;
+        return NavigationTarget.BISQ_EASY_TRADE_WIZARD_DIRECTION_AND_MARKET;
     }
 
     public void reset() {

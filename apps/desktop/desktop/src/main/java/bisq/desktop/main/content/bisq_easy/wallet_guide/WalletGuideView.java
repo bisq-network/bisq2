@@ -17,11 +17,11 @@
 
 package bisq.desktop.main.content.bisq_easy.wallet_guide;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.Styles;
 import bisq.desktop.common.view.TabView;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;

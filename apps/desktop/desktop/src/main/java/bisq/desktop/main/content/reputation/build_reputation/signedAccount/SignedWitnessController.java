@@ -17,13 +17,13 @@
 
 package bisq.desktop.main.content.reputation.build_reputation.signedAccount;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.reputation.build_reputation.signedAccount.tab1.SignedWitnessTab1Controller;
 import bisq.desktop.main.content.reputation.build_reputation.signedAccount.tab2.SignedWitnessTab2Controller;
 import bisq.desktop.main.content.reputation.build_reputation.signedAccount.tab3.SignedWitnessTab3Controller;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

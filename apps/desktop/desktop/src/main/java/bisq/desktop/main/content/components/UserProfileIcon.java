@@ -17,13 +17,13 @@
 
 package bisq.desktop.main.content.components;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.SimpleStringProperty;

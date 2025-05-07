@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.network;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.main.content.ContentTabView;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 
 public class NetworkView extends ContentTabView<NetworkModel, NetworkController> {

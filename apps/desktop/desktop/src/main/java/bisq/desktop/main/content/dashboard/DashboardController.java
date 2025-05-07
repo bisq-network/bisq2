@@ -19,7 +19,6 @@ package bisq.desktop.main.content.dashboard;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
 import bisq.bisq_easy.BisqEasyOfferbookMessageService;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.common.currency.Market;
@@ -29,6 +28,7 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;

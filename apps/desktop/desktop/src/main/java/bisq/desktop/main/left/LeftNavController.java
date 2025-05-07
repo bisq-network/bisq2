@@ -18,8 +18,6 @@
 package bisq.desktop.main.left;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
-import bisq.bisq_easy.ChatChannelDomainNavigationTargetMapper;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatNotification;
@@ -31,6 +29,8 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.navigation.NavigationTarget;
+import bisq.desktop.navigation.NavigationUtil;
 import bisq.evolution.updater.UpdaterService;
 import bisq.mu_sig.MuSigService;
 import bisq.settings.CookieKey;
@@ -145,7 +145,7 @@ public class LeftNavController implements Controller {
 
             findLeftNavButton(notification.getChatChannelDomain()).ifPresent(leftNavButton -> {
                 NavigationTarget navigationTarget = leftNavButton.getNavigationTarget();
-                long numNotifications = bisqEasyNotificationsService.getNumNotifications(navigationTarget);
+                long numNotifications = bisqEasyNotificationsService.getNumNotifications(NavigationUtil.fromNavigationTarget(navigationTarget));
                 if (notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OFFERBOOK || notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OPEN_TRADES || notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT) {
                     // In case we are a mediator we ignore the notifications in the BISQ_EASY_OPEN_TRADES as those
                     // we handle in the mediation view.
@@ -214,7 +214,7 @@ public class LeftNavController implements Controller {
 
 
     private Optional<LeftNavButton> findLeftNavButton(ChatChannelDomain chatChannelDomain) {
-        return ChatChannelDomainNavigationTargetMapper.fromChatChannelDomain(chatChannelDomain)
+        return NavigationUtil.fromChatChannelDomain(chatChannelDomain)
                 .flatMap(this::findNavButton);
     }
 }

@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -35,6 +34,7 @@ import bisq.desktop.main.content.support.SupportController;
 import bisq.desktop.main.content.trade_apps.TradeAppsController;
 import bisq.desktop.main.content.user.UserController;
 import bisq.desktop.main.content.wallet.WalletController;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

@@ -17,13 +17,13 @@
 
 package bisq.desktop.main.content.user;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.user.accounts.PaymentAccountsController;
 import bisq.desktop.main.content.user.password.PasswordController;
 import bisq.desktop.main.content.user.user_profile.UserProfileController;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

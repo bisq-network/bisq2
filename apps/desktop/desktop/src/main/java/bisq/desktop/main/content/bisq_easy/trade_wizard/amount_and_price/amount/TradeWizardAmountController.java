@@ -20,7 +20,6 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price.amount
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
@@ -36,6 +35,7 @@ import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.components.amount_selection.AmountSelectionController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
@@ -73,7 +73,12 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static bisq.bisq_easy.BisqEasyTradeAmountLimits.*;
+import static bisq.bisq_easy.BisqEasyTradeAmountLimits.DEFAULT_MIN_USD_TRADE_AMOUNT;
+import static bisq.bisq_easy.BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT;
+import static bisq.bisq_easy.BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION;
+import static bisq.bisq_easy.BisqEasyTradeAmountLimits.Result;
+import static bisq.bisq_easy.BisqEasyTradeAmountLimits.getLowestAndHighestAmountInAvailableOffers;
+import static bisq.bisq_easy.BisqEasyTradeAmountLimits.withTolerance;
 import static bisq.presentation.formatters.AmountFormatter.formatQuoteAmountWithCode;
 import static com.google.common.base.Preconditions.checkNotNull;
 

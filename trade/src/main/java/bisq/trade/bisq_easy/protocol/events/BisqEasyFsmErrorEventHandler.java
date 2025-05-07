@@ -24,7 +24,7 @@ import bisq.common.util.ExceptionUtil;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage;
-import bisq.trade.protocol.events.SendTradeMessageHandler;
+import bisq.trade.protocol.handler.SendTradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.common.util.StringUtils.createUid;

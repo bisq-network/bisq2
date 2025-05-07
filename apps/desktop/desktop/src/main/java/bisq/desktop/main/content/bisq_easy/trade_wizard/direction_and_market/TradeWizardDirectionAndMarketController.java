@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.direction_and_market;
 
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
@@ -30,6 +29,7 @@ import bisq.common.currency.MarketRepository;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.offer.Direction;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.ReputationService;
