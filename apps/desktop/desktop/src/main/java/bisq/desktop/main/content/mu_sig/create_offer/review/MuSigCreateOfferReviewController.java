@@ -127,15 +127,23 @@ public class MuSigCreateOfferReviewController implements Controller {
         }
     }
 
-    public void setDataForCreateOffer(Direction direction,
-                                      Market market,
-                                      List<BitcoinPaymentMethod> bitcoinPaymentMethods,
+    public void setDirection(Direction direction) {
+        model.setDirection(direction);
+    }
+
+    public void setMarket(Market market) {
+        model.setMarket(market);
+    }
+
+    public void setDataForCreateOffer(List<BitcoinPaymentMethod> bitcoinPaymentMethods,
                                       List<FiatPaymentMethod> fiatPaymentMethods,
                                       AmountSpec amountSpec,
                                       PriceSpec priceSpec) {
         checkArgument(!bitcoinPaymentMethods.isEmpty(), "bitcoinPaymentMethods must not be empty");
         checkArgument(!fiatPaymentMethods.isEmpty(), "fiatPaymentMethods must not be empty");
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
+        Direction direction = model.getDirection();
+        Market market = model.getMarket();
 
         List<OfferOption> offerOptions = List.of();
         MuSigOffer offer = muSigService.createAndGetMuSigOffer(direction,

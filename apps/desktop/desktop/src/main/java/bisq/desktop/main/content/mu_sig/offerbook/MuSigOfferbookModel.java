@@ -39,7 +39,8 @@ import java.util.Set;
 @Slf4j
 @Getter
 public abstract class MuSigOfferbookModel implements Model {
-    private final Direction takersDirection;
+    private final Direction direction;
+    private final ObjectProperty<Market> market= new SimpleObjectProperty<>();
     private final String maker;
     private final String createOfferButtonText;
     private final String takeOfferButtonText;
@@ -55,19 +56,17 @@ public abstract class MuSigOfferbookModel implements Model {
     private final StringProperty amountToReceive = new SimpleStringProperty();
     private final StringProperty amountToSend = new SimpleStringProperty();
 
-    public MuSigOfferbookModel(Direction takersDirection) {
-        this.takersDirection = takersDirection;
-        maker = takersDirection.isSell()
+    public MuSigOfferbookModel(Direction direction) {
+        this.direction = direction;
+        maker = direction.isSell()
                 ? Res.get("muSig.offerbook.table.maker.buyer").toUpperCase(Locale.ROOT)
                 : Res.get("muSig.offerbook.table.maker.seller").toUpperCase(Locale.ROOT);
-        createOfferButtonText = takersDirection.isSell()
+        createOfferButtonText = direction.isSell()
                 ? Res.get("muSig.offerbook.createOffer.sell").toUpperCase(Locale.ROOT)
                 : Res.get("muSig.offerbook.createOffer.buy").toUpperCase(Locale.ROOT);
 
-        takeOfferButtonText = takersDirection.isSell()
+        takeOfferButtonText = direction.isSell()
                 ? Res.get("muSig.offerbook.table.taker.sell").toUpperCase(Locale.ROOT)
                 : Res.get("muSig.offerbook.table.taker.buy").toUpperCase(Locale.ROOT);
-
-
     }
 }
