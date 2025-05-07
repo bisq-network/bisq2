@@ -50,6 +50,7 @@ dependencies {
     implementation("bisq:settings")
     implementation("bisq:presentation")
     implementation("bisq:bisq-easy")
+    implementation("bisq:mu-sig")
     implementation("bisq:application")
     implementation("bisq:evolution")
     implementation("bisq:os-specific")

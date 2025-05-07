@@ -18,6 +18,7 @@
 package bisq.desktop.components.controls;
 
 import bisq.common.util.StringUtils;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -25,7 +26,11 @@ import bisq.desktop.components.controls.validator.ValidationControl;
 import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.ObservableList;
@@ -504,10 +509,11 @@ public class MaterialTextField extends Pane {
 
     void update() {
         if (StringUtils.isNotEmpty(descriptionLabel.getText())) {
+            long duration = ManagedDuration.getOneSixthOfDefaultDurationMillis();
             if (showInputTextField()) {
-                Transitions.animateLayoutY(descriptionLabel, 6.5, Transitions.DEFAULT_DURATION / 6d, null);
+                Transitions.animateLayoutY(descriptionLabel, 6.5, duration, null);
             } else {
-                Transitions.animateLayoutY(descriptionLabel, 16.5, Transitions.DEFAULT_DURATION / 6d, null);
+                Transitions.animateLayoutY(descriptionLabel, 16.5, duration, null);
             }
         }
 

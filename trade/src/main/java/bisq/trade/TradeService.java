@@ -28,6 +28,7 @@ import bisq.persistence.PersistenceService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
+import bisq.trade.mu_sig.MuSigTradeService;
 import bisq.user.UserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,7 @@ public class TradeService implements Service, ServiceProvider {
     private final BondedRolesService bondedRolesService;
     private final UserService userService;
     private final SettingsService settingsService;
+    private final MuSigTradeService muSigTradeService;
 
     public TradeService(NetworkService networkService,
                         IdentityService identityService,
@@ -71,6 +73,7 @@ public class TradeService implements Service, ServiceProvider {
         this.settingsService = settingsService;
 
         bisqEasyTradeService = new BisqEasyTradeService(this);
+        muSigTradeService = new MuSigTradeService(this);
     }
 
 
@@ -85,6 +88,17 @@ public class TradeService implements Service, ServiceProvider {
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         return bisqEasyTradeService.shutdown();
+    }
+
+    public CompletableFuture<Boolean> initializeMuSigTradeService() {
+        log.info("initialize MuSigTradeService");
+        return muSigTradeService.initialize();
+    }
+
+    public CompletableFuture<Boolean> shutdownMuSigTradeService() {
+        log.info("shutdown MuSigTradeService");
+        return muSigTradeService.shutdown();
     }
 }

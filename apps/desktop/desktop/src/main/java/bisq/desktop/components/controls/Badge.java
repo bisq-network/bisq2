@@ -17,7 +17,7 @@
 
 package bisq.desktop.components.controls;
 
-import bisq.desktop.common.Transitions;
+import bisq.desktop.common.ManagedDuration;
 import javafx.animation.FadeTransition;
 import javafx.beans.DefaultProperty;
 import javafx.beans.property.ObjectProperty;
@@ -32,7 +32,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
-import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -82,7 +81,7 @@ public class Badge extends StackPane {
         badge.getChildren().add(badgePane);
         badge.setOpacity(0);
 
-        transition = new FadeTransition(Duration.millis(Transitions.effectiveDuration(Transitions.DEFAULT_DURATION)), badge);
+        transition = new FadeTransition(ManagedDuration.getDefaultDuration(), badge);
         transition.setFromValue(0);
         transition.setToValue(1.0);
         transition.setCycleCount(1);

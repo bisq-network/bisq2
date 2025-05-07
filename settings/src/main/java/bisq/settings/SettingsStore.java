@@ -30,11 +30,22 @@ import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import static bisq.settings.SettingsService.*;
+import static bisq.settings.SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION;
+import static bisq.settings.SettingsService.DEFAULT_MIN_REQUIRED_REPUTATION_SCORE;
+import static bisq.settings.SettingsService.DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA;
+import static bisq.settings.SettingsService.DEFAULT_TOTAL_MAX_BACKUP_SIZE_IN_MB;
+import static bisq.settings.SettingsService.MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA;
+import static bisq.settings.SettingsService.MAX_TRADE_PRICE_DEVIATION;
+import static bisq.settings.SettingsService.MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA;
+import static bisq.settings.SettingsService.MIN_TRADE_PRICE_DEVIATION;
 
 @Slf4j
 final class SettingsStore implements PersistableStore<SettingsStore> {
@@ -68,6 +79,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Double> totalMaxBackupSizeInMB = new Observable<>();
     final Observable<ChatMessageType> bisqEasyOfferbookMessageTypeFilter = new Observable<>();
     final Observable<Integer> numDaysAfterRedactingTradeData = new Observable<>();
+    final Observable<Boolean> muSigActivated = new Observable<>();
 
     SettingsStore() {
         this(new Cookie(),
@@ -96,36 +108,38 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 false,
                 DEFAULT_TOTAL_MAX_BACKUP_SIZE_IN_MB,
                 ChatMessageType.ALL,
-                DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA);
+                DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA,
+                false);
     }
 
     SettingsStore(Cookie cookie,
-                         Map<String, Boolean> dontShowAgainMap,
-                         boolean useAnimations,
-                         Market selectedMarket,
-                         long requiredTotalReputationScore,
-                         boolean offersOnly,
-                         boolean tradeRulesConfirmed,
-                         ChatNotificationType chatNotificationType,
-                         boolean isTacAccepted,
-                         Set<String> consumedAlertIds,
-                         boolean closeMyOfferWhenTaken,
-                         String languageCode,
-                         boolean preventStandbyMode,
-                         Set<String> supportedLanguageCodes,
-                         double difficultyAdjustmentFactor,
-                         boolean ignoreDiffAdjustmentFromSecManager,
-                         Set<Market> favouriteMarkets,
-                         boolean ignoreMinRequiredReputationScoreFromSecManager,
-                         double maxTradePriceDeviation,
-                         boolean showBuyOffers,
-                         boolean showOfferListExpanded,
-                         boolean showMarketSelectionListCollapsed,
-                         String backupLocation,
-                         boolean showMyOffersOnly,
-                         double totalMaxBackupSizeInMB,
-                         ChatMessageType bisqEasyOfferbookMessageTypeFilter,
-                         int numDaysAfterRedactingTradeData) {
+                  Map<String, Boolean> dontShowAgainMap,
+                  boolean useAnimations,
+                  Market selectedMarket,
+                  long requiredTotalReputationScore,
+                  boolean offersOnly,
+                  boolean tradeRulesConfirmed,
+                  ChatNotificationType chatNotificationType,
+                  boolean isTacAccepted,
+                  Set<String> consumedAlertIds,
+                  boolean closeMyOfferWhenTaken,
+                  String languageCode,
+                  boolean preventStandbyMode,
+                  Set<String> supportedLanguageCodes,
+                  double difficultyAdjustmentFactor,
+                  boolean ignoreDiffAdjustmentFromSecManager,
+                  Set<Market> favouriteMarkets,
+                  boolean ignoreMinRequiredReputationScoreFromSecManager,
+                  double maxTradePriceDeviation,
+                  boolean showBuyOffers,
+                  boolean showOfferListExpanded,
+                  boolean showMarketSelectionListCollapsed,
+                  String backupLocation,
+                  boolean showMyOffersOnly,
+                  double totalMaxBackupSizeInMB,
+                  ChatMessageType bisqEasyOfferbookMessageTypeFilter,
+                  int numDaysAfterRedactingTradeData,
+                  boolean muSigActivated) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -153,6 +167,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
         this.totalMaxBackupSizeInMB.set(totalMaxBackupSizeInMB);
         this.bisqEasyOfferbookMessageTypeFilter.set(bisqEasyOfferbookMessageTypeFilter);
         this.numDaysAfterRedactingTradeData.set(numDaysAfterRedactingTradeData);
+        this.muSigActivated.set(muSigActivated);
     }
 
     @Override
@@ -184,7 +199,8 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setShowMyOffersOnly(showMyOffersOnly.get())
                 .setTotalMaxBackupSizeInMB(totalMaxBackupSizeInMB.get())
                 .setBisqEasyOfferbookMessageTypeFilter(bisqEasyOfferbookMessageTypeFilter.get().toProtoEnum())
-                .setNumDaysAfterRedactingTradeData(numDaysAfterRedactingTradeData.get());
+                .setNumDaysAfterRedactingTradeData(numDaysAfterRedactingTradeData.get())
+                .setMuSigActivated(muSigActivated.get());
     }
 
     @Override
@@ -238,7 +254,8 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getShowMyOffersOnly(),
                 totalMaxBackupSizeInMB,
                 ChatMessageType.fromProto(proto.getBisqEasyOfferbookMessageTypeFilter()),
-                numDaysAfterRedactingTradeData);
+                numDaysAfterRedactingTradeData,
+                proto.getMuSigActivated());
     }
 
     @Override
@@ -280,7 +297,8 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 showMyOffersOnly.get(),
                 totalMaxBackupSizeInMB.get(),
                 bisqEasyOfferbookMessageTypeFilter.get(),
-                numDaysAfterRedactingTradeData.get());
+                numDaysAfterRedactingTradeData.get(),
+                muSigActivated.get());
     }
 
     @Override
@@ -313,6 +331,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
             totalMaxBackupSizeInMB.set(persisted.totalMaxBackupSizeInMB.get());
             bisqEasyOfferbookMessageTypeFilter.set(persisted.bisqEasyOfferbookMessageTypeFilter.get());
             numDaysAfterRedactingTradeData.set(persisted.numDaysAfterRedactingTradeData.get());
+            muSigActivated.set(persisted.muSigActivated.get());
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }

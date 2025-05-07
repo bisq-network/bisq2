@@ -1,17 +1,17 @@
 package bisq.desktop.main.left;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.common.data.Pair;
 import bisq.common.data.Triple;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.Transitions;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
@@ -38,7 +38,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -354,9 +353,9 @@ public class NetworkInfo {
                     node.setOpacity(1);
                     Timeline fadeIn = new Timeline();
                     ObservableList<KeyFrame> fadeInKeyFrames = fadeIn.getKeyFrames();
-                    fadeInKeyFrames.add(new KeyFrame(Duration.millis(0), new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR)));
-                    fadeInKeyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(4000)), new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR)));
-                    fadeInKeyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(5000)), new KeyValue(node.opacityProperty(), 0, Interpolator.EASE_OUT)));
+                    fadeInKeyFrames.add(new KeyFrame(ManagedDuration.ZERO, new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR)));
+                    fadeInKeyFrames.add(new KeyFrame(ManagedDuration.millis(4000), new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR)));
+                    fadeInKeyFrames.add(new KeyFrame(ManagedDuration.millis(5000), new KeyValue(node.opacityProperty(), 0, Interpolator.EASE_OUT)));
                     fadeIn.setOnFinished(e -> {
                         inventoryRequestsLabel.getStyleClass().remove("bisq-text-green");
                         inventoryRequestsLabel.getStyleClass().add("bisq-text-grey-9");
@@ -364,9 +363,9 @@ public class NetworkInfo {
 
                         Timeline fadeOut = new Timeline();
                         ObservableList<KeyFrame> fadeOutKeyFrames = fadeOut.getKeyFrames();
-                        fadeOutKeyFrames.add(new KeyFrame(Duration.millis(0), new KeyValue(node.opacityProperty(), 0, Interpolator.LINEAR)));
-                        fadeOutKeyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(1000)), new KeyValue(node.opacityProperty(), 0, Interpolator.LINEAR)));
-                        fadeOutKeyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(3000)), new KeyValue(node.opacityProperty(), 1, Interpolator.EASE_OUT)));
+                        fadeOutKeyFrames.add(new KeyFrame(ManagedDuration.ZERO, new KeyValue(node.opacityProperty(), 0, Interpolator.LINEAR)));
+                        fadeOutKeyFrames.add(new KeyFrame(ManagedDuration.millis(1000), new KeyValue(node.opacityProperty(), 0, Interpolator.LINEAR)));
+                        fadeOutKeyFrames.add(new KeyFrame(ManagedDuration.millis(3000), new KeyValue(node.opacityProperty(), 1, Interpolator.EASE_OUT)));
                         fadeOut.play();
                     });
                     fadeIn.play();

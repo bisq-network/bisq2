@@ -49,7 +49,9 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
     // We do not persist the paymentRail but still include it in EqualsAndHashCode.
     protected transient final R paymentRail;
 
+    @EqualsAndHashCode.Exclude
     protected transient final String displayString;
+    @EqualsAndHashCode.Exclude
     protected transient final String shortDisplayString;
 
     /**

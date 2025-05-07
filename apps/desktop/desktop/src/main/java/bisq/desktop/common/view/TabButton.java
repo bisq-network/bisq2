@@ -17,15 +17,15 @@
 
 package bisq.desktop.common.view;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Styles;
-import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.navigation.NavigationTarget;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -47,7 +47,6 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.util.Duration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -168,7 +167,7 @@ public class TabButton extends Pane implements Toggle {
                 animateOut.stop();
                 animateOut = null;
             }
-            animateIn = animate(clearNotificationsButton, Transitions.DEFAULT_DURATION / 2, () -> {
+            animateIn = animate(clearNotificationsButton, ManagedDuration.getHalfOfDefaultDurationMillis(), () -> {
                 UIThread.runOnNextRenderFrame(() -> {
                     animateIn = null;
                 });
@@ -179,7 +178,7 @@ public class TabButton extends Pane implements Toggle {
                 animateIn.stop();
                 animateIn = null;
             }
-            animateOut = animate(clearNotificationsButton, Transitions.DEFAULT_DURATION / 4, () -> {
+            animateOut = animate(clearNotificationsButton, ManagedDuration.getQuoterOfDefaultDurationMillis(), () -> {
                 UIThread.runOnNextRenderFrame(() -> {
                     animateOut = null;
                 });
@@ -239,7 +238,7 @@ public class TabButton extends Pane implements Toggle {
         label.setGraphic(selected ? iconSelected : icon);
     }
 
-    private Timeline animate(Region node, int duration, Runnable onFinishedHandler, boolean animateIn) {
+    private Timeline animate(Region node, long duration, Runnable onFinishedHandler, boolean animateIn) {
         Timeline timeline = new Timeline();
         double rightX = numMessagesBadge.getWidth() + 8;
         double end = animateIn ? rightX : 0;
@@ -247,11 +246,11 @@ public class TabButton extends Pane implements Toggle {
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
         double start = animateIn ? 0 : rightX;
         double opacityStart = animateIn ? 0 : 1;
-        keyFrames.add(new KeyFrame(Duration.millis(0),
+        keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                 new KeyValue(node.opacityProperty(), opacityStart, Interpolator.EASE_IN),
                 new KeyValue(node.translateXProperty(), start, Interpolator.EASE_IN)
         ));
-        keyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(duration)),
+        keyFrames.add(new KeyFrame(ManagedDuration.millis(duration),
                 new KeyValue(node.opacityProperty(), opacityEnd, Interpolator.EASE_OUT),
                 new KeyValue(node.translateXProperty(), end, Interpolator.EASE_OUT)
         ));

@@ -20,7 +20,7 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 import bisq.bisq_easy.BisqEasyMarketFilter;
 import bisq.bisq_easy.BisqEasyOfferbookMessageService;
 import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
@@ -327,7 +327,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         ChatChannel<? extends ChatMessage> chatChannel = model.getSelectedChannel();
         checkArgument(chatChannel instanceof BisqEasyOfferbookChannel,
                 "channel must be instanceof BisqEasyPublicChatChannel at onCreateOfferButtonClicked");
-        Navigation.navigateTo(NavigationTarget.TRADE_WIZARD, new TradeWizardController.InitData(true));
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_WIZARD, new TradeWizardController.InitData(true));
     }
 
     void onSortMarkets(MarketSortType marketSortType) {
@@ -372,12 +372,15 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     }
 
     private void updateMarketPrice() {
-        Market selectedMarket = bisqEasyOfferbookModel.getSelectedMarketChannelItem().get().getMarket();
-        if (selectedMarket != null) {
-            marketPriceService
-                    .findMarketPrice(selectedMarket)
-                    .ifPresent(marketPrice ->
-                            model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true)));
+        MarketChannelItem selectedMarketChannelItem = model.getSelectedMarketChannelItem().get();
+        if (selectedMarketChannelItem != null) {
+            Market selectedMarket = selectedMarketChannelItem.getMarket();
+            if (selectedMarket != null) {
+                marketPriceService
+                        .findMarketPrice(selectedMarket)
+                        .ifPresent(marketPrice ->
+                                model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true)));
+            }
         }
     }
 

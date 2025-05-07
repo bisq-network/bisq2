@@ -19,7 +19,7 @@ package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
-import bisq.desktop.common.Transitions;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.list_view.ListViewUtil;
@@ -46,7 +46,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.util.Duration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -103,10 +102,8 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         scrollDownBadge.getStyleClass().add("chat-messages-badge");
         scrollDownBadge.setPosition(Pos.BOTTOM_RIGHT);
         scrollDownBadge.setBadgeInsets(new Insets(20, 10, -2, 55));
-        scrollDownBadge.setCursor(Cursor.HAND);
 
         scrollDownTooltip = new BisqTooltip(Res.get("chat.listView.scrollDown"));
-        Tooltip.install(scrollDownBadge, scrollDownTooltip);
 
         StackPane.setAlignment(scrollDownBadge, Pos.BOTTOM_CENTER);
         StackPane.setAlignment(scrollDownBackground, Pos.BOTTOM_CENTER);
@@ -136,11 +133,13 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
             }
         });
 
+        Tooltip.install(scrollDownBadge, scrollDownTooltip);
+
         scrollDownBackground.visibleProperty().bind(model.getShowScrolledDownButton());
         scrollDownBackground.managedProperty().bind(model.getShowScrolledDownButton());
 
         scrollDownBadge.textProperty().bind(model.getNumUnReadMessages());
-        scrollDownBadge.setOpacity(0);
+        hideScrollDownBadge();
 
         showScrolledDownButtonPin = EasyBind.subscribe(model.getShowScrolledDownButton(), showScrolledDownButton -> {
             if (showScrolledDownButton == null) {
@@ -152,7 +151,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
             if (showScrolledDownButton) {
                 fadeInScrollDownBadge();
             } else {
-                scrollDownBadge.setOpacity(0);
+                hideScrollDownBadge();
             }
         });
         hasUnreadMessagesPin = EasyBind.subscribe(model.getHasUnreadMessages(), hasUnreadMessages -> {
@@ -191,29 +190,39 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         hasUnreadMessagesPin.unsubscribe();
         showScrolledDownButtonPin.unsubscribe();
 
+        Tooltip.uninstall(scrollDownBadge, scrollDownTooltip);
+
         scrollDownBadge.setOnMouseClicked(null);
         if (fadeInScrollDownBadgeTimeline != null) {
             fadeInScrollDownBadgeTimeline.stop();
             fadeInScrollDownBadgeTimeline = null;
-            scrollDownBadge.setOpacity(0);
+            hideScrollDownBadge();
         }
+    }
+
+    private void hideScrollDownBadge() {
+        scrollDownBadge.setCursor(Cursor.DEFAULT);
+        scrollDownBadge.setOpacity(0);
+        scrollDownTooltip.setOpacity(0);
     }
 
     private void fadeInScrollDownBadge() {
         fadeInScrollDownBadgeTimeline = new Timeline();
         scrollDownBadge.setOpacity(0);
         ObservableList<KeyFrame> keyFrames = fadeInScrollDownBadgeTimeline.getKeyFrames();
-        keyFrames.add(new KeyFrame(Duration.millis(0),
+        keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                 new KeyValue(scrollDownBadge.opacityProperty(), 0, Interpolator.LINEAR)
         ));
         // Add a delay before starting fade-in to deal with a render delay when adding a
         // list item.
-        keyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(100)),
+        keyFrames.add(new KeyFrame(ManagedDuration.millis(100),
                 new KeyValue(scrollDownBadge.opacityProperty(), 0, Interpolator.EASE_OUT)
         ));
-        keyFrames.add(new KeyFrame(Duration.millis(Transitions.effectiveDuration(400)),
+        keyFrames.add(new KeyFrame(ManagedDuration.millis(400),
                 new KeyValue(scrollDownBadge.opacityProperty(), 1, Interpolator.EASE_OUT)
         ));
         fadeInScrollDownBadgeTimeline.play();
+        scrollDownBadge.setCursor(Cursor.HAND);
+        scrollDownTooltip.setOpacity(1);
     }
 }

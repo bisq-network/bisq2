@@ -25,13 +25,21 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.CssConfig;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Layout;
-import bisq.desktop.common.Transitions;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.qr.QrCodeDisplay;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.KeyHandlerUtil;
-import bisq.desktop.components.controls.*;
-import bisq.desktop.components.controls.validator.*;
+import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.BitcoinAmountDisplay;
+import bisq.desktop.components.controls.MaterialBitcoinAmountDisplay;
+import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.WrappingText;
+import bisq.desktop.components.controls.validator.BitcoinAddressValidator;
+import bisq.desktop.components.controls.validator.BitcoinTransactionValidator;
+import bisq.desktop.components.controls.validator.LightningInvoiceValidator;
+import bisq.desktop.components.controls.validator.LightningPreImageValidator;
+import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
@@ -40,7 +48,12 @@ import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
@@ -53,7 +66,12 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -513,18 +531,18 @@ public class SellerState3a extends BaseState {
         }
 
         private void startShowAnimation(Node node, Stage qrCodeWindow) {
-            double duration = Transitions.effectiveDuration(400);
+            Duration duration = ManagedDuration.millis(400);
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
 
             double startScale = 0.25;
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(qrCodeWindow.opacityProperty(), 0, INTERPOLATOR),
                     new KeyValue(node.scaleXProperty(), startScale, INTERPOLATOR),
                     new KeyValue(node.scaleYProperty(), startScale, INTERPOLATOR)
 
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(qrCodeWindow.opacityProperty(), 1, INTERPOLATOR),
                     new KeyValue(node.scaleXProperty(), 1, INTERPOLATOR),
                     new KeyValue(node.scaleYProperty(), 1, INTERPOLATOR)

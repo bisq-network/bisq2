@@ -1,0 +1,8 @@
+.offerbook-level2-tab {
+    -fx-background-color: -bisq-dark-grey-20;
+    -fx-background-radius: 8 8 0 0;
+}
+
+.offerbook-container {
+    -fx-background-color: -bisq-dark-grey-20;
+}

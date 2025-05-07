@@ -129,6 +129,10 @@ public class BannedUserService implements PersistenceClient<BannedUserStore>, Se
         }
     }
 
+    public boolean isRateLimitExceeding(UserProfile userProfile) {
+        return isRateLimitExceeding(userProfile.getId());
+    }
+
     public boolean isRateLimitExceeding(String userProfileId) {
         refresh(userProfileId);
         return rateLimitExceedingUserProfiles.contains(userProfileId);

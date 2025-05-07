@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.profile_card;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.desktop.common.view.TabModel;
 import bisq.user.profile.UserProfile;
