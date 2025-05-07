@@ -54,7 +54,7 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
 
     private final VBox takeOfferStatus, sendTakeOfferMessageFeedback, takeOfferSuccess;
     private final Button takeOfferSuccessButton;
-    private final Label priceDetails, bitcoinPaymentMethod, fiatPaymentMethod, fee, feeDetails;
+    private final Label priceDetails, fiatPaymentMethod, fee, feeDetails;
     private final GridPane content;
     private final TextFlow price;
     private final MuSigProtocolWaitingAnimation takeOfferSendMessageWaitingAnimation;
@@ -125,15 +125,6 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
         content.add(priceDetails, 2, rowIndex);
 
         rowIndex++;
-        Label bitcoinPaymentMethodDescription = new Label(Res.get("bisqEasy.takeOffer.review.method.bitcoin"));
-        bitcoinPaymentMethodDescription.getStyleClass().add(DESCRIPTION_STYLE);
-        content.add(bitcoinPaymentMethodDescription, 0, rowIndex);
-
-        bitcoinPaymentMethod = new Label();
-        bitcoinPaymentMethod.getStyleClass().add(VALUE_STYLE);
-        content.add(bitcoinPaymentMethod, 1, rowIndex);
-
-        rowIndex++;
         Label fiatPaymentMethodDescription = new Label(Res.get("bisqEasy.takeOffer.review.method.fiat"));
         fiatPaymentMethodDescription.getStyleClass().add(DESCRIPTION_STYLE);
         content.add(fiatPaymentMethodDescription, 0, rowIndex);
@@ -184,10 +175,6 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
         priceDetails.setText(model.getPriceDetails());
 
         fiatPaymentMethod.setText(model.getFiatPaymentMethod());
-        bitcoinPaymentMethod.setText(model.getBitcoinPaymentMethod());
-
-        feeDetails.setVisible(model.isFeeDetailsVisible());
-        feeDetails.setManaged(model.isFeeDetailsVisible());
 
         fee.setText(model.getFee());
         feeDetails.setText(model.getFeeDetails());

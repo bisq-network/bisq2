@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.take_offer.review;
 
-import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.bonded_roles.market_price.NoMarketPriceAvailableException;
@@ -35,7 +34,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
-import bisq.desktop.main.content.bisq_easy.components.ReviewDataDisplay;
+import bisq.desktop.main.content.mu_sig.components.MuSigReviewDataDisplay;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.mu_sig.MuSigService;
@@ -69,6 +68,8 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class MuSigTakeOfferReviewController implements Controller {
     private final MuSigTakeOfferReviewModel model;
@@ -81,7 +82,7 @@ public class MuSigTakeOfferReviewController implements Controller {
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
     private final BannedUserService bannedUserService;
-    private final ReviewDataDisplay reviewDataDisplay;
+    private final MuSigReviewDataDisplay muSigReviewDataDisplay;
     private final MediationRequestService mediationRequestService;
     private final MuSigService muSigService;
     private final NetworkService networkService;
@@ -104,9 +105,9 @@ public class MuSigTakeOfferReviewController implements Controller {
         muSigOpenTradeChannelService = serviceProvider.getChatService().getMuSigOpenTradeChannelService();
 
         priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
-        reviewDataDisplay = new ReviewDataDisplay();
+        muSigReviewDataDisplay = new MuSigReviewDataDisplay();
         model = new MuSigTakeOfferReviewModel();
-        view = new MuSigTakeOfferReviewView(model, this, reviewDataDisplay.getRoot());
+        view = new MuSigTakeOfferReviewView(model, this, muSigReviewDataDisplay.getRoot());
     }
 
     public void init(MuSigOffer bisqEasyOffer) {
@@ -143,13 +144,6 @@ public class MuSigTakeOfferReviewController implements Controller {
         }
     }
 
-    public void setBitcoinPaymentMethodSpec(BitcoinPaymentMethodSpec spec) {
-        if (spec != null) {
-            model.setBitcoinPaymentMethodSpec(spec);
-            model.setBitcoinPaymentMethod(spec.getShortDisplayString());
-        }
-    }
-
     public void setFiatPaymentMethodSpec(FiatPaymentMethodSpec spec) {
         if (spec != null) {
             model.setFiatPaymentMethodSpec(spec);
@@ -162,8 +156,8 @@ public class MuSigTakeOfferReviewController implements Controller {
         Monetary takersBaseSideAmount = model.getTakersBaseSideAmount();
         Monetary takersQuoteSideAmount = model.getTakersQuoteSideAmount();
         FiatPaymentMethodSpec fiatPaymentMethodSpec = model.getFiatPaymentMethodSpec();
-        BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = model.getBitcoinPaymentMethodSpec();
-
+        checkArgument(muSigOffer.getBaseSidePaymentMethodSpecs().size() == 1);
+        BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = muSigOffer.getBaseSidePaymentMethodSpecs().get(0);
         mainButtonsVisibleHandler.accept(false);
 
         try {
@@ -269,8 +263,6 @@ public class MuSigTakeOfferReviewController implements Controller {
         String formattedBaseAmount = AmountFormatter.formatBaseAmount(fixBaseSideAmount);
         String formattedQuoteAmount = AmountFormatter.formatQuoteAmount(fixQuoteSideAmount);
         Direction takersDirection = model.getMuSigOffer().getTakersDirection();
-        boolean isMainChain = model.getBitcoinPaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
-        model.setFeeDetailsVisible(isMainChain);
         if (takersDirection.isSell()) {
             toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toSend");
             toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
@@ -279,12 +271,8 @@ public class MuSigTakeOfferReviewController implements Controller {
             toReceiveAmount = formattedQuoteAmount;
             toReceiveCode = fixQuoteSideAmount.getCode();
 
-            if (isMainChain) {
-                model.setFee(Res.get("bisqEasy.takeOffer.review.sellerPaysMinerFee"));
-                model.setFeeDetails(Res.get("bisqEasy.takeOffer.review.noTradeFeesLong"));
-            } else {
-                model.setFee(Res.get("bisqEasy.takeOffer.review.noTradeFees"));
-            }
+            model.setFee(Res.get("bisqEasy.takeOffer.review.sellerPaysMinerFee"));
+            model.setFeeDetails(Res.get("bisqEasy.takeOffer.review.noTradeFeesLong"));
         } else {
             toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toPay");
             toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
@@ -293,25 +281,20 @@ public class MuSigTakeOfferReviewController implements Controller {
             toReceiveAmount = formattedBaseAmount;
             toReceiveCode = fixBaseSideAmount.getCode();
 
-            if (isMainChain) {
-                model.setFee(Res.get("bisqEasy.takeOffer.review.noTradeFees"));
-                model.setFeeDetails(Res.get("bisqEasy.takeOffer.review.sellerPaysMinerFeeLong"));
-            } else {
-                model.setFee(Res.get("bisqEasy.takeOffer.review.noTradeFees"));
-            }
+            model.setFee(Res.get("bisqEasy.takeOffer.review.noTradeFees"));
+            model.setFeeDetails(Res.get("bisqEasy.takeOffer.review.sellerPaysMinerFeeLong"));
         }
 
-        reviewDataDisplay.setDirection(Res.get("bisqEasy.tradeWizard.review.direction",
+        muSigReviewDataDisplay.setDirection(Res.get("bisqEasy.tradeWizard.review.direction",
                 Res.get(takersDirection.isSell() ? "offer.sell" : "offer.buy").toUpperCase()));
-        reviewDataDisplay.setToSendAmountDescription(toSendAmountDescription.toUpperCase());
-        reviewDataDisplay.setToSendAmount(toSendAmount);
-        reviewDataDisplay.setToSendCode(toSendCode);
-        reviewDataDisplay.setToReceiveAmountDescription(toReceiveAmountDescription.toUpperCase());
-        reviewDataDisplay.setToReceiveAmount(toReceiveAmount);
-        reviewDataDisplay.setToReceiveCode(toReceiveCode);
-        reviewDataDisplay.setFiatPaymentMethodDescription(Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription.fiat").toUpperCase());
-        reviewDataDisplay.setBitcoinPaymentMethod(model.getBitcoinPaymentMethod());
-        reviewDataDisplay.setFiatPaymentMethod(model.getFiatPaymentMethod());
+        muSigReviewDataDisplay.setToSendAmountDescription(toSendAmountDescription.toUpperCase());
+        muSigReviewDataDisplay.setToSendAmount(toSendAmount);
+        muSigReviewDataDisplay.setToSendCode(toSendCode);
+        muSigReviewDataDisplay.setToReceiveAmountDescription(toReceiveAmountDescription.toUpperCase());
+        muSigReviewDataDisplay.setToReceiveAmount(toReceiveAmount);
+        muSigReviewDataDisplay.setToReceiveCode(toReceiveCode);
+        muSigReviewDataDisplay.setFiatPaymentMethodDescription(Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription.fiat").toUpperCase());
+        muSigReviewDataDisplay.setFiatPaymentMethod(model.getFiatPaymentMethod());
     }
 
     @Override

@@ -20,7 +20,6 @@ package bisq.desktop.main.content.mu_sig.take_offer.review;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.user.profile.UserProfile;
@@ -42,8 +41,6 @@ class MuSigTakeOfferReviewModel implements Model {
     @Setter
     private List<String> paymentMethodNames;
     @Setter
-    private BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec;
-    @Setter
     private FiatPaymentMethodSpec fiatPaymentMethodSpec;
     @Setter
     private Monetary takersBaseSideAmount;
@@ -55,15 +52,11 @@ class MuSigTakeOfferReviewModel implements Model {
     @Setter
     private String priceDetails;
     @Setter
-    private String bitcoinPaymentMethod;
-    @Setter
     private String fiatPaymentMethod;
     @Setter
     private String fee;
     @Setter
     private String feeDetails;
-    @Setter
-    private boolean feeDetailsVisible;
     @Setter
     private long marketPrice;
 
