@@ -18,15 +18,26 @@
 package bisq.account.payment_method;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class StablecoinPaymentMethodUtil {
+    public static Optional<StablecoinPaymentMethod> findPaymentMethod(String name) {
+        try {
+            StablecoinPaymentRail paymentRail = StablecoinPaymentRail.valueOf(name);
+            StablecoinPaymentMethod paymentMethod = StablecoinPaymentMethod.fromPaymentRail(paymentRail);
+            return Optional.of(paymentMethod);
+        } catch (Throwable ignore) {
+            return Optional.empty();
+        }
+    }
+
     public static StablecoinPaymentMethod getPaymentMethod(String name) {
         try {
             StablecoinPaymentRail paymentRail = StablecoinPaymentRail.valueOf(name);
-            StablecoinPaymentMethod fiatPaymentMethod = StablecoinPaymentMethod.fromPaymentRail(paymentRail);
-            if (!fiatPaymentMethod.isCustomPaymentMethod()) {
-                return fiatPaymentMethod;
+            StablecoinPaymentMethod paymentMethod = StablecoinPaymentMethod.fromPaymentRail(paymentRail);
+            if (!paymentMethod.isCustomPaymentMethod()) {
+                return paymentMethod;
             }
         } catch (Throwable ignore) {
         }

@@ -206,7 +206,7 @@ public final class Coin extends Monetary {
 
     @Override
     public String getName() {
-        return CryptoCurrencyRepository.getName(code).orElse(code);
+        return CryptoCurrencyRepository.findName(code).orElse(code);
     }
 
     @Override

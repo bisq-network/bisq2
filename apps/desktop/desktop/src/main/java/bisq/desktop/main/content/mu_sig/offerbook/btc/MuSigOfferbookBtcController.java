@@ -17,15 +17,18 @@
 
 package bisq.desktop.main.content.mu_sig.offerbook.btc;
 
+import bisq.common.currency.Market;
+import bisq.common.currency.MarketRepository;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.main.content.mu_sig.offerbook.MuSigOfferbookController;
 import bisq.offer.Direction;
+import bisq.settings.CookieKey;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MuSigOfferbookBtcController extends MuSigOfferbookController<MuSigOfferbookBtcModel, MuSigOfferbookBtcView> {
     public MuSigOfferbookBtcController(ServiceProvider serviceProvider, Direction direction) {
-        super(serviceProvider,direction);
+        super(serviceProvider, direction);
     }
 
     @Override
@@ -36,5 +39,27 @@ public class MuSigOfferbookBtcController extends MuSigOfferbookController<MuSigO
     @Override
     protected MuSigOfferbookBtcModel createAndGetModel(Direction direction) {
         return new MuSigOfferbookBtcModel(direction);
+    }
+
+    @Override
+    public void onActivate() {
+        model.getMarkets().setAll(MarketRepository.getAllFiatMarkets());
+
+        super.onActivate();
+    }
+
+    @Override
+    protected Market getDefaultMarket() {
+        return MarketRepository.getDefaultBtcFiatMarket();
+    }
+
+    @Override
+    protected boolean isExpectedMarket(Market market) {
+        return market.isFiat() && market.getBaseCurrencyCode().equals("BTC");
+    }
+
+    @Override
+    protected CookieKey getSelectedMarketCookieKey() {
+        return CookieKey.MU_SIG_OFFERBOOK_SELECTED_BTC_MARKET;
     }
 }

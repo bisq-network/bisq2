@@ -19,6 +19,7 @@ package bisq.desktop.main.content.mu_sig.offerbook;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.Market;
+import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.util.StringUtils;
@@ -34,6 +35,7 @@ import bisq.identity.IdentityService;
 import bisq.mu_sig.MuSigService;
 import bisq.offer.Direction;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
@@ -74,6 +76,7 @@ public abstract class MuSigOfferbookController<M extends MuSigOfferbookModel, V 
 
     @Override
     public void onActivate() {
+        applyInitialSelectedMarket();
         selectedMarketPin = EasyBind.subscribe(model.getSelectedMarket(), market -> {
             if (market != null) {
                 model.getSelectedMarket().set(market);
@@ -100,7 +103,7 @@ public abstract class MuSigOfferbookController<M extends MuSigOfferbookModel, V 
                 UIThread.run(() -> {
                     String offerId = muSigOffer.getId();
                     if (muSigOffer.getDirection().mirror().equals(model.getDirection()) &&
-                            canAddOffer(muSigOffer) &&
+                            isExpectedMarket(muSigOffer.getMarket()) &&
                             !model.getOfferIds().contains(offerId)) {
                         model.getListItems().add(new MuSigOfferListItem(muSigOffer, marketPriceService, userProfileService, identityService));
                         model.getOfferIds().add(offerId);
@@ -135,10 +138,10 @@ public abstract class MuSigOfferbookController<M extends MuSigOfferbookModel, V 
         });
     }
 
-    protected abstract boolean canAddOffer(MuSigOffer muSigOffer);
+    protected abstract boolean isExpectedMarket(Market market);
 
     private void updatePredicate() {
-        model.getFilteredList().setPredicate(item -> false);
+        model.getFilteredList().setPredicate(item -> true);
         model.getFilteredList().setPredicate(item ->
                 model.getDirectionPredicate().test(item) &&
                         model.getMarketPredicate().test(item) &&
@@ -167,15 +170,30 @@ public abstract class MuSigOfferbookController<M extends MuSigOfferbookModel, V 
         muSigService.removeOffer(offer);
     }
 
-    public void onSelectMarket(Market market) {
+
+    void onSelectMarket(Market market) {
         settingsService.setSelectedMarket(market);
-        model.getSelectedMarket().set(market);
+        settingsService.setCookie(getSelectedMarketCookieKey(), market.getMarketCodes());
     }
 
     public void onSearchInput(String searchInput) {
         //TODO add a more controlled search impl.
-        model.setSearchPredicate(item -> StringUtils.isEmpty(searchInput) ||
-                item.toString().contains(searchInput));
-        updatePredicate();
+        if (searchInput != null) {
+            model.setSearchPredicate(item -> StringUtils.isEmpty(searchInput) ||
+                    item.toString().contains(searchInput));
+            updatePredicate();
+        }
     }
+
+    protected void applyInitialSelectedMarket() {
+        Market selectedMarket = settingsService.getCookie().asString(getSelectedMarketCookieKey())
+                .flatMap(MarketRepository::findAnyMarketByMarketCodes)
+                .filter(this::isExpectedMarket)
+                .orElse(getDefaultMarket());
+        model.getSelectedMarket().set(selectedMarket);
+    }
+
+    protected abstract Market getDefaultMarket();
+
+    protected abstract CookieKey getSelectedMarketCookieKey();
 }

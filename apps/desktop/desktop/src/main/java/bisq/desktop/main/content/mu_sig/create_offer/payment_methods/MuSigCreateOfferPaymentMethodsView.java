@@ -42,10 +42,10 @@ import lombok.extern.slf4j.Slf4j;
 public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOfferPaymentMethodsModel, MuSigCreateOfferPaymentMethodsController> {
     private static final double TWO_COLUMN_WIDTH = 20.75;
 
-    private final ListChangeListener<FiatPaymentMethod> fiatPaymentMethodListener;
-    private final Label fiatSubtitleLabel,  nonFoundLabel;
+    private final ListChangeListener<FiatPaymentMethod> paymentMethodListener;
+    private final Label subtitleLabel,  nonFoundLabel;
     private final MuSigCreateOfferAddCustomPaymentMethodBox muSigCreateOfferAddCustomPaymentMethodBox;
-    private final GridPane fiatMethodsGridPane;
+    private final GridPane gridPane;
 
     public MuSigCreateOfferPaymentMethodsView(MuSigCreateOfferPaymentMethodsModel model, MuSigCreateOfferPaymentMethodsController controller) {
         super(new VBox(), model, controller);
@@ -56,126 +56,126 @@ public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOf
         Label headlineLabel = new Label(Res.get("muSig.createOffer.paymentMethods.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        fiatSubtitleLabel = new Label();
-        fiatSubtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        fiatSubtitleLabel.setAlignment(Pos.CENTER);
-        fiatSubtitleLabel.getStyleClass().add("bisq-text-3");
-        fiatSubtitleLabel.setWrapText(true);
-        fiatSubtitleLabel.setMaxWidth(600);
+        subtitleLabel = new Label();
+        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
+        subtitleLabel.setAlignment(Pos.CENTER);
+        subtitleLabel.getStyleClass().add("bisq-text-3");
+        subtitleLabel.setWrapText(true);
+        subtitleLabel.setMaxWidth(600);
 
         nonFoundLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethods.noneFound"));
         nonFoundLabel.getStyleClass().add("bisq-text-6");
         nonFoundLabel.setAlignment(Pos.CENTER);
 
-        fiatMethodsGridPane = GridPaneUtil.getGridPane(10, 10, new Insets(0));
-        fiatMethodsGridPane.getStyleClass().add("fiat-methods-grid-pane");
+        gridPane = GridPaneUtil.getGridPane(10, 10, new Insets(0));
+        gridPane.getStyleClass().add("fiat-methods-grid-pane");
 
         muSigCreateOfferAddCustomPaymentMethodBox = new MuSigCreateOfferAddCustomPaymentMethodBox();
 
 
 
-        VBox fiatVBox = new VBox(20, fiatSubtitleLabel, nonFoundLabel, fiatMethodsGridPane);
-        fiatVBox.setAlignment(Pos.CENTER);
+        VBox vBox = new VBox(20, subtitleLabel, nonFoundLabel, gridPane);
+        vBox.setAlignment(Pos.CENTER);
 
         VBox.setMargin(headlineLabel, new Insets(0, 0, -5, 0));
-        VBox.setMargin(fiatMethodsGridPane, new Insets(0, 60, 0, 60));
-        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, Spacer.fillVBox(), fiatVBox, Spacer.fillVBox());
+        VBox.setMargin(gridPane, new Insets(0, 60, 0, 60));
+        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, Spacer.fillVBox(), vBox, Spacer.fillVBox());
 
-        fiatPaymentMethodListener = c -> {
+        paymentMethodListener = c -> {
             c.next();
-            setUpAndFillFiatPaymentMethods();
+            setUpAndFillPaymentMethods();
         };
     }
 
     @Override
     protected void onViewAttached() {
-        fiatSubtitleLabel.setText(model.getFiatSubtitleLabel());
-        muSigCreateOfferAddCustomPaymentMethodBox.getCustomPaymentMethodField().textProperty().bindBidirectional(model.getCustomFiatPaymentMethodName());
+        subtitleLabel.setText(model.getSubtitleLabel());
+        muSigCreateOfferAddCustomPaymentMethodBox.getCustomPaymentMethodField().textProperty().bindBidirectional(model.getCustomPaymentMethodName());
         nonFoundLabel.visibleProperty().bind(model.getIsPaymentMethodsEmpty());
         nonFoundLabel.managedProperty().bind(model.getIsPaymentMethodsEmpty());
-        fiatMethodsGridPane.visibleProperty().bind(model.getIsPaymentMethodsEmpty().not());
-        fiatMethodsGridPane.managedProperty().bind(model.getIsPaymentMethodsEmpty().not());
+        gridPane.visibleProperty().bind(model.getIsPaymentMethodsEmpty().not());
+        gridPane.managedProperty().bind(model.getIsPaymentMethodsEmpty().not());
 
-        model.getFiatPaymentMethods().addListener(fiatPaymentMethodListener);
+        model.getPaymentMethods().addListener(paymentMethodListener);
 
-        muSigCreateOfferAddCustomPaymentMethodBox.getAddIconButton().setOnAction(e -> controller.onAddCustomFiatMethod());
+        muSigCreateOfferAddCustomPaymentMethodBox.getAddIconButton().setOnAction(e -> controller.onAddCustomPaymentMethod());
         muSigCreateOfferAddCustomPaymentMethodBox.initialize();
         root.setOnMousePressed(e -> root.requestFocus());
 
-        setUpAndFillFiatPaymentMethods();
+        setUpAndFillPaymentMethods();
     }
 
     @Override
     protected void onViewDetached() {
-        muSigCreateOfferAddCustomPaymentMethodBox.getCustomPaymentMethodField().textProperty().unbindBidirectional(model.getCustomFiatPaymentMethodName());
+        muSigCreateOfferAddCustomPaymentMethodBox.getCustomPaymentMethodField().textProperty().unbindBidirectional(model.getCustomPaymentMethodName());
         nonFoundLabel.visibleProperty().unbind();
         nonFoundLabel.managedProperty().unbind();
-        fiatMethodsGridPane.visibleProperty().unbind();
-        fiatMethodsGridPane.managedProperty().unbind();
+        gridPane.visibleProperty().unbind();
+        gridPane.managedProperty().unbind();
 
-        fiatMethodsGridPane.getChildren().stream()
+        gridPane.getChildren().stream()
                 .filter(e -> e instanceof ChipButton)
                 .map(e -> (ChipButton) e)
                 .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));
 
-        model.getFiatPaymentMethods().removeListener(fiatPaymentMethodListener);
+        model.getPaymentMethods().removeListener(paymentMethodListener);
 
         muSigCreateOfferAddCustomPaymentMethodBox.getAddIconButton().setOnAction(null);
         muSigCreateOfferAddCustomPaymentMethodBox.dispose();
         root.setOnMousePressed(null);
     }
 
-    private void setUpAndFillFiatPaymentMethods() {
-        fiatMethodsGridPane.getChildren().clear();
-        fiatMethodsGridPane.getColumnConstraints().clear();
-        int paymentMethodsCount = model.getSortedFiatPaymentMethods().size();
+    private void setUpAndFillPaymentMethods() {
+        gridPane.getChildren().clear();
+        gridPane.getColumnConstraints().clear();
+        int paymentMethodsCount = model.getSortedPaymentMethods().size();
         int numColumns = paymentMethodsCount < 10 ? 3 : 4;
-        GridPaneUtil.setGridPaneMultiColumnsConstraints(fiatMethodsGridPane, numColumns);
+        GridPaneUtil.setGridPaneMultiColumnsConstraints(gridPane, numColumns);
 
         int i = 0;
         int col, row;
         for (; i < paymentMethodsCount; ++i) {
-            FiatPaymentMethod fiatPaymentMethod = model.getSortedFiatPaymentMethods().get(i);
+            FiatPaymentMethod paymentMethod = model.getSortedPaymentMethods().get(i);
 
             // enum name or custom name
-            ChipButton chipButton = new ChipButton(fiatPaymentMethod.getShortDisplayString());
-            if (!fiatPaymentMethod.getShortDisplayString().equals(fiatPaymentMethod.getDisplayString())) {
-                chipButton.setTooltip(new BisqTooltip(fiatPaymentMethod.getDisplayString()));
+            ChipButton chipButton = new ChipButton(paymentMethod.getShortDisplayString());
+            if (!paymentMethod.getShortDisplayString().equals(paymentMethod.getDisplayString())) {
+                chipButton.setTooltip(new BisqTooltip(paymentMethod.getDisplayString()));
             }
-            if (model.getSelectedFiatPaymentMethods().contains(fiatPaymentMethod)) {
+            if (model.getSelectedPaymentMethods().contains(paymentMethod)) {
                 chipButton.setSelected(true);
             }
             chipButton.setOnAction(() -> {
-                boolean wasAdded = controller.onToggleFiatPaymentMethod(fiatPaymentMethod, chipButton.isSelected());
+                boolean wasAdded = controller.onTogglePaymentMethod(paymentMethod, chipButton.isSelected());
                 if (!wasAdded) {
                     UIThread.runOnNextRenderFrame(() -> chipButton.setSelected(false));
                 }
             });
-            model.getAddedCustomFiatPaymentMethods().stream()
-                    .filter(customMethod -> customMethod.equals(fiatPaymentMethod))
+            model.getAddedCustomPaymentMethods().stream()
+                    .filter(customMethod -> customMethod.equals(paymentMethod))
                     .findAny()
                     .ifPresentOrElse(
                             customMethod -> {
                                 ImageView closeIcon = chipButton.setRightIcon("remove-white");
-                                closeIcon.setOnMousePressed(e -> controller.onRemoveFiatCustomMethod(fiatPaymentMethod));
+                                closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(paymentMethod));
                                 StackPane icon = BisqEasyViewUtils.getCustomPaymentMethodIcon(customMethod.getDisplayString());
                                 chipButton.setLeftIcon(icon);
                             },
                             () -> {
                                 // Lookup for an image with the id of the enum name (REVOLUT)
-                                ImageView icon = ImageUtil.getImageViewById(fiatPaymentMethod.getName());
+                                ImageView icon = ImageUtil.getImageViewById(paymentMethod.getName());
                                 chipButton.setLeftIcon(icon);
                             });
 
             col = i % numColumns;
             row = i / numColumns;
-            fiatMethodsGridPane.add(chipButton, col, row);
+            gridPane.add(chipButton, col, row);
         }
 
-        if (model.getCanAddCustomFiatPaymentMethod().get()) {
+        if (model.getCanAddCustomPaymentMethod().get()) {
             col = i % numColumns;
             row = i / numColumns;
-            fiatMethodsGridPane.add(muSigCreateOfferAddCustomPaymentMethodBox, col, row);
+            gridPane.add(muSigCreateOfferAddCustomPaymentMethodBox, col, row);
         }
     }
 }

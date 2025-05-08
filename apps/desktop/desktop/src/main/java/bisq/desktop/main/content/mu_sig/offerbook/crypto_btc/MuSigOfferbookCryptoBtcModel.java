@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offerbook.other;
+package bisq.desktop.main.content.mu_sig.offerbook.crypto_btc;
 
 import bisq.desktop.main.content.mu_sig.offerbook.MuSigOfferbookModel;
 import bisq.offer.Direction;
@@ -24,8 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class MuSigOfferbookOtherModel extends MuSigOfferbookModel {
-    public MuSigOfferbookOtherModel(Direction direction) {
+public abstract class MuSigOfferbookCryptoBtcModel extends MuSigOfferbookModel {
+    public MuSigOfferbookCryptoBtcModel(Direction direction) {
         super(direction);
     }
 }

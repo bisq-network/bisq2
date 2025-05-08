@@ -307,7 +307,12 @@ public class MuSigCreateOfferReviewController implements Controller {
     }
 
     void onShowOfferbook() {
-        closeAndNavigateToHandler.accept(NavigationTarget.MU_SIG_OFFERBOOK_BUY);
+        if (model.getDirection().isBuy()) {
+            // My buy offer appears on the sell offerbook
+            closeAndNavigateToHandler.accept(NavigationTarget.MU_SIG_OFFERBOOK_SELL);
+        } else {
+            closeAndNavigateToHandler.accept(NavigationTarget.MU_SIG_OFFERBOOK_BUY);
+        }
     }
 
     void onSelectFiatPaymentMethod(FiatPaymentMethod paymentMethod) {

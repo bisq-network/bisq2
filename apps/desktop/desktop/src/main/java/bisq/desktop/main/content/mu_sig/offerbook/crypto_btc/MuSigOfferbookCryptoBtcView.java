@@ -15,23 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offerbook.btc;
+package bisq.desktop.main.content.mu_sig.offerbook.crypto_btc;
 
 import bisq.common.currency.Market;
 import bisq.desktop.main.content.mu_sig.offerbook.MuSigOfferbookView;
 import javafx.util.StringConverter;
 
-public class MuSigOfferbookBtcView extends MuSigOfferbookView<MuSigOfferbookBtcModel, MuSigOfferbookBtcController> {
-
-    public MuSigOfferbookBtcView(MuSigOfferbookBtcModel model, MuSigOfferbookBtcController controller) {
+public abstract  class MuSigOfferbookCryptoBtcView <M extends MuSigOfferbookCryptoBtcModel, C extends MuSigOfferbookCryptoBtcController<?, ?>> extends MuSigOfferbookView< M, C> {
+    public MuSigOfferbookCryptoBtcView(M model, C controller) {
         super(model, controller);
     }
-
     protected StringConverter<Market> getConverter() {
         return new StringConverter<>() {
             @Override
             public String toString(Market market) {
-                return market != null ? market.getQuoteCurrencyDisplayName() : "";
+                return market != null ? market.getBaseCurrencyDisplayName() : "";
             }
 
             @Override

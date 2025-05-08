@@ -119,7 +119,7 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
     public abstract List<TradeCurrency> getTradeCurrencies();
 
     public boolean isCustomPaymentMethod() {
-        return paymentRail == getCustomPaymentRail();
+        return paymentRail.equals(getCustomPaymentRail());
     }
 
     @Override

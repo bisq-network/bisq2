@@ -47,6 +47,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.stream.Collectors;
+
 @Slf4j
 @Getter
 @ToString
@@ -65,11 +66,11 @@ public class MuSigOfferListItem {
     private final String deposit;
     private final String maker;
 
-    private double priceSpecAsPercent;
-    private String formattedPercentagePrice;
-    private long priceAsLong;
-    private String price;
-    private String priceTooltip;
+    private double priceSpecAsPercent = 0;
+    private String formattedPercentagePrice = Res.get("data.na");
+    private long priceAsLong = 0;
+    private String price = Res.get("data.na");
+    private String priceTooltip = Res.get("data.na");
 
     private final Pin marketPriceByCurrencyMapPin;
 
@@ -80,7 +81,7 @@ public class MuSigOfferListItem {
         this.offer = offer;
         this.marketPriceService = marketPriceService;
 
-        isMyOffer =  identityService.findActiveIdentity(offer.getMakerNetworkId()).isPresent();
+        isMyOffer = identityService.findActiveIdentity(offer.getMakerNetworkId()).isPresent();
         quoteCurrencyCode = offer.getMarket().getQuoteCurrencyCode();
 
         AmountSpec amountSpec = offer.getAmountSpec();
@@ -89,7 +90,6 @@ public class MuSigOfferListItem {
         Market market = offer.getMarket();
         baseAmountAsString = OfferAmountFormatter.formatBaseAmount(marketPriceService, offer, false);
         quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, false);
-
 
 
         // ImageUtil.getImageViewById(fiatPaymentMethod.getName());
@@ -130,16 +130,17 @@ public class MuSigOfferListItem {
     }
 
     private void updatePriceSpecAsPercent() {
-        priceSpecAsPercent = PriceUtil.findPercentFromMarketPrice(marketPriceService, offer).orElseThrow();
-        formattedPercentagePrice = PercentageFormatter.formatToPercentWithSignAndSymbol(priceSpecAsPercent);
-        String offerPrice = OfferPriceFormatter.formatQuote(marketPriceService, offer);
-        priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(offer.getPriceSpec(), offerPrice);
+        PriceUtil.findPercentFromMarketPrice(marketPriceService, offer)
+                .ifPresent(priceSpecAsPercent -> {
+                    this.priceSpecAsPercent = priceSpecAsPercent;
+                    formattedPercentagePrice = PercentageFormatter.formatToPercentWithSignAndSymbol(priceSpecAsPercent);
+                    String offerPrice = OfferPriceFormatter.formatQuote(marketPriceService, offer);
+                    priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(offer.getPriceSpec(), offerPrice);
 
-        PriceSpec priceSpec = offer.getPriceSpec();
-        price = PriceSpecFormatter.getFormattedPrice(priceSpec, marketPriceService);
+                    PriceSpec priceSpec = offer.getPriceSpec();
+                    price = PriceSpecFormatter.getFormattedPrice(priceSpec, marketPriceService);
 
-        priceAsLong = PriceUtil.findQuote(marketPriceService, priceSpec, offer.getMarket()).map(PriceQuote::getValue).orElse(0L);
-        log.error("price {}, priceAsLong {}",price,priceAsLong );
-        //price 89286.77 (-10.00%), priceAsLong 2702250
+                    priceAsLong = PriceUtil.findQuote(marketPriceService, priceSpec, offer.getMarket()).map(PriceQuote::getValue).orElse(0L);
+                });
     }
 }

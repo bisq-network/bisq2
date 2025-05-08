@@ -17,18 +17,29 @@
 
 package bisq.common.currency;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 public class MarketRepository {
-    public static Market getDefault() {
-        return new Market(CryptoCurrencyRepository.getDefaultCurrency().getCode(),
+    public static Market getDefaultBtcFiatMarket() {
+        return new Market(CryptoCurrencyRepository.BITCOIN.getCode(),
                 FiatCurrencyRepository.getDefaultCurrency().getCode(),
-                CryptoCurrencyRepository.getDefaultCurrency().getName(),
+                CryptoCurrencyRepository.BITCOIN.getName(),
                 FiatCurrencyRepository.getDefaultCurrency().getName()
+        );
+    }
+
+    public static Market getDefaultCryptoBtcMarket() {
+        return new Market(CryptoCurrencyRepository.L_BTC.getCode(),
+                CryptoCurrencyRepository.BITCOIN.getCode(),
+                CryptoCurrencyRepository.L_BTC.getName(),
+                CryptoCurrencyRepository.BITCOIN.getName()
         );
     }
 
@@ -95,7 +106,7 @@ public class MarketRepository {
     }
 
     public static List<Market> getAllCryptoCurrencyMarkets() {
-        return CryptoCurrencyRepository.getAllCurrencies().stream()
+        return CryptoCurrencyRepository.getALL_CURRENCIES().stream()
                 .filter(currency -> !currency.equals(CryptoCurrencyRepository.BITCOIN))
                 .map(currency -> new Market(currency.getCode(), "BTC", currency.getName(), "Bitcoin"))
                 .distinct()
@@ -103,7 +114,15 @@ public class MarketRepository {
     }
 
     public static List<Market> getAllNonXMRCryptoCurrencyMarkets() {
-        return CryptoCurrencyRepository.getAllCurrencies().stream()
+        List<CryptoCurrency> allCurrencies = CryptoCurrencyRepository.getALL_CURRENCIES();
+        return allCurrencies.stream()
+                .filter(currency -> {
+                    var ee = CryptoCurrencyRepository.getALL_CURRENCIES();
+                    if (currency == null) {
+                        log.error("");
+                    }
+                    return true;
+                })
                 .filter(currency -> !currency.equals(CryptoCurrencyRepository.BITCOIN))
                 .filter(currency -> !currency.equals(CryptoCurrencyRepository.XMR))
                 .map(currency -> new Market(currency.getCode(), "BTC", currency.getName(), "Bitcoin"))
@@ -113,7 +132,7 @@ public class MarketRepository {
 
     public static List<Market> getAllMarkets() {
         List<Market> list = new ArrayList<>();
-        list.add(getDefault());
+        list.add(getDefaultBtcFiatMarket());
         list.addAll(getMajorMarkets());
         list.addAll(getMinorMarkets());
         return list.stream().distinct().collect(Collectors.toList());
@@ -121,7 +140,7 @@ public class MarketRepository {
 
     public static List<Market> getAllFiatMarkets() {
         List<Market> list = new ArrayList<>();
-        list.add(getDefault());
+        list.add(getDefaultBtcFiatMarket());
         list.addAll(getMajorFiatMarkets());
         list.addAll(getMinorFiatMarkets());
         return list.stream().distinct().collect(Collectors.toList());

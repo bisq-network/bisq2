@@ -86,13 +86,13 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
 
     public String getQuoteCurrencyDisplayName() {
         return FiatCurrency.isFiat(quoteCurrencyCode)
-                ? FiatCurrencyRepository.getDisplayName(quoteCurrencyCode).orElse(quoteCurrencyName)
+                ? FiatCurrencyRepository.findDisplayName(quoteCurrencyCode).orElse(quoteCurrencyName)
                 : quoteCurrencyName;
     }
 
     public String getBaseCurrencyDisplayName() {
         return FiatCurrency.isFiat(baseCurrencyCode)
-                ? FiatCurrencyRepository.getDisplayName(baseCurrencyCode).orElse(baseCurrencyName)
+                ? FiatCurrencyRepository.findDisplayName(baseCurrencyCode).orElse(baseCurrencyName)
                 : baseCurrencyName;
     }
 

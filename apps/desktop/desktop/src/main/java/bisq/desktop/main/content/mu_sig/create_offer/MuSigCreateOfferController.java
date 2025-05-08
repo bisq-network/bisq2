@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.mu_sig.create_offer;
 
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.NationalCurrencyPaymentMethod;
 import bisq.common.currency.Market;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
@@ -71,7 +72,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
     private final MuSigCreateOfferPaymentMethodsController muSigCreateOfferPaymentMethodsController;
     private final MuSigCreateOfferReviewController muSigCreateOfferReviewController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
-    private final ListChangeListener<FiatPaymentMethod> fiatPaymentMethodsListener;
+    private final ListChangeListener<NationalCurrencyPaymentMethod<?>> paymentMethodsListener;
     private Subscription priceSpecPin;
 
     public MuSigCreateOfferController(ServiceProvider serviceProvider) {
@@ -92,9 +93,9 @@ public class MuSigCreateOfferController extends NavigationController implements 
                 this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo);
 
-        fiatPaymentMethodsListener = c -> {
+        paymentMethodsListener = c -> {
             c.next();
-            handleFiatPaymentMethodsUpdate();
+            handlePaymentMethodsUpdate();
         };
     }
 
@@ -128,8 +129,8 @@ public class MuSigCreateOfferController extends NavigationController implements 
 
         priceSpecPin = EasyBind.subscribe(muSigCreateOfferAmountAndPriceController.getPriceSpec(),
                 muSigCreateOfferAmountAndPriceController::updateQuoteSideAmountSpecWithPriceSpec);
-        handleFiatPaymentMethodsUpdate();
-        muSigCreateOfferPaymentMethodsController.getFiatPaymentMethods().addListener(fiatPaymentMethodsListener);
+        handlePaymentMethodsUpdate();
+        muSigCreateOfferPaymentMethodsController.getPaymentMethods().addListener(paymentMethodsListener);
     }
 
     @Override
@@ -138,14 +139,14 @@ public class MuSigCreateOfferController extends NavigationController implements 
         overlayController.getApplicationRoot().removeEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
         priceSpecPin.unsubscribe();
-        muSigCreateOfferPaymentMethodsController.getFiatPaymentMethods().removeListener(fiatPaymentMethodsListener);
+        muSigCreateOfferPaymentMethodsController.getPaymentMethods().removeListener(paymentMethodsListener);
     }
 
     @Override
     protected void onStartProcessNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
         if (navigationTarget == NavigationTarget.MU_SIG_CREATE_OFFER_REVIEW_OFFER) {
             muSigCreateOfferReviewController.setDataForCreateOffer(
-                    muSigCreateOfferPaymentMethodsController.getFiatPaymentMethods(),
+                    muSigCreateOfferPaymentMethodsController.getPaymentMethods(),
                     muSigCreateOfferAmountAndPriceController.getQuoteSideAmountSpec().get(),
                     muSigCreateOfferAmountAndPriceController.getPriceSpec().get()
             );
@@ -263,8 +264,8 @@ public class MuSigCreateOfferController extends NavigationController implements 
         model.getCloseButtonVisible().set(value);
     }
 
-    private void handleFiatPaymentMethodsUpdate() {
-        ObservableList<FiatPaymentMethod> fiatPaymentMethods = muSigCreateOfferPaymentMethodsController.getFiatPaymentMethods();
+    private void handlePaymentMethodsUpdate() {
+        ObservableList<FiatPaymentMethod> fiatPaymentMethods = muSigCreateOfferPaymentMethodsController.getPaymentMethods();
         muSigCreateOfferAmountAndPriceController.setFiatPaymentMethods(fiatPaymentMethods);
         muSigCreateOfferReviewController.setFiatPaymentMethods(fiatPaymentMethods);
     }

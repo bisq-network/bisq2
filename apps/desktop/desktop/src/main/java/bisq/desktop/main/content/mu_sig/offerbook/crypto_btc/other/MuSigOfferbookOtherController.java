@@ -15,15 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offerbook.other;
+package bisq.desktop.main.content.mu_sig.offerbook.crypto_btc.other;
 
+import bisq.common.currency.Market;
+import bisq.common.currency.MarketRepository;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.main.content.mu_sig.offerbook.MuSigOfferbookController;
+import bisq.desktop.main.content.mu_sig.offerbook.crypto_btc.MuSigOfferbookCryptoBtcController;
 import bisq.offer.Direction;
+import bisq.settings.CookieKey;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MuSigOfferbookOtherController extends MuSigOfferbookController<MuSigOfferbookOtherModel, MuSigOfferbookOtherView> {
+public class MuSigOfferbookOtherController extends MuSigOfferbookCryptoBtcController<MuSigOfferbookOtherModel, MuSigOfferbookOtherView> {
     public MuSigOfferbookOtherController(ServiceProvider serviceProvider, Direction direction) {
         super(serviceProvider, direction);
     }
@@ -36,5 +39,27 @@ public class MuSigOfferbookOtherController extends MuSigOfferbookController<MuSi
     @Override
     protected MuSigOfferbookOtherModel createAndGetModel(Direction direction) {
         return new MuSigOfferbookOtherModel(direction);
+    }
+
+    @Override
+    public void onActivate() {
+        model.getMarkets().setAll(MarketRepository.getAllNonXMRCryptoCurrencyMarkets());
+
+        super.onActivate();
+    }
+
+    @Override
+    protected Market getDefaultMarket() {
+        return MarketRepository.getDefaultCryptoBtcMarket();
+    }
+
+    @Override
+    protected boolean isExpectedMarket(Market market) {
+        return market.isCrypto() && !market.isXmr();
+    }
+
+    @Override
+    protected CookieKey getSelectedMarketCookieKey() {
+        return CookieKey.MU_SIG_OFFERBOOK_SELECTED_OTHER_MARKET;
     }
 }

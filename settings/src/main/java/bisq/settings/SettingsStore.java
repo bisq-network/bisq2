@@ -17,6 +17,7 @@
 
 package bisq.settings;
 
+import bisq.common.application.DevMode;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.locale.LanguageRepository;
@@ -52,7 +53,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
     final Cookie cookie;
     final Map<String, Boolean> dontShowAgainMap = new ConcurrentHashMap<>();
     final Observable<Boolean> useAnimations = new Observable<>();
-    final Observable<Market> selectedMarket = new Observable<>();
+    final Observable<Market> selectedMarket = new Observable<>(); // todo not used?
     @Deprecated(since = "2.1.1")
     private final Observable<Long> minRequiredReputationScore = new Observable<>();
     @Deprecated(since = "2.1.2")
@@ -85,7 +86,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
         this(new Cookie(),
                 new HashMap<>(),
                 true,
-                MarketRepository.getDefault(),
+                MarketRepository.getDefaultBtcFiatMarket(),
                 DEFAULT_MIN_REQUIRED_REPUTATION_SCORE,
                 false,
                 false,
@@ -109,7 +110,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 DEFAULT_TOTAL_MAX_BACKUP_SIZE_IN_MB,
                 ChatMessageType.ALL,
                 DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA,
-                false);
+                DevMode.isDevMode());
     }
 
     SettingsStore(Cookie cookie,

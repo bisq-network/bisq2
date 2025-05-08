@@ -15,13 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offerbook.xmr;
+package bisq.desktop.main.content.mu_sig.offerbook.crypto_btc.other;
 
-import bisq.desktop.main.content.mu_sig.offerbook.MuSigOfferbookView;
+import bisq.desktop.main.content.mu_sig.offerbook.crypto_btc.MuSigOfferbookCryptoBtcModel;
+import bisq.offer.Direction;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public class MuSigOfferbookXmrView extends MuSigOfferbookView<MuSigOfferbookXmrModel, MuSigOfferbookXmrController> {
-
-    public MuSigOfferbookXmrView(MuSigOfferbookXmrModel model, MuSigOfferbookXmrController controller) {
-        super(model, controller);
+@Slf4j
+@Getter
+public class MuSigOfferbookOtherModel extends MuSigOfferbookCryptoBtcModel {
+    public MuSigOfferbookOtherModel(Direction direction) {
+        super(direction);
     }
 }

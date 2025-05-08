@@ -15,13 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offerbook.other;
+package bisq.desktop.main.content.mu_sig.offerbook.crypto_btc.xmr;
 
-import bisq.desktop.main.content.mu_sig.offerbook.MuSigOfferbookView;
+import bisq.desktop.main.content.mu_sig.offerbook.crypto_btc.MuSigOfferbookCryptoBtcView;
 
-public class MuSigOfferbookOtherView extends MuSigOfferbookView<MuSigOfferbookOtherModel, MuSigOfferbookOtherController> {
+public class MuSigOfferbookXmrView extends MuSigOfferbookCryptoBtcView<MuSigOfferbookXmrModel, MuSigOfferbookXmrController> {
 
-    public MuSigOfferbookOtherView(MuSigOfferbookOtherModel model, MuSigOfferbookOtherController controller) {
+    public MuSigOfferbookXmrView(MuSigOfferbookXmrModel model, MuSigOfferbookXmrController controller) {
         super(model, controller);
+    }
+
+    @Override
+    protected void onViewAttached() {
+        super.onViewAttached();
+        marketSelection.setManaged(false);
+        marketSelection.setVisible(false);
     }
 }

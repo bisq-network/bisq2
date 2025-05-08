@@ -69,6 +69,7 @@ public class FiatCurrencyRepository {
         List<String> mainCodes = new ArrayList<>(List.of("USD", "EUR", "GBP", "CAD", "AUD", "RUB", "CNY", "INR", "NGN"));
         return mainCodes.stream()
                 .map(code -> currencyByCode.get(code))
+                .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
     }
@@ -104,11 +105,11 @@ public class FiatCurrencyRepository {
         return currencyByCode.get(code);
     }
 
-    public static Optional<String> getName(String code) {
+    public static Optional<String> findName(String code) {
         return Optional.ofNullable(currencyByCode.get(code)).map(TradeCurrency::getName);
     }
 
-    public static Optional<String> getDisplayName(String code) {
+    public static Optional<String> findDisplayName(String code) {
         return Optional.ofNullable(currencyByCode.get(code)).map(TradeCurrency::getDisplayName);
     }
 

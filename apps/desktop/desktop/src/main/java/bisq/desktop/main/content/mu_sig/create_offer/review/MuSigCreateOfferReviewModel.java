@@ -39,7 +39,7 @@ class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private Direction direction;
     @Setter
-    private Market market = MarketRepository.getDefault();
+    private Market market = MarketRepository.getDefaultBtcFiatMarket();
     @Setter
     private  MuSigOffer offer;
     @Setter

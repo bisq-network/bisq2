@@ -35,7 +35,8 @@ public class StablecoinPaymentMethod extends NationalCurrencyPaymentMethod<Stabl
     }
 
     public static StablecoinPaymentMethod fromCustomName(String customName) {
-        throw new UnsupportedOperationException("StablecoinPaymentMethod does not support custom paymentRails");
+        // StablecoinPaymentMethod does not support custom paymentRails
+        return null;
     }
 
     private StablecoinPaymentMethod(StablecoinPaymentRail paymentRail) {
@@ -58,7 +59,8 @@ public class StablecoinPaymentMethod extends NationalCurrencyPaymentMethod<Stabl
 
     @Override
     protected StablecoinPaymentRail getCustomPaymentRail() {
-        throw new UnsupportedOperationException("StablecoinPaymentMethod does not support custom paymentRails");
+        // StablecoinPaymentMethod does not support custom paymentRails
+        return null;
     }
 
     @Override
