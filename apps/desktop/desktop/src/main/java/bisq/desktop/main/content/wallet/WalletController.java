@@ -22,7 +22,9 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.wallet.dashboard.WalletDashboardController;
+import bisq.desktop.main.content.wallet.password.WalletPasswordController;
 import bisq.desktop.main.content.wallet.receive.WalletReceiveController;
+import bisq.desktop.main.content.wallet.seed.WalletSeedController;
 import bisq.desktop.main.content.wallet.send.WalletSendController;
 import bisq.desktop.main.content.wallet.settings.WalletSettingsController;
 import bisq.desktop.main.content.wallet.txs.WalletTxsController;
@@ -48,6 +50,8 @@ public class WalletController extends ContentTabController<WalletModel> {
             case WALLET_SEND -> Optional.of(new WalletSendController(serviceProvider));
             case WALLET_RECEIVE -> Optional.of(new WalletReceiveController(serviceProvider));
             case WALLET_TXS -> Optional.of(new WalletTxsController(serviceProvider));
+            case WALLET_SEED -> Optional.of(new WalletSeedController(serviceProvider));
+            case WALLET_PASSWORD -> Optional.of(new WalletPasswordController(serviceProvider));
             case WALLET_SETTINGS -> Optional.of(new WalletSettingsController(serviceProvider));
             default -> Optional.empty();
         };

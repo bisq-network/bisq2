@@ -29,6 +29,8 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
         addTab(Res.get("wallet.send"), NavigationTarget.WALLET_SEND);
         addTab(Res.get("wallet.receive"), NavigationTarget.WALLET_RECEIVE);
         addTab(Res.get("wallet.txs"), NavigationTarget.WALLET_TXS);
+        addTab(Res.get("wallet.password"), NavigationTarget.WALLET_PASSWORD);
+        addTab(Res.get("wallet.seed"), NavigationTarget.WALLET_SEED);
         addTab(Res.get("wallet.settings"), NavigationTarget.WALLET_SETTINGS);
     }
 }
