@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
  * The payment rails for fiat payments.
  * Provide static data associated with the payment rail.
  */
-public enum FiatPaymentRail implements PaymentRail {
+public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
     CUSTOM(new ArrayList<>(), new ArrayList<>()),             // Custom defined payment rail by the user
     SEPA(FiatPaymentRailUtil.getSepaEuroCountries()),
     SEPA_INSTANT(FiatPaymentRailUtil.getSepaEuroCountries()),

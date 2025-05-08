@@ -20,22 +20,22 @@ package bisq.account.payment_method;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class FiatPaymentMethodUtil {
-    public static FiatPaymentMethod getPaymentMethod(String name) {
+public class StablecoinPaymentMethodUtil {
+    public static StablecoinPaymentMethod getPaymentMethod(String name) {
         try {
-            FiatPaymentRail paymentRail = FiatPaymentRail.valueOf(name);
-            FiatPaymentMethod fiatPaymentMethod = FiatPaymentMethod.fromPaymentRail(paymentRail);
+            StablecoinPaymentRail paymentRail = StablecoinPaymentRail.valueOf(name);
+            StablecoinPaymentMethod fiatPaymentMethod = StablecoinPaymentMethod.fromPaymentRail(paymentRail);
             if (!fiatPaymentMethod.isCustomPaymentMethod()) {
                 return fiatPaymentMethod;
             }
         } catch (Throwable ignore) {
         }
-        return FiatPaymentMethod.fromCustomName(name);
+        return StablecoinPaymentMethod.fromCustomName(name);
     }
 
-    public static List<FiatPaymentMethod> getPaymentMethods(String currencyCode) {
-        return FiatPaymentRailUtil.getPaymentRails(currencyCode).stream()
-                .map(FiatPaymentMethod::fromPaymentRail)
+    public static List<StablecoinPaymentMethod> getPaymentMethods(String currencyCode) {
+        return StablecoinPaymentRailUtil.getPaymentRails(currencyCode).stream()
+                .map(StablecoinPaymentMethod::fromPaymentRail)
                 .collect(Collectors.toList());
     }
 }

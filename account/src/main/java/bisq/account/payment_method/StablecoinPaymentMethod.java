@@ -29,40 +29,36 @@ import java.util.List;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class FiatPaymentMethod extends NationalCurrencyPaymentMethod<FiatPaymentRail> {
-    public static FiatPaymentMethod fromPaymentRail(FiatPaymentRail fiatPaymentRail) {
-        return new FiatPaymentMethod(fiatPaymentRail);
+public class StablecoinPaymentMethod extends NationalCurrencyPaymentMethod<StablecoinPaymentRail> {
+    public static StablecoinPaymentMethod fromPaymentRail(StablecoinPaymentRail paymentRail) {
+        return new StablecoinPaymentMethod(paymentRail);
     }
 
-    public static FiatPaymentMethod fromCustomName(String customName) {
-        return new FiatPaymentMethod(customName);
+    public static StablecoinPaymentMethod fromCustomName(String customName) {
+        throw new UnsupportedOperationException("StablecoinPaymentMethod does not support custom paymentRails");
     }
 
-
-    private FiatPaymentMethod(FiatPaymentRail paymentRail) {
+    private StablecoinPaymentMethod(StablecoinPaymentRail paymentRail) {
         super(paymentRail);
-    }
-
-    private FiatPaymentMethod(String customName) {
-        super(customName);
     }
 
     @Override
     public bisq.account.protobuf.PaymentMethod.Builder getBuilder(boolean serializeForHash) {
-        return getPaymentMethodBuilder(serializeForHash).setFiatPaymentMethod(bisq.account.protobuf.FiatPaymentMethod.newBuilder());
+        return getPaymentMethodBuilder(serializeForHash).setStablecoinPaymentMethod(bisq.account.protobuf.StablecoinPaymentMethod.newBuilder());
     }
 
     @Override
     public bisq.account.protobuf.PaymentMethod toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
-    public static FiatPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
-        return FiatPaymentMethodUtil.getPaymentMethod(proto.getName());
+
+    public static StablecoinPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
+        return StablecoinPaymentMethodUtil.getPaymentMethod(proto.getName());
     }
 
     @Override
-    protected FiatPaymentRail getCustomPaymentRail() {
-        return FiatPaymentRail.CUSTOM;
+    protected StablecoinPaymentRail getCustomPaymentRail() {
+        throw new UnsupportedOperationException("StablecoinPaymentMethod does not support custom paymentRails");
     }
 
     @Override
