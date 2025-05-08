@@ -32,9 +32,9 @@ public class WalletSeedController implements Controller {
     @Override
     public void onActivate() {
         currentPasswordPin = EasyBind.subscribe(model.getCurrentPassword(), password -> {
-            //todo implement
+            boolean isValid = password != null && !password.isEmpty();
             UIThread.run(() -> {
-                model.getShowSeedButtonDisable().set(false);
+                model.getShowSeedButtonDisable().set(!isValid);
             });
         });
         walletService.isWalletEncrypted().thenAccept(isEncrypted -> {
@@ -62,13 +62,22 @@ public class WalletSeedController implements Controller {
     }
 
     public void onSeedValidator() {
-        //todo implement
-        model.getRestoreButtonDisable().set(false);
+        String seed = model.getRestoreSeed().get();
+        boolean isValid = seed != null && !seed.isEmpty() && validateSeedFormat(seed);
+        model.getRestoreButtonDisable().set(!isValid);
+    }
+
+    private boolean validateSeedFormat(String seed) {
+        // Check if seed has correct number of words (typically 12, 18 or 24)
+        String[] words = seed.trim().split("\\s+");
+        return words.length == 12 || words.length == 18 || words.length == 24;
     }
 
     @Override
     public void onDeactivate() {
-        currentPasswordPin.unsubscribe();
+        if (currentPasswordPin != null) {
+            currentPasswordPin.unsubscribe();
+        }
         model.getWalletSeed().set(null);
         model.getRestoreSeed().set(null);
         model.getRestoreButtonDisable().set(true);

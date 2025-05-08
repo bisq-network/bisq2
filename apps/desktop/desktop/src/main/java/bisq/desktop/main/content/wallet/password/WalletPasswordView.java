@@ -67,8 +67,8 @@ public class WalletPasswordView extends View<VBox, WalletPasswordModel, WalletPa
         });
 
 
-        passwordField.focusedProperty().removeListener(passwordFieldFocusChangeListener);
-        passwordField.textProperty().removeListener(passwordFieldTextChangeListener);
+        passwordField.focusedProperty().addListener(passwordFieldFocusChangeListener);
+        passwordField.textProperty().addListener(passwordFieldTextChangeListener);
         repeatedPasswordField.textProperty().addListener(repeatedPasswordFieldChangeListener);
     }
 
