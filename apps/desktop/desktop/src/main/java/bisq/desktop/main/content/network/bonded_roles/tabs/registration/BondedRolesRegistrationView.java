@@ -105,11 +105,9 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
 
         requestRegistrationButton = new Button(Res.get("user.bondedRoles.registration.requestRegistration"));
         requestRegistrationButton.setDefaultButton(true);
-        requestRegistrationButton.getStyleClass().add("button-reduced-padding");
         requestRegistrationButton.setPrefWidth(180);
 
         requestCancellationButton = new Button(Res.get("user.bondedRoles.cancellation.requestCancellation"));
-        requestCancellationButton.getStyleClass().add("button-reduced-padding");
         requestCancellationButton.setPrefWidth(180);
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));

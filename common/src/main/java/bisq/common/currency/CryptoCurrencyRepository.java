@@ -24,10 +24,19 @@ import java.util.stream.Collectors;
 
 public class CryptoCurrencyRepository {
     public static final CryptoCurrency BITCOIN = new CryptoCurrency("BTC", "Bitcoin");
+    public static final CryptoCurrency XMR = new CryptoCurrency("XMR", "Monero");
+    public static final CryptoCurrency USDT = new CryptoCurrency("USDT", "USD Tether"); //Tron,Ethereum
+    public static final CryptoCurrency USDC = new CryptoCurrency("USDC", "USD Coin (Circle)"); //Ethereum and Solana
+    public static final CryptoCurrency DAI = new CryptoCurrency("DAI", "DAI (MakerDAO)"); //Ethereum
+    public static final CryptoCurrency FDUSD = new CryptoCurrency("FDUSD", "FDUSD (Binance)");
+    public static final CryptoCurrency GUSD = new CryptoCurrency("GUSD", "GUSD (Gemini)");
+
     @Getter
     private static final Map<String, String> nameByCode = new HashMap<>();
     @Getter
     private static final Map<String, CryptoCurrency> currencyByCode = new HashMap<>();
+    @Getter
+    private static final List<CryptoCurrency> stableCoinCurrencies;
     @Getter
     private static final List<CryptoCurrency> majorCurrencies;
     @Getter
@@ -39,9 +48,10 @@ public class CryptoCurrencyRepository {
 
     static {
         currencyByCode.put("BTC", BITCOIN);
-        currencyByCode.put("XMR", new CryptoCurrency("XMR", "Monero"));
+        currencyByCode.put("XMR", XMR);
         currencyByCode.put("L-BTC", new CryptoCurrency("L-BTC", "Liquid-Bitcoin"));
-        currencyByCode.put("USDT", new CryptoCurrency("USDT", "USD-Tether"));
+
+        currencyByCode.put("USDT", USDT);
         currencyByCode.put("GRIN", new CryptoCurrency("GRIN", "Grin"));
         currencyByCode.put("ZEC", new CryptoCurrency("ZEC", "Zcash"));
         currencyByCode.put("ETH", new CryptoCurrency("ETH", "Ethereum"));
@@ -60,6 +70,9 @@ public class CryptoCurrencyRepository {
         allCurrencies.add(defaultCurrency);
         allCurrencies.addAll(majorCurrencies);
         allCurrencies.addAll(minorCurrencies);
+
+        stableCoinCurrencies = new ArrayList<>();
+        stableCoinCurrencies.add(USDT);
 
         fillNameByCodeMap();
 

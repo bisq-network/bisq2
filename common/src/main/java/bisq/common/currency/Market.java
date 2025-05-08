@@ -102,7 +102,19 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
     }
 
     public boolean isFiat() {
-        return FiatCurrency.isFiat(quoteCurrencyCode);
+        return baseCurrencyCode.equals("BTC") && FiatCurrency.isFiat(quoteCurrencyCode);
+    }
+
+    public boolean isFiatOrStable() {
+        return baseCurrencyCode.equals("BTC") && FiatCurrency.isFiat(quoteCurrencyCode);
+    }
+
+    public boolean isCrypto() {
+        return quoteCurrencyCode.equals("BTC");
+    }
+
+    public boolean isXmr() {
+        return isCrypto() && baseCurrencyCode.equals("XMR");
     }
 
     public String getMarketCodes() {
