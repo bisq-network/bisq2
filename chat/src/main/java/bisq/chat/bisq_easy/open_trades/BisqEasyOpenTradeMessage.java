@@ -41,7 +41,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.*;
+import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
+import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 
 @Slf4j
 @Getter
@@ -225,7 +227,12 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyO
 
     @Override
     public boolean addChatMessageReaction(ChatMessageReaction chatMessageReaction) {
-        return addPrivateChatMessageReaction((BisqEasyOpenTradeMessageReaction) chatMessageReaction);
+        if (!(chatMessageReaction instanceof BisqEasyOpenTradeMessageReaction reaction)) {
+            log.warn("Ignoring unsupported reaction type {} for message {}",
+                    chatMessageReaction.getClass().getSimpleName(), getId());
+            return false;
+        }
+        return addPrivateChatMessageReaction(reaction);
     }
 
     @Override

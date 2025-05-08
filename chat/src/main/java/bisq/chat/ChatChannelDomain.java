@@ -32,7 +32,7 @@ public enum ChatChannelDomain implements ProtoEnum {
     BISQ_EASY_OPEN_TRADES,
     DISCUSSION,
     SUPPORT,
-    MU_SIG_OFFERBOOK,
+    MU_SIG_OPEN_TRADES,
 
     @Deprecated BISQ_EASY_PRIVATE_CHAT(DISCUSSION), // Dropped in 2.1.1, all messages will fall back on domain DISCUSSION,
     @Deprecated EVENTS(DISCUSSION); // Dropped in 2.1.1, all messages will fall back on domain DISCUSSION

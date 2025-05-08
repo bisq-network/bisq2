@@ -26,6 +26,7 @@ import bisq.common.util.NetworkUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -44,6 +45,7 @@ public class WebcamAppService implements Service {
     private static final long HEART_BEAT_TIMEOUT = TimeUnit.SECONDS.toMillis(10);
     @Getter
     private final Observable<State> state = new Observable<>();
+    @Nullable
     private Pin qrCodePin, isShutdownSignalReceivedPin, restartSignalReceivedPin;
 
     public enum State {
@@ -82,6 +84,7 @@ public class WebcamAppService implements Service {
         stopSchedulers();
         unbind();
         qrCodeListeningServer.stopServer();
+        model.reset();
         return webcamProcessLauncher.shutdown()
                 .thenApply(terminatedGraceFully -> {
                     state.set(TERMINATED);
@@ -143,12 +146,15 @@ public class WebcamAppService implements Service {
     private void unbind() {
         if (qrCodePin != null) {
             qrCodePin.unbind();
+            qrCodePin = null;
         }
         if (isShutdownSignalReceivedPin != null) {
             isShutdownSignalReceivedPin.unbind();
+            isShutdownSignalReceivedPin = null;
         }
         if (restartSignalReceivedPin != null) {
             restartSignalReceivedPin.unbind();
+            restartSignalReceivedPin = null;
         }
     }
 

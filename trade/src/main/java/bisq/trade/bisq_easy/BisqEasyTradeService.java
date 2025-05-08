@@ -56,6 +56,7 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
@@ -85,8 +86,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     private boolean haltTrading;
     private boolean requireVersionForTrading;
     private Optional<String> minRequiredVersionForTrading = Optional.empty();
-
+    @Nullable
     private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin;
+    @Nullable
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
     private final Set<BisqEasyTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
 
@@ -187,7 +189,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
             verifyTradingNotOnHalt();
             verifyMinVersionForTrading();
 
-            if (bannedUserService.isNetworkIdBanned(bisqEasyTradeMessage.getSender())) {
+            if (bannedUserService.isUserProfileBanned(bisqEasyTradeMessage.getSender())) {
                 log.warn("Message ignored as sender is banned");
                 return;
             }

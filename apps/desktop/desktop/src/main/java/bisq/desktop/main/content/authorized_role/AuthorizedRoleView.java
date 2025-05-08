@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.authorized_role;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.desktop.common.view.*;
 import bisq.desktop.components.controls.BisqTooltip;

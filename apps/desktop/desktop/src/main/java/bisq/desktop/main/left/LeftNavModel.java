@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.left;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;

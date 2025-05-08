@@ -21,7 +21,12 @@ import javafx.collections.transformation.SortedList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableColumnBase;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -61,6 +66,7 @@ public class RichTableView<T> extends VBox {
     private final Hyperlink exportHyperlink;
     private final ChangeListener<Toggle> toggleChangeListener;
     private final ListChangeListener<T> listChangeListener;
+    private final VBox footerVBox;
     private Subscription searchTextPin;
     @Setter
     private Optional<List<String>> csvHeaders = Optional.empty();
@@ -157,7 +163,7 @@ public class RichTableView<T> extends VBox {
         exportHyperlink.setAlignment(Pos.BASELINE_LEFT);
 
         HBox.setMargin(exportHyperlink, new Insets(8, 10, 0, 0));
-        VBox footerVBox = new VBox(5, numEntriesLabel, exportHyperlink);
+        footerVBox = new VBox(5, numEntriesLabel, exportHyperlink);
         footerVBox.setAlignment(Pos.BASELINE_LEFT);
 
         VBox.setMargin(headerBox, new Insets(0, 0, 5, 0));

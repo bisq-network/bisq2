@@ -99,6 +99,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        fatalException.set(null);
         return CompletableFuture.completedFuture(true);
     }
 

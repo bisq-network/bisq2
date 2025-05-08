@@ -22,7 +22,7 @@ import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bisq_easy.BisqEasyServiceUtil;
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannelDomain;
@@ -420,7 +420,7 @@ public class TradeWizardReviewController implements Controller {
 
     public void takeOffer() {
         BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
-        if (bannedUserService.isNetworkIdBanned(bisqEasyOffer.getMakerNetworkId())) {
+        if (bannedUserService.isUserProfileBanned(bisqEasyOffer.getMakerNetworkId())) {
             new Popup().warning(Res.get("bisqEasy.takeOffer.makerBanned.warning")).show();
             return;
         }

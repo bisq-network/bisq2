@@ -32,6 +32,7 @@ import bisq.user.profile.UserProfileService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,7 +45,7 @@ import static bisq.http_api.web_socket.subscription.Topic.TRADE_CHAT_MESSAGES;
 public class TradeChatMessagesWebSocketService extends BaseWebSocketService {
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     private final UserProfileService userProfileService;
-
+    @Nullable
     private Pin channelsPin;
     private final Map<String, Pin> messagesByChannelIdPins = new ConcurrentHashMap<>();
 
@@ -114,8 +115,10 @@ public class TradeChatMessagesWebSocketService extends BaseWebSocketService {
     public CompletableFuture<Boolean> shutdown() {
         if (channelsPin != null) {
             channelsPin.unbind();
+            channelsPin = null;
         }
         new ArrayList<>(messagesByChannelIdPins.values()).forEach(Pin::unbind);
+        messagesByChannelIdPins.clear();
         return CompletableFuture.completedFuture(true);
     }
 

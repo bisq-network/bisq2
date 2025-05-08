@@ -94,6 +94,7 @@ public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore>
                         .map(openOffer -> removeFromNetwork(openOffer.getOffer())))
                 .thenApply(removeOfferBroadCastDataResults -> {
                     executorService.shutdownNow();
+                    listeners.clear();
                     return removeOfferBroadCastDataResults;
                 });
     }

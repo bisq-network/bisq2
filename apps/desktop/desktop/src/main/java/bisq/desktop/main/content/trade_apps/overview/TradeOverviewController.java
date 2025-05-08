@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.trade_apps.overview;
 
 import bisq.account.protocol_type.TradeProtocolType;
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.common.data.Pair;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;

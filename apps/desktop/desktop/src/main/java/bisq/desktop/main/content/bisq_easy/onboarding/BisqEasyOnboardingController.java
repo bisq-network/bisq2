@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.onboarding;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
@@ -59,7 +59,7 @@ public class BisqEasyOnboardingController implements Controller {
     }
 
     void onOpenTradeWizard() {
-        Navigation.navigateTo(NavigationTarget.TRADE_WIZARD, new TradeWizardController.InitData(false));
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_WIZARD, new TradeWizardController.InitData(false));
     }
 
     void onOpenTradeGuide() {

@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.reputation.build_reputation.accountAge.tab3;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;

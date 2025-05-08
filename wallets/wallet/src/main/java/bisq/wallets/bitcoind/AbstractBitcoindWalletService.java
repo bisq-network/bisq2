@@ -103,8 +103,20 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
     @Override
     public CompletableFuture<Boolean> shutdown() {
         return CompletableFuture.supplyAsync(() -> {
-            zmqConnection.ifPresent(ZmqConnection::shutdown);
+            zmqConnection.ifPresent(connection -> {
+                connection.getListeners().clearAll();
+                connection.shutdown();
+            });
+            zmqConnection = Optional.empty();
+
             wallet.ifPresent(Wallet::shutdown);
+            wallet = Optional.empty();
+
+            utxoTxIds.clear();
+            walletAddresses.clear();
+            transactions.clear();
+            observableBalanceAsCoin.set(Coin.fromValue(0, currencyCode));
+
             return true;
         });
     }

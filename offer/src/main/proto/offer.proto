@@ -143,10 +143,6 @@ message Offer {
   }
 }
 
-message OfferMessage {
-  Offer offer = 1;
-}
-
 // BisqEasy
 message BisqEasyOffer {
   repeated string supportedLanguageCodes = 1;
@@ -158,4 +154,10 @@ message MuSigOffer {
 
 message MyMuSigOffersStore {
   repeated Offer offers = 1;
+  repeated string deactivatedOfferIds = 2;
 }
+
+message MuSigOfferMessage {
+  Offer offer = 1;
+}
+

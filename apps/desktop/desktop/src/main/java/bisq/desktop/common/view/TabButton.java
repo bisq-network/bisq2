@@ -17,7 +17,7 @@
 
 package bisq.desktop.common.view;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Styles;
 import bisq.desktop.common.Transitions;

@@ -50,10 +50,10 @@ public class NetworkLoadExchangeService implements Node.Listener {
 
     public NetworkLoadExchangeService(Node node) {
         this.node = node;
-        this.node.addListener(this);
     }
 
     public void initialize() {
+        node.addListener(this);
         scheduler = Optional.of(Scheduler.run(this::requestFromAll)
                 .host(this)
                 .runnableName("requestFromAll")
@@ -61,7 +61,9 @@ public class NetworkLoadExchangeService implements Node.Listener {
     }
 
     public void shutdown() {
+        node.removeListener(this);
         scheduler.ifPresent(Scheduler::stop);
+        scheduler = Optional.empty();
         requestHandlerMap.values().forEach(NetworkLoadExchangeHandler::dispose);
         requestHandlerMap.clear();
     }

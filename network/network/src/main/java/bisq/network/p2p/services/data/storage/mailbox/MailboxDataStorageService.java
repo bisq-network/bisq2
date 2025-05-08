@@ -60,6 +60,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     public void shutdown() {
         maybeLogMapState("shutdown", persistableStore);
         super.shutdown();
+        listeners.clear();
     }
 
     public DataStorageResult add(AddMailboxRequest request) {

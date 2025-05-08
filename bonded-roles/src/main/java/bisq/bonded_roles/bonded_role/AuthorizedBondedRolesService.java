@@ -32,6 +32,7 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistribu
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -70,6 +71,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     @Getter
     private final DataService.Listener initialDataServiceListener;
     private final Set<AuthorizedData> failedAuthorizedData = new CopyOnWriteArraySet<>();
+    @Nullable
     private Scheduler initialDataScheduler, reprocessScheduler;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private boolean initializeCalled;
@@ -101,7 +103,10 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-
+        if (initializeCalled) {
+            log.error("AuthorizedBondedRolesService already initialized, skipping initialization");
+            return CompletableFuture.completedFuture(true);
+        }
         initializeCalled = true;
 
         networkService.getDataService().ifPresent(dataService ->
@@ -130,20 +135,34 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (!initializeCalled) {
+            return CompletableFuture.completedFuture(true);
+        }
         initializeCalled = false;
         networkService.removeDataServiceListener(initialDataServiceListener);
         networkService.removeDataServiceListener(this);
         if (initialDataScheduler != null) {
             initialDataScheduler.stop();
+            initialDataScheduler = null;
         }
+        if (reprocessScheduler != null) {
+            reprocessScheduler.stop();
+            reprocessScheduler = null;
+        }
+        bondedRoles.clear();
+        authorizedOracleNodes.clear();
+        failedAuthorizedData.clear();
+        listeners.clear();
         return CompletableFuture.completedFuture(true);
     }
 
     private void delayedApplyInitialData() {
         networkService.removeDataServiceListener(initialDataServiceListener);
         applyInitialData();
-        initialDataScheduler.stop();
-        initialDataScheduler = null;
+        if (initialDataScheduler != null) {
+            initialDataScheduler.stop();
+            initialDataScheduler = null;
+        }
     }
 
     private void applyInitialData() {
@@ -335,8 +354,10 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     private void reprocess() {
         Set<AuthorizedData> clone = new HashSet<>(failedAuthorizedData);
         clone.forEach(this::onAuthorizedDataAdded);
-        reprocessScheduler.stop();
-        reprocessScheduler = null;
+        if (reprocessScheduler != null) {
+            reprocessScheduler.stop();
+            reprocessScheduler = null;
+        }
     }
 
     private Optional<AuthorizedBondedRole> validateBondedRole(AuthorizedData authorizedData,

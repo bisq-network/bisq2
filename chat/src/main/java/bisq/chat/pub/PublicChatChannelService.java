@@ -17,7 +17,11 @@
 
 package bisq.chat.pub;
 
-import bisq.chat.*;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelService;
+import bisq.chat.ChatMessage;
+import bisq.chat.Citation;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.common.observable.Pin;
@@ -64,6 +68,10 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        if (initialized) {
+            return CompletableFuture.completedFuture(true);
+        }
+
         maybeAddDefaultChannels();
 
         networkService.addDataServiceListener(this);
@@ -82,12 +90,17 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                             });
                             allInventoryDataReceivedPins.add(pin);
                         }));
-        initialized= true;
+        initialized = true;
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (!initialized) {
+            return CompletableFuture.completedFuture(true);
+        }
+        initialized = false;
+        allInventoryDataReceived = false;
         allInventoryDataReceivedPins.forEach(Pin::unbind);
         allInventoryDataReceivedPins.clear();
         networkService.removeDataServiceListener(this);
@@ -112,17 +125,13 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         String authorUserProfileId = message.getAuthorUserProfileId();
 
         // For rate limit violation we let the user know that his message was not sent, by not inserting the message.
-        if (bannedUserService.isRateLimitExceeding(authorUserProfileId)) {
-            return CompletableFuture.failedFuture(new RuntimeException());
-        }
+        checkArgument(!bannedUserService.isRateLimitExceeding(authorUserProfileId), "Rate limit was exceeding");
 
         // Sender adds the message at sending to avoid the delayed display if using the received message from the network.
         findChannel(message.getChannelId()).ifPresent(channel -> addMessage(message, channel));
 
         // For banned users we hide that their message is not published by inserting it to their local message list.
-        if (bannedUserService.isUserProfileBanned(authorUserProfileId)) {
-            return CompletableFuture.failedFuture(new RuntimeException());
-        }
+        checkArgument(!bannedUserService.isUserProfileBanned(authorUserProfileId), "User profile is banned");
 
         KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
         return networkService.publishAuthenticatedData(message, keyPair);

@@ -22,6 +22,7 @@ import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import lombok.extern.slf4j.Slf4j;
@@ -32,15 +33,18 @@ import java.util.Optional;
 @Slf4j
 public class LeavePrivateChatManager {
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
+    private final MuSigOpenTradeChannelService muSigOpenTradeChannelService;
     private final Map<ChatChannelDomain, TwoPartyPrivateChatChannelService> twoPartyPrivateChatChannelServices;
     private final Map<ChatChannelDomain, ChatChannelSelectionService> chatChannelSelectionServices;
     private final ChatNotificationService chatNotificationService;
 
     public LeavePrivateChatManager(BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService,
+                                   MuSigOpenTradeChannelService muSigOpenTradeChannelService,
                                    Map<ChatChannelDomain, TwoPartyPrivateChatChannelService> twoPartyPrivateChatChannelServices,
                                    Map<ChatChannelDomain, ChatChannelSelectionService> chatChannelSelectionServices,
                                    ChatNotificationService chatNotificationService) {
         this.bisqEasyOpenTradeChannelService = bisqEasyOpenTradeChannelService;
+        this.muSigOpenTradeChannelService = muSigOpenTradeChannelService;
         this.twoPartyPrivateChatChannelServices = twoPartyPrivateChatChannelServices;
         this.chatChannelSelectionServices = chatChannelSelectionServices;
         this.chatNotificationService = chatNotificationService;
@@ -75,9 +79,8 @@ public class LeavePrivateChatManager {
         return switch (chatChannelDomain) {
             case BISQ_EASY_OFFERBOOK ->
                     throw new IllegalArgumentException("BISQ_EASY_OFFERBOOK is not supported at LeavePrivateChatChannelService");
-            case MU_SIG_OFFERBOOK ->
-                    throw new IllegalArgumentException("MU_SIG_OFFERBOOK is not supported at LeavePrivateChatChannelService");
             case BISQ_EASY_OPEN_TRADES -> bisqEasyOpenTradeChannelService;
+            case MU_SIG_OPEN_TRADES -> muSigOpenTradeChannelService;
             case BISQ_EASY_PRIVATE_CHAT, DISCUSSION, EVENTS, SUPPORT ->
                     twoPartyPrivateChatChannelServices.get(chatChannelDomain);
         };

@@ -19,7 +19,7 @@ package bisq.desktop.main.content.dashboard;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
 import bisq.bisq_easy.BisqEasyOfferbookMessageService;
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.common.currency.Market;

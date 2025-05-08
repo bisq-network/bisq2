@@ -74,6 +74,7 @@ public abstract class PrivateChatChannelService<
     @Override
     public CompletableFuture<Boolean> shutdown() {
         networkService.removeConfidentialMessageListener(this);
+        unprocessedReactions.clear();
         return CompletableFuture.completedFuture(true);
     }
 
@@ -239,7 +240,7 @@ public abstract class PrivateChatChannelService<
             log.warn("Sent a message to myself. This should never happen for private chat messages.");
             return false;
         }
-        if (bannedUserService.isNetworkIdBanned(message.getSenderUserProfile().getNetworkId())) {
+        if (bannedUserService.isUserProfileBanned(message.getSenderUserProfile())) {
             log.warn("Message invalid as sender is banned");
             return false;
         }

@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.take_offer.review;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannelDomain;
@@ -160,7 +160,7 @@ public class TakeOfferReviewController implements Controller {
 
     public void takeOffer(Runnable onCancelHandler) {
         BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
-        if (bannedUserService.isNetworkIdBanned(bisqEasyOffer.getMakerNetworkId())) {
+        if (bannedUserService.isUserProfileBanned(bisqEasyOffer.getMakerNetworkId())) {
             new Popup().warning(Res.get("bisqEasy.takeOffer.makerBanned.warning")).show();
             onCancelHandler.run();
             return;

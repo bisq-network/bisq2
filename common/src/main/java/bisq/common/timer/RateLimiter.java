@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -65,6 +66,14 @@ public class RateLimiter {
     }
 
     public boolean exceedsLimit(String userProfileId, long timeStamp) {
+        return getExceedsLimitInfo(userProfileId, timeStamp).isPresent();
+    }
+
+    public Optional<String> getExceedsLimitInfo(String userProfileId) {
+        return getExceedsLimitInfo(userProfileId, clock.now());
+    }
+
+    public Optional<String> getExceedsLimitInfo(String userProfileId, long timeStamp) {
         timestampsByUserProfileId.putIfAbsent(userProfileId, new ArrayDeque<>());
         Deque<Long> timestamps = timestampsByUserProfileId.get(userProfileId);
         synchronized (timestamps) {
@@ -83,11 +92,13 @@ public class RateLimiter {
                     countLastMinute > maxPerMinute ||
                     countLastHour > maxPerHour ||
                     countLastDay > maxPerDay) {
-                log.info("Rate limit exceeded: countLastSecond {}, countLastMinute {}, countLastHour {}, countLastDay={}", countLastSecond, countLastMinute, countLastHour, countLastDay);
-                return true;
+                String message = String.format("Rate limit exceeded: countLastSecond %d, countLastMinute %d, countLastHour %d, countLastDay=%d",
+                        countLastSecond, countLastMinute, countLastHour, countLastDay);
+                log.info(message);
+                return Optional.of(message);
             }
         }
 
-        return false;
+        return Optional.empty();
     }
 }

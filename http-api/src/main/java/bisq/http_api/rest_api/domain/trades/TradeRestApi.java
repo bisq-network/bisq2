@@ -134,7 +134,7 @@ public class TradeRestApi extends RestApiBase {
                     .filter(e -> e.getId().equals(request.offerId()))
                     .findFirst()
                     .orElseThrow();
-            checkArgument(!bannedUserService.isNetworkIdBanned(bisqEasyOffer.getMakerNetworkId()), "Maker profile is banned");
+            checkArgument(!bannedUserService.isUserProfileBanned(bisqEasyOffer.getMakerNetworkId()), "Maker profile is banned");
             Monetary baseSideAmount = Monetary.from(request.baseSideAmount(), bisqEasyOffer.getMarket().getBaseCurrencyCode());
             Monetary quoteSideAmount = Monetary.from(request.quoteSideAmount(), bisqEasyOffer.getMarket().getBaseCurrencyCode());
             BitcoinPaymentMethod bitcoinPaymentMethod = PaymentMethodSpecUtil.getBitcoinPaymentMethod(request.bitcoinPaymentMethod());
