@@ -42,12 +42,20 @@ message CryptoCurrency {
 message FiatCurrency {
 }
 
+message StableCoinCurrency {
+  string pegCurrencyCode = 1;
+  string chain = 2;
+  string standard = 3;
+  string issuer = 4;
+}
+
 message TradeCurrency {
   string code = 1;
   string name = 2;
   oneof message {
     CryptoCurrency cryptoCurrency = 10;
     FiatCurrency fiatCurrency = 11;
+    StableCoinCurrency stableCoinCurrency = 12;
   }
 }
 

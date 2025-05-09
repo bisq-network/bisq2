@@ -50,7 +50,7 @@ import java.util.List;
 
 @Slf4j
 public class BisqEasyOfferbookUtil {
-    static final List<Market> majorMarkets = MarketRepository.getMajorMarkets();
+    static final List<Market> majorMarkets = MarketRepository.getMajorFiatMarkets();
 
     static Comparator<MarketChannelItem> sortByNumOffers() {
         return (lhs, rhs) -> Integer.compare(rhs.getNumOffers().get(), lhs.getNumOffers().get());

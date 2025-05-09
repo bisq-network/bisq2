@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.payment_methods;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
@@ -39,34 +38,25 @@ public class MuSigCreateOfferPaymentMethodsModel implements Model {
     @Setter
     private Direction direction;
     @Setter
-    private String fiatSubtitleLabel;
-    @Setter
-    private String bitcoinSubtitleLabel;
-    private final ObservableList<FiatPaymentMethod> fiatPaymentMethods = FXCollections.observableArrayList();
-    private final SortedList<FiatPaymentMethod> sortedFiatPaymentMethods = new SortedList<>(fiatPaymentMethods);
-    private final ObservableList<FiatPaymentMethod> selectedFiatPaymentMethods = FXCollections.observableArrayList();
-    private final ObservableList<FiatPaymentMethod> addedCustomFiatPaymentMethods = FXCollections.observableArrayList();
-    private final ObservableList<BitcoinPaymentMethod> bitcoinPaymentMethods = FXCollections.observableArrayList();
-    private final SortedList<BitcoinPaymentMethod> sortedBitcoinPaymentMethods = new SortedList<>(bitcoinPaymentMethods);
-    private final ObservableList<BitcoinPaymentMethod> selectedBitcoinPaymentMethods = FXCollections.observableArrayList();
-    private final ObservableList<BitcoinPaymentMethod> addedCustomBitcoinPaymentMethods = FXCollections.observableArrayList();
-    private final StringProperty customFiatPaymentMethodName = new SimpleStringProperty("");
+    private String subtitleLabel;
+    private final ObservableList<FiatPaymentMethod> paymentMethods = FXCollections.observableArrayList();
+    private final SortedList<FiatPaymentMethod> sortedPaymentMethods = new SortedList<>(paymentMethods);
+    private final ObservableList<FiatPaymentMethod> selectedPaymentMethods = FXCollections.observableArrayList();
+    private final ObservableList<FiatPaymentMethod> addedCustomPaymentMethods = FXCollections.observableArrayList();
+    private final StringProperty customPaymentMethodName = new SimpleStringProperty("");
     private final BooleanProperty isPaymentMethodsEmpty = new SimpleBooleanProperty();
-    private final BooleanProperty canAddCustomFiatPaymentMethod = new SimpleBooleanProperty();
+    private final BooleanProperty canAddCustomPaymentMethod = new SimpleBooleanProperty();
     private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
 
     void reset() {
         direction = null;
-        fiatSubtitleLabel = null;
-        bitcoinSubtitleLabel = null;
-        fiatPaymentMethods.clear();
-        selectedFiatPaymentMethods.clear();
-        addedCustomFiatPaymentMethods.clear();
-        bitcoinPaymentMethods.clear();
-        selectedBitcoinPaymentMethods.clear();
-        customFiatPaymentMethodName.set("");
+        subtitleLabel = null;
+        paymentMethods.clear();
+        selectedPaymentMethods.clear();
+        addedCustomPaymentMethods.clear();
+        customPaymentMethodName.set("");
         isPaymentMethodsEmpty.set(false);
-        canAddCustomFiatPaymentMethod.set(false);
+        canAddCustomPaymentMethod.set(false);
         market.set(null);
     }
 }

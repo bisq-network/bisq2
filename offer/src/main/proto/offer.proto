@@ -67,12 +67,16 @@ message FiatPaymentMethodSpec {
 message BitcoinPaymentMethodSpec {
 }
 
+message StablecoinPaymentMethodSpec {
+}
+
 message PaymentMethodSpec {
   account.PaymentMethod paymentMethod = 1;
   optional string saltedMakerAccountId = 2;
   oneof message {
     BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = 10;
     FiatPaymentMethodSpec fiatPaymentMethodSpec = 11;
+    StablecoinPaymentMethodSpec stablecoinPaymentMethodSpec = 12;
   }
 }
 

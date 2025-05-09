@@ -22,20 +22,30 @@ import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferController;
 import bisq.desktop.main.content.mu_sig.take_offer.MuSigTakeOfferController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
+import bisq.identity.IdentityService;
 import bisq.mu_sig.MuSigService;
 import bisq.offer.Direction;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
+import bisq.user.banned.BannedUserService;
+import bisq.user.banned.RateLimitExceededException;
+import bisq.user.banned.UserProfileBannedException;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Locale;
 import java.util.Optional;
@@ -49,13 +59,18 @@ public abstract class MuSigOfferbookController<M extends MuSigOfferbookModel, V 
     protected final MarketPriceService marketPriceService;
     protected final UserProfileService userProfileService;
     protected final SettingsService settingsService;
-    protected Pin selectedMarketPin, offersPin;
+    private final IdentityService identityService;
+    private final BannedUserService bannedUserService;
+    protected Pin offersPin;
+    private Subscription selectedMarketPin;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider, Direction direction) {
         muSigService = serviceProvider.getMuSigService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
+        identityService = serviceProvider.getIdentityService();
         settingsService = serviceProvider.getSettingsService();
+        bannedUserService = serviceProvider.getUserService().getBannedUserService();
 
         model = createAndGetModel(direction);
         view = createAndGetView();
@@ -67,27 +82,23 @@ public abstract class MuSigOfferbookController<M extends MuSigOfferbookModel, V 
 
     @Override
     public void onActivate() {
-        model.getMarkets().setAll(MarketRepository.getAllFiatMarkets());
-
-        selectedMarketPin = settingsService.getSelectedMarket().addObserver(market -> {
+        applyInitialSelectedMarket();
+        selectedMarketPin = EasyBind.subscribe(model.getSelectedMarket(), market -> {
             if (market != null) {
-                UIThread.run(() -> {
-                    model.getSelectedMarket().set(market);
-                    model.getPriceTableHeader().set(Res.get("muSig.offerbook.table.price", market.getMarketCodes()).toUpperCase(Locale.ROOT));
-                    String baseCurrencyCode = market.getBaseCurrencyCode();
-                    String quoteCurrencyCode = market.getQuoteCurrencyCode();
+                model.getPriceTableHeader().set(Res.get("muSig.offerbook.table.header.price", market.getMarketCodes()).toUpperCase(Locale.ROOT));
+                String baseCurrencyCode = market.getBaseCurrencyCode();
+                String quoteCurrencyCode = market.getQuoteCurrencyCode();
 
-                    if(model.getTakersDirection().isBuy()){
-                        model.getAmountToReceive().set(Res.get("muSig.offerbook.table.amountToReceive", baseCurrencyCode).toUpperCase(Locale.ROOT));
-                        model.getAmountToSend().set(Res.get("muSig.offerbook.table.amountToPay", quoteCurrencyCode).toUpperCase(Locale.ROOT));
-                    }else{
-                        model.getAmountToReceive().set(Res.get("muSig.offerbook.table.amountToReceive", quoteCurrencyCode).toUpperCase(Locale.ROOT));
-                        model.getAmountToSend().set(Res.get("muSig.offerbook.table.amountToSend", baseCurrencyCode).toUpperCase(Locale.ROOT));
-                    }
+                if (model.getDirection().isBuy()) {
+                    model.getAmountToReceive().set(Res.get("muSig.offerbook.table.header.amountToReceive", baseCurrencyCode).toUpperCase(Locale.ROOT));
+                    model.getAmountToSend().set(Res.get("muSig.offerbook.table.header.amountToPay", quoteCurrencyCode).toUpperCase(Locale.ROOT));
+                } else {
+                    model.getAmountToReceive().set(Res.get("muSig.offerbook.table.header.amountToReceive", quoteCurrencyCode).toUpperCase(Locale.ROOT));
+                    model.getAmountToSend().set(Res.get("muSig.offerbook.table.header.amountToSend", baseCurrencyCode).toUpperCase(Locale.ROOT));
+                }
 
-
-                    updatePredicate();
-                });
+                model.setMarketPredicate(item -> item.getOffer().getMarket().equals(market));
+                updatePredicate();
             }
         });
 
@@ -96,9 +107,12 @@ public abstract class MuSigOfferbookController<M extends MuSigOfferbookModel, V 
             public void add(MuSigOffer muSigOffer) {
                 UIThread.run(() -> {
                     String offerId = muSigOffer.getId();
-                    if (!model.getOfferIds().contains(offerId)) {
-                        model.getListItems().add(new MuSigOfferListItem(muSigOffer, marketPriceService, userProfileService));
+                    if (muSigOffer.getDirection().mirror().equals(model.getDirection()) &&
+                            isExpectedMarket(muSigOffer.getMarket()) &&
+                            !model.getOfferIds().contains(offerId)) {
+                        model.getListItems().add(new MuSigOfferListItem(muSigOffer, marketPriceService, userProfileService, identityService));
                         model.getOfferIds().add(offerId);
+                        //updatePredicate();
                     }
                 });
             }
@@ -129,17 +143,20 @@ public abstract class MuSigOfferbookController<M extends MuSigOfferbookModel, V 
         });
     }
 
+    protected abstract boolean isExpectedMarket(Market market);
+
     private void updatePredicate() {
-        Market market = model.getSelectedMarket().get();
+        model.getFilteredList().setPredicate(item -> true);
         model.getFilteredList().setPredicate(item ->
-                item.getOffer().getDirection() == model.getTakersDirection().mirror() &&
-                        item.getOffer().getMarket().equals(market)
+                model.getDirectionPredicate().test(item) &&
+                        model.getMarketPredicate().test(item) &&
+                        model.getSearchPredicate().test(item)
         );
     }
 
     @Override
     public void onDeactivate() {
-        selectedMarketPin.unbind();
+        selectedMarketPin.unsubscribe();
         offersPin.unbind();
         model.getListItems().forEach(MuSigOfferListItem::dispose);
         model.getListItems().clear();
@@ -147,14 +164,51 @@ public abstract class MuSigOfferbookController<M extends MuSigOfferbookModel, V 
     }
 
     void onCreateOffer() {
-        Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER);
+        Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER, new MuSigCreateOfferController.InitData(model.getDirection(), model.getSelectedMarket().get()));
     }
 
     void onTakeOffer(MuSigOffer offer) {
         Navigation.navigateTo(NavigationTarget.MU_SIG_TAKE_OFFER, new MuSigTakeOfferController.InitData(offer));
     }
 
-    public void onSelectMarket(Market market) {
-        settingsService.setSelectedMarket(market);
+    void onRemoveOffer(MuSigOffer muSigOffer) {
+        try {
+            muSigService.removeOffer(muSigOffer);
+        } catch (UserProfileBannedException e) {
+            UIThread.run(() -> {
+                // We do not inform banned users about being banned
+            });
+        } catch (RateLimitExceededException e) {
+            UIThread.run(() -> {
+                    new Popup().warning(Res.get("muSig.offerbook.rateLimitsExceeded.removeOffer.warning")).show();
+            });
+        }
     }
+
+
+    void onSelectMarket(Market market) {
+        settingsService.setSelectedMarket(market);
+        settingsService.setCookie(getSelectedMarketCookieKey(), market.getMarketCodes());
+    }
+
+    public void onSearchInput(String searchInput) {
+        //TODO add a more controlled search impl.
+        if (searchInput != null) {
+            model.setSearchPredicate(item -> StringUtils.isEmpty(searchInput) ||
+                    item.toString().contains(searchInput));
+            updatePredicate();
+        }
+    }
+
+    protected void applyInitialSelectedMarket() {
+        Market selectedMarket = settingsService.getCookie().asString(getSelectedMarketCookieKey())
+                .flatMap(MarketRepository::findAnyMarketByMarketCodes)
+                .filter(this::isExpectedMarket)
+                .orElse(getDefaultMarket());
+        model.getSelectedMarket().set(selectedMarket);
+    }
+
+    protected abstract Market getDefaultMarket();
+
+    protected abstract CookieKey getSelectedMarketCookieKey();
 }

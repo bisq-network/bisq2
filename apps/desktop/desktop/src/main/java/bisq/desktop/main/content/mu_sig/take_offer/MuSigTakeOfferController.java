@@ -68,7 +68,7 @@ public class MuSigTakeOfferController extends NavigationController implements In
     private final MuSigTakeOfferPaymentController muSigTakeOfferPaymentController;
     private final MuSigTakeOfferReviewController muSigTakeOfferReviewController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
-    private Subscription takersBaseSideAmountPin, takersQuoteSideAmountPin, selectedBitcoinPaymentMethodSpecPin, selectedFiatPaymentMethodSpecPin;
+    private Subscription takersBaseSideAmountPin, takersQuoteSideAmountPin, selectedFiatPaymentMethodSpecPin;
 
     public MuSigTakeOfferController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MU_SIG_TAKE_OFFER);
@@ -109,7 +109,6 @@ public class MuSigTakeOfferController extends NavigationController implements In
         } else {
             checkArgument(baseSidePaymentMethodSpecs.size() == 1);
             checkArgument(quoteSidePaymentMethodSpecs.size() == 1);
-            muSigTakeOfferReviewController.setBitcoinPaymentMethodSpec(baseSidePaymentMethodSpecs.get(0));
             muSigTakeOfferReviewController.setFiatPaymentMethodSpec(quoteSidePaymentMethodSpecs.get(0));
         }
         model.getChildTargets().add(NavigationTarget.MU_SIG_TAKE_OFFER_REVIEW);
@@ -128,8 +127,6 @@ public class MuSigTakeOfferController extends NavigationController implements In
                 muSigTakeOfferReviewController::setTakersBaseSideAmount);
         takersQuoteSideAmountPin = EasyBind.subscribe(muSigTakeOfferAmountController.getTakersQuoteSideAmount(),
                 muSigTakeOfferReviewController::setTakersQuoteSideAmount);
-        selectedBitcoinPaymentMethodSpecPin = EasyBind.subscribe(muSigTakeOfferPaymentController.getSelectedBitcoinPaymentMethodSpec(),
-                muSigTakeOfferReviewController::setBitcoinPaymentMethodSpec);
         selectedFiatPaymentMethodSpecPin = EasyBind.subscribe(muSigTakeOfferPaymentController.getSelectedFiatPaymentMethodSpec(),
                 muSigTakeOfferReviewController::setFiatPaymentMethodSpec);
     }
@@ -140,7 +137,6 @@ public class MuSigTakeOfferController extends NavigationController implements In
         overlayController.getApplicationRoot().removeEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
         takersBaseSideAmountPin.unsubscribe();
         takersQuoteSideAmountPin.unsubscribe();
-        selectedBitcoinPaymentMethodSpecPin.unsubscribe();
         selectedFiatPaymentMethodSpecPin.unsubscribe();
     }
 
@@ -181,7 +177,7 @@ public class MuSigTakeOfferController extends NavigationController implements In
     }
 
     void onNext() {
-        int nextIndex = model.getCurrentIndex().get();
+        int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
             if (model.getSelectedChildTarget().get() == NavigationTarget.MU_SIG_TAKE_OFFER_PAYMENT) {
                 if (!muSigTakeOfferPaymentController.isValid()) {

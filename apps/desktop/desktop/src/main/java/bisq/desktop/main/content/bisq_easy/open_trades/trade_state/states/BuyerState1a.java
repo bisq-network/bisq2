@@ -108,7 +108,7 @@ public class BuyerState1a extends BaseState {
             model.setBitcoinPaymentDescription(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.description." + name));
             model.setBitcoinPaymentPrompt(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.prompt." + name));
             model.setBitcoinPaymentHelp(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.walletHelp"));
-            if (paymentRail == BitcoinPaymentRail.MAIN_CHAIN) {
+            if (paymentRail.equals(BitcoinPaymentRail.MAIN_CHAIN)) {
                 model.setBitcoinPaymentValidator(new BitcoinAddressValidator());
             } else {
                 model.setBitcoinPaymentValidator(new LightningInvoiceValidator());

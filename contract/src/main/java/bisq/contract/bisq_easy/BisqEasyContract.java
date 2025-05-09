@@ -131,19 +131,19 @@ public final class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
 
     public static BisqEasyContract fromProto(bisq.contract.protobuf.Contract proto) {
         bisq.contract.protobuf.TwoPartyContract twoPartyContractProto = proto.getTwoPartyContract();
-        bisq.contract.protobuf.BisqEasyContract muSigContractProto = twoPartyContractProto.getBisqEasyContract();
+        bisq.contract.protobuf.BisqEasyContract bisqEasyContract = twoPartyContractProto.getBisqEasyContract();
         return new BisqEasyContract(proto.getTakeOfferDate(),
                 BisqEasyOffer.fromProto(proto.getOffer()),
                 TradeProtocolType.fromProto(proto.getTradeProtocolType()),
                 Party.fromProto(twoPartyContractProto.getTaker()),
-                muSigContractProto.getBaseSideAmount(),
-                muSigContractProto.getQuoteSideAmount(),
-                PaymentMethodSpec.protoToBitcoinPaymentMethodSpec(muSigContractProto.getBaseSidePaymentMethodSpec()),
-                PaymentMethodSpec.protoToFiatPaymentMethodSpec(muSigContractProto.getQuoteSidePaymentMethodSpec()),
-                muSigContractProto.hasMediator() ?
-                        Optional.of(UserProfile.fromProto(muSigContractProto.getMediator())) :
+                bisqEasyContract.getBaseSideAmount(),
+                bisqEasyContract.getQuoteSideAmount(),
+                PaymentMethodSpec.protoToBitcoinPaymentMethodSpec(bisqEasyContract.getBaseSidePaymentMethodSpec()),
+                PaymentMethodSpec.protoToFiatPaymentMethodSpec(bisqEasyContract.getQuoteSidePaymentMethodSpec()),
+                bisqEasyContract.hasMediator() ?
+                        Optional.of(UserProfile.fromProto(bisqEasyContract.getMediator())) :
                         Optional.empty(),
-                PriceSpec.fromProto(muSigContractProto.getPriceSpec()),
-                muSigContractProto.getMarketPrice());
+                PriceSpec.fromProto(bisqEasyContract.getPriceSpec()),
+                bisqEasyContract.getMarketPrice());
     }
 }

@@ -17,6 +17,7 @@
 
 package bisq.contract.mu_sig;
 
+import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.contract.Party;
 import bisq.contract.Role;
@@ -34,10 +35,17 @@ import lombok.ToString;
 
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class MuSigContract extends TwoPartyContract<MuSigOffer> {
+    private static BitcoinPaymentMethodSpec getBitcoinPaymentMethodSpec(MuSigOffer offer) {
+        checkArgument(offer.getBaseSidePaymentMethodSpecs().size() == 1,
+                "MuSigOffers baseSidePaymentMethodSpecs must have exactly 1 item");
+        return offer.getBaseSidePaymentMethodSpecs().get(0);
+    }
 
     private final long baseSideAmount;
     private final long quoteSideAmount;
@@ -52,7 +60,6 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                          NetworkId takerNetworkId,
                          long baseSideAmount,
                          long quoteSideAmount,
-                         BitcoinPaymentMethodSpec baseSidePaymentMethodSpec,
                          FiatPaymentMethodSpec quoteSidePaymentMethodSpec,
                          Optional<UserProfile> mediator,
                          PriceSpec priceSpec,
@@ -63,7 +70,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                 new Party(Role.TAKER, takerNetworkId),
                 baseSideAmount,
                 quoteSideAmount,
-                baseSidePaymentMethodSpec,
+                getBitcoinPaymentMethodSpec(offer),
                 quoteSidePaymentMethodSpec,
                 mediator,
                 priceSpec,
@@ -96,6 +103,8 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
     @Override
     public void verify() {
         super.verify();
+        checkArgument(BitcoinPaymentRail.MAIN_CHAIN.equals(baseSidePaymentMethodSpec.getPaymentMethod().getPaymentRail()),
+                "BitcoinPaymentRail from baseSidePaymentMethodSpec must be MAIN_CHAIN");
     }
 
     @Override

@@ -85,7 +85,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
             BitcoinPaymentRail paymentRail = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
             String name = paymentRail.name();
             model.setPaymentProofDescription(Res.get("bisqEasy.tradeState.paymentProof." + name));
-            model.setBlockExplorerLinkVisible(paymentRail == BitcoinPaymentRail.MAIN_CHAIN);
+            model.setBlockExplorerLinkVisible(paymentRail.equals(BitcoinPaymentRail.MAIN_CHAIN));
             String paymentProof = bisqEasyTrade.getPaymentProof().get();
             model.setPaymentProof(paymentProof);
             model.setPaymentProofVisible(paymentProof != null);

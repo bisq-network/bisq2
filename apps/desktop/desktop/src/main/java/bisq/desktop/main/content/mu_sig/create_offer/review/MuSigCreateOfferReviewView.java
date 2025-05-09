@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.review;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.GridPaneUtil;
@@ -50,23 +49,21 @@ import javax.annotation.Nullable;
 class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewModel, MuSigCreateOfferReviewController> {
     private final static int FEEDBACK_WIDTH = 700;
 
-    private final Label headline, detailsHeadline,
-            bitcoinPaymentMethod, bitcoinPaymentMethodDescription, fiatPaymentMethod, fiatPaymentMethodDescription, fee, feeDetails,
+    private final Label headline, detailsHeadline, paymentMethod, paymentMethodDescription, fee, feeDetails,
             priceDetails, priceDescription;
-    private final VBox  createOfferSuccess;
+    private final VBox createOfferSuccess;
     private final Button createOfferSuccessButton;
     private final GridPane gridPane;
-    private final StackPane bitcoinPaymentMethodValuePane, fiatPaymentMethodValuePane;
+    private final StackPane paymentMethodValuePane;
     private final TextFlow price;
     private final HBox reviewDataDisplay;
     @Nullable
-    private ComboBox<BitcoinPaymentMethod> bitcoinPaymentMethodsComboBox;
-    @Nullable
-    private ComboBox<FiatPaymentMethod> fiatPaymentMethodsComboBox;
+    private ComboBox<FiatPaymentMethod> paymentMethodsComboBox;
     private Subscription showCreateOfferSuccessPin;
-    private boolean minWaitingTimePassed = false;
 
-    MuSigCreateOfferReviewView(MuSigCreateOfferReviewModel model, MuSigCreateOfferReviewController controller, HBox reviewDataDisplay) {
+    MuSigCreateOfferReviewView(MuSigCreateOfferReviewModel model,
+                               MuSigCreateOfferReviewController controller,
+                               HBox reviewDataDisplay) {
         super(new StackPane(), model, controller);
 
         this.reviewDataDisplay = reviewDataDisplay;
@@ -125,28 +122,16 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
         gridPane.add(priceDetails, 2, rowIndex);
 
         rowIndex++;
-        bitcoinPaymentMethodDescription = new Label();
-        bitcoinPaymentMethodDescription.getStyleClass().add(descriptionStyle);
-        gridPane.add(bitcoinPaymentMethodDescription, 0, rowIndex);
+        paymentMethodDescription = new Label();
+        paymentMethodDescription.getStyleClass().add(descriptionStyle);
+        gridPane.add(paymentMethodDescription, 0, rowIndex);
 
-        bitcoinPaymentMethod = new Label();
-        bitcoinPaymentMethod.getStyleClass().add(valueStyle);
-        bitcoinPaymentMethodValuePane = new StackPane(bitcoinPaymentMethod);
-        bitcoinPaymentMethodValuePane.setAlignment(Pos.TOP_LEFT);
-        GridPane.setColumnSpan(bitcoinPaymentMethodValuePane, 3);
-        gridPane.add(bitcoinPaymentMethodValuePane, 1, rowIndex);
-
-        rowIndex++;
-        fiatPaymentMethodDescription = new Label();
-        fiatPaymentMethodDescription.getStyleClass().add(descriptionStyle);
-        gridPane.add(fiatPaymentMethodDescription, 0, rowIndex);
-
-        fiatPaymentMethod = new Label();
-        fiatPaymentMethod.getStyleClass().add(valueStyle);
-        fiatPaymentMethodValuePane = new StackPane(fiatPaymentMethod);
-        fiatPaymentMethodValuePane.setAlignment(Pos.TOP_LEFT);
-        GridPane.setColumnSpan(fiatPaymentMethodValuePane, 3);
-        gridPane.add(fiatPaymentMethodValuePane, 1, rowIndex);
+        paymentMethod = new Label();
+        paymentMethod.getStyleClass().add(valueStyle);
+        paymentMethodValuePane = new StackPane(paymentMethod);
+        paymentMethodValuePane.setAlignment(Pos.TOP_LEFT);
+        GridPane.setColumnSpan(paymentMethodValuePane, 3);
+        gridPane.add(paymentMethodValuePane, 1, rowIndex);
 
         rowIndex++;
         Label feeInfoDescription = new Label(Res.get("bisqEasy.tradeWizard.review.feeDescription"));
@@ -187,14 +172,8 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
         TextFlowUtils.updateTextFlow(price, model.getPrice());
         priceDetails.setText(model.getPriceDetails());
 
-        bitcoinPaymentMethodDescription.setText(model.getBitcoinPaymentMethodDescription());
-        bitcoinPaymentMethod.setText(model.getBitcoinPaymentMethod());
-
-        fiatPaymentMethodDescription.setText(model.getFiatPaymentMethodDescription());
-        fiatPaymentMethod.setText(model.getFiatPaymentMethod());
-
-        feeDetails.setVisible(model.isFeeDetailsVisible());
-        feeDetails.setManaged(model.isFeeDetailsVisible());
+        paymentMethodDescription.setText(model.getPaymentMethodDescription());
+        paymentMethod.setText(model.getPaymentMethod());
 
         fee.setText(model.getFee());
         feeDetails.setText(model.getFeeDetails());
@@ -212,43 +191,12 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
                     }
                 });
 
-        if (model.getTakersBitcoinPaymentMethods().size() > 1) {
-            bitcoinPaymentMethodsComboBox = new ComboBox<>(model.getTakersBitcoinPaymentMethods());
-            bitcoinPaymentMethodsComboBox.getStyleClass().add("trade-wizard-review-payment-combo-box");
-            GridPane.setMargin(bitcoinPaymentMethodValuePane, new Insets(-8, 0, -8, 0));
-            bitcoinPaymentMethodValuePane.getChildren().setAll(bitcoinPaymentMethodsComboBox);
-            bitcoinPaymentMethodsComboBox.setConverter(new StringConverter<>() {
-                @Override
-                public String toString(BitcoinPaymentMethod method) {
-                    return method != null ? method.getShortDisplayString() : "";
-                }
-
-                @Override
-                public BitcoinPaymentMethod fromString(String string) {
-                    return null;
-                }
-            });
-
-            bitcoinPaymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedBitcoinPaymentMethod());
-            bitcoinPaymentMethodsComboBox.setOnAction(e -> {
-                if (bitcoinPaymentMethodsComboBox.getSelectionModel().getSelectedItem() == null) {
-                    bitcoinPaymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedBitcoinPaymentMethod());
-                    return;
-                }
-                controller.onSelectBitcoinPaymentMethod(bitcoinPaymentMethodsComboBox.getSelectionModel().getSelectedItem());
-            });
-        } else {
-            GridPane.setMargin(bitcoinPaymentMethodValuePane, new Insets(0, 0, 0, 0));
-            bitcoinPaymentMethodValuePane.getChildren().setAll(bitcoinPaymentMethod);
-        }
-
-
         if (model.getTakersFiatPaymentMethods().size() > 1) {
-            fiatPaymentMethodsComboBox = new ComboBox<>(model.getTakersFiatPaymentMethods());
-            fiatPaymentMethodsComboBox.getStyleClass().add("trade-wizard-review-payment-combo-box");
-            GridPane.setMargin(fiatPaymentMethodValuePane, new Insets(-8, 0, -8, 0));
-            fiatPaymentMethodValuePane.getChildren().setAll(fiatPaymentMethodsComboBox);
-            fiatPaymentMethodsComboBox.setConverter(new StringConverter<>() {
+            paymentMethodsComboBox = new ComboBox<>(model.getTakersFiatPaymentMethods());
+            paymentMethodsComboBox.getStyleClass().add("trade-wizard-review-payment-combo-box");
+            GridPane.setMargin(paymentMethodValuePane, new Insets(-8, 0, -8, 0));
+            paymentMethodValuePane.getChildren().setAll(paymentMethodsComboBox);
+            paymentMethodsComboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(FiatPaymentMethod method) {
                     return method != null ? method.getDisplayString() : "";
@@ -260,17 +208,17 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
                 }
             });
 
-            fiatPaymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedFiatPaymentMethod());
-            fiatPaymentMethodsComboBox.setOnAction(e -> {
-                if (fiatPaymentMethodsComboBox.getSelectionModel().getSelectedItem() == null) {
-                    fiatPaymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedFiatPaymentMethod());
+            paymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedFiatPaymentMethod());
+            paymentMethodsComboBox.setOnAction(e -> {
+                if (paymentMethodsComboBox.getSelectionModel().getSelectedItem() == null) {
+                    paymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedFiatPaymentMethod());
                     return;
                 }
-                controller.onSelectFiatPaymentMethod(fiatPaymentMethodsComboBox.getSelectionModel().getSelectedItem());
+                controller.onSelectFiatPaymentMethod(paymentMethodsComboBox.getSelectionModel().getSelectedItem());
             });
         } else {
-            GridPane.setMargin(fiatPaymentMethodValuePane, new Insets(0, 0, 0, 0));
-            fiatPaymentMethodValuePane.getChildren().setAll(fiatPaymentMethod);
+            GridPane.setMargin(paymentMethodValuePane, new Insets(0, 0, 0, 0));
+            paymentMethodValuePane.getChildren().setAll(paymentMethod);
         }
 
         if (model.isRangeAmount()) {
@@ -286,11 +234,8 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
 
         showCreateOfferSuccessPin.unsubscribe();
 
-        if (bitcoinPaymentMethodsComboBox != null) {
-            bitcoinPaymentMethodsComboBox.setOnAction(null);
-        }
-        if (fiatPaymentMethodsComboBox != null) {
-            fiatPaymentMethodsComboBox.setOnAction(null);
+        if (paymentMethodsComboBox != null) {
+            paymentMethodsComboBox.setOnAction(null);
         }
     }
 

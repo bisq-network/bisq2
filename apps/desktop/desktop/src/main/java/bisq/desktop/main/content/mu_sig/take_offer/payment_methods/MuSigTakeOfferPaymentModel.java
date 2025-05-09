@@ -19,7 +19,6 @@ package bisq.desktop.main.content.mu_sig.take_offer.payment_methods;
 
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
-import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -31,11 +30,6 @@ import lombok.Setter;
 
 @Getter
 public class MuSigTakeOfferPaymentModel implements Model {
-    private final ObservableList<BitcoinPaymentMethodSpec> offeredBitcoinPaymentMethodSpecs = FXCollections.observableArrayList();
-    private final SortedList<BitcoinPaymentMethodSpec> sortedBitcoinPaymentMethodSpecs = new SortedList<>(offeredBitcoinPaymentMethodSpecs);
-    private final ObjectProperty<BitcoinPaymentMethodSpec> selectedBitcoinPaymentMethodSpec = new SimpleObjectProperty<>();
-    @Setter
-    private boolean bitcoinMethodVisible;
     @Setter
     private Market market;
 
@@ -47,7 +41,5 @@ public class MuSigTakeOfferPaymentModel implements Model {
     @Setter
     private String headline;
     @Setter
-    private String fiatSubtitle;
-    @Setter
-    private String bitcoinSubtitle;
+    private String subtitle;
 }

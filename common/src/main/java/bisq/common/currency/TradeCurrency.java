@@ -18,6 +18,7 @@
 package bisq.common.currency;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.currency.stable.StableCoinCurrency;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
@@ -70,6 +71,7 @@ public abstract class TradeCurrency implements Comparable<TradeCurrency>, Persis
         return switch (proto.getMessageCase()) {
             case CRYPTOCURRENCY -> CryptoCurrency.fromProto(proto);
             case FIATCURRENCY -> FiatCurrency.fromProto(proto);
+            case STABLECOINCURRENCY -> StableCoinCurrency.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

@@ -89,6 +89,15 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
         };
     }
 
+    public static PaymentMethodSpec<?> fromProto(bisq.offer.protobuf.PaymentMethodSpec proto) {
+        return switch (proto.getMessageCase()) {
+            case BITCOINPAYMENTMETHODSPEC -> BitcoinPaymentMethodSpec.fromProto(proto);
+            case FIATPAYMENTMETHODSPEC -> FiatPaymentMethodSpec.fromProto(proto);
+            case STABLECOINPAYMENTMETHODSPEC -> StablecoinPaymentMethodSpec.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+        };
+    }
+
     public String getPaymentMethodName() {
         return paymentMethod.getName();
     }

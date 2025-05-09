@@ -15,17 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offerbook.other;
+package bisq.common.currency.stable;
 
-import bisq.desktop.main.content.mu_sig.offerbook.MuSigOfferbookModel;
-import bisq.offer.Direction;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-@Getter
-public class MuSigOfferbookOtherModel extends MuSigOfferbookModel {
-    public MuSigOfferbookOtherModel(Direction direction) {
-        super(direction);
+public enum StableCoinChain {
+    ETHEREUM("Ethereum"),
+    TRON("Tron"),
+    BNB_SMART_CHAIN("BNB Smart Chain"),
+    SOLANA("Solana"),
+    BITCOIN("Bitcoin"),
+    TAPROOT_ASSETS("Taproot Assets"),
+    LIQUID("Liquid Bitcoin");
+    /*RGB,
+    FEDIMINT,
+    STABLESATS*/
+    @Getter
+    private final String displayName;
+
+    StableCoinChain(String displayName) {
+        this.displayName = displayName;
     }
 }

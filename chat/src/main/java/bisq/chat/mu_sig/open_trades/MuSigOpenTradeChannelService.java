@@ -141,22 +141,22 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
                                                              Optional<Citation> citation,
                                                              ChatMessageType chatMessageType,
                                                              MuSigOpenTradeChannel channel) {
-        String shortUid = StringUtils.createUid();
+        String messageId = StringUtils.createUid();
         long date = new Date().getTime();
         if (channel.isInMediation() && channel.getMediator().isPresent()) {
             String senderId = channel.getMyUserIdentity().getId();
             List<CompletableFuture<SendMessageResult>> futures = channel.getTraders().stream()
                     .filter(peer -> !peer.getId().equals(senderId))
-                    .map(peer -> sendMessage(shortUid, text, citation, channel, peer, chatMessageType, date))
+                    .map(peer -> sendMessage(messageId, text, citation, channel, peer, chatMessageType, date))
                     .collect(Collectors.toList());
             channel.getMediator()
                     .filter(mediator -> !mediator.getId().equals(senderId))
-                    .map(mediator -> sendMessage(shortUid, text, citation, channel, mediator, chatMessageType, date))
+                    .map(mediator -> sendMessage(messageId, text, citation, channel, mediator, chatMessageType, date))
                     .ifPresent(futures::add);
             return CompletableFutureUtils.allOf(futures)
                     .thenApply(list -> list.get(0)); //TODO return list?
         } else {
-            return sendMessage(shortUid, text, citation, channel, channel.getPeer(), chatMessageType, date);
+            return sendMessage(messageId, text, citation, channel, channel.getPeer(), chatMessageType, date);
         }
     }
 

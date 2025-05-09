@@ -44,7 +44,7 @@ public class TradeWizardAmountModel implements Model {
     @Setter
     private Direction direction;
     @Setter
-    private Market market = MarketRepository.getDefault();
+    private Market market = MarketRepository.getDefaultBtcFiatMarket();
     @Setter
     private List<BitcoinPaymentMethod> bitcoinPaymentMethods = new ArrayList<>();
     @Setter
@@ -77,7 +77,7 @@ public class TradeWizardAmountModel implements Model {
 
     public void reset() {
         direction = null;
-        market = MarketRepository.getDefault();
+        market = MarketRepository.getDefaultBtcFiatMarket();
         bitcoinPaymentMethods = new ArrayList<>();
         fiatPaymentMethods = new ArrayList<>();
         amountLimitInfo.set(null);
