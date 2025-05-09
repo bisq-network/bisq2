@@ -17,17 +17,21 @@
 
 package bisq.account.payment_method;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class StablecoinPaymentMethodUtil {
     public static Optional<StablecoinPaymentMethod> findPaymentMethod(String name) {
         try {
             StablecoinPaymentRail paymentRail = StablecoinPaymentRail.valueOf(name);
             StablecoinPaymentMethod paymentMethod = StablecoinPaymentMethod.fromPaymentRail(paymentRail);
             return Optional.of(paymentMethod);
-        } catch (Throwable ignore) {
+        } catch (Throwable e) {
+            log.warn("Could not find payment method for name: {}", name, e);
             return Optional.empty();
         }
     }
@@ -39,8 +43,11 @@ public class StablecoinPaymentMethodUtil {
             if (!paymentMethod.isCustomPaymentMethod()) {
                 return paymentMethod;
             }
-        } catch (Throwable ignore) {
+        } catch (Throwable e) {
+            log.warn("Could not get payment method for name: {}", name, e);
         }
+
+        //TODO can be removed once stable coin domain is completed and confirmed that this is not needed
         return StablecoinPaymentMethod.fromCustomName(name);
     }
 

@@ -29,7 +29,7 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 public final class StablecoinPaymentMethodSpec extends PaymentMethodSpec<StablecoinPaymentMethod> {
     public StablecoinPaymentMethodSpec(StablecoinPaymentMethod paymentMethod) {
-        super(paymentMethod);
+        this(paymentMethod, Optional.empty());
     }
 
     public StablecoinPaymentMethodSpec(StablecoinPaymentMethod paymentMethod, Optional<String> saltedMakerAccountId) {

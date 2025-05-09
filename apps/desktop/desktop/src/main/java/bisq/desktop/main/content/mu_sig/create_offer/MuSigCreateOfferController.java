@@ -250,7 +250,15 @@ public class MuSigCreateOfferController extends NavigationController implements 
     }
 
     private void updateNextButtonDisabledState() {
-        model.getNextButtonDisabled().set(false);
+        // TODO as UI is WIP we leave the currently not useful code here to be used maybe later for disabling next if
+        // ui input is missing.
+       /* if (NavigationTarget.BISQ_EASY_TRADE_WIZARD_DIRECTION_AND_MARKET.equals(model.getSelectedChildTarget().get())) {
+            model.getNextButtonDisabled().set(tradeWizardDirectionAndMarketController.getMarket().get() == null);
+        } else if (NavigationTarget.BISQ_EASY_TRADE_WIZARD_TAKE_OFFER_OFFER.equals(model.getSelectedChildTarget().get())) {
+            model.getNextButtonDisabled().set(tradeWizardSelectOfferController.getSelectedBisqEasyOffer().get() == null);
+        } else {*/
+            model.getNextButtonDisabled().set(false);
+       // }
     }
 
     private void closeAndNavigateTo(NavigationTarget navigationTarget) {
@@ -265,8 +273,8 @@ public class MuSigCreateOfferController extends NavigationController implements 
     }
 
     private void handlePaymentMethodsUpdate() {
-        ObservableList<FiatPaymentMethod> fiatPaymentMethods = muSigCreateOfferPaymentMethodsController.getPaymentMethods();
-        muSigCreateOfferAmountAndPriceController.setFiatPaymentMethods(fiatPaymentMethods);
-        muSigCreateOfferReviewController.setFiatPaymentMethods(fiatPaymentMethods);
+        ObservableList<FiatPaymentMethod> paymentMethods = muSigCreateOfferPaymentMethodsController.getPaymentMethods();
+        muSigCreateOfferAmountAndPriceController.setPaymentMethods(paymentMethods);
+        muSigCreateOfferReviewController.setPaymentMethods(paymentMethods);
     }
 }

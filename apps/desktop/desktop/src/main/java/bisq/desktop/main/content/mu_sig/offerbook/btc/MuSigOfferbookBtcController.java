@@ -55,7 +55,7 @@ public class MuSigOfferbookBtcController extends MuSigOfferbookController<MuSigO
 
     @Override
     protected boolean isExpectedMarket(Market market) {
-        return market.isFiat() && market.getBaseCurrencyCode().equals("BTC");
+        return market.isBtcFiatMarket() && market.getBaseCurrencyCode().equals("BTC");
     }
 
     @Override

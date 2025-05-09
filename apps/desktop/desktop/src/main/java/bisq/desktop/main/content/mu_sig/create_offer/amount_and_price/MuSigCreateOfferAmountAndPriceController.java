@@ -105,8 +105,8 @@ public class MuSigCreateOfferAmountAndPriceController implements Controller {
         return muSigCreateOfferAmountController.getQuoteSideAmountSpec();
     }
 
-    public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
-        muSigCreateOfferAmountController.setFiatPaymentMethods(fiatPaymentMethods);
+    public void setPaymentMethods(List<FiatPaymentMethod> paymentMethods) {
+        muSigCreateOfferAmountController.setPaymentMethods(paymentMethods);
     }
 
     public boolean validate() {

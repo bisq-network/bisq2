@@ -17,6 +17,7 @@
 
 package bisq.common.currency;
 
+import bisq.common.currency.stable.StableCoinCurrency;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.PersistableProto;
 import bisq.common.validation.NetworkDataValidation;
@@ -96,17 +97,17 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
                 : baseCurrencyName;
     }
 
-    //todo (refactor, low prio) make static utils
-    public String getFiatCurrencyName() {
-        return isFiat() ? getQuoteCurrencyDisplayName() : getBaseCurrencyDisplayName();
+    // Returns display name of non BTC side
+    public String getSignificantCurrencyName() {
+        return baseCurrencyCode.equals("BTC") ? getQuoteCurrencyDisplayName() : getBaseCurrencyDisplayName();
     }
 
-    public boolean isFiat() {
+    public boolean isBtcFiatMarket() {
         return baseCurrencyCode.equals("BTC") && FiatCurrency.isFiat(quoteCurrencyCode);
     }
 
-    public boolean isFiatOrStable() {
-        return baseCurrencyCode.equals("BTC") && FiatCurrency.isFiat(quoteCurrencyCode);
+    public boolean isBtcStableCoinMarket() {
+        return baseCurrencyCode.equals("BTC") && StableCoinCurrency.isStableCoinCurrency(quoteCurrencyCode);
     }
 
     public boolean isCrypto() {
@@ -131,7 +132,7 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
 
     @Override
     public String toString() {
-        return getFiatCurrencyName() + " (" + getMarketCodes() + ")";
+        return getSignificantCurrencyName() + " (" + getMarketCodes() + ")";
     }
 
     @Override

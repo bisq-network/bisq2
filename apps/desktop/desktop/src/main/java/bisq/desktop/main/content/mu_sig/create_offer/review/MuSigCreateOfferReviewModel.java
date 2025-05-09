@@ -59,7 +59,7 @@ class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private PriceSpec priceSpec;
     @Setter
-    private List<FiatPaymentMethod> fiatPaymentMethods;
+    private List<FiatPaymentMethod> paymentMethods;
     @Setter
     private String headline;
     @Setter
@@ -69,9 +69,9 @@ class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private boolean isRangeAmount;
     @Setter
-    private String fiatPaymentMethodDescription;
+    private String paymentMethodDescription;
     @Setter
-    private String fiatPaymentMethod;
+    private String paymentMethod;
     @Setter
     private String priceDescription;
     @Setter
@@ -97,14 +97,14 @@ class MuSigCreateOfferReviewModel implements Model {
         maxQuoteSideAmount = null;
         fixQuoteSideAmount = null;
         priceSpec = null;
-        fiatPaymentMethods = null;
+        paymentMethods = null;
         headline = null;
         detailsHeadline = null;
         priceDescription = null;
         price = null;
         priceDetails = null;
-        fiatPaymentMethodDescription = null;
-        fiatPaymentMethod = null;
+        paymentMethodDescription = null;
+        paymentMethod = null;
         fee = null;
         feeDetails = null;
         takersFiatPaymentMethods.clear();

@@ -36,7 +36,7 @@ public class FiatPaymentRailUtil {
         return switch (protocolType) {
             case BISQ_EASY, MU_SIG, BISQ_LIGHTNING -> getPaymentRails();
             case MONERO_SWAP, LIQUID_SWAP, BSQ_SWAP ->
-                    throw new IllegalArgumentException("No paymentMethods for that protocolType");
+                    throw new UnsupportedOperationException("No paymentMethods for that protocolType");
             default -> throw new RuntimeException("Not handled case: protocolType=" + protocolType);
         };
     }

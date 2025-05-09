@@ -46,7 +46,6 @@ import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.mu_sig.MuSigOfferService;
 import bisq.offer.options.OfferOption;
-import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.PersistenceService;
@@ -228,15 +227,15 @@ public class MuSigService extends LifecycleService {
                 MuSigProtocol.VERSION);
     }
 
-    public CompletableFuture<BroadcastResult> publishOffer(MuSigOffer muSigOffer) {
+    public CompletableFuture<BroadcastResult> publishOffer(MuSigOffer muSigOffer) throws UserProfileBannedException, RateLimitExceededException {
         checkArgument(isActivated());
-        validateUserProfile(muSigOffer);
+        validateUserProfile(muSigOffer.getMakersUserProfileId());
         return muSigOfferService.publishAndAddOffer(muSigOffer);
     }
 
-    public CompletableFuture<BroadcastResult> removeOffer(MuSigOffer muSigOffer) {
+    public CompletableFuture<BroadcastResult> removeOffer(MuSigOffer muSigOffer) throws UserProfileBannedException, RateLimitExceededException {
         checkArgument(isActivated());
-        validateUserProfile(muSigOffer);
+        validateUserProfile(muSigOffer.getMakersUserProfileId());
         return muSigOfferService.removeOffer(muSigOffer);
     }
 
@@ -250,11 +249,11 @@ public class MuSigService extends LifecycleService {
                                         MuSigOffer muSigOffer,
                                         Monetary takersBaseSideAmount,
                                         Monetary takersQuoteSideAmount,
-                                        BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
                                         FiatPaymentMethodSpec fiatPaymentMethodSpec)
             throws UserProfileBannedException, NoMediatorAvailableException,
             NoMarketPriceAvailableException, RateLimitExceededException {
 
+        checkArgument(isActivated());
         String makersUserProfileId = muSigOffer.getMakersUserProfileId();
         validateUserProfile(makersUserProfileId);
         validateUserProfile(takerIdentity.getId());
@@ -270,7 +269,6 @@ public class MuSigService extends LifecycleService {
                 muSigOffer,
                 takersBaseSideAmount,
                 takersQuoteSideAmount,
-                bitcoinPaymentMethodSpec,
                 fiatPaymentMethodSpec,
                 mediator);
     }
@@ -279,7 +277,6 @@ public class MuSigService extends LifecycleService {
                                          MuSigOffer muSigOffer,
                                          Monetary takersBaseSideAmount,
                                          Monetary takersQuoteSideAmount,
-                                         BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
                                          FiatPaymentMethodSpec fiatPaymentMethodSpec,
                                          Optional<UserProfile> mediator) throws NoMarketPriceAvailableException {
 
@@ -295,7 +292,6 @@ public class MuSigService extends LifecycleService {
                 muSigOffer,
                 takersBaseSideAmount,
                 takersQuoteSideAmount,
-                bitcoinPaymentMethodSpec,
                 fiatPaymentMethodSpec,
                 mediator,
                 marketPrice.get());
@@ -305,7 +301,6 @@ public class MuSigService extends LifecycleService {
                                          MuSigOffer muSigOffer,
                                          Monetary takersBaseSideAmount,
                                          Monetary takersQuoteSideAmount,
-                                         BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
                                          FiatPaymentMethodSpec fiatPaymentMethodSpec,
                                          Optional<UserProfile> mediator,
                                          long marketPrice) {
@@ -313,32 +308,31 @@ public class MuSigService extends LifecycleService {
                 muSigOffer,
                 takersBaseSideAmount,
                 takersQuoteSideAmount,
-                bitcoinPaymentMethodSpec,
                 fiatPaymentMethodSpec,
                 mediator,
                 muSigOffer.getPriceSpec(),
                 marketPrice);
     }
 
-    public MuSigOpenTradeChannel createsMuSigOpenTradeChannel(MuSigTrade muSigTrade, UserIdentity takerIdentity) {
+    public void createMuSigOpenTradeChannel(MuSigTrade muSigTrade, UserIdentity takerIdentity) {
+        checkArgument(isActivated());
         String tradeId = muSigTrade.getId();
         Optional<MuSigOpenTradeChannel> channel = muSigOpenTradeChannelService.findChannelByTradeId(tradeId);
-        if (channel.isPresent()) {
-            log.warn("When taking an offer it is expected that no MuSigOpenTradeChannel for that trade ID exist yet. " +
-                    "In case of failed take offer attempts though it might be that there is a channel present.");
-
-            return channel.get();
-        } else {
+        if (channel.isEmpty()) {
             Optional<UserProfile> makersUserProfile = userProfileService.findUserProfile(muSigTrade.getOffer().getMakersUserProfileId());
             checkArgument(makersUserProfile.isPresent(), "Makers user profile is not present");
-            return muSigOpenTradeChannelService.traderCreatesChannel(tradeId,
+            muSigOpenTradeChannelService.traderCreatesChannel(tradeId,
                     takerIdentity,
                     makersUserProfile.get(),
                     Optional.empty());
+        } else {
+            log.warn("When taking an offer it is expected that no MuSigOpenTradeChannel for that trade ID exist yet. " +
+                    "In case of failed take offer attempts though it might be that there is a channel present.");
         }
     }
 
     public void takeOffer(MuSigTrade muSigTrade) {
+        checkArgument(isActivated());
         // Starts the trade protocol
         muSigTradeService.takeOffer(muSigTrade);
     }

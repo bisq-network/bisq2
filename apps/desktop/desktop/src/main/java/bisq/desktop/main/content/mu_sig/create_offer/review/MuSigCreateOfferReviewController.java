@@ -29,6 +29,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
 import bisq.desktop.main.content.mu_sig.components.MuSigReviewDataDisplay;
 import bisq.desktop.navigation.NavigationTarget;
@@ -53,6 +54,8 @@ import bisq.settings.SettingsService;
 import bisq.support.mediation.MediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.banned.BannedUserService;
+import bisq.user.banned.RateLimitExceededException;
+import bisq.user.banned.UserProfileBannedException;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
@@ -107,9 +110,10 @@ public class MuSigCreateOfferReviewController implements Controller {
         view = new MuSigCreateOfferReviewView(model, this, muSigReviewDataDisplay.getRoot());
     }
 
-    public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
-        if (fiatPaymentMethods != null) {
+    public void setPaymentMethods(List<FiatPaymentMethod> paymentMethods) {
+        if (paymentMethods != null) {
             resetSelectedPaymentMethod();
+            model.setPaymentMethods(paymentMethods);
         }
     }
 
@@ -152,25 +156,32 @@ public class MuSigCreateOfferReviewController implements Controller {
     }
 
     public void publishOffer() {
-        muSigService.publishOffer(model.getOffer()).whenComplete((result, throwable) -> {
-            if (throwable == null) {
-                UIThread.run(() -> {
-                    model.getShowCreateOfferSuccess().set(true);
-                    mainButtonsVisibleHandler.accept(false);
-                });
-                result.forEach(future -> {
-                    future.whenComplete((res, t) -> {
-                        if (t == null) {
-                            log.error("Offer published. result={}", res);
-                        } else {
-                            log.error("Offer publishing failed with", throwable);
-                        }
+        MuSigOffer muSigOffer = model.getOffer();
+        try {
+            muSigService.publishOffer(muSigOffer).whenComplete((result, throwable) -> {
+                if (throwable == null) {
+                    UIThread.run(() -> {
+                        model.getShowCreateOfferSuccess().set(true);
+                        mainButtonsVisibleHandler.accept(false);
                     });
-                });
-            } else {
-                log.error("Offer publishing failed", throwable);
-            }
-        });
+                    result.forEach(future -> {
+                        future.whenComplete((res, t) -> {
+                            if (t == null) {
+                                log.info("Offer published. result={}", res);
+                            } else {
+                                log.error("Offer publishing failed", t);
+                            }
+                        });
+                    });
+                } else {
+                    log.error("Offer publishing failed", throwable);
+                }
+            });
+        } catch (UserProfileBannedException e) {
+            // We do not inform banned users about being banned
+        } catch (RateLimitExceededException e) {
+            UIThread.run(() -> new Popup().warning(Res.get("muSig.createOffer.rateLimitsExceeded.publish.warning")).show());
+        }
     }
 
     // direction is from user perspective not offer direction
@@ -181,7 +192,7 @@ public class MuSigCreateOfferReviewController implements Controller {
                            PriceSpec priceSpec) {
         String marketCodes = market.getMarketCodes();
 
-        model.setFiatPaymentMethods(fiatPaymentMethods);
+        model.setPaymentMethods(fiatPaymentMethods);
         model.setPriceSpec(priceSpec);
         priceInput.setMarket(market);
         priceInput.setDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.taker", marketCodes));
@@ -248,12 +259,12 @@ public class MuSigCreateOfferReviewController implements Controller {
 
         model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.maker"));
         model.setDetailsHeadline(Res.get("bisqEasy.tradeWizard.review.detailsHeadline.maker").toUpperCase());
-        model.setFiatPaymentMethodDescription(
+        model.setPaymentMethodDescription(
                 fiatPaymentMethods.size() == 1
                         ? Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription.fiat")
                         : Res.get("bisqEasy.tradeWizard.review.paymentMethodDescriptions.fiat.maker")
         );
-        model.setFiatPaymentMethod(PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods));
+        model.setPaymentMethod(PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods));
         model.setPriceDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.maker"));
         if (direction.isSell()) {
             toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toSend");
@@ -273,7 +284,7 @@ public class MuSigCreateOfferReviewController implements Controller {
         muSigReviewDataDisplay.setToReceiveAmountDescription(toReceiveAmountDescription.toUpperCase());
         muSigReviewDataDisplay.setToReceiveAmount(toReceiveAmount);
         muSigReviewDataDisplay.setToReceiveCode(toReceiveCode);
-        muSigReviewDataDisplay.setFiatPaymentMethodDescription(model.getFiatPaymentMethodDescription().toUpperCase());
+        muSigReviewDataDisplay.setFiatPaymentMethodDescription(model.getPaymentMethodDescription().toUpperCase());
     }
 
     public void reset() {
@@ -325,7 +336,7 @@ public class MuSigCreateOfferReviewController implements Controller {
     }
 
     private void applyHeaderFiatPaymentMethod() {
-        List<FiatPaymentMethod> bitcoinPaymentMethods = model.getFiatPaymentMethods();
+        List<FiatPaymentMethod> bitcoinPaymentMethods = model.getPaymentMethods();
         String bitcoinPaymentMethodsString;
         if (bitcoinPaymentMethods.size() > 2) {
             bitcoinPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(bitcoinPaymentMethods.stream()

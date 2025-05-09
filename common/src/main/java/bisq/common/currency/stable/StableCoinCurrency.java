@@ -28,10 +28,13 @@ import lombok.ToString;
 @ToString(callSuper = true)
 public final class StableCoinCurrency extends TradeCurrency {
     private final String pegCurrencyCode;
-    private final String chain;
-    private final String standard;
+    private final String chain;//TODO use StableCoinChain
+    private final String standard; //TODO use StableCoinTokenStandard
+
+    // We consider issues as only informational data, if for instance the backing company gets sold, the coin
+    // should not change.
     @EqualsAndHashCode.Exclude
-    private final String issuer;
+    private final String issuer; //TODO use StableCoinIssuer
 
     public StableCoinCurrency(String code,
                               String name,
@@ -53,6 +56,10 @@ public final class StableCoinCurrency extends TradeCurrency {
         this.chain = chain;
         this.standard = standard;
         this.issuer = issuer;
+    }
+
+    public static boolean isStableCoinCurrency(String code) {
+        return !StableCoinCurrencyRepository.allWithCode(code).isEmpty();
     }
 
     //todo
@@ -80,6 +87,7 @@ public final class StableCoinCurrency extends TradeCurrency {
                 stableCoinCurrencyProto.getIssuer());
     }
 
+    @Override
     public boolean isFiat() {
         return false;
     }

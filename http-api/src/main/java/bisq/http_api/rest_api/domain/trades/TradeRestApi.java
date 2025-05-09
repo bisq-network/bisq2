@@ -309,7 +309,7 @@ public class TradeRestApi extends RestApiBase {
 
     private void handleSellerConfirmBtcSent(BisqEasyOpenTradeChannel channel, BisqEasyTrade trade, TradeEventDto tradeEvent, BitcoinPaymentRail paymentRail, String userName) throws Exception {
         Optional<String> paymentProof = Optional.ofNullable(tradeEvent.data());
-        boolean isMainChain = paymentRail == BitcoinPaymentRail.MAIN_CHAIN;
+        boolean isMainChain = paymentRail.equals(BitcoinPaymentRail.MAIN_CHAIN);
         if (isMainChain) {
             checkArgument(paymentProof.isPresent(), "Transaction ID is required for Bitcoin settlement");
         }
@@ -326,7 +326,7 @@ public class TradeRestApi extends RestApiBase {
     }
 
     private void handleBtcConfirmed(BisqEasyOpenTradeChannel channel, BisqEasyTrade trade, BitcoinPaymentRail paymentRail, String userName) throws Exception {
-        if (paymentRail == BitcoinPaymentRail.LN && trade.isBuyer()) {
+        if (paymentRail.equals(BitcoinPaymentRail.LN) && trade.isBuyer()) {
             String encoded = Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln", userName);
             bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel);
         }

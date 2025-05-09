@@ -135,10 +135,12 @@ public class MuSigCreateOfferAmountController implements Controller {
         applyQuoteSideMinMaxRange();
     }
 
-    public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
-        if (fiatPaymentMethods != null) {
-            model.setFiatPaymentMethods(fiatPaymentMethods);
+    public void setPaymentMethods(List<FiatPaymentMethod> paymentMethods) {
+        if (paymentMethods == null) {
+            return;
         }
+        model.getPaymentMethods().clear();
+        model.getPaymentMethods().addAll(paymentMethods);
     }
 
     public boolean validate() {
@@ -574,7 +576,7 @@ public class MuSigCreateOfferAmountController implements Controller {
     }
 
     private void applyReputationBasedQuoteSideAmount() {
-            amountSelectionController.setMaxOrFixedQuoteSideAmount(amountSelectionController.getRightMarkerQuoteSideValue().round(0));
+        amountSelectionController.setMaxOrFixedQuoteSideAmount(amountSelectionController.getRightMarkerQuoteSideValue().round(0));
     }
 
     private long getNumMatchingOffers(Monetary quoteSideAmount) {
@@ -636,7 +638,7 @@ public class MuSigCreateOfferAmountController implements Controller {
 
     private boolean isValidPaymentMethods(BisqEasyOffer peersOffer) {
         List<String> fiatPaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(peersOffer.getQuoteSidePaymentMethodSpecs());
-        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(model.getFiatPaymentMethods());
+        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(model.getPaymentMethods());
         List<String> quoteSidePaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(quoteSidePaymentMethodSpecs);
         if (quoteSidePaymentMethodNames.stream().noneMatch(fiatPaymentMethodNames::contains)) {
             return false;

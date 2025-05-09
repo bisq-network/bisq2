@@ -52,12 +52,9 @@ public class MuSigTakeOfferPaymentController implements Controller {
     public void init(MuSigOffer bisqEasyOffer) {
         model.setMarket(bisqEasyOffer.getMarket());
         model.getOfferedFiatPaymentMethodSpecs().setAll(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
-        model.setFiatSubtitle(bisqEasyOffer.getTakersDirection().isBuy()
+        model.setSubtitle(bisqEasyOffer.getTakersDirection().isBuy()
                 ? Res.get("bisqEasy.takeOffer.paymentMethods.subtitle.fiat.buyer", bisqEasyOffer.getMarket().getQuoteCurrencyCode())
                 : Res.get("bisqEasy.takeOffer.paymentMethods.subtitle.fiat.seller", bisqEasyOffer.getMarket().getQuoteCurrencyCode()));
-        model.setBitcoinSubtitle(bisqEasyOffer.getTakersDirection().isBuy()
-                ? Res.get("bisqEasy.takeOffer.paymentMethods.subtitle.bitcoin.buyer")
-                : Res.get("bisqEasy.takeOffer.paymentMethods.subtitle.bitcoin.seller"));
     }
 
     public ReadOnlyObjectProperty<FiatPaymentMethodSpec> getSelectedFiatPaymentMethodSpec() {

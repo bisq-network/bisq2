@@ -27,6 +27,9 @@ public enum StableCoinTokenStandard {
     ERC4626("ERC-4626"),
     ERC777("ERC-777"),
 
+    // Thron
+    TRC20("TRC-20"),
+
     // Bitcoin
     RGB("RGB"),
     Omni("Omni"),

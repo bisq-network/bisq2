@@ -19,8 +19,10 @@ package bisq.common.currency.stable;
 
 import lombok.Getter;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class StableCoinCurrencyRepository {
     public static final StableCoinCurrency USDT_ERC20 = new StableCoinCurrency("USDT",
@@ -34,7 +36,7 @@ public class StableCoinCurrencyRepository {
             "Tether USD (Tron TRC-20)",
             "USD",
             StableCoinChain.TRON,
-            StableCoinTokenStandard.ERC20,
+            StableCoinTokenStandard.TRC20,
             StableCoinIssuer.TETHER);
 
     public static final StableCoinCurrency USDT_BEP20 = new StableCoinCurrency("USDT",
@@ -110,4 +112,18 @@ public class StableCoinCurrencyRepository {
             "USDP", Set.of(USDP_ERC20),
             "GUSD", Set.of(GUSD_ERC20)
     );
+
+    public static Set<StableCoinCurrency> allWithPegCurrencyCode(String pegCurrencyCode) {
+        return STABLE_COIN_CURRENCY_SET_BY_CODE.values().stream()
+                .flatMap(Collection::stream)
+                .filter(e -> e.getPegCurrencyCode().equals(pegCurrencyCode))
+                .collect(Collectors.toSet());
+    }
+
+    public static Set<StableCoinCurrency> allWithCode(String code) {
+        return STABLE_COIN_CURRENCY_SET_BY_CODE.values().stream()
+                .flatMap(Collection::stream)
+                .filter(e -> e.getCode().equals(code))
+                .collect(Collectors.toSet());
+    }
 }

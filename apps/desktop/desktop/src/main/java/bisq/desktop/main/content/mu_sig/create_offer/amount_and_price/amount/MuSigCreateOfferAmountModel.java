@@ -44,8 +44,7 @@ public class MuSigCreateOfferAmountModel implements Model {
     private Direction direction;
     @Setter
     private Market market = MarketRepository.getDefaultBtcFiatMarket();
-    @Setter
-    private List<FiatPaymentMethod> fiatPaymentMethods = new ArrayList<>();
+    private final List<FiatPaymentMethod> paymentMethods = new ArrayList<>();
     private final StringProperty amountLimitInfo = new SimpleStringProperty();
     private final StringProperty amountLimitInfoOverlayInfo = new SimpleStringProperty();
     private final BooleanProperty shouldShowAmountLimitInfo = new SimpleBooleanProperty();
@@ -72,7 +71,7 @@ public class MuSigCreateOfferAmountModel implements Model {
     public void reset() {
         direction = null;
         market = MarketRepository.getDefaultBtcFiatMarket();
-        fiatPaymentMethods = new ArrayList<>();
+        paymentMethods.clear();
         amountLimitInfo.set(null);
         amountLimitInfoOverlayInfo.set(null);
         shouldShowAmountLimitInfo.set(false);

@@ -38,7 +38,6 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.DbSubDirectory;
@@ -311,7 +310,6 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
                                              MuSigOffer muSigOffer,
                                              Monetary baseSideAmount,
                                              Monetary quoteSideAmount,
-                                             BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
                                              FiatPaymentMethodSpec fiatPaymentMethodSpec,
                                              Optional<UserProfile> mediator,
                                              PriceSpec priceSpec,
@@ -326,7 +324,6 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
                 takerNetworkId,
                 baseSideAmount.getValue(),
                 quoteSideAmount.getValue(),
-                bitcoinPaymentMethodSpec,
                 fiatPaymentMethodSpec,
                 mediator,
                 priceSpec,

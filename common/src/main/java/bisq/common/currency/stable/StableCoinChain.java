@@ -26,7 +26,7 @@ public enum StableCoinChain {
     SOLANA("Solana"),
     BITCOIN("Bitcoin"),
     TAPROOT_ASSETS("Taproot Assets"),
-    LIQUID("Liquid Bitcoin");;
+    LIQUID("Liquid Bitcoin");
     /*RGB,
     FEDIMINT,
     STABLESATS*/

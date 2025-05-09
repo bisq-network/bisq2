@@ -58,12 +58,10 @@ public class PriceSpecFormatter {
     public static String getFormattedPrice(PriceSpec priceSpec, MarketPriceService marketPriceService) {
         String priceInfo = Res.get("data.na");
         if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
-            log.error("FixPriceSpec {}", PriceFormatter.format(fixPriceSpec.getPriceQuote()));
             return PriceFormatter.format(fixPriceSpec.getPriceQuote());
         }
 
         Market selectedMarket = marketPriceService.getSelectedMarket().get();
-        log.warn("selectedMarket "+selectedMarket);
         if (selectedMarket == null) {
             log.warn("No market price selected");
             return Res.get("data.na");
@@ -85,17 +83,10 @@ public class PriceSpecFormatter {
                     .orElse(Res.get("data.na"));
 
             String percent = PercentageFormatter.formatToPercentWithSymbol(Math.abs(percentage));
-            log.error("FloatPriceSpec {}", currentPrice + " (" + Res.get(percentage >= 0
-                            ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.plus"
-                            : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.minus",
-                    percent) + ")");
             return currentPrice + " (" + Res.get(percentage >= 0
                             ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.plus"
-                            : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.minus",
-                    percent) + ")";
+                            : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.minus", percent) + ")";
         }
-
-        log.error("MarketPrice {}", PriceFormatter.format(marketPrice.get().getPriceQuote(), true));
         return PriceFormatter.format(marketPrice.get().getPriceQuote(), true);
 
     }

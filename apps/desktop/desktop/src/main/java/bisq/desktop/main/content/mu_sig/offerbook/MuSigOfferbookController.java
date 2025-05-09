@@ -27,6 +27,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferController;
 import bisq.desktop.main.content.mu_sig.take_offer.MuSigTakeOfferController;
 import bisq.desktop.navigation.NavigationTarget;
@@ -37,6 +38,9 @@ import bisq.offer.Direction;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
+import bisq.user.banned.BannedUserService;
+import bisq.user.banned.RateLimitExceededException;
+import bisq.user.banned.UserProfileBannedException;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +60,7 @@ public abstract class MuSigOfferbookController<M extends MuSigOfferbookModel, V 
     protected final UserProfileService userProfileService;
     protected final SettingsService settingsService;
     private final IdentityService identityService;
+    private final BannedUserService bannedUserService;
     protected Pin offersPin;
     private Subscription selectedMarketPin;
 
@@ -65,6 +70,7 @@ public abstract class MuSigOfferbookController<M extends MuSigOfferbookModel, V 
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         identityService = serviceProvider.getIdentityService();
         settingsService = serviceProvider.getSettingsService();
+        bannedUserService = serviceProvider.getUserService().getBannedUserService();
 
         model = createAndGetModel(direction);
         view = createAndGetView();
@@ -79,7 +85,6 @@ public abstract class MuSigOfferbookController<M extends MuSigOfferbookModel, V 
         applyInitialSelectedMarket();
         selectedMarketPin = EasyBind.subscribe(model.getSelectedMarket(), market -> {
             if (market != null) {
-                model.getSelectedMarket().set(market);
                 model.getPriceTableHeader().set(Res.get("muSig.offerbook.table.header.price", market.getMarketCodes()).toUpperCase(Locale.ROOT));
                 String baseCurrencyCode = market.getBaseCurrencyCode();
                 String quoteCurrencyCode = market.getQuoteCurrencyCode();
@@ -166,8 +171,18 @@ public abstract class MuSigOfferbookController<M extends MuSigOfferbookModel, V 
         Navigation.navigateTo(NavigationTarget.MU_SIG_TAKE_OFFER, new MuSigTakeOfferController.InitData(offer));
     }
 
-    void onRemoveOffer(MuSigOffer offer) {
-        muSigService.removeOffer(offer);
+    void onRemoveOffer(MuSigOffer muSigOffer) {
+        try {
+            muSigService.removeOffer(muSigOffer);
+        } catch (UserProfileBannedException e) {
+            UIThread.run(() -> {
+                // We do not inform banned users about being banned
+            });
+        } catch (RateLimitExceededException e) {
+            UIThread.run(() -> {
+                    new Popup().warning(Res.get("muSig.offerbook.rateLimitsExceeded.removeOffer.warning")).show();
+            });
+        }
     }
 
 

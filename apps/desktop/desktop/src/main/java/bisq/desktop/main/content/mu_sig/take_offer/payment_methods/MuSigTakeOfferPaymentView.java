@@ -42,7 +42,7 @@ public class MuSigTakeOfferPaymentView extends View<VBox, MuSigTakeOfferPaymentM
 
     private final GridPane fiatGridPane;
     private final ToggleGroup fiatToggleGroup;
-    private final Label headlineLabel, fiatSubtitleLabel;
+    private final Label headlineLabel, subtitleLabel;
     private final VBox fiatVBox;
 
     public MuSigTakeOfferPaymentView(MuSigTakeOfferPaymentModel model, MuSigTakeOfferPaymentController controller) {
@@ -53,17 +53,17 @@ public class MuSigTakeOfferPaymentView extends View<VBox, MuSigTakeOfferPaymentM
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        fiatSubtitleLabel = new Label();
-        fiatSubtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        fiatSubtitleLabel.setAlignment(Pos.CENTER);
-        fiatSubtitleLabel.getStyleClass().addAll("bisq-text-3");
-        fiatSubtitleLabel.setWrapText(true);
-        fiatSubtitleLabel.setMaxWidth(600);
+        subtitleLabel = new Label();
+        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
+        subtitleLabel.setAlignment(Pos.CENTER);
+        subtitleLabel.getStyleClass().addAll("bisq-text-3");
+        subtitleLabel.setWrapText(true);
+        subtitleLabel.setMaxWidth(600);
         fiatToggleGroup = new ToggleGroup();
         fiatGridPane = GridPaneUtil.getGridPane(10, 10, new Insets(0));
         fiatGridPane.setAlignment(Pos.CENTER);
 
-        fiatVBox = new VBox(25, fiatSubtitleLabel, fiatGridPane);
+        fiatVBox = new VBox(25, subtitleLabel, fiatGridPane);
         fiatVBox.setAlignment(Pos.CENTER);
 
         VBox.setMargin(headlineLabel, new Insets(0, 0, 40, 0));
@@ -80,7 +80,7 @@ public class MuSigTakeOfferPaymentView extends View<VBox, MuSigTakeOfferPaymentM
         fiatVBox.setVisible(model.isFiatMethodVisible());
         fiatVBox.setManaged(model.isFiatMethodVisible());
         if (model.isFiatMethodVisible()) {
-            fiatSubtitleLabel.setText(model.getFiatSubtitle());
+            subtitleLabel.setText(model.getSubtitle());
             fiatGridPane.getChildren().clear();
             fiatGridPane.getColumnConstraints().clear();
             int numColumns = model.getSortedFiatPaymentMethodSpecs().size();

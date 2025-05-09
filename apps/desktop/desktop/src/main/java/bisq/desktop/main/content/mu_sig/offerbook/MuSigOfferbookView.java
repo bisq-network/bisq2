@@ -84,7 +84,6 @@ public abstract class MuSigOfferbookView<M extends MuSigOfferbookModel, C extend
 
         createOfferButton.getStyleClass().add(model.getDirection().isBuy() ? "buy-button" : "sell-button");
 
-        log.error("model.getSelectedMarket().get() "+model.getSelectedMarket().get());
         marketSelection.getSelectionModel().select(model.getSelectedMarket().get());
         marketSelection.setOnChangeConfirmed(e -> {
             if (marketSelection.getSelectionModel().getSelectedItem() == null) {
@@ -102,10 +101,6 @@ public abstract class MuSigOfferbookView<M extends MuSigOfferbookModel, C extend
         quoteCurrencyTableHeaderPin = EasyBind.subscribe(model.getAmountToReceive(), title -> {
             // quoteCurrencyAmountColumn.applyTitle(title);
         });
-
-
-        marketSelection.setOnChangeConfirmed(null);
-        marketSelection.resetValidation();
     }
 
     @Override
@@ -186,8 +181,7 @@ public abstract class MuSigOfferbookView<M extends MuSigOfferbookModel, C extend
                 if (item != null && !empty) {
                     if (item.isMyOffer()) {
                         takeOfferButton.setText(Res.get("muSig.offerbook.table.cell.intent.remove").toUpperCase(Locale.ROOT));
-                        takeOfferButton.getStyleClass().remove("buy-button");
-                        takeOfferButton.getStyleClass().remove("sell-button");
+                        resetStyles();
                         // FIXME Label text always stays white independent of style class or even if setting style here directly.
                         //  If using grey-transparent-outlined-button we have a white label. Quick fix is to use opacity with a while style...
                         takeOfferButton.getStyleClass().add("white-transparent-outlined-button");
@@ -196,7 +190,7 @@ public abstract class MuSigOfferbookView<M extends MuSigOfferbookModel, C extend
                     } else {
                         takeOfferButton.setText(model.getTakeOfferButtonText());
                         takeOfferButton.setOpacity(1);
-                        takeOfferButton.getStyleClass().remove("white-transparent-outlined-button");
+                        resetStyles();
                         if (item.getOffer().getDirection().mirror().isBuy()) {
                             takeOfferButton.getStyleClass().add("buy-button");
                         } else {
@@ -206,12 +200,16 @@ public abstract class MuSigOfferbookView<M extends MuSigOfferbookModel, C extend
                     }
                     setGraphic(takeOfferButton);
                 } else {
-                    takeOfferButton.getStyleClass().remove("buy-button");
-                    takeOfferButton.getStyleClass().remove("sell-button");
-                    takeOfferButton.getStyleClass().remove("white-transparent-outlined-button");
+                    resetStyles();
                     takeOfferButton.setOnAction(null);
                     setGraphic(null);
                 }
+            }
+
+            private void resetStyles() {
+                takeOfferButton.getStyleClass().remove("buy-button");
+                takeOfferButton.getStyleClass().remove("sell-button");
+                takeOfferButton.getStyleClass().remove("white-transparent-outlined-button");
             }
         };
     }

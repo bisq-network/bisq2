@@ -25,6 +25,7 @@ import bisq.account.payment_method.FiatPaymentMethodUtil;
 import bisq.account.payment_method.PaymentMethod;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,7 +46,7 @@ public class PaymentMethodSpecUtil {
     }
 
     public static List<BitcoinPaymentMethodSpec> createBitcoinMainChainPaymentMethodSpec() {
-        return createBitcoinPaymentMethodSpecs(List.of(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)));
+        return createBitcoinPaymentMethodSpecs(Collections.singletonList(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)));
     }
 
     public static List<FiatPaymentMethodSpec> createFiatPaymentMethodSpecs(List<FiatPaymentMethod> paymentMethods) {

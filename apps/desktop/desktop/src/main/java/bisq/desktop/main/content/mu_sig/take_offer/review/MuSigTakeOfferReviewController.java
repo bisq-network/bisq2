@@ -21,7 +21,6 @@ import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.bonded_roles.market_price.NoMarketPriceAvailableException;
 import bisq.chat.ChatService;
-import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
@@ -43,7 +42,6 @@ import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FloatPriceSpec;
@@ -157,7 +155,6 @@ public class MuSigTakeOfferReviewController implements Controller {
         Monetary takersQuoteSideAmount = model.getTakersQuoteSideAmount();
         FiatPaymentMethodSpec fiatPaymentMethodSpec = model.getFiatPaymentMethodSpec();
         checkArgument(muSigOffer.getBaseSidePaymentMethodSpecs().size() == 1);
-        BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = muSigOffer.getBaseSidePaymentMethodSpecs().get(0);
         mainButtonsVisibleHandler.accept(false);
 
         try {
@@ -166,11 +163,10 @@ public class MuSigTakeOfferReviewController implements Controller {
                     muSigOffer,
                     takersBaseSideAmount,
                     takersQuoteSideAmount,
-                    bitcoinPaymentMethodSpec,
                     fiatPaymentMethodSpec);
             MuSigTrade muSigTrade = muSigProtocol.getTrade();
             model.setMuSigTrade(muSigTrade);
-            MuSigOpenTradeChannel channel = muSigService.createsMuSigOpenTradeChannel(muSigTrade, takerIdentity);
+            muSigService.createMuSigOpenTradeChannel(muSigTrade, takerIdentity);
 
             if (timeoutScheduler != null) {
                 timeoutScheduler.stop();

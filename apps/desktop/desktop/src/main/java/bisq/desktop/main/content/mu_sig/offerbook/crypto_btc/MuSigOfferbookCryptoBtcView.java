@@ -21,10 +21,11 @@ import bisq.common.currency.Market;
 import bisq.desktop.main.content.mu_sig.offerbook.MuSigOfferbookView;
 import javafx.util.StringConverter;
 
-public abstract  class MuSigOfferbookCryptoBtcView <M extends MuSigOfferbookCryptoBtcModel, C extends MuSigOfferbookCryptoBtcController<?, ?>> extends MuSigOfferbookView< M, C> {
+public abstract class MuSigOfferbookCryptoBtcView<M extends MuSigOfferbookCryptoBtcModel, C extends MuSigOfferbookCryptoBtcController<?, ?>> extends MuSigOfferbookView<M, C> {
     public MuSigOfferbookCryptoBtcView(M model, C controller) {
         super(model, controller);
     }
+
     protected StringConverter<Market> getConverter() {
         return new StringConverter<>() {
             @Override
@@ -34,7 +35,7 @@ public abstract  class MuSigOfferbookCryptoBtcView <M extends MuSigOfferbookCryp
 
             @Override
             public Market fromString(String string) {
-                return null;
+                throw new UnsupportedOperationException("Conversion from String to Market is not supported");
             }
         };
     }

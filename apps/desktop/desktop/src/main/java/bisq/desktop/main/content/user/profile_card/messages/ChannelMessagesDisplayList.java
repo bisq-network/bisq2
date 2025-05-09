@@ -114,7 +114,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
             String iconId = publicChatChannel.getChatChannelDomain() == DISCUSSION ? "bisq-31" : "support-31";
             model.getChannelIconId().set(iconId);
             if (publicChatChannel instanceof BisqEasyOfferbookChannel bisqEasyOfferbookChannel) {
-                model.getChannelName().set(bisqEasyOfferbookChannel.getMarket().getFiatCurrencyName());
+                model.getChannelName().set(bisqEasyOfferbookChannel.getMarket().getQuoteCurrencyDisplayName());
                 model.getMarketCurrencyCode().set(bisqEasyOfferbookChannel.getMarket().getQuoteCurrencyCode());
             }
 

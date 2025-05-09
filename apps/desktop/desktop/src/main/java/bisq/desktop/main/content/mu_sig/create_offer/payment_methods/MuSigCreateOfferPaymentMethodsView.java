@@ -38,16 +38,21 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Slf4j
 public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOfferPaymentMethodsModel, MuSigCreateOfferPaymentMethodsController> {
     private static final double TWO_COLUMN_WIDTH = 20.75;
 
     private final ListChangeListener<FiatPaymentMethod> paymentMethodListener;
-    private final Label subtitleLabel,  nonFoundLabel;
+    private final Label subtitleLabel, nonFoundLabel;
     private final MuSigCreateOfferAddCustomPaymentMethodBox muSigCreateOfferAddCustomPaymentMethodBox;
     private final GridPane gridPane;
+    private final Set<ImageView> closeIcons = new HashSet<>();
 
-    public MuSigCreateOfferPaymentMethodsView(MuSigCreateOfferPaymentMethodsModel model, MuSigCreateOfferPaymentMethodsController controller) {
+    public MuSigCreateOfferPaymentMethodsView(MuSigCreateOfferPaymentMethodsModel model,
+                                              MuSigCreateOfferPaymentMethodsController controller) {
         super(new VBox(), model, controller);
 
         root.setAlignment(Pos.CENTER);
@@ -73,7 +78,6 @@ public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOf
         muSigCreateOfferAddCustomPaymentMethodBox = new MuSigCreateOfferAddCustomPaymentMethodBox();
 
 
-
         VBox vBox = new VBox(20, subtitleLabel, nonFoundLabel, gridPane);
         vBox.setAlignment(Pos.CENTER);
 
@@ -81,10 +85,7 @@ public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOf
         VBox.setMargin(gridPane, new Insets(0, 60, 0, 60));
         root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, Spacer.fillVBox(), vBox, Spacer.fillVBox());
 
-        paymentMethodListener = c -> {
-            c.next();
-            setUpAndFillPaymentMethods();
-        };
+        paymentMethodListener = c -> setUpAndFillPaymentMethods();
     }
 
     @Override
@@ -122,12 +123,19 @@ public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOf
 
         muSigCreateOfferAddCustomPaymentMethodBox.getAddIconButton().setOnAction(null);
         muSigCreateOfferAddCustomPaymentMethodBox.dispose();
+
+        closeIcons.forEach(imageView -> imageView.setOnMousePressed(null));
+        closeIcons.clear();
+
         root.setOnMousePressed(null);
     }
 
     private void setUpAndFillPaymentMethods() {
+        closeIcons.forEach(imageView -> imageView.setOnMousePressed(null));
+        closeIcons.clear();
         gridPane.getChildren().clear();
         gridPane.getColumnConstraints().clear();
+
         int paymentMethodsCount = model.getSortedPaymentMethods().size();
         int numColumns = paymentMethodsCount < 10 ? 3 : 4;
         GridPaneUtil.setGridPaneMultiColumnsConstraints(gridPane, numColumns);
@@ -158,6 +166,7 @@ public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOf
                             customMethod -> {
                                 ImageView closeIcon = chipButton.setRightIcon("remove-white");
                                 closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(paymentMethod));
+                                closeIcons.add(closeIcon);
                                 StackPane icon = BisqEasyViewUtils.getCustomPaymentMethodIcon(customMethod.getDisplayString());
                                 chipButton.setLeftIcon(icon);
                             },

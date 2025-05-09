@@ -116,13 +116,6 @@ public class MarketRepository {
     public static List<Market> getAllNonXMRCryptoCurrencyMarkets() {
         List<CryptoCurrency> allCurrencies = CryptoCurrencyRepository.getALL_CURRENCIES();
         return allCurrencies.stream()
-                .filter(currency -> {
-                    var ee = CryptoCurrencyRepository.getALL_CURRENCIES();
-                    if (currency == null) {
-                        log.error("");
-                    }
-                    return true;
-                })
                 .filter(currency -> !currency.equals(CryptoCurrencyRepository.BITCOIN))
                 .filter(currency -> !currency.equals(CryptoCurrencyRepository.XMR))
                 .map(currency -> new Market(currency.getCode(), "BTC", currency.getName(), "Bitcoin"))

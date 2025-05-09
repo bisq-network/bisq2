@@ -36,7 +36,7 @@ public class MuSigOfferbookBtcView extends MuSigOfferbookView<MuSigOfferbookBtcM
 
             @Override
             public Market fromString(String string) {
-                return null;
+                throw new UnsupportedOperationException("Conversion from String to Market is not supported");
             }
         };
     }

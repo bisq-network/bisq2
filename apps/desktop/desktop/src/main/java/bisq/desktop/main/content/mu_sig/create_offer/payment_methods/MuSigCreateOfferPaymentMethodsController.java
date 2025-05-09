@@ -41,7 +41,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 
 @Slf4j
@@ -113,7 +112,7 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
         model.getMarket().set(market);
         model.getSelectedPaymentMethods().clear();
         model.getPaymentMethods().setAll(FiatPaymentMethodUtil.getPaymentMethods(market.getQuoteCurrencyCode()));
-      //  model.getPaymentMethods().addAll(StablecoinPaymentMethodUtil.getPaymentMethods(market.getQuoteCurrencyCode()));
+        //  model.getPaymentMethods().addAll(StablecoinPaymentMethodUtil.getPaymentMethods(market.getQuoteCurrencyCode()));
         model.getPaymentMethods().addAll(model.getAddedCustomPaymentMethods());
         model.getIsPaymentMethodsEmpty().set(model.getPaymentMethods().isEmpty());
     }
@@ -143,7 +142,7 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
                     }
 
                     //todo
-                   // Optional<StablecoinPaymentMethod> stablecoinPaymentMethod = StablecoinPaymentMethodUtil.findPaymentMethod(name);
+                    // Optional<StablecoinPaymentMethod> stablecoinPaymentMethod = StablecoinPaymentMethodUtil.findPaymentMethod(name);
                     FiatPaymentMethod paymentMethod;
                     paymentMethod = FiatPaymentMethodUtil.getPaymentMethod(name);
                   /*  if (stablecoinPaymentMethod.isEmpty()) {
@@ -239,7 +238,9 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
     }
 
     private boolean isPredefinedPaymentMethodsContainName(String name) {
-        return new HashSet<>(PaymentMethodUtil.getPaymentMethodNames(model.getPaymentMethods())).contains(name);
+        return model.getPaymentMethods().stream()
+                .map(PaymentMethod::getName)
+                .anyMatch(e -> e.equals(name));
     }
 
     void onRemoveCustomMethod(FiatPaymentMethod paymentMethod) {
@@ -262,7 +263,8 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
         // To ensure backwards compatibility we need to drop custom payment methods if the user has more than 3,
         // which is the max allowed number of custom payment methods per market
         while (model.getAddedCustomPaymentMethods().size() > MAX_ALLOWED_CUSTOM_PAYMENT_METHODS) {
-            model.getAddedCustomPaymentMethods().remove(model.getAddedCustomPaymentMethods().size() - 1);
+            FiatPaymentMethod toRemove = model.getAddedCustomPaymentMethods().remove(model.getAddedCustomPaymentMethods().size() - 1);
+            onRemoveCustomMethod(toRemove);
         }
     }
 

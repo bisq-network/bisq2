@@ -117,7 +117,7 @@ public class SellerState3a extends BaseState {
 
             model.setBitcoinPaymentData(model.getBisqEasyTrade().getBitcoinPaymentData().get());
             double factor = 2.5;
-            if (paymentRail == BitcoinPaymentRail.MAIN_CHAIN) {
+            if (paymentRail.equals(BitcoinPaymentRail.MAIN_CHAIN)) {
                 // Typical bitcoin address require size of 29 or a multiple of it
                 model.setSmallQrCodeSize(116); //233
                 model.getBtcSentButtonDisabled().bind(model.getPaymentProof().isEmpty());
@@ -151,7 +151,7 @@ public class SellerState3a extends BaseState {
 
         private void onConfirmedBtcSent() {
             BitcoinPaymentRail paymentRail = getPaymentRail();
-            boolean isMainChain = paymentRail == BitcoinPaymentRail.MAIN_CHAIN;
+            boolean isMainChain = paymentRail.equals(BitcoinPaymentRail.MAIN_CHAIN);
             // model.getPaymentProof().get() can be null (default) or empty (if user has edited and cleared input)
             Optional<String> paymentProof = StringUtils.toOptional(model.getPaymentProof().get());
             boolean isValid;

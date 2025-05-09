@@ -41,7 +41,5 @@ public class MuSigTakeOfferPaymentModel implements Model {
     @Setter
     private String headline;
     @Setter
-    private String fiatSubtitle;
-    @Setter
-    private String bitcoinSubtitle;
+    private String subtitle;
 }

@@ -24,6 +24,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @ToString(callSuper = true)
@@ -36,6 +37,7 @@ public class StablecoinPaymentMethod extends NationalCurrencyPaymentMethod<Stabl
 
     public static StablecoinPaymentMethod fromCustomName(String customName) {
         // StablecoinPaymentMethod does not support custom paymentRails
+        //TODO can be removed once stable coin domain is completed and confirmed that this is not needed
         return null;
     }
 
@@ -54,7 +56,10 @@ public class StablecoinPaymentMethod extends NationalCurrencyPaymentMethod<Stabl
     }
 
     public static StablecoinPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
-        return StablecoinPaymentMethodUtil.getPaymentMethod(proto.getName());
+        return  Optional.ofNullable(
+                        StablecoinPaymentMethodUtil.getPaymentMethod(proto.getName()))
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Unknown stable-coin payment method: " + proto.getName()));
     }
 
     @Override

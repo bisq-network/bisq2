@@ -91,7 +91,6 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
 
     public static PaymentMethodSpec<?> fromProto(bisq.offer.protobuf.PaymentMethodSpec proto) {
         return switch (proto.getMessageCase()) {
-           // case FIATCURRENCY -> FiatCurrency.fromProto(proto);
             case BITCOINPAYMENTMETHODSPEC -> BitcoinPaymentMethodSpec.fromProto(proto);
             case FIATPAYMENTMETHODSPEC -> FiatPaymentMethodSpec.fromProto(proto);
             case STABLECOINPAYMENTMETHODSPEC -> StablecoinPaymentMethodSpec.fromProto(proto);
