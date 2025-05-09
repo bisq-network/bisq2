@@ -42,6 +42,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,17 +55,16 @@ public class Carousel extends BorderPane {
     private final BooleanProperty showBottomDots = new SimpleBooleanProperty(true);
     @Getter
     private final BooleanProperty showArrows = new SimpleBooleanProperty(true);
-    private final StackPane itemStackPane;
-    private final Button leftArrowButton;
-    private final Button rightArrowButton;
     @Getter
     private final HBox indicatorsHBox;
-
     @Setter
     private int transitionDuration = 400;
     @Setter
     private int displayDuration = 3000;
-
+    private final StackPane itemStackPane;
+    private final Button leftArrowButton;
+    private final Button rightArrowButton;
+    @Nullable
     private UIScheduler transitionScheduler;
     private boolean isTransitioning = false;
     private Node currentNode;
@@ -80,21 +80,15 @@ public class Carousel extends BorderPane {
         getStyleClass().add("carousel");
 
         Rectangle clipRectangle = new Rectangle();
-
         itemStackPane = new StackPane();
         itemStackPane.getStyleClass().add("carousel-item-container");
-
-        clipRectangle.widthProperty().bind(itemStackPane.widthProperty());
-        clipRectangle.heightProperty().bind(itemStackPane.heightProperty());
         itemStackPane.setClip(clipRectangle);
 
         leftArrowButton = new Button("❮");
         leftArrowButton.getStyleClass().addAll("carousel-nav-arrow");
-        leftArrowButton.setOnAction(e -> previous());
 
         rightArrowButton = new Button("❯");
         rightArrowButton.getStyleClass().addAll("carousel-nav-arrow");
-        rightArrowButton.setOnAction(e -> next());
 
         indicatorsHBox = new HBox(6);
         indicatorsHBox.setAlignment(Pos.CENTER);
@@ -111,6 +105,18 @@ public class Carousel extends BorderPane {
         BorderPane.setAlignment(leftArrowButton, Pos.CENTER);
         BorderPane.setAlignment(rightArrowButton, Pos.CENTER);
 
+        if (!items.isEmpty()) {
+            this.items.addAll(items);
+        }
+    }
+
+    public void initialize() {
+        Rectangle clipRectangle = (Rectangle) itemStackPane.getClip();
+        if (clipRectangle != null) {
+            clipRectangle.widthProperty().bind(itemStackPane.widthProperty());
+            clipRectangle.heightProperty().bind(itemStackPane.heightProperty());
+        }
+
         indicatorsHBox.visibleProperty().bind(showBottomDots);
         indicatorsHBox.managedProperty().bind(showBottomDots);
 
@@ -119,11 +125,56 @@ public class Carousel extends BorderPane {
         rightArrowButton.visibleProperty().bind(showArrows);
         rightArrowButton.managedProperty().bind(showArrows);
 
+        leftArrowButton.setOnAction(e -> previous());
+        rightArrowButton.setOnAction(e -> next());
+
+        currentIndex.addListener(currentIndexListener);
+
         if (!items.isEmpty()) {
-            for (Node item : items) {
-                addItem(item);
+            setupInitialItem();
+            updateIndicators();
+            updateArrowVisibility();
+        }
+    }
+
+    public void dispose() {
+        stop();
+
+        if (transitionScheduler != null) {
+            transitionScheduler.stop();
+            transitionScheduler = null;
+        }
+
+        currentIndex.removeListener(currentIndexListener);
+
+        Rectangle clip = (Rectangle) itemStackPane.getClip();
+        if (clip != null) {
+            clip.widthProperty().unbind();
+            clip.heightProperty().unbind();
+        }
+
+        indicatorsHBox.visibleProperty().unbind();
+        indicatorsHBox.managedProperty().unbind();
+
+        leftArrowButton.visibleProperty().unbind();
+        leftArrowButton.managedProperty().unbind();
+        rightArrowButton.visibleProperty().unbind();
+        rightArrowButton.managedProperty().unbind();
+
+        leftArrowButton.setOnAction(null);
+        rightArrowButton.setOnAction(null);
+
+        for (Node dot : indicatorsHBox.getChildren()) {
+            if (dot instanceof StackPane) {
+                dot.setOnMouseClicked(null);
             }
         }
+
+        indicatorsHBox.getChildren().clear();
+        itemStackPane.getChildren().clear();
+
+        currentNode = null;
+        nextNode = null;
     }
 
     public void addItem(Node item) {
@@ -176,8 +227,6 @@ public class Carousel extends BorderPane {
         if (items.size() <= 1) {
             return;
         }
-        currentIndex.removeListener(currentIndexListener);
-        currentIndex.addListener(currentIndexListener);
         isPlaying.set(true);
         scheduleNextTransition();
     }
@@ -187,10 +236,7 @@ public class Carousel extends BorderPane {
 
         if (transitionScheduler != null) {
             transitionScheduler.stop();
-            transitionScheduler = null;
         }
-
-        currentIndex.removeListener(currentIndexListener);
     }
 
     public void next() {

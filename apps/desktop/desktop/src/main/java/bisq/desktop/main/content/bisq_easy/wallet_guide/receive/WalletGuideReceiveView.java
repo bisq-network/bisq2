@@ -74,30 +74,18 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
         ImageView image1 = ImageUtil.getImageViewById("blue-wallet-tx");
         ImageView image2 = ImageUtil.getImageViewById("blue-wallet-qr");
 
-        double imageWidth = 250;
-        double imageHeight = 430;
-
-        image1.setFitWidth(imageWidth);
-        image1.setFitHeight(imageHeight);
-        image1.setPreserveRatio(true);
-
-        image2.setFitWidth(imageWidth);
-        image2.setFitHeight(imageHeight);
-        image2.setPreserveRatio(true);
+        configureImage(image1, 250, 430);
+        configureImage(image2, 250, 430);
 
         imageCarousel = new Carousel();
-        imageCarousel.setTransitionDuration(400);
-        imageCarousel.setDisplayDuration(3000);
         imageCarousel.addItem(image1);
         imageCarousel.addItem(image2);
 
-        VBox carouselContainer = new VBox();
-        carouselContainer.setAlignment(Pos.CENTER);
-        carouselContainer.getStyleClass().add("carousel-container");
-        carouselContainer.getChildren().add(imageCarousel);
-        carouselContainer.setPadding(new Insets(10, 0, 0, 0));
-
-        root.getChildren().addAll(vBox, carouselContainer);
+        root.getChildren().addAll(vBox,
+                new VBox(10, imageCarousel) {{
+                    setAlignment(Pos.CENTER);
+                    getStyleClass().add("carousel-container");
+                }});
         HBox.setHgrow(vBox, Priority.ALWAYS);
         root.setAlignment(Pos.TOP_LEFT);
     }
@@ -109,6 +97,7 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
         link1.setOnAction(e -> controller.onOpenLink1());
         link2.setOnAction(e -> controller.onOpenLink2());
 
+        imageCarousel.initialize();
         imageCarousel.start();
     }
 
@@ -119,6 +108,12 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
         link1.setOnAction(null);
         link2.setOnAction(null);
 
-        imageCarousel.stop();
+        imageCarousel.dispose();
+    }
+
+    private void configureImage(ImageView image, double width, double height) {
+        image.setFitWidth(width);
+        image.setFitHeight(height);
+        image.setPreserveRatio(true);
     }
 }
