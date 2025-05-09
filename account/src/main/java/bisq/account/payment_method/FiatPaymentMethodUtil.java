@@ -18,15 +18,30 @@
 package bisq.account.payment_method;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class FiatPaymentMethodUtil {
+    public static Optional<FiatPaymentMethod> findPaymentMethod(String name) {
+        try {
+            FiatPaymentRail paymentRail = FiatPaymentRail.valueOf(name);
+            FiatPaymentMethod paymentMethod = FiatPaymentMethod.fromPaymentRail(paymentRail);
+            if (!paymentMethod.isCustomPaymentMethod()) {
+                return Optional.of(paymentMethod);
+            } else {
+                return Optional.empty();
+            }
+        } catch (Throwable ignore) {
+            return Optional.empty();
+        }
+    }
+    
     public static FiatPaymentMethod getPaymentMethod(String name) {
         try {
-            FiatPaymentRail fiatPaymentRail = FiatPaymentRail.valueOf(name);
-            FiatPaymentMethod fiatPaymentMethod = FiatPaymentMethod.fromPaymentRail(fiatPaymentRail);
-            if (!fiatPaymentMethod.isCustomPaymentMethod()) {
-                return fiatPaymentMethod;
+            FiatPaymentRail paymentRail = FiatPaymentRail.valueOf(name);
+            FiatPaymentMethod paymentMethod = FiatPaymentMethod.fromPaymentRail(paymentRail);
+            if (!paymentMethod.isCustomPaymentMethod()) {
+                return paymentMethod;
             }
         } catch (Throwable ignore) {
         }

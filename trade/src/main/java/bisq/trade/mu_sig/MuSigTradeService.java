@@ -20,12 +20,15 @@ package bisq.trade.mu_sig;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.platform.Version;
+import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.identity.Identity;
@@ -35,7 +38,6 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.DbSubDirectory;
@@ -47,8 +49,8 @@ import bisq.trade.Trade;
 import bisq.trade.mu_sig.events.MuSigTradeEvent;
 import bisq.trade.mu_sig.events.buyer_as_taker.MuSigPaymentInitiatedEvent;
 import bisq.trade.mu_sig.events.buyer_as_taker.MuSigTakeOfferEvent;
+import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
 import bisq.trade.mu_sig.messages.network.MuSigTradeMessage;
-import bisq.trade.mu_sig.messages.network.not_used_yet.MuSigTakeOfferRequest;
 import bisq.trade.mu_sig.protocol.MuSigBuyerAsTakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigProtocol;
 import bisq.trade.mu_sig.protocol.MuSigSellerAsMakerProtocol;
@@ -71,6 +73,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -84,6 +87,8 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
     private final SettingsService settingsService;
     private final BannedUserService bannedUserService;
     private final AlertService alertService;
+    private final MuSigOpenTradeChannelService muSigOpenTradeChannelService;
+    private ExecutorService musigGrpcExecutorService;
 
     @Getter
     private final MuSigTradeStore persistableStore = new MuSigTradeStore();
@@ -112,6 +117,7 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
         settingsService = serviceProvider.getSettingsService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         alertService = serviceProvider.getBondedRolesService().getAlertService();
+        muSigOpenTradeChannelService = serviceProvider.getChatService().getMuSigOpenTradeChannelService();
 
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
@@ -129,18 +135,24 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
                 .forEach(this::onMessage);
         networkService.addConfidentialMessageListener(this);
 
-        //todo add host/port to config
-        grpcChannel = Grpc.newChannelBuilderForAddress(
-                "127.0.0.1",
-                50051,
-                InsecureChannelCredentials.create()
-        ).build();
+        musigGrpcExecutorService = ExecutorFactory.newSingleThreadExecutor("musigGrpcExecutorService");
+        musigGrpcExecutorService.submit(() -> {
+            //todo add host/port to config
+            grpcChannel = Grpc.newChannelBuilderForAddress(
+                    "127.0.0.1",
+                    50051,
+                    InsecureChannelCredentials.create()
+            ).build();
 
-        try {
-            musigStub = MusigGrpc.newBlockingStub(grpcChannel);
-        } finally {
-            grpcChannel.shutdown();
-        }
+            try {
+                musigStub = MusigGrpc.newBlockingStub(grpcChannel);
+            } catch (Exception e) {
+                log.error("Error at setting up MusigGrpc client", e);
+                grpcChannel.shutdown();
+                grpcChannel = null;
+                musigStub = null;
+            }
+        });
 
         authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
             @Override
@@ -199,6 +211,10 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
             numDaysAfterRedactingTradeDataScheduler.stop();
             numDaysAfterRedactingTradeDataScheduler = null;
         }
+        if (musigGrpcExecutorService != null) {
+            ExecutorFactory.shutdownAndAwaitTermination(musigGrpcExecutorService);
+            musigGrpcExecutorService = null;
+        }
         if (grpcChannel != null) {
             grpcChannel.shutdown();
             grpcChannel = null;
@@ -215,6 +231,8 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
 
         return CompletableFuture.completedFuture(true);
     }
+
+
     /* --------------------------------------------------------------------- */
     // MessageListener
     /* --------------------------------------------------------------------- */
@@ -225,13 +243,13 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
             verifyTradingNotOnHalt();
             verifyMinVersionForTrading();
 
-            if (bannedUserService.isNetworkIdBanned(muSigTradeMessage.getSender())) {
+            if (bannedUserService.isUserProfileBanned(muSigTradeMessage.getSender())) {
                 log.warn("Message ignored as sender is banned");
                 return;
             }
 
-            if (muSigTradeMessage instanceof MuSigTakeOfferRequest) {
-                handleMuSigTakeOfferMessage((MuSigTakeOfferRequest) muSigTradeMessage);
+            if (muSigTradeMessage instanceof MuSigSetupTradeMessage_A) {
+                handleMuSigTakeOfferMessage((MuSigSetupTradeMessage_A) muSigTradeMessage);
             } else {
                 handleMuSigTradeMessage(muSigTradeMessage);
             }
@@ -243,33 +261,38 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
     // Message event
     /* --------------------------------------------------------------------- */
 
-    private void handleMuSigTakeOfferMessage(MuSigTakeOfferRequest message) {
-        MuSigContract MuSigContract = message.getMuSigContract();
-        MuSigProtocol protocol = createProtocol(MuSigContract, message.getSender(), message.getReceiver());
-        protocol.handle(message);
-        persist();
+    private void handleMuSigTakeOfferMessage(MuSigSetupTradeMessage_A message) {
+        MuSigContract muSigContract = message.getContract();
+        MuSigProtocol protocol = createProtocol(muSigContract, message.getSender(), message.getReceiver());
 
-        if (!pendingMessages.isEmpty()) {
-            log.info("We have pendingMessages. We try to re-process them now.");
-            pendingMessages.forEach(this::handleMuSigTradeMessage);
-        }
+        CompletableFuture.runAsync(() -> {
+            protocol.handle(message);
+            persist();
+
+            if (!pendingMessages.isEmpty()) {
+                log.info("We have pendingMessages. We try to re-process them now.");
+                pendingMessages.forEach(this::handleMuSigTradeMessage);
+            }
+        });
     }
 
     private void handleMuSigTradeMessage(MuSigTradeMessage message) {
         String tradeId = message.getTradeId();
         findProtocol(tradeId).ifPresentOrElse(protocol -> {
-                    protocol.handle(message);
-                    persist();
+                    CompletableFuture.runAsync(() -> {
+                        protocol.handle(message);
+                        persist();
 
-                    if (pendingMessages.contains(message)) {
-                        log.info("We remove message {} from pendingMessages.", message);
-                        pendingMessages.remove(message);
-                    }
+                        if (pendingMessages.contains(message)) {
+                            log.info("We remove message {} from pendingMessages.", message);
+                            pendingMessages.remove(message);
+                        }
 
-                    if (!pendingMessages.isEmpty()) {
-                        log.info("We have pendingMessages. We try to re-process them now.");
-                        pendingMessages.forEach(this::handleMuSigTradeMessage);
-                    }
+                        if (!pendingMessages.isEmpty()) {
+                            log.info("We have pendingMessages. We try to re-process them now.");
+                            pendingMessages.forEach(this::handleMuSigTradeMessage);
+                        }
+                    });
                 },
                 () -> {
                     log.info("Protocol with tradeId {} not found. We add the message to pendingMessages for " +
@@ -287,7 +310,6 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
                                              MuSigOffer muSigOffer,
                                              Monetary baseSideAmount,
                                              Monetary quoteSideAmount,
-                                             BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
                                              FiatPaymentMethodSpec fiatPaymentMethodSpec,
                                              Optional<UserProfile> mediator,
                                              PriceSpec priceSpec,
@@ -302,7 +324,6 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
                 takerNetworkId,
                 baseSideAmount.getValue(),
                 quoteSideAmount.getValue(),
-                bitcoinPaymentMethodSpec,
                 fiatPaymentMethodSpec,
                 mediator,
                 priceSpec,
@@ -317,6 +338,10 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
         persistableStore.addTrade(muSigTrade);
 
         return createAndAddTradeProtocol(muSigTrade);
+    }
+
+    public Optional<MuSigOpenTradeChannel> findMuSigOpenTradeChannel(String tradeId) {
+        return muSigOpenTradeChannelService.findChannelByTradeId(tradeId);
     }
 
     public void takeOffer(MuSigTrade trade) {
@@ -348,8 +373,10 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
         verifyMinVersionForTrading();
         String tradeId = trade.getId();
         findProtocol(tradeId).ifPresentOrElse(protocol -> {
-                    protocol.handle(event);
-                    persist();
+                    CompletableFuture.runAsync(() -> {
+                        protocol.handle(event);
+                        persist();
+                    });
                 },
                 () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
     }

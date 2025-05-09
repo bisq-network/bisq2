@@ -22,7 +22,15 @@ import bisq.common.locale.LocaleRepository;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Currency;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -69,6 +77,7 @@ public class FiatCurrencyRepository {
         List<String> mainCodes = new ArrayList<>(List.of("USD", "EUR", "GBP", "CAD", "AUD", "RUB", "CNY", "INR", "NGN"));
         return mainCodes.stream()
                 .map(code -> currencyByCode.get(code))
+                .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
     }
@@ -104,11 +113,11 @@ public class FiatCurrencyRepository {
         return currencyByCode.get(code);
     }
 
-    public static Optional<String> getName(String code) {
+    public static Optional<String> findName(String code) {
         return Optional.ofNullable(currencyByCode.get(code)).map(TradeCurrency::getName);
     }
 
-    public static Optional<String> getDisplayName(String code) {
+    public static Optional<String> findDisplayName(String code) {
         return Optional.ofNullable(currencyByCode.get(code)).map(TradeCurrency::getDisplayName);
     }
 

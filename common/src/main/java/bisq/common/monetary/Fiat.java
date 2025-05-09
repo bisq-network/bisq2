@@ -135,7 +135,7 @@ public final class Fiat extends Monetary {
 
     @Override
     public String getName() {
-        return FiatCurrencyRepository.getName(code).orElse(code);
+        return FiatCurrencyRepository.findName(code).orElse(code);
     }
 
     @Override

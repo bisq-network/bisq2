@@ -25,16 +25,16 @@ import bisq.contract.mu_sig.MuSigContract;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
-import bisq.trade.protobuf.MusigGrpc;
-import bisq.trade.protobuf.NonceSharesRequest;
-import bisq.trade.protobuf.PubKeySharesRequest;
-import bisq.trade.protobuf.Role;
 import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_B;
+import bisq.trade.protobuf.MusigGrpc;
+import bisq.trade.protobuf.NonceSharesRequest;
+import bisq.trade.protobuf.PubKeySharesRequest;
+import bisq.trade.protobuf.Role;
 import bisq.trade.protocol.events.TradeMessageHandler;
-import bisq.trade.protocol.events.TradeMessageSender;
+import bisq.trade.protocol.handler.TradeMessageSender;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -95,7 +95,8 @@ public class MuSigSetupTradeMessage_A_Handler extends TradeMessageHandler<MuSigT
                     trade.getPeer().getNetworkId(),
                     makersContract,
                     makersContractSignatureData,
-                    sellerPubKeyShareResponse);
+                    sellerPubKeyShareResponse,
+                    sellerNonceSharesMessage);
             sendMessage(responseMessage, serviceProvider, trade);
 
         } catch (GeneralSecurityException e) {

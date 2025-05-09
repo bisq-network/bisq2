@@ -173,7 +173,6 @@ public class MuSigCreateOfferView extends NavigationView<VBox, MuSigCreateOfferM
     }
 
     private Triple<HBox, Button, List<Label>> getProgressItems() {
-        Label directionAndMarket = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.directionAndMarket"));
         Label amountAtPrice = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.amountAndPrice.createOffer"));
         Label paymentMethods = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.paymentMethods"));
         Label review = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.review"));
@@ -188,8 +187,6 @@ public class MuSigCreateOfferView extends NavigationView<VBox, MuSigCreateOfferM
         hBox.setPadding(new Insets(0, 20, 0, 50));
 
         hBox.getChildren().addAll(Spacer.fillHBox(),
-                directionAndMarket,
-                getHLine(),
                 amountAtPrice,
                 getHLine(),
                 paymentMethods,
@@ -198,8 +195,7 @@ public class MuSigCreateOfferView extends NavigationView<VBox, MuSigCreateOfferM
                 Spacer.fillHBox(),
                 closeButton);
 
-        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(directionAndMarket, amountAtPrice,
-                paymentMethods, review)));
+        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(amountAtPrice, paymentMethods, review)));
     }
 
     private Region getHLine() {

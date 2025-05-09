@@ -17,13 +17,14 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.review;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.common.currency.Market;
+import bisq.common.currency.MarketRepository;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
+import bisq.offer.Direction;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.price.spec.PriceSpec;
-import bisq.trade.bisq_easy.BisqEasyTrade;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
@@ -36,11 +37,11 @@ import java.util.List;
 @Getter
 class MuSigCreateOfferReviewModel implements Model {
     @Setter
-    private  MuSigOffer offer;
+    private Direction direction;
     @Setter
-    private BisqEasyTrade bisqEasyTrade;
+    private Market market = MarketRepository.getDefaultBtcFiatMarket();
     @Setter
-    private BitcoinPaymentMethod takersSelectedBitcoinPaymentMethod;
+    private MuSigOffer offer;
     @Setter
     private FiatPaymentMethod takersSelectedFiatPaymentMethod;
     @Setter
@@ -58,13 +59,9 @@ class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private PriceSpec priceSpec;
     @Setter
-    private List<BitcoinPaymentMethod> bitcoinPaymentMethods;
-    @Setter
-    private List<FiatPaymentMethod> fiatPaymentMethods;
+    private List<FiatPaymentMethod> paymentMethods;
     @Setter
     private String headline;
-    @Setter
-    private String headerBitcoinPaymentMethod;
     @Setter
     private String headerFiatPaymentMethod;
     @Setter
@@ -72,13 +69,9 @@ class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private boolean isRangeAmount;
     @Setter
-    private String bitcoinPaymentMethodDescription;
+    private String paymentMethodDescription;
     @Setter
-    private String bitcoinPaymentMethod;
-    @Setter
-    private String fiatPaymentMethodDescription;
-    @Setter
-    private String fiatPaymentMethod;
+    private String paymentMethod;
     @Setter
     private String priceDescription;
     @Setter
@@ -89,9 +82,6 @@ class MuSigCreateOfferReviewModel implements Model {
     private String fee;
     @Setter
     private String feeDetails;
-    @Setter
-    private boolean feeDetailsVisible;
-    private final ObservableList<BitcoinPaymentMethod> takersBitcoinPaymentMethods = FXCollections.observableArrayList();
     private final ObservableList<FiatPaymentMethod> takersFiatPaymentMethods = FXCollections.observableArrayList();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
     @Setter
@@ -99,8 +89,6 @@ class MuSigCreateOfferReviewModel implements Model {
 
     public void reset() {
         offer = null;
-        bisqEasyTrade = null;
-        takersSelectedBitcoinPaymentMethod = null;
         takersSelectedFiatPaymentMethod = null;
         minBaseSideAmount = null;
         maxBaseSideAmount = null;
@@ -109,20 +97,16 @@ class MuSigCreateOfferReviewModel implements Model {
         maxQuoteSideAmount = null;
         fixQuoteSideAmount = null;
         priceSpec = null;
-        bitcoinPaymentMethods = null;
-        fiatPaymentMethods = null;
+        paymentMethods = null;
         headline = null;
         detailsHeadline = null;
         priceDescription = null;
         price = null;
         priceDetails = null;
-        bitcoinPaymentMethodDescription = null;
-        bitcoinPaymentMethod = null;
-        fiatPaymentMethodDescription = null;
-        fiatPaymentMethod = null;
+        paymentMethodDescription = null;
+        paymentMethod = null;
         fee = null;
         feeDetails = null;
-        takersBitcoinPaymentMethods.clear();
         takersFiatPaymentMethods.clear();
         showCreateOfferSuccess.set(false);
         marketPrice = 0;

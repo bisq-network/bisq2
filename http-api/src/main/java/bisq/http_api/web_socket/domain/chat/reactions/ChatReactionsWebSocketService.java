@@ -31,7 +31,13 @@ import bisq.http_api.web_socket.subscription.SubscriberRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -42,7 +48,7 @@ import static bisq.http_api.web_socket.subscription.Topic.CHAT_REACTIONS;
 @Slf4j
 public class ChatReactionsWebSocketService extends BaseWebSocketService {
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
-
+    @Nullable
     private Pin channelsPin;
     private final Map<String, Pin> chatMessagesPinsByChannelId = new ConcurrentHashMap<>();
     private final Map<String, Pin> chatMessageReactionsPinsByMessageId = new ConcurrentHashMap<>();
@@ -126,6 +132,7 @@ public class ChatReactionsWebSocketService extends BaseWebSocketService {
             @Override
             public void clear() {
                 new ArrayList<>(chatMessagesPinsByChannelId.values()).forEach(Pin::unbind);
+                chatMessagesPinsByChannelId.clear();
             }
         });
         return CompletableFuture.completedFuture(true);
@@ -135,9 +142,12 @@ public class ChatReactionsWebSocketService extends BaseWebSocketService {
     public CompletableFuture<Boolean> shutdown() {
         if (channelsPin != null) {
             channelsPin.unbind();
+            channelsPin = null;
         }
         new ArrayList<>(chatMessagesPinsByChannelId.values()).forEach(Pin::unbind);
         new ArrayList<>(chatMessageReactionsPinsByMessageId.values()).forEach(Pin::unbind);
+        chatMessagesPinsByChannelId.clear();
+        chatMessageReactionsPinsByMessageId.clear();
         return CompletableFuture.completedFuture(true);
     }
 

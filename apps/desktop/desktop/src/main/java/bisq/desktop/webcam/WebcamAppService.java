@@ -26,12 +26,17 @@ import bisq.common.util.NetworkUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static bisq.desktop.webcam.WebcamAppService.State.*;
+import static bisq.desktop.webcam.WebcamAppService.State.NEW;
+import static bisq.desktop.webcam.WebcamAppService.State.RUNNING;
+import static bisq.desktop.webcam.WebcamAppService.State.STARTING;
+import static bisq.desktop.webcam.WebcamAppService.State.STOPPING;
+import static bisq.desktop.webcam.WebcamAppService.State.TERMINATED;
 import static com.google.common.base.Preconditions.checkArgument;
 
 // On MacOS one can reset the camera access permissions by `tccutil reset Camera`. This is helpful for tesing failure
@@ -44,6 +49,7 @@ public class WebcamAppService implements Service {
     private static final long HEART_BEAT_TIMEOUT = TimeUnit.SECONDS.toMillis(10);
     @Getter
     private final Observable<State> state = new Observable<>();
+    @Nullable
     private Pin qrCodePin, isShutdownSignalReceivedPin, restartSignalReceivedPin;
 
     public enum State {
@@ -82,6 +88,7 @@ public class WebcamAppService implements Service {
         stopSchedulers();
         unbind();
         qrCodeListeningServer.stopServer();
+        model.reset();
         return webcamProcessLauncher.shutdown()
                 .thenApply(terminatedGraceFully -> {
                     state.set(TERMINATED);
@@ -143,12 +150,15 @@ public class WebcamAppService implements Service {
     private void unbind() {
         if (qrCodePin != null) {
             qrCodePin.unbind();
+            qrCodePin = null;
         }
         if (isShutdownSignalReceivedPin != null) {
             isShutdownSignalReceivedPin.unbind();
+            isShutdownSignalReceivedPin = null;
         }
         if (restartSignalReceivedPin != null) {
             restartSignalReceivedPin.unbind();
+            restartSignalReceivedPin = null;
         }
     }
 

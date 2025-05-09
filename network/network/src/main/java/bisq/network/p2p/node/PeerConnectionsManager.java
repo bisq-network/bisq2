@@ -30,7 +30,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.spi.SelectorProvider;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -76,7 +80,9 @@ public class PeerConnectionsManager {
 
     public void shutdown() {
         server.ifPresent(ServerChannel::shutdown);
+        server = Optional.empty();
         outboundConnectionMultiplexer.ifPresent(OutboundConnectionMultiplexer::shutdown);
+        outboundConnectionMultiplexer = Optional.empty();
     }
 
     public Optional<Address> findMyAddress() {

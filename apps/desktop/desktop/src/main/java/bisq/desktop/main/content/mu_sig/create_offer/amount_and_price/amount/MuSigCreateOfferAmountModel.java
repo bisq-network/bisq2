@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.amount_and_price.amount;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
@@ -44,11 +43,8 @@ public class MuSigCreateOfferAmountModel implements Model {
     @Setter
     private Direction direction;
     @Setter
-    private Market market = MarketRepository.getDefault();
-    @Setter
-    private List<BitcoinPaymentMethod> bitcoinPaymentMethods = new ArrayList<>();
-    @Setter
-    private List<FiatPaymentMethod> fiatPaymentMethods = new ArrayList<>();
+    private Market market = MarketRepository.getDefaultBtcFiatMarket();
+    private final List<FiatPaymentMethod> paymentMethods = new ArrayList<>();
     private final StringProperty amountLimitInfo = new SimpleStringProperty();
     private final StringProperty amountLimitInfoOverlayInfo = new SimpleStringProperty();
     private final BooleanProperty shouldShowAmountLimitInfo = new SimpleBooleanProperty();
@@ -74,9 +70,8 @@ public class MuSigCreateOfferAmountModel implements Model {
 
     public void reset() {
         direction = null;
-        market = MarketRepository.getDefault();
-        bitcoinPaymentMethods = new ArrayList<>();
-        fiatPaymentMethods = new ArrayList<>();
+        market = MarketRepository.getDefaultBtcFiatMarket();
+        paymentMethods.clear();
         amountLimitInfo.set(null);
         amountLimitInfoOverlayInfo.set(null);
         shouldShowAmountLimitInfo.set(false);

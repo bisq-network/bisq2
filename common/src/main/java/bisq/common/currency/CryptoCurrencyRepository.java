@@ -19,80 +19,53 @@ package bisq.common.currency;
 
 import lombok.Getter;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CryptoCurrencyRepository {
     public static final CryptoCurrency BITCOIN = new CryptoCurrency("BTC", "Bitcoin");
+    public static final CryptoCurrency XMR = new CryptoCurrency("XMR", "Monero");
+    public static final CryptoCurrency L_BTC = new CryptoCurrency("L-BTC", "Liquid-Bitcoin");
+
     @Getter
-    private static final Map<String, String> nameByCode = new HashMap<>();
+    private static final Map<String, String> NAME_BY_CODE = new HashMap<>();
+
     @Getter
-    private static final Map<String, CryptoCurrency> currencyByCode = new HashMap<>();
+    private static final Map<String, CryptoCurrency> MAJOR_CURRENCIES_BY_CODE = Map.of(
+            "XMR", XMR,
+            "L-BTC", L_BTC,
+            "ETH", new CryptoCurrency("ETH", "Ethereum")
+    );
     @Getter
-    private static final List<CryptoCurrency> majorCurrencies;
+    private static final Map<String, CryptoCurrency> MINOR_CURRENCIES_BY_CODE = Map.of(
+            "GRIN", new CryptoCurrency("GRIN", "Grin"),
+            "ZEC", new CryptoCurrency("ZEC", "Zcash")
+    );
     @Getter
-    private static final List<CryptoCurrency> minorCurrencies;
+    private static final Map<String, CryptoCurrency> ALL_CURRENCIES_BY_CODE = Stream.concat(
+                    MAJOR_CURRENCIES_BY_CODE.entrySet().stream(),
+                    MINOR_CURRENCIES_BY_CODE.entrySet().stream())
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     @Getter
-    private static final List<CryptoCurrency> allCurrencies;
-    @Getter
-    private static final CryptoCurrency defaultCurrency;
+    private static final List<CryptoCurrency> ALL_CURRENCIES = ALL_CURRENCIES_BY_CODE.values().stream().toList();
 
-    static {
-        currencyByCode.put("BTC", BITCOIN);
-        currencyByCode.put("XMR", new CryptoCurrency("XMR", "Monero"));
-        currencyByCode.put("L-BTC", new CryptoCurrency("L-BTC", "Liquid-Bitcoin"));
-        currencyByCode.put("USDT", new CryptoCurrency("USDT", "USD-Tether"));
-        currencyByCode.put("GRIN", new CryptoCurrency("GRIN", "Grin"));
-        currencyByCode.put("ZEC", new CryptoCurrency("ZEC", "Zcash"));
-        currencyByCode.put("ETH", new CryptoCurrency("ETH", "Ethereum"));
-
-        defaultCurrency = BITCOIN;
-
-        majorCurrencies = initMajorCurrencies();
-        majorCurrencies.remove(defaultCurrency);
-
-        minorCurrencies = new ArrayList<>(currencyByCode.values());
-        minorCurrencies.remove(defaultCurrency);
-        minorCurrencies.removeAll(majorCurrencies);
-        minorCurrencies.sort(Comparator.comparing(TradeCurrency::getDisplayNameAndCode));
-
-        allCurrencies = new ArrayList<>();
-        allCurrencies.add(defaultCurrency);
-        allCurrencies.addAll(majorCurrencies);
-        allCurrencies.addAll(minorCurrencies);
-
-        fillNameByCodeMap();
-
-        nameByCode.forEach((code, name) -> {
-            CryptoCurrency cryptoCurrency = new CryptoCurrency(code, name);
-            currencyByCode.put(code, cryptoCurrency);
-            if (!defaultCurrency.equals(cryptoCurrency) &&
-                    !majorCurrencies.contains(cryptoCurrency) &&
-                    !minorCurrencies.contains(cryptoCurrency)) {
-                minorCurrencies.add(cryptoCurrency);
-            }
-        });
-    }
-
-    private static List<CryptoCurrency> initMajorCurrencies() {
-        List<String> mainCodes = new ArrayList<>(List.of("BTC", "XMR", "L-BTC", "USDT", "GRIN", "ZEC", "ETH"));
-        return mainCodes.stream()
-                .map(currencyByCode::get)
-                .distinct()
-                .collect(Collectors.toList());
-    }
-
-    public static Optional<String> getName(String code) {
-        return Optional.ofNullable(currencyByCode.get(code)).map(TradeCurrency::getName);
-    }
-
-
-    //todo (deferred) fill with major coins
-    private static void fillNameByCodeMap() {
-        nameByCode.put("ALGO", "Algorand");
+    public static Optional<String> findName(String code) {
+        return find(code).map(CryptoCurrency::getName);
     }
 
     public static Optional<CryptoCurrency> find(String code) {
-        return Optional.ofNullable(currencyByCode.get(code));
+        return Optional.ofNullable(ALL_CURRENCIES_BY_CODE.get(code));
+    }
+
+    public static List<CryptoCurrency> getMajorCurrencies() {
+        return MAJOR_CURRENCIES_BY_CODE.values().stream().toList();
+    }
+
+    public static List<CryptoCurrency> getMinorCurrencies() {
+        return MINOR_CURRENCIES_BY_CODE.values().stream().toList();
     }
 }

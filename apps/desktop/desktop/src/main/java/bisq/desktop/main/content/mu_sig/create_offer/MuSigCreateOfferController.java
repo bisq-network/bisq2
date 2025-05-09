@@ -17,25 +17,29 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.NationalCurrencyPaymentMethod;
+import bisq.common.currency.Market;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.mu_sig.create_offer.amount_and_price.MuSigCreateOfferAmountAndPriceController;
-import bisq.desktop.main.content.mu_sig.create_offer.direction_and_market.MuSigCreateOfferDirectionAndMarketController;
 import bisq.desktop.main.content.mu_sig.create_offer.payment_methods.MuSigCreateOfferPaymentMethodsController;
 import bisq.desktop.main.content.mu_sig.create_offer.review.MuSigCreateOfferReviewController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -44,7 +48,19 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public class MuSigCreateOfferController extends NavigationController {
+public class MuSigCreateOfferController extends NavigationController implements InitWithDataController<MuSigCreateOfferController.InitData> {
+    @Getter
+    @EqualsAndHashCode
+    @ToString
+    public static class InitData {
+        private final Direction direction;
+        private final Market market;
+
+        public InitData(Direction direction, Market market) {
+            this.direction = direction;
+            this.market = market;
+        }
+    }
 
     private final ServiceProvider serviceProvider;
     private final OverlayController overlayController;
@@ -52,14 +68,12 @@ public class MuSigCreateOfferController extends NavigationController {
     private final MuSigCreateOfferModel model;
     @Getter
     private final MuSigCreateOfferView view;
-    private final MuSigCreateOfferDirectionAndMarketController muSigCreateOfferDirectionAndMarketController;
     private final MuSigCreateOfferAmountAndPriceController muSigCreateOfferAmountAndPriceController;
     private final MuSigCreateOfferPaymentMethodsController muSigCreateOfferPaymentMethodsController;
     private final MuSigCreateOfferReviewController muSigCreateOfferReviewController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
-    private final ListChangeListener<BitcoinPaymentMethod> bitcoinPaymentMethodsListener;
-    private final ListChangeListener<FiatPaymentMethod> fiatPaymentMethodsListener;
-    private Subscription directionPin, marketPin, priceSpecPin;
+    private final ListChangeListener<NationalCurrencyPaymentMethod<?>> paymentMethodsListener;
+    private Subscription priceSpecPin;
 
     public MuSigCreateOfferController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MU_SIG_CREATE_OFFER);
@@ -70,10 +84,6 @@ public class MuSigCreateOfferController extends NavigationController {
         model = new MuSigCreateOfferModel();
         view = new MuSigCreateOfferView(model, this);
 
-        muSigCreateOfferDirectionAndMarketController = new MuSigCreateOfferDirectionAndMarketController(serviceProvider,
-                this::onNext,
-                this::setMainButtonsVisibleState,
-                this::closeAndNavigateTo);
         muSigCreateOfferAmountAndPriceController = new MuSigCreateOfferAmountAndPriceController(serviceProvider,
                 view.getRoot(),
                 this::setMainButtonsVisibleState,
@@ -83,14 +93,22 @@ public class MuSigCreateOfferController extends NavigationController {
                 this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo);
 
-        bitcoinPaymentMethodsListener = c -> {
+        paymentMethodsListener = c -> {
             c.next();
-            handleBitcoinPaymentMethodsUpdate();
+            handlePaymentMethodsUpdate();
         };
-        fiatPaymentMethodsListener = c -> {
-            c.next();
-            handleFiatPaymentMethodsUpdate();
-        };
+    }
+
+    @Override
+    public void initWithData(InitData data) {
+        Direction direction = data.getDirection();
+        muSigCreateOfferAmountAndPriceController.setDirection(direction);
+        muSigCreateOfferPaymentMethodsController.setDirection(direction);
+        muSigCreateOfferReviewController.setDirection(direction);
+        Market market = data.getMarket();
+        muSigCreateOfferPaymentMethodsController.setMarket(market);
+        muSigCreateOfferAmountAndPriceController.setMarket(market);
+        muSigCreateOfferReviewController.setMarket(market);
     }
 
     @Override
@@ -99,33 +117,20 @@ public class MuSigCreateOfferController extends NavigationController {
         overlayController.setEnterKeyHandler(null);
         overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
+
         model.getNextButtonDisabled().set(false);
         model.getChildTargets().clear();
         model.getChildTargets().addAll(List.of(
-                NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET,
                 NavigationTarget.MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE,
                 NavigationTarget.MU_SIG_CREATE_OFFER_PAYMENT_METHODS,
                 NavigationTarget.MU_SIG_CREATE_OFFER_REVIEW_OFFER
         ));
-        model.getSelectedChildTarget().set(NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET);
+        model.getSelectedChildTarget().set(NavigationTarget.MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE);
 
-        directionPin = EasyBind.subscribe(muSigCreateOfferDirectionAndMarketController.getDirection(), direction -> {
-            muSigCreateOfferAmountAndPriceController.setDirection(direction);
-            muSigCreateOfferPaymentMethodsController.setDirection(direction);
-        });
-        marketPin = EasyBind.subscribe(muSigCreateOfferDirectionAndMarketController.getMarket(), market -> {
-            muSigCreateOfferPaymentMethodsController.setMarket(market);
-            muSigCreateOfferAmountAndPriceController.setMarket(market);
-            updateNextButtonDisabledState();
-        });
         priceSpecPin = EasyBind.subscribe(muSigCreateOfferAmountAndPriceController.getPriceSpec(),
-                priceSpec -> {
-                    muSigCreateOfferAmountAndPriceController.updateQuoteSideAmountSpecWithPriceSpec(priceSpec);
-                });
-        handleFiatPaymentMethodsUpdate();
-        muSigCreateOfferPaymentMethodsController.getFiatPaymentMethods().addListener(fiatPaymentMethodsListener);
-        handleBitcoinPaymentMethodsUpdate();
-        muSigCreateOfferPaymentMethodsController.getBitcoinPaymentMethods().addListener(bitcoinPaymentMethodsListener);
+                muSigCreateOfferAmountAndPriceController::updateQuoteSideAmountSpecWithPriceSpec);
+        handlePaymentMethodsUpdate();
+        muSigCreateOfferPaymentMethodsController.getPaymentMethods().addListener(paymentMethodsListener);
     }
 
     @Override
@@ -133,21 +138,15 @@ public class MuSigCreateOfferController extends NavigationController {
         overlayController.setUseEscapeKeyHandler(true);
         overlayController.getApplicationRoot().removeEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
-        directionPin.unsubscribe();
-        marketPin.unsubscribe();
         priceSpecPin.unsubscribe();
-        muSigCreateOfferPaymentMethodsController.getFiatPaymentMethods().removeListener(fiatPaymentMethodsListener);
-        muSigCreateOfferPaymentMethodsController.getBitcoinPaymentMethods().removeListener(bitcoinPaymentMethodsListener);
+        muSigCreateOfferPaymentMethodsController.getPaymentMethods().removeListener(paymentMethodsListener);
     }
 
     @Override
     protected void onStartProcessNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
         if (navigationTarget == NavigationTarget.MU_SIG_CREATE_OFFER_REVIEW_OFFER) {
             muSigCreateOfferReviewController.setDataForCreateOffer(
-                    muSigCreateOfferDirectionAndMarketController.getDirection().get(),
-                    muSigCreateOfferDirectionAndMarketController.getMarket().get(),
-                    muSigCreateOfferPaymentMethodsController.getBitcoinPaymentMethods(),
-                    muSigCreateOfferPaymentMethodsController.getFiatPaymentMethods(),
+                    muSigCreateOfferPaymentMethodsController.getPaymentMethods(),
                     muSigCreateOfferAmountAndPriceController.getQuoteSideAmountSpec().get(),
                     muSigCreateOfferAmountAndPriceController.getPriceSpec().get()
             );
@@ -161,14 +160,13 @@ public class MuSigCreateOfferController extends NavigationController {
     protected void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
         model.getCloseButtonVisible().set(true);
         model.getBackButtonText().set(Res.get("action.back"));
-        model.getBackButtonVisible().set(navigationTarget != NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET);
+        model.getBackButtonVisible().set(navigationTarget != NavigationTarget.MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE);
     }
 
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET -> Optional.of(muSigCreateOfferDirectionAndMarketController);
             case MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE -> Optional.of(muSigCreateOfferAmountAndPriceController);
             case MU_SIG_CREATE_OFFER_PAYMENT_METHODS -> Optional.of(muSigCreateOfferPaymentMethodsController);
             case MU_SIG_CREATE_OFFER_REVIEW_OFFER -> Optional.of(muSigCreateOfferReviewController);
@@ -222,9 +220,6 @@ public class MuSigCreateOfferController extends NavigationController {
     }
 
     private boolean validate(boolean calledFromNext) {
-        if (model.getSelectedChildTarget().get() == NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET) {
-            return muSigCreateOfferDirectionAndMarketController.validate();
-        }
         if (model.getSelectedChildTarget().get() == NavigationTarget.MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE) {
             return muSigCreateOfferAmountAndPriceController.validate();
         }
@@ -247,7 +242,6 @@ public class MuSigCreateOfferController extends NavigationController {
     private void reset() {
         resetSelectedChildTarget();
 
-        muSigCreateOfferDirectionAndMarketController.reset();
         muSigCreateOfferAmountAndPriceController.reset();
         muSigCreateOfferPaymentMethodsController.reset();
         muSigCreateOfferReviewController.reset();
@@ -256,11 +250,15 @@ public class MuSigCreateOfferController extends NavigationController {
     }
 
     private void updateNextButtonDisabledState() {
-        if (NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET.equals(model.getSelectedChildTarget().get())) {
-            model.getNextButtonDisabled().set(muSigCreateOfferDirectionAndMarketController.getMarket().get() == null);
-        } else {
+        // TODO as UI is WIP we leave the currently not useful code here to be used maybe later for disabling next if
+        // ui input is missing.
+       /* if (NavigationTarget.BISQ_EASY_TRADE_WIZARD_DIRECTION_AND_MARKET.equals(model.getSelectedChildTarget().get())) {
+            model.getNextButtonDisabled().set(tradeWizardDirectionAndMarketController.getMarket().get() == null);
+        } else if (NavigationTarget.BISQ_EASY_TRADE_WIZARD_TAKE_OFFER_OFFER.equals(model.getSelectedChildTarget().get())) {
+            model.getNextButtonDisabled().set(tradeWizardSelectOfferController.getSelectedBisqEasyOffer().get() == null);
+        } else {*/
             model.getNextButtonDisabled().set(false);
-        }
+        // }
     }
 
     private void closeAndNavigateTo(NavigationTarget navigationTarget) {
@@ -269,20 +267,14 @@ public class MuSigCreateOfferController extends NavigationController {
     }
 
     private void setMainButtonsVisibleState(boolean value) {
-        model.getBackButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET);
+        model.getBackButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE);
         model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.MU_SIG_CREATE_OFFER_REVIEW_OFFER);
         model.getCloseButtonVisible().set(value);
     }
 
-    private void handleFiatPaymentMethodsUpdate() {
-        ObservableList<FiatPaymentMethod> fiatPaymentMethods = muSigCreateOfferPaymentMethodsController.getFiatPaymentMethods();
-        muSigCreateOfferAmountAndPriceController.setFiatPaymentMethods(fiatPaymentMethods);
-        muSigCreateOfferReviewController.setFiatPaymentMethods(fiatPaymentMethods);
-    }
-
-    private void handleBitcoinPaymentMethodsUpdate() {
-        ObservableList<BitcoinPaymentMethod> bitcoinPaymentMethods = muSigCreateOfferPaymentMethodsController.getBitcoinPaymentMethods();
-        muSigCreateOfferAmountAndPriceController.setBitcoinPaymentMethods(bitcoinPaymentMethods);
-        muSigCreateOfferReviewController.setBitcoinPaymentMethods(bitcoinPaymentMethods);
+    private void handlePaymentMethodsUpdate() {
+        ObservableList<FiatPaymentMethod> paymentMethods = muSigCreateOfferPaymentMethodsController.getPaymentMethods();
+        muSigCreateOfferAmountAndPriceController.setPaymentMethods(paymentMethods);
+        muSigCreateOfferReviewController.setPaymentMethods(paymentMethods);
     }
 }

@@ -47,8 +47,21 @@ import bisq.persistence.PersistenceClient;
 import bisq.settings.SettingsService;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
-import bisq.trade.bisq_easy.protocol.*;
-import bisq.trade.bisq_easy.protocol.events.*;
+import bisq.trade.bisq_easy.protocol.BisqEasyBuyerAsMakerProtocol;
+import bisq.trade.bisq_easy.protocol.BisqEasyBuyerAsTakerProtocol;
+import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
+import bisq.trade.bisq_easy.protocol.BisqEasySellerAsMakerProtocol;
+import bisq.trade.bisq_easy.protocol.BisqEasySellerAsTakerProtocol;
+import bisq.trade.bisq_easy.protocol.events.BisqEasyAccountDataEvent;
+import bisq.trade.bisq_easy.protocol.events.BisqEasyBtcConfirmedEvent;
+import bisq.trade.bisq_easy.protocol.events.BisqEasyCancelTradeEvent;
+import bisq.trade.bisq_easy.protocol.events.BisqEasyConfirmBtcSentEvent;
+import bisq.trade.bisq_easy.protocol.events.BisqEasyConfirmFiatReceiptEvent;
+import bisq.trade.bisq_easy.protocol.events.BisqEasyConfirmFiatSentEvent;
+import bisq.trade.bisq_easy.protocol.events.BisqEasyRejectTradeEvent;
+import bisq.trade.bisq_easy.protocol.events.BisqEasySendBtcAddressEvent;
+import bisq.trade.bisq_easy.protocol.events.BisqEasyTakeOfferEvent;
+import bisq.trade.bisq_easy.protocol.events.BisqEasyTradeEvent;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
 import bisq.user.banned.BannedUserService;
@@ -56,6 +69,7 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
@@ -85,8 +99,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     private boolean haltTrading;
     private boolean requireVersionForTrading;
     private Optional<String> minRequiredVersionForTrading = Optional.empty();
-
+    @Nullable
     private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin;
+    @Nullable
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
     private final Set<BisqEasyTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
 
@@ -187,7 +202,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
             verifyTradingNotOnHalt();
             verifyMinVersionForTrading();
 
-            if (bannedUserService.isNetworkIdBanned(bisqEasyTradeMessage.getSender())) {
+            if (bannedUserService.isUserProfileBanned(bisqEasyTradeMessage.getSender())) {
                 log.warn("Message ignored as sender is banned");
                 return;
             }

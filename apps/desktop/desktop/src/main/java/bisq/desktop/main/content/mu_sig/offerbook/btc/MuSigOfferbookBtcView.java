@@ -17,11 +17,27 @@
 
 package bisq.desktop.main.content.mu_sig.offerbook.btc;
 
+import bisq.common.currency.Market;
 import bisq.desktop.main.content.mu_sig.offerbook.MuSigOfferbookView;
+import javafx.util.StringConverter;
 
 public class MuSigOfferbookBtcView extends MuSigOfferbookView<MuSigOfferbookBtcModel, MuSigOfferbookBtcController> {
 
     public MuSigOfferbookBtcView(MuSigOfferbookBtcModel model, MuSigOfferbookBtcController controller) {
         super(model, controller);
+    }
+
+    protected StringConverter<Market> getConverter() {
+        return new StringConverter<>() {
+            @Override
+            public String toString(Market market) {
+                return market != null ? market.getQuoteCurrencyDisplayName() : "";
+            }
+
+            @Override
+            public Market fromString(String string) {
+                throw new UnsupportedOperationException("Conversion from String to Market is not supported");
+            }
+        };
     }
 }

@@ -109,6 +109,7 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
             case FIATPAYMENTMETHOD -> FiatPaymentMethod.fromProto(proto);
             case BITCOINPAYMENTMETHOD -> BitcoinPaymentMethod.fromProto(proto);
             case CRYPTOPAYMENTMETHOD -> CryptoPaymentMethod.fromProto(proto);
+            case STABLECOINPAYMENTMETHOD -> StablecoinPaymentMethod.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
@@ -118,7 +119,7 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
     public abstract List<TradeCurrency> getTradeCurrencies();
 
     public boolean isCustomPaymentMethod() {
-        return paymentRail == getCustomPaymentRail();
+        return paymentRail.equals(getCustomPaymentRail());
     }
 
     @Override

@@ -68,10 +68,10 @@ public class KeepAliveService implements Node.Listener {
     public KeepAliveService(Node node, Config config) {
         this.node = node;
         this.config = config;
-        this.node.addListener(this);
     }
 
     public void initialize() {
+        node.addListener(this);
         scheduler = Optional.of(Scheduler.run(this::sendPingIfRequired)
                 .host(this)
                 .runnableName("sendPingIfRequired")
@@ -79,7 +79,9 @@ public class KeepAliveService implements Node.Listener {
     }
 
     public void shutdown() {
+        node.removeListener(this);
         scheduler.ifPresent(Scheduler::stop);
+        scheduler = Optional.empty();
         requestHandlerMap.values().forEach(KeepAliveHandler::dispose);
         requestHandlerMap.clear();
     }

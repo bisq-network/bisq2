@@ -58,6 +58,7 @@ public class QrCodeSender {
 
     public void shutdown() {
         heartBeatScheduler.ifPresent(Scheduler::stop);
+        heartBeatScheduler = Optional.empty();
         executorService.shutdownNow();
     }
 

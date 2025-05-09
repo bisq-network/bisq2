@@ -17,10 +17,13 @@
 
 package bisq.desktop.common.standby;
 
+import bisq.common.observable.Pin;
 import bisq.common.platform.OS;
 import bisq.desktop.ServiceProvider;
 import bisq.settings.SettingsService;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 /**
  * On OSX and Windows we play a silent sound and repeat it after a delay. This prevents the OS to activate standby mode.
@@ -31,6 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 public class PreventStandbyModeService {
     private final SettingsService settingsService;
     private final PreventStandbyMode preventStandbyMode;
+    @Nullable
+    private Pin preventStandbyModePin;
 
     public PreventStandbyModeService(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
@@ -38,10 +43,11 @@ public class PreventStandbyModeService {
     }
 
     public void initialize() {
-        if(OS.isAndroid()){
+        if (OS.isAndroid()) {
             return;
         }
-        settingsService.getPreventStandbyMode().addObserver(preventStandbyMode -> {
+
+        preventStandbyModePin = settingsService.getPreventStandbyMode().addObserver(preventStandbyMode -> {
             if (preventStandbyMode) {
                 this.preventStandbyMode.initialize();
             } else {
@@ -51,6 +57,10 @@ public class PreventStandbyModeService {
     }
 
     public void shutdown() {
+        if (preventStandbyModePin != null) {
+            preventStandbyModePin.unbind();
+            preventStandbyModePin = null;
+        }
         preventStandbyMode.shutdown();
     }
 }

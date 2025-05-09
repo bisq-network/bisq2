@@ -17,6 +17,7 @@
 
 package bisq.common.currency;
 
+import bisq.common.currency.stable.StableCoinCurrency;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.PersistableProto;
 import bisq.common.validation.NetworkDataValidation;
@@ -86,23 +87,35 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
 
     public String getQuoteCurrencyDisplayName() {
         return FiatCurrency.isFiat(quoteCurrencyCode)
-                ? FiatCurrencyRepository.getDisplayName(quoteCurrencyCode).orElse(quoteCurrencyName)
+                ? FiatCurrencyRepository.findDisplayName(quoteCurrencyCode).orElse(quoteCurrencyName)
                 : quoteCurrencyName;
     }
 
     public String getBaseCurrencyDisplayName() {
         return FiatCurrency.isFiat(baseCurrencyCode)
-                ? FiatCurrencyRepository.getDisplayName(baseCurrencyCode).orElse(baseCurrencyName)
+                ? FiatCurrencyRepository.findDisplayName(baseCurrencyCode).orElse(baseCurrencyName)
                 : baseCurrencyName;
     }
 
-    //todo (refactor, low prio) make static utils
-    public String getFiatCurrencyName() {
-        return isFiat() ? getQuoteCurrencyDisplayName() : getBaseCurrencyDisplayName();
+    // Returns display name of non BTC side
+    public String getSignificantCurrencyName() {
+        return baseCurrencyCode.equals("BTC") ? getQuoteCurrencyDisplayName() : getBaseCurrencyDisplayName();
     }
 
-    public boolean isFiat() {
-        return FiatCurrency.isFiat(quoteCurrencyCode);
+    public boolean isBtcFiatMarket() {
+        return baseCurrencyCode.equals("BTC") && FiatCurrency.isFiat(quoteCurrencyCode);
+    }
+
+    public boolean isBtcStableCoinMarket() {
+        return baseCurrencyCode.equals("BTC") && StableCoinCurrency.isStableCoinCurrency(quoteCurrencyCode);
+    }
+
+    public boolean isCrypto() {
+        return quoteCurrencyCode.equals("BTC");
+    }
+
+    public boolean isXmr() {
+        return isCrypto() && baseCurrencyCode.equals("XMR");
     }
 
     public String getMarketCodes() {
@@ -119,7 +132,7 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
 
     @Override
     public String toString() {
-        return getFiatCurrencyName() + " (" + getMarketCodes() + ")";
+        return getSignificantCurrencyName() + " (" + getMarketCodes() + ")";
     }
 
     @Override

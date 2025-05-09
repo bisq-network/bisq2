@@ -34,14 +34,22 @@ public class SystemNotificationService implements Service {
     }
 
     public CompletableFuture<Boolean> initialize() {
-        isInitialized = true;
         log.info("initialize");
+        if (isInitialized) {
+            log.error("SystemNotificationService already initialized, skipping initialization");
+            return CompletableFuture.completedFuture(true);
+        }
+        isInitialized = true;
         systemNotificationDelegate.ifPresent(Service::initialize);
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
+        if (!isInitialized) {
+            return CompletableFuture.completedFuture(true);
+        }
+        isInitialized = false;
         systemNotificationDelegate.ifPresent(Service::shutdown);
         return CompletableFuture.completedFuture(true);
     }

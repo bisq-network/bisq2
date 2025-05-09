@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer;
 
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
+import bisq.desktop.navigation.NavigationTarget;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -55,7 +55,7 @@ public class MuSigCreateOfferModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET;
+        return NavigationTarget.MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE;
     }
 
     public void reset() {

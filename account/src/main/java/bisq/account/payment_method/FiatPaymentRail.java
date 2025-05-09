@@ -25,14 +25,18 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * The payment rails for fiat payments.
  * Provide static data associated with the payment rail.
  */
-public enum FiatPaymentRail implements PaymentRail {
+public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
     CUSTOM(new ArrayList<>(), new ArrayList<>()),             // Custom defined payment rail by the user
     SEPA(FiatPaymentRailUtil.getSepaEuroCountries()),
     SEPA_INSTANT(FiatPaymentRailUtil.getSepaEuroCountries()),

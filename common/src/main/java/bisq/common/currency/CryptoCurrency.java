@@ -23,7 +23,7 @@ import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public final class CryptoCurrency extends TradeCurrency {
+public class CryptoCurrency extends TradeCurrency {
     public CryptoCurrency(String code, String name) {
         super(code, name);
     }

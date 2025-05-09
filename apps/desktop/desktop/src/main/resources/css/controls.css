@@ -20,6 +20,7 @@
     -fx-font-family: "IBM Plex Sans";
     -fx-padding: 5 32 5 32;
     -fx-cursor: hand;
+    -fx-label-padding: 0 -15 0 -15;
 }
 
 .button:hover {
@@ -37,8 +38,8 @@
     -fx-text-fill: derive(-fx-light-text-color, -20%);
 }
 
-.button-reduced-padding {
-    -fx-label-padding: 0 -15 0 -15;
+.button-min-horizontal-padding {
+    -fx-padding: 5 24 5 24;
 }
 
 .button:default,
@@ -125,6 +126,52 @@
 .dark-grey-button:disabled {
     -fx-background-color: -bisq-grey-7;
     -fx-text-fill: rgba(255, 255, 255, 0.3);
+}
+
+
+.buy-button {
+    -fx-background-color: -bisq2-green-dim-40;
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-border-color: transparent;
+}
+
+.buy-button > .text {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+}
+.buy-button:hover {
+    -fx-background-color: derive(-bisq2-green-dim-40, 10%);
+}
+
+.buy-button:pressed {
+    -fx-background-color: derive(-bisq2-green-dim-40, -10%);
+}
+.buy-button:disabled {
+    -fx-background-color: derive(-bisq2-green-dim-40, 30%);
+}
+
+.sell-button {
+    -fx-background-color: -bisq2-red-dim-30;
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-border-color: transparent;
+}
+
+.sell-button > .text {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.sell-button:hover {
+    -fx-background-color: derive(-bisq2-red-dim-30, 10%);
+}
+
+.sell-button:pressed {
+    -fx-background-color: derive(-bisq2-red-dim-30, -10%);
+}
+.sell-button:disabled {
+    -fx-background-color: derive(-bisq2-red-dim-30, 30%);
 }
 
 
@@ -252,7 +299,8 @@
 .red-outlined-button {
     -fx-background-color: transparent;
     -fx-border-color: -bisq2-red;
-    -fx-text-fill: -bisq2-red;
+    -fx-fill: -bisq2-red !important;
+    -fx-text-fill: -bisq2-red !important;
 }
 
 .red-outlined-button:hover {

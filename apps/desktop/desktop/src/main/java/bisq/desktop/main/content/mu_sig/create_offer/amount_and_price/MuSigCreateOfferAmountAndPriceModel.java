@@ -30,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class MuSigCreateOfferAmountAndPriceModel implements Model {
-   // private boolean showPriceSelection; //true
     private String headline;
     private Direction direction;
     private Market market;

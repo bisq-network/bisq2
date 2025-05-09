@@ -23,6 +23,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Collections;
 import java.util.List;
 
 @ToString(callSuper = true)
@@ -67,6 +68,6 @@ public class BitcoinPaymentMethod extends PaymentMethod<BitcoinPaymentRail> {
 
     @Override
     public List<TradeCurrency> getTradeCurrencies() {
-        return List.of(CryptoCurrencyRepository.BITCOIN);
+        return Collections.singletonList(CryptoCurrencyRepository.BITCOIN);
     }
 }

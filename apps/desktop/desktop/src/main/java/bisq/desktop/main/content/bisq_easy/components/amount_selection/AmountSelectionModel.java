@@ -23,7 +23,14 @@ import bisq.common.currency.MarketRepository;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -63,7 +70,7 @@ public class AmountSelectionModel implements Model {
     private Monetary rightMarkerQuoteSideValue;
     private final StringProperty sliderTrackStyle = new SimpleStringProperty();
     @Setter
-    private Market market = MarketRepository.getDefault();
+    private Market market = MarketRepository.getDefaultBtcFiatMarket();
     @Setter
     private Direction direction = Direction.BUY;
     private final StringProperty description = new SimpleStringProperty();
@@ -94,7 +101,7 @@ public class AmountSelectionModel implements Model {
         leftMarkerQuoteSideValue = null;
         rightMarkerQuoteSideValue = null;
         sliderTrackStyle.set(null);
-        market = MarketRepository.getDefault();
+        market = MarketRepository.getDefaultBtcFiatMarket();
         direction = Direction.BUY;
         description.set(null);
         minRangeValueAsString.set(null);
