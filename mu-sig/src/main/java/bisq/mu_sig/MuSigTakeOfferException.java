@@ -17,7 +17,7 @@
 
 package bisq.mu_sig;
 
-public class MuSigTakeOfferException extends Exception{
+public class MuSigTakeOfferException extends Exception {
     public MuSigTakeOfferException(String message) {
         super(message);
     }

@@ -163,7 +163,8 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         takeOfferStatus = new VBox();
         takeOfferStatus.setVisible(false);
 
-        sendTakeOfferMessageFeedback = new VBox(20);takeOfferSendMessageWaitingAnimation = new WaitingAnimation(WaitingState.TAKE_BISQ_EASY_OFFER);
+        sendTakeOfferMessageFeedback = new VBox(20);
+        takeOfferSendMessageWaitingAnimation = new WaitingAnimation(WaitingState.TAKE_BISQ_EASY_OFFER);
         configSendTakeOfferMessageFeedback();
 
         takeOfferSuccessButton = new Button(Res.get("bisqEasy.takeOffer.review.takeOfferSuccessButton"));

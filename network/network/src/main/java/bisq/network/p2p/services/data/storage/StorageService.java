@@ -28,10 +28,18 @@ import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyDataStorageService;
-import bisq.network.p2p.services.data.storage.auth.*;
+import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
+import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.network.p2p.services.data.storage.mailbox.*;
+import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxDataStorageService;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxRequest;
+import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
@@ -40,7 +48,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -48,7 +62,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static bisq.network.p2p.services.data.storage.StoreType.*;
+import static bisq.network.p2p.services.data.storage.StoreType.ALL;
+import static bisq.network.p2p.services.data.storage.StoreType.APPEND_ONLY_DATA_STORE;
+import static bisq.network.p2p.services.data.storage.StoreType.AUTHENTICATED_DATA_STORE;
+import static bisq.network.p2p.services.data.storage.StoreType.MAILBOX_DATA_STORE;
 
 @Slf4j
 public class StorageService {

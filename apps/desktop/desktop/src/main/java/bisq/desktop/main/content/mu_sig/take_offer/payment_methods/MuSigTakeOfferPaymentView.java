@@ -68,7 +68,7 @@ public class MuSigTakeOfferPaymentView extends View<VBox, MuSigTakeOfferPaymentM
 
         VBox.setMargin(headlineLabel, new Insets(0, 0, 40, 0));
         VBox.setMargin(fiatGridPane, new Insets(0, 0, 45, 0));
-        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, fiatVBox,  Spacer.fillVBox());
+        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, fiatVBox, Spacer.fillVBox());
 
         root.setOnMousePressed(e -> root.requestFocus());
     }

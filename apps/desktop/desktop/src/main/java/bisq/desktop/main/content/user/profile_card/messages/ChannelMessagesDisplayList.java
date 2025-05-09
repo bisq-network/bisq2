@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.user.profile_card.messages;
 
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
 import bisq.chat.ChatService;
@@ -38,11 +37,16 @@ import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.components.MarketImageComposition;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -62,7 +66,9 @@ import lombok.Getter;
 import java.util.Map;
 import java.util.Optional;
 
-import static bisq.chat.ChatChannelDomain.*;
+import static bisq.chat.ChatChannelDomain.BISQ_EASY_OFFERBOOK;
+import static bisq.chat.ChatChannelDomain.DISCUSSION;
+import static bisq.chat.ChatChannelDomain.SUPPORT;
 
 public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
     private final Controller controller;

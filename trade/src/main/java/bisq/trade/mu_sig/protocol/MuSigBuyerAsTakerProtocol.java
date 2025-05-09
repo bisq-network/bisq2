@@ -52,6 +52,7 @@ public class MuSigBuyerAsTakerProtocol extends MuSigProtocol {
     public MuSigBuyerAsTakerProtocol(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
+
     @Override
     protected void configErrorHandling() {
         fromAny()

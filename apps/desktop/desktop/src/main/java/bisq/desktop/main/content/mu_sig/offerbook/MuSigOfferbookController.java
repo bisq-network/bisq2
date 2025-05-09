@@ -180,7 +180,7 @@ public abstract class MuSigOfferbookController<M extends MuSigOfferbookModel, V 
             });
         } catch (RateLimitExceededException e) {
             UIThread.run(() -> {
-                    new Popup().warning(Res.get("muSig.offerbook.rateLimitsExceeded.removeOffer.warning")).show();
+                new Popup().warning(Res.get("muSig.offerbook.rateLimitsExceeded.removeOffer.warning")).show();
             });
         }
     }

@@ -258,7 +258,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
             model.getNextButtonDisabled().set(tradeWizardSelectOfferController.getSelectedBisqEasyOffer().get() == null);
         } else {*/
             model.getNextButtonDisabled().set(false);
-       // }
+        // }
     }
 
     private void closeAndNavigateTo(NavigationTarget navigationTarget) {

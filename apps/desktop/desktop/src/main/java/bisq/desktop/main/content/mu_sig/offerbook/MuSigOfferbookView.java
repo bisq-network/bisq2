@@ -72,6 +72,7 @@ public abstract class MuSigOfferbookView<M extends MuSigOfferbookModel, C extend
         root.setPadding(new Insets(20, 20, 500, 20));
         root.getChildren().addAll(hBox, richTableView);
     }
+
     protected abstract StringConverter<Market> getConverter();
 
     @Override

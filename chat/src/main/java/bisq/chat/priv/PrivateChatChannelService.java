@@ -17,7 +17,12 @@
 
 package bisq.chat.priv;
 
-import bisq.chat.*;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelService;
+import bisq.chat.ChatMessage;
+import bisq.chat.ChatMessageType;
+import bisq.chat.Citation;
 import bisq.chat.reactions.PrivateChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.common.util.StringUtils;

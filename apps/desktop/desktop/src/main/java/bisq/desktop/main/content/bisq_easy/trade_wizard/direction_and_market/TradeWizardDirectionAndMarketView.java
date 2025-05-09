@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.direction_and_market;
 import bisq.common.currency.FiatCurrency;
 import bisq.common.currency.Market;
 import bisq.desktop.common.Icons;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
@@ -177,7 +178,7 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
                     } else {
                         Transitions.removeEffect(content);
                         if (reputationInfo.isVisible()) {
-                            Transitions.fadeOut(reputationInfo, Transitions.DEFAULT_DURATION / 2,
+                            Transitions.fadeOut(reputationInfo, ManagedDuration.getHalfOfDefaultDurationMillis(),
                                     () -> reputationInfo.setVisible(false));
                         }
                     }

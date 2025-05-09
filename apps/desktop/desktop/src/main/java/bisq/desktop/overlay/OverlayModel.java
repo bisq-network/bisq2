@@ -52,7 +52,4 @@ public class OverlayModel extends NavigationModel {
         settingsService = serviceProvider.getSettingsService();
     }
 
-    double getDuration(double duration) {
-        return settingsService.getUseAnimations().get() ? duration : 1;
-    }
 }

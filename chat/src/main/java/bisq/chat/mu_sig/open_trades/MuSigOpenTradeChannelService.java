@@ -267,11 +267,11 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
 
     @Override
     protected MuSigOpenTradeMessageReaction createAndGetNewPrivateChatMessageReaction(MuSigOpenTradeMessage message,
-                                                                                         UserProfile senderUserProfile,
-                                                                                         UserProfile receiverUserProfile,
-                                                                                         Reaction reaction,
-                                                                                         String messageReactionId,
-                                                                                         boolean isRemoved) {
+                                                                                      UserProfile senderUserProfile,
+                                                                                      UserProfile receiverUserProfile,
+                                                                                      Reaction reaction,
+                                                                                      String messageReactionId,
+                                                                                      boolean isRemoved) {
         return new MuSigOpenTradeMessageReaction(
                 messageReactionId,
                 senderUserProfile,

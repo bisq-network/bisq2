@@ -19,6 +19,7 @@ package bisq.desktop.overlay;
 
 import bisq.common.data.Pair;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
@@ -194,18 +195,18 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     }
 
     private void animateDisplay(Runnable onFinishedHandler) {
-        double duration = model.getDuration(400);
+        Duration duration = ManagedDuration.millis(400);
         Timeline timeline = new Timeline();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
 
         double startScale = 0.25;
-        keyFrames.add(new KeyFrame(Duration.millis(0),
+        keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                 new KeyValue(root.opacityProperty(), 0, INTERPOLATOR),
                 new KeyValue(root.scaleXProperty(), startScale, INTERPOLATOR),
                 new KeyValue(root.scaleYProperty(), startScale, INTERPOLATOR)
 
         ));
-        keyFrames.add(new KeyFrame(Duration.millis(duration),
+        keyFrames.add(new KeyFrame(duration,
                 new KeyValue(root.opacityProperty(), 1, INTERPOLATOR),
                 new KeyValue(root.scaleXProperty(), 1, INTERPOLATOR),
                 new KeyValue(root.scaleYProperty(), 1, INTERPOLATOR)
@@ -225,16 +226,16 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     }
 
     private void animateHide(Runnable onFinishedHandler) {
-        double duration = model.getDuration(Transitions.DEFAULT_DURATION / 2d);
+        Duration duration = ManagedDuration.getHalfOfDefaultDuration();
         Timeline timeline = new Timeline();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
         double endScale = 0.25;
-        keyFrames.add(new KeyFrame(Duration.millis(0),
+        keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                 new KeyValue(root.opacityProperty(), 1, INTERPOLATOR),
                 new KeyValue(root.scaleXProperty(), 1, INTERPOLATOR),
                 new KeyValue(root.scaleYProperty(), 1, INTERPOLATOR)
         ));
-        keyFrames.add(new KeyFrame(Duration.millis(duration),
+        keyFrames.add(new KeyFrame(duration,
                 new KeyValue(root.opacityProperty(), 0, INTERPOLATOR),
                 new KeyValue(root.scaleXProperty(), endScale, INTERPOLATOR),
                 new KeyValue(root.scaleYProperty(), endScale, INTERPOLATOR)

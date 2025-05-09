@@ -41,7 +41,7 @@ class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private Market market = MarketRepository.getDefaultBtcFiatMarket();
     @Setter
-    private  MuSigOffer offer;
+    private MuSigOffer offer;
     @Setter
     private FiatPaymentMethod takersSelectedFiatPaymentMethod;
     @Setter
