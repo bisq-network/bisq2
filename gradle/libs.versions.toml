@@ -41,7 +41,7 @@ google-libphonenumber-lib = { strictly = '9.0.8' }
 
 grpc = { strictly = '1.61.0' }
 
-i2p-lib = { strictly = '1.8.0' }
+i2p-lib = { strictly = '2.7.0' }
 i2p-v2 = { strictly = '2.4.0' }
 
 jackson-lib = { strictly = '2.17.2' }
@@ -123,9 +123,9 @@ grpc-services = { module = 'io.grpc:grpc-services', version.ref = 'grpc' }
 grpc-stub = { module = 'io.grpc:grpc-stub', version.ref = 'grpc' }
 
 i2p-core = { module = 'net.i2p:i2p', version.ref = 'i2p-lib' }
-i2p-core-v2 = { module = 'net.i2p:i2p', version.ref = 'i2p-v2' }
+i2p-core-v2 = { module = 'net.i2p:i2p', version.ref = 'i2p-lib' }
 i2p-streaming = { module = 'net.i2p.client:streaming', version.ref = 'i2p-lib' }
-i2p-streaming-v2 = { module = 'net.i2p.client:streaming', version.ref = 'i2p-v2' }
+i2p-streaming-v2 = { module = 'net.i2p.client:streaming', version.ref = 'i2p-lib' }
 i2p-router = { module = 'net.i2p:router', version.ref = 'i2p-lib' }
 
 jackson-core = { module = 'com.fasterxml.jackson.core:jackson-core', version.ref = 'jackson-lib' }
