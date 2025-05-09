@@ -52,7 +52,11 @@ public class WalletSeedController implements Controller {
     public void onShowSeed() {
         walletService.getSeed(Optional.ofNullable(model.getCurrentPassword().get())).whenComplete((seed, throwable) -> {
             if (throwable == null) {
-                model.getWalletSeed().set(seed);
+                UIThread.run(() -> model.getWalletSeed().set(seed));
+            } else {
+                UIThread.run(() -> new Popup()
+                        .error(Res.get("wallet.seed.show.error", Res.get("wallet.common.errorMessageInline", throwable)))
+                        .show());
             }
         });
 

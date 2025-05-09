@@ -204,19 +204,22 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
     @Override
     public CompletableFuture<Boolean> encryptWallet(String password, Optional<String> currentPassword) {
         //todo implement
-        return CompletableFuture.supplyAsync(() -> true);
+        return CompletableFuture.failedFuture(
+                new UnsupportedOperationException("Not implemented yet"));
     }
 
     @Override
-    public CompletableFuture<Boolean> restoreFromSeed(String seed) {
+    public CompletableFuture<Void> restoreFromSeed(String seed) {
         //todo implement
-        return CompletableFuture.supplyAsync(() -> true);
+        return CompletableFuture.failedFuture(
+                new UnsupportedOperationException("Not implemented yet"));
     }
 
     @Override
     public CompletableFuture<String> getSeed(Optional<String> password) {
         //todo implement
-        return CompletableFuture.supplyAsync(() -> "seeds");
+        return CompletableFuture.failedFuture(
+                new UnsupportedOperationException("Not implemented yet"));
     }
 
     @Override

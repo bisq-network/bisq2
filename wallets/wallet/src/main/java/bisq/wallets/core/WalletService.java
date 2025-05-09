@@ -62,5 +62,5 @@ public interface WalletService extends Service {
 
     CompletableFuture<String> getSeed(Optional<String> password);
 
-    CompletableFuture<Boolean> restoreFromSeed(String seed);
+    CompletableFuture<Void> restoreFromSeed(String seed);
 }
