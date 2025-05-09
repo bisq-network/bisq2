@@ -3,11 +3,15 @@ package bisq.desktop.main.content.wallet.seed;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.overlay.Popup;
+import bisq.i18n.Res;
 import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import java.util.Optional;
 
 
 @Getter
@@ -46,18 +50,27 @@ public class WalletSeedController implements Controller {
     }
 
     public void onShowSeed() {
-        //todo implement
-//        walletService.getSeed().whenComplete((seed, throwable) -> {
-//            if (throwable == null) {
-//                model.getWalletSeed().set(seed);
-//            }
-//        });
+        walletService.getSeed(Optional.ofNullable(model.getCurrentPassword().get())).whenComplete((seed, throwable) -> {
+            if (throwable == null) {
+                model.getWalletSeed().set(seed);
+            }
+        });
 
     }
 
     public void onRestore() {
-        //todo implement
-        String seed = model.getRestoreSeed().get();
+        walletService.restoreFromSeed(model.getRestoreSeed().get()).thenAccept(success -> {
+            UIThread.run(() -> {
+                model.getRestoreSeed().set("");
+            });
+            log.info("Wallets restored with seed words");
+            new Popup().feedback(Res.get("wallet.seed.restore.success")).show();
+        }).exceptionally(throwable -> {
+            log.error("Failed to restore wallet", throwable);
+            new Popup().error(Res.get("wallet.seed.restore.error", Res.get("wallet.common.errorMessageInline", throwable)))
+                    .show();
+            return null;
+        });
 
     }
 

@@ -221,6 +221,24 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
         return CompletableFuture.supplyAsync(() -> true);
     }
 
+    @Override
+    public CompletableFuture<Boolean> encryptWallet(String password, Optional<String> currentPassword) {
+        //todo implement
+        return CompletableFuture.supplyAsync(() -> true);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> restoreFromSeed(String seed) {
+        //todo implement
+        return CompletableFuture.supplyAsync(() -> true);
+    }
+
+    @Override
+    public CompletableFuture<String> getSeed(Optional<String> password) {
+        //todo implement
+        return CompletableFuture.supplyAsync(() -> "seeds");
+    }
+
     protected void initializeZmqListeners(ZmqConnection zmqConnection, Set<String> walletAddresses) {
         // Update balance when new block gets mined
         zmqConnection.getListeners().registerNewBlockMinedListener(unused -> updateBalance());

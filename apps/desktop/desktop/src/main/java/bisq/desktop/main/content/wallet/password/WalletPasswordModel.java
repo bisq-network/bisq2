@@ -17,6 +17,9 @@ public class WalletPasswordModel implements Model {
     private final StringProperty currentPassword = new SimpleStringProperty();
     private final BooleanProperty isCurrentPasswordVisible = new SimpleBooleanProperty();
 
+    private final PasswordValidator passwordValidator;
+
     public WalletPasswordModel() {
+        passwordValidator = new PasswordValidator();
     }
 }

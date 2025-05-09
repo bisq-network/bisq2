@@ -15,7 +15,6 @@ import java.util.Objects;
 
 @Slf4j
 public class WalletPasswordView extends View<VBox, WalletPasswordModel, WalletPasswordController> {
-    private PasswordValidator passwordValidator;
     private MaterialPasswordField currentPasswordField;
     private MaterialPasswordField passwordField;
     private MaterialPasswordField repeatedPasswordField;
@@ -28,10 +27,9 @@ public class WalletPasswordView extends View<VBox, WalletPasswordModel, WalletPa
         super(new VBox(20), model, controller);
         root.setPadding(new Insets(40, 0, 0, 0));
         currentPasswordField = new MaterialPasswordField(Res.get("wallet.send.password"));
-        passwordValidator = new PasswordValidator();
         passwordField = new MaterialPasswordField(Res.get("wallet.password.enterPassword"));
         final RequiredFieldValidator requiredFieldValidator = new RequiredFieldValidator(Res.get("validation.empty"));
-        passwordField.setValidators(requiredFieldValidator, passwordValidator);
+        passwordField.setValidators(requiredFieldValidator, model.getPasswordValidator());
         passwordFieldFocusChangeListener = (observable, oldValue, newValue) -> {
             if (!newValue) validatePasswords();
         };
@@ -41,7 +39,7 @@ public class WalletPasswordView extends View<VBox, WalletPasswordModel, WalletPa
         };
 
         repeatedPasswordField = new MaterialPasswordField(Res.get("wallet.password.confirmPassword"));
-        repeatedPasswordField.setValidator(passwordValidator);
+        repeatedPasswordField.setValidator(model.getPasswordValidator());
         repeatedPasswordFieldChangeListener = (observable, oldValue, newValue) -> {
             if (!Objects.equals(oldValue, newValue)) validatePasswords();
         };
@@ -87,14 +85,14 @@ public class WalletPasswordView extends View<VBox, WalletPasswordModel, WalletPa
     }
 
     private void validatePasswords() {
-        passwordValidator.setPasswordsMatch(true);
+        model.getPasswordValidator().setPasswordsMatch(true);
         if (passwordField.validate()) {
             if (repeatedPasswordField.validate()) {
                 if (passwordField.getText().equals(repeatedPasswordField.getText())) {
                     pwButton.setDisable(false);
                     return;
                 } else {
-                    passwordValidator.setPasswordsMatch(false);
+                    model.getPasswordValidator().setPasswordsMatch(false);
                     repeatedPasswordField.validate();
                 }
             }

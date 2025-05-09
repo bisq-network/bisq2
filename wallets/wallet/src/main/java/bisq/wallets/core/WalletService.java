@@ -57,4 +57,10 @@ public interface WalletService extends Service {
     ObservableSet<Transaction> getTransactions();
 
     CompletableFuture<ObservableSet<Transaction>> requestTransactions();
+
+    CompletableFuture<Boolean> encryptWallet(String password, Optional<String> currentPassword);
+
+    CompletableFuture<String> getSeed(Optional<String> password);
+
+    CompletableFuture<Boolean> restoreFromSeed(String seed);
 }

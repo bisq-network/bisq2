@@ -202,6 +202,24 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
     }
 
     @Override
+    public CompletableFuture<Boolean> encryptWallet(String password, Optional<String> currentPassword) {
+        //todo implement
+        return CompletableFuture.supplyAsync(() -> true);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> restoreFromSeed(String seed) {
+        //todo implement
+        return CompletableFuture.supplyAsync(() -> true);
+    }
+
+    @Override
+    public CompletableFuture<String> getSeed(Optional<String> password) {
+        //todo implement
+        return CompletableFuture.supplyAsync(() -> "seeds");
+    }
+
+    @Override
     public CompletableFuture<Coin> requestBalance() {
         return CompletableFuture.supplyAsync(() -> {
             double balance = wallet.getBalance();
