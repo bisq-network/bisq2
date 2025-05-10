@@ -243,6 +243,10 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     }
 
     public boolean isNotBanned(Address address) {
+        // Special handling for I2P addresses during initial integration phase
+        if (address.getTransportType() == TransportType.I2P) {
+                  return true;  // Temporarily bypass ban checks for I2P addresses
+              }
         return banList.isNotBanned(address);
     }
 

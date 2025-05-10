@@ -15,26 +15,32 @@ import java.net.SocketTimeoutException;
 public class EchoServer {
 
     public static void main(String[] args) {
-        I2PSocketManager manager = I2PSocketManagerFactory.createManager();
+        try {
+            I2PSocketManager manager = I2PSocketManagerFactory.createManager();
 
-        I2PSocketOptions i2PSocketOptions = manager.getDefaultOptions();
-        i2PSocketOptions.setLocalPort(1234);
-        manager.setDefaultOptions(i2PSocketOptions);
+            if (manager == null) {
+                System.err.println("Failed to create I2PSocketManager. Is your I2P router running?");
+                return;
+            }
 
-        I2PServerSocket serverSocket = manager.getServerSocket();
-        I2PSession session = manager.getSession();
+            I2PSocketOptions i2PSocketOptions = manager.getDefaultOptions();
+            i2PSocketOptions.setLocalPort(1234);
+            manager.setDefaultOptions(i2PSocketOptions);
 
-        session.getPrivateKey();
+            I2PServerSocket serverSocket = manager.getServerSocket();
+            I2PSession session = manager.getSession();
 
-        // Print the base64 string, the regular string would look like garbage.
-        System.out.println(session.getMyDestination().toBase64());
+            System.out.println("Base64 destination: " + session.getMyDestination().toBase64());
 
-        // Create socket to handle clients
-        I2PThread t = new I2PThread(new ClientHandler(serverSocket));
-        t.setName("clienthandler1");
-        t.setDaemon(false);
-        t.start();
+            I2PThread t = new I2PThread(new ClientHandler(serverSocket));
+            t.setName("clienthandler1");
+            t.setDaemon(false);
+            t.start();
+        } catch (Exception e) {
+            e.printStackTrace(); // Log actual issue that caused non-zero exit
+        }
     }
+
 
     private static class ClientHandler implements Runnable {
 
