@@ -57,6 +57,7 @@ public class Carousel extends BorderPane {
     private final BooleanProperty showArrows = new SimpleBooleanProperty(true);
     @Getter
     private final HBox indicatorsHBox;
+    private final Rectangle clipRectangle;
     @Setter
     private int transitionDuration = 400;
     @Setter
@@ -79,7 +80,7 @@ public class Carousel extends BorderPane {
     public Carousel(List<Node> items) {
         getStyleClass().add("carousel");
 
-        Rectangle clipRectangle = new Rectangle();
+        clipRectangle = new Rectangle();
         itemStackPane = new StackPane();
         itemStackPane.getStyleClass().add("carousel-item-container");
         itemStackPane.setClip(clipRectangle);
@@ -111,11 +112,8 @@ public class Carousel extends BorderPane {
     }
 
     public void initialize() {
-        Rectangle clipRectangle = (Rectangle) itemStackPane.getClip();
-        if (clipRectangle != null) {
-            clipRectangle.widthProperty().bind(itemStackPane.widthProperty());
-            clipRectangle.heightProperty().bind(itemStackPane.heightProperty());
-        }
+        clipRectangle.widthProperty().bind(itemStackPane.widthProperty());
+        clipRectangle.heightProperty().bind(itemStackPane.heightProperty());
 
         indicatorsHBox.visibleProperty().bind(showBottomDots);
         indicatorsHBox.managedProperty().bind(showBottomDots);
@@ -147,11 +145,8 @@ public class Carousel extends BorderPane {
 
         currentIndex.removeListener(currentIndexListener);
 
-        Rectangle clip = (Rectangle) itemStackPane.getClip();
-        if (clip != null) {
-            clip.widthProperty().unbind();
-            clip.heightProperty().unbind();
-        }
+        clipRectangle.widthProperty().unbind();
+        clipRectangle.heightProperty().unbind();
 
         indicatorsHBox.visibleProperty().unbind();
         indicatorsHBox.managedProperty().unbind();
