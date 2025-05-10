@@ -17,11 +17,11 @@
 
 package bisq.desktop.main.content.bisq_easy.wallet_guide;
 
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.Styles;
 import bisq.desktop.common.view.TabView;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -65,7 +65,7 @@ public class WalletGuideView extends TabView<WalletGuideModel, WalletGuideContro
         closeIconButton.setOnAction(e -> controller.onClose());
 
         root.setPrefWidth(OverlayModel.WIDTH);
-        root.setPrefHeight(OverlayModel.HEIGHT + 40);
+        root.setPrefHeight(OverlayModel.HEIGHT + 70);
     }
 
     @Override

@@ -1168,3 +1168,86 @@
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-family: "IBM Plex Sans Light";
 }
+
+/*******************************************************************************
+ *                                                                             *
+ * Carousel                                                                    *
+ *                                                                             *
+ ******************************************************************************/
+
+.carousel {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-background-insets: 0;
+    -fx-border-width: 0;
+}
+
+.carousel-item-container {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.carousel-indicators {
+    -fx-spacing: 6;
+    -fx-padding: 5 0 0 0;
+    -fx-alignment: center;
+    -fx-min-height: 12;
+    -fx-pref-height: 12;
+    -fx-max-height: 12;
+}
+
+.carousel-indicator {
+    -fx-background-color: -bisq-mid-grey-20;
+    -fx-background-radius: 3;
+    -fx-min-width: 6;
+    -fx-min-height: 6;
+    -fx-max-width: 6;
+    -fx-max-height: 6;
+    -fx-pref-width: 6;
+    -fx-pref-height: 6;
+    -fx-cursor: hand;
+    -fx-opacity: 0.6;
+}
+
+.carousel-indicator:hover {
+    -fx-opacity: 0.8;
+    -fx-background-color: -bisq-mid-grey-10;
+}
+
+.carousel-indicator.active {
+    -fx-background-color: -bisq2-green;
+    -fx-opacity: 1.0;
+}
+
+.carousel-nav-arrow {
+    -fx-background-color: transparent;
+    -fx-background-radius: 2;
+    -fx-min-width: 20px;
+    -fx-min-height: 32px;
+    -fx-max-width: 20px;
+    -fx-max-height: 32px;
+    -fx-font-size: 14px;
+    -fx-text-fill: white;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+    -fx-border-width: 0;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-content-display: center;
+    -fx-opacity: 0.7;
+}
+
+.carousel-nav-arrow:hover {
+    -fx-background-color: -bisq-green-hover;
+    -fx-opacity: 0.9;
+}
+
+.carousel-nav-arrow:pressed {
+    -fx-background-color: -bisq-green-pressed;
+    -fx-opacity: 1.0;
+}
+
+.carousel-container {
+    -fx-spacing: 5;
+    -fx-padding: 0;
+}
