@@ -93,7 +93,7 @@ public final class MuSigOpenTradesView extends ChatView<MuSigOpenTradesView, MuS
         headlineLabel.getStyleClass().add("bisq-easy-container-headline");
         HBox header = new HBox(10, headlineLabel);
         header.setAlignment(Pos.CENTER_LEFT);
-        header.getStyleClass().add("chat-container-header");
+        header.getStyleClass().add("mu-sig-open-trades-header");
 
          tableViewAnchorPane = new AnchorPane(tableView);
         Layout.pinToAnchorPane(tableView, 0, 0, 0, 0);
@@ -114,7 +114,7 @@ public final class MuSigOpenTradesView extends ChatView<MuSigOpenTradesView, MuS
         chatMessagesComponent.setMinHeight(200);
         chatMessagesComponent.setPadding(new Insets(0, -30, -15, -30));
 
-        VBox.setMargin(chatMessagesComponent, new Insets(0, 30, 15, 30));
+        //VBox.setMargin(chatMessagesComponent, new Insets(0, 30, 15, 30));
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
 
         chatVBox = new VBox(tradeDataHeader, Layout.hLine(), chatMessagesComponent);
@@ -128,6 +128,8 @@ public final class MuSigOpenTradesView extends ChatView<MuSigOpenTradesView, MuS
         VBox.setVgrow(chatVBox, Priority.ALWAYS);
         VBox.setVgrow(tableViewVBox, Priority.NEVER);
         centerVBox.getChildren().addAll(tradeWelcomeViewRoot, tableViewVBox, tradeStateViewRoot, chatVBox);
+
+        contentAnchorPane.setPadding(new Insets(0, 0, 0, 0));
 
         listItemListener = o -> numListItemsChanged();
     }
