@@ -114,7 +114,7 @@ public final class MuSigOpenTradesView extends ChatView<MuSigOpenTradesView, MuS
         chatMessagesComponent.setMinHeight(200);
         chatMessagesComponent.setPadding(new Insets(0, -30, -15, -30));
 
-        //VBox.setMargin(chatMessagesComponent, new Insets(0, 30, 15, 30));
+        VBox.setMargin(chatMessagesComponent, new Insets(0, 30, 15, 30));
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
 
         chatVBox = new VBox(tradeDataHeader, Layout.hLine(), chatMessagesComponent);
