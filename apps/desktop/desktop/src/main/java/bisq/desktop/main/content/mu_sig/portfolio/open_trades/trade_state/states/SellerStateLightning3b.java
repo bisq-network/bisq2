@@ -20,8 +20,8 @@ package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.state
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatMessageType;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeMessage;
 import bisq.common.data.Pair;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
@@ -32,7 +32,7 @@ import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.i18n.Res;
-import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.mu_sig.MuSigTrade;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
@@ -49,9 +49,9 @@ public class SellerStateLightning3b extends BaseState {
     private final Controller controller;
 
     public SellerStateLightning3b(ServiceProvider serviceProvider,
-                                  BisqEasyTrade bisqEasyTrade,
-                                  BisqEasyOpenTradeChannel channel) {
-        controller = new Controller(serviceProvider, bisqEasyTrade, channel);
+                                  MuSigTrade trade,
+                                  MuSigOpenTradeChannel channel) {
+        controller = new Controller(serviceProvider, trade, channel);
     }
 
     public View getView() {
@@ -62,14 +62,14 @@ public class SellerStateLightning3b extends BaseState {
         private Pin channelPin, chatMessagesPin;
 
         private Controller(ServiceProvider serviceProvider,
-                           BisqEasyTrade bisqEasyTrade,
-                           BisqEasyOpenTradeChannel channel) {
-            super(serviceProvider, bisqEasyTrade, channel);
+                           MuSigTrade trade,
+                           MuSigOpenTradeChannel channel) {
+            super(serviceProvider, trade, channel);
         }
 
         @Override
-        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            return new Model(bisqEasyTrade, channel);
+        protected Model createModel(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            return new Model(trade, channel);
         }
 
         @Override
@@ -85,18 +85,18 @@ public class SellerStateLightning3b extends BaseState {
 
             // We check if we have received the log message from the peer which signals that they have received the bitcoin payment.
             // We use the i18n key not the string itself for comparison, thus even changing the string will not affect us.
-            // Though the key ('bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln') must not be changed.
+            // Though the key ('muSig.tradeState.info.buyer.phase3b.tradeLogMessage.ln') must not be changed.
             // This is a bit of a hack, but we did not want to alter the trade protocol for this relative small feature.
             ChatChannelSelectionService selectionService = chatService.getChatChannelSelectionServices().get(ChatChannelDomain.BISQ_EASY_OPEN_TRADES);
             channelPin = selectionService.getSelectedChannel().addObserver(channel -> {
-                if (channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
-                    String peersUserName = bisqEasyOpenTradeChannel.getPeer().getUserName();
+                if (channel instanceof MuSigOpenTradeChannel muSigOpenTradeChannel) {
+                    String peersUserName = muSigOpenTradeChannel.getPeer().getUserName();
                     if (chatMessagesPin != null) {
                         chatMessagesPin.unbind();
                     }
-                    chatMessagesPin = bisqEasyOpenTradeChannel.getChatMessages().addObserver(new CollectionObserver<>() {
+                    chatMessagesPin = muSigOpenTradeChannel.getChatMessages().addObserver(new CollectionObserver<>() {
                         @Override
-                        public void add(BisqEasyOpenTradeMessage message) {
+                        public void add(MuSigOpenTradeMessage message) {
                             if (message.getChatMessageType() == ChatMessageType.PROTOCOL_LOG_MESSAGE && message.getText().isPresent()) {
                                 // The peersUserName is set to the nickName if it is unique within the user's current
                                 // view of the network data. If multiple user profiles have identical nickNames, we
@@ -112,7 +112,7 @@ public class SellerStateLightning3b extends BaseState {
                                 // (nickName + nym) and the nickName alone.
                                 String encodedLogMessage = message.getText().get();
                                 String encodedWithUserName = Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln", peersUserName);
-                                String encodedWithNickName = getEncodedWithNickName(bisqEasyOpenTradeChannel);
+                                String encodedWithNickName = getEncodedWithNickName(muSigOpenTradeChannel);
                                 if (encodedLogMessage.equals(encodedWithUserName) || encodedLogMessage.equals(encodedWithNickName)) {
                                     UIThread.run(() -> model.getBuyerHasConfirmedBitcoinReceipt().set(
                                             Res.get("bisqEasy.tradeState.info.seller.phase3b.receiptConfirmed.ln")));
@@ -145,13 +145,13 @@ public class SellerStateLightning3b extends BaseState {
 
         private void onButtonClicked() {
             // todo should we send a system message? if so we should change the text
-            //sendTradeLogMessage(Res.get("bisqEasy.tradeState.info.phase3b.tradeLogMessage", model.getChannel().getMyUserIdentity().getUserName()));
-            bisqEasyTradeService.btcConfirmed(model.getBisqEasyTrade());
+            //sendTradeLogMessage(Res.get("muSig.tradeState.info.phase3b.tradeLogMessage", model.getChannel().getMyUserIdentity().getUserName()));
+            muSigTradeService.btcConfirmed(model.getTrade());
         }
 
-        private String getEncodedWithNickName(BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
+        private String getEncodedWithNickName(MuSigOpenTradeChannel muSigOpenTradeChannel) {
             return Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln",
-                    bisqEasyOpenTradeChannel.getPeer().getNickName());
+                    muSigOpenTradeChannel.getPeer().getNickName());
         }
     }
 
@@ -159,8 +159,8 @@ public class SellerStateLightning3b extends BaseState {
     private static class Model extends BaseState.Model {
         private final StringProperty buyerHasConfirmedBitcoinReceipt = new SimpleStringProperty();
 
-        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            super(bisqEasyTrade, channel);
+        protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            super(trade, channel);
         }
     }
 

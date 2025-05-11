@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state;
 
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.data.Triple;
 import bisq.common.monetary.Coin;
@@ -28,8 +28,8 @@ import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
-import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.bisq_easy.BisqEasyTradeService;
+import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.MuSigTradeService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
@@ -56,14 +56,14 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-public class TradeDataHeader {
+public class MuSigTradeDataHeader {
     private final Controller controller;
 
-    public TradeDataHeader(ServiceProvider serviceProvider, String peerDescription) {
+    public MuSigTradeDataHeader(ServiceProvider serviceProvider, String peerDescription) {
         controller = new Controller(serviceProvider, peerDescription);
     }
 
-    public void setSelectedChannel(@Nullable BisqEasyOpenTradeChannel channel) {
+    public void setSelectedChannel(@Nullable MuSigOpenTradeChannel channel) {
         controller.setSelectedChannel(channel);
     }
 
@@ -78,19 +78,19 @@ public class TradeDataHeader {
         private final Model model;
         private final ReputationService reputationService;
         private final UserIdentityService userIdentityService;
-        private final BisqEasyTradeService bisqEasyTradeService;
+        private final MuSigTradeService muSigTradeService;
         private Subscription channelPin;
 
         private Controller(ServiceProvider serviceProvider, String peerDescription) {
             userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-            bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
+            muSigTradeService = serviceProvider.getTradeService().getMuSigTradeService();
             reputationService = serviceProvider.getUserService().getReputationService();
 
             model = new Model(peerDescription);
             view = new View(model, this);
         }
 
-        private void setSelectedChannel(@Nullable BisqEasyOpenTradeChannel channel) {
+        private void setSelectedChannel(@Nullable MuSigOpenTradeChannel channel) {
             model.getChannel().set(channel);
         }
 
@@ -100,26 +100,26 @@ public class TradeDataHeader {
                 if (channel == null) {
                     return;
                 }
-                Optional<BisqEasyTrade> optionalBisqEasyTrade = bisqEasyTradeService.findTrade(channel.getTradeId());
-                if (optionalBisqEasyTrade.isEmpty()) {
+                Optional<MuSigTrade> optionalMuSigTrade = muSigTradeService.findTrade(channel.getTradeId());
+                if (optionalMuSigTrade.isEmpty()) {
                     return;
                 }
 
-                BisqEasyTrade bisqEasyTrade = optionalBisqEasyTrade.get();
-                model.getBisqEasyTrade().set(bisqEasyTrade);
+                MuSigTrade trade = optionalMuSigTrade.get();
+                model.getTrade().set(trade);
 
                 UserProfile peerUserProfile = channel.getPeer();
                 model.getReputationScore().set(reputationService.findReputationScore(peerUserProfile).orElse(ReputationScore.NONE));
                 model.getPeersUserProfile().set(peerUserProfile);
-                model.getTradeId().set(bisqEasyTrade.getShortId());
+                model.getTradeId().set(trade.getShortId());
 
-                long baseSideAmount = bisqEasyTrade.getContract().getBaseSideAmount();
-                long quoteSideAmount = bisqEasyTrade.getContract().getQuoteSideAmount();
+                long baseSideAmount = trade.getContract().getBaseSideAmount();
+                long quoteSideAmount = trade.getContract().getQuoteSideAmount();
                 Coin baseAmount = Coin.asBtcFromValue(baseSideAmount);
                 String baseAmountString = AmountFormatter.formatBaseAmount(baseAmount);
-                Monetary quoteAmount = Fiat.from(quoteSideAmount, bisqEasyTrade.getOffer().getMarket().getQuoteCurrencyCode());
+                Monetary quoteAmount = Fiat.from(quoteSideAmount, trade.getOffer().getMarket().getQuoteCurrencyCode());
                 String quoteAmountString = AmountFormatter.formatQuoteAmount(quoteAmount);
-                if (bisqEasyTrade.isSeller()) {
+                if (trade.isSeller()) {
                     model.getDirection().set(Res.get("offer.sell").toUpperCase());
                     model.getLeftAmountDescription().set(Res.get("bisqEasy.tradeState.header.send").toUpperCase());
                     model.getLeftAmount().set(baseAmountString);
@@ -150,8 +150,8 @@ public class TradeDataHeader {
     private static class Model implements bisq.desktop.common.view.Model {
         private final String peerDescription;
 
-        private final ObjectProperty<BisqEasyOpenTradeChannel> channel = new SimpleObjectProperty<>();
-        private final ObjectProperty<BisqEasyTrade> bisqEasyTrade = new SimpleObjectProperty<>();
+        private final ObjectProperty<MuSigOpenTradeChannel> channel = new SimpleObjectProperty<>();
+        private final ObjectProperty<MuSigTrade> trade = new SimpleObjectProperty<>();
         private final ObjectProperty<UserProfile> peersUserProfile = new SimpleObjectProperty<>();
         private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
         private final StringProperty direction = new SimpleStringProperty();

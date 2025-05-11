@@ -27,6 +27,7 @@ import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.platform.Version;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
@@ -380,6 +381,38 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
                 },
                 () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
     }
+    
+    //temp
+
+
+    public void sellerSendsPaymentAccount(MuSigTrade trade, String paymentAccountData) {
+       // handleMuSigTradeEvent(trade, new MuSigAccountDataEvent(paymentAccountData));
+    }
+
+    public void buyerSendBitcoinPaymentData(MuSigTrade trade, String buyersBitcoinPaymentData) {
+     //   handleMuSigTradeEvent(trade, new MuSigSendBtcAddressEvent(buyersBitcoinPaymentData));
+    }
+
+    public void sellerConfirmFiatReceipt(MuSigTrade trade) {
+       // handleMuSigTradeEvent(trade, new MuSigConfirmFiatReceiptEvent());
+    }
+
+    public void sellerConfirmBtcSent(MuSigTrade trade, Optional<String> paymentProof) {
+       // handleMuSigTradeEvent(trade, new MuSigConfirmBtcSentEvent(paymentProof));
+    }
+
+    public void btcConfirmed(MuSigTrade trade) {
+       // handleMuSigTradeEvent(trade, new MuSigBtcConfirmedEvent());
+    }
+
+    public void rejectTrade(MuSigTrade trade) {
+       // handleMuSigTradeEvent(trade, new MuSigRejectTradeEvent());
+    }
+
+    public void cancelTrade(MuSigTrade trade) {
+       // handleMuSigTradeEvent(trade, new MuSigCancelTradeEvent());
+    }
+
 
 
     /* --------------------------------------------------------------------- */
@@ -416,6 +449,10 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
 
     public Collection<MuSigTrade> getTrades() {
         return persistableStore.getTrades();
+    }
+
+    public ObservableHashMap<String, MuSigTrade> getTradeById() {
+        return persistableStore.getTradeById();
     }
 
     public void removeTrade(MuSigTrade trade) {

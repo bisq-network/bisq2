@@ -19,18 +19,15 @@ package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.state
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.UserDefinedFiatAccount;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.MaterialTextArea;
-import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
-import bisq.user.profile.UserProfile;
+import bisq.trade.mu_sig.MuSigTrade;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -59,8 +56,8 @@ import java.util.stream.Collectors;
 public class SellerState1 extends BaseState {
     private final Controller controller;
 
-    public SellerState1(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-        controller = new Controller(serviceProvider, bisqEasyTrade, channel);
+    public SellerState1(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
+        controller = new Controller(serviceProvider, trade, channel);
     }
 
     public View getView() {
@@ -70,13 +67,13 @@ public class SellerState1 extends BaseState {
     private static class Controller extends BaseState.Controller<Model, View> {
         private Pin accountsPin, selectedAccountPin;
 
-        private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            super(serviceProvider, bisqEasyTrade, channel);
+        private Controller(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            super(serviceProvider, trade, channel);
         }
 
         @Override
-        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            return new Model(bisqEasyTrade, channel);
+        protected Model createModel(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            return new Model(trade, channel);
         }
 
         @Override
@@ -123,13 +120,13 @@ public class SellerState1 extends BaseState {
 
         private void onSendPaymentData() {
             String paymentAccountData = model.getPaymentAccountData().get();
-            if (paymentAccountData.length() > BisqEasyAccountDataMessage.MAX_LENGTH) {
+           /* if (paymentAccountData.length() > BisqEasyAccountDataMessage.MAX_LENGTH) {
                 new Popup().warning(Res.get("validation.tooLong", UserProfile.MAX_LENGTH_STATEMENT)).show();
                 return;
-            }
+            }*/
             sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase1.tradeLogMessage",
                     model.getChannel().getMyUserIdentity().getUserName(), model.getPaymentAccountData().get()));
-            bisqEasyTradeService.sellerSendsPaymentAccount(model.getBisqEasyTrade(), paymentAccountData);
+            muSigTradeService.sellerSendsPaymentAccount(model.getTrade(), paymentAccountData);
         }
 
         private void onSelectAccount(UserDefinedFiatAccount account) {
@@ -154,8 +151,8 @@ public class SellerState1 extends BaseState {
         private final SortedList<UserDefinedFiatAccount> sortedAccounts = new SortedList<>(accounts);
         private final ObjectProperty<UserDefinedFiatAccount> selectedAccount = new SimpleObjectProperty<>();
 
-        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            super(bisqEasyTrade, channel);
+        protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            super(trade, channel);
         }
 
         @Nullable

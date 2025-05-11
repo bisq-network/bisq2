@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, TradeDetailsController> {
+public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetailsModel, MuSigTradeDetailsController> {
     private final Button closeButton;
     private final Label tradeDateLabel, tradeDurationLabel, meLabel, peerLabel, offerTypeLabel, marketLabel, fiatAmountLabel,
             fiatCurrencyLabel, btcAmountLabel, priceLabel, priceCodesLabel, priceSpecLabel, paymentMethodLabel,
@@ -50,7 +50,7 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
             btcPaymentAddressCopyButton, paymentProofCopyButton, paymentAccountDataCopyButton;
     private final HBox paymentProofBox, tradeDurationBox;
 
-    public TradeDetailsView(TradeDetailsModel model, TradeDetailsController controller) {
+    public MuSigTradeDetailsView(MuSigTradeDetailsModel model, MuSigTradeDetailsController controller) {
         super(new VBox(), model, controller);
 
         closeButton = BisqIconButton.createIconButton("close");

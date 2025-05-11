@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states;
 
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
-import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.mu_sig.MuSigTrade;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -27,16 +27,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SellerState4 extends State4<SellerState4.Controller> {
     public SellerState4(ServiceProvider serviceProvider,
-                        BisqEasyTrade bisqEasyTrade,
-                        BisqEasyOpenTradeChannel channel) {
-        super(serviceProvider, bisqEasyTrade, channel);
+                        MuSigTrade trade,
+                        MuSigOpenTradeChannel channel) {
+        super(serviceProvider, trade, channel);
     }
 
     @Override
     protected Controller getController(ServiceProvider serviceProvider,
-                                       BisqEasyTrade bisqEasyTrade,
-                                       BisqEasyOpenTradeChannel channel) {
-        return new Controller(serviceProvider, bisqEasyTrade, channel);
+                                       MuSigTrade trade,
+                                       MuSigOpenTradeChannel channel) {
+        return new Controller(serviceProvider, trade, channel);
     }
 
     public View getView() {
@@ -45,14 +45,14 @@ public class SellerState4 extends State4<SellerState4.Controller> {
 
     protected static class Controller extends State4.Controller<Model, View> {
         protected Controller(ServiceProvider serviceProvider,
-                             BisqEasyTrade bisqEasyTrade,
-                             BisqEasyOpenTradeChannel channel) {
-            super(serviceProvider, bisqEasyTrade, channel);
+                             MuSigTrade trade,
+                             MuSigOpenTradeChannel channel) {
+            super(serviceProvider, trade, channel);
         }
 
         @Override
-        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            return new Model(bisqEasyTrade, channel);
+        protected Model createModel(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            return new Model(trade, channel);
         }
 
         @Override
@@ -64,8 +64,8 @@ public class SellerState4 extends State4<SellerState4.Controller> {
     @Setter
     @Getter
     protected static class Model extends State4.Model {
-        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            super(bisqEasyTrade, channel);
+        protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            super(trade, channel);
         }
     }
 

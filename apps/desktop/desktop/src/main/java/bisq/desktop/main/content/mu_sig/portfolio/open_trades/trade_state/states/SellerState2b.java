@@ -17,11 +17,11 @@
 
 package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states;
 
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.i18n.Res;
-import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.mu_sig.MuSigTrade;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
@@ -32,8 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 public class SellerState2b extends BaseState {
     private final Controller controller;
 
-    public SellerState2b(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-        controller = new Controller(serviceProvider, bisqEasyTrade, channel);
+    public SellerState2b(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
+        controller = new Controller(serviceProvider, trade, channel);
     }
 
     public View getView() {
@@ -41,13 +41,13 @@ public class SellerState2b extends BaseState {
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
-        private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            super(serviceProvider, bisqEasyTrade, channel);
+        private Controller(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            super(serviceProvider, trade, channel);
         }
 
         @Override
-        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            return new Model(bisqEasyTrade, channel);
+        protected Model createModel(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            return new Model(trade, channel);
         }
 
         @Override
@@ -68,14 +68,14 @@ public class SellerState2b extends BaseState {
         private void onConfirmFiatReceipt() {
             sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase2b.tradeLogMessage",
                     model.getChannel().getMyUserIdentity().getUserName(), model.getFormattedQuoteAmount()));
-            bisqEasyTradeService.sellerConfirmFiatReceipt(model.getBisqEasyTrade());
+            muSigTradeService.sellerConfirmFiatReceipt(model.getTrade());
         }
     }
 
     @Getter
     private static class Model extends BaseState.Model {
-        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            super(bisqEasyTrade, channel);
+        protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            super(trade, channel);
         }
     }
 
@@ -98,7 +98,7 @@ public class SellerState2b extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
-            headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.headline", model.getFormattedQuoteAmount(), model.getBisqEasyTrade().getShortId()));
+            headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.headline", model.getFormattedQuoteAmount(), model.getTrade().getShortId()));
             fiatReceivedButton.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.fiatReceivedButton", model.getFormattedQuoteAmount()));
             fiatReceivedButton.setOnAction(e -> controller.onConfirmFiatReceipt());
         }

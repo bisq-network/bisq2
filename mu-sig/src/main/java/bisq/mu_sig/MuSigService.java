@@ -347,6 +347,10 @@ public class MuSigService extends LifecycleService {
         }
     }
 
+    public boolean isAccountDataBanned(String sellersAccountData) {
+        return false;
+    }
+
     //todo
     private void validateUserProfile(MuSigOffer muSigOffer) {
         Optional<Identity> activeIdentity = identityService.findActiveIdentity(muSigOffer.getMakerNetworkId());

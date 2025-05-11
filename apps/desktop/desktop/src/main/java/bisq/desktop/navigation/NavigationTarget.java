@@ -95,6 +95,7 @@ public enum NavigationTarget {
     BISQ_EASY_OFFER_DETAILS(OVERLAY, false),
 
     BISQ_EASY_TRADE_DETAILS(OVERLAY, false),
+    MU_SIG_TRADE_DETAILS(OVERLAY, false),
 
     MEDIATION_CASE_DETAILS(OVERLAY, false),
 

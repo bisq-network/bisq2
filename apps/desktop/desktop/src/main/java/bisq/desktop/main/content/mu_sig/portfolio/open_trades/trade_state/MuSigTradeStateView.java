@@ -41,7 +41,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class TradeStateView extends View<VBox, TradeStateModel, TradeStateController> {
+public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigTradeStateController> {
     private final HBox phaseAndInfoHBox, cancelledHBox, interruptedHBox, errorHBox, isInMediationHBox;
     private final Button interruptTradeButton, closeTradeButton, exportButton, reportToMediatorButton, acceptSellersPriceButton,
             rejectPriceButton, tradeDetailsButton;
@@ -53,10 +53,10 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
     private Subscription stateInfoVBoxPin, showSellersPriceApprovalOverlayPin, requestMediationDeliveryStatusPin,
             shouldShowTryRequestMediationAgainPin;
 
-    public TradeStateView(TradeStateModel model,
-                          TradeStateController controller,
-                          VBox tradePhaseBox,
-                          HBox tradeDataHeader) {
+    public MuSigTradeStateView(MuSigTradeStateModel model,
+                               MuSigTradeStateController controller,
+                               VBox tradePhaseBox,
+                               HBox tradeDataHeader) {
         super(new VBox(0), model, controller);
 
         this.tradePhaseBox = tradePhaseBox;

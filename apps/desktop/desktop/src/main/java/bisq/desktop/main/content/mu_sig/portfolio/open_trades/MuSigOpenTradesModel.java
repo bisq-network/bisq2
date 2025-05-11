@@ -44,10 +44,10 @@ public final class MuSigOpenTradesModel extends ChatModel {
     private final BooleanProperty isAnyTradeInMediation = new SimpleBooleanProperty();
     private final StringProperty chatWindowTitle = new SimpleStringProperty();
     private final ObjectProperty<Stage> chatWindow = new SimpleObjectProperty<>();
-    private final ObjectProperty<OpenTradeListItem> selectedItem = new SimpleObjectProperty<>();
-    private final ObservableList<OpenTradeListItem> listItems = FXCollections.observableArrayList();
-    private final FilteredList<OpenTradeListItem> filteredList = new FilteredList<>(listItems);
-    private final SortedList<OpenTradeListItem> sortedList = new SortedList<>(filteredList);
+    private final ObjectProperty<MuSigOpenTradeListItem> selectedItem = new SimpleObjectProperty<>();
+    private final ObservableList<MuSigOpenTradeListItem> listItems = FXCollections.observableArrayList();
+    private final FilteredList<MuSigOpenTradeListItem> filteredList = new FilteredList<>(listItems);
+    private final SortedList<MuSigOpenTradeListItem> sortedList = new SortedList<>(filteredList);
 
     public MuSigOpenTradesModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
@@ -63,7 +63,7 @@ public final class MuSigOpenTradesModel extends ChatModel {
         chatWindowTitle.set(null);
         chatWindow.set(null);
         selectedItem.set(null);
-        listItems.forEach(OpenTradeListItem::dispose);
+        listItems.forEach(MuSigOpenTradeListItem::dispose);
         listItems.clear();
     }
 }

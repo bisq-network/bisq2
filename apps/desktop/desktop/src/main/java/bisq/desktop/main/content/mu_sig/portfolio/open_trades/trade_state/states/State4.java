@@ -19,24 +19,24 @@ package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.state
 
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.bonded_roles.explorer.ExplorerService;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.common.data.Pair;
-import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.components.UserProfileDisplay;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_details.TradeDetailsController;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.OpenTradesUtils;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_details.MuSigTradeDetailsController;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.MuSigOpenTradesUtils;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.formatters.TimeFormatter;
-import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.bisq_easy.BisqEasyTradeUtils;
+import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.MuSigTradeUtils;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
@@ -55,22 +55,22 @@ import java.util.Optional;
 public abstract class State4<C extends State4.Controller<?, ?>> extends BaseState {
     protected final C controller;
 
-    public State4(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-        controller = getController(serviceProvider, bisqEasyTrade, channel);
+    public State4(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
+        controller = getController(serviceProvider, trade, channel);
     }
 
     protected abstract C getController(ServiceProvider serviceProvider,
-                                       BisqEasyTrade bisqEasyTrade,
-                                       BisqEasyOpenTradeChannel channel);
+                                       MuSigTrade trade,
+                                       MuSigOpenTradeChannel channel);
 
     protected static abstract class Controller<M extends Model, V extends View<?, ?>> extends BaseState.Controller<M, V> {
         private final ReputationService reputationService;
         protected final ExplorerService explorerService;
 
         protected Controller(ServiceProvider serviceProvider,
-                             BisqEasyTrade bisqEasyTrade,
-                             BisqEasyOpenTradeChannel channel) {
-            super(serviceProvider, bisqEasyTrade, channel);
+                             MuSigTrade trade,
+                             MuSigOpenTradeChannel channel) {
+            super(serviceProvider, trade, channel);
 
             explorerService = serviceProvider.getBondedRolesService().getExplorerService();
             reputationService = serviceProvider.getUserService().getReputationService();
@@ -80,32 +80,32 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
         public void onActivate() {
             super.onActivate();
 
-            BisqEasyTrade bisqEasyTrade = model.getBisqEasyTrade();
-            BisqEasyContract contract = bisqEasyTrade.getContract();
+            MuSigTrade trade = model.getTrade();
+            MuSigContract contract = trade.getContract();
             BitcoinPaymentRail paymentRail = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
             String name = paymentRail.name();
             model.setPaymentProofDescription(Res.get("bisqEasy.tradeState.paymentProof." + name));
             model.setBlockExplorerLinkVisible(paymentRail.equals(BitcoinPaymentRail.MAIN_CHAIN));
-            String paymentProof = bisqEasyTrade.getPaymentProof().get();
+            String paymentProof = trade.getPaymentProof().get();
             model.setPaymentProof(paymentProof);
             model.setPaymentProofVisible(paymentProof != null);
             UserProfile tradePeer = model.getChannel().getPeer();
             model.setTradePeer(tradePeer);
-            model.setBuyer(bisqEasyTrade.isBuyer());
-            model.setFiatCurrency(bisqEasyTrade.getOffer().getMarket().getQuoteCurrencyCode());
+            model.setBuyer(trade.isBuyer());
+            model.setFiatCurrency(trade.getOffer().getMarket().getQuoteCurrencyCode());
             model.setPaymentMethod(contract.getQuoteSidePaymentMethodSpec().getShortDisplayString());
-            model.setTradeId(bisqEasyTrade.getShortId());
+            model.setTradeId(trade.getShortId());
             long takeOfferDate = contract.getTakeOfferDate();
             model.setTradeDate(DateFormatter.formatDateTime(takeOfferDate));
 
-            String tradeDuration = bisqEasyTrade.getTradeCompletedDate()
+            String tradeDuration = trade.getTradeCompletedDate()
                     .map(tradeCompletedDate -> tradeCompletedDate - takeOfferDate)
                     .map(TimeFormatter::formatAge)
                     .orElse("");
             model.setTradeDuration(tradeDuration);
 
-            model.setPrice(PriceFormatter.format(BisqEasyTradeUtils.getPriceQuote(bisqEasyTrade)));
-            model.setPriceSymbol(model.getBisqEasyOffer().getMarket().getMarketCodes());
+            model.setPrice(PriceFormatter.format(MuSigTradeUtils.getPriceQuote(trade)));
+            model.setPriceSymbol(model.getMuSigOffer().getMarket().getMarketCodes());
             model.setTradePeerReputationScore(reputationService.findReputationScore(tradePeer).orElse(ReputationScore.NONE));
         }
 
@@ -118,7 +118,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
             new Popup().feedback(Res.get("bisqEasy.openTrades.closeTrade.warning.completed"))
                     .actionButtonText(Res.get("bisqEasy.openTrades.confirmCloseTrade"))
                     .onAction(() -> {
-                        bisqEasyTradeService.removeTrade(model.getBisqEasyTrade());
+                        muSigTradeService.removeTrade(model.getTrade());
                         leavePrivateChatManager.leaveChannel(model.getChannel());
                     })
                     .closeButtonText(Res.get("action.cancel"))
@@ -126,12 +126,12 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
         }
 
         protected void onShowDetails() {
-            Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_DETAILS,
-                    new TradeDetailsController.InitData(model.getBisqEasyTrade(), model.getChannel()));
+            Navigation.navigateTo(NavigationTarget.MU_SIG_TRADE_DETAILS,
+                    new MuSigTradeDetailsController.InitData(model.getTrade(), model.getChannel()));
         }
 
         protected void onExportTrade() {
-            OpenTradesUtils.exportTrade(model.getBisqEasyTrade(), getView().getRoot().getScene());
+            MuSigOpenTradesUtils.exportTrade(model.getTrade(), getView().getRoot().getScene());
         }
 
         protected void openExplorer() {
@@ -167,8 +167,8 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
         protected Optional<String> txId = Optional.empty();
         protected ReputationScore tradePeerReputationScore;
 
-        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            super(bisqEasyTrade, channel);
+        protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            super(trade, channel);
         }
     }
 

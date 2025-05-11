@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_details;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
+import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
@@ -32,9 +32,9 @@ import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.formatters.TimeFormatter;
-import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
-import bisq.trade.bisq_easy.BisqEasyTradeUtils;
+import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.MuSigTradeFormatter;
+import bisq.trade.mu_sig.MuSigTradeUtils;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -44,44 +44,44 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class TradeDetailsController extends NavigationController implements InitWithDataController<TradeDetailsController.InitData> {
+public class MuSigTradeDetailsController extends NavigationController implements InitWithDataController<MuSigTradeDetailsController.InitData> {
     @Getter
     @EqualsAndHashCode
     @ToString
     public static class InitData {
-        private final BisqEasyTrade bisqEasyTrade;
-        private final BisqEasyOpenTradeChannel channel;
+        private final MuSigTrade trade;
+        private final MuSigOpenTradeChannel channel;
 
-        public InitData(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            this.bisqEasyTrade = bisqEasyTrade;
+        public InitData(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            this.trade = trade;
             this.channel = channel;
         }
     }
 
     @Getter
-    private final TradeDetailsModel model;
+    private final MuSigTradeDetailsModel model;
     @Getter
-    private final TradeDetailsView view;
+    private final MuSigTradeDetailsView view;
 
 
-    public TradeDetailsController(ServiceProvider serviceProvider) {
-        super(NavigationTarget.BISQ_EASY_TRADE_DETAILS);
+    public MuSigTradeDetailsController(ServiceProvider serviceProvider) {
+        super(NavigationTarget.MU_SIG_TRADE_DETAILS);
 
-        model = new TradeDetailsModel();
-        view = new TradeDetailsView(model, this);
+        model = new MuSigTradeDetailsModel();
+        view = new MuSigTradeDetailsView(model, this);
     }
 
     @Override
     public void initWithData(InitData initData) {
-        model.setTrade(initData.bisqEasyTrade);
+        model.setTrade(initData.trade);
         model.setChannel(initData.channel);
     }
 
     @Override
     public void onActivate() {
-        BisqEasyTrade trade = model.getTrade();
-        BisqEasyOpenTradeChannel channel = model.getChannel();
-        BisqEasyContract contract = trade.getContract();
+        MuSigTrade trade = model.getTrade();
+        MuSigOpenTradeChannel channel = model.getChannel();
+        MuSigContract contract = trade.getContract();
 
         model.setTradeDate(DateFormatter.formatDateTime(contract.getTakeOfferDate()));
 
@@ -90,17 +90,17 @@ public class TradeDetailsController extends NavigationController implements Init
                 .map(TimeFormatter::formatAge);
         model.setTradeDuration(tradeDuration);
 
-        model.setMe(String.format("%s (%s)", channel.getMyUserIdentity().getNickName(), BisqEasyTradeFormatter.getMakerTakerRole(trade).toLowerCase()));
+        model.setMe(String.format("%s (%s)", channel.getMyUserIdentity().getNickName(), MuSigTradeFormatter.getMakerTakerRole(trade).toLowerCase()));
         model.setPeer(channel.getPeer().getUserName());
         model.setOfferType(trade.getOffer().getDirection().isBuy()
                 ? Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.buyOffer")
                 : Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.sellOffer"));
         model.setMarket(Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.fiatMarket",
                 trade.getOffer().getMarket().getQuoteCurrencyCode()));
-        model.setFiatAmount(BisqEasyTradeFormatter.formatQuoteSideAmount(trade));
+        model.setFiatAmount(MuSigTradeFormatter.formatQuoteSideAmount(trade));
         model.setFiatCurrency(trade.getOffer().getMarket().getQuoteCurrencyCode());
-        model.setBtcAmount(BisqEasyTradeFormatter.formatBaseSideAmount(trade));
-        model.setPrice(PriceFormatter.format(BisqEasyTradeUtils.getPriceQuote(contract)));
+        model.setBtcAmount(MuSigTradeFormatter.formatBaseSideAmount(trade));
+        model.setPrice(PriceFormatter.format(MuSigTradeUtils.getPriceQuote(contract)));
         model.setPriceCodes(trade.getOffer().getMarket().getMarketCodes());
         model.setPriceSpec(trade.getOffer().getPriceSpec() instanceof FixPriceSpec
                 ? ""

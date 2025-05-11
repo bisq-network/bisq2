@@ -20,18 +20,18 @@ package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.state
 import bisq.account.AccountService;
 import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.chat.ChatService;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
-import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.mu_sig.MuSigOffer;
 import bisq.presentation.formatters.AmountFormatter;
-import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.bisq_easy.BisqEasyTradeService;
+import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.MuSigTradeService;
 import bisq.user.identity.UserIdentityService;
 import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
@@ -48,42 +48,42 @@ public abstract class BaseState {
         protected final M model;
         @Getter
         protected final V view;
-        protected final BisqEasyTradeService bisqEasyTradeService;
+        protected final MuSigTradeService muSigTradeService;
         protected final ChatService chatService;
         protected final AccountService accountService;
         protected final UserIdentityService userIdentityService;
-        protected final BisqEasyOpenTradeChannelService channelService;
+        protected final MuSigOpenTradeChannelService channelService;
         protected final LeavePrivateChatManager leavePrivateChatManager;
 
         protected Controller(ServiceProvider serviceProvider,
-                             BisqEasyTrade bisqEasyTrade,
-                             BisqEasyOpenTradeChannel channel) {
+                             MuSigTrade trade,
+                             MuSigOpenTradeChannel channel) {
             chatService = serviceProvider.getChatService();
-            bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
+            muSigTradeService = serviceProvider.getTradeService().getMuSigTradeService();
             accountService = serviceProvider.getAccountService();
             userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-            channelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
+            channelService = serviceProvider.getChatService().getMuSigOpenTradeChannelService();
             leavePrivateChatManager = chatService.getLeavePrivateChatManager();
 
-            model = createModel(bisqEasyTrade, channel);
+            model = createModel(trade, channel);
             view = createView();
         }
 
         protected abstract V createView();
 
-        protected abstract M createModel(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel);
+        protected abstract M createModel(MuSigTrade trade, MuSigOpenTradeChannel channel);
 
         @Override
         public void onActivate() {
-            BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
-            model.setQuoteCode(bisqEasyOffer.getMarket().getQuoteCurrencyCode());
+            MuSigOffer muSigOffer = model.getMuSigOffer();
+            model.setQuoteCode(muSigOffer.getMarket().getQuoteCurrencyCode());
 
-            long baseSideAmount = model.getBisqEasyTrade().getContract().getBaseSideAmount();
-            long quoteSideAmount = model.getBisqEasyTrade().getContract().getQuoteSideAmount();
+            long baseSideAmount = model.getTrade().getContract().getBaseSideAmount();
+            long quoteSideAmount = model.getTrade().getContract().getQuoteSideAmount();
             model.setBaseAmount(AmountFormatter.formatBaseAmount(Coin.asBtcFromValue(baseSideAmount)));
             model.setFormattedBaseAmount(AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(baseSideAmount)));
-            model.setQuoteAmount(AmountFormatter.formatQuoteAmount(Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode())));
-            model.setFormattedQuoteAmount(AmountFormatter.formatQuoteAmountWithCode(Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode())));
+            model.setQuoteAmount(AmountFormatter.formatQuoteAmount(Fiat.from(quoteSideAmount, muSigOffer.getMarket().getQuoteCurrencyCode())));
+            model.setFormattedQuoteAmount(AmountFormatter.formatQuoteAmountWithCode(Fiat.from(quoteSideAmount, muSigOffer.getMarket().getQuoteCurrencyCode())));
         }
 
         @Override
@@ -100,14 +100,14 @@ public abstract class BaseState {
         }
 
         protected void sendTradeLogMessage(String encoded) {
-            chatService.getBisqEasyOpenTradeChannelService().sendTradeLogMessage(encoded, model.getChannel());
+            chatService.getMuSigOpenTradeChannelService().sendTradeLogMessage(encoded, model.getChannel());
         }
     }
 
     @Getter
     protected static class Model implements bisq.desktop.common.view.Model {
-        protected final BisqEasyTrade bisqEasyTrade;
-        protected final BisqEasyOpenTradeChannel channel;
+        protected final MuSigTrade trade;
+        protected final MuSigOpenTradeChannel channel;
         @Setter
         protected String quoteCode;
         @Setter
@@ -119,13 +119,13 @@ public abstract class BaseState {
         @Setter
         protected String formattedQuoteAmount;
 
-        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            this.bisqEasyTrade = bisqEasyTrade;
+        protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            this.trade = trade;
             this.channel = channel;
         }
 
-        protected BisqEasyOffer getBisqEasyOffer() {
-            return bisqEasyTrade.getOffer();
+        protected MuSigOffer getMuSigOffer() {
+            return trade.getOffer();
         }
     }
 

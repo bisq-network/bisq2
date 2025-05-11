@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_details;
 
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.navigation.NavigationTarget;
-import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.mu_sig.MuSigTrade;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -30,9 +30,9 @@ import java.util.Optional;
 @Slf4j
 @Getter
 @Setter
-public class TradeDetailsModel extends NavigationModel {
-    private BisqEasyTrade trade;
-    private BisqEasyOpenTradeChannel channel;
+public class MuSigTradeDetailsModel extends NavigationModel {
+    private MuSigTrade trade;
+    private MuSigOpenTradeChannel channel;
 
     private String tradeDate;
     private Optional<String> tradeDuration = Optional.empty();
@@ -63,6 +63,6 @@ public class TradeDetailsModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.BISQ_EASY_TRADE_DETAILS;
+        return NavigationTarget.MU_SIG_TRADE_DETAILS;
     }
 }

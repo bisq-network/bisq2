@@ -20,7 +20,7 @@ package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.state
 import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.bonded_roles.explorer.dto.Output;
 import bisq.bonded_roles.explorer.dto.Tx;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.common.monetary.Coin;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
@@ -37,7 +37,7 @@ import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
-import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.mu_sig.MuSigTrade;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -67,14 +67,14 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
     protected final C controller;
 
     protected StateMainChain3b(ServiceProvider serviceProvider,
-                               BisqEasyTrade bisqEasyTrade,
-                               BisqEasyOpenTradeChannel channel) {
-        controller = getController(serviceProvider, bisqEasyTrade, channel);
+                               MuSigTrade trade,
+                               MuSigOpenTradeChannel channel) {
+        controller = getController(serviceProvider, trade, channel);
     }
 
     protected abstract C getController(ServiceProvider serviceProvider,
-                                       BisqEasyTrade bisqEasyTrade,
-                                       BisqEasyOpenTradeChannel channel);
+                                       MuSigTrade trade,
+                                       MuSigOpenTradeChannel channel);
 
     protected static abstract class Controller<M extends Model, V extends View<?, ?>> extends BaseState.Controller<M, V> {
         private final static Map<String, Tx> CONFIRMED_TX_CACHE = new HashMap<>();
@@ -86,9 +86,9 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
         private CompletableFuture<Tx> requestFuture;
 
         protected Controller(ServiceProvider serviceProvider,
-                             BisqEasyTrade bisqEasyTrade,
-                             BisqEasyOpenTradeChannel channel) {
-            super(serviceProvider, bisqEasyTrade, channel);
+                             MuSigTrade trade,
+                             MuSigOpenTradeChannel channel) {
+            super(serviceProvider, trade, channel);
 
             explorerService = serviceProvider.getBondedRolesService().getExplorerService();
         }
@@ -97,8 +97,8 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
         public void onActivate() {
             super.onActivate();
 
-            model.setPaymentProof(model.getBisqEasyTrade().getPaymentProof().get());
-            model.setBitcoinPaymentData(model.getBisqEasyTrade().getBitcoinPaymentData().get());
+            model.setPaymentProof(model.getTrade().getPaymentProof().get());
+            model.setBitcoinPaymentData(model.getTrade().getBitcoinPaymentData().get());
 
             if (model.getConfirmationState().get() == null) {
                 model.getConfirmationState().set(Model.ConfirmationState.REQUEST_STARTED);
@@ -148,7 +148,7 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
             if (StringUtils.isEmpty(txValue)) {
                 return Res.get("bisqEasy.tradeState.info.phase3b.button.next.noOutputForAddress", address, txId);
             } else {
-                String tradeAmount = getFormattedBaseAmount(model.getBisqEasyTrade().getContract().getBaseSideAmount());
+                String tradeAmount = getFormattedBaseAmount(model.getTrade().getContract().getBaseSideAmount());
                 return Res.get("bisqEasy.tradeState.info.phase3b.button.next.amountNotMatching", address, txId, txValue, tradeAmount);
             }
         }
@@ -162,8 +162,8 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
 
         private void doCompleteTrade() {
             // todo should we send a system message? if so we should change the text
-            //sendTradeLogMessage(Res.get("bisqEasy.tradeState.info.phase3b.tradeLogMessage", model.getChannel().getMyUserIdentity().getUserName()));
-            bisqEasyTradeService.btcConfirmed(model.getBisqEasyTrade());
+            //sendTradeLogMessage(Res.get("muSig.tradeState.info.phase3b.tradeLogMessage", model.getChannel().getMyUserIdentity().getUserName()));
+            muSigTradeService.btcConfirmed(model.getTrade());
         }
 
         private void requestTx() {
@@ -225,7 +225,7 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
             } else if (txOutputValuesForAddress.size() == 1) {
                 long outputValue = txOutputValuesForAddress.get(0);
                 model.getBtcBalance().set(getFormattedBaseAmount(outputValue));
-                long tradeAmount = model.getBisqEasyTrade().getContract().getBaseSideAmount();
+                long tradeAmount = model.getTrade().getContract().getBaseSideAmount();
                 if (outputValue != tradeAmount) {
                     explorerResultValidator.setMessage(Res.get("bisqEasy.tradeState.info.phase3b.balance.invalid.amountNotMatching"));
                 }
@@ -273,8 +273,8 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
         private final ObjectProperty<ConfirmationState> confirmationState = new SimpleObjectProperty<>();
         private final ExplorerResultValidator explorerResultValidator = new ExplorerResultValidator();
 
-        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            super(bisqEasyTrade, channel);
+        protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            super(trade, channel);
             role = this instanceof BuyerStateMainChain3b.Model ? "buyer" : "seller";
         }
     }

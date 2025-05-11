@@ -19,17 +19,17 @@ package bisq.desktop.main.content.mu_sig.portfolio.open_trades;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.FiatPaymentRail;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
-import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.table.DateTableItem;
 import bisq.presentation.formatters.DateFormatter;
-import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
-import bisq.trade.bisq_easy.BisqEasyTradeUtils;
+import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.MuSigTradeFormatter;
+import bisq.trade.mu_sig.MuSigTradeUtils;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
@@ -43,11 +43,11 @@ import lombok.ToString;
 @ToString
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-class OpenTradeListItem implements DateTableItem {
+class MuSigOpenTradeListItem implements DateTableItem {
     @EqualsAndHashCode.Include
-    private final BisqEasyOpenTradeChannel channel;
+    private final MuSigOpenTradeChannel channel;
     @EqualsAndHashCode.Include
-    private final BisqEasyTrade trade;
+    private final MuSigTrade trade;
 
     private final UserProfile myUserProfile, peersUserProfile;
     private final String offerId, tradeId, shortTradeId, myUserName, directionalTitle, peersUserName, dateString, timeString,
@@ -67,11 +67,11 @@ class OpenTradeListItem implements DateTableItem {
     private String mediatorUserName = "";
     private boolean isInMediation;
 
-    public OpenTradeListItem(BisqEasyOpenTradeChannel channel,
-                             BisqEasyTrade trade,
-                             ReputationService reputationService,
-                             ChatNotificationService chatNotificationService,
-                             UserProfileService userProfileService) {
+    public MuSigOpenTradeListItem(MuSigOpenTradeChannel channel,
+                                  MuSigTrade trade,
+                                  ReputationService reputationService,
+                                  ChatNotificationService chatNotificationService,
+                                  UserProfileService userProfileService) {
         this.channel = channel;
         this.trade = trade;
 
@@ -80,29 +80,29 @@ class OpenTradeListItem implements DateTableItem {
         this.chatNotificationService = chatNotificationService;
         peersUserName = peersUserProfile.getUserName();
         myUserName = channel.getMyUserIdentity().getUserName();
-        directionalTitle = BisqEasyTradeFormatter.getDirectionalTitle(trade);
-        offerId = channel.getBisqEasyOffer().getId();
+        directionalTitle = MuSigTradeFormatter.getDirectionalTitle(trade);
+        offerId = trade.getContract().getOffer().getId();
         this.tradeId = trade.getId();
         shortTradeId = trade.getShortId();
 
-        BisqEasyContract contract = trade.getContract();
+        MuSigContract contract = trade.getContract();
         date = contract.getTakeOfferDate();
         dateString = DateFormatter.formatDate(date);
         timeString = DateFormatter.formatTime(date);
         market = trade.getOffer().getMarket().toString();
-        price = BisqEasyTradeUtils.getPriceQuote(trade).getValue();
-        priceString = BisqEasyTradeFormatter.formatPriceWithCode(trade);
+        price = MuSigTradeUtils.getPriceQuote(trade).getValue();
+        priceString = MuSigTradeFormatter.formatPriceWithCode(trade);
         baseAmount = contract.getBaseSideAmount();
-        baseAmountString = BisqEasyTradeFormatter.formatBaseSideAmount(trade);
+        baseAmountString = MuSigTradeFormatter.formatBaseSideAmount(trade);
         quoteAmount = contract.getQuoteSideAmount();
-        quoteAmountString = BisqEasyTradeFormatter.formatQuoteSideAmountWithCode(trade);
+        quoteAmountString = MuSigTradeFormatter.formatQuoteSideAmountWithCode(trade);
         bitcoinPaymentRail = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
         fiatPaymentRail = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
         bitcoinSettlementMethod = contract.getBaseSidePaymentMethodSpec().getShortDisplayString();
         fiatPaymentMethod = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
         isFiatPaymentMethodCustom = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().isCustomPaymentMethod();
 
-        myRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
+        myRole = MuSigTradeFormatter.getMakerTakerRole(trade);
         reputationScore = reputationService.getReputationScore(peersUserProfile);
 
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);

@@ -17,18 +17,18 @@
 
 package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states;
 
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
-import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.mu_sig.MuSigTrade;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SellerStateMainChain3b extends StateMainChain3b<SellerStateMainChain3b.Controller> {
     public SellerStateMainChain3b(ServiceProvider serviceProvider,
-                                  BisqEasyTrade bisqEasyTrade,
-                                  BisqEasyOpenTradeChannel channel) {
-        super(serviceProvider, bisqEasyTrade, channel);
+                                  MuSigTrade trade,
+                                  MuSigOpenTradeChannel channel) {
+        super(serviceProvider, trade, channel);
     }
 
     public View getView() {
@@ -37,21 +37,21 @@ public class SellerStateMainChain3b extends StateMainChain3b<SellerStateMainChai
 
     @Override
     protected Controller getController(ServiceProvider serviceProvider,
-                                       BisqEasyTrade bisqEasyTrade,
-                                       BisqEasyOpenTradeChannel channel) {
-        return new Controller(serviceProvider, bisqEasyTrade, channel);
+                                       MuSigTrade trade,
+                                       MuSigOpenTradeChannel channel) {
+        return new Controller(serviceProvider, trade, channel);
     }
 
     protected static class Controller extends StateMainChain3b.Controller<Model, View> {
         protected Controller(ServiceProvider serviceProvider,
-                             BisqEasyTrade bisqEasyTrade,
-                             BisqEasyOpenTradeChannel channel) {
-            super(serviceProvider, bisqEasyTrade, channel);
+                             MuSigTrade trade,
+                             MuSigOpenTradeChannel channel) {
+            super(serviceProvider, trade, channel);
         }
 
         @Override
-        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            return new Model(bisqEasyTrade, channel);
+        protected Model createModel(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            return new Model(trade, channel);
         }
 
         @Override
@@ -62,8 +62,8 @@ public class SellerStateMainChain3b extends StateMainChain3b<SellerStateMainChai
 
     @Getter
     protected static class Model extends StateMainChain3b.Model {
-        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            super(bisqEasyTrade, channel);
+        protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            super(trade, channel);
         }
     }
 

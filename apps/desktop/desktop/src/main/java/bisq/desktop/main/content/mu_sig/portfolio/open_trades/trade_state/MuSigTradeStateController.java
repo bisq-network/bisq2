@@ -19,8 +19,8 @@ package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.chat.ChatService;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
@@ -33,22 +33,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_details.TradeDetailsController;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState1a;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState1b;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState2a;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState2b;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState3a;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState4;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerStateLightning3b;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerStateMainChain3b;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState1;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState2a;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState2b;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState3a;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState4;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerStateLightning3b;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerStateMainChain3b;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_details.MuSigTradeDetailsController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
@@ -59,9 +44,9 @@ import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.settings.DontShowAgainService;
 import bisq.support.mediation.MediationRequest;
 import bisq.support.mediation.MediationRequestService;
-import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.bisq_easy.BisqEasyTradeService;
-import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
+import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.MuSigTradeService;
+import bisq.trade.mu_sig.protocol.MuSigTradeState;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -74,52 +59,52 @@ import java.util.Set;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class TradeStateController implements Controller {
+public class MuSigTradeStateController implements Controller {
     @Getter
-    private final TradeStateView view;
-    private final TradeStateModel model;
+    private final MuSigTradeStateView view;
+    private final MuSigTradeStateModel model;
     private final ServiceProvider serviceProvider;
-    private final TradePhaseBox tradePhaseBox;
-    private final TradeDataHeader tradeDataHeader;
+    private final MuSigTradePhaseBox muSigTradePhaseBox;
+    private final MuSigTradeDataHeader muSigTradeDataHeader;
     private final NetworkService networkService;
-    private final BisqEasyTradeService bisqEasyTradeService;
-    private final BisqEasyOpenTradeChannelService channelService;
+    private final MuSigTradeService tradeService;
+    private final MuSigOpenTradeChannelService openTradeChannelService;
     private final MediationRequestService mediationRequestService;
     private final DontShowAgainService dontShowAgainService;
     private final LeavePrivateChatManager leavePrivateChatManager;
     private final Optional<ResendMessageService> resendMessageService;
-    private Pin bisqEasyTradeStatePin, errorMessagePin, peersErrorMessagePin, isInMediationPin,
+    private Pin muSigTradeStatePin, errorMessagePin, peersErrorMessagePin, isInMediationPin,
             requestMediationDeliveryStatusPin, messageDeliveryStatusByMessageIdPin;
     private Subscription channelPin, hasBuyerAcceptedPriceSpecPin;
 
-    public TradeStateController(ServiceProvider serviceProvider) {
+    public MuSigTradeStateController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
         networkService = serviceProvider.getNetworkService();
-        bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
+        tradeService = serviceProvider.getTradeService().getMuSigTradeService();
         ChatService chatService = serviceProvider.getChatService();
-        channelService = chatService.getBisqEasyOpenTradeChannelService();
+        openTradeChannelService = chatService.getMuSigOpenTradeChannelService();
         leavePrivateChatManager = chatService.getLeavePrivateChatManager();
         mediationRequestService = serviceProvider.getSupportService().getMediationRequestService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
         resendMessageService = serviceProvider.getNetworkService().getResendMessageService();
 
-        tradePhaseBox = new TradePhaseBox(serviceProvider);
-        tradeDataHeader = new TradeDataHeader(serviceProvider, Res.get("bisqEasy.tradeState.header.peer").toUpperCase());
-        model = new TradeStateModel();
-        view = new TradeStateView(model, this,
-                tradePhaseBox.getView().getRoot(),
-                tradeDataHeader.getRoot());
+        muSigTradePhaseBox = new MuSigTradePhaseBox(serviceProvider);
+        muSigTradeDataHeader = new MuSigTradeDataHeader(serviceProvider, Res.get("bisqEasy.tradeState.header.peer").toUpperCase());
+        model = new MuSigTradeStateModel();
+        view = new MuSigTradeStateView(model, this,
+                muSigTradePhaseBox.getView().getRoot(),
+                muSigTradeDataHeader.getRoot());
     }
 
-    public void setSelectedChannel(BisqEasyOpenTradeChannel channel) {
+    public void setSelectedChannel(MuSigOpenTradeChannel channel) {
         model.getChannel().set(channel);
     }
 
     @Override
     public void onActivate() {
         channelPin = EasyBind.subscribe(model.getChannel(), channel -> {
-            tradeDataHeader.setSelectedChannel(channel);
-            tradePhaseBox.setSelectedChannel(channel);
+            muSigTradeDataHeader.setSelectedChannel(channel);
+            muSigTradePhaseBox.setSelectedChannel(channel);
 
             removeChannelRelatedBindings();
 
@@ -128,8 +113,8 @@ public class TradeStateController implements Controller {
                 return;
             }
 
-            Optional<BisqEasyTrade> optionalBisqEasyTrade = bisqEasyTradeService.findTrade(channel.getTradeId());
-            if (optionalBisqEasyTrade.isEmpty()) {
+            Optional<MuSigTrade> optionalMuSigTrade = tradeService.findTrade(channel.getTradeId());
+            if (optionalMuSigTrade.isEmpty()) {
                 model.resetAll();
                 return;
             }
@@ -139,37 +124,37 @@ public class TradeStateController implements Controller {
 
             isInMediationPin = FxBindings.bind(model.getIsInMediation()).to(channel.isInMediationObservable());
 
-            BisqEasyTrade bisqEasyTrade = optionalBisqEasyTrade.get();
-            model.getBisqEasyTrade().set(bisqEasyTrade);
+            MuSigTrade trade = optionalMuSigTrade.get();
+            model.getTrade().set(trade);
 
-            tradePhaseBox.setBisqEasyTrade(bisqEasyTrade);
+            muSigTradePhaseBox.setMuSigTrade(trade);
 
-            bisqEasyTradeStatePin = bisqEasyTrade.tradeStateObservable().addObserver(state ->
+            muSigTradeStatePin = trade.tradeStateObservable().addObserver(state ->
                     UIThread.run(() -> {
                         applyStateInfoVBox(state);
                         updateShouldShowSellerPriceApprovalOverlay();
                     }));
 
-            errorMessagePin = bisqEasyTrade.errorMessageObservable().addObserver(errorMessage -> {
+            errorMessagePin = trade.errorMessageObservable().addObserver(errorMessage -> {
                         if (errorMessage != null) {
-                            String key = "errorMessage_" + model.getBisqEasyTrade().get().getId();
+                            String key = "errorMessage_" + model.getTrade().get().getId();
                             if (dontShowAgainService.showAgain(key)) {
                                 UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
                                                 errorMessage,
-                                                StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 2000)))
+                                                StringUtils.truncate(trade.getErrorStackTrace(), 2000)))
                                         .dontShowAgainId(key)
                                         .show());
                             }
                         }
                     }
             );
-            peersErrorMessagePin = bisqEasyTrade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
+            peersErrorMessagePin = trade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
                         if (peersErrorMessage != null) {
-                            String key = "peersErrorMessage_" + model.getBisqEasyTrade().get().getId();
+                            String key = "peersErrorMessage_" + model.getTrade().get().getId();
                             if (dontShowAgainService.showAgain(key)) {
                                 UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.popup",
                                                 peersErrorMessage,
-                                                StringUtils.truncate(bisqEasyTrade.getPeersErrorStackTrace(), 2000)))
+                                                StringUtils.truncate(trade.getPeersErrorStackTrace(), 2000)))
                                         .dontShowAgainId(key)
                                         .show());
                             }
@@ -182,10 +167,10 @@ public class TradeStateController implements Controller {
 
             model.getBuyerPriceDescriptionApprovalOverlay().set(
                     Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.buyersPrice",
-                            PriceSpecFormatter.getFormattedPriceSpec(bisqEasyTrade.getOffer().getPriceSpec())));
+                            PriceSpecFormatter.getFormattedPriceSpec(trade.getOffer().getPriceSpec())));
             model.getSellerPriceDescriptionApprovalOverlay().set(
                     Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.sellersPrice",
-                            PriceSpecFormatter.getFormattedPriceSpec(bisqEasyTrade.getContract().getPriceSpec())));
+                            PriceSpecFormatter.getFormattedPriceSpec(trade.getContract().getPriceSpec())));
 
             messageDeliveryStatusByMessageIdPin = networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
                 @Override
@@ -208,7 +193,7 @@ public class TradeStateController implements Controller {
     }
 
     void onInterruptTrade() {
-        BisqEasyTrade trade = model.getBisqEasyTrade().get();
+        MuSigTrade trade = model.getTrade().get();
         String message = switch (model.getTradeCloseType()) {
             case REJECT -> Res.get("bisqEasy.openTrades.rejectTrade.warning");
             case CANCEL -> {
@@ -229,16 +214,16 @@ public class TradeStateController implements Controller {
     }
 
     void onShowTradeDetails() {
-        BisqEasyOpenTradeChannel channel = model.getChannel().get();
-        Optional<BisqEasyTrade> optionalBisqEasyTrade = bisqEasyTradeService.findTrade(channel.getTradeId());
-        if (optionalBisqEasyTrade.isEmpty()) {
+        MuSigOpenTradeChannel channel = model.getChannel().get();
+        Optional<MuSigTrade> optionalMuSigTrade = tradeService.findTrade(channel.getTradeId());
+        if (optionalMuSigTrade.isEmpty()) {
             model.resetAll();
             return;
         }
 
-        BisqEasyTrade bisqEasyTrade = optionalBisqEasyTrade.get();
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_DETAILS,
-                new TradeDetailsController.InitData(bisqEasyTrade, channel));
+        MuSigTrade trade = optionalMuSigTrade.get();
+        Navigation.navigateTo(NavigationTarget.MU_SIG_TRADE_DETAILS,
+                new MuSigTradeDetailsController.InitData(trade, channel));
     }
 
     void onRejectPrice() {
@@ -246,20 +231,20 @@ public class TradeStateController implements Controller {
     }
 
     private void doInterruptTrade() {
-        BisqEasyTrade trade = model.getBisqEasyTrade().get();
+        MuSigTrade trade = model.getTrade().get();
         String encoded;
-        BisqEasyOpenTradeChannel channel = model.getChannel().get();
+        MuSigOpenTradeChannel channel = model.getChannel().get();
         String userName = channel.getMyUserIdentity().getUserName();
         switch (model.getTradeCloseType()) {
             case REJECT:
                 encoded = Res.encode("bisqEasy.openTrades.tradeLogMessage.rejected", userName);
-                channelService.sendTradeLogMessage(encoded, channel);
-                bisqEasyTradeService.rejectTrade(trade);
+                openTradeChannelService.sendTradeLogMessage(encoded, channel);
+                tradeService.rejectTrade(trade);
                 break;
             case CANCEL:
                 encoded = Res.encode("bisqEasy.openTrades.tradeLogMessage.cancelled", userName);
-                channelService.sendTradeLogMessage(encoded, channel);
-                bisqEasyTradeService.cancelTrade(trade);
+                openTradeChannelService.sendTradeLogMessage(encoded, channel);
+                tradeService.cancelTrade(trade);
                 break;
             case COMPLETED:
             default:
@@ -276,26 +261,26 @@ public class TradeStateController implements Controller {
 
     private void doCloseTrade() {
         // We need to pin the chatChannel to close as the one in the model would get updated after
-        // bisqEasyTradeService.removeTrade, and then we would close the wrong channel.
-        BisqEasyOpenTradeChannel chatChannel = model.getChannel().get();
-        bisqEasyTradeService.removeTrade(model.getBisqEasyTrade().get());
+        // muSigTradeService.removeTrade, and then we would close the wrong channel.
+        MuSigOpenTradeChannel chatChannel = model.getChannel().get();
+        tradeService.removeTrade(model.getTrade().get());
         leavePrivateChatManager.leaveChannel(chatChannel);
     }
 
     void onExportTrade() {
-        OpenTradesUtils.exportTrade(model.getBisqEasyTrade().get(), getView().getRoot().getScene());
+        MuSigOpenTradesUtils.exportTrade(model.getTrade().get(), getView().getRoot().getScene());
     }
 
     void onRequestMediation() {
-        OpenTradesUtils.requestMediation(model.getChannel().get(),
-                model.getBisqEasyTrade().get().getContract(),
-                mediationRequestService, channelService);
+        MuSigOpenTradesUtils.requestMediation(model.getChannel().get(),
+                model.getTrade().get().getContract(),
+                mediationRequestService, openTradeChannelService);
     }
 
     public void onResendMediationRequest() {
-        BisqEasyTrade bisqEasyTrade = model.getBisqEasyTrade().get();
-        if (bisqEasyTrade != null) {
-            String mediationRequestId = MediationRequest.createMessageId(bisqEasyTrade.getId());
+        MuSigTrade trade = model.getTrade().get();
+        if (trade != null) {
+            String mediationRequestId = MediationRequest.createMessageId(trade.getId());
             resendMessageService.ifPresent(service -> service.manuallyResendMessage(mediationRequestId));
         }
     }
@@ -309,11 +294,11 @@ public class TradeStateController implements Controller {
     }
 
     private void handleNewMessageDeliveryStatus(String messageId, Observable<MessageDeliveryStatus> observableStatus) {
-        BisqEasyTrade bisqEasyTrade = model.getBisqEasyTrade().get();
-        if (bisqEasyTrade == null) {
+        MuSigTrade trade = model.getTrade().get();
+        if (trade == null) {
             return;
         }
-        String mediationRequestId = MediationRequest.createMessageId(bisqEasyTrade.getId());
+        String mediationRequestId = MediationRequest.createMessageId(trade.getId());
         if (!mediationRequestId.equals(messageId)) {
             return;
         }
@@ -333,7 +318,7 @@ public class TradeStateController implements Controller {
         }));
     }
 
-    private void applyStateInfoVBox(@Nullable BisqEasyTradeState state) {
+    private void applyStateInfoVBox(@Nullable MuSigTradeState state) {
         applyCloseTradeReason(state);
 
         if (state == null) {
@@ -341,8 +326,8 @@ public class TradeStateController implements Controller {
             return;
         }
 
-        BisqEasyTrade trade = checkNotNull(model.getBisqEasyTrade().get());
-        BisqEasyOpenTradeChannel channel = checkNotNull(model.getChannel().get());
+        MuSigTrade trade = checkNotNull(model.getTrade().get());
+        MuSigOpenTradeChannel channel = checkNotNull(model.getChannel().get());
         boolean isSeller = trade.isSeller();
 
         model.getPhaseAndInfoVisible().set(true);
@@ -352,7 +337,7 @@ public class TradeStateController implements Controller {
         model.getIsTradeCompleted().set(false);
 
         boolean isMainChain = trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
-        switch (state) {
+       /* switch (state) {
             case INIT:
                 break;
             case TAKER_SENT_TAKE_OFFER_REQUEST:
@@ -457,24 +442,24 @@ public class TradeStateController implements Controller {
                 model.getError().set(true);
                 model.getInterruptTradeButtonVisible().set(false);
                 model.getShowReportToMediatorButton().set(false);
-                model.getErrorMessage().set(Res.get("bisqEasy.openTrades.failed",
-                        model.getBisqEasyTrade().get().getErrorMessage()));
+                model.getErrorMessage().set(Res.get("muSig.openTrades.failed",
+                        model.getTrade().get().getErrorMessage()));
                 break;
             case FAILED_AT_PEER:
                 model.getPhaseAndInfoVisible().set(false);
                 model.getInterruptTradeButtonVisible().set(false);
                 model.getShowReportToMediatorButton().set(false);
                 model.getError().set(true);
-                model.getErrorMessage().set(Res.get("bisqEasy.openTrades.failedAtPeer",
-                        model.getBisqEasyTrade().get().getPeersErrorMessage()));
+                model.getErrorMessage().set(Res.get("muSig.openTrades.failedAtPeer",
+                        model.getTrade().get().getPeersErrorMessage()));
                 break;
 
             default:
                 log.error("State {} not handled", state.name());
-        }
+        }*/
     }
 
-    private void applyTradeInterruptedInfo(BisqEasyTrade trade, boolean isCancelled) {
+    private void applyTradeInterruptedInfo(MuSigTrade trade, boolean isCancelled) {
         boolean isMaker = trade.isMaker();
         boolean makerInterruptedTrade = trade.getInterruptTradeInitiator().get() == Role.MAKER;
         boolean selfInitiated = (makerInterruptedTrade && isMaker) ||
@@ -491,14 +476,14 @@ public class TradeStateController implements Controller {
         }
     }
 
-    private void applyCloseTradeReason(@Nullable BisqEasyTradeState state) {
+    private void applyCloseTradeReason(@Nullable MuSigTradeState state) {
         if (state == null) {
             model.setTradeCloseType(null);
             model.getInterruptTradeButtonText().set(null);
             return;
         }
 
-        switch (state) {
+      /*  switch (state) {
             case INIT:
             case TAKER_SENT_TAKE_OFFER_REQUEST:
             case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
@@ -510,7 +495,7 @@ public class TradeStateController implements Controller {
             case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
             case TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
                 model.setTradeCloseType(TradeStateModel.TradeCloseType.REJECT);
-                model.getInterruptTradeButtonText().set(Res.get("bisqEasy.openTrades.rejectTrade"));
+                model.getInterruptTradeButtonText().set(Res.get("muSig.openTrades.rejectTrade"));
                 model.getInterruptTradeButtonVisible().set(true);
                 break;
             case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
@@ -536,7 +521,7 @@ public class TradeStateController implements Controller {
             case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION:
             case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
                 model.setTradeCloseType(TradeStateModel.TradeCloseType.CANCEL);
-                model.getInterruptTradeButtonText().set(Res.get("bisqEasy.openTrades.cancelTrade"));
+                model.getInterruptTradeButtonText().set(Res.get("muSig.openTrades.cancelTrade"));
                 model.getInterruptTradeButtonVisible().set(true);
                 break;
             case BTC_CONFIRMED:
@@ -554,39 +539,39 @@ public class TradeStateController implements Controller {
 
             default:
                 log.error("State {} not handled", state.name());
-        }
+        }*/
     }
 
     private void updateShouldShowSellerPriceApprovalOverlay() {
         model.getShouldShowSellerPriceApprovalOverlay().set(
-                model.getBisqEasyTrade().get() != null
-                        && model.getBisqEasyTrade().get().isBuyer()
-                        && model.getBisqEasyTrade().get().isMaker()
-                        && tradePhaseBox.getPhaseIndex() == 0
+                model.getTrade().get() != null
+                        && model.getTrade().get().isBuyer()
+                        && model.getTrade().get().isMaker()
+                        && muSigTradePhaseBox.getPhaseIndex() == 0
                         && requiresSellerPriceAcceptance()
                         && !model.getHasBuyerAcceptedSellersPriceSpec().get()
         );
     }
 
     private boolean requiresSellerPriceAcceptance() {
-        PriceSpec buyerPriceSpec = model.getBisqEasyTrade().get().getOffer().getPriceSpec();
-        PriceSpec sellerPriceSpec = model.getBisqEasyTrade().get().getContract().getPriceSpec();
+        PriceSpec buyerPriceSpec = model.getTrade().get().getOffer().getPriceSpec();
+        PriceSpec sellerPriceSpec = model.getTrade().get().getContract().getPriceSpec();
         boolean priceSpecChanged = !buyerPriceSpec.equals(sellerPriceSpec);
 
-        Set<BisqEasyTradeState> validStatesToRejectPrice = Set.of(
-                BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
-                BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
-                BisqEasyTradeState.MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
-                BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_
+        Set<MuSigTradeState> validStatesToRejectPrice = Set.of(
+               /* MuSigTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
+                MuSigTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
+                MuSigTradeState.MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
+                MuSigTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_*/
         );
-        boolean isInValidStateToRejectPrice = validStatesToRejectPrice.contains(model.getBisqEasyTrade().get().tradeStateObservable().get());
+        boolean isInValidStateToRejectPrice = validStatesToRejectPrice.contains(model.getTrade().get().tradeStateObservable().get());
         return priceSpecChanged && isInValidStateToRejectPrice;
     }
 
     private void removeChannelRelatedBindings() {
-        if (bisqEasyTradeStatePin != null) {
-            bisqEasyTradeStatePin.unbind();
-            bisqEasyTradeStatePin = null;
+        if (muSigTradeStatePin != null) {
+            muSigTradeStatePin.unbind();
+            muSigTradeStatePin = null;
         }
         if (errorMessagePin != null) {
             errorMessagePin.unbind();

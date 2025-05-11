@@ -48,6 +48,17 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
     // Wrapper for stateObservable which is not handled as generic in Fsm
     private final transient Observable<MuSigTradeState> tradeState = new Observable<>();
 
+    //todo temp
+    @Getter
+    private final Observable<String> paymentAccountData = new Observable<>();
+    @Getter
+    private final Observable<String> bitcoinPaymentData = new Observable<>(); // btc address in case of mainChain, or LN invoice if LN is used
+    // paymentProof can be null in Observable
+    @Getter
+    private final Observable<String> paymentProof = new Observable<>(); // txId in case of mainChain, or preimage if LN is used
+
+
+
     @Setter
     @Getter
     private Optional<Long> tradeCompletedDate = Optional.empty();

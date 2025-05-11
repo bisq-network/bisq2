@@ -211,9 +211,9 @@ public class TradeCompletedTable extends VBox {
         bodyGridPane.add(tradeIdValue, colValue, row);
 
        /* ++row;
-        Label tradeFee = new Label(Res.get("bisqEasy.tradeCompleted.body.tradeFee"));
+        Label tradeFee = new Label(Res.get("muSig.tradeCompleted.body.tradeFee"));
         tradeFee.getStyleClass().addAll("dimmed-text");
-        Label tradeFeeValue = new Label(Res.get("bisqEasy.tradeCompleted.body.tradeFee.value"));
+        Label tradeFeeValue = new Label(Res.get("muSig.tradeCompleted.body.tradeFee.value"));
         tradeFeeValue.getStyleClass().add("medium-text");
         bodyGridPane.add(tradeFee, colTitle, row);
         bodyGridPane.add(tradeFeeValue, colValue, row);*/

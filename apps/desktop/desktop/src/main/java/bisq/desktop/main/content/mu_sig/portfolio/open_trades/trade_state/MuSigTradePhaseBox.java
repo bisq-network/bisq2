@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state;
 
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.common.data.Triple;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -33,8 +33,7 @@ import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.support.mediation.MediationRequestService;
-import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
+import bisq.trade.mu_sig.MuSigTrade;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -59,10 +58,10 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 @Slf4j
-class TradePhaseBox {
+class MuSigTradePhaseBox {
     private final Controller controller;
 
-    TradePhaseBox(ServiceProvider serviceProvider) {
+    MuSigTradePhaseBox(ServiceProvider serviceProvider) {
         controller = new Controller(serviceProvider);
     }
 
@@ -70,12 +69,12 @@ class TradePhaseBox {
         return controller.getView();
     }
 
-    void setSelectedChannel(@Nullable BisqEasyOpenTradeChannel channel) {
+    void setSelectedChannel(@Nullable MuSigOpenTradeChannel channel) {
         controller.setSelectedChannel(channel);
     }
 
-    void setBisqEasyTrade(BisqEasyTrade bisqEasyTrade) {
-        controller.setBisqEasyTrade(bisqEasyTrade);
+    void setMuSigTrade(MuSigTrade trade) {
+        controller.setMuSigTrade(trade);
     }
 
     void reset() {
@@ -91,18 +90,18 @@ class TradePhaseBox {
         @Getter
         private final View view;
         private final MediationRequestService mediationRequestService;
-        private final BisqEasyOpenTradeChannelService channelService;
-        private Pin bisqEasyTradeStatePin, isInMediationPin;
+        private final MuSigOpenTradeChannelService channelService;
+        private Pin muSigTradeStatePin, isInMediationPin;
 
         private Controller(ServiceProvider serviceProvider) {
             mediationRequestService = serviceProvider.getSupportService().getMediationRequestService();
-            channelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
+            channelService = serviceProvider.getChatService().getMuSigOpenTradeChannelService();
 
             model = new Model();
             view = new View(model, this);
         }
 
-        private void setSelectedChannel(@Nullable BisqEasyOpenTradeChannel channel) {
+        private void setSelectedChannel(@Nullable MuSigOpenTradeChannel channel) {
             model.setSelectedChannel(channel);
             if (isInMediationPin != null) {
                 isInMediationPin.unbind();
@@ -112,12 +111,12 @@ class TradePhaseBox {
             }
         }
 
-        private void setBisqEasyTrade(BisqEasyTrade bisqEasyTrade) {
-            model.setBisqEasyTrade(bisqEasyTrade);
-            if (bisqEasyTradeStatePin != null) {
-                bisqEasyTradeStatePin.unbind();
+        private void setMuSigTrade(MuSigTrade trade) {
+            model.setTrade(trade);
+            if (muSigTradeStatePin != null) {
+                muSigTradeStatePin.unbind();
             }
-            if (bisqEasyTrade == null) {
+            if (trade == null) {
                 return;
             }
 
@@ -126,8 +125,8 @@ class TradePhaseBox {
             model.getPhase3Info().set(Res.get("bisqEasy.tradeState.phase3").toUpperCase());
             model.getPhase4Info().set(Res.get("bisqEasy.tradeState.phase4").toUpperCase());
 
-            bisqEasyTradeStatePin = bisqEasyTrade.tradeStateObservable().addObserver(state -> UIThread.run(() -> {
-                switch (state) {
+            muSigTradeStatePin = trade.tradeStateObservable().addObserver(state -> UIThread.run(() -> {
+               /* switch (state) {
                     case INIT:
                         break;
 
@@ -170,8 +169,8 @@ class TradePhaseBox {
                     case BUYER_SENT_FIAT_SENT_CONFIRMATION:
                         model.getPhaseIndex().set(1);
                         boolean showRequestMediationButton =
-                                state == BisqEasyTradeState.BUYER_SENT_FIAT_SENT_CONFIRMATION
-                                        || state == BisqEasyTradeState.SELLER_RECEIVED_FIAT_SENT_CONFIRMATION;
+                                state == MuSigTradeState.BUYER_SENT_FIAT_SENT_CONFIRMATION
+                                        || state == MuSigTradeState.SELLER_RECEIVED_FIAT_SENT_CONFIRMATION;
                         model.getRequestMediationButtonVisible().set(showRequestMediationButton);
                         model.getReportToMediatorButtonVisible().set(!showRequestMediationButton);
                         break;
@@ -207,7 +206,7 @@ class TradePhaseBox {
 
                     default:
                         log.error("State {} not handled", state.name());
-                }
+                }*/
             }));
         }
 
@@ -231,8 +230,8 @@ class TradePhaseBox {
         }
 
         void onRequestMediation() {
-            OpenTradesUtils.requestMediation(model.getSelectedChannel(),
-                    model.getBisqEasyTrade().getContract(),
+            MuSigOpenTradesUtils.requestMediation(model.getSelectedChannel(),
+                    model.getTrade().getContract(),
                     mediationRequestService, channelService);
         }
     }
@@ -240,9 +239,9 @@ class TradePhaseBox {
     @Getter
     public static class Model implements bisq.desktop.common.view.Model {
         @Setter
-        private BisqEasyOpenTradeChannel selectedChannel;
+        private MuSigOpenTradeChannel selectedChannel;
         @Setter
-        private BisqEasyTrade bisqEasyTrade;
+        private MuSigTrade trade;
         private final BooleanProperty requestMediationButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty reportToMediatorButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty isInMediation = new SimpleBooleanProperty();
@@ -254,7 +253,7 @@ class TradePhaseBox {
 
         void reset() {
             selectedChannel = null;
-            bisqEasyTrade = null;
+            trade = null;
             requestMediationButtonVisible.set(false);
             reportToMediatorButtonVisible.set(false);
             isInMediation.set(false);

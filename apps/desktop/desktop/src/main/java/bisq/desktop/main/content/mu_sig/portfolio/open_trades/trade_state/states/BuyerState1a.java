@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.common.encoding.BitcoinURIScheme;
 import bisq.common.observable.Pin;
 import bisq.common.util.ExceptionUtil;
@@ -42,7 +42,7 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.webcam.WebcamAppModel;
 import bisq.desktop.webcam.WebcamAppService;
 import bisq.i18n.Res;
-import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.mu_sig.MuSigTrade;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -74,9 +74,9 @@ public class BuyerState1a extends BaseState {
     private final Controller controller;
 
     public BuyerState1a(ServiceProvider serviceProvider,
-                        BisqEasyTrade bisqEasyTrade,
-                        BisqEasyOpenTradeChannel channel) {
-        controller = new Controller(serviceProvider, bisqEasyTrade, channel);
+                        MuSigTrade trade,
+                        MuSigOpenTradeChannel channel) {
+        controller = new Controller(serviceProvider, trade, channel);
     }
 
     public View getView() {
@@ -88,15 +88,15 @@ public class BuyerState1a extends BaseState {
         private Pin qrCodePin, imageRecognizedPin, webcamAppErrorMessagePin, localExceptionPin, webcamAppStatePin, restartSignalReceivedPin;
 
         private Controller(ServiceProvider serviceProvider,
-                           BisqEasyTrade bisqEasyTrade,
-                           BisqEasyOpenTradeChannel channel) {
-            super(serviceProvider, bisqEasyTrade, channel);
+                           MuSigTrade trade,
+                           MuSigOpenTradeChannel channel) {
+            super(serviceProvider, trade, channel);
             webcamAppService = serviceProvider.getWebcamAppService();
         }
 
         @Override
-        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            return new Model(bisqEasyTrade, channel);
+        protected Model createModel(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            return new Model(trade, channel);
         }
 
         @Override
@@ -171,7 +171,7 @@ public class BuyerState1a extends BaseState {
             String key = "bisqEasy.tradeState.info.buyer.phase1a.tradeLogMessage." + btcRailName;
             String bitcoinPaymentData = model.getBitcoinPaymentData().get();
             sendTradeLogMessage(Res.encode(key, model.getChannel().getMyUserIdentity().getUserName(), bitcoinPaymentData));
-            bisqEasyTradeService.buyerSendBitcoinPaymentData(model.getBisqEasyTrade(), bitcoinPaymentData);
+            muSigTradeService.buyerSendBitcoinPaymentData(model.getTrade(), bitcoinPaymentData);
         }
 
         void onOpenWalletGuide() {
@@ -281,7 +281,7 @@ public class BuyerState1a extends BaseState {
         }
 
         private BitcoinPaymentRail getPaymentRail() {
-            return model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
+            return model.getTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
         }
     }
 
@@ -309,8 +309,8 @@ public class BuyerState1a extends BaseState {
         private final StringProperty webcamStateIconId = new SimpleStringProperty();
         private final StringProperty webcamStateInfo = new SimpleStringProperty();
 
-        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            super(bisqEasyTrade, channel);
+        protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            super(trade, channel);
         }
     }
 

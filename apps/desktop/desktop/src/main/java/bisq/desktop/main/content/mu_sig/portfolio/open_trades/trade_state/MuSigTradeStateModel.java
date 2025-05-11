@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state;
 
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.common.view.Model;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
-import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.mu_sig.MuSigTrade;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class TradeStateModel implements Model {
+public class MuSigTradeStateModel implements Model {
     enum TradeCloseType {
         REJECT,
         CANCEL,
@@ -43,8 +43,8 @@ public class TradeStateModel implements Model {
 
     @Setter
     private TradeCloseType tradeCloseType;
-    private final ObjectProperty<BisqEasyOpenTradeChannel> channel = new SimpleObjectProperty<>();
-    private final ObjectProperty<BisqEasyTrade> bisqEasyTrade = new SimpleObjectProperty<>();
+    private final ObjectProperty<MuSigOpenTradeChannel> channel = new SimpleObjectProperty<>();
+    private final ObjectProperty<MuSigTrade> trade = new SimpleObjectProperty<>();
     private final ObjectProperty<VBox> stateInfoVBox = new SimpleObjectProperty<>();
     private final StringProperty interruptTradeButtonText = new SimpleStringProperty();
     private final BooleanProperty interruptTradeButtonVisible = new SimpleBooleanProperty(true);
@@ -70,7 +70,7 @@ public class TradeStateModel implements Model {
 
     void reset() {
         tradeCloseType = null;
-        bisqEasyTrade.set(null);
+        trade.set(null);
         stateInfoVBox.set(null);
         interruptTradeButtonText.set(null);
         interruptTradeButtonVisible.set(true);

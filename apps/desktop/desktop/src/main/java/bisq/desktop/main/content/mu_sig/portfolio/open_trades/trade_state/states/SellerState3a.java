@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.common.data.Pair;
 import bisq.common.util.MathUtils;
 import bisq.common.util.StringUtils;
@@ -43,7 +43,7 @@ import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
-import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.mu_sig.MuSigTrade;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -90,9 +90,9 @@ public class SellerState3a extends BaseState {
     private final Controller controller;
 
     public SellerState3a(ServiceProvider serviceProvider,
-                         BisqEasyTrade bisqEasyTrade,
-                         BisqEasyOpenTradeChannel channel) {
-        controller = new Controller(serviceProvider, bisqEasyTrade, channel);
+                         MuSigTrade trade,
+                         MuSigOpenTradeChannel channel) {
+        controller = new Controller(serviceProvider, trade, channel);
     }
 
     public View getView() {
@@ -102,14 +102,14 @@ public class SellerState3a extends BaseState {
     private static class Controller extends BaseState.Controller<Model, View> {
 
         private Controller(ServiceProvider serviceProvider,
-                           BisqEasyTrade bisqEasyTrade,
-                           BisqEasyOpenTradeChannel channel) {
-            super(serviceProvider, bisqEasyTrade, channel);
+                           MuSigTrade trade,
+                           MuSigOpenTradeChannel channel) {
+            super(serviceProvider, trade, channel);
         }
 
         @Override
-        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            return new Model(bisqEasyTrade, channel);
+        protected Model createModel(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            return new Model(trade, channel);
         }
 
         @Override
@@ -129,7 +129,7 @@ public class SellerState3a extends BaseState {
             model.setPaymentProofDescription(Res.get("bisqEasy.tradeState.info.seller.phase3a.paymentProof.description." + name));
             model.setPaymentProofPrompt(Res.get("bisqEasy.tradeState.info.seller.phase3a.paymentProof.prompt." + name));
 
-            model.setBitcoinPaymentData(model.getBisqEasyTrade().getBitcoinPaymentData().get());
+            model.setBitcoinPaymentData(model.getTrade().getBitcoinPaymentData().get());
             double factor = 2.5;
             if (paymentRail.equals(BitcoinPaymentRail.MAIN_CHAIN)) {
                 // Typical bitcoin address require size of 29 or a multiple of it
@@ -195,7 +195,7 @@ public class SellerState3a extends BaseState {
                 sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage",
                         userName, proofType, paymentProof.get()));
             }
-            bisqEasyTradeService.sellerConfirmBtcSent(model.getBisqEasyTrade(), paymentProof);
+            muSigTradeService.sellerConfirmBtcSent(model.getTrade(), paymentProof);
         }
 
         void onShowQrCodeDisplay() {
@@ -236,7 +236,7 @@ public class SellerState3a extends BaseState {
         }
 
         private BitcoinPaymentRail getPaymentRail() {
-            return model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
+            return model.getTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
         }
     }
 
@@ -269,8 +269,8 @@ public class SellerState3a extends BaseState {
         @Setter
         private ValidatorBase bitcoinPaymentValidator;
 
-        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            super(bisqEasyTrade, channel);
+        protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            super(trade, channel);
         }
     }
 
@@ -446,7 +446,7 @@ public class SellerState3a extends BaseState {
         private void qrCodeWindowChanged(Stage qrCodeWindow) {
             if (qrCodeWindow != null) {
                 int qrCodeSize = model.getLargeQrCodeSize();
-                String shortTradeId = model.getBisqEasyTrade().getShortId();
+                String shortTradeId = model.getTrade().getShortId();
 
                 Label headline =
                         new Label(Res.get("bisqEasy.tradeState.info.seller.phase3a.qrCodeDisplay.window.title",

@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig;
 
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
@@ -30,14 +31,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
 final class MuSigTradeStore implements PersistableStore<MuSigTradeStore> {
     @Getter(AccessLevel.PACKAGE)
-    private final Map<String, MuSigTrade> tradeById = new ConcurrentHashMap<>();
+    private final ObservableHashMap<String, MuSigTrade> tradeById = new ObservableHashMap<>();
 
     private MuSigTradeStore(Map<String, MuSigTrade> tradeById) {
         this.tradeById.putAll(tradeById);

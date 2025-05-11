@@ -17,13 +17,13 @@
 
 package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states;
 
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.i18n.Res;
-import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.mu_sig.MuSigTrade;
 import javafx.scene.layout.HBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -32,8 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 public class BuyerState2b extends BaseState {
     private final Controller controller;
 
-    public BuyerState2b(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-        controller = new Controller(serviceProvider, bisqEasyTrade, channel);
+    public BuyerState2b(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
+        controller = new Controller(serviceProvider, trade, channel);
     }
 
     public View getView() {
@@ -41,13 +41,13 @@ public class BuyerState2b extends BaseState {
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
-        private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            super(serviceProvider, bisqEasyTrade, channel);
+        private Controller(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            super(serviceProvider, trade, channel);
         }
 
         @Override
-        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            return new Model(bisqEasyTrade, channel);
+        protected Model createModel(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            return new Model(trade, channel);
         }
 
         @Override
@@ -68,8 +68,8 @@ public class BuyerState2b extends BaseState {
 
     @Getter
     private static class Model extends BaseState.Model {
-        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            super(bisqEasyTrade, channel);
+        protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            super(trade, channel);
         }
     }
 
@@ -92,7 +92,7 @@ public class BuyerState2b extends BaseState {
             super.onViewAttached();
 
             headline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2b.headline"));
-            String name = model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail().name();
+            String name = model.getTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail().name();
             String bitcoinPaymentData = Res.get("bisqEasy.tradeState.bitcoinPaymentData." + name);
             info.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2b.info", model.getFormattedQuoteAmount(), bitcoinPaymentData));
             waitingAnimation.play();

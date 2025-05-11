@@ -1,18 +1,18 @@
 package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state;
 
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.common.encoding.Csv;
 import bisq.common.file.FileUtils;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
-import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.support.mediation.MediationRequestService;
-import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.mu_sig.MuSigTrade;
 import bisq.user.profile.UserProfile;
 import javafx.scene.Scene;
 import lombok.extern.slf4j.Slf4j;
@@ -22,13 +22,13 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public class OpenTradesUtils {
+public class MuSigOpenTradesUtils {
 
-    public static void exportTrade(BisqEasyTrade trade, Scene scene) {
+    public static void exportTrade(MuSigTrade trade, Scene scene) {
         try {
             String tradeId = trade.getId();
             String quoteCurrencyCode = trade.getOffer().getMarket().getQuoteCurrencyCode();
-            BisqEasyContract contract = trade.getContract();
+            MuSigContract contract = trade.getContract();
             long baseSideAmount = contract.getBaseSideAmount();
             long quoteSideAmount = contract.getQuoteSideAmount();
             String formattedBaseAmount = AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(baseSideAmount));
@@ -71,10 +71,10 @@ public class OpenTradesUtils {
         }
     }
 
-    public static void requestMediation(BisqEasyOpenTradeChannel channel,
-                                         BisqEasyContract contract,
-                                         MediationRequestService mediationRequestService,
-                                         BisqEasyOpenTradeChannelService channelService) {
+    public static void requestMediation(MuSigOpenTradeChannel channel,
+                                        MuSigContract contract,
+                                        MediationRequestService mediationRequestService,
+                                        MuSigOpenTradeChannelService channelService) {
         Optional<UserProfile> mediator = channel.getMediator();
         if (mediator.isPresent()) {
             new Popup().headline(Res.get("bisqEasy.mediation.request.confirm.headline"))
