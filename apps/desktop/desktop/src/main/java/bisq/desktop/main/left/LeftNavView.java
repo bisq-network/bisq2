@@ -62,6 +62,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final LeftNavButton authorizedRole;
     private final Label version;
     private final LeftNavButton muSigLeftNavButton;
+    private final LeftNavButton wallet;
     private Subscription navigationTargetSubscription, menuExpandedSubscription,
             selectedNavigationButtonPin, newVersionAvailablePin, isMuSigActivatedPin;
 
@@ -98,7 +99,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 "nav-trade",
                 NavigationTarget.TRADE_PROTOCOLS, false);
 
-        LeftNavButton wallet = createNavigationButton(Res.get("navigation.wallet"),
+        wallet = createNavigationButton(Res.get("navigation.wallet"),
                 "nav-wallet",
                 NavigationTarget.WALLET, false);
 
@@ -164,9 +165,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         mainMenuItems.getChildren().addAll(dashBoard, bisqEasy, muSigLeftNavButton, reputation, protocols,
                 learn, chat, support, user, network, settings, authorizedRole);
-        if (model.isWalletEnabled()) {
-            mainMenuItems.getChildren().add(3, wallet);
-        }
+        mainMenuItems.getChildren().add(3, wallet);
 
         mainMenuItems.setLayoutY(menuTop);
 
@@ -181,8 +180,11 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
     @Override
     protected void onViewAttached() {
+        wallet.visibleProperty().bind(model.getIsMuSigActivated());
+        wallet.managedProperty().bind(model.getIsMuSigActivated());
         authorizedRole.visibleProperty().bind(model.getAuthorizedRoleVisible());
         authorizedRole.managedProperty().bind(model.getAuthorizedRoleVisible());
+
 
         horizontalExpandIcon.setOnMouseClicked(e -> controller.onToggleHorizontalExpandState());
         horizontalCollapseIcon.setOnMouseClicked(e -> controller.onToggleHorizontalExpandState());
@@ -300,6 +302,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
     @Override
     protected void onViewDetached() {
+        wallet.visibleProperty().unbind();
+        wallet.managedProperty().unbind();
         authorizedRole.visibleProperty().unbind();
         authorizedRole.managedProperty().unbind();
         horizontalExpandIcon.setOnMouseClicked(null);

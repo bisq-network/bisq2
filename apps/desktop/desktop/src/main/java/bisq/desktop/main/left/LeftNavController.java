@@ -68,7 +68,7 @@ public class LeftNavController implements Controller {
         muSigService = serviceProvider.getMuSigService();
 
         NetworkInfo networkInfo = new NetworkInfo(serviceProvider, this::onNavigationTargetSelected);
-        model = new LeftNavModel(serviceProvider.getWalletService().isPresent());
+        model = new LeftNavModel();
         model.setVersion("v" + ApplicationVersion.getVersion().toString());
         view = new LeftNavView(model, this, networkInfo.getRoot());
     }
