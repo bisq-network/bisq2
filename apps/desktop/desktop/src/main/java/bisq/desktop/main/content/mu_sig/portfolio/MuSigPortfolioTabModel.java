@@ -27,6 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 public class MuSigPortfolioTabModel extends MuSigLevel2TabModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.MU_SIG_OPEN_OFFERS;
+        return NavigationTarget.MU_SIG_OPEN_TRADES;
     }
 }
