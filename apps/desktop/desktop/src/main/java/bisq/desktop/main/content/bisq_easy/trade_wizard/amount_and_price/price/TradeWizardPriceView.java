@@ -47,6 +47,8 @@ import java.text.DecimalFormat;
 @Slf4j
 public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, TradeWizardPriceController> {
     private static final String SELECTED_PRICE_MODEL_STYLE_CLASS = "selected-model";
+    private static final String PRICE_SLIDER_BUYER_STYLE_CLASS = "price-slider-buyer";
+    private static final String PRICE_SLIDER_SELLER_STYLE_CLASS = "price-slider-seller";
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("00");
 
     private final PriceInputBox percentageInput;
@@ -101,7 +103,6 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         slider = new Slider();
         slider.setMin(model.getSliderMin());
         slider.setMax(model.getSliderMax());
-        slider.getStyleClass().add(model.getDirection().isSell() ? "price-slider-seller" : "price-slider-buyer");
 
         minSliderValue = new Label();
         minSliderValue.getStyleClass().add("range-value");
@@ -154,6 +155,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         feedbackBox.visibleProperty().bind(model.getShouldShowFeedback());
         feedbackBox.managedProperty().bind(model.getShouldShowFeedback());
         slider.valueProperty().bindBidirectional(model.getPriceSliderValue());
+        slider.getStyleClass().add(model.getDirection().isSell() ? PRICE_SLIDER_SELLER_STYLE_CLASS : PRICE_SLIDER_BUYER_STYLE_CLASS);
         model.getSliderFocus().bind(slider.focusedProperty());
 
         percentageFocussedPin = EasyBind.subscribe(percentageInput.textInputFocusedProperty(), controller::onPercentageFocussed);
@@ -186,6 +188,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         warningIcon.visibleProperty().unbind();
         warningIcon.managedProperty().unbind();
         slider.valueProperty().unbindBidirectional(model.getPriceSliderValue());
+        slider.getStyleClass().removeAll(PRICE_SLIDER_BUYER_STYLE_CLASS, PRICE_SLIDER_SELLER_STYLE_CLASS);
         model.getSliderFocus().unbind();
 
         percentageFocussedPin.unsubscribe();
