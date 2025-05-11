@@ -152,8 +152,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         feedbackSentence.textProperty().bind(model.getFeedbackSentence());
         warningIcon.visibleProperty().bind(model.getShouldShowWarningIcon());
         warningIcon.managedProperty().bind(model.getShouldShowWarningIcon());
-        feedbackBox.visibleProperty().bind(model.getShouldShowFeedback());
-        feedbackBox.managedProperty().bind(model.getShouldShowFeedback());
+        showLearnWhyButton.visibleProperty().bind(model.getShouldShowLearnWhyButton());
+        showLearnWhyButton.managedProperty().bind(model.getShouldShowLearnWhyButton());
         slider.valueProperty().bindBidirectional(model.getPriceSliderValue());
         slider.getStyleClass().add(model.getDirection().isSell() ? PRICE_SLIDER_SELLER_STYLE_CLASS : PRICE_SLIDER_BUYER_STYLE_CLASS);
         model.getSliderFocus().bind(slider.focusedProperty());
@@ -183,8 +183,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         percentageInput.conversionPriceTextProperty().unbind();
         percentageInput.dispose();
         feedbackSentence.textProperty().unbind();
-        feedbackBox.visibleProperty().unbind();
-        feedbackBox.managedProperty().unbind();
+        showLearnWhyButton.visibleProperty().unbind();
+        showLearnWhyButton.managedProperty().unbind();
         warningIcon.visibleProperty().unbind();
         warningIcon.managedProperty().unbind();
         slider.valueProperty().unbindBidirectional(model.getPriceSliderValue());
