@@ -19,6 +19,7 @@ package bisq.desktop.main.content.mu_sig.take_offer.amount;
 
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Icons;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -118,7 +119,7 @@ public class MuSigTakeOfferAmountView extends View<StackPane, MuSigTakeOfferAmou
             } else {
                 Transitions.removeEffect(content);
                 if (amountLimitInfoOverlay.isVisible()) {
-                    Transitions.fadeOut(amountLimitInfoOverlay, Transitions.DEFAULT_DURATION / 2,
+                    Transitions.fadeOut(amountLimitInfoOverlay, ManagedDuration.getHalfOfDefaultDurationMillis(),
                             () -> amountLimitInfoOverlay.setVisible(false));
                 }
             }
