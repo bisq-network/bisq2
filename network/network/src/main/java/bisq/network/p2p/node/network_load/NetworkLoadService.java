@@ -30,7 +30,11 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -76,6 +80,9 @@ public class NetworkLoadService {
 
     public void shutdown() {
         scheduler.stop();
+        synchronized (lock) {
+            connectionMetricsByConnectionId.clear();
+        }
     }
 
     public NetworkLoad updateNetworkLoad() {

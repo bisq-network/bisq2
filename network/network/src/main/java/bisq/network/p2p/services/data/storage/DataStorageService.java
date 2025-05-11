@@ -70,6 +70,8 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     }
 
     public void shutdown() {
+        prunedAndExpiredDataRequests.clear();
+        maxMapSize = Optional.empty();
     }
 
     @Override

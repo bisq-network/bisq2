@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.authorized_role.moderator;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.chat.ChatChannelDomain;
 import bisq.common.observable.Pin;

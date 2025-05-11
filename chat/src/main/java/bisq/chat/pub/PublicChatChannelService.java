@@ -68,6 +68,10 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        if (initialized) {
+            return CompletableFuture.completedFuture(true);
+        }
+
         maybeAddDefaultChannels();
 
         networkService.addDataServiceListener(this);
@@ -92,6 +96,11 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (!initialized) {
+            return CompletableFuture.completedFuture(true);
+        }
+        initialized = false;
+        allInventoryDataReceived = false;
         allInventoryDataReceivedPins.forEach(Pin::unbind);
         allInventoryDataReceivedPins.clear();
         networkService.removeDataServiceListener(this);

@@ -17,9 +17,15 @@
 
 package bisq.offer.payment_method;
 
-import bisq.account.payment_method.*;
+import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.BitcoinPaymentMethodUtil;
+import bisq.account.payment_method.BitcoinPaymentRail;
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentMethodUtil;
+import bisq.account.payment_method.PaymentMethod;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,7 +46,7 @@ public class PaymentMethodSpecUtil {
     }
 
     public static List<BitcoinPaymentMethodSpec> createBitcoinMainChainPaymentMethodSpec() {
-        return createBitcoinPaymentMethodSpecs(List.of(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)));
+        return createBitcoinPaymentMethodSpecs(Collections.singletonList(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)));
     }
 
     public static List<FiatPaymentMethodSpec> createFiatPaymentMethodSpecs(List<FiatPaymentMethod> paymentMethods) {
@@ -48,6 +54,19 @@ public class PaymentMethodSpecUtil {
                 .map(FiatPaymentMethodSpec::new)
                 .collect(Collectors.toList());
     }
+
+   /* public static List<NationalCurrencyPaymentMethod<?>> createNationalCurrencyPaymentMethodSpecs(List<NationalCurrencyPaymentMethod<?>> paymentMethods) {
+        return paymentMethods.stream()
+                .map(paymentMethod->{
+                    if(paymentMethod instanceof FiatPaymentMethod fiatPaymentMethod){
+                        return new FiatPaymentMethodSpec(fiatPaymentMethod);
+                    }else  if(paymentMethod instanceof StablecoinPaymentMethod stablecoinPaymentMethod){
+                        return new StablecoinPaymentMethodSpec(stablecoinPaymentMethod);
+
+                    }
+                })
+                .collect(Collectors.toList());
+    }*/
 
     public static <M extends PaymentMethod<?>, T extends PaymentMethodSpec<M>> List<M> getPaymentMethods(Collection<T> paymentMethodSpecs) {
         return paymentMethodSpecs.stream()

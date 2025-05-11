@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.data.Triple;
@@ -407,7 +407,6 @@ class TradePhaseBox {
             Label label = new Label();
             label.getStyleClass().add("bisq-easy-trade-state-phase");
             Badge badge = new Badge();
-            badge.setUseAnimation(false);
             HBox hBox = new HBox(7.5, badge, label);
             hBox.setAlignment(Pos.CENTER_LEFT);
             return new Triple<>(hBox, label, badge);

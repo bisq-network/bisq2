@@ -82,7 +82,7 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
 
         authorizedBondedRolesService.addListener(this);
 
-        setSelectedMarket(MarketRepository.getDefault());
+        setSelectedMarket(MarketRepository.getDefaultBtcFiatMarket());
 
         marketPriceByCurrencyMapPin = marketPriceRequestService.getMarketPriceByCurrencyMap().addObserver(() ->
                 applyNewMap(marketPriceRequestService.getMarketPriceByCurrencyMap()));

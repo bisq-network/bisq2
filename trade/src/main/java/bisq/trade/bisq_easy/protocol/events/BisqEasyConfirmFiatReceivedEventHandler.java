@@ -22,7 +22,7 @@ import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmFiatReceiptMessage;
-import bisq.trade.protocol.events.SendTradeMessageHandler;
+import bisq.trade.protocol.handler.SendTradeMessageHandler;
 
 public class BisqEasyConfirmFiatReceivedEventHandler extends SendTradeMessageHandler<BisqEasyTrade> {
 

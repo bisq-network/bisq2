@@ -22,7 +22,7 @@ import bisq.contract.ContractSignatureData;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.protocol.events.TradeMessageHandler;
-import bisq.trade.protocol.events.TradeMessageSender;
+import bisq.trade.protocol.handler.TradeMessageSender;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

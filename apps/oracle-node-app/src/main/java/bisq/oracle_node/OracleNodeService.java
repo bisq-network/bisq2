@@ -25,6 +25,7 @@ import bisq.bonded_roles.market_price.MarketPriceRequestService;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
+import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.platform.MemoryReportService;
 import bisq.common.timer.Scheduler;
@@ -112,6 +113,8 @@ public class OracleNodeService implements Service {
     private final boolean staticPublicKeysProvided;
     @Nullable
     private Scheduler startupScheduler, scheduler;
+    @Nullable
+    private Pin bondedRolesPin;
 
     public OracleNodeService(Config config,
                              IdentityService identityService,
@@ -221,7 +224,7 @@ public class OracleNodeService implements Service {
                     .periodically(50, TimeUnit.DAYS);
         }
 
-        authorizedBondedRolesService.getBondedRoles().addObserver(new CollectionObserver<>() {
+        bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addObserver(new CollectionObserver<>() {
             @Override
             public void add(BondedRole element) {
             }
@@ -256,10 +259,18 @@ public class OracleNodeService implements Service {
     public CompletableFuture<Boolean> shutdown() {
         if (scheduler != null) {
             scheduler.stop();
+            scheduler = null;
         }
         if (startupScheduler != null) {
             startupScheduler.stop();
+            startupScheduler = null;
         }
+
+        if (bondedRolesPin != null) {
+            bondedRolesPin.unbind();
+            bondedRolesPin = null;
+        }
+
         return bisq1BridgeService.shutdown()
                 .thenCompose(result -> timestampService.shutdown())
                 .thenCompose(result -> marketPricePropagationService.shutdown());

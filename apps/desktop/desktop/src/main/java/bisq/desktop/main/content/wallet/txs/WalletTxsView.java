@@ -36,7 +36,7 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
     public WalletTxsView(WalletTxsModel model, WalletTxsController controller) {
         super(new VBox(20), model, controller);
 
-        root.setPadding(new Insets(40, 0, 0, 0));
+        root.setPadding(new Insets(0, 40, 40, 40));
 
         richTableView = new RichTableView<>(model.getSortedList());
         richTableView.setMinHeight(300);

@@ -20,13 +20,14 @@ package bisq.http_api.web_socket.domain.trades;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.dto.presentation.open_trades.TradeItemPresentationDto;
-import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.http_api.web_socket.domain.BaseWebSocketService;
+import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.http_api.web_socket.subscription.ModificationType;
 import bisq.http_api.web_socket.subscription.SubscriberRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +38,7 @@ import static bisq.http_api.web_socket.subscription.Topic.TRADES;
 @Slf4j
 public class TradesWebSocketService extends BaseWebSocketService {
     private final OpenTradeItemsService openTradeItemsService;
-
+    @Nullable
     private Pin tradesPin;
 
     public TradesWebSocketService(ObjectMapper objectMapper,
@@ -75,7 +76,10 @@ public class TradesWebSocketService extends BaseWebSocketService {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        tradesPin.unbind();
+        if (tradesPin != null) {
+            tradesPin.unbind();
+            tradesPin = null;
+        }
         return CompletableFuture.completedFuture(true);
     }
 

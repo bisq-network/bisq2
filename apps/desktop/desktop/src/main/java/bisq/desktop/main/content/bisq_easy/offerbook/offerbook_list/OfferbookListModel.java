@@ -25,15 +25,12 @@ import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
 import javafx.collections.transformation.FilteredList;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @Getter
 class OfferbookListModel implements bisq.desktop.common.view.Model {
-    @Setter
-    private boolean useAnimations;
     private final Set<String> chatMessageIds = new HashSet<>();
     private final ObservableList<OfferbookListItem> offerbookListItems = FXCollections.observableArrayList();
     private final FilteredList<OfferbookListItem> filteredOfferbookListItems = new FilteredList<>(offerbookListItems);

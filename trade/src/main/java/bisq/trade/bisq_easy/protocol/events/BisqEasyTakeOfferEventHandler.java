@@ -24,7 +24,7 @@ import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
-import bisq.trade.protocol.events.SendTradeMessageHandler;
+import bisq.trade.protocol.handler.SendTradeMessageHandler;
 
 import java.security.GeneralSecurityException;
 

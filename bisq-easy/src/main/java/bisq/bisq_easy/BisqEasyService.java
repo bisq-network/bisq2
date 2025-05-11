@@ -145,7 +145,7 @@ public class BisqEasyService implements Service {
         settingsService.getCookie().asString(CookieKey.SELECTED_MARKET_CODES)
                 .flatMap(MarketRepository::findAnyFiatMarketByMarketCodes)
                 .ifPresentOrElse(marketPriceService::setSelectedMarket,
-                        () -> marketPriceService.setSelectedMarket(MarketRepository.getDefault()));
+                        () -> marketPriceService.setSelectedMarket(MarketRepository.getDefaultBtcFiatMarket()));
 
         selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(market -> {
             if (market != null) {

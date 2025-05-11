@@ -44,4 +44,8 @@ public abstract class MuSigProtocol extends TradeProtocol<MuSigTrade> {
     @Override
     protected void configErrorHandling() {
     }
+
+    public MuSigTrade getTrade() {
+        return getModel();
+    }
 }

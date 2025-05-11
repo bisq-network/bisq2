@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.network.bonded_roles.nodes.tabs;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;

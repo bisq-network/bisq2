@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.academy.overview;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;

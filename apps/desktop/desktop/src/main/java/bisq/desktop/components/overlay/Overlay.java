@@ -28,6 +28,7 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Icons;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -57,9 +58,19 @@ import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.*;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Modality;
@@ -74,8 +85,19 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.*;
-import java.util.*;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
@@ -160,8 +182,6 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected boolean useBgEffect = true;
     @Getter
     protected final BooleanProperty isHiddenProperty = new SimpleBooleanProperty();
-
-    protected boolean useAnimation = true;
 
     protected Label headlineIcon, headlineLabel, messageLabel;
     protected String headline, message;
@@ -558,11 +578,6 @@ public abstract class Overlay<T extends Overlay<T>> {
         return cast();
     }
 
-    public T useAnimation(boolean useAnimation) {
-        this.useAnimation = useAnimation;
-        return cast();
-    }
-
     public T setHeadlineStyle(String headlineStyle) {
         this.headlineStyle = headlineStyle;
         return cast();
@@ -587,7 +602,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     protected void blurAgain() {
-        UIScheduler.run(() -> getTransitionsType().apply(owner)).after(Transitions.DEFAULT_DURATION);
+        UIScheduler.run(() -> getTransitionsType().apply(owner)).after(ManagedDuration.getDefaultDurationMillis());
     }
 
     public void display() {
@@ -663,64 +678,64 @@ public abstract class Overlay<T extends Overlay<T>> {
 
         rootContainer.setOpacity(0);
         Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
-        double duration = getDuration(400);
+        Duration duration = ManagedDuration.millis(400);
         Timeline timeline = new Timeline();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
 
         AnimationType animationType = getAnimationType();
         if (animationType == AnimationType.SlideDownFromCenterTop) {
             double startY = -rootContainer.getHeight();
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
                     new KeyValue(rootContainer.translateYProperty(), startY, interpolator)
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
                     new KeyValue(rootContainer.translateYProperty(), -50, interpolator)
             ));
         } else if (animationType == AnimationType.ScaleFromCenter) {
             double startScale = 0.25;
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
                     new KeyValue(rootContainer.scaleXProperty(), startScale, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), startScale, interpolator)
 
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleXProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
             ));
         } else if (animationType == AnimationType.ScaleYFromCenter) {
             double startYScale = 0.25;
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), startYScale, interpolator)
 
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
             ));
         } else if (animationType == AnimationType.ScaleDownToCenter) {
             double startScale = 1.1;
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
                     new KeyValue(rootContainer.scaleXProperty(), startScale, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), startScale, interpolator)
 
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleXProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
             ));
         } else if (animationType == AnimationType.FadeInAtCenter) {
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator)
 
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator)
             ));
         }
@@ -730,7 +745,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     protected void animateHide(Runnable onFinishedHandler) {
         Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
-        double duration = getDuration(200);
+        Duration duration = ManagedDuration.millis(200);
         Timeline timeline = new Timeline();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
 
@@ -738,11 +753,11 @@ public abstract class Overlay<T extends Overlay<T>> {
         AnimationType animationType = getAnimationType();
         if (animationType == AnimationType.SlideDownFromCenterTop) {
             double endY = -rootContainer.getHeight();
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
                     new KeyValue(rootContainer.translateYProperty(), -10, interpolator)
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
                     new KeyValue(rootContainer.translateYProperty(), endY, interpolator)
             ));
@@ -751,12 +766,12 @@ public abstract class Overlay<T extends Overlay<T>> {
             timeline.play();
         } else if (animationType == AnimationType.ScaleFromCenter) {
             double endScale = 0.25;
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleXProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
                     new KeyValue(rootContainer.scaleXProperty(), endScale, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), endScale, interpolator)
@@ -764,31 +779,31 @@ public abstract class Overlay<T extends Overlay<T>> {
         } else if (animationType == AnimationType.ScaleYFromCenter) {
             rootContainer.setRotationAxis(Rotate.X_AXIS);
             rootContainer.getScene().setCamera(new PerspectiveCamera());
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.rotateProperty(), 0, interpolator),
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator)
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.rotateProperty(), -90, interpolator),
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator)
             ));
         } else if (animationType == AnimationType.ScaleDownToCenter) {
             double endScale = 0.1;
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleXProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
                     new KeyValue(rootContainer.scaleXProperty(), endScale, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), endScale, interpolator)
             ));
         } else if (animationType == AnimationType.FadeInAtCenter) {
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator)
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator)
             ));
         }
@@ -1122,10 +1137,6 @@ public abstract class Overlay<T extends Overlay<T>> {
         }
         this.message = StringUtils.extractHyperlinks(message, messageHyperlinks);
         setTruncatedMessage();
-    }
-
-    protected double getDuration(double duration) {
-        return useAnimation && settingsService.getUseAnimations().get() ? duration : 1;
     }
 
     public boolean isDisplayed() {

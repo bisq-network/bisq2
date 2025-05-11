@@ -31,7 +31,8 @@ import java.util.Optional;
 @ToString
 @Getter
 @EqualsAndHashCode
-public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends PaymentRail>> implements NetworkProto {
+public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends PaymentRail>>
+        implements Comparable<PaymentMethodSpec<?>>, NetworkProto {
     protected final Optional<String> saltedMakerAccountId;
     protected final T paymentMethod;
 
@@ -88,6 +89,15 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
         };
     }
 
+    public static PaymentMethodSpec<?> fromProto(bisq.offer.protobuf.PaymentMethodSpec proto) {
+        return switch (proto.getMessageCase()) {
+            case BITCOINPAYMENTMETHODSPEC -> BitcoinPaymentMethodSpec.fromProto(proto);
+            case FIATPAYMENTMETHODSPEC -> FiatPaymentMethodSpec.fromProto(proto);
+            case STABLECOINPAYMENTMETHODSPEC -> StablecoinPaymentMethodSpec.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+        };
+    }
+
     public String getPaymentMethodName() {
         return paymentMethod.getName();
     }
@@ -98,5 +108,11 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
 
     public String getDisplayString() {
         return paymentMethod.getDisplayString();
+    }
+
+
+    @Override
+    public int compareTo(PaymentMethodSpec<?> o) {
+        return this.getDisplayString().compareTo(o.getDisplayString());
     }
 }

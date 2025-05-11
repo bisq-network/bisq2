@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.onboarding.video;
 
 import bisq.common.data.Pair;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ImageUtil;
@@ -28,7 +29,11 @@ import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.TimeFormatter;
-import javafx.animation.*;
+import javafx.animation.Animation;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -173,14 +178,14 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
             Media media = new Media(Objects.requireNonNull(resource).toExternalForm());
             mediaPlayer = new MediaPlayer(media);
             mediaView.setMediaPlayer(mediaPlayer);
-
+            long duration = ManagedDuration.getHalfOfDefaultDurationMillis();
             mediaPlayer.setOnEndOfMedia(() -> {
                 largeReplay.setScaleX(0.5);
                 largeReplay.setScaleY(0.5);
-                Transitions.fadeIn(largeReplay, Transitions.DEFAULT_DURATION / 2);
+                Transitions.fadeIn(largeReplay, duration);
                 endImage.setManaged(true);
                 endImage.setVisible(true);
-                Transitions.fadeIn(endImage, Transitions.DEFAULT_DURATION / 2);
+                Transitions.fadeIn(endImage, duration);
                 mediaPlayer.stop();
 
                 controller.onCompleted();
@@ -290,7 +295,7 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
                         mediaPlayer.seek(Duration.millis(model.getLastPositionBeforeClose()));
                     }
                     UIScheduler.run(() -> {
-                        Transitions.fadeIn(mediaView, Transitions.DEFAULT_DURATION / 2);
+                        Transitions.fadeIn(mediaView, ManagedDuration.getHalfOfDefaultDurationMillis());
                         statusPin.unsubscribe();
                         statusPin = null;
                     }).after(500);
@@ -394,27 +399,25 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
             largeReplay.setOpacity(0);
         }
         pausePlayTimeline = new Timeline();
-        if (Transitions.useAnimations()) {
-            ObservableList<KeyFrame> keyFrames = pausePlayTimeline.getKeyFrames();
-            if (imageView.getOpacity() == 0) {
-                keyFrames.add(new KeyFrame(Duration.millis(0),
-                        new KeyValue(imageView.opacityProperty(), 0, Interpolator.LINEAR),
-                        new KeyValue(imageView.scaleXProperty(), 0.25, Interpolator.LINEAR),
-                        new KeyValue(imageView.scaleYProperty(), 0.25, Interpolator.LINEAR)
-                ));
-            }
-            keyFrames.add(new KeyFrame(Duration.millis(Transitions.DEFAULT_DURATION / 2d),
-                    new KeyValue(imageView.opacityProperty(), 1, Interpolator.EASE_BOTH),
-                    new KeyValue(imageView.scaleXProperty(), 0.5, Interpolator.LINEAR),
-                    new KeyValue(imageView.scaleYProperty(), 0.5, Interpolator.LINEAR)
+        ObservableList<KeyFrame> keyFrames = pausePlayTimeline.getKeyFrames();
+        if (imageView.getOpacity() == 0) {
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
+                    new KeyValue(imageView.opacityProperty(), 0, Interpolator.LINEAR),
+                    new KeyValue(imageView.scaleXProperty(), 0.25, Interpolator.LINEAR),
+                    new KeyValue(imageView.scaleYProperty(), 0.25, Interpolator.LINEAR)
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(Transitions.DEFAULT_DURATION),
-                    new KeyValue(imageView.opacityProperty(), 0, Interpolator.EASE_BOTH),
-                    new KeyValue(imageView.scaleXProperty(), 1, Interpolator.LINEAR),
-                    new KeyValue(imageView.scaleYProperty(), 1, Interpolator.LINEAR)
-            ));
-            pausePlayTimeline.play();
         }
+        keyFrames.add(new KeyFrame(ManagedDuration.getHalfOfDefaultDuration(),
+                new KeyValue(imageView.opacityProperty(), 1, Interpolator.EASE_BOTH),
+                new KeyValue(imageView.scaleXProperty(), 0.5, Interpolator.LINEAR),
+                new KeyValue(imageView.scaleYProperty(), 0.5, Interpolator.LINEAR)
+        ));
+        keyFrames.add(new KeyFrame(ManagedDuration.getDefaultDuration(),
+                new KeyValue(imageView.opacityProperty(), 0, Interpolator.EASE_BOTH),
+                new KeyValue(imageView.scaleXProperty(), 1, Interpolator.LINEAR),
+                new KeyValue(imageView.scaleYProperty(), 1, Interpolator.LINEAR)
+        ));
+        pausePlayTimeline.play();
     }
 
     private void pause() {
@@ -432,7 +435,7 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
             model.setLastPositionBeforeClose(0);
             largePlay.setOpacity(0);
         } else {
-            Transitions.fadeOut(startImage, Transitions.DEFAULT_DURATION / 2, () -> {
+            Transitions.fadeOut(startImage, ManagedDuration.getHalfOfDefaultDurationMillis(), () -> {
                 startImage.setManaged(false);
                 startImage.setVisible(false);
             });
@@ -468,19 +471,15 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
         }
         if (controlsVBox.getOpacity() == 0) {
             restartCheckActivityScheduler();
-            if (Transitions.useAnimations()) {
-                showControlsTimeline = new Timeline();
-                ObservableList<KeyFrame> keyFrames = showControlsTimeline.getKeyFrames();
-                keyFrames.add(new KeyFrame(Duration.millis(0),
-                        new KeyValue(controlsVBox.opacityProperty(), 0, Interpolator.LINEAR)
-                ));
-                keyFrames.add(new KeyFrame(Duration.millis(Transitions.DEFAULT_DURATION / 2d),
-                        new KeyValue(controlsVBox.opacityProperty(), 1, Interpolator.EASE_BOTH)
-                ));
-                showControlsTimeline.play();
-            } else {
-                controlsVBox.setOpacity(1);
-            }
+            showControlsTimeline = new Timeline();
+            ObservableList<KeyFrame> keyFrames = showControlsTimeline.getKeyFrames();
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
+                    new KeyValue(controlsVBox.opacityProperty(), 0, Interpolator.LINEAR)
+            ));
+            keyFrames.add(new KeyFrame(ManagedDuration.getHalfOfDefaultDuration(),
+                    new KeyValue(controlsVBox.opacityProperty(), 1, Interpolator.EASE_BOTH)
+            ));
+            showControlsTimeline.play();
         }
     }
 
@@ -490,19 +489,15 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
             controlsVBox.setOpacity(1);
         }
         if (mediaPlayer != null && mediaPlayer.getStatus() == MediaPlayer.Status.PLAYING && controlsVBox.getOpacity() > 0) {
-            if (Transitions.useAnimations()) {
-                hideControlsTimeline = new Timeline();
-                ObservableList<KeyFrame> keyFrames = hideControlsTimeline.getKeyFrames();
-                keyFrames.add(new KeyFrame(Duration.millis(0),
-                        new KeyValue(controlsVBox.opacityProperty(), 1, Interpolator.LINEAR)
-                ));
-                keyFrames.add(new KeyFrame(Duration.millis(Transitions.DEFAULT_DURATION),
-                        new KeyValue(controlsVBox.opacityProperty(), 0, Interpolator.EASE_BOTH)
-                ));
-                hideControlsTimeline.play();
-            } else {
-                controlsVBox.setOpacity(0);
-            }
+            hideControlsTimeline = new Timeline();
+            ObservableList<KeyFrame> keyFrames = hideControlsTimeline.getKeyFrames();
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
+                    new KeyValue(controlsVBox.opacityProperty(), 1, Interpolator.LINEAR)
+            ));
+            keyFrames.add(new KeyFrame(ManagedDuration.getDefaultDuration(),
+                    new KeyValue(controlsVBox.opacityProperty(), 0, Interpolator.EASE_BOTH)
+            ));
+            hideControlsTimeline.play();
         }
     }
 
@@ -524,39 +519,31 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
     }
 
     private void showVolumeSlider() {
-        if (Transitions.useAnimations()) {
-            Timeline timeline = new Timeline();
-            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
-            keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(volumeSlider.translateXProperty(), -SLIDER_WIDTH, Interpolator.LINEAR),
-                    new KeyValue(volumePane.prefWidthProperty(), 0, Interpolator.LINEAR)
-            ));
-            keyFrames.add(new KeyFrame(Duration.millis(Transitions.DEFAULT_DURATION / 2d),
-                    new KeyValue(volumeSlider.translateXProperty(), 0, Interpolator.EASE_BOTH),
-                    new KeyValue(volumePane.prefWidthProperty(), SLIDER_WIDTH, Interpolator.EASE_BOTH)
-            ));
-            timeline.play();
-        } else {
-            volumeSlider.setTranslateX(0);
-        }
+        Timeline timeline = new Timeline();
+        ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+        keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
+                new KeyValue(volumeSlider.translateXProperty(), -SLIDER_WIDTH, Interpolator.LINEAR),
+                new KeyValue(volumePane.prefWidthProperty(), 0, Interpolator.LINEAR)
+        ));
+        keyFrames.add(new KeyFrame(ManagedDuration.getHalfOfDefaultDuration(),
+                new KeyValue(volumeSlider.translateXProperty(), 0, Interpolator.EASE_BOTH),
+                new KeyValue(volumePane.prefWidthProperty(), SLIDER_WIDTH, Interpolator.EASE_BOTH)
+        ));
+        timeline.play();
     }
 
     private void hideVolumeSlider() {
-        if (Transitions.useAnimations()) {
-            Timeline timeline = new Timeline();
-            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
-            keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(volumeSlider.translateXProperty(), 0, Interpolator.LINEAR),
-                    new KeyValue(volumePane.prefWidthProperty(), SLIDER_WIDTH, Interpolator.LINEAR)
-            ));
-            keyFrames.add(new KeyFrame(Duration.millis(Transitions.DEFAULT_DURATION / 2d),
-                    new KeyValue(volumeSlider.translateXProperty(), -SLIDER_WIDTH, Interpolator.EASE_BOTH),
-                    new KeyValue(volumePane.prefWidthProperty(), 0, Interpolator.EASE_BOTH)
-            ));
-            timeline.play();
-        } else {
-            volumeSlider.setTranslateX(-SLIDER_WIDTH);
-        }
+        Timeline timeline = new Timeline();
+        ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+        keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
+                new KeyValue(volumeSlider.translateXProperty(), 0, Interpolator.LINEAR),
+                new KeyValue(volumePane.prefWidthProperty(), SLIDER_WIDTH, Interpolator.LINEAR)
+        ));
+        keyFrames.add(new KeyFrame(ManagedDuration.getHalfOfDefaultDuration(),
+                new KeyValue(volumeSlider.translateXProperty(), -SLIDER_WIDTH, Interpolator.EASE_BOTH),
+                new KeyValue(volumePane.prefWidthProperty(), 0, Interpolator.EASE_BOTH)
+        ));
+        timeline.play();
     }
 
     private double getTotalDuration() {

@@ -44,9 +44,16 @@ import bisq.user.profile.UserProfileService;
 import com.google.common.primitives.Ints;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
@@ -66,7 +73,9 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final BannedUserService bannedUserService;
     private final Set<MediatorsResponse> pendingMediatorsResponseMessages = new CopyOnWriteArraySet<>();
+    @Nullable
     private Pin channeldPin;
+    @Nullable
     private Scheduler throttleUpdatesScheduler;
 
     public MediationRequestService(NetworkService networkService,
@@ -105,6 +114,7 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
             throttleUpdatesScheduler.stop();
             throttleUpdatesScheduler = null;
         }
+        pendingMediatorsResponseMessages.clear();
         return CompletableFuture.completedFuture(true);
     }
 

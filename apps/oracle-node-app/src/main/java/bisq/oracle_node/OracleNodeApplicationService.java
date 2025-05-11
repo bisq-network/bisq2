@@ -19,6 +19,7 @@ package bisq.oracle_node;
 
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceRequestService;
+import bisq.common.observable.Pin;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
@@ -27,6 +28,7 @@ import bisq.security.SecurityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -40,6 +42,8 @@ public class OracleNodeApplicationService extends JavaSeApplicationService {
     private final NetworkService networkService;
     private final OracleNodeService oracleNodeService;
     private final BondedRolesService bondedRolesService;
+    @Nullable
+    private Pin difficultyAdjustmentServicePin;
 
     public OracleNodeApplicationService(String[] args) {
         super("oracle_node", args);
@@ -91,8 +95,11 @@ public class OracleNodeApplicationService extends JavaSeApplicationService {
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (success) {
-                        bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault -> networkService.getNetworkLoadServices().forEach(networkLoadService ->
-                                networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
+                        difficultyAdjustmentServicePin = bondedRolesService.getDifficultyAdjustmentService()
+                                .getMostRecentValueOrDefault()
+                                .addObserver(mostRecentValueOrDefault ->
+                                        networkService.getNetworkLoadServices().forEach(networkLoadService ->
+                                                networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
                         log.info("NetworkApplicationService initialized");
                     } else {
                         log.error("Initializing networkApplicationService failed", throwable);
@@ -102,6 +109,10 @@ public class OracleNodeApplicationService extends JavaSeApplicationService {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (difficultyAdjustmentServicePin != null) {
+            difficultyAdjustmentServicePin.unbind();
+            difficultyAdjustmentServicePin = null;
+        }
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> oracleNodeService.shutdown()
                 .thenCompose(result -> bondedRolesService.shutdown())

@@ -17,7 +17,7 @@
 
 package bisq.desktop.common.view;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.Styles;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;

@@ -55,6 +55,7 @@ message PaymentMethod {
     FiatPaymentMethod fiatPaymentMethod = 10;
     BitcoinPaymentMethod bitcoinPaymentMethod = 11;
     CryptoPaymentMethod cryptoPaymentMethod = 12;
+    StablecoinPaymentMethod stablecoinPaymentMethod = 13;
   }
 }
 message FiatPaymentMethod {
@@ -64,6 +65,9 @@ message BitcoinPaymentMethod {
 message CryptoPaymentMethod {
   string currencyCode = 1;
 }
+message StablecoinPaymentMethod {
+}
+
 
 // AccountPayload
 message AccountPayload {

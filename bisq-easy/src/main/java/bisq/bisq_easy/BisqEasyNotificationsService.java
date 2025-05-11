@@ -154,8 +154,8 @@ public class BisqEasyNotificationsService implements Service {
                 .flatMap(chatNotification -> chatNotification.getTradeId().stream());
     }
 
-    public long getNumNotifications(NavigationTarget navigationTarget) {
-        return ChatChannelDomainNavigationTargetMapper.fromNavigationTarget(navigationTarget).stream()
+    public long getNumNotifications(Set<ChatChannelDomain> chatChannelDomains) {
+        return chatChannelDomains.stream()
                 .flatMap(chatNotificationService::getNotConsumedNotifications)
                 .count();
     }

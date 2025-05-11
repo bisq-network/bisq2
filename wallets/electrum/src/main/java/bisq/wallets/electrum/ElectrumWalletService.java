@@ -104,9 +104,17 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
     @Override
     public CompletableFuture<Boolean> shutdown() {
         return CompletableFuture.supplyAsync(() -> {
+
+            ElectrumNotifyApi.removeListener(this);
             wallet.shutdown();
             electrumProcess.shutdown();
             electrumNotifyWebServer.stopServer();
+
+            walletAddresses.clear();
+            transactions.clear();
+            balance.set(Coin.asBtcFromValue(0));
+            isWalletReady = false;
+
             return true;
         });
     }

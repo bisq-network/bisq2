@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.network.bonded_roles;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.common.observable.Pin;

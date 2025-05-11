@@ -21,7 +21,13 @@ import bisq.common.application.DevMode;
 import bisq.common.data.ByteArray;
 import bisq.common.formatter.DataSizeFormatter;
 import bisq.common.util.StringUtils;
-import bisq.network.p2p.services.data.storage.*;
+import bisq.network.p2p.services.data.storage.DataStorageResult;
+import bisq.network.p2p.services.data.storage.DataStorageService;
+import bisq.network.p2p.services.data.storage.DataStore;
+import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
+import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
@@ -71,6 +77,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     public void shutdown() {
         maybeLogMapState("shutdown", persistableStore);
         super.shutdown();
+        listeners.clear();
     }
 
     public DataStorageResult add(AddAuthenticatedDataRequest request) {

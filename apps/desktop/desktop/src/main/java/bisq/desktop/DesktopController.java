@@ -18,7 +18,7 @@
 package bisq.desktop;
 
 import bisq.application.State;
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Observable;
 import bisq.desktop.common.Browser;

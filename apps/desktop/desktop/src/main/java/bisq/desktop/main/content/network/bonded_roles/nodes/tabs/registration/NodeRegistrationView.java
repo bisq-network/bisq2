@@ -43,11 +43,10 @@ public class NodeRegistrationView extends BondedRolesRegistrationView<NodeRegist
         privKey = new MaterialPasswordField(Res.get("user.bondedRoles.registration.node.privKey"));
 
         importNodeAddressButton = new Button(Res.get("user.bondedRoles.registration.node.importAddress"));
-        importNodeAddressButton.getStyleClass().addAll("outlined-button", "button-reduced-padding");
+        importNodeAddressButton.getStyleClass().addAll("outlined-button");
         importNodeAddressButton.setPrefWidth(180);
 
         showKeyPairButton = new Button(Res.get("user.bondedRoles.registration.node.showKeyPair"));
-        showKeyPairButton.getStyleClass().add("button-reduced-padding");
         showKeyPairButton.setPrefWidth(150);
 
         buttons.getChildren().add(0, importNodeAddressButton);

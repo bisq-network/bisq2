@@ -105,7 +105,7 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
 
     @Override
     public Optional<BisqEasyOfferbookChannel> getDefaultChannel() {
-        Market defaultMarket = MarketRepository.getDefault();
+        Market defaultMarket = MarketRepository.getDefaultBtcFiatMarket();
         return getChannels().stream()
                 .filter(channel -> defaultMarket.equals(channel.getMarket()))
                 .findAny()
@@ -163,11 +163,11 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
     @Override
     protected void maybeAddDefaultChannels() {
         if (getChannels().isEmpty()) {
-            BisqEasyOfferbookChannel defaultChannel = new BisqEasyOfferbookChannel(MarketRepository.getDefault());
+            BisqEasyOfferbookChannel defaultChannel = new BisqEasyOfferbookChannel(MarketRepository.getDefaultBtcFiatMarket());
             maybeAddPublicTradeChannel(defaultChannel);
 
             List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
-            allMarkets.remove(MarketRepository.getDefault());
+            allMarkets.remove(MarketRepository.getDefaultBtcFiatMarket());
             allMarkets.forEach(market -> maybeAddPublicTradeChannel(new BisqEasyOfferbookChannel(market)));
         }
     }

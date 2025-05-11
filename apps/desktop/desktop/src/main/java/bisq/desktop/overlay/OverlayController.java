@@ -17,7 +17,6 @@
 
 package bisq.desktop.overlay;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.KeyHandlerUtil;
@@ -32,6 +31,8 @@ import bisq.desktop.main.content.bisq_easy.trade_guide.BisqEasyGuideController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.main.content.bisq_easy.wallet_guide.WalletGuideController;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
+import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferController;
+import bisq.desktop.main.content.mu_sig.take_offer.MuSigTakeOfferController;
 import bisq.desktop.main.content.reputation.build_reputation.accountAge.AccountAgeController;
 import bisq.desktop.main.content.reputation.build_reputation.bond.BondedReputationController;
 import bisq.desktop.main.content.reputation.build_reputation.burn.BurnBsqController;
@@ -39,6 +40,7 @@ import bisq.desktop.main.content.reputation.build_reputation.signedAccount.Signe
 import bisq.desktop.main.content.user.accounts.create.CreatePaymentAccountController;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.desktop.main.content.user.user_profile.create.CreateUserProfileController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.chat_rules.ChatRulesController;
 import bisq.desktop.overlay.onboarding.OnboardingController;
 import bisq.desktop.overlay.tac.TacController;
@@ -133,23 +135,31 @@ public class OverlayController extends NavigationController {
             case TAC -> Optional.of(new TacController(serviceProvider));
             case UPDATER -> Optional.of(new UpdaterController(serviceProvider));
             case ONBOARDING -> Optional.of(new OnboardingController(serviceProvider));
-            case TRADE_WIZARD -> Optional.of(new TradeWizardController(serviceProvider));
-            case TAKE_OFFER -> Optional.of(new TakeOfferController(serviceProvider));
+
             case BISQ_EASY_VIDEO -> Optional.of(new BisqEasyVideoController(serviceProvider));
             case BISQ_EASY_GUIDE -> Optional.of(new BisqEasyGuideController(serviceProvider));
-            case WALLET_GUIDE -> Optional.of(new WalletGuideController(serviceProvider));
+            case BISQ_EASY_TRADE_WIZARD -> Optional.of(new TradeWizardController(serviceProvider));
+            case BISQ_EASY_TAKE_OFFER -> Optional.of(new TakeOfferController(serviceProvider));
             case BISQ_EASY_TRADE_DETAILS -> Optional.of(new TradeDetailsController(serviceProvider));
-            case MEDIATION_CASE_DETAILS -> Optional.of(new MediationCaseDetailsController(serviceProvider));
             case BISQ_EASY_OFFER_DETAILS -> Optional.of(new BisqEasyOfferDetailsController(serviceProvider));
+
+            case MU_SIG_CREATE_OFFER -> Optional.of(new MuSigCreateOfferController(serviceProvider));
+            case MU_SIG_TAKE_OFFER -> Optional.of(new MuSigTakeOfferController(serviceProvider));
+
+            case WALLET_GUIDE -> Optional.of(new WalletGuideController(serviceProvider));
             case CHAT_RULES -> Optional.of(new ChatRulesController(serviceProvider));
+
             case CREATE_PROFILE -> Optional.of(new CreateUserProfileController(serviceProvider));
             case CREATE_BISQ_EASY_PAYMENT_ACCOUNT -> Optional.of(new CreatePaymentAccountController(serviceProvider));
+
             case BURN_BSQ -> Optional.of(new BurnBsqController(serviceProvider));
             case BSQ_BOND -> Optional.of(new BondedReputationController(serviceProvider));
             case ACCOUNT_AGE -> Optional.of(new AccountAgeController(serviceProvider));
             case SIGNED_WITNESS -> Optional.of(new SignedWitnessController(serviceProvider));
             case REPORT_TO_MODERATOR -> Optional.of(new ReportToModeratorWindow(serviceProvider).getController());
+
             case PROFILE_CARD -> Optional.of(new ProfileCardController(serviceProvider));
+            case MEDIATION_CASE_DETAILS -> Optional.of(new MediationCaseDetailsController(serviceProvider));
             default -> Optional.empty();
         };
     }

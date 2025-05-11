@@ -20,6 +20,7 @@ package bisq.desktop.common.standby;
 import bisq.common.threading.ExecutorFactory;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +34,7 @@ class Inhibitor implements PreventStandbyMode {
             "/bin/gnome-session-inhibit",
             "/usr/bin/systemd-inhibit",
             "/bin/systemd-inhibit");
+    @Nullable
     private ExecutorService executor;
 
     static Optional<PreventStandbyMode> findExecutableInhibitor() {
@@ -79,6 +81,9 @@ class Inhibitor implements PreventStandbyMode {
 
     @Override
     public void shutdown() {
+        if (!isPlaying) {
+            return;
+        }
         isPlaying = false;
         process.ifPresent(process -> {
             log.info("Stopping process {} isAlive={}", process.toHandle().info(), process.isAlive());
@@ -89,6 +94,7 @@ class Inhibitor implements PreventStandbyMode {
         process = Optional.empty();
         if (executor != null) {
             ExecutorFactory.shutdownAndAwaitTermination(executor, 10);
+            executor = null;
         }
     }
 }

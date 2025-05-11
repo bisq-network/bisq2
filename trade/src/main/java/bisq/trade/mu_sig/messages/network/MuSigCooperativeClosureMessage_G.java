@@ -61,7 +61,8 @@ public final class MuSigCooperativeClosureMessage_G extends MuSigTradeMessage {
     }
 
     private bisq.trade.protobuf.MuSigCooperativeClosureMessage_G.Builder getMuSigCooperativeClosureMessage_G(boolean serializeForHash) {
-        return bisq.trade.protobuf.MuSigCooperativeClosureMessage_G.newBuilder();
+        return bisq.trade.protobuf.MuSigCooperativeClosureMessage_G.newBuilder()
+                .setCloseTradeResponse(closeTradeResponse.toProto(serializeForHash));
     }
 
     public static MuSigCooperativeClosureMessage_G fromProto(bisq.trade.protobuf.TradeMessage proto) {

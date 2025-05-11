@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.chat.message_container;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.*;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;

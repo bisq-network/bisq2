@@ -21,11 +21,12 @@ import bisq.common.threading.ExecutorFactory;
 import bisq.presentation.notifications.OsSpecificNotificationService;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.swing.ImageIcon;
-import java.awt.SystemTray;
-import java.awt.TrayIcon;
+import javax.annotation.Nullable;
+import javax.swing.*;
+import java.awt.*;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -33,12 +34,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class AwtNotificationService implements OsSpecificNotificationService {
     private boolean isSupported;
     private TrayIcon trayIcon;
+    @Nullable
+    private ExecutorService initializationExecutor;
 
     public AwtNotificationService() {
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        initializationExecutor = ExecutorFactory.newSingleThreadExecutor("initialize-NotificationService");
         CompletableFuture.runAsync(() -> {
             try {
                 checkArgument(SystemTray.isSupported(), "SystemTray is not supported");
@@ -52,12 +56,24 @@ public class AwtNotificationService implements OsSpecificNotificationService {
                 log.warn("AwtNotificationService not supported.", e);
                 isSupported = false;
             }
-        }, ExecutorFactory.newSingleThreadExecutor("initialize-NotificationService"));
+        }, initializationExecutor);
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (isSupported && trayIcon != null) {
+            try {
+                SystemTray.getSystemTray().remove(trayIcon);
+            } catch (Exception e) {
+                log.error("Failed to remove tray icon during shutdown", e);
+            }
+            trayIcon = null;
+        }
+        if (initializationExecutor != null) {
+            initializationExecutor.shutdownNow();
+            initializationExecutor = null;
+        }
         return CompletableFuture.completedFuture(true);
     }
 

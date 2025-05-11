@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.network;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.main.content.ContentTabModel;
 
 public class NetworkModel extends ContentTabModel {

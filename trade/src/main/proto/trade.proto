@@ -296,6 +296,7 @@ message MuSigSetupTradeMessage_B {
   contract.Contract contract = 1;
   contract.ContractSignatureData contractSignatureData = 2;
   PubKeySharesResponse pubKeySharesResponse = 3;
+  NonceSharesMessage nonceSharesMessage = 4;
 }
 
 message MuSigSetupTradeMessage_C {

@@ -34,7 +34,7 @@ public class WalletReceiveView extends View<VBox, WalletReceiveModel, WalletRece
     public WalletReceiveView(WalletReceiveModel model, WalletReceiveController controller) {
         super(new VBox(20), model, controller);
 
-        root.setPadding(new Insets(40, 0, 0, 0));
+        root.setPadding(new Insets(0, 40, 40, 40));
 
         address = new MaterialTextField(Res.get("wallet.receive.address"));
         address.setEditable(false);

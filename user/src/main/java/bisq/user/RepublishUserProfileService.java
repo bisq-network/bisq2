@@ -18,12 +18,14 @@
 package bisq.user;
 
 import bisq.common.application.Service;
+import bisq.common.observable.Pin;
 import bisq.common.timer.Scheduler;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.security.KeyPair;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +38,10 @@ public class RepublishUserProfileService implements Service {
     private UserIdentity selectedUserIdentity;
     private long lastPublished;
     private long republishCounter;
+    @Nullable
+    private Pin selectedUserIdentityPin;
+    @Nullable
+    private Scheduler republishScheduler;
 
     public RepublishUserProfileService(UserIdentityService userIdentityService) {
         this.userIdentityService = userIdentityService;
@@ -43,13 +49,14 @@ public class RepublishUserProfileService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> {
+        selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> {
             if (userIdentity != null && !userIdentity.getIdentity().isDefaultTag()) {
                 selectedUserIdentity = userIdentity;
                 userActivityDetected();
             }
         });
-        Scheduler.run(() -> {
+
+        republishScheduler = Scheduler.run(() -> {
                     KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
                     UserProfile userProfile = selectedUserIdentity.getUserProfile();
                     userIdentityService.publishUserProfile(userProfile, keyPair);
@@ -62,6 +69,16 @@ public class RepublishUserProfileService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (selectedUserIdentityPin != null) {
+            selectedUserIdentityPin.unbind();
+            selectedUserIdentityPin = null;
+        }
+
+        if (republishScheduler != null) {
+            republishScheduler.stop();
+            republishScheduler = null;
+        }
+
         return CompletableFuture.completedFuture(true);
     }
 

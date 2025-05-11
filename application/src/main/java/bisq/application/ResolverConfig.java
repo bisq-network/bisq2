@@ -29,10 +29,12 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.common.CommonPublicChatMessage;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeMessage;
 import bisq.chat.reactions.BisqEasyOfferbookMessageReaction;
 import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.CommonPublicChatMessageReaction;
+import bisq.chat.reactions.MuSigOpenTradeMessageReaction;
 import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.proto.NetworkStorageWhiteList;
@@ -53,6 +55,14 @@ import bisq.trade.bisq_easy.protocol.messages.BisqEasyRejectTradeMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferResponse;
+import bisq.trade.mu_sig.messages.network.MuSigCooperativeClosureMessage_G;
+import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
+import bisq.trade.mu_sig.messages.network.MuSigPaymentReceivedMessage_F;
+import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
+import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
+import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_B;
+import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_C;
+import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
 import bisq.trade.protocol.messages.TradeMessage;
 import bisq.user.banned.BannedUserProfileData;
 import bisq.user.profile.UserProfile;
@@ -111,27 +121,39 @@ public class ResolverConfig {
 
         // ChatMessage subclasses
         NetworkStorageWhiteList.add(CommonPublicChatMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyOfferbookMessage.class);
         NetworkStorageWhiteList.add(TwoPartyPrivateChatMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyOfferbookMessage.class);
         NetworkStorageWhiteList.add(BisqEasyOpenTradeMessage.class);
+        NetworkStorageWhiteList.add(MuSigOpenTradeMessage.class);
 
-        // TradeMessage subclasses
-        NetworkStorageWhiteList.add(BisqEasyAccountDataMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyBtcAddressMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyConfirmBtcSentMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyConfirmFiatReceiptMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyConfirmFiatSentMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyCancelTradeMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyRejectTradeMessage.class);
+        // BisqEasyTradeMessage subclasses
         NetworkStorageWhiteList.add(BisqEasyReportErrorMessage.class);
         NetworkStorageWhiteList.add(BisqEasyTakeOfferRequest.class);
         NetworkStorageWhiteList.add(BisqEasyTakeOfferResponse.class);
+        NetworkStorageWhiteList.add(BisqEasyCancelTradeMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyRejectTradeMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyAccountDataMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyBtcAddressMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyConfirmFiatSentMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyConfirmFiatReceiptMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyConfirmBtcSentMessage.class);
+
+        // MuSigTradeMessage subclasses
+        NetworkStorageWhiteList.add(MuSigReportErrorMessage.class);
+        NetworkStorageWhiteList.add(MuSigSetupTradeMessage_A.class);
+        NetworkStorageWhiteList.add(MuSigSetupTradeMessage_B.class);
+        NetworkStorageWhiteList.add(MuSigSetupTradeMessage_C.class);
+        NetworkStorageWhiteList.add(MuSigSetupTradeMessage_D.class);
+        NetworkStorageWhiteList.add(MuSigPaymentInitiatedMessage_E.class);
+        NetworkStorageWhiteList.add(MuSigPaymentReceivedMessage_F.class);
+        NetworkStorageWhiteList.add(MuSigCooperativeClosureMessage_G.class);
 
         // ChatMessageReaction subclasses
         NetworkStorageWhiteList.add(CommonPublicChatMessageReaction.class);
-        NetworkStorageWhiteList.add(BisqEasyOfferbookMessageReaction.class);
         NetworkStorageWhiteList.add(TwoPartyPrivateChatMessageReaction.class);
+        NetworkStorageWhiteList.add(BisqEasyOfferbookMessageReaction.class);
         NetworkStorageWhiteList.add(BisqEasyOpenTradeMessageReaction.class);
+        NetworkStorageWhiteList.add(MuSigOpenTradeMessageReaction.class);
 
         // From network module. As it is used as mailbox message we add it here as well.
         NetworkStorageWhiteList.add(AckMessage.class);

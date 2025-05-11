@@ -12,6 +12,7 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistribu
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.TreeMap;
@@ -26,6 +27,7 @@ public class MarketPricePropagationService implements Service {
     private final boolean staticPublicKeysProvided;
     @Setter
     private Identity identity;
+    @Nullable
     private Pin marketPriceByCurrencyMapPin;
 
     public MarketPricePropagationService(NetworkService networkService,
@@ -58,6 +60,7 @@ public class MarketPricePropagationService implements Service {
     public CompletableFuture<Boolean> shutdown() {
         if (marketPriceByCurrencyMapPin != null) {
             marketPriceByCurrencyMapPin.unbind();
+            marketPriceByCurrencyMapPin = null;
         }
         return marketPriceRequestService.shutdown();
     }

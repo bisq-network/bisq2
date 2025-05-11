@@ -50,10 +50,16 @@ public class TorController {
     }
 
     public void shutdown() {
+        if (isShutdownInProgress) {
+            return;
+        }
         isShutdownInProgress = true;
         bootstrapService.ifPresent(BootstrapService::shutdown);
+        bootstrapService = Optional.empty();
         publishOnionAddressServiceMap.values().forEach(PublishOnionAddressService::shutdown);
+        publishOnionAddressServiceMap.clear();
         onionServiceOnlineStateServiceMap.values().forEach(OnionServiceOnlineStateService::shutdown);
+        onionServiceOnlineStateServiceMap.clear();
         torControlProtocol.close();
     }
 

@@ -51,6 +51,7 @@ import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.security.KeyPair;
 import java.util.Optional;
 import java.util.Set;
@@ -84,8 +85,8 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
     private final ModeratorStore persistableStore = new ModeratorStore();
     @Getter
     private final Persistence<ModeratorStore> persistence;
-
-    private Pin rateLimitExceedingUserProfileIdMapPin;
+    @Nullable
+    private Pin rateLimitExceedingUserProfileIdMapPin, bondedRolesPin;
 
     public ModeratorService(ModeratorService.Config config,
                             PersistenceService persistenceService,
@@ -128,6 +129,12 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
             rateLimitExceedingUserProfileIdMapPin.unbind();
             rateLimitExceedingUserProfileIdMapPin = null;
         }
+
+        if (bondedRolesPin != null) {
+            bondedRolesPin.unbind();
+            bondedRolesPin = null;
+        }
+
         networkService.removeConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
@@ -219,7 +226,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
 
     private void addObserverIfModerator() {
         Set<String> myUserProfileIds = userIdentityService.getMyUserProfileIds();
-        authorizedBondedRolesService.getBondedRoles().addObserver(new CollectionObserver<>() {
+        bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addObserver(new CollectionObserver<>() {
             @Override
             public void add(BondedRole bondedRole) {
                 AuthorizedBondedRole authorizedBondedRole = bondedRole.getAuthorizedBondedRole();

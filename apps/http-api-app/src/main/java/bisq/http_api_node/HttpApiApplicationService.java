@@ -23,6 +23,7 @@ import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
+import bisq.common.observable.Pin;
 import bisq.common.platform.OS;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
@@ -51,7 +52,8 @@ import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.awt.SystemTray;
+import javax.annotation.Nullable;
+import java.awt.*;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -84,6 +86,8 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
     private final BisqEasyService bisqEasyService;
     private final HttpApiService httpApiService;
     private final OpenTradeItemsService openTradeItemsService;
+    @Nullable
+    private Pin difficultyAdjustmentServicePin;
 
     public HttpApiApplicationService(String[] args) {
         super("http_api_app", args);
@@ -233,8 +237,11 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                         if (success) {
                             setState(State.APP_INITIALIZED);
 
-                            bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault -> networkService.getNetworkLoadServices().forEach(networkLoadService ->
-                                    networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
+                            difficultyAdjustmentServicePin = bondedRolesService.getDifficultyAdjustmentService()
+                                    .getMostRecentValueOrDefault()
+                                    .addObserver(mostRecentValueOrDefault ->
+                                            networkService.getNetworkLoadServices().forEach(networkLoadService ->
+                                                    networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
 
                             log.info("ApplicationService initialized");
                         } else {
@@ -250,6 +257,11 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (difficultyAdjustmentServicePin != null) {
+            difficultyAdjustmentServicePin.unbind();
+            difficultyAdjustmentServicePin = null;
+        }
+
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> httpApiService.shutdown()
                 .thenCompose(result -> openTradeItemsService.shutdown())

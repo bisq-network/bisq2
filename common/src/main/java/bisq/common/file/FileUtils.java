@@ -25,12 +25,32 @@ import bisq.common.util.StringUtils;
 import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.EOFException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.file.*;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -408,15 +428,33 @@ public class FileUtils {
     }
 
     public static void copyDirectory(String sourceDirectory, String destinationDirectory) throws IOException {
+        copyDirectory(sourceDirectory, destinationDirectory, Collections.emptySet());
+    }
+
+    public static void copyDirectory(String sourceDirectory,
+                                     String destinationDirectory,
+                                     Set<String> extensionsToSkip) throws IOException {
         Path start = Paths.get(sourceDirectory);
         AtomicReference<IOException> exception = new AtomicReference<>();
         try (Stream<Path> stream = Files.walk(start)) {
             stream.forEach(source -> {
-                Path destination = Paths.get(destinationDirectory, source.toString().substring(sourceDirectory.length()));
-                try {
-                    Files.copy(source, destination);
-                } catch (IOException e) {
-                    exception.set(e);
+                boolean shouldSkip = false;
+                if (!Files.isDirectory(source)) {
+                    String fileName = source.getFileName().toString();
+                    int lastDotIndex = fileName.lastIndexOf('.');
+                    if (lastDotIndex > 0) {
+                        String extension = fileName.substring(lastDotIndex + 1);
+                        shouldSkip = extensionsToSkip.contains(extension);
+                    }
+                }
+
+                if (!shouldSkip) {
+                    Path destination = Paths.get(destinationDirectory, source.toString().substring(sourceDirectory.length()));
+                    try {
+                        Files.copy(source, destination);
+                    } catch (IOException e) {
+                        exception.set(e);
+                    }
                 }
             });
         }

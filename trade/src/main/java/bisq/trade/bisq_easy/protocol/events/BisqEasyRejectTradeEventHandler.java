@@ -23,7 +23,7 @@ import bisq.contract.Role;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyRejectTradeMessage;
-import bisq.trade.protocol.events.SendTradeMessageHandler;
+import bisq.trade.protocol.handler.SendTradeMessageHandler;
 
 public class BisqEasyRejectTradeEventHandler extends SendTradeMessageHandler<BisqEasyTrade> {
 

@@ -61,7 +61,8 @@ public final class MuSigSetupTradeMessage_D extends MuSigTradeMessage {
     }
 
     private bisq.trade.protobuf.MuSigSetupTradeMessage_D.Builder getMuSigSetupTradeMessage_D(boolean serializeForHash) {
-        return bisq.trade.protobuf.MuSigSetupTradeMessage_D.newBuilder();
+        return bisq.trade.protobuf.MuSigSetupTradeMessage_D.newBuilder()
+                .setPartialSignaturesMessage(partialSignaturesMessage.toProto(serializeForHash));
     }
 
     public static MuSigSetupTradeMessage_D fromProto(bisq.trade.protobuf.TradeMessage proto) {

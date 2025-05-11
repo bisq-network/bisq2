@@ -83,10 +83,15 @@ public class InventoryRequestService implements Node.Listener {
     }
 
     public void shutdown() {
+        if (shutdownInProgress) {
+            return;
+        }
         shutdownInProgress = true;
         node.removeListener(this);
         requestHandlerMap.values().forEach(InventoryHandler::dispose);
+        requestHandlerMap.clear();
         periodicRequestScheduler.ifPresent(Scheduler::stop);
+        periodicRequestScheduler = Optional.empty();
     }
 
 

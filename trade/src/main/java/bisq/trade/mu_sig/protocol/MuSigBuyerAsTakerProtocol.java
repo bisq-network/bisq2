@@ -17,17 +17,34 @@
 
 package bisq.trade.mu_sig.protocol;
 
+import bisq.common.fsm.FsmErrorEvent;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
-import bisq.trade.mu_sig.events.buyer_as_taker.*;
+import bisq.trade.mu_sig.events.MuSigFsmErrorEventHandler;
+import bisq.trade.mu_sig.events.MuSigReportErrorMessageHandler;
+import bisq.trade.mu_sig.events.buyer_as_taker.MuSigBuyersCooperativeCloseTimeoutEvent;
+import bisq.trade.mu_sig.events.buyer_as_taker.MuSigBuyersCooperativeCloseTimeoutEventHandler;
+import bisq.trade.mu_sig.events.buyer_as_taker.MuSigPaymentInitiatedEvent;
+import bisq.trade.mu_sig.events.buyer_as_taker.MuSigPaymentInitiatedEventHandler;
+import bisq.trade.mu_sig.events.buyer_as_taker.MuSigTakeOfferEvent;
+import bisq.trade.mu_sig.events.buyer_as_taker.MuSigTakeOfferEventHandler;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentReceivedMessage_F;
+import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_B;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
 import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigPaymentReceivedMessage_F_Handler;
 import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigSetupTradeMessage_B_Handler;
 import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigSetupTradeMessage_D_Handler;
 
-import static bisq.trade.mu_sig.protocol.MuSigTradeState.*;
+import static bisq.trade.bisq_easy.protocol.BisqEasyTradeState.FAILED;
+import static bisq.trade.bisq_easy.protocol.BisqEasyTradeState.FAILED_AT_PEER;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_CLOSED_TRADE;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_FORCE_CLOSED_TRADE;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_INITIALIZED_TRADE;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_INITIATED_PAYMENT;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.INIT;
 
 
 public class MuSigBuyerAsTakerProtocol extends MuSigProtocol {
@@ -36,6 +53,18 @@ public class MuSigBuyerAsTakerProtocol extends MuSigProtocol {
         super(serviceProvider, model);
     }
 
+    @Override
+    protected void configErrorHandling() {
+        fromAny()
+                .on(FsmErrorEvent.class)
+                .run(MuSigFsmErrorEventHandler.class)
+                .to(FAILED);
+
+        fromAny()
+                .on(MuSigReportErrorMessage.class)
+                .run(MuSigReportErrorMessageHandler.class)
+                .to(FAILED_AT_PEER);
+    }
 
     @Override
     public void configTransitions() {

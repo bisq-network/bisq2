@@ -158,9 +158,11 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
         log.info("shutdown");
         if (periodicRequestDoaDataScheduler != null) {
             periodicRequestDoaDataScheduler.stop();
+            periodicRequestDoaDataScheduler = null;
         }
         if (initialDelayScheduler != null) {
             initialDelayScheduler.stop();
+            initialDelayScheduler = null;
         }
         networkService.removeConfidentialMessageListener(this);
         authorizedBondedRolesService.removeListener(this);

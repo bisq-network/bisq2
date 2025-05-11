@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 @Slf4j
 final class MarketPriceStore implements PersistableStore<MarketPriceStore> {
     private final ObservableHashMap<Market, MarketPrice> marketPriceByCurrencyMap = new ObservableHashMap<>();
-    private final Observable<Market> selectedMarket = new Observable<>(MarketRepository.getDefault());
+    private final Observable<Market> selectedMarket = new Observable<>(MarketRepository.getDefaultBtcFiatMarket());
 
     private MarketPriceStore(Map<Market, MarketPrice> marketPriceByCurrencyMap, Market selectedMarket) {
         this.marketPriceByCurrencyMap.putAll(marketPriceByCurrencyMap);

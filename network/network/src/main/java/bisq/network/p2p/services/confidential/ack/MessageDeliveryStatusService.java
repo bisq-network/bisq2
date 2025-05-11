@@ -33,6 +33,7 @@ import bisq.security.keys.KeyBundleService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -58,6 +59,8 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     private final KeyBundleService keyBundleService;
     private final NetworkService networkService;
     private final Set<String> ackedMessageIds = new HashSet<>();
+    @Nullable
+    private Scheduler checkPendingScheduler;
 
     public MessageDeliveryStatusService(PersistenceService persistenceService,
                                         KeyBundleService keyBundleService,
@@ -83,7 +86,7 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     }
 
     public void initialize() {
-        Scheduler.run(this::checkPending)
+        checkPendingScheduler = Scheduler.run(this::checkPending)
                 .host(this)
                 .runnableName("checkPending")
                 .after(1000);
@@ -95,7 +98,12 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     }
 
     public void shutdown() {
+        if (checkPendingScheduler != null) {
+            checkPendingScheduler.stop();
+            checkPendingScheduler = null;
+        }
         networkService.removeConfidentialMessageListener(this);
+        ackedMessageIds.clear();
     }
 
 

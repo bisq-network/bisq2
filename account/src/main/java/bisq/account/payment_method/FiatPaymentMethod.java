@@ -29,7 +29,7 @@ import java.util.List;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class FiatPaymentMethod extends PaymentMethod<FiatPaymentRail> {
+public class FiatPaymentMethod extends NationalCurrencyPaymentMethod<FiatPaymentRail> {
     public static FiatPaymentMethod fromPaymentRail(FiatPaymentRail fiatPaymentRail) {
         return new FiatPaymentMethod(fiatPaymentRail);
     }

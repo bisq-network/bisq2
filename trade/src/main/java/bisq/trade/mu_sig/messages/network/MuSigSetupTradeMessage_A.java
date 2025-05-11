@@ -69,7 +69,10 @@ public final class MuSigSetupTradeMessage_A extends MuSigTradeMessage {
     }
 
     private bisq.trade.protobuf.MuSigSetupTradeMessage_A.Builder getMuSigSetupTradeMessage_A(boolean serializeForHash) {
-        return bisq.trade.protobuf.MuSigSetupTradeMessage_A.newBuilder();
+        return bisq.trade.protobuf.MuSigSetupTradeMessage_A.newBuilder()
+                .setContract(contract.toProto(serializeForHash))
+                .setContractSignatureData(contractSignatureData.toProto(serializeForHash))
+                .setPubKeySharesResponse(pubKeySharesResponse.toProto(serializeForHash));
     }
 
     public static MuSigSetupTradeMessage_A fromProto(bisq.trade.protobuf.TradeMessage proto) {
