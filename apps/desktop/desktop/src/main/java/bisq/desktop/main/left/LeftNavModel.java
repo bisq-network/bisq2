@@ -36,8 +36,6 @@ import java.util.Set;
 @Slf4j
 @Getter
 public class LeftNavModel implements Model {
-    private final boolean isWalletEnabled;
-
     @Setter
     private String version;
 
@@ -50,7 +48,6 @@ public class LeftNavModel implements Model {
     private final BooleanProperty isNewReleaseAvailable = new SimpleBooleanProperty(false);
     private final BooleanProperty isMuSigActivated= new SimpleBooleanProperty();
 
-    public LeftNavModel(boolean isWalletEnabled) {
-        this.isWalletEnabled = isWalletEnabled;
+    public LeftNavModel( ) {
     }
 }

@@ -46,6 +46,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Optional;
+
 @Slf4j
 public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavController> {
     public final static int EXPANDED_WIDTH = 190;
@@ -62,6 +64,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final LeftNavButton authorizedRole;
     private final Label version;
     private final LeftNavButton muSigLeftNavButton;
+    private final LeftNavButton wallet;
     private Subscription navigationTargetSubscription, menuExpandedSubscription,
             selectedNavigationButtonPin, newVersionAvailablePin, isMuSigActivatedPin;
 
@@ -98,7 +101,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 "nav-trade",
                 NavigationTarget.TRADE_PROTOCOLS, false);
 
-        LeftNavButton wallet = createNavigationButton(Res.get("navigation.wallet"),
+        wallet = createNavigationButton(Res.get("navigation.wallet"),
                 "nav-wallet",
                 NavigationTarget.WALLET, false);
 
@@ -164,9 +167,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         mainMenuItems.getChildren().addAll(dashBoard, bisqEasy, muSigLeftNavButton, reputation, protocols,
                 learn, chat, support, user, network, settings, authorizedRole);
-        if (model.isWalletEnabled()) {
-            mainMenuItems.getChildren().add(3, wallet);
-        }
+        mainMenuItems.getChildren().add(3, wallet);
 
         mainMenuItems.setLayoutY(menuTop);
 
@@ -181,8 +182,11 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
     @Override
     protected void onViewAttached() {
+        wallet.visibleProperty().bind(model.getIsMuSigActivated());
+        wallet.managedProperty().bind(model.getIsMuSigActivated());
         authorizedRole.visibleProperty().bind(model.getAuthorizedRoleVisible());
         authorizedRole.managedProperty().bind(model.getAuthorizedRoleVisible());
+
 
         horizontalExpandIcon.setOnMouseClicked(e -> controller.onToggleHorizontalExpandState());
         horizontalCollapseIcon.setOnMouseClicked(e -> controller.onToggleHorizontalExpandState());
@@ -300,6 +304,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
     @Override
     protected void onViewDetached() {
+        wallet.visibleProperty().unbind();
+        wallet.managedProperty().unbind();
         authorizedRole.visibleProperty().unbind();
         authorizedRole.managedProperty().unbind();
         horizontalExpandIcon.setOnMouseClicked(null);
@@ -366,34 +372,31 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     }
 
     private void maybeAnimateMark() {
-        LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
-        if (selectedLeftNavButton == null) return;
+        Optional<LeftNavButton> buttonForAnimation = findButtonForAnimation();
+        double height = findButtonForAnimation().map(Region::getHeight).orElse(0d);
+        if (height > 0) {
+            Transitions.animateNavigationButtonMarks(selectionMarker, height, calculateTargetY());
+            updateSubmenu();
+        } else {
+            // If height is zero we try again after a short delay
+            UIScheduler.run(this::maybeAnimateMark).after(20);
+        }
+    }
 
-        LeftNavButton buttonForHeight;
+    private Optional<LeftNavButton> findButtonForAnimation() {
+        LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
+        if (selectedLeftNavButton == null) {
+            return Optional.empty();
+        }
+
         if (selectedLeftNavButton instanceof LeftNavSubButton leftNavSubButton) {
             LeftNavButton parentButton = leftNavSubButton.getParentButton();
             if (!parentButton.getIsSubMenuExpanded().get()) {
-                buttonForHeight = parentButton;
-            } else {
-                buttonForHeight = selectedLeftNavButton;
+                return Optional.of(parentButton);
             }
-        } else {
-            buttonForHeight = selectedLeftNavButton;
         }
 
-        if (buttonForHeight.getHeight() > 0) {
-            Transitions.animateNavigationButtonMarks(selectionMarker,
-                    buttonForHeight.getHeight(),
-                    calculateTargetY());
-        } else {
-            // Duration for animation for opening submenu is Transitions.DEFAULT_DURATION / 2.
-            // We only know target position after the initial animation is done.
-            UIScheduler.run(() -> Transitions.animateNavigationButtonMarks(selectionMarker,
-                            buttonForHeight.getHeight(),
-                            calculateTargetY()))
-                    .after(ManagedDuration.getHalfOfDefaultDurationMillis());
-        }
-        updateSubmenu();
+        return Optional.of(selectedLeftNavButton);
     }
 
     private double calculateTargetY() {

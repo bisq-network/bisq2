@@ -759,7 +759,7 @@ public class Transitions {
 
     public static void animateNavigationButtonMarks(Region node, double targetHeight, double targetY) {
         double startY = node.getLayoutY();
-        if (useAnimations() || startY == 0) {
+        if (useAnimations()) {
             Duration duration = ManagedDuration.getQuoterOfDefaultDuration();
             Duration halfOfDuration = ManagedDuration.getOneEighthOfDefaultDuration();
             double startHeight = node.getHeight();
