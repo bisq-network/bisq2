@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.components;
 
 import bisq.common.util.StringUtils;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.BisqIconButton;
@@ -297,7 +298,7 @@ public class MaterialUserProfileSelection extends Pane {
 
     void update() {
         if (StringUtils.isNotEmpty(descriptionLabel.getText())) {
-            Transitions.animateLayoutY(descriptionLabel, 6.5, Transitions.DEFAULT_DURATION / 6d, null);
+            Transitions.animateLayoutY(descriptionLabel, 6.5, ManagedDuration.getOneSixthOfDefaultDurationMillis(), null);
         }
         helpLabel.setVisible(StringUtils.isNotEmpty(helpProperty().get()));
         helpLabel.setManaged(StringUtils.isNotEmpty(helpProperty().get()));

@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard;
 
 import bisq.common.data.Triple;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.Controller;
@@ -241,8 +242,8 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
                 if (progressLabelAnimationScheduler != null) {
                     progressLabelAnimationScheduler.stop();
                 }
-                progressLabelAnimationScheduler = UIScheduler.run(() -> progressLabelAnimation = Transitions.fade(label, OPACITY, 1, Transitions.DEFAULT_DURATION / 2))
-                        .after(Transitions.DEFAULT_DURATION / 2);
+                progressLabelAnimationScheduler = UIScheduler.run(() -> progressLabelAnimation = Transitions.fade(label, OPACITY, 1, ManagedDuration.getHalfOfDefaultDurationMillis()))
+                        .after(ManagedDuration.getHalfOfDefaultDurationMillis());
             } else {
                 label.setOpacity(1);
             }

@@ -56,7 +56,7 @@ public class StablecoinPaymentMethod extends NationalCurrencyPaymentMethod<Stabl
     }
 
     public static StablecoinPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
-        return  Optional.ofNullable(
+        return Optional.ofNullable(
                         StablecoinPaymentMethodUtil.getPaymentMethod(proto.getName()))
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Unknown stable-coin payment method: " + proto.getName()));

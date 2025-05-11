@@ -32,7 +32,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static bisq.desktop.webcam.WebcamAppService.State.*;
+import static bisq.desktop.webcam.WebcamAppService.State.NEW;
+import static bisq.desktop.webcam.WebcamAppService.State.RUNNING;
+import static bisq.desktop.webcam.WebcamAppService.State.STARTING;
+import static bisq.desktop.webcam.WebcamAppService.State.STOPPING;
+import static bisq.desktop.webcam.WebcamAppService.State.TERMINATED;
 import static com.google.common.base.Preconditions.checkArgument;
 
 // On MacOS one can reset the camera access permissions by `tccutil reset Camera`. This is helpful for tesing failure

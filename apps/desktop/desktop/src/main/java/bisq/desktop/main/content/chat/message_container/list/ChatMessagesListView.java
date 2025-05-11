@@ -19,7 +19,7 @@ package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
-import bisq.desktop.common.Transitions;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.list_view.ListViewUtil;
@@ -46,7 +46,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.util.Duration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -208,25 +207,18 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
     }
 
     private void fadeInScrollDownBadge() {
-        if (!Transitions.useAnimations()) {
-            scrollDownBadge.setCursor(Cursor.HAND);
-            scrollDownBadge.setOpacity(1);
-            scrollDownTooltip.setOpacity(1);
-            return;
-        }
-
         fadeInScrollDownBadgeTimeline = new Timeline();
         scrollDownBadge.setOpacity(0);
         ObservableList<KeyFrame> keyFrames = fadeInScrollDownBadgeTimeline.getKeyFrames();
-        keyFrames.add(new KeyFrame(Duration.millis(0),
+        keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                 new KeyValue(scrollDownBadge.opacityProperty(), 0, Interpolator.LINEAR)
         ));
         // Add a delay before starting fade-in to deal with a render delay when adding a
         // list item.
-        keyFrames.add(new KeyFrame(Duration.millis(100),
+        keyFrames.add(new KeyFrame(ManagedDuration.millis(100),
                 new KeyValue(scrollDownBadge.opacityProperty(), 0, Interpolator.EASE_OUT)
         ));
-        keyFrames.add(new KeyFrame(Duration.millis(400),
+        keyFrames.add(new KeyFrame(ManagedDuration.millis(400),
                 new KeyValue(scrollDownBadge.opacityProperty(), 1, Interpolator.EASE_OUT)
         ));
         fadeInScrollDownBadgeTimeline.play();

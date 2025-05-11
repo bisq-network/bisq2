@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.amount_and_price;
 
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferView;
@@ -77,7 +78,7 @@ public class MuSigCreateOfferAmountAndPriceView extends View<VBox, MuSigCreateOf
             } else {
                 Transitions.removeEffect(content);
                 if (amountOverlay.isVisible()) {
-                    Transitions.fadeOut(amountOverlay, Transitions.DEFAULT_DURATION / 2,
+                    Transitions.fadeOut(amountOverlay, ManagedDuration.getHalfOfDefaultDurationMillis(),
                             () -> amountOverlay.setVisible(false));
                 }
             }
@@ -92,7 +93,7 @@ public class MuSigCreateOfferAmountAndPriceView extends View<VBox, MuSigCreateOf
             } else {
                 Transitions.removeEffect(content);
                 if (priceOverlay.isVisible()) {
-                    Transitions.fadeOut(priceOverlay, Transitions.DEFAULT_DURATION / 2,
+                    Transitions.fadeOut(priceOverlay, ManagedDuration.getHalfOfDefaultDurationMillis(),
                             () -> priceOverlay.setVisible(false));
                 }
             }

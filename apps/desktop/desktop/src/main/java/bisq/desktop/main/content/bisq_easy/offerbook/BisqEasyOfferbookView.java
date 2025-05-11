@@ -19,11 +19,16 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.bisq_easy.BisqEasyMarketFilter;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.*;
+import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.DropdownBisqMenuItem;
+import bisq.desktop.components.controls.DropdownMenu;
+import bisq.desktop.components.controls.DropdownTitleMenuItem;
+import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.chat.ChatView;
@@ -41,7 +46,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -49,7 +58,9 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
-import static bisq.bisq_easy.BisqEasyMarketFilter.*;
+import static bisq.bisq_easy.BisqEasyMarketFilter.ALL;
+import static bisq.bisq_easy.BisqEasyMarketFilter.FAVOURITES;
+import static bisq.bisq_easy.BisqEasyMarketFilter.WITH_OFFERS;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -57,7 +68,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private static final double EXPANDED_OFFER_LIST_WIDTH = 545;
     public static final double COLLAPSED_LIST_WIDTH = 40;
     public static final double LIST_CELL_HEIGHT = 53;
-    public static final long SPLITPANE_ANIMATION_DURATION = 300;
     private static final long WIDTH_ANIMATION_DURATION = 200;
     private static final double EXPANDED_MARKET_SELECTION_LIST_WIDTH = 210;
 
@@ -318,7 +328,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         SplitPane.Divider divider = splitPane.getDividers().get(0);
         double initialPosition = divider.getPosition();
         double finalPosition = calculateNormalizedPosition(showOfferListExpanded);
-        Transitions.animateDividerPosition(divider, initialPosition, finalPosition, SPLITPANE_ANIMATION_DURATION);
+        Transitions.animateDividerPosition(divider, initialPosition, finalPosition, ManagedDuration.getSplitPaneAnimationDurationMillis());
         updateChatContainerStyleClass();
         updateSplitPaneStyleClass(showOfferListExpanded);
     }

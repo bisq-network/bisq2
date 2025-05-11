@@ -84,8 +84,8 @@ public class PriceSpecFormatter {
 
             String percent = PercentageFormatter.formatToPercentWithSymbol(Math.abs(percentage));
             return currentPrice + " (" + Res.get(percentage >= 0
-                            ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.plus"
-                            : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.minus", percent) + ")";
+                    ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.plus"
+                    : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.minus", percent) + ")";
         }
         return PriceFormatter.format(marketPrice.get().getPriceQuote(), true);
 

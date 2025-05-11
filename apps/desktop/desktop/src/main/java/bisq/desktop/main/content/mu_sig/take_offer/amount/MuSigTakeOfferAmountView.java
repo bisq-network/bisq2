@@ -124,7 +124,7 @@ public class MuSigTakeOfferAmountView extends View<StackPane, MuSigTakeOfferAmou
             }
         });
 
-        isWarningIconVisiblePin  = EasyBind.subscribe(model.getIsWarningIconVisible(), isWarningIconVisible -> {
+        isWarningIconVisiblePin = EasyBind.subscribe(model.getIsWarningIconVisible(), isWarningIconVisible -> {
             warningIcon.setVisible(isWarningIconVisible);
             amountLimitInfo.getStyleClass().setAll("font-size-11", "wrap-text", "font-light");
             amountLimitInfo.getStyleClass().add(isWarningIconVisible ? "bisq-text-white" : "bisq-text-grey-9");

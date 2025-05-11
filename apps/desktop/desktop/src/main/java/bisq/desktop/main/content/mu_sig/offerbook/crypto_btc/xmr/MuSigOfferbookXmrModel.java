@@ -31,7 +31,7 @@ public class MuSigOfferbookXmrModel extends MuSigOfferbookCryptoBtcModel {
     public MuSigOfferbookXmrModel(Direction direction, Market xmrMarket) {
         super(direction);
         getSelectedMarket().set(xmrMarket);
-        setMarketPredicate(item-> item.getOffer().getMarket().equals(xmrMarket));
+        setMarketPredicate(item -> item.getOffer().getMarket().equals(xmrMarket));
         getMarkets().setAll(Collections.singletonList(xmrMarket));
     }
 }

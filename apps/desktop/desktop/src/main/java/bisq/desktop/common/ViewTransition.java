@@ -52,30 +52,14 @@ public class ViewTransition {
         this.newView = newView;
         oldViewRoot = oldView != null ? oldView.getRoot() : null;
         newViewRoot = newView.getRoot();
-        if (!Transitions.useAnimations()) {
-            if (oldView != null) {
-                remove(oldViewRoot);
-                if (oldView instanceof TransitionedView) {
-                    ((TransitionedView) oldView).onOutTransitionStarted();
-                    ((TransitionedView) oldView).onOutTransitionCompleted();
-                }
-            }
-            newViewRoot.setOpacity(1);
-            if (newView instanceof TransitionedView) {
-                ((TransitionedView) newView).onInTransitionStarted();
-                ((TransitionedView) newView).onInTransitionCompleted();
-            }
-            return;
-        }
 
-        int defaultDuration = Transitions.DEFAULT_DURATION;
         newViewRoot.setOpacity(0);
         if (oldViewRoot == null) {
-            fadeInNewView(defaultDuration);
+            fadeInNewView(ManagedDuration.getDefaultDurationMillis());
         } else {
             oldViewX = oldViewRoot.getTranslateX();
-            scheduler = UIScheduler.run(() -> fadeInNewView(MathUtils.roundDoubleToInt(defaultDuration / 2d)))
-                    .after(defaultDuration / 2);
+            scheduler = UIScheduler.run(() -> fadeInNewView(MathUtils.roundDoubleToInt(ManagedDuration.getHalfOfDefaultDurationMillis())))
+                    .after(ManagedDuration.getHalfOfDefaultDurationMillis());
             if (slideOutTimeline != null) {
                 slideOutTimeline.stop();
             }
@@ -127,7 +111,7 @@ public class ViewTransition {
         }
     }
 
-    private void fadeInNewView(int duration) {
+    private void fadeInNewView(long duration) {
         if (newView instanceof TransitionedView) {
             ((TransitionedView) newView).onInTransitionStarted();
         }

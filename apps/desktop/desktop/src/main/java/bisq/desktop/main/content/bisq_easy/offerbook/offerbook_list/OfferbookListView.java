@@ -21,6 +21,7 @@ import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
@@ -44,10 +45,18 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.Tooltip;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -62,7 +71,6 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private static final double COLLAPSED_LIST_WIDTH = BisqEasyOfferbookView.COLLAPSED_LIST_WIDTH + 2; // +2 for the margin
     private static final double HEADER_HEIGHT = BaseChatView.HEADER_HEIGHT;
     private static final double LIST_CELL_HEIGHT = BisqEasyOfferbookView.LIST_CELL_HEIGHT;
-    private static final long SPLITPANE_ANIMATION_DURATION = BisqEasyOfferbookView.SPLITPANE_ANIMATION_DURATION;
     private static final String ACTIVE_FILTER_CLASS = "active-filter";
 
     private final Label showMyOffersOnlyLabel, expandOfferListLabel, collapseOfferListLabel, offerListCollapsedIconLabel, headline;
@@ -296,11 +304,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     }
 
     private void collapseListView() {
-        if (model.isUseAnimations()) {
-            UIScheduler.run(this::applyCollapsedViewChanges).after(SPLITPANE_ANIMATION_DURATION);
-        } else {
-            applyCollapsedViewChanges();
-        }
+        UIScheduler.run(this::applyCollapsedViewChanges).after(ManagedDuration.getSplitPaneAnimationDurationMillis());
     }
 
     private void applyCollapsedViewChanges() {

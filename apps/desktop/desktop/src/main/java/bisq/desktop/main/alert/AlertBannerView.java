@@ -18,6 +18,7 @@
 package bisq.desktop.main.alert;
 
 import bisq.bonded_roles.security_manager.alert.AlertType;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
@@ -39,7 +40,6 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class AlertBannerView extends View<BorderPane, AlertBannerModel, AlertBannerController> {
-    public static final int DURATION = Transitions.DEFAULT_DURATION / 2;
     public static final Insets DEFAULT_PADDING = new Insets(20, 40, 20, 40);
     public static final Insets PADDING_WITH_NOTIFICATION = new Insets(0, 40, 20, 40);
 
@@ -99,16 +99,18 @@ public class AlertBannerView extends View<BorderPane, AlertBannerModel, AlertBan
                 root.setManaged(false);
                 root.setVisible(false);
             }
+
+            long duration = ManagedDuration.getHalfOfDefaultDurationMillis();
             if (isVisible) {
                 root.setManaged(true);
                 root.setVisible(true);
                 root.setTranslateY(0);
-                slideInRightTimeline = Transitions.slideInRight(root, DURATION, () -> {
+                slideInRightTimeline = Transitions.slideInRight(root, duration, () -> {
                 });
             } else {
                 root.setTranslateX(0);
                 root.setTranslateY(0);
-                slideOutTopTimeline = Transitions.slideAndFadeOutTop(root, DURATION, () -> {
+                slideOutTopTimeline = Transitions.slideAndFadeOutTop(root, duration, () -> {
                     root.setManaged(false);
                     root.setVisible(false);
                 });

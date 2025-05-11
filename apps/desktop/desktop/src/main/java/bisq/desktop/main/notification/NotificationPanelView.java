@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.notification;
 
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -35,8 +36,6 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class NotificationPanelView extends View<BorderPane, NotificationPanelModel, NotificationPanelController> {
-    public static final int DURATION = Transitions.DEFAULT_DURATION / 2;
-
     private final Label notificationHeadline;
     private final Button closeButton;
     private final Hyperlink hyperlink;
@@ -94,16 +93,17 @@ public class NotificationPanelView extends View<BorderPane, NotificationPanelMod
                 root.setManaged(false);
                 root.setVisible(false);
             }
+            long duration = ManagedDuration.getNotificationPanelDurationMillis();
             if (isVisible) {
                 root.setManaged(true);
                 root.setVisible(true);
                 root.setTranslateY(0);
-                slideInRightTimeline = Transitions.slideInRight(root, DURATION, () -> {
+                slideInRightTimeline = Transitions.slideInRight(root, duration, () -> {
                 });
             } else {
                 root.setTranslateX(0);
                 root.setTranslateY(0);
-                slideOutTopTimeline = Transitions.slideAndFadeOutTop(root, DURATION, () -> {
+                slideOutTopTimeline = Transitions.slideAndFadeOutTop(root, duration, () -> {
                     root.setManaged(false);
                     root.setVisible(false);
                 });

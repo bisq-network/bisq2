@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.take_offer;
 
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.Controller;
@@ -250,8 +251,8 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
             progressLabelList.forEach(label -> label.setOpacity(OPACITY));
             Label label = progressLabelList.get(progressIndex);
             if (delay) {
-                UIScheduler.run(() -> Transitions.fade(label, OPACITY, 1, Transitions.DEFAULT_DURATION / 2))
-                        .after(Transitions.DEFAULT_DURATION / 2);
+                UIScheduler.run(() -> Transitions.fade(label, OPACITY, 1, ManagedDuration.getHalfOfDefaultDurationMillis()))
+                        .after(ManagedDuration.getHalfOfDefaultDurationMillis());
             } else {
                 label.setOpacity(1);
             }

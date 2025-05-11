@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.left;
 
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
@@ -27,6 +27,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.top.TopPanelView;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
@@ -44,8 +45,6 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavController> {
@@ -203,57 +202,59 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         menuExpandedSubscription = EasyBind.subscribe(model.getMenuHorizontalExpanded(), menuExpanded -> {
             int width = menuExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
-            AtomicInteger duration = new AtomicInteger(400);
+            long duration = ManagedDuration.inMillis(400);
+            long halfOfDuration = ManagedDuration.inMillis(200);
+            long quoterOfDuration = ManagedDuration.inMillis(100);
             if (menuExpanded) {
                 UIScheduler.run(() -> model.getLeftNavButtons()
-                                .forEach(e -> e.setHorizontalExpanded(true, duration.get() / 2)))
-                        .after(duration.get() / 2);
-                Transitions.animateLeftNavigationWidth(mainMenuItems, EXPANDED_WIDTH, duration.get());
+                                .forEach(e -> e.setHorizontalExpanded(true, halfOfDuration)))
+                        .after(halfOfDuration);
+                Transitions.animateLeftNavigationWidth(mainMenuItems, EXPANDED_WIDTH, duration);
                 networkInfoRoot.setPrefWidth(width + MARKER_WIDTH);
-                Transitions.fadeIn(networkInfoRoot, duration.get());
+                Transitions.fadeIn(networkInfoRoot, duration);
 
-                Transitions.fadeOut(horizontalExpandIcon, duration.get() / 4, () -> {
+                Transitions.fadeOut(horizontalExpandIcon, quoterOfDuration, () -> {
                     horizontalExpandIcon.setVisible(false);
                     horizontalExpandIcon.setManaged(false);
                 });
                 UIScheduler.run(() -> {
-                    Transitions.fadeIn(logoExpanded, duration.get() / 4, () -> {
+                    Transitions.fadeIn(logoExpanded, quoterOfDuration, () -> {
                         logoCollapsed.setVisible(false);
                         logoCollapsed.setManaged(false);
                     });
                     logoExpanded.setVisible(true);
                     logoExpanded.setManaged(true);
                     version.setLayoutX(91);
-                }).after(duration.get() / 2);
+                }).after(halfOfDuration);
                 UIScheduler.run(() -> {
                     networkInfoRoot.setOpacity(0);
-                    Transitions.fadeIn(networkInfoRoot, duration.get() / 4);
+                    Transitions.fadeIn(networkInfoRoot, quoterOfDuration);
                     networkInfoRoot.setVisible(true);
                     networkInfoRoot.setManaged(true);
                     horizontalCollapseIcon.setOpacity(0);
                     horizontalCollapseIcon.setVisible(true);
                     horizontalCollapseIcon.setManaged(true);
-                    Transitions.fadeIn(horizontalCollapseIcon, Transitions.DEFAULT_DURATION, 0.3, null);
-                }).after(duration.get() + 100);
+                    Transitions.fadeIn(horizontalCollapseIcon, ManagedDuration.getDefaultDurationMillis(), 0.3, null);
+                }).after(ManagedDuration.inMillis(duration + 100));
             } else {
                 horizontalExpandIcon.setOpacity(0);
                 horizontalExpandIcon.setVisible(true);
                 horizontalExpandIcon.setManaged(true);
 
-                model.getLeftNavButtons().forEach(e -> e.setHorizontalExpanded(false, duration.get() / 2));
+                model.getLeftNavButtons().forEach(e -> e.setHorizontalExpanded(false, halfOfDuration));
                 UIScheduler.run(() -> {
-                            Transitions.animateLeftNavigationWidth(mainMenuItems, COLLAPSED_WIDTH, duration.get());
+                            Transitions.animateLeftNavigationWidth(mainMenuItems, COLLAPSED_WIDTH, duration);
                             horizontalCollapseIcon.setVisible(false);
                             horizontalCollapseIcon.setManaged(false);
                             horizontalCollapseIcon.setOpacity(0);
-                            Transitions.fadeIn(horizontalExpandIcon, 2 * Transitions.DEFAULT_DURATION, 0.3, null);
+                            Transitions.fadeIn(horizontalExpandIcon, 2 * ManagedDuration.getDefaultDurationMillis(), 0.3, null);
                         })
-                        .after(duration.get() / 4);
-                Transitions.fadeOut(networkInfoRoot, duration.get() / 2, () -> {
+                        .after(quoterOfDuration);
+                Transitions.fadeOut(networkInfoRoot, halfOfDuration, () -> {
                     networkInfoRoot.setVisible(false);
                     networkInfoRoot.setManaged(false);
                 });
-                Transitions.fadeOut(logoExpanded, duration.get() / 2, () -> {
+                Transitions.fadeOut(logoExpanded, halfOfDuration, () -> {
                     logoExpanded.setVisible(false);
                     logoExpanded.setManaged(false);
                     version.setLayoutX(53);
@@ -265,7 +266,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         root.setOnMouseEntered(e -> {
             if (horizontalCollapseIcon.isVisible()) {
-                Transitions.fadeIn(horizontalCollapseIcon, Transitions.DEFAULT_DURATION, 0.3, null);
+                Transitions.fadeIn(horizontalCollapseIcon, ManagedDuration.getDefaultDurationMillis(), 0.3, null);
             }
         });
         root.setOnMouseExited(e -> {
@@ -390,7 +391,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             UIScheduler.run(() -> Transitions.animateNavigationButtonMarks(selectionMarker,
                             buttonForHeight.getHeight(),
                             calculateTargetY()))
-                    .after(Transitions.effectiveDuration(Transitions.DEFAULT_DURATION / 2));
+                    .after(ManagedDuration.getHalfOfDefaultDurationMillis());
         }
         updateSubmenu();
     }

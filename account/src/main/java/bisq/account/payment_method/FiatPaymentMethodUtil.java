@@ -28,7 +28,7 @@ public class FiatPaymentMethodUtil {
             FiatPaymentMethod paymentMethod = FiatPaymentMethod.fromPaymentRail(paymentRail);
             if (!paymentMethod.isCustomPaymentMethod()) {
                 return Optional.of(paymentMethod);
-            }else{
+            } else {
                 return Optional.empty();
             }
         } catch (Throwable ignore) {

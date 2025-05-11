@@ -17,12 +17,12 @@
 
 package bisq.trade.mu_sig.mock_grpc;
 
-import io.grpc.Grpc;
-import io.grpc.InsecureChannelCredentials;
-import io.grpc.ManagedChannel;
 import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protobuf.PubKeySharesRequest;
 import bisq.trade.protobuf.Role;
+import io.grpc.Grpc;
+import io.grpc.InsecureChannelCredentials;
+import io.grpc.ManagedChannel;
 
 public class MusigClient {
     public static void main(String[] args) {

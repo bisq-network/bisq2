@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.left;
 
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
+import bisq.desktop.navigation.NavigationTarget;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import lombok.Getter;
@@ -51,7 +51,7 @@ class LeftNavSubButton extends LeftNavButton {
     }
 
     @Override
-    public void setHorizontalExpanded(boolean menuExpanded, int duration) {
+    public void setHorizontalExpanded(boolean menuExpanded, long duration) {
         if (menuExpanded) {
             Tooltip.uninstall(this, tooltip);
             Transitions.animateLeftSubNavigation(buttonLabel, LABEL_X_POS_EXPANDED, duration);

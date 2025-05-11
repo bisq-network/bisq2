@@ -17,20 +17,24 @@
 
 package bisq.desktop.main.left;
 
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Cursor;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -188,7 +192,7 @@ class LeftNavButton extends Pane implements Toggle {
         setOnMouseClicked(e -> handler.run());
     }
 
-    public void setHorizontalExpanded(boolean menuExpanded, int duration) {
+    public void setHorizontalExpanded(boolean menuExpanded, long duration) {
         if (menuExpanded) {
             Tooltip.uninstall(this, tooltip);
             buttonLabel.setVisible(true);

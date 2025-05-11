@@ -41,17 +41,27 @@ import net.freehaven.tor.control.PasswordDigest;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.*;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import static bisq.network.tor.common.torrc.Torrc.Keys.*;
+import static bisq.network.tor.common.torrc.Torrc.Keys.CONTROL_PORT;
+import static bisq.network.tor.common.torrc.Torrc.Keys.COOKIE_AUTHENTICATION;
+import static bisq.network.tor.common.torrc.Torrc.Keys.COOKIE_AUTH_FILE;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
