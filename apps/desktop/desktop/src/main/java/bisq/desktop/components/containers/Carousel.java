@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.containers;
 
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import javafx.animation.ParallelTransition;
@@ -350,8 +351,7 @@ public class Carousel extends BorderPane {
     }
 
     private ParallelTransition createSlideTransition(Node currentItem, Node targetItem, boolean goingForward) {
-        int effectiveDurationMs = Transitions.effectiveDuration(transitionDuration);
-        Duration duration = Duration.millis(effectiveDurationMs);
+        Duration duration = ManagedDuration.millis(transitionDuration);
 
         TranslateTransition exitTransition = new TranslateTransition(duration, currentItem);
         exitTransition.setToX(goingForward ? -itemStackPane.getWidth() : itemStackPane.getWidth());

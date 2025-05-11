@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.components;
 
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ImageUtil;
 import javafx.animation.FadeTransition;
@@ -27,7 +28,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
-import javafx.util.Duration;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.TimeUnit;
@@ -58,11 +58,11 @@ public class WaitingAnimation extends StackPane {
 
         getChildren().add(spinningCircle);
 
-        fadeTransition = new FadeTransition(Duration.millis(INTERVAL), spinningCircle);
+        fadeTransition = new FadeTransition(ManagedDuration.millis(INTERVAL), spinningCircle);
         fadeTransition.setFromValue(0);
         fadeTransition.setToValue(1);
 
-        rotate = new RotateTransition(Duration.millis(INTERVAL), spinningCircle);
+        rotate = new RotateTransition(ManagedDuration.millis(INTERVAL), spinningCircle);
         rotate.setByAngle(360);
 
         sceneListener = (observable, oldValue, newValue) -> {
