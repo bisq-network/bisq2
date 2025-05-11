@@ -55,8 +55,6 @@ public class MuSigTradeStateModel implements Model {
     private final BooleanProperty showReportToMediatorButton = new SimpleBooleanProperty();
     private final StringProperty tradeInterruptedInfo = new SimpleStringProperty();
     private final StringProperty errorMessage = new SimpleStringProperty();
-    private final BooleanProperty shouldShowSellerPriceApprovalOverlay = new SimpleBooleanProperty();
-    private final BooleanProperty hasBuyerAcceptedSellersPriceSpec = new SimpleBooleanProperty();
     private final StringProperty buyerPriceDescriptionApprovalOverlay = new SimpleStringProperty();
     private final StringProperty sellerPriceDescriptionApprovalOverlay = new SimpleStringProperty();
     private final BooleanProperty isTradeCompleted = new SimpleBooleanProperty();
@@ -81,8 +79,6 @@ public class MuSigTradeStateModel implements Model {
         showReportToMediatorButton.set(false);
         tradeInterruptedInfo.set(null);
         errorMessage.set(null);
-        shouldShowSellerPriceApprovalOverlay.set(false);
-        hasBuyerAcceptedSellersPriceSpec.set(false);
         buyerPriceDescriptionApprovalOverlay.set(null);
         sellerPriceDescriptionApprovalOverlay.set(null);
         isTradeCompleted.set(false);

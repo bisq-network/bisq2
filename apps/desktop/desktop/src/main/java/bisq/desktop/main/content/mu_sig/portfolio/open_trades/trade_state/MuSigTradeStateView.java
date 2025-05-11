@@ -19,7 +19,6 @@ package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state;
 
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.Layout;
-import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
@@ -32,9 +31,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -43,14 +40,13 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigTradeStateController> {
     private final HBox phaseAndInfoHBox, cancelledHBox, interruptedHBox, errorHBox, isInMediationHBox;
-    private final Button interruptTradeButton, closeTradeButton, exportButton, reportToMediatorButton, acceptSellersPriceButton,
-            rejectPriceButton, tradeDetailsButton;
+    private final Button interruptTradeButton, closeTradeButton, exportButton, reportToMediatorButton,
+            tradeDetailsButton;
     private final Label cancelledInfo, errorMessage, buyerPriceDescriptionApprovalOverlay,
             sellerPriceDescriptionApprovalOverlay, mediationBannerLabel;
-    private final VBox tradePhaseBox, tradeDataHeaderBox, sellerPriceApprovalOverlay;
-    private final Pane sellerPriceApprovalContent;
+    private final VBox tradePhaseBox, tradeDataHeaderBox;
     private final BisqMenuItem tryAgainMenuItem;
-    private Subscription stateInfoVBoxPin, showSellersPriceApprovalOverlayPin, requestMediationDeliveryStatusPin,
+    private Subscription stateInfoVBoxPin, requestMediationDeliveryStatusPin,
             shouldShowTryRequestMediationAgainPin;
 
     public MuSigTradeStateView(MuSigTradeStateModel model,
@@ -133,16 +129,8 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         sellerPriceDescriptionApprovalOverlay = new Label();
         VBox priceDescriptionBox = new VBox(buyerPriceDescriptionApprovalOverlay, sellerPriceDescriptionApprovalOverlay);
         priceDescriptionBox.getStyleClass().setAll("seller-price-approval-content");
-        sellerPriceApprovalContent = new Pane(priceDescriptionBox);
-        acceptSellersPriceButton = new Button(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.button.accept"));
-        acceptSellersPriceButton.getStyleClass().add("outlined-button");
-        rejectPriceButton = new Button();
-        rejectPriceButton.setMinWidth(160);
-        rejectPriceButton.setDefaultButton(true);
-        sellerPriceApprovalOverlay = createAndGetSellerPriceApprovalOverlay();
 
-        StackPane layeredContent = new StackPane(content, sellerPriceApprovalOverlay);
-        root.getChildren().add(layeredContent);
+        root.getChildren().add(content);
     }
 
     @Override
@@ -168,10 +156,9 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         errorMessage.textProperty().bind(model.getErrorMessage());
 
         interruptTradeButton.textProperty().bind(model.getInterruptTradeButtonText());
-        interruptTradeButton.visibleProperty().bind(model.getInterruptTradeButtonVisible().and(model.getShouldShowSellerPriceApprovalOverlay().not()));
-        interruptTradeButton.managedProperty().bind(model.getInterruptTradeButtonVisible().and(model.getShouldShowSellerPriceApprovalOverlay().not()));
+        interruptTradeButton.visibleProperty().bind(model.getInterruptTradeButtonVisible());
+        interruptTradeButton.managedProperty().bind(model.getInterruptTradeButtonVisible());
 
-        rejectPriceButton.textProperty().bind(model.getInterruptTradeButtonText());
         buyerPriceDescriptionApprovalOverlay.textProperty().bind(model.getBuyerPriceDescriptionApprovalOverlay());
         sellerPriceDescriptionApprovalOverlay.textProperty().bind(model.getSellerPriceDescriptionApprovalOverlay());
 
@@ -183,19 +170,6 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
                 HBox.setHgrow(stateInfoVBox, Priority.ALWAYS);
                 HBox.setMargin(stateInfoVBox, new Insets(20, 0, 0, 0));
                 phaseAndInfoHBox.getChildren().add(stateInfoVBox);
-            }
-        });
-
-        showSellersPriceApprovalOverlayPin = EasyBind.subscribe(model.getShouldShowSellerPriceApprovalOverlay(), shouldShow -> {
-            if (shouldShow) {
-                sellerPriceApprovalOverlay.setVisible(true);
-                sellerPriceApprovalOverlay.setManaged(true);
-                Transitions.blurStrong(phaseAndInfoHBox, 0);
-                Transitions.slideInTop(sellerPriceApprovalOverlay, 450);
-            } else {
-                sellerPriceApprovalOverlay.setVisible(false);
-                sellerPriceApprovalOverlay.setManaged(false);
-                Transitions.removeEffect(phaseAndInfoHBox);
             }
         });
 
@@ -227,9 +201,7 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         tradeDetailsButton.setOnAction(e -> controller.onShowTradeDetails());
         closeTradeButton.setOnAction(e -> controller.onCloseTrade());
         exportButton.setOnAction(e -> controller.onExportTrade());
-        rejectPriceButton.setOnAction(e -> controller.onRejectPrice());
         reportToMediatorButton.setOnAction(e -> controller.onRequestMediation());
-        acceptSellersPriceButton.setOnAction(e -> controller.onAcceptSellersPriceButton());
         tryAgainMenuItem.setOnAction(e -> controller.onResendMediationRequest());
     }
 
@@ -259,12 +231,10 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         interruptTradeButton.visibleProperty().unbind();
         interruptTradeButton.managedProperty().unbind();
 
-        rejectPriceButton.textProperty().unbind();
         buyerPriceDescriptionApprovalOverlay.textProperty().unbind();
         sellerPriceDescriptionApprovalOverlay.textProperty().unbind();
 
         stateInfoVBoxPin.unsubscribe();
-        showSellersPriceApprovalOverlayPin.unsubscribe();
         requestMediationDeliveryStatusPin.unsubscribe();
         shouldShowTryRequestMediationAgainPin.unsubscribe();
 
@@ -272,43 +242,11 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         tradeDetailsButton.setOnAction(null);
         closeTradeButton.setOnAction(null);
         exportButton.setOnAction(null);
-        rejectPriceButton.setOnAction(null);
         reportToMediatorButton.setOnAction(null);
-        acceptSellersPriceButton.setOnAction(null);
         tryAgainMenuItem.setOnAction(null);
 
         if (phaseAndInfoHBox.getChildren().size() == 2) {
             phaseAndInfoHBox.getChildren().remove(1);
         }
-    }
-
-    private VBox createAndGetSellerPriceApprovalOverlay() {
-        VBox overlay = new VBox(10);
-        overlay.setAlignment(Pos.TOP_LEFT);
-        overlay.getStyleClass().addAll("trade-wizard-feedback-bg", "seller-price-approval-popup");
-        overlay.visibleProperty().set(false);
-        overlay.managedProperty().set(false);
-
-        Label titleLabel = new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.title"));
-        titleLabel.getStyleClass().addAll("seller-price-approval-title", "large-text", "font-default");
-
-        sellerPriceApprovalContent.getStyleClass().addAll("seller-price-approval-description", "normal-text", "font-default");
-
-        Label questionLabel = new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.question"));
-        questionLabel.getStyleClass().addAll("seller-price-approval-description", "normal-text",
-                "font-default", "seller-price-approval-question");
-
-        Label disclaimerLabel = new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.disclaimer"));
-        disclaimerLabel.getStyleClass().addAll("seller-price-approval-description", "small-text", "font-default",
-                "seller-price-approval-disclaimer");
-
-        HBox acceptOrRejectButtons = new HBox(10, acceptSellersPriceButton, rejectPriceButton);
-        acceptOrRejectButtons.setAlignment(Pos.BOTTOM_RIGHT);
-
-        overlay.getChildren().addAll(titleLabel, sellerPriceApprovalContent,
-                questionLabel, disclaimerLabel, Spacer.fillVBox(), acceptOrRejectButtons);
-        StackPane.setAlignment(overlay, Pos.TOP_CENTER);
-        StackPane.setMargin(overlay, new Insets(63, 0, 0, 0));
-        return overlay;
     }
 }

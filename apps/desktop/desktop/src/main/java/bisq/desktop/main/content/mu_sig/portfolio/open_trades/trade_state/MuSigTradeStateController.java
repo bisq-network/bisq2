@@ -39,7 +39,6 @@ import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
-import bisq.offer.price.spec.PriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.settings.DontShowAgainService;
 import bisq.support.mediation.MediationRequest;
@@ -54,7 +53,6 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
-import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -73,9 +71,9 @@ public class MuSigTradeStateController implements Controller {
     private final DontShowAgainService dontShowAgainService;
     private final LeavePrivateChatManager leavePrivateChatManager;
     private final Optional<ResendMessageService> resendMessageService;
-    private Pin muSigTradeStatePin, errorMessagePin, peersErrorMessagePin, isInMediationPin,
+    private Pin tradeStatePin, errorMessagePin, peersErrorMessagePin, isInMediationPin,
             requestMediationDeliveryStatusPin, messageDeliveryStatusByMessageIdPin;
-    private Subscription channelPin, hasBuyerAcceptedPriceSpecPin;
+    private Subscription channelPin;
 
     public MuSigTradeStateController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
@@ -129,10 +127,9 @@ public class MuSigTradeStateController implements Controller {
 
             muSigTradePhaseBox.setMuSigTrade(trade);
 
-            muSigTradeStatePin = trade.tradeStateObservable().addObserver(state ->
+            tradeStatePin = trade.tradeStateObservable().addObserver(state ->
                     UIThread.run(() -> {
                         applyStateInfoVBox(state);
-                        updateShouldShowSellerPriceApprovalOverlay();
                     }));
 
             errorMessagePin = trade.errorMessageObservable().addObserver(errorMessage -> {
@@ -161,9 +158,6 @@ public class MuSigTradeStateController implements Controller {
                         }
                     }
             );
-
-            hasBuyerAcceptedPriceSpecPin = EasyBind.subscribe(model.getHasBuyerAcceptedSellersPriceSpec(),
-                    hasAccepted -> updateShouldShowSellerPriceApprovalOverlay());
 
             model.getBuyerPriceDescriptionApprovalOverlay().set(
                     Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.buyersPrice",
@@ -226,10 +220,6 @@ public class MuSigTradeStateController implements Controller {
                 new MuSigTradeDetailsController.InitData(trade, channel));
     }
 
-    void onRejectPrice() {
-        doInterruptTrade();
-    }
-
     private void doInterruptTrade() {
         MuSigTrade trade = model.getTrade().get();
         String encoded;
@@ -287,10 +277,6 @@ public class MuSigTradeStateController implements Controller {
 
     public boolean canManuallyResendMessage(String messageId) {
         return resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false);
-    }
-
-    void onAcceptSellersPriceButton() {
-        model.getHasBuyerAcceptedSellersPriceSpec().set(true);
     }
 
     private void handleNewMessageDeliveryStatus(String messageId, Observable<MessageDeliveryStatus> observableStatus) {
@@ -483,6 +469,16 @@ public class MuSigTradeStateController implements Controller {
             return;
         }
 
+
+        if(state.isFinalState()){
+            model.setTradeCloseType(MuSigTradeStateModel.TradeCloseType.COMPLETED);
+            model.getInterruptTradeButtonVisible().set(false);
+        }else{
+            model.setTradeCloseType(MuSigTradeStateModel.TradeCloseType.CANCEL);
+            model.getInterruptTradeButtonText().set(Res.get("muSig.openTrades.cancelTrade"));
+            model.getInterruptTradeButtonVisible().set(true);
+        }
+
       /*  switch (state) {
             case INIT:
             case TAKER_SENT_TAKE_OFFER_REQUEST:
@@ -542,36 +538,11 @@ public class MuSigTradeStateController implements Controller {
         }*/
     }
 
-    private void updateShouldShowSellerPriceApprovalOverlay() {
-        model.getShouldShowSellerPriceApprovalOverlay().set(
-                model.getTrade().get() != null
-                        && model.getTrade().get().isBuyer()
-                        && model.getTrade().get().isMaker()
-                        && muSigTradePhaseBox.getPhaseIndex() == 0
-                        && requiresSellerPriceAcceptance()
-                        && !model.getHasBuyerAcceptedSellersPriceSpec().get()
-        );
-    }
-
-    private boolean requiresSellerPriceAcceptance() {
-        PriceSpec buyerPriceSpec = model.getTrade().get().getOffer().getPriceSpec();
-        PriceSpec sellerPriceSpec = model.getTrade().get().getContract().getPriceSpec();
-        boolean priceSpecChanged = !buyerPriceSpec.equals(sellerPriceSpec);
-
-        Set<MuSigTradeState> validStatesToRejectPrice = Set.of(
-               /* MuSigTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
-                MuSigTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
-                MuSigTradeState.MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
-                MuSigTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_*/
-        );
-        boolean isInValidStateToRejectPrice = validStatesToRejectPrice.contains(model.getTrade().get().tradeStateObservable().get());
-        return priceSpecChanged && isInValidStateToRejectPrice;
-    }
 
     private void removeChannelRelatedBindings() {
-        if (muSigTradeStatePin != null) {
-            muSigTradeStatePin.unbind();
-            muSigTradeStatePin = null;
+        if (tradeStatePin != null) {
+            tradeStatePin.unbind();
+            tradeStatePin = null;
         }
         if (errorMessagePin != null) {
             errorMessagePin.unbind();
@@ -584,10 +555,6 @@ public class MuSigTradeStateController implements Controller {
         if (isInMediationPin != null) {
             isInMediationPin.unbind();
             isInMediationPin = null;
-        }
-        if (hasBuyerAcceptedPriceSpecPin != null) {
-            hasBuyerAcceptedPriceSpecPin.unsubscribe();
-            hasBuyerAcceptedPriceSpecPin = null;
         }
         if (messageDeliveryStatusByMessageIdPin != null) {
             messageDeliveryStatusByMessageIdPin.unbind();
