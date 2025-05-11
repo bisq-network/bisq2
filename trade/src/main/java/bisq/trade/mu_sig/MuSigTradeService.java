@@ -337,6 +337,7 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
 
         checkArgument(!tradeExists(muSigTrade.getId()), "A trade with that ID exists already");
         persistableStore.addTrade(muSigTrade);
+        persist();
 
         return createAndAddTradeProtocol(muSigTrade);
     }
@@ -477,6 +478,8 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
         checkArgument(findProtocol(tradeId).isEmpty(), "We received the MuSigTakeOfferRequest for an already existing protocol");
         checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
         persistableStore.addTrade(muSigTrade);
+        persist();
+
         return createAndAddTradeProtocol(muSigTrade);
     }
 

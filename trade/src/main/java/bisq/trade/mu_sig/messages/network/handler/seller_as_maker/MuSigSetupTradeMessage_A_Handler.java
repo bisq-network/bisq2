@@ -53,7 +53,6 @@ public class MuSigSetupTradeMessage_A_Handler extends TradeMessageHandler<MuSigT
         MuSigSetupTradeMessage_A message = (MuSigSetupTradeMessage_A) event;
         verifyMessage(message);
 
-
         MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
         PubKeySharesResponse sellerPubKeyShareResponse = PubKeySharesResponse.fromProto(stub.initTrade(PubKeySharesRequest.newBuilder()
                 .setTradeId(trade.getId())
