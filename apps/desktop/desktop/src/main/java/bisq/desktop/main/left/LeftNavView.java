@@ -46,6 +46,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Optional;
+
 @Slf4j
 public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavController> {
     public final static int EXPANDED_WIDTH = 190;
@@ -370,34 +372,31 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     }
 
     private void maybeAnimateMark() {
-        LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
-        if (selectedLeftNavButton == null) return;
+        Optional<LeftNavButton> buttonForAnimation = findButtonForAnimation();
+        double height = findButtonForAnimation().map(Region::getHeight).orElse(0d);
+        if (height > 0) {
+            Transitions.animateNavigationButtonMarks(selectionMarker, height, calculateTargetY());
+            updateSubmenu();
+        } else {
+            // If height is zero we try again after a short delay
+            UIScheduler.run(this::maybeAnimateMark).after(20);
+        }
+    }
 
-        LeftNavButton buttonForHeight;
+    private Optional<LeftNavButton> findButtonForAnimation() {
+        LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
+        if (selectedLeftNavButton == null) {
+            return Optional.empty();
+        }
+
         if (selectedLeftNavButton instanceof LeftNavSubButton leftNavSubButton) {
             LeftNavButton parentButton = leftNavSubButton.getParentButton();
             if (!parentButton.getIsSubMenuExpanded().get()) {
-                buttonForHeight = parentButton;
-            } else {
-                buttonForHeight = selectedLeftNavButton;
+                return Optional.of(parentButton);
             }
-        } else {
-            buttonForHeight = selectedLeftNavButton;
         }
 
-        if (buttonForHeight.getHeight() > 0) {
-            Transitions.animateNavigationButtonMarks(selectionMarker,
-                    buttonForHeight.getHeight(),
-                    calculateTargetY());
-        } else {
-            // Duration for animation for opening submenu is Transitions.DEFAULT_DURATION / 2.
-            // We only know target position after the initial animation is done.
-            UIScheduler.run(() -> Transitions.animateNavigationButtonMarks(selectionMarker,
-                            buttonForHeight.getHeight(),
-                            calculateTargetY()))
-                    .after(ManagedDuration.getHalfOfDefaultDurationMillis());
-        }
-        updateSubmenu();
+        return Optional.of(selectedLeftNavButton);
     }
 
     private double calculateTargetY() {
