@@ -92,7 +92,9 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
                             Set<Address> seedNodeAddresses,
                             BanList banList) {
         this.config = config;
-        this.seedNodeAddresses = seedNodeAddresses;
+        this.seedNodeAddresses = seedNodeAddresses.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
         this.banList = banList;
 
         persistence = persistenceService.getOrCreatePersistence(this,

@@ -172,6 +172,7 @@ public class I2pClient {
             manager.setDefaultOptions(options);
 
             String destinationBase64 = manager.getSession().getMyDestination().toBase64();
+            log.info("My destination: {}", destinationBase64);
             File destinationFile = new File(fileName + ".destination");
             if (!destinationFile.exists()) {
                 FileUtils.write(destinationFile.getPath(), destinationBase64);
