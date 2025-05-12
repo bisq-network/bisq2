@@ -94,9 +94,8 @@ public final class Address implements NetworkProto, Comparable<Address> {
     }
 
     public boolean isI2pAddress() {
-        //TODO (deferred) add more specific check
         String lowerHost = host.toLowerCase(Locale.ROOT);
-        return lowerHost.matches("^[a-z2-7]{52}\\.b32\\.i2p$") || lowerHost.endsWith(".i2p");
+        return lowerHost.matches("^[a-z2-7]{52}\\.b32\\.i2p$") || lowerHost.endsWith(".i2p") || lowerHost.matches("^[a-zA-Z0-9~\\-]{400,1000}(:\\d{1,5})?$");
     }
 
     public boolean isLocalhost() {
