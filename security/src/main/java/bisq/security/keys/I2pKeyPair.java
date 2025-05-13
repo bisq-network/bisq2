@@ -3,18 +3,20 @@ package bisq.security.keys;
 import bisq.common.proto.PersistableProto;
 import bisq.security.protobuf.I2PKeyPair;
 import com.google.protobuf.ByteString;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 import java.util.Objects;
 
+@Getter
 public class I2pKeyPair implements PersistableProto {
     @ToString.Exclude
-    @Getter
     private final byte[] privateKey;
-    @Getter
+
     private final byte[] publicKey;
-    @Getter
+
+    @EqualsAndHashCode.Include
     private final String destination;
 
     public I2pKeyPair(byte[] privateKey, byte[] publicKey) {

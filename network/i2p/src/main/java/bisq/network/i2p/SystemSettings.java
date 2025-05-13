@@ -171,21 +171,6 @@ public class SystemSettings {
         return userAppHomeDir;
     }
 
-    public static File getUserAppHomeDir(String groupName, String appName, boolean create) throws IOException {
-        if (getUserAppHomeDir() == null) {
-            return null;
-        }
-        File userAppHomeDir = getUserAppHomeDir();
-        File groupDir = new File(userAppHomeDir, groupName);
-        if (groupDir.exists() || (create && groupDir.mkdir())) {
-            File appDir = new File(groupDir, appName);
-            if (appDir.exists() || (create && appDir.mkdir())) {
-                return appDir;
-            }
-        }
-        return null;
-    }
-
     public static File getUserAppDataDir(String groupName, String appName, boolean create) throws IOException {
         if(getUserAppHomeDir()==null) {
             return null;
@@ -202,11 +187,11 @@ public class SystemSettings {
     }
 
     public static File getUserAppConfigDir(String groupName, String appName, boolean create) throws IOException {
-        if(getUserAppHomeDir()==null) {
+        if(getUserConfigDir(create)==null) {
             return null;
         }
-        File userAppHomeDir = getUserAppHomeDir();
-        File groupDir = new File(userAppHomeDir, groupName);
+        File userConfigDir = getUserConfigDir(create);
+        File groupDir = new File(userConfigDir, groupName);
         if(groupDir.exists() || (create && groupDir.mkdir())) {
             File appDir = new File(groupDir, appName);
             if(appDir.exists() || (create && appDir.mkdir())) {
@@ -217,11 +202,11 @@ public class SystemSettings {
     }
 
     public static File getUserAppCacheDir(String groupName, String appName, boolean create) throws IOException {
-        if(getUserAppHomeDir()==null) {
+        if(getUserCacheDir(create)==null) {
             return null;
         }
-        File userAppHomeDir = getUserAppHomeDir();
-        File groupDir = new File(userAppHomeDir, groupName);
+        File userCacheDir = getUserCacheDir(create);
+        File groupDir = new File(userCacheDir, groupName);
         if(groupDir.exists() || (create && groupDir.mkdir())) {
             File appDir = new File(groupDir, appName);
             if(appDir.exists() || (create && appDir.mkdir())) {
@@ -232,29 +217,19 @@ public class SystemSettings {
     }
 
     public static void main(String[] args) {
-        String groupName = "1m5";
-        String sysAppName = "core";
-        String appName = "proxy";
-        // * - System Application Base Directory (e.g. /usr/share): directory for all user installed shared multi-user applications
+        String groupName = "bisq2";
+        String sysAppName = "network";
+        String appName = "i2p";
         print("System App Base", getSystemApplicationBaseDir());
-        // * - System Application Directory (e.g. /usr/share/1m5/core):
         print("System App Dir", getSystemApplicationDir( groupName, sysAppName, true));
-        // * - User Home Directory (e.g. /home/objectorange):
         print("User Home", getUserHomeDir());
-        // * - User Data Directory (e.g. /home/objectorange/.local/share):
         print("User Data", getUserDataDir(true));
-        // * - User Config Directory (e.g. /home/objectorange/.config):
         print("User Config", getUserConfigDir(true));
-        // * - User Cache Directory (e.g. /home/objectorange/.cache):
         print("User Cache", getUserCacheDir(true));
-        // * - User App Home Directory
         try {
             print("User App Home", getUserAppHomeDir());
-            // * - User App Data Directory (e.g. /home/objectorange/.local/share/1m5/proxy):
             print("User App Data", getUserAppDataDir(groupName, appName, true));
-            // * - User App Config Directory (e.g. /home/objectorange/.config/1m5/proxy):
             print("User App Config", getUserAppConfigDir(groupName, appName, true));
-            // * - User App Cache Directory (.e.g /home/objectorange/.cache/1m5/proxy):
             print("User App Cache", getUserAppCacheDir(groupName, appName, true));
         } catch (IOException e) {
             System.out.println(e.getLocalizedMessage());

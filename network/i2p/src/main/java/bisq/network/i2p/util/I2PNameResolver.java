@@ -26,6 +26,7 @@ import net.i2p.client.naming.SingleFileNamingService;
 import net.i2p.client.naming.NamingService;
 import net.i2p.client.naming.HostsTxtNamingService;
 
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -41,12 +42,12 @@ public class I2PNameResolver {
         this.namingService = SingleFileNamingService.createInstance(context);
     }
 
-    public Destination resolve(String hostname) {
+    public Optional<Destination> resolve(String hostname) {
         // Check cache first
         Destination cachedDest = cache.get(hostname);
         if (cachedDest != null) {
             log.debug("Cache hit for hostname: {}", hostname);
-            return cachedDest;
+            return Optional.of(cachedDest);
         }
 
         // Attempt resolution
@@ -56,27 +57,27 @@ public class I2PNameResolver {
             if (dest != null) {
                 log.debug("Resolved via NetDB: {}", hostname);
                 cache.put(hostname, dest); // Cache the result
-                return dest;
+                return Optional.of(dest);
             }
 
             // Fall back to host.txt
-            HostsTxtNamingService hostFile = new HostsTxtNamingService(ctx);
-            dest = hostFile.lookup(hostname);
+            HostsTxtNamingService hostService = new HostsTxtNamingService(ctx);
+            dest = hostService.lookup(hostname);
             if (dest != null) {
                 log.debug("Resolved via host.txt: {}", hostname);
                 cache.put(hostname, dest); // Cache the result
-                return dest;
+                return Optional.of(dest);
             }
 
             // Check if it's a valid base32 (can reconstruct Destination from it)
             if (hostname.endsWith(".b32.i2p")) {
                 String base32 = hostname.substring(0, hostname.indexOf(".b32.i2p"));
                 byte[] hash = Base32.decode(base32);
-                dest = ctx.netDb().lookupDestinationLocally(new Hash(hash));
-                if (dest != null) {
+                Destination destFromBase32 = ctx.netDb().lookupDestinationLocally(new Hash(hash));
+                if (destFromBase32 != null) {
                     log.debug("Reconstructed Destination from base32: {}", hostname);
-                    cache.put(hostname, dest); // Cache the result
-                    return dest;
+                    cache.put(hostname, destFromBase32); // Cache the result
+                    return Optional.of(destFromBase32);
                 }
             }
 
@@ -84,7 +85,6 @@ public class I2PNameResolver {
             log.warn("Failed to resolve hostname: {}", hostname, e);
         }
 
-        // If no resolution found, return null and optionally retry after a delay
-        return null;
+        return Optional.empty();
     }
 }

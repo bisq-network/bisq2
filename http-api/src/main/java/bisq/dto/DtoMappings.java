@@ -1048,6 +1048,9 @@ public class DtoMappings {
     public static class I2pKeyPairMapping {
 
         public static I2pKeyPair toBisq2Model(I2pKeyPairDto value) {
+            if (value == null) {
+                return null;
+            }
             return new I2pKeyPair(
                     Base64.getDecoder().decode(value.privateKeyEncoded()),
                     Base64.getDecoder().decode(value.publicKeyEncoded()),
