@@ -65,6 +65,20 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, 
             case AMAZONGIFTCARDACCOUNT -> AmazonGiftCardAccount.fromProto(proto);
             case UPIACCOUNT -> UpiAccount.fromProto(proto);
             case BIZUMACCOUNT -> BizumAccount.fromProto(proto);
+            case CASHDEPOSITACCOUNT -> CashDepositAccount.fromProto(proto);
+            case WESTERNUNIONACCOUNT -> WesternUnionAccount.fromProto(proto);
+            case SEPAINSTANTACCOUNT -> SepaInstantAccount.fromProto(proto);
+            case PAYTMACCOUNT -> PaytmAccount.fromProto(proto);
+            case IFSCBASEDACCOUNT -> IfscBasedAccount.fromProto(proto);
+            case NEQUIACCOUNT -> NequiAccount.fromProto(proto);
+            case SATISPAYACCOUNT -> SatispayAccount.fromProto(proto);
+            case TIKKIEACCOUNT -> TikkieAccount.fromProto(proto);
+            case TRANSFERWISEACCOUNT -> TransferwiseAccount.fromProto(proto);
+            case TRANSFERWISEUSDACCOUNT -> TransferwiseUsdAccount.fromProto(proto);
+            case MERCADOPAGOACCOUNT -> MercadoPagoAccount.fromProto(proto);
+            case MONESEACCOUNT -> MoneseAccount.fromProto(proto);
+            case MONEYGRAMACCOUNT -> MoneyGramAccount.fromProto(proto);
+
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

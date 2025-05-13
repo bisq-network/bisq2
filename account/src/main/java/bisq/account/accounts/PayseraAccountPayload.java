@@ -27,12 +27,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class RevolutAccountPayload extends AccountPayload {
+public final class PayseraAccountPayload extends AccountPayload {
+
     private final String email;
 
-    public RevolutAccountPayload(String id, String paymentMethodName, String email) {
+    public PayseraAccountPayload(String id, String paymentMethodName, String email) {
         super(id, paymentMethodName);
         this.email = email;
+
         verify();
     }
 
@@ -45,19 +47,24 @@ public final class RevolutAccountPayload extends AccountPayload {
     @Override
     public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
         return getAccountPayloadBuilder(serializeForHash)
-                .setRevolutAccountPayload(toRevolutAccountPayloadProto(serializeForHash));
+                .setPayseraAccountPayload(toPayseraAccountPayloadProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.RevolutAccountPayload toRevolutAccountPayloadProto(boolean serializeForHash) {
-        return resolveBuilder(getRevolutAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    public static PayseraAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+        var payseraPayload = proto.getPayseraAccountPayload();
+        return new PayseraAccountPayload(
+                proto.getId(),
+                proto.getPaymentMethodName(),
+                payseraPayload.getEmail()
+        );
     }
 
-    private bisq.account.protobuf.RevolutAccountPayload.Builder getRevolutAccountPayloadBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.RevolutAccountPayload.newBuilder()
+    private bisq.account.protobuf.PayseraAccountPayload toPayseraAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getPayseraAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.PayseraAccountPayload.Builder getPayseraAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.PayseraAccountPayload.newBuilder()
                 .setEmail(email);
-    }
-
-    public static RevolutAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        return new RevolutAccountPayload(proto.getId(), proto.getPaymentMethodName(), proto.getRevolutAccountPayload().getEmail());
     }
 }

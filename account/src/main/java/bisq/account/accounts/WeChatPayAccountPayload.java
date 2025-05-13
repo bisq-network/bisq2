@@ -27,37 +27,44 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class RevolutAccountPayload extends AccountPayload {
-    private final String email;
+public final class WeChatPayAccountPayload extends AccountPayload {
 
-    public RevolutAccountPayload(String id, String paymentMethodName, String email) {
+    private final String accountNr;
+
+    public WeChatPayAccountPayload(String id, String paymentMethodName, String accountNr) {
         super(id, paymentMethodName);
-        this.email = email;
+        this.accountNr = accountNr;
+
         verify();
     }
 
     @Override
     public void verify() {
         super.verify();
-        NetworkDataValidation.validateEmail(email);
+        NetworkDataValidation.validateText(accountNr, 100);
     }
 
     @Override
     public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
         return getAccountPayloadBuilder(serializeForHash)
-                .setRevolutAccountPayload(toRevolutAccountPayloadProto(serializeForHash));
+                .setWeChatPayAccountPayload(toWeChatPayAccountPayloadProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.RevolutAccountPayload toRevolutAccountPayloadProto(boolean serializeForHash) {
-        return resolveBuilder(getRevolutAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    public static WeChatPayAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+        var weChatPayPayload = proto.getWeChatPayAccountPayload();
+        return new WeChatPayAccountPayload(
+                proto.getId(),
+                proto.getPaymentMethodName(),
+                weChatPayPayload.getAccountNr()
+        );
     }
 
-    private bisq.account.protobuf.RevolutAccountPayload.Builder getRevolutAccountPayloadBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.RevolutAccountPayload.newBuilder()
-                .setEmail(email);
+    private bisq.account.protobuf.WeChatPayAccountPayload toWeChatPayAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getWeChatPayAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
-    public static RevolutAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        return new RevolutAccountPayload(proto.getId(), proto.getPaymentMethodName(), proto.getRevolutAccountPayload().getEmail());
+    private bisq.account.protobuf.WeChatPayAccountPayload.Builder getWeChatPayAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.WeChatPayAccountPayload.newBuilder()
+                .setAccountNr(accountNr);
     }
 }

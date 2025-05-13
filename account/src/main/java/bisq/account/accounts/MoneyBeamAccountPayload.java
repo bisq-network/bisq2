@@ -27,37 +27,44 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class RevolutAccountPayload extends AccountPayload {
-    private final String email;
+public final class MoneyBeamAccountPayload extends AccountPayload {
 
-    public RevolutAccountPayload(String id, String paymentMethodName, String email) {
+    private final String accountId;
+
+    public MoneyBeamAccountPayload(String id, String paymentMethodName, String accountId) {
         super(id, paymentMethodName);
-        this.email = email;
+        this.accountId = accountId;
+
         verify();
     }
 
     @Override
     public void verify() {
         super.verify();
-        NetworkDataValidation.validateEmail(email);
+        NetworkDataValidation.validateText(accountId, 100);
     }
 
     @Override
     public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
         return getAccountPayloadBuilder(serializeForHash)
-                .setRevolutAccountPayload(toRevolutAccountPayloadProto(serializeForHash));
+                .setMoneyBeamAccountPayload(toMoneyBeamAccountPayloadProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.RevolutAccountPayload toRevolutAccountPayloadProto(boolean serializeForHash) {
-        return resolveBuilder(getRevolutAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    public static MoneyBeamAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+        var moneyBeamPayload = proto.getMoneyBeamAccountPayload();
+        return new MoneyBeamAccountPayload(
+                proto.getId(),
+                proto.getPaymentMethodName(),
+                moneyBeamPayload.getAccountId()
+        );
     }
 
-    private bisq.account.protobuf.RevolutAccountPayload.Builder getRevolutAccountPayloadBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.RevolutAccountPayload.newBuilder()
-                .setEmail(email);
+    private bisq.account.protobuf.MoneyBeamAccountPayload toMoneyBeamAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getMoneyBeamAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
-    public static RevolutAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        return new RevolutAccountPayload(proto.getId(), proto.getPaymentMethodName(), proto.getRevolutAccountPayload().getEmail());
+    private bisq.account.protobuf.MoneyBeamAccountPayload.Builder getMoneyBeamAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.MoneyBeamAccountPayload.newBuilder()
+                .setAccountId(accountId);
     }
 }

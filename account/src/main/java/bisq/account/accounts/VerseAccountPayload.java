@@ -27,37 +27,44 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class RevolutAccountPayload extends AccountPayload {
-    private final String email;
+public final class VerseAccountPayload extends AccountPayload {
 
-    public RevolutAccountPayload(String id, String paymentMethodName, String email) {
+    private final String holderName;
+
+    public VerseAccountPayload(String id, String paymentMethodName, String holderName) {
         super(id, paymentMethodName);
-        this.email = email;
+        this.holderName = holderName;
+
         verify();
     }
 
     @Override
     public void verify() {
         super.verify();
-        NetworkDataValidation.validateEmail(email);
+        NetworkDataValidation.validateText(holderName, 100);
     }
 
     @Override
     public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
         return getAccountPayloadBuilder(serializeForHash)
-                .setRevolutAccountPayload(toRevolutAccountPayloadProto(serializeForHash));
+                .setVerseAccountPayload(toVerseAccountPayloadProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.RevolutAccountPayload toRevolutAccountPayloadProto(boolean serializeForHash) {
-        return resolveBuilder(getRevolutAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    public static VerseAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+        var versePayload = proto.getVerseAccountPayload();
+        return new VerseAccountPayload(
+                proto.getId(),
+                proto.getPaymentMethodName(),
+                versePayload.getHolderName()
+        );
     }
 
-    private bisq.account.protobuf.RevolutAccountPayload.Builder getRevolutAccountPayloadBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.RevolutAccountPayload.newBuilder()
-                .setEmail(email);
+    private bisq.account.protobuf.VerseAccountPayload toVerseAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getVerseAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
-    public static RevolutAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        return new RevolutAccountPayload(proto.getId(), proto.getPaymentMethodName(), proto.getRevolutAccountPayload().getEmail());
+    private bisq.account.protobuf.VerseAccountPayload.Builder getVerseAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.VerseAccountPayload.newBuilder()
+                .setHolderName(holderName);
     }
 }

@@ -19,6 +19,7 @@ package bisq.common.validation;
 
 import bisq.common.platform.Version;
 import bisq.common.util.DateUtils;
+import bisq.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.PublicKey;
@@ -147,4 +148,40 @@ public class NetworkDataValidation {
         checkArgument(bondUserName.length() < 100,
                 "Bond username too long. bondUserName=" + bondUserName);
     }
+
+    public static void validateEmail(String email) {
+        checkArgument(!StringUtils.isEmpty(email), "Email must not be empty");
+        checkArgument(email.length() <= 100, "Email must not be longer than 100 characters. email=" + email);
+
+        String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
+        checkArgument(email.matches(emailRegex), "Invalid email format. email: " + email);
+    }
+
+    public static void validatePhoneNumber(String phoneNumber) {
+        checkArgument(!StringUtils.isEmpty(phoneNumber), "Phone number must not be empty");
+        checkArgument(phoneNumber.length() <= 20,
+                "Phone number must not be longer than 20 characters. phoneNumber=" + phoneNumber);
+
+        String cleanedNumber = phoneNumber.replaceAll("[\\s\\-()]+", "");
+
+        // After removing the + from the beginning (if present) and all formatting chars,
+        // it should contain only digits
+        String digitsOnly = cleanedNumber.startsWith("+")
+                ? cleanedNumber.substring(1)
+                : cleanedNumber;
+
+        checkArgument(digitsOnly.matches("\\d+"),
+                "Phone number contains invalid characters. phoneNumber=" + phoneNumber);
+
+        // Additional check: there should be a reasonable number of digits
+        checkArgument(digitsOnly.length() >= 8,
+                "Phone number contains too few digits. phoneNumber=" + phoneNumber);
+    }
+
+    public static void validatePhoneNumber(String phoneNumber, String countryCode) {
+        validatePhoneNumber(phoneNumber);
+        checkArgument(phoneNumber.replace("+", "").startsWith(countryCode.replace("+", "")),
+                "Phone number must start with country code " + countryCode + ". countryCode=" + phoneNumber);
+    }
 }
+

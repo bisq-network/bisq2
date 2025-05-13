@@ -27,12 +27,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class RevolutAccountPayload extends AccountPayload {
+public final class PaxumAccountPayload extends AccountPayload {
+
     private final String email;
 
-    public RevolutAccountPayload(String id, String paymentMethodName, String email) {
+    public PaxumAccountPayload(String id, String paymentMethodName, String email) {
         super(id, paymentMethodName);
         this.email = email;
+
         verify();
     }
 
@@ -45,19 +47,24 @@ public final class RevolutAccountPayload extends AccountPayload {
     @Override
     public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
         return getAccountPayloadBuilder(serializeForHash)
-                .setRevolutAccountPayload(toRevolutAccountPayloadProto(serializeForHash));
+                .setPaxumAccountPayload(toPaxumAccountPayloadProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.RevolutAccountPayload toRevolutAccountPayloadProto(boolean serializeForHash) {
-        return resolveBuilder(getRevolutAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    public static PaxumAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+        var paxumPayload = proto.getPaxumAccountPayload();
+        return new PaxumAccountPayload(
+                proto.getId(),
+                proto.getPaymentMethodName(),
+                paxumPayload.getEmail()
+        );
     }
 
-    private bisq.account.protobuf.RevolutAccountPayload.Builder getRevolutAccountPayloadBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.RevolutAccountPayload.newBuilder()
+    private bisq.account.protobuf.PaxumAccountPayload toPaxumAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getPaxumAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.PaxumAccountPayload.Builder getPaxumAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.PaxumAccountPayload.newBuilder()
                 .setEmail(email);
-    }
-
-    public static RevolutAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        return new RevolutAccountPayload(proto.getId(), proto.getPaymentMethodName(), proto.getRevolutAccountPayload().getEmail());
     }
 }

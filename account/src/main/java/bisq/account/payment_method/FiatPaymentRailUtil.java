@@ -183,4 +183,278 @@ public class FiatPaymentRailUtil {
                 "ZAR"
         );
     }
+
+    //https://support.volet.com/hc/en-us/articles/14575021212572-In-what-countries-is-this-available
+    static List<String> getVoletCountries() {
+        return List.of("AT", "BE", "HR", "CY", "EE", "FI", "FR", "DE", "GR", "IE",
+                "IT", "LV", "LT", "LU", "MT", "NL", "PT", "SK", "SI", "ES",
+                "IN", "TR", "AE", "MX", "VN", "ID", "NG", "CL", "CO", "PE",
+                "BR", "KE", "TH", "MY", "PH", "AR");
+    }
+
+    //https://volet.com/
+    static List<String> getVoletCurrencies() {
+        return List.of(
+                "USD",
+                "EUR",
+                "GBP",
+                "KZT",
+                "BRL",
+                "TRY",
+                "VND",
+                "AZN"
+        );
+    }
+
+    static List<String> getMoneseCountries() {
+        List<String> countries = new ArrayList<>(getSepaEuroCountries());
+        countries.add("GB");
+        countries.add("RO");
+        return countries;
+    }
+
+    static List<String> getMoneseCurrencies() {
+        return List.of(
+                "EUR",
+                "GBP",
+                "RON"
+        );
+    }
+
+    static List<String> getMoneyGramCountries() {
+        List<String> countries = new ArrayList<>(List.of("AE", "AR", "AU", "BN", "CA", "CH", "CZ", "DK", "FJ", "GB", "HK", "HU",
+                "ID", "IL", "IN", "JP", "KR", "KW", "LK", "MA", "MG", "MX", "MY", "NO", "NZ", "OM", "PE", "PG", "PH", "PK",
+                "PL", "SA", "SB", "SC", "SE", "SG", "TH", "TO", "TR", "TW", "US", "VN", "VU", "WS", "ZA"));
+
+        // Add XOF countries (West African CFA franc)
+        countries.addAll(List.of("BJ", "BF", "CI", "GW", "ML", "NE", "SN", "TG"));
+
+        // Add XPF countries (CFP franc)
+        countries.addAll(List.of("PF", "NC", "WF"));
+
+        // Add SEPA Euro countries
+        countries.addAll(getSepaEuroCountries());
+
+        return countries;
+    }
+
+    static List<String> getMoneyGramCurrencies() {
+        return List.of(
+                "AED",
+                "ARS",
+                "AUD",
+                "BND",
+                "CAD",
+                "CHF",
+                "CZK",
+                "DKK",
+                "EUR",
+                "FJD",
+                "GBP",
+                "HKD",
+                "HUF",
+                "IDR",
+                "ILS",
+                "INR",
+                "JPY",
+                "KRW",
+                "KWD",
+                "LKR",
+                "MAD",
+                "MGA",
+                "MXN",
+                "MYR",
+                "NOK",
+                "NZD",
+                "OMR",
+                "PEN",
+                "PGK",
+                "PHP",
+                "PKR",
+                "PLN",
+                "SAR",
+                "SBD",
+                "SCR",
+                "SEK",
+                "SGD",
+                "THB",
+                "TOP",
+                "TRY",
+                "TWD",
+                "USD",
+                "VND",
+                "VUV",
+                "WST",
+                "XOF",
+                "XPF",
+                "ZAR"
+        );
+    }
+
+    static List<String> getPaxumCountries() {
+        List<String> countries = new ArrayList<>(getSepaEuroCountries());
+
+        // Add countries for non-EUR currencies
+        countries.addAll(List.of("US", "CA", "DK", "CZ", "AU", "ZA", "TH", "CH", "SE", "RO", "PL", "NZ", "NO",
+                "IN", "ID", "HU", "GB"));
+
+        return countries;
+    }
+
+    static List<String> getPaxumCurrencies() {
+        return List.of(
+                "USD",
+                "CAD",
+                "EUR",
+                "DKK",
+                "CZK",
+                "AUD",
+                "ZAR",
+                "THB",
+                "CHF",
+                "SEK",
+                "RON",
+                "PLN",
+                "NZD",
+                "NOK",
+                "INR",
+                "IDR",
+                "HUF",
+                "GBP"
+        );
+    }
+
+    static List<String> getPayseraCountries() {
+        List<String> countries = new ArrayList<>(getSepaEuroCountries());
+
+        // Add countries for non-EUR currencies
+        countries.addAll(List.of("AU", "BG", "BY", "CA", "CH", "CN", "CZ", "DK", "GB", "GE", "HK", "HR", "HU",
+                "IL", "IN", "JP", "KZ", "MX", "NO", "NZ", "PH", "PL", "RO", "RS", "RU", "SE", "SG", "TH", "TR", "US",
+                "ZA"));
+
+        return countries;
+    }
+
+    static List<String> getPayseraCurrencies() {
+        return List.of(
+                "AUD",
+                "BGN",
+                "BYN",
+                "CAD",
+                "CHF",
+                "CNY",
+                "CZK",
+                "DKK",
+                "EUR",
+                "GBP",
+                "GEL",
+                "HKD",
+                "HUF",
+                "ILS",
+                "INR",
+                "JPY",
+                "KZT",
+                "MXN",
+                "NOK",
+                "NZD",
+                "PHP",
+                "PLN",
+                "RON",
+                "RSD",
+                "RUB",
+                "SEK",
+                "SGD",
+                "THB",
+                "TRY",
+                "USD",
+                "ZAR"
+        );
+    }
+
+    //https://support.satispay.com/en/articles/information-required-during-signup
+    static List<String> getSatispayCountries() {
+        return List.of(
+                "LU", "AT", "BE", "DK", "EE", "FI", "FR", "DE", "GR", "IE",
+                "IT", "LT", "NL", "NO", "PT", "ES", "SE", "CZ", "HU", "LV",
+                "PL", "SK", "BG", "CY", "RO", "SI", "MT", "HR", "IS", "LI"
+        );
+    }
+
+    static List<String> getSatispayCurrencies() {
+        return List.of(
+                "EUR"
+        );
+    }
+
+    static List<String> getUpholdCountries() {
+        return List.of(
+                "AD", "AR", "AT", "AU", "BE", "BG", "BM", "BR", "CA", "CH",
+                "CL", "CR", "CY", "CZ", "DK", "EE", "ES", "FI", "FR", "GB",
+                "GR", "GT", "HK", "HR", "HU", "IE", "IL", "IS", "IT", "JP",
+                "KR", "LI", "LT", "LU", "LV", "MC", "MT", "MX", "MY", "NO",
+                "NZ", "PE", "PH", "PL", "PT", "RO", "SE", "SG", "SI", "SK",
+                "SM", "TH", "US", "UY", "VA", "ZA"
+        );
+    }
+
+    static List<String> getUpholdCurrencies() {
+        return List.of(
+                "AED",
+                "ARS",
+                "AUD",
+                "BRL",
+                "CAD",
+                "CHF",
+                "CNY",
+                "DKK",
+                "EUR",
+                "GBP",
+                "HKD",
+                "ILS",
+                "INR",
+                "JPY",
+                "KES",
+                "MXN",
+                "NOK",
+                "NZD",
+                "PHP",
+                "PLN",
+                "SEK",
+                "SGD",
+                "USD"
+        );
+    }
+
+    static List<String> getVerseCountries() {
+        return List.of("AT", "BE", "DK", "FI", "FR", "DE", "GR", "IE", "IT", "PL", "PT", "SK", "ES", "SE",
+                "NL", "GB");
+    }
+
+    static List<String> getVerseCurrencies() {
+        return List.of(
+                "EUR",
+                "GBP",
+                "SEK",
+                "HUF",
+                "DKK",
+                "PLN"
+        );
+    }
+
+    //https://support.bigcommerce.com/s/article/Connecting-with-Mercado-Pago?language=en_US
+    static List<String> getMercadoPagoCountries() {
+        return List.of("AR", "BR", "CL", "CO", "MX", "PE", "UY");
+    }
+
+    static List<String> getMercadoPagoCurrencies() {
+        return List.of(
+                "ARS",
+                "BRL",
+                "CLP",
+                "COP",
+                "MXN",
+                "PEN",
+                "UYU"
+        );
+    }
 }
