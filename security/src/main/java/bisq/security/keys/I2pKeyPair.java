@@ -7,14 +7,14 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+@Getter
 public class I2pKeyPair implements PersistableProto {
     @ToString.Exclude
-    @Getter
     private final byte[] privateKey;
-    @Getter
+
     private final byte[] publicKey;
+
     @EqualsAndHashCode.Include
-    @Getter
     private final String destination;
 
     public I2pKeyPair(byte[] privateKey, byte[] publicKey) {
