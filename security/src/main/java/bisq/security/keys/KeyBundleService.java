@@ -23,6 +23,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
+import bisq.security.protobuf.I2PKeyPair;
 import com.google.common.base.Strings;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -127,20 +129,44 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
                 return true;
             });
         } else {
-            return getOrCreateKeyBundleAsync(defaultKeyId)
-                    .thenApply(keyBundle -> {
-                        if (keyBundle != null) {
-                            if (writeDefaultTorPrivateKeyToFile) {
-                                TorKeyUtils.writePrivateKey(keyBundle.getTorKeyPair(), torStoragePath, tag);
-                            }
-                            if (writeDefaultI2pPrivateKeyToFile) {
-                                I2PKeyUtils.writePrivateKey(keyBundle.getI2PKeyPair(), i2pStoragePath, tag);
-                            }
-                            return true;
-                        }
-                        return false;
-                    });
+            // If we get Tor and/or I2P private keys passed from the config, always use those and override existing keys.
+            return CompletableFuture.supplyAsync(() -> {
+                // Decode and generate Tor key pair if provided
+                TorKeyPair defaultTorKeyPair = defaultTorPrivateKey.map(hex -> {
+                    byte[] torPrivateKey = Hex.decode(hex);
+                    return TorKeyGeneration.generateKeyPair(torPrivateKey);
+                }).orElse(null);
+
+                // Decode and generate I2P key pair if provided
+               I2pKeyPair defaultI2PKeyPair = defaultI2pPrivateKey.map(hex -> {
+                    byte[] i2pPrivateKey = Hex.decode(hex);
+                    return I2pKeyGeneration.generateKeyPair();
+                }).orElse(null);
+
+                // Compose the key bundle using existing or provided values
+                KeyBundle keyBundle = findKeyBundle(defaultKeyId)
+                        .map(existingBundle -> new KeyBundle(
+                                defaultKeyId,
+                                existingBundle.getKeyPair(), // preserve existing main keypair
+                                defaultTorKeyPair != null ? defaultTorKeyPair : existingBundle.getTorKeyPair(),
+                                defaultI2PKeyPair != null ? defaultI2PKeyPair : existingBundle.getI2PKeyPair()
+                        ))
+                        .orElseGet(() -> createKeyBundle(defaultKeyId, defaultTorKeyPair, defaultI2PKeyPair));
+
+                persistKeyBundle(defaultKeyId, keyBundle);
+
+                if (writeDefaultTorPrivateKeyToFile && defaultTorKeyPair != null) {
+                    TorKeyUtils.writePrivateKey(defaultTorKeyPair, torStoragePath, tag);
+                }
+
+                if (writeDefaultI2pPrivateKeyToFile && defaultI2PKeyPair != null) {
+                    I2PKeyUtils.writePrivateKey(defaultI2PKeyPair, i2pStoragePath, tag);
+                }
+
+                return keyBundle;
+            }).thenApply(Objects::nonNull);
         }
+
     }
 
     public KeyPair generateKeyPair() {
