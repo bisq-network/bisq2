@@ -179,7 +179,7 @@ public class I2pEmbeddedRouter {
         I2PSocketManager manager = null;
         System.setProperty("I2P_DISABLE_OUTPUT_OVERRIDE", "true");
 
-       getPropertiesForEmbeddedRouter();
+       setupRouterDirectories();
 
         try {
             log.info("Launching I2P Router...");
@@ -188,7 +188,6 @@ public class I2pEmbeddedRouter {
             routerContext = routerContexts.get(0);
             router = routerContext.router();
             //Check for running routers on the JVM, if none, create.
-           // router = new Router(p);
             if(extendedI2pLogging) {
                 router.getContext().setLogManager(new I2PLogManager());
             }
@@ -219,121 +218,84 @@ public class I2pEmbeddedRouter {
         }
     }
 
-    private void getPropertiesForEmbeddedRouter() throws IOException {
-
-        if(System.getProperty("i2p.dir.base")==null) {
-            File homeDir = SystemSettings.getUserHomeDir();
-            File i2pDir = new File(homeDir, ".bisq2");
-            if (!i2pDir.exists() && !i2pDir.mkdir()) {
-                log.warn("Unable to create home/.bisq2 directory.");
-
-            }
-            File servicesDir = new File(i2pDir, "services");
-            if (!servicesDir.exists() && !servicesDir.mkdir()) {
-                log.warn("Unable to create services directory in home/.bisq2");
-            }
-            i2pDir = new File(servicesDir, I2pEmbeddedRouter.class.getName());
-            if (!i2pDir.exists() && !i2pDir.mkdir()) {
-                log.warn("Unable to create " + I2pEmbeddedRouter.class.getName() + " directory in home/.bisq2/services");
-            }
-        } else {
-            i2pDir = new File(System.getProperty("i2p.dir.base"));
+private void setupRouterDirectories() throws IOException {
+    // Set up I2P base directory
+    if(System.getProperty("i2p.dir.base") == null) {
+        File homeDir = SystemSettings.getUserHomeDir();
+        File bisqDir = new File(homeDir, ".bisq2");
+        if (!bisqDir.exists() && !bisqDir.mkdir()) {
+            throw new IOException("Unable to create home/.bisq2 directory.");
         }
-
-        // Config Directory
-        File i2pConfigDir = new File(i2pDir, "config");
-        if(!i2pConfigDir.exists())
-            if(!i2pConfigDir.mkdir())
-                log.warn("Unable to create I2P config directory: " +i2pConfigDir);
-        if(i2pConfigDir.exists()) {
-            System.setProperty("i2p.dir.config",i2pConfigDir.getAbsolutePath());
-            //    config.setProperty("i2p.dir.config",i2pConfigDir.getAbsolutePath());
+        File servicesDir = new File(bisqDir, "services");
+        if (!servicesDir.exists() && !servicesDir.mkdir()) {
+            throw new IOException("Unable to create services directory in home/.bisq2");
         }
-        // Router Directory
-        File i2pRouterDir = new File(i2pDir,"router");
-        if(!i2pRouterDir.exists())
-            if(!i2pRouterDir.mkdir())
-                log.warn("Unable to create I2P router directory: "+i2pRouterDir);
-        if(i2pRouterDir.exists()) {
-            System.setProperty("i2p.dir.router",i2pRouterDir.getAbsolutePath());
-            //     config.setProperty("i2p.dir.router",i2pRouterDir.getAbsolutePath());
+        i2pDir = new File(servicesDir, I2pEmbeddedRouter.class.getName());
+        if (!i2pDir.exists() && !i2pDir.mkdir()) {
+            throw new IOException("Unable to create " + I2pEmbeddedRouter.class.getName() + " directory in home/.bisq2/services");
         }
-
-        // PID Directory
-        File i2pPIDDir = new File(i2pDir, "pid");
-        if(!i2pPIDDir.exists())
-            if(!i2pPIDDir.mkdir())
-                log.warn("Unable to create I2P PID directory: "+i2pPIDDir.getAbsolutePath());
-        if(i2pPIDDir.exists()) {
-            System.setProperty("i2p.dir.pid",i2pPIDDir.getAbsolutePath());
-            //    config.setProperty("i2p.dir.pid",i2pPIDDir.getAbsolutePath());
-        }
-        // Log Directory
-        File i2pLogDir = new File(i2pDir,"log");
-        if(!i2pLogDir.exists())
-            if(!i2pLogDir.mkdir())
-                log.warn("Unable to create I2P log directory: "+i2pLogDir.getAbsolutePath());
-        if(i2pLogDir.exists()) {
-            System.setProperty("i2p.dir.log",i2pLogDir.getAbsolutePath());
-            //   config.setProperty("i2p.dir.log",i2pLogDir.getAbsolutePath());
-        }
-        // App Directory
-        File i2pAppDir = new File(i2pDir,"app");
-        if(!i2pAppDir.exists())
-            if(!i2pAppDir.mkdir())
-                log.warn("Unable to create I2P app directory: "+i2pAppDir.getAbsolutePath());
-        if(i2pAppDir.exists()) {
-            System.setProperty("i2p.dir.app", i2pAppDir.getAbsolutePath());
-            //   config.setProperty("i2p.dir.app", i2pAppDir.getAbsolutePath());
-        }
-        System.setProperty(I2PClient.PROP_TCP_HOST, "internal");
-        System.setProperty(I2PClient.PROP_TCP_PORT, "internal");
-        System.setProperty("i2p.dir.base", i2pDir.getAbsolutePath());
-        mergeRouterConfig(null);
-
-        File certDir = new File(i2pDir, "certificates");
-        if(!certDir.exists())
-            if(!certDir.mkdir()) {
-                log.warn("Unable to create certificates directory in: "+certDir.getAbsolutePath()+"; exiting...");
-            }
-        File seedDir = new File(certDir, "reseed");
-        if(!seedDir.exists())
-            if(!seedDir.mkdir()) {
-                log.warn("Unable to create "+seedDir.getAbsolutePath()+" directory; exiting...");
-            }
-        File sslDir = new File(certDir, "ssl");
-        if(!sslDir.exists())
-            if(!sslDir.mkdir()) {
-                log.warn("Unable to create "+sslDir.getAbsolutePath()+" directory; exiting...");
-            }
-
-        File seedCertificates = new File(certDir, "reseed");
-        File sslCertificates = new File(certDir, "ssl");
-
-        copyCertificatesToBaseDir(seedCertificates, sslCertificates);
-        Properties p = new Properties();
-        String i2pDirBasePath = dirPath + "/i2p-dir-base";
-        p.put("i2p.dir.base", i2pDirBasePath);
-        Files.createDirectories(Path.of(i2pDirBasePath));
-
-        // Contains the I2P data files
-        String i2pDirConfig = dirPath + "/i2p-dir-config";
-        p.put("i2p.dir.config", i2pDirConfig);
-        Files.createDirectories(Path.of(i2pDirConfig));
-
-        //Parameters related to router size and badwidth share
-        p.put("i2np.bandwidth.inboundKBytesPerSecond", inboundKBytesPerSecond);
-        p.put("i2np.bandwidth.inboundBurstKBytesPerSecond", inboundKBytesPerSecond);
-        p.put("i2np.bandwidth.outboundKBytesPerSecond", outboundKBytesPerSecond);
-        p.put("i2np.bandwidth.outboundBurstKBytesPerSecond", outboundKBytesPerSecond);
-        p.put("router.sharePercentage", bandwidthSharePercentage);
-
-        p.put("i2cp.disableInterface", "true");
-        p.put("i2np.ntcp.nodelay", "true");
-        p.put("router.encType","4");
-        p.put("router.useShortTBM","true");
+    } else {
+        i2pDir = new File(System.getProperty("i2p.dir.base"));
     }
 
+    // Set up directory structure and system properties
+    setupDirectory("config", "i2p.dir.config");
+    setupDirectory("router", "i2p.dir.router");
+    setupDirectory("pid", "i2p.dir.pid");
+    setupDirectory("log", "i2p.dir.log");
+    setupDirectory("app", "i2p.dir.app");
+
+    // Set up client properties
+    System.setProperty(I2PClient.PROP_TCP_HOST, "internal");
+    System.setProperty(I2PClient.PROP_TCP_PORT, "internal");
+    System.setProperty("i2p.dir.base", i2pDir.getAbsolutePath());
+
+    Properties p = new Properties();
+
+    //Parameters related to router size and badwidth share
+    p.put("i2np.bandwidth.inboundKBytesPerSecond", inboundKBytesPerSecond);
+    p.put("i2np.bandwidth.inboundBurstKBytesPerSecond", inboundKBytesPerSecond);
+    p.put("i2np.bandwidth.outboundKBytesPerSecond", outboundKBytesPerSecond);
+    p.put("i2np.bandwidth.outboundBurstKBytesPerSecond", outboundKBytesPerSecond);
+    p.put("router.sharePercentage", bandwidthSharePercentage);
+
+    p.put("i2cp.disableInterface", "true");
+    p.put("i2np.ntcp.nodelay", "true");
+    p.put("router.encType","4");
+    p.put("router.useShortTBM","true");
+
+    // Set up configuration and certificates
+    mergeRouterConfig(p);
+    setupCertificatesDirectories();
+
+}
+
+    private void setupDirectory(String dirName, String propertyName) throws IOException {
+        File dir = new File(i2pDir, dirName);
+        if (!dir.exists() && !dir.mkdir()) {
+            throw new IOException("Unable to create I2P " + dirName + " directory: " + dir.getAbsolutePath());
+        }
+        System.setProperty(propertyName, dir.getAbsolutePath());
+    }
+
+    private void setupCertificatesDirectories() throws IOException {
+        File certDir = new File(i2pDir, "certificates");
+        if (!certDir.exists() && !certDir.mkdir()) {
+            throw new IOException("Unable to create certificates directory: " + certDir.getAbsolutePath());
+        }
+
+        File seedDir = new File(certDir, "reseed");
+        if (!seedDir.exists() && !seedDir.mkdir()) {
+            throw new IOException("Unable to create reseed certificates directory: " + seedDir.getAbsolutePath());
+        }
+
+        File sslDir = new File(certDir, "ssl");
+        if (!sslDir.exists() && !sslDir.mkdir()) {
+            throw new IOException("Unable to create SSL certificates directory: " + sslDir.getAbsolutePath());
+        }
+
+        copyCertificatesToBaseDir(seedDir, sslDir);
+    }
     private CommSystemFacade.Status getRouterStatus() {
         return routerContext.commSystem().getStatus();
     }
@@ -351,10 +313,14 @@ public class I2pEmbeddedRouter {
         File f = new File(i2pDir, "router.config");
         boolean i2pBaseRouterConfigIsNew = false;
         if (!f.exists()) {
-            if (!f.mkdir()) {
+            try {
+                if (!f.createNewFile()) {
+                    log.warn("While merging router.config files, unable to create router.config in i2pBaseDirectory: " + i2pDir.getAbsolutePath());
+                } else{
+                    i2pBaseRouterConfigIsNew = true;
+                }
+            } catch (IOException e) {
                 log.warn("While merging router.config files, unable to create router.config in i2pBaseDirectory: " + i2pDir.getAbsolutePath());
-            } else {
-                i2pBaseRouterConfigIsNew = true;
             }
         }
         InputStream i2pBaseRouterConfig = null;

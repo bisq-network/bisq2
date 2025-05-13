@@ -18,8 +18,6 @@
 package bisq.network.i2p;
 
 import bisq.common.file.FileUtils;
-import bisq.common.network.Address;
-import bisq.network.i2p.util.I2PNameResolver;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.I2PAppContext;
 import net.i2p.I2PException;
@@ -29,7 +27,6 @@ import net.i2p.client.streaming.I2PSocketOptions;
 import net.i2p.data.DataFormatException;
 import net.i2p.data.Destination;
 import net.i2p.data.PrivateKeyFile;
-import net.i2p.router.RouterContext;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -49,6 +46,7 @@ public class I2pClient {
     public static final long DEFAULT_SOCKET_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
 
     private static final Map<String, I2pClient> I2P_CLIENT_BY_APP = new ConcurrentHashMap<>();
+    private static final ExecutorService routerInitExecutor = Executors.newSingleThreadExecutor();
 
     private final boolean embeddedRouter;
     private I2pEmbeddedRouter i2pRouter;
@@ -58,7 +56,6 @@ public class I2pClient {
 //            RouterContext.getCurrentContext() != null ? (RouterContext) RouterContext.getCurrentContext() : null);
     private final Map<String, I2PSocketManager> sessionMap = new ConcurrentHashMap<>();
 
-    private static final ExecutorService routerInitExecutor = Executors.newSingleThreadExecutor();
 
     public static I2pClient getI2pClient(String dirPath, String host, int port, long socketTimeout, boolean isEmbeddedRouter) {
         synchronized (I2P_CLIENT_BY_APP) {

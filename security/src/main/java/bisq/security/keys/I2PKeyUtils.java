@@ -20,18 +20,25 @@ package bisq.security.keys;
 import bisq.common.encoding.Hex;
 import bisq.common.file.FileUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.util.encoders.Base32;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
+import net.i2p.data.*;
+
 
 @Slf4j
 public class I2PKeyUtils {
 
     public static byte[] getPublicKeyFromB32Address(String b32Address) {
-        b32Address = b32Address.substring(0, b32Address.length() - ".b32.i2p".length());
-        return Base32.decode(b32Address.toUpperCase());
+        if (b32Address == null || !b32Address.endsWith(".b32.i2p")) {
+                    throw new IllegalArgumentException("Invalid I2P base32 host: " + b32Address);
+                }
+            String base32 = b32Address
+                            .substring(0, b32Address.length() - ".b32.i2p".length())
+                            .toUpperCase(Locale.ROOT);
+            return Base32.decode(base32);
     }
 
     public static void writePrivateKey(I2pKeyPair i2pKeyPair, Path storageDir, String tag) {

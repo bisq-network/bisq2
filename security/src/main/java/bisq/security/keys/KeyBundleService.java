@@ -28,12 +28,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -46,18 +44,22 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
         private final Optional<String> defaultTorPrivateKey;
         private final Optional<String> defaultI2pPrivateKey; // <-- Added support for default I2P key
         private final boolean writeDefaultTorPrivateKeyToFile;
+        private final boolean writeDefaultI2pPrivateKeyToFile;
 
-        public Config(String defaultTorPrivateKey, String defaultI2pPrivateKey, boolean writeDefaultTorPrivateKeyToFile) {
+        public Config(String defaultTorPrivateKey, String defaultI2pPrivateKey, boolean writeDefaultTorPrivateKeyToFile,
+                      boolean writeDefaultI2pPrivateKeyToFile) {
             this.defaultTorPrivateKey = Optional.ofNullable(Strings.emptyToNull(defaultTorPrivateKey));
             this.defaultI2pPrivateKey = Optional.ofNullable(Strings.emptyToNull(defaultI2pPrivateKey));
             this.writeDefaultTorPrivateKeyToFile = writeDefaultTorPrivateKeyToFile;
+            this.writeDefaultI2pPrivateKeyToFile = writeDefaultI2pPrivateKeyToFile;
         }
 
         public static Config from(com.typesafe.config.Config config) {
             return new Config(
                     config.getString("defaultTorPrivateKey"),
                     config.getString("defaultI2pPrivateKey"),
-                    config.getBoolean("writeDefaultTorPrivateKeyToFile")
+                    config.getBoolean("writeDefaultTorPrivateKeyToFile"),
+                    config.getBoolean("writeDefaultI2pPrivateKeyToFile")
             );
         }
     }
@@ -70,12 +72,14 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     private final Optional<String> defaultTorPrivateKey;
     private final Optional<String> defaultI2pPrivateKey; // <-- Store I2P from config
     private final boolean writeDefaultTorPrivateKeyToFile;
+    private final boolean writeDefaultI2pPrivateKeyToFile;
 
     public KeyBundleService(PersistenceService persistenceService, Config config) {
         persistableStore = new KeyBundleStore();
         defaultTorPrivateKey = config.getDefaultTorPrivateKey();
         defaultI2pPrivateKey = config.getDefaultI2pPrivateKey();
         writeDefaultTorPrivateKeyToFile = config.isWriteDefaultTorPrivateKeyToFile();
+        writeDefaultI2pPrivateKeyToFile = config.isWriteDefaultI2pPrivateKeyToFile();
 
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         baseDir = persistenceService.getBaseDir();
@@ -116,7 +120,9 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
                 if (writeDefaultTorPrivateKeyToFile) {
                     TorKeyUtils.writePrivateKey(torKeyPair, torStoragePath, tag);
                 }
-                I2PKeyUtils.writePrivateKey(i2pKeyPair, i2pStoragePath, tag);
+                if (writeDefaultI2pPrivateKeyToFile) {
+                    I2PKeyUtils.writePrivateKey(i2pKeyPair, i2pStoragePath, tag);
+                }
 
                 return true;
             });
@@ -127,7 +133,9 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
                             if (writeDefaultTorPrivateKeyToFile) {
                                 TorKeyUtils.writePrivateKey(keyBundle.getTorKeyPair(), torStoragePath, tag);
                             }
-                            I2PKeyUtils.writePrivateKey(keyBundle.getI2PKeyPair(), i2pStoragePath, tag);
+                            if (writeDefaultI2pPrivateKeyToFile) {
+                                I2PKeyUtils.writePrivateKey(keyBundle.getI2PKeyPair(), i2pStoragePath, tag);
+                            }
                             return true;
                         }
                         return false;
