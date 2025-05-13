@@ -1088,22 +1088,15 @@
     -fx-pref-height: 0;
 }
 
-.slider.price-slider-seller,
-.slider.price-slider-buyer {
-    -track-color: -bisq-dark-grey-50;
-}
-
 .slider.price-slider-seller .track {
     -fx-background-color: linear-gradient(to right, -bisq2-green 25%, -bisq2-yellow 58.3%, -bisq2-red 100%);
     -fx-background-insets: 0, 1;
-    -fx-background-radius: 0, 0;
     -fx-padding: 0 0 0 0;
 }
 
 .slider.price-slider-buyer .track {
     -fx-background-color: linear-gradient(to right, -bisq2-red 0%, -bisq2-yellow 16.7%,-bisq2-green 41.7%);
     -fx-background-insets: 0, 1;
-    -fx-background-radius: 0, 0;
     -fx-padding: 0 0 0 0;
 }
 

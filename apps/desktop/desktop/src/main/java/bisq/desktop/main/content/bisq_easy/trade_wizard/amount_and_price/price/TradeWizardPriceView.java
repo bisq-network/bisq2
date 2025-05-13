@@ -57,7 +57,6 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     private final PriceInput priceInput;
     private final Button percentagePrice, fixedPrice, closeOverlayButton;
     private final Label warningIcon, feedbackSentence, minSliderValue, maxSliderValue;
-    private final HBox feedbackBox;
     private final Slider slider;
     private final Hyperlink showLearnWhyButton;
     private Subscription percentageFocussedPin, useFixPricePin;
@@ -129,7 +128,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         showLearnWhyButton.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
         showLearnWhyButton.setMinWidth(Hyperlink.USE_PREF_SIZE);
 
-        feedbackBox = new HBox(2.5, warningIcon, feedbackSentence, showLearnWhyButton);
+        HBox feedbackBox = new HBox(2.5, warningIcon, feedbackSentence, showLearnWhyButton);
         feedbackBox.setAlignment(Pos.CENTER);
 
         // Overlay
