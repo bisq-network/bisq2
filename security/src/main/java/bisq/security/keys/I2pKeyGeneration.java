@@ -30,17 +30,6 @@ public class I2pKeyGeneration {
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    public static byte[] generatePrivateKey() {
-        try {
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("Ed25519", "BC");
-            keyGen.initialize(256, new SecureRandom());
-            KeyPair keyPair = keyGen.generateKeyPair();
-            return keyPair.getPrivate().getEncoded(); // Returns PKCS#8 format
-        } catch (Exception e) {
-            throw new RuntimeException("Error generating private key", e);
-        }
-    }
-
     public static I2pKeyPair generateKeyPair() {
         try {
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance("Ed25519", "BC");

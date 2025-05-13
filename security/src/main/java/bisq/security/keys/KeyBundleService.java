@@ -138,10 +138,8 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
                 }).orElse(null);
 
                 // Decode and generate I2P key pair if provided
-               I2pKeyPair defaultI2PKeyPair = defaultI2pPrivateKey.map(hex -> {
-                    byte[] i2pPrivateKey = Hex.decode(hex);
-                    return I2pKeyGeneration.generateKeyPair();
-                }).orElse(null);
+               I2pKeyPair defaultI2PKeyPair = defaultI2pPrivateKey.map(hex ->
+                       I2pKeyGeneration.generateKeyPair()).orElse(null);
 
                 // Compose the key bundle using existing or provided values
                 KeyBundle keyBundle = findKeyBundle(defaultKeyId)
