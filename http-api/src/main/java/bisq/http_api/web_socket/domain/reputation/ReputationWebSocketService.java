@@ -18,6 +18,7 @@
 package bisq.http_api.web_socket.domain.reputation;
 
 import bisq.common.observable.Pin;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.dto.DtoMappings;
 import bisq.dto.user.reputation.ReputationScoreDto;
 import bisq.http_api.web_socket.domain.SimpleObservableWebSocketService;
@@ -43,7 +44,7 @@ public class ReputationWebSocketService extends SimpleObservableWebSocketService
     }
 
     @Override
-    protected Map<String, Long> getObservable() {
+    protected ObservableHashMap<String, Long> getObservable() {
         return reputationService.getScoreByUserProfileId();
     }
 
@@ -59,6 +60,6 @@ public class ReputationWebSocketService extends SimpleObservableWebSocketService
 
     @Override
     protected Pin setupObserver() {
-        return reputationService.getUserProfileIdWithScoreChange().addObserver(value -> onChange());
+        return getObservable().addObserver(this::onChange);
     }
 }
