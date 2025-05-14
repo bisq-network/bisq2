@@ -19,12 +19,12 @@ package bisq.desktop.main.content.reputation.build_reputation;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BuildReputationView extends View<VBox, BuildReputationModel, BuildReputationController> {
     private final Button burnBsqButton, bsqBondButton, accountAgeButton, signedAccountButton;
-    private final BisqMenuItem learnMoreLink;
+    private final Hyperlink learnMoreLink;
 
     public BuildReputationView(BuildReputationModel model, BuildReputationController controller) {
         super(new VBox(), model, controller);
@@ -99,12 +99,12 @@ public class BuildReputationView extends View<VBox, BuildReputationModel, BuildR
         HBox signedAccountAndAgeBox = new HBox(20, signedAccountBox, accountAgeBox);
 
         Label learnMoreLabel = new Label(Res.get("reputation.buildReputation.learnMore"));
-        learnMoreLink = new BisqMenuItem(Res.get("reputation.buildReputation.learnMore.link"));
+        learnMoreLink = new Hyperlink(Res.get("reputation.buildReputation.learnMore.link"));
         learnMoreLink.setTooltip(new BisqTooltip("https://bisq.wiki/Reputation"));
         learnMoreLabel.getStyleClass().addAll("reputation-learn-more");
         learnMoreLink.getStyleClass().addAll("reputation-learn-more-link");
-        HBox learnMoreHBox = new HBox(4, learnMoreLabel, learnMoreLink);
-
+        HBox learnMoreHBox = new HBox(2, learnMoreLabel, learnMoreLink);
+        learnMoreHBox.setAlignment(Pos.BASELINE_LEFT);
 
         VBox.setMargin(introLabelPart2, new Insets(20, 0, 20, 0));
         VBox contentBox = new VBox(20);
