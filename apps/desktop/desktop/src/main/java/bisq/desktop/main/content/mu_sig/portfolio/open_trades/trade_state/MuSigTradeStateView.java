@@ -39,10 +39,10 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigTradeStateController> {
-    private final HBox phaseAndInfoHBox, cancelledHBox, interruptedHBox, errorHBox, isInMediationHBox;
-    private final Button interruptTradeButton, closeTradeButton, exportButton, reportToMediatorButton,
+    private final HBox phaseAndInfoHBox, hHBox, errorHBox, isInMediationHBox;
+    private final Button closeTradeButton, exportButton, reportToMediatorButton,
             tradeDetailsButton;
-    private final Label cancelledInfo, errorMessage, buyerPriceDescriptionApprovalOverlay,
+    private final Label errorMessage, buyerPriceDescriptionApprovalOverlay,
             sellerPriceDescriptionApprovalOverlay, mediationBannerLabel;
     private final VBox tradePhaseBox, tradeDataHeaderBox;
     private final BisqMenuItem tryAgainMenuItem;
@@ -56,16 +56,13 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         super(new VBox(0), model, controller);
 
         this.tradePhaseBox = tradePhaseBox;
-        interruptTradeButton = new Button();
-        interruptTradeButton.setMinWidth(160);
-        interruptTradeButton.getStyleClass().add("outlined-button");
 
         tradeDetailsButton = new Button(Res.get("bisqEasy.openTrades.tradeDetails.button"));
         tradeDetailsButton.getStyleClass().addAll("grey-transparent-outlined-button");
         tradeDetailsButton.setMinWidth(160);
 
         HBox.setMargin(tradeDetailsButton, new Insets(0, -20, 0, 0));
-        tradeDataHeader.getChildren().addAll(Spacer.fillHBox(), tradeDetailsButton, interruptTradeButton);
+        tradeDataHeader.getChildren().addAll(Spacer.fillHBox(), tradeDetailsButton);
         tradeDataHeaderBox = new VBox(tradeDataHeader, Layout.hLine());
 
         Label isInMediationIcon = Icons.getIcon(AwesomeIcon.WARNING_SIGN);
@@ -84,12 +81,6 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         isInMediationHBox.setPadding(new Insets(10));
         isInMediationHBox.getStyleClass().add("bisq-easy-trade-isInMediation-bg");
 
-        Label tradeInterruptedIcon = Icons.getIcon(AwesomeIcon.WARNING_SIGN);
-        tradeInterruptedIcon.getStyleClass().add("bisq-text-yellow");
-        tradeInterruptedIcon.setMinWidth(16);
-        cancelledInfo = new Label();
-        cancelledInfo.getStyleClass().add("bisq-easy-trade-interrupted-headline");
-
         exportButton = new Button(Res.get("bisqEasy.openTrades.exportTrade"));
         exportButton.setMinWidth(180);
 
@@ -100,9 +91,6 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         closeTradeButton.setMinWidth(160);
         closeTradeButton.setDefaultButton(true);
 
-        cancelledHBox = new HBox(10, tradeInterruptedIcon, cancelledInfo);
-        cancelledHBox.setAlignment(Pos.CENTER_LEFT);
-
         Label errorIcon = Icons.getIcon(AwesomeIcon.WARNING_SIGN);
         errorIcon.getStyleClass().add("bisq-text-error");
         errorIcon.setMinWidth(16);
@@ -112,16 +100,16 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         errorHBox.setAlignment(Pos.CENTER_LEFT);
 
         HBox buttonHBox = new HBox(10, reportToMediatorButton, exportButton, closeTradeButton);
-        interruptedHBox = new HBox(10, cancelledHBox, errorHBox, Spacer.fillHBox(), buttonHBox);
-        interruptedHBox.setAlignment(Pos.CENTER_LEFT);
+        hHBox = new HBox(10, errorHBox, Spacer.fillHBox(), buttonHBox);
+        hHBox.setAlignment(Pos.CENTER_LEFT);
 
         HBox.setHgrow(tradePhaseBox, Priority.ALWAYS);
         phaseAndInfoHBox = new HBox(tradePhaseBox);
 
         VBox.setMargin(isInMediationHBox, new Insets(20, 30, 0, 30));
-        VBox.setMargin(interruptedHBox, new Insets(20, 30, 20, 30));
+        VBox.setMargin(hHBox, new Insets(20, 30, 20, 30));
         VBox.setMargin(phaseAndInfoHBox, new Insets(0, 30, 15, 30));
-        VBox content = new VBox(tradeDataHeaderBox, isInMediationHBox, interruptedHBox, phaseAndInfoHBox);
+        VBox content = new VBox(tradeDataHeaderBox, isInMediationHBox, hHBox, phaseAndInfoHBox);
         content.getStyleClass().add("bisq-easy-container");
 
         // Accept seller's price overlay
@@ -143,21 +131,14 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         reportToMediatorButton.managedProperty().bind(model.getShowReportToMediatorButton());
         isInMediationHBox.visibleProperty().bind(model.getIsInMediation());
         isInMediationHBox.managedProperty().bind(model.getIsInMediation());
-        cancelledHBox.visibleProperty().bind(model.getInterruptedTradeInfo());
-        cancelledHBox.managedProperty().bind(model.getInterruptedTradeInfo());
-        interruptedHBox.visibleProperty().bind(model.getInterruptedTradeInfo().or(model.getError()));
-        interruptedHBox.managedProperty().bind(model.getInterruptedTradeInfo().or(model.getError()));
         errorHBox.visibleProperty().bind(model.getError());
         errorHBox.managedProperty().bind(model.getError());
+        hHBox.visibleProperty().bind(model.getIsTradeCompleted().or(model.getError()));
+        hHBox.managedProperty().bind(hHBox.visibleProperty());
         phaseAndInfoHBox.visibleProperty().bind(model.getPhaseAndInfoVisible());
         phaseAndInfoHBox.managedProperty().bind(model.getPhaseAndInfoVisible());
 
-        cancelledInfo.textProperty().bind(model.getTradeInterruptedInfo());
         errorMessage.textProperty().bind(model.getErrorMessage());
-
-        interruptTradeButton.textProperty().bind(model.getInterruptTradeButtonText());
-        interruptTradeButton.visibleProperty().bind(model.getInterruptTradeButtonVisible());
-        interruptTradeButton.managedProperty().bind(model.getInterruptTradeButtonVisible());
 
         buyerPriceDescriptionApprovalOverlay.textProperty().bind(model.getBuyerPriceDescriptionApprovalOverlay());
         sellerPriceDescriptionApprovalOverlay.textProperty().bind(model.getSellerPriceDescriptionApprovalOverlay());
@@ -197,7 +178,6 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
                     }
                 });
 
-        interruptTradeButton.setOnAction(e -> controller.onInterruptTrade());
         tradeDetailsButton.setOnAction(e -> controller.onShowTradeDetails());
         closeTradeButton.setOnAction(e -> controller.onCloseTrade());
         exportButton.setOnAction(e -> controller.onExportTrade());
@@ -215,21 +195,14 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         reportToMediatorButton.managedProperty().unbind();
         isInMediationHBox.visibleProperty().unbind();
         isInMediationHBox.managedProperty().unbind();
-        cancelledHBox.visibleProperty().unbind();
-        cancelledHBox.managedProperty().unbind();
-        interruptedHBox.visibleProperty().unbind();
-        interruptedHBox.managedProperty().unbind();
+        hHBox.visibleProperty().unbind();
+        hHBox.managedProperty().unbind();
         errorHBox.visibleProperty().unbind();
         errorHBox.managedProperty().unbind();
         phaseAndInfoHBox.visibleProperty().unbind();
         phaseAndInfoHBox.managedProperty().unbind();
 
-        cancelledInfo.textProperty().unbind();
         errorMessage.textProperty().unbind();
-
-        interruptTradeButton.textProperty().unbind();
-        interruptTradeButton.visibleProperty().unbind();
-        interruptTradeButton.managedProperty().unbind();
 
         buyerPriceDescriptionApprovalOverlay.textProperty().unbind();
         sellerPriceDescriptionApprovalOverlay.textProperty().unbind();
@@ -238,7 +211,6 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         requestMediationDeliveryStatusPin.unsubscribe();
         shouldShowTryRequestMediationAgainPin.unsubscribe();
 
-        interruptTradeButton.setOnAction(null);
         tradeDetailsButton.setOnAction(null);
         closeTradeButton.setOnAction(null);
         exportButton.setOnAction(null);

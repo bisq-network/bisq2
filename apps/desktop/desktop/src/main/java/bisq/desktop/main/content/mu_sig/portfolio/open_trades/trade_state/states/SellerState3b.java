@@ -24,10 +24,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SellerStateMainChain3b extends StateMainChain3b<SellerStateMainChain3b.Controller> {
-    public SellerStateMainChain3b(ServiceProvider serviceProvider,
-                                  MuSigTrade trade,
-                                  MuSigOpenTradeChannel channel) {
+public class SellerState3b extends StateMainChain3b<SellerState3b.Controller> {
+    public SellerState3b(ServiceProvider serviceProvider,
+                         MuSigTrade trade,
+                         MuSigOpenTradeChannel channel) {
         super(serviceProvider, trade, channel);
     }
 

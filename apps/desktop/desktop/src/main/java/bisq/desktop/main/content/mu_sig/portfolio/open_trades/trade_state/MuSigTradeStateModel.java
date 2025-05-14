@@ -29,31 +29,18 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class MuSigTradeStateModel implements Model {
-    enum TradeCloseType {
-        REJECT,
-        CANCEL,
-        COMPLETED
-    }
-
-    @Setter
-    private TradeCloseType tradeCloseType;
     private final ObjectProperty<MuSigOpenTradeChannel> channel = new SimpleObjectProperty<>();
     private final ObjectProperty<MuSigTrade> trade = new SimpleObjectProperty<>();
     private final ObjectProperty<VBox> stateInfoVBox = new SimpleObjectProperty<>();
-    private final StringProperty interruptTradeButtonText = new SimpleStringProperty();
-    private final BooleanProperty interruptTradeButtonVisible = new SimpleBooleanProperty(true);
-    private final BooleanProperty interruptedTradeInfo = new SimpleBooleanProperty();
     private final BooleanProperty error = new SimpleBooleanProperty();
     private final BooleanProperty phaseAndInfoVisible = new SimpleBooleanProperty();
     private final BooleanProperty isInMediation = new SimpleBooleanProperty();
     private final BooleanProperty showReportToMediatorButton = new SimpleBooleanProperty();
-    private final StringProperty tradeInterruptedInfo = new SimpleStringProperty();
     private final StringProperty errorMessage = new SimpleStringProperty();
     private final StringProperty buyerPriceDescriptionApprovalOverlay = new SimpleStringProperty();
     private final StringProperty sellerPriceDescriptionApprovalOverlay = new SimpleStringProperty();
@@ -67,17 +54,12 @@ public class MuSigTradeStateModel implements Model {
     }
 
     void reset() {
-        tradeCloseType = null;
         trade.set(null);
         stateInfoVBox.set(null);
-        interruptTradeButtonText.set(null);
-        interruptTradeButtonVisible.set(true);
-        interruptedTradeInfo.set(false);
         error.set(false);
         phaseAndInfoVisible.set(false);
         isInMediation.set(false);
         showReportToMediatorButton.set(false);
-        tradeInterruptedInfo.set(null);
         errorMessage.set(null);
         buyerPriceDescriptionApprovalOverlay.set(null);
         sellerPriceDescriptionApprovalOverlay.set(null);

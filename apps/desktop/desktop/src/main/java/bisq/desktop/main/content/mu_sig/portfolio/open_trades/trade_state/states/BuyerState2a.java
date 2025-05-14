@@ -92,9 +92,6 @@ public class BuyerState2a extends BaseState {
                 String message = "Account data of " + peerUserName + " is banned: " + sellersAccountData;
                 moderationRequestService.reportUserProfile(peer, message);
 
-                // We reject the trade to avoid the banned user can continue
-                muSigTradeService.cancelTrade(trade);
-
                 new Popup().warning(Res.get("bisqEasy.tradeState.info.buyer.phase2a.accountDataBanned.popup.warning")).show();
             } else {
                 model.getConfirmFiatSentButtonDisabled().set(false);

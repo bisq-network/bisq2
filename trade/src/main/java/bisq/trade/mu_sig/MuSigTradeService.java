@@ -406,14 +406,6 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
        // handleMuSigTradeEvent(trade, new MuSigBtcConfirmedEvent());
     }
 
-    public void rejectTrade(MuSigTrade trade) {
-       // handleMuSigTradeEvent(trade, new MuSigRejectTradeEvent());
-    }
-
-    public void cancelTrade(MuSigTrade trade) {
-       // handleMuSigTradeEvent(trade, new MuSigCancelTradeEvent());
-    }
-
 
 
     /* --------------------------------------------------------------------- */

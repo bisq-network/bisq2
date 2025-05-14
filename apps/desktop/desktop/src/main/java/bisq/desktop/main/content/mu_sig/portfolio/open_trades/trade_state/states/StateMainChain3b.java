@@ -275,7 +275,7 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
 
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
-            role = this instanceof BuyerStateMainChain3b.Model ? "buyer" : "seller";
+            role = this instanceof BuyerState3b.Model ? "buyer" : "seller";
         }
     }
 

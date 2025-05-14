@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state;
 
-import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.chat.ChatService;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
@@ -26,7 +25,6 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.HashMapObserver;
 import bisq.common.util.StringUtils;
-import bisq.contract.Role;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
@@ -34,6 +32,12 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_details.MuSigTradeDetailsController;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState2a;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState2b;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState4;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState2a;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState3a;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState4;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
@@ -128,9 +132,7 @@ public class MuSigTradeStateController implements Controller {
             muSigTradePhaseBox.setMuSigTrade(trade);
 
             tradeStatePin = trade.tradeStateObservable().addObserver(state ->
-                    UIThread.run(() -> {
-                        applyStateInfoVBox(state);
-                    }));
+                    UIThread.run(() -> handleStateChange(state)));
 
             errorMessagePin = trade.errorMessageObservable().addObserver(errorMessage -> {
                         if (errorMessage != null) {
@@ -186,27 +188,6 @@ public class MuSigTradeStateController implements Controller {
         model.resetAll();
     }
 
-    void onInterruptTrade() {
-        MuSigTrade trade = model.getTrade().get();
-        String message = switch (model.getTradeCloseType()) {
-            case REJECT -> Res.get("bisqEasy.openTrades.rejectTrade.warning");
-            case CANCEL -> {
-                String part2 = Res.get("bisqEasy.openTrades.cancelTrade.warning.part2");
-                yield trade.isSeller()
-                        ? Res.get("bisqEasy.openTrades.cancelTrade.warning.seller", part2)
-                        : Res.get("bisqEasy.openTrades.cancelTrade.warning.buyer", part2);
-            }
-            // We hide close button at the top-pane at the complete screen
-            default -> throw new RuntimeException("Unexpected TradeCloseType " + model.getTradeCloseType());
-        };
-
-        new Popup().warning(message)
-                .actionButtonText(Res.get("confirmation.yes"))
-                .onAction(this::doInterruptTrade)
-                .closeButtonText(Res.get("confirmation.no"))
-                .show();
-    }
-
     void onShowTradeDetails() {
         MuSigOpenTradeChannel channel = model.getChannel().get();
         Optional<MuSigTrade> optionalMuSigTrade = tradeService.findTrade(channel.getTradeId());
@@ -218,27 +199,6 @@ public class MuSigTradeStateController implements Controller {
         MuSigTrade trade = optionalMuSigTrade.get();
         Navigation.navigateTo(NavigationTarget.MU_SIG_TRADE_DETAILS,
                 new MuSigTradeDetailsController.InitData(trade, channel));
-    }
-
-    private void doInterruptTrade() {
-        MuSigTrade trade = model.getTrade().get();
-        String encoded;
-        MuSigOpenTradeChannel channel = model.getChannel().get();
-        String userName = channel.getMyUserIdentity().getUserName();
-        switch (model.getTradeCloseType()) {
-            case REJECT:
-                encoded = Res.encode("bisqEasy.openTrades.tradeLogMessage.rejected", userName);
-                openTradeChannelService.sendTradeLogMessage(encoded, channel);
-                tradeService.rejectTrade(trade);
-                break;
-            case CANCEL:
-                encoded = Res.encode("bisqEasy.openTrades.tradeLogMessage.cancelled", userName);
-                openTradeChannelService.sendTradeLogMessage(encoded, channel);
-                tradeService.cancelTrade(trade);
-                break;
-            case COMPLETED:
-            default:
-        }
     }
 
     void onCloseTrade() {
@@ -304,9 +264,7 @@ public class MuSigTradeStateController implements Controller {
         }));
     }
 
-    private void applyStateInfoVBox(@Nullable MuSigTradeState state) {
-        applyCloseTradeReason(state);
-
+    private void handleStateChange(@Nullable MuSigTradeState state) {
         if (state == null) {
             model.getStateInfoVBox().set(null);
             return;
@@ -318,11 +276,55 @@ public class MuSigTradeStateController implements Controller {
 
         model.getPhaseAndInfoVisible().set(true);
         model.getError().set(false);
-        model.getInterruptedTradeInfo().set(false);
-        model.getInterruptTradeButtonVisible().set(true);
-        model.getIsTradeCompleted().set(false);
+        model.getIsTradeCompleted().set(state.isFinalState());
 
-        boolean isMainChain = trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
+        switch (state) {
+            case INIT -> {
+            }
+
+            // Deposit tx setup phase
+            case BUYER_AS_TAKER_INITIALIZED_TRADE,
+                 BUYER_AS_TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES -> {
+                // todo protocol started state
+            }
+            case BUYER_AS_TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX -> {
+                model.getStateInfoVBox().set(new BuyerState2a(serviceProvider, trade, channel).getView().getRoot());
+            }
+            case SELLER_AS_MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES,
+                 SELLER_AS_MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX -> {
+                // todo protocol started state
+
+                //todo add state when deposit is seen in network
+                model.getStateInfoVBox().set(new SellerState2a(serviceProvider, trade, channel).getView().getRoot());
+            }
+
+            // Settlement phase
+            case BUYER_AS_TAKER_INITIATED_PAYMENT -> {
+                model.getStateInfoVBox().set(new BuyerState2b(serviceProvider, trade, channel).getView().getRoot());
+            }
+            case SELLER_AS_MAKER_RECEIVED_INITIATED_PAYMENT_MESSAGE -> {
+                model.getStateInfoVBox().set(new SellerState2a(serviceProvider, trade, channel).getView().getRoot());
+            }
+            case SELLER_AS_MAKER_RECEIVED_PAYMENT -> {
+                model.getStateInfoVBox().set(new SellerState3a(serviceProvider, trade, channel).getView().getRoot());
+            }
+
+            // Cooperative path
+            case BUYER_AS_TAKER_CLOSED_TRADE -> {
+                model.getStateInfoVBox().set(new BuyerState4(serviceProvider, trade, channel).getView().getRoot());
+            }
+            case SELLER_AS_MAKER_CLOSED_TRADE -> {
+                model.getStateInfoVBox().set(new SellerState4(serviceProvider, trade, channel).getView().getRoot());
+            }
+
+            // Uncooperative path
+            case BUYER_AS_TAKER_FORCE_CLOSED_TRADE -> {
+                model.getStateInfoVBox().set(new BuyerState4(serviceProvider, trade, channel).getView().getRoot());
+            }
+            case SELLER_AS_MAKER_FORCE_CLOSED_TRADE -> {
+                model.getStateInfoVBox().set(new SellerState4(serviceProvider, trade, channel).getView().getRoot());
+            }
+        }
        /* switch (state) {
             case INIT:
                 break;
@@ -444,100 +446,6 @@ public class MuSigTradeStateController implements Controller {
                 log.error("State {} not handled", state.name());
         }*/
     }
-
-    private void applyTradeInterruptedInfo(MuSigTrade trade, boolean isCancelled) {
-        boolean isMaker = trade.isMaker();
-        boolean makerInterruptedTrade = trade.getInterruptTradeInitiator().get() == Role.MAKER;
-        boolean selfInitiated = (makerInterruptedTrade && isMaker) ||
-                (!makerInterruptedTrade && !isMaker);
-        if (isCancelled) {
-            model.getTradeInterruptedInfo().set(selfInitiated ?
-                    Res.get("bisqEasy.openTrades.cancelled.self") :
-                    Res.get("bisqEasy.openTrades.cancelled.peer"));
-            model.getShowReportToMediatorButton().set(!selfInitiated);
-        } else {
-            model.getTradeInterruptedInfo().set(selfInitiated ?
-                    Res.get("bisqEasy.openTrades.rejected.self") :
-                    Res.get("bisqEasy.openTrades.rejected.peer"));
-        }
-    }
-
-    private void applyCloseTradeReason(@Nullable MuSigTradeState state) {
-        if (state == null) {
-            model.setTradeCloseType(null);
-            model.getInterruptTradeButtonText().set(null);
-            return;
-        }
-
-
-        if(state.isFinalState()){
-            model.setTradeCloseType(MuSigTradeStateModel.TradeCloseType.COMPLETED);
-            model.getInterruptTradeButtonVisible().set(false);
-        }else{
-            model.setTradeCloseType(MuSigTradeStateModel.TradeCloseType.CANCEL);
-            model.getInterruptTradeButtonText().set(Res.get("muSig.openTrades.cancelTrade"));
-            model.getInterruptTradeButtonVisible().set(true);
-        }
-
-      /*  switch (state) {
-            case INIT:
-            case TAKER_SENT_TAKE_OFFER_REQUEST:
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-            case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-            case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-            case TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-            case TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-                model.setTradeCloseType(TradeStateModel.TradeCloseType.REJECT);
-                model.getInterruptTradeButtonText().set(Res.get("muSig.openTrades.rejectTrade"));
-                model.getInterruptTradeButtonVisible().set(true);
-                break;
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS_:
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS_:
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-            case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
-            case SELLER_CONFIRMED_FIAT_RECEIPT:
-            case SELLER_SENT_BTC_SENT_CONFIRMATION:
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA_:
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_:
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-            case BUYER_SENT_FIAT_SENT_CONFIRMATION:
-            case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION:
-            case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
-                model.setTradeCloseType(TradeStateModel.TradeCloseType.CANCEL);
-                model.getInterruptTradeButtonText().set(Res.get("muSig.openTrades.cancelTrade"));
-                model.getInterruptTradeButtonVisible().set(true);
-                break;
-            case BTC_CONFIRMED:
-                model.setTradeCloseType(TradeStateModel.TradeCloseType.COMPLETED);
-                model.getInterruptTradeButtonVisible().set(false);
-                break;
-            case REJECTED:
-            case PEER_REJECTED:
-            case CANCELLED:
-            case PEER_CANCELLED:
-            case FAILED:
-            case FAILED_AT_PEER:
-                model.getInterruptTradeButtonVisible().set(false);
-                break;
-
-            default:
-                log.error("State {} not handled", state.name());
-        }*/
-    }
-
 
     private void removeChannelRelatedBindings() {
         if (tradeStatePin != null) {
