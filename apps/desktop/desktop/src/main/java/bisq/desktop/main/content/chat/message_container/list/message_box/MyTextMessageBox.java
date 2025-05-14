@@ -103,6 +103,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     private void setUpEditFunctionality() {
         // edit
         editInputField = new BisqTextArea();
+        editInputField.getStyleClass().addAll("text-fill-white", "normal-text", "font-default");
         editInputField.setId("chat-messages-edit-text-area");
         editInputField.setMinWidth(150);
         editInputField.setVisible(false);
