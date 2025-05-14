@@ -1058,12 +1058,21 @@
     -fx-padding: 0 0 5 0;
 }
 
-.slider.price-slider .thumb,
+.slider.price-slider-seller .thumb,
+.slider.price-slider-buyer .thumb,
 .slider.max-or-fixed-amount-slider .thumb {
     -fx-background-color: -bisq-white;
     -fx-background-insets: 2.5;
     -fx-shape: "M 0 0 h 7 l -3.5 4 z";
     -fx-translate-y: -8;
+}
+
+.slider.max-or-fixed-amount-slider .track,
+.slider.price-slider-buyer .track,
+.slider.price-slider-seller .track {
+    -fx-pref-height: 2.5;
+    -fx-min-height: 2.5;
+    -fx-max-height: 2.5;
 }
 
 .slider.min-amount-slider .thumb {
@@ -1079,8 +1088,16 @@
     -fx-pref-height: 0;
 }
 
-.slider.price-slider {
-    -track-color: -bisq-dark-grey-50;
+.slider.price-slider-seller .track {
+    -fx-background-color: linear-gradient(to right, -bisq2-green 25%, -bisq2-yellow 58.3%, -bisq2-red 100%);
+    -fx-background-insets: 0, 1;
+    -fx-padding: 0 0 0 0;
+}
+
+.slider.price-slider-buyer .track {
+    -fx-background-color: linear-gradient(to right, -bisq2-red 0%, -bisq2-yellow 16.7%,-bisq2-green 41.7%);
+    -fx-background-insets: 0, 1;
+    -fx-padding: 0 0 0 0;
 }
 
 .amount-selection .range-value,
