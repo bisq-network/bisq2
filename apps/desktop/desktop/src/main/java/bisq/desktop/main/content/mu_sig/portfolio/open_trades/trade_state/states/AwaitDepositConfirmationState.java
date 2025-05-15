@@ -63,12 +63,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, ?>> extends BaseState {
+public abstract class AwaitDepositConfirmationState<C extends AwaitDepositConfirmationState.Controller<?, ?>> extends BaseState {
     protected final C controller;
 
-    protected StateMainChain3b(ServiceProvider serviceProvider,
-                               MuSigTrade trade,
-                               MuSigOpenTradeChannel channel) {
+    protected AwaitDepositConfirmationState(ServiceProvider serviceProvider,
+                                            MuSigTrade trade,
+                                            MuSigOpenTradeChannel channel) {
         controller = getController(serviceProvider, trade, channel);
     }
 
@@ -275,7 +275,7 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
 
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
-            role = this instanceof BuyerState3b.Model ? "buyer" : "seller";
+            role = this instanceof BuyerState1AwaitDepositConfirmation.Model ? "buyer" : "seller";
         }
     }
 

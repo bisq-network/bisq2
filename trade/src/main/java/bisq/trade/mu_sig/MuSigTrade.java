@@ -28,6 +28,7 @@ import bisq.offer.mu_sig.MuSigOffer;
 import bisq.trade.Trade;
 import bisq.trade.TradeParty;
 import bisq.trade.TradeRole;
+import bisq.trade.mu_sig.messages.grpc.TxConfirmationStatus;
 import bisq.trade.mu_sig.protocol.MuSigTradeState;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,10 +38,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.DEPOSIT_TX_CONFIRMED;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.INIT;
+
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTradeParty> {
+
+    //todo use ReadOnlyObservable
     // The role who cancelled or rejected the trade
     @Getter
     private final Observable<Role> interruptTradeInitiator = new Observable<>();
@@ -48,16 +54,17 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
     // Wrapper for stateObservable which is not handled as generic in Fsm
     private final transient Observable<MuSigTradeState> tradeState = new Observable<>();
 
+    private final Observable<TxConfirmationStatus> depositTxConfirmationStatus = new Observable<>();
+
     //todo temp
     @Getter
     private final Observable<String> paymentAccountData = new Observable<>();
     @Getter
     private final Observable<String> bitcoinPaymentData = new Observable<>(); // btc address in case of mainChain, or LN invoice if LN is used
     // paymentProof can be null in Observable
+
     @Getter
     private final Observable<String> paymentProof = new Observable<>(); // txId in case of mainChain, or preimage if LN is used
-
-
 
     @Setter
     @Getter
@@ -154,4 +161,22 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
     public ReadOnlyObservable<MuSigTradeState> tradeStateObservable() {
         return tradeState;
     }
+
+    public boolean isDepositTxCreatedButNotConfirmed() {
+        // TODO make more rigid check
+        log.error(tradeState.get().name());
+        return /*getMyself().getDepositPsbt() != null &&*/  // todo not persisted yet
+                tradeState.get().ordinal() > INIT.ordinal() &&
+                        tradeState.get().ordinal() < DEPOSIT_TX_CONFIRMED.ordinal();
+    }
+
+    public void setDepositTxConfirmationStatus(TxConfirmationStatus txConfirmationStatus) {
+        depositTxConfirmationStatus.set(txConfirmationStatus);
+
+    }
+
+    public ReadOnlyObservable<TxConfirmationStatus> getDepositTxConfirmationStatus() {
+        return depositTxConfirmationStatus;
+    }
+
 }

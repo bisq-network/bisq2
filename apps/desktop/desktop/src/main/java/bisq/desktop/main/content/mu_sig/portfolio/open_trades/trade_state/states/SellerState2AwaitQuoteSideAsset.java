@@ -29,10 +29,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SellerState2a extends BaseState {
+public class SellerState2AwaitQuoteSideAsset extends BaseState {
     private final Controller controller;
 
-    public SellerState2a(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
+    public SellerState2AwaitQuoteSideAsset(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, trade, channel);
     }
 

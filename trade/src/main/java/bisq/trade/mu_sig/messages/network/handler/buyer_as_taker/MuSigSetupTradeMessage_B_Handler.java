@@ -59,8 +59,8 @@ public class MuSigSetupTradeMessage_B_Handler extends TradeMessageHandler<MuSigT
 
         // Request NonceSharesMessage from rust server
         PubKeySharesResponse sellerPubKeySharesResponse = message.getPubKeySharesResponse();
-        MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
-        NonceSharesMessage buyerNonceSharesMessage = NonceSharesMessage.fromProto(stub.getNonceShares(NonceSharesRequest.newBuilder()
+        MusigGrpc.MusigBlockingStub musigBlockingStub = serviceProvider.getMuSigTradeService().getMusigBlockingStub();
+        NonceSharesMessage buyerNonceSharesMessage = NonceSharesMessage.fromProto(musigBlockingStub.getNonceShares(NonceSharesRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setBuyerOutputPeersPubKeyShare(ByteString.copyFrom(sellerPubKeySharesResponse.getBuyerOutputPubKeyShare()))
                 .setSellerOutputPeersPubKeyShare(ByteString.copyFrom(sellerPubKeySharesResponse.getSellerOutputPubKeyShare()))
@@ -71,7 +71,7 @@ public class MuSigSetupTradeMessage_B_Handler extends TradeMessageHandler<MuSigT
                 .setSellersSecurityDeposit(30_000)
                 .build()));
 
-        PartialSignaturesMessage buyerPartialSignaturesMessage = PartialSignaturesMessage.fromProto(stub.getPartialSignatures(PartialSignaturesRequest.newBuilder()
+        PartialSignaturesMessage buyerPartialSignaturesMessage = PartialSignaturesMessage.fromProto(musigBlockingStub.getPartialSignatures(PartialSignaturesRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setPeersNonceShares(sellerAsMakerNonceSharesMessage.toProto(true))
                 .addAllReceivers(mockReceivers())

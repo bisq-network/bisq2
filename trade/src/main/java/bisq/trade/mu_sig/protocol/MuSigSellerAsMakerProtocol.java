@@ -22,6 +22,8 @@ import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.events.MuSigFsmErrorEventHandler;
 import bisq.trade.mu_sig.events.MuSigReportErrorMessageHandler;
+import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEvent;
+import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEventHandler;
 import bisq.trade.mu_sig.events.seller_as_maker.MuSigSellersCooperativeCloseTimeoutEvent;
 import bisq.trade.mu_sig.events.seller_as_maker.MuSigSellersCooperativeCloseTimeoutEventHandler;
 import bisq.trade.mu_sig.messages.network.MuSigCooperativeClosureMessage_G;
@@ -36,6 +38,7 @@ import bisq.trade.mu_sig.messages.network.handler.seller_as_maker.MuSigSetupTrad
 
 import static bisq.trade.bisq_easy.protocol.BisqEasyTradeState.FAILED;
 import static bisq.trade.bisq_easy.protocol.BisqEasyTradeState.FAILED_AT_PEER;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.DEPOSIT_TX_CONFIRMED;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.INIT;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.SELLER_AS_MAKER_CLOSED_TRADE;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.SELLER_AS_MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX;
@@ -75,10 +78,18 @@ public class MuSigSellerAsMakerProtocol extends MuSigProtocol {
                 .run(MuSigSetupTradeMessage_C_Handler.class)
                 .to(SELLER_AS_MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX)
 
+                // Deposit confirmation phase
+                .then()
+                .from(SELLER_AS_MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX)
+                .on(MuSigDepositTxConfirmedEvent.class)
+                .run(MuSigDepositTxConfirmedEventHandler.class)
+                .to(DEPOSIT_TX_CONFIRMED)
+
                 // TODO observe blockchain to know when deposit tx is published or
                 //  buyer send informative message after publishing
 
                 // Wait for buyers payment...
+
 
                 // Settlement
                 .then()

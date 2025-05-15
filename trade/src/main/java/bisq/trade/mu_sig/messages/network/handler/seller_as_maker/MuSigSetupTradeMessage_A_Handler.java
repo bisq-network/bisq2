@@ -53,14 +53,14 @@ public class MuSigSetupTradeMessage_A_Handler extends TradeMessageHandler<MuSigT
         MuSigSetupTradeMessage_A message = (MuSigSetupTradeMessage_A) event;
         verifyMessage(message);
 
-        MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
-        PubKeySharesResponse sellerPubKeyShareResponse = PubKeySharesResponse.fromProto(stub.initTrade(PubKeySharesRequest.newBuilder()
+        MusigGrpc.MusigBlockingStub musigBlockingStub = serviceProvider.getMuSigTradeService().getMusigBlockingStub();
+        PubKeySharesResponse sellerPubKeyShareResponse = PubKeySharesResponse.fromProto(musigBlockingStub.initTrade(PubKeySharesRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setMyRole(Role.SELLER_AS_MAKER)
                 .build()));
 
         PubKeySharesResponse buyerPubKeySharesResponse = message.getPubKeySharesResponse();
-        NonceSharesMessage sellerNonceSharesMessage = NonceSharesMessage.fromProto(stub.getNonceShares(NonceSharesRequest.newBuilder()
+        NonceSharesMessage sellerNonceSharesMessage = NonceSharesMessage.fromProto(musigBlockingStub.getNonceShares(NonceSharesRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setBuyerOutputPeersPubKeyShare(ByteString.copyFrom(buyerPubKeySharesResponse.getBuyerOutputPubKeyShare()))
                 .setSellerOutputPeersPubKeyShare(ByteString.copyFrom(buyerPubKeySharesResponse.getSellerOutputPubKeyShare()))

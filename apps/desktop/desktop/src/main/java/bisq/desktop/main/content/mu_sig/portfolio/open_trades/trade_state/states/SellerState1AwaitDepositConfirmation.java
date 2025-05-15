@@ -24,10 +24,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SellerState3b extends StateMainChain3b<SellerState3b.Controller> {
-    public SellerState3b(ServiceProvider serviceProvider,
-                         MuSigTrade trade,
-                         MuSigOpenTradeChannel channel) {
+public class SellerState1AwaitDepositConfirmation extends AwaitDepositConfirmationState<SellerState1AwaitDepositConfirmation.Controller> {
+    public SellerState1AwaitDepositConfirmation(ServiceProvider serviceProvider,
+                                                MuSigTrade trade,
+                                                MuSigOpenTradeChannel channel) {
         super(serviceProvider, trade, channel);
     }
 
@@ -42,7 +42,7 @@ public class SellerState3b extends StateMainChain3b<SellerState3b.Controller> {
         return new Controller(serviceProvider, trade, channel);
     }
 
-    protected static class Controller extends StateMainChain3b.Controller<Model, View> {
+    protected static class Controller extends AwaitDepositConfirmationState.Controller<Model, View> {
         protected Controller(ServiceProvider serviceProvider,
                              MuSigTrade trade,
                              MuSigOpenTradeChannel channel) {
@@ -61,13 +61,13 @@ public class SellerState3b extends StateMainChain3b<SellerState3b.Controller> {
     }
 
     @Getter
-    protected static class Model extends StateMainChain3b.Model {
+    protected static class Model extends AwaitDepositConfirmationState.Model {
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
         }
     }
 
-    public static class View extends StateMainChain3b.View<Model, Controller> {
+    public static class View extends AwaitDepositConfirmationState.View<Model, Controller> {
         protected View(Model model, Controller controller) {
             super(model, controller);
         }

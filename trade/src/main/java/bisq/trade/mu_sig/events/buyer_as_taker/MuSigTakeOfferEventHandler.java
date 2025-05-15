@@ -46,8 +46,8 @@ public class MuSigTakeOfferEventHandler extends MuSigSendTradeMessageHandler<MuS
     @Override
     public void handle(Event event) {
         try {
-            MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
-            bisq.trade.protobuf.PubKeySharesResponse proto = stub.initTrade(PubKeySharesRequest.newBuilder()
+            MusigGrpc.MusigBlockingStub musigBlockingStub = serviceProvider.getMuSigTradeService().getMusigBlockingStub();
+            bisq.trade.protobuf.PubKeySharesResponse proto = musigBlockingStub.initTrade(PubKeySharesRequest.newBuilder()
                     .setTradeId(trade.getId())
                     .setMyRole(Role.BUYER_AS_TAKER)
                     .build());

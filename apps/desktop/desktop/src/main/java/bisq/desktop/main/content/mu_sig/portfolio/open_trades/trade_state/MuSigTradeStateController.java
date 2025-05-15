@@ -32,10 +32,12 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_details.MuSigTradeDetailsController;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState2a;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState1AwaitDepositConfirmation;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState2SendQuoteSideAsset;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState2b;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState4;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState2a;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState1AwaitDepositConfirmation;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState2AwaitQuoteSideAsset;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState3a;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState4;
 import bisq.desktop.navigation.NavigationTarget;
@@ -288,14 +290,22 @@ public class MuSigTradeStateController implements Controller {
                 // todo protocol started state
             }
             case BUYER_AS_TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX -> {
-                model.getStateInfoVBox().set(new BuyerState2a(serviceProvider, trade, channel).getView().getRoot());
+                model.getStateInfoVBox().set(new BuyerState1AwaitDepositConfirmation(serviceProvider, trade, channel).getView().getRoot());
             }
             case SELLER_AS_MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES,
                  SELLER_AS_MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX -> {
                 // todo protocol started state
 
                 //todo add state when deposit is seen in network
-                model.getStateInfoVBox().set(new SellerState2a(serviceProvider, trade, channel).getView().getRoot());
+                model.getStateInfoVBox().set(new SellerState1AwaitDepositConfirmation(serviceProvider, trade, channel).getView().getRoot());
+            }
+
+            case DEPOSIT_TX_CONFIRMED -> {
+                if (isSeller) {
+                    model.getStateInfoVBox().set(new SellerState2AwaitQuoteSideAsset(serviceProvider, trade, channel).getView().getRoot());
+                } else {
+                    model.getStateInfoVBox().set(new BuyerState2SendQuoteSideAsset(serviceProvider, trade, channel).getView().getRoot());
+                }
             }
 
             // Settlement phase
@@ -303,7 +313,7 @@ public class MuSigTradeStateController implements Controller {
                 model.getStateInfoVBox().set(new BuyerState2b(serviceProvider, trade, channel).getView().getRoot());
             }
             case SELLER_AS_MAKER_RECEIVED_INITIATED_PAYMENT_MESSAGE -> {
-                model.getStateInfoVBox().set(new SellerState2a(serviceProvider, trade, channel).getView().getRoot());
+                model.getStateInfoVBox().set(new SellerState2AwaitQuoteSideAsset(serviceProvider, trade, channel).getView().getRoot());
             }
             case SELLER_AS_MAKER_RECEIVED_PAYMENT -> {
                 model.getStateInfoVBox().set(new SellerState3a(serviceProvider, trade, channel).getView().getRoot());

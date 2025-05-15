@@ -32,14 +32,14 @@ public class MusigClient {
                 InsecureChannelCredentials.create()
         ).build();
 
-        MusigGrpc.MusigBlockingStub musigStub = MusigGrpc.newBlockingStub(grpcChannel);
+        MusigGrpc.MusigBlockingStub musigBlockingStub = MusigGrpc.newBlockingStub(grpcChannel);
 
         PubKeySharesRequest request = PubKeySharesRequest.newBuilder()
                 .setTradeId("mock-trade-001")
                 .setMyRole(Role.BUYER_AS_TAKER)
                 .build();
 
-        var response = musigStub.initTrade(request);
+        var response = musigBlockingStub.initTrade(request);
 
         System.out.println("Received response:");
         System.out.println("  buyerOutputPubKeyShare: " + response.getBuyerOutputPubKeyShare().size() + " bytes");

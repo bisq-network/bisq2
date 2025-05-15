@@ -40,9 +40,9 @@ public class MuSigSellersCooperativeCloseTimeoutEventHandler extends TradeEventH
 
         // ClosureType.UNCOOPERATIVE
         // *** SELLER FORCE-CLOSES TRADE ***
-         MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
+         MusigGrpc.MusigBlockingStub musigBlockingStub = serviceProvider.getMuSigTradeService().getMusigBlockingStub();
         //TODO isn't here the swap Tx needed to pass?
-        CloseTradeResponse sellersCloseTradeResponse = stub.closeTrade(CloseTradeRequest.newBuilder()
+        CloseTradeResponse sellersCloseTradeResponse = musigBlockingStub.closeTrade(CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .build());
     }
