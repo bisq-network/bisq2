@@ -28,12 +28,11 @@ import bisq.user.reputation.ReputationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class ReputationWebSocketService extends SimpleObservableWebSocketService<Map<String, Long>, Map<String, ReputationScoreDto>> {
+public class ReputationWebSocketService extends SimpleObservableWebSocketService<ObservableHashMap<String, Long>, Map<String, ReputationScoreDto>> {
     private final ReputationService reputationService;
 
     public ReputationWebSocketService(ObjectMapper objectMapper,
@@ -49,7 +48,7 @@ public class ReputationWebSocketService extends SimpleObservableWebSocketService
     }
 
     @Override
-    protected Map<String, ReputationScoreDto> toPayload(Map<String, Long> observable) {
+    protected Map<String, ReputationScoreDto> toPayload(ObservableHashMap<String, Long> observable) {
         return observable
                 .entrySet().stream()
                 .collect(Collectors.toMap(
