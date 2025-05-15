@@ -38,7 +38,7 @@ public class ReputationWebSocketService extends SimpleObservableWebSocketService
     public ReputationWebSocketService(ObjectMapper objectMapper,
                                       SubscriberRepository subscriberRepository,
                                       ReputationService reputationService) {
-        super(objectMapper, subscriberRepository, Topic.USER_REPUTATION);
+        super(objectMapper, subscriberRepository, Topic.REPUTATION);
         this.reputationService = reputationService;
     }
 

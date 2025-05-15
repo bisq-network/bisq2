@@ -158,7 +158,7 @@ public class SubscriptionService implements Service {
             case CHAT_REACTIONS -> {
                 return Optional.of(chatReactionsWebSocketService);
             }
-            case USER_REPUTATION -> {
+            case REPUTATION -> {
                 return Optional.of(reputationWebSocketService);
             }
         }
