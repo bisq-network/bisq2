@@ -22,6 +22,7 @@ import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
 import bisq.user.banned.BannedUserService;
@@ -34,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
 @Slf4j
@@ -44,7 +44,7 @@ public class ReputationService implements Service {
     private final AccountAgeService accountAgeService;
     private final SignedWitnessService signedWitnessService;
     private final Observable<String> userProfileIdWithScoreChange = new Observable<>();
-    private final Map<String, Long> scoreByUserProfileId = new ConcurrentHashMap<>();
+    private final ObservableHashMap<String, Long> scoreByUserProfileId = new ObservableHashMap<>();
     private final ProfileAgeService profileAgeService;
     private final NetworkService networkService;
 
