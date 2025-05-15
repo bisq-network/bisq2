@@ -18,12 +18,15 @@
 package bisq.network.tor.process.control_port;
 
 import bisq.common.threading.ThreadName;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.TimeoutException;
 
+@Slf4j
 public class ControlPortFilePoller {
     private final AtomicBoolean isRunning = new AtomicBoolean();
     private final CompletableFuture<Integer> portCompletableFuture = new CompletableFuture<>();
@@ -45,26 +48,94 @@ public class ControlPortFilePoller {
         Thread thread = new Thread(() -> {
             ThreadName.setName("ControlPortFilePoller.startPoller");
             try {
-                while (true) {
+                int attemptLimit = 300; // e.g., try for up to 30 seconds (300 * 100ms interval)
+                int attempts = 0;
+                Optional<Integer> lastParsedPort = Optional.empty();
+                int consecutiveReadFailures = 0;
+                final int MAX_CONSECUTIVE_READ_FAILURES = 10; // Increased limit for robustness
+                final int SETTLE_DELAY_MS = 50;
+                final int POLLING_INTERVAL_MS = 100;
+
+                log.debug("Starting control port file poller for: {}. Timeout: {}s",
+                        controlPortFilePath, attemptLimit * POLLING_INTERVAL_MS / 1000);
+
+                while (attempts < attemptLimit) {
+                    attempts++;
                     Optional<Integer> optionalPort = parsePortFromFile();
 
                     if (optionalPort.isPresent()) {
-                        portCompletableFuture.complete(optionalPort.get());
-                        break;
-                    } else {
-                        // We can't use Java's WatcherService because it misses events between event processing.
-                        // Tor writes the port to a swap file first, and renames it afterward.
-                        // The WatcherService can miss the second operation, causing a deadlock.
-                        //noinspection BusyWait
-                        Thread.sleep(100);
+                        consecutiveReadFailures = 0; // Reset counter on successful parse
+                        int currentPort = optionalPort.get();
+
+                        // Optimization: if port hasn't changed and we just failed (external check
+                        // needed for this),
+                        // or just to ensure stability, wait briefly after initial parse.
+                        if (lastParsedPort.isEmpty() || lastParsedPort.get() != currentPort) {
+                            log.debug("Poller parsed port {} (attempt {}). Waiting {}ms to check for stability.",
+                                    currentPort, attempts, SETTLE_DELAY_MS);
+                            Thread.sleep(SETTLE_DELAY_MS);
+                            Optional<Integer> finalCheckOptionalPort = parsePortFromFile();
+
+                            if (finalCheckOptionalPort.isPresent() && finalCheckOptionalPort.get() == currentPort) {
+                                log.info("ControlPortFilePoller confirmed stable port: {}", currentPort);
+                                portCompletableFuture.complete(currentPort);
+                                break;
+                            } else if (finalCheckOptionalPort.isPresent()) {
+                                log.warn(
+                                        "Control port file changed rapidly after initial parse ({} -> {}). Re-polling.",
+                                        currentPort, finalCheckOptionalPort.get());
+                                lastParsedPort = finalCheckOptionalPort; // Update to the newest read
+                            } else {
+                                log.warn("Control port file became unparseable after initial parse. Re-polling.");
+                                lastParsedPort = Optional.empty(); // Reset last known good port
+                            }
+                        } else {
+                            // Port parsed is the same as the last attempt, assume stable
+                            log.info("ControlPortFilePoller confirmed stable port (same as last): {}", currentPort);
+                            portCompletableFuture.complete(currentPort);
+                            break;
+                        }
+
+                    } else { // parsePortFromFile returned empty (e.g. file not found or not ready)
+                        consecutiveReadFailures++;
+                        log.trace("Control port file not found or not ready, attempt {}. Consecutive failures: {}.",
+                                attempts, consecutiveReadFailures);
+                        if (consecutiveReadFailures >= MAX_CONSECUTIVE_READ_FAILURES) {
+                            log.error(
+                                    "ControlPortFilePoller failed to parse port file after {} consecutive attempts. Giving up.",
+                                    MAX_CONSECUTIVE_READ_FAILURES);
+                            portCompletableFuture.completeExceptionally(
+                                    new ControlPortFileParseFailureException("Failed to parse port file after "
+                                            + MAX_CONSECUTIVE_READ_FAILURES + " attempts."));
+                            break;
+                        }
+                        lastParsedPort = Optional.empty(); // Reset if file unparseable
                     }
+
+                    // Main polling interval wait
+                    Thread.sleep(POLLING_INTERVAL_MS);
+
                 }
 
-            } catch (ControlPortFileParseFailureException | InterruptedException e) {
+                if (!portCompletableFuture.isDone()) {
+                    log.error("ControlPortFilePoller timed out after {} attempts ({} seconds) for file: {}",
+                            attempts, attemptLimit * POLLING_INTERVAL_MS / 1000, controlPortFilePath);
+                    portCompletableFuture.completeExceptionally(
+                            new TimeoutException("ControlPortFilePoller timed out after "
+                                    + (attemptLimit * POLLING_INTERVAL_MS / 1000) + " seconds."));
+                }
+
+            } catch (InterruptedException e) {
+                log.warn("ControlPortFilePoller interrupted.", e);
+                portCompletableFuture.completeExceptionally(e);
+                Thread.currentThread().interrupt();
+            } catch (Exception e) { // Catch unexpected errors during polling
+                log.error("ControlPortFilePoller encountered an unexpected error.", e);
                 portCompletableFuture.completeExceptionally(e);
             }
-        });
+        }, "ControlPortFilePollerThread");
 
+        thread.setDaemon(true); // Ensure poller thread doesn't prevent JVM shutdown
         thread.start();
     }
 

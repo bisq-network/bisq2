@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 public class TorControlProtocol implements AutoCloseable {
     private static final int MAX_CONNECTION_ATTEMPTS = 10;
 
-    private final Socket controlSocket;
+    private Socket controlSocket;
     private final TorControlReader torControlReader;
     private Optional<OutputStream> outputStream = Optional.empty();
 
@@ -36,7 +36,6 @@ public class TorControlProtocol implements AutoCloseable {
     private volatile boolean closeInProgress;
 
     public TorControlProtocol() {
-        controlSocket = new Socket();
         torControlReader = new TorControlReader();
     }
 
@@ -251,8 +250,16 @@ public class TorControlProtocol implements AutoCloseable {
         int connectionAttempt = 0;
         while (connectionAttempt < MAX_CONNECTION_ATTEMPTS) {
             try {
+                // Create a new socket for each attempt
+                Socket attemptSocket = new Socket();
                 var socketAddress = new InetSocketAddress("127.0.0.1", port);
-                controlSocket.connect(socketAddress);
+                attemptSocket.connect(socketAddress);
+
+                // Assign the successful socket to the class member
+                controlSocket = attemptSocket;
+                // Setup streams for the successful socket
+                setupStreams();
+
                 break;
             } catch (ConnectException e) {
                 connectionAttempt++;
@@ -262,9 +269,25 @@ public class TorControlProtocol implements AutoCloseable {
                 throw new CannotConnectWithTorException(e);
             }
         }
+        if (controlSocket == null || !controlSocket.isConnected()) {
+            throw new CannotConnectWithTorException(
+                    new IOException("Failed to connect after " + MAX_CONNECTION_ATTEMPTS + " attempts."));
+        }
+    }
+
+    private void setupStreams() throws IOException {
+        if (controlSocket == null || !controlSocket.isConnected()) {
+            throw new IllegalStateException("Cannot setup streams on a null or disconnected socket.");
+        }
+        this.outputStream = Optional.of(controlSocket.getOutputStream());
+        this.torControlReader.start(controlSocket.getInputStream());
     }
 
     private void sendCommand(String command) {
+        // Check if outputStream is present before sending command
+        if (outputStream.isEmpty()) {
+            throw new IllegalStateException("TorControlProtocol output stream not initialized. Cannot send command.");
+        }
         try {
             String commandToLog = command.contains("AUTHENTICATE")
                     ? command.split(" ")[0] + " [authentication data hidden in logs]"
