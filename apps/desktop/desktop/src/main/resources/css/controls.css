@@ -1035,7 +1035,7 @@
 
 .dropdown-menu-popup .menu-item .dropdown-menu-item-content {
     -fx-background-color: transparent;
-    -fx-padding: 10;
+    -fx-padding: 10 10 10 18;
     -fx-cursor: hand;
 }
 

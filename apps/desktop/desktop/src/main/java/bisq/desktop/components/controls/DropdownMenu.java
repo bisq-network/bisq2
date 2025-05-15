@@ -95,7 +95,7 @@ public class DropdownMenu extends HBox {
                 isFirstRun = true;
                 // Once the contextMenu has calculated the width on the first render time we update the items
                 // so that they all have the same size.
-                prefWidth = contextMenu.getWidth() - 18; // Remove margins
+                prefWidth = contextMenu.getWidth();
                 updateMenuItemWidth();
             }
         };
