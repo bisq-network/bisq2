@@ -39,7 +39,7 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigTradeStateController> {
-    private final HBox phaseAndInfoHBox, hHBox, errorHBox, isInMediationHBox;
+    private final HBox phaseAndInfoHBox, topHBox, errorHBox, isInMediationHBox;
     private final Button closeTradeButton, exportButton, reportToMediatorButton,
             tradeDetailsButton;
     private final Label errorMessage, buyerPriceDescriptionApprovalOverlay,
@@ -100,16 +100,16 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         errorHBox.setAlignment(Pos.CENTER_LEFT);
 
         HBox buttonHBox = new HBox(10, reportToMediatorButton, exportButton, closeTradeButton);
-        hHBox = new HBox(10, errorHBox, Spacer.fillHBox(), buttonHBox);
-        hHBox.setAlignment(Pos.CENTER_LEFT);
+        topHBox = new HBox(10, errorHBox, Spacer.fillHBox(), buttonHBox);
+        topHBox.setAlignment(Pos.CENTER_LEFT);
 
         HBox.setHgrow(tradePhaseBox, Priority.ALWAYS);
         phaseAndInfoHBox = new HBox(tradePhaseBox);
 
         VBox.setMargin(isInMediationHBox, new Insets(20, 30, 0, 30));
-        VBox.setMargin(hHBox, new Insets(20, 30, 20, 30));
+        VBox.setMargin(topHBox, new Insets(20, 30, 20, 30));
         VBox.setMargin(phaseAndInfoHBox, new Insets(0, 30, 15, 30));
-        VBox content = new VBox(tradeDataHeaderBox, isInMediationHBox, hHBox, phaseAndInfoHBox);
+        VBox content = new VBox(tradeDataHeaderBox, isInMediationHBox, topHBox, phaseAndInfoHBox);
         content.getStyleClass().add("bisq-easy-container");
 
         // Accept seller's price overlay
@@ -133,8 +133,8 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         isInMediationHBox.managedProperty().bind(model.getIsInMediation());
         errorHBox.visibleProperty().bind(model.getError());
         errorHBox.managedProperty().bind(model.getError());
-        hHBox.visibleProperty().bind(model.getIsTradeCompleted().or(model.getError()));
-        hHBox.managedProperty().bind(hHBox.visibleProperty());
+        topHBox.visibleProperty().bind(model.getIsTradeCompleted().not().or(model.getError()));
+        topHBox.managedProperty().bind(topHBox.visibleProperty());
         phaseAndInfoHBox.visibleProperty().bind(model.getPhaseAndInfoVisible());
         phaseAndInfoHBox.managedProperty().bind(model.getPhaseAndInfoVisible());
 
@@ -191,12 +191,12 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         tradePhaseBox.managedProperty().unbind();
         tradeDataHeaderBox.visibleProperty().unbind();
         tradeDataHeaderBox.managedProperty().unbind();
+        topHBox.visibleProperty().unbind();
+        topHBox.managedProperty().unbind();
         reportToMediatorButton.visibleProperty().unbind();
         reportToMediatorButton.managedProperty().unbind();
         isInMediationHBox.visibleProperty().unbind();
         isInMediationHBox.managedProperty().unbind();
-        hHBox.visibleProperty().unbind();
-        hHBox.managedProperty().unbind();
         errorHBox.visibleProperty().unbind();
         errorHBox.managedProperty().unbind();
         phaseAndInfoHBox.visibleProperty().unbind();

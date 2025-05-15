@@ -29,10 +29,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SellerState2AwaitQuoteSideAsset extends BaseState {
+public class BuyerState3WaitForSellersQuoteSideAssetReceipt extends BaseState {
     private final Controller controller;
 
-    public SellerState2AwaitQuoteSideAsset(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
+    public BuyerState3WaitForSellersQuoteSideAssetReceipt(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, trade, channel);
     }
 
@@ -80,7 +80,7 @@ public class SellerState2AwaitQuoteSideAsset extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            waitingAnimation = new WaitingAnimation(WaitingState.FIAT_PAYMENT);
+            waitingAnimation = new WaitingAnimation(WaitingState.FIAT_PAYMENT_CONFIRMATION);
             headline = FormUtils.getHeadline();
             info = FormUtils.getInfo();
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
@@ -91,8 +91,10 @@ public class SellerState2AwaitQuoteSideAsset extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
-            headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2a.waitForPayment.headline", model.getQuoteCode()));
-            info.setText(Res.get("bisqEasy.tradeState.info.seller.phase2a.waitForPayment.info", model.getFormattedQuoteAmount()));
+            headline.setText(Res.get("muSig.tradeState.info.buyer.phase3.headline"));
+            String name = model.getTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail().name();
+            String bitcoinPaymentData = Res.get("bisqEasy.tradeState.bitcoinPaymentData." + name);
+            info.setText(Res.get("muSig.tradeState.info.buyer.phase3.info", model.getFormattedQuoteAmount()));
             waitingAnimation.play();
         }
 

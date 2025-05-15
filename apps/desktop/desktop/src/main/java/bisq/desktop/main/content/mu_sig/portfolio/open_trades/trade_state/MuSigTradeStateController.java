@@ -33,12 +33,13 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_details.MuSigTradeDetailsController;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState1WaitForDepositConfirmation;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState2SendQuoteSideAsset;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState2b;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState2aSendQuoteSideAsset;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState3WaitForSellersQuoteSideAssetReceipt;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState4;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState1WaitForDepositConfirmation;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState2AwaitQuoteSideAsset;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState3a;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState2aWaitForQuoteSideAsset;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState3aConfirmQuoteSideAssetReceipt;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState3bWaitForTradeClose;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState4;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
@@ -287,36 +288,32 @@ public class MuSigTradeStateController implements Controller {
             // Deposit tx setup phase
             case BUYER_AS_TAKER_INITIALIZED_TRADE,
                  BUYER_AS_TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES -> {
-                // todo protocol started state
             }
             case BUYER_AS_TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX -> {
                 model.getStateInfoVBox().set(new BuyerState1WaitForDepositConfirmation(serviceProvider, trade, channel).getView().getRoot());
             }
             case SELLER_AS_MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES,
                  SELLER_AS_MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX -> {
-                // todo protocol started state
-
-                //todo add state when deposit is seen in network
                 model.getStateInfoVBox().set(new SellerState1WaitForDepositConfirmation(serviceProvider, trade, channel).getView().getRoot());
             }
 
+            // Deposit tx confirmed, settlement phase starts
             case DEPOSIT_TX_CONFIRMED -> {
                 if (isSeller) {
-                    model.getStateInfoVBox().set(new SellerState2AwaitQuoteSideAsset(serviceProvider, trade, channel).getView().getRoot());
+                    model.getStateInfoVBox().set(new SellerState2aWaitForQuoteSideAsset(serviceProvider, trade, channel).getView().getRoot());
                 } else {
-                    model.getStateInfoVBox().set(new BuyerState2SendQuoteSideAsset(serviceProvider, trade, channel).getView().getRoot());
+                    model.getStateInfoVBox().set(new BuyerState2aSendQuoteSideAsset(serviceProvider, trade, channel).getView().getRoot());
                 }
             }
 
-            // Settlement phase
             case BUYER_AS_TAKER_INITIATED_PAYMENT -> {
-                model.getStateInfoVBox().set(new BuyerState2b(serviceProvider, trade, channel).getView().getRoot());
+                model.getStateInfoVBox().set(new BuyerState3WaitForSellersQuoteSideAssetReceipt(serviceProvider, trade, channel).getView().getRoot());
             }
             case SELLER_AS_MAKER_RECEIVED_INITIATED_PAYMENT_MESSAGE -> {
-                model.getStateInfoVBox().set(new SellerState2AwaitQuoteSideAsset(serviceProvider, trade, channel).getView().getRoot());
+                model.getStateInfoVBox().set(new SellerState3aConfirmQuoteSideAssetReceipt(serviceProvider, trade, channel).getView().getRoot());
             }
-            case SELLER_AS_MAKER_RECEIVED_PAYMENT -> {
-                model.getStateInfoVBox().set(new SellerState3a(serviceProvider, trade, channel).getView().getRoot());
+            case SELLER_AS_MAKER_CONFIRMED_PAYMENT_RECEIPT -> {
+                model.getStateInfoVBox().set(new SellerState3bWaitForTradeClose(serviceProvider, trade, channel).getView().getRoot());
             }
 
             // Cooperative path

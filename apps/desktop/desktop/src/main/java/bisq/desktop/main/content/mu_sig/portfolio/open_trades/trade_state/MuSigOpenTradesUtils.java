@@ -33,8 +33,8 @@ public class MuSigOpenTradesUtils {
             long quoteSideAmount = contract.getQuoteSideAmount();
             String formattedBaseAmount = AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(baseSideAmount));
             String formattedQuoteAmount = AmountFormatter.formatQuoteAmountWithCode(Fiat.from(quoteSideAmount, quoteCurrencyCode));
-            String paymentProof = Optional.ofNullable(trade.getPaymentProof().get()).orElse(Res.get("data.na"));
-            String bitcoinPaymentData = trade.getBitcoinPaymentData().get();
+            String paymentProof = Optional.ofNullable(trade.getDepositTxId().get()).orElse(Res.get("data.na"));
+            String bitcoinPaymentData = trade.getBtcAddress().get();
             String bitcoinMethod = contract.getBaseSidePaymentMethodSpec().getDisplayString();
             String fiatMethod = contract.getQuoteSidePaymentMethodSpec().getDisplayString();
             String paymentMethod = bitcoinMethod + " / " + fiatMethod;

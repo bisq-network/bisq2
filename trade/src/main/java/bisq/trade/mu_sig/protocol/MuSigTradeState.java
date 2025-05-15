@@ -39,7 +39,7 @@ public enum MuSigTradeState implements State {
     // Settlement phase
     BUYER_AS_TAKER_INITIATED_PAYMENT,
     SELLER_AS_MAKER_RECEIVED_INITIATED_PAYMENT_MESSAGE,
-    SELLER_AS_MAKER_RECEIVED_PAYMENT,
+    SELLER_AS_MAKER_CONFIRMED_PAYMENT_RECEIPT,
 
     // Cooperative path
     BUYER_AS_TAKER_CLOSED_TRADE(true),
@@ -47,7 +47,10 @@ public enum MuSigTradeState implements State {
 
     // Uncooperative path
     BUYER_AS_TAKER_FORCE_CLOSED_TRADE(true),
-    SELLER_AS_MAKER_FORCE_CLOSED_TRADE(true);
+    SELLER_AS_MAKER_FORCE_CLOSED_TRADE(true),
+
+    FAILED(true),
+    FAILED_AT_PEER(true);
 
     private final boolean isFinalState;
     private final int ordinal;

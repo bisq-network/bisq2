@@ -58,13 +58,13 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
 
     //todo temp
     @Getter
-    private final Observable<String> paymentAccountData = new Observable<>();
+    private final Observable<String> paymentAccountData = new Observable<>("TODO paymentAccountData");
     @Getter
-    private final Observable<String> bitcoinPaymentData = new Observable<>(); // btc address in case of mainChain, or LN invoice if LN is used
+    private final Observable<String> btcAddress = new Observable<>("TODO btcAddress");
     // paymentProof can be null in Observable
 
     @Getter
-    private final Observable<String> paymentProof = new Observable<>(); // txId in case of mainChain, or preimage if LN is used
+    private final Observable<String> depositTxId = new Observable<>("TODO depositTxId");
 
     @Setter
     @Getter

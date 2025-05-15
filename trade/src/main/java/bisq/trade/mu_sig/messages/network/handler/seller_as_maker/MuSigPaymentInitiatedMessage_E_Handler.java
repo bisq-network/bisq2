@@ -18,20 +18,12 @@
 package bisq.trade.mu_sig.messages.network.handler.seller_as_maker;
 
 import bisq.common.fsm.Event;
-import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
-import bisq.trade.mu_sig.MuSigTradeParty;
-import bisq.trade.mu_sig.events.seller_as_maker.MuSigSellersCooperativeCloseTimeoutEvent;
-import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
-import bisq.trade.mu_sig.messages.network.MuSigPaymentReceivedMessage_F;
-import bisq.trade.protobuf.MusigGrpc;
-import bisq.trade.protobuf.SwapTxSignatureRequest;
 import bisq.trade.protocol.events.TradeMessageHandler;
 import bisq.trade.protocol.handler.TradeMessageSender;
-import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -46,30 +38,6 @@ public class MuSigPaymentInitiatedMessage_E_Handler extends TradeMessageHandler<
     public void handle(Event event) {
         MuSigPaymentInitiatedMessage_E message = (MuSigPaymentInitiatedMessage_E) event;
         verifyMessage(message);
-
-        MuSigTradeParty buyerAsTaker = trade.getTaker();
-        // We got that from an earlier message
-        PartialSignaturesMessage buyerPartialSignaturesMessage = buyerAsTaker.getPartialSignaturesMessage();
-
-        MusigGrpc.MusigBlockingStub musigBlockingStub = serviceProvider.getMuSigTradeService().getMusigBlockingStub();
-        SwapTxSignatureResponse sellerSwapTxSignatureResponse = SwapTxSignatureResponse.fromProto(musigBlockingStub.signSwapTx(SwapTxSignatureRequest.newBuilder()
-                .setTradeId(trade.getId())
-                // NOW send the redacted buyer's swapTxInputPartialSignature:
-                .setSwapTxInputPeersPartialSignature(ByteString.copyFrom(buyerPartialSignaturesMessage.getSwapTxInputPartialSignature()))
-                .build()));
-
-        commitToModel(sellerSwapTxSignatureResponse);
-        //ClosureType.COOPERATIVE
-
-        MuSigPaymentReceivedMessage_F responseMessage = new MuSigPaymentReceivedMessage_F(StringUtils.createUid(),
-                trade.getId(),
-                trade.getProtocolVersion(),
-                trade.getMyIdentity().getNetworkId(),
-                trade.getPeer().getNetworkId(),
-                sellerSwapTxSignatureResponse); // TODO do we want to send the full SwapTxSignatureResponse?
-        sendMessage(responseMessage, serviceProvider, trade);
-
-        serviceProvider.getMuSigTradeService().startCooperativeCloseTimeout(trade, new MuSigSellersCooperativeCloseTimeoutEvent());
     }
 
     @Override
@@ -78,7 +46,5 @@ public class MuSigPaymentInitiatedMessage_E_Handler extends TradeMessageHandler<
     }
 
     private void commitToModel(SwapTxSignatureResponse sellerSwapTxSignatureResponse) {
-        MuSigTradeParty sellerAsMaker = trade.getMaker();
-        sellerAsMaker.setSwapTxSignatureResponse(sellerSwapTxSignatureResponse);
     }
 }

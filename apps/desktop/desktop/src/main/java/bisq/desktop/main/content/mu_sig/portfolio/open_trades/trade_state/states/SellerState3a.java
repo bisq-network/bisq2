@@ -129,7 +129,7 @@ public class SellerState3a extends BaseState {
             model.setPaymentProofDescription(Res.get("bisqEasy.tradeState.info.seller.phase3a.paymentProof.description." + name));
             model.setPaymentProofPrompt(Res.get("bisqEasy.tradeState.info.seller.phase3a.paymentProof.prompt." + name));
 
-            model.setBitcoinPaymentData(model.getTrade().getBitcoinPaymentData().get());
+            model.setBitcoinPaymentData(model.getTrade().getBtcAddress().get());
             double factor = 2.5;
             if (paymentRail.equals(BitcoinPaymentRail.MAIN_CHAIN)) {
                 // Typical bitcoin address require size of 29 or a multiple of it
@@ -243,7 +243,7 @@ public class SellerState3a extends BaseState {
     @Getter
     private static class Model extends BaseState.Model {
         @Setter
-        protected String bitcoinPaymentData;
+        protected String bitcoinPaymentData = "TODO";
         private final StringProperty paymentProof = new SimpleStringProperty();
         private final BooleanProperty btcSentButtonDisabled = new SimpleBooleanProperty();
         private final BooleanProperty showQrCodeWindow = new SimpleBooleanProperty();

@@ -51,6 +51,7 @@ import bisq.trade.mu_sig.events.MuSigTradeEvent;
 import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEvent;
 import bisq.trade.mu_sig.events.buyer_as_taker.MuSigPaymentInitiatedEvent;
 import bisq.trade.mu_sig.events.buyer_as_taker.MuSigTakeOfferEvent;
+import bisq.trade.mu_sig.events.seller_as_maker.MuSigPaymentReceiptConfirmedEvent;
 import bisq.trade.mu_sig.messages.grpc.DepositPsbt;
 import bisq.trade.mu_sig.messages.grpc.TxConfirmationStatus;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
@@ -156,7 +157,7 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
 
             try {
                 musigBlockingStub = MusigGrpc.newBlockingStub(grpcChannel);
-                musigAsyncStub= MusigGrpc.newStub(grpcChannel);
+                musigAsyncStub = MusigGrpc.newStub(grpcChannel);
                 // At startup we observe all unconfirmed deposit txs
                 getTrades().stream()
                         .filter(MuSigTrade::isDepositTxCreatedButNotConfirmed)
@@ -420,10 +421,10 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
 
     public void startCooperativeCloseTimeout(MuSigTrade trade, MuSigTradeEvent event) {
         stopCooperativeCloseTimeout(trade);
-        cooperativeCloseTimeoutSchedulerByTradeId.put(trade.getId(),
+        cooperativeCloseTimeoutSchedulerByTradeId.computeIfAbsent(trade.getId(), key ->
                 Scheduler.run(() ->
                                 handleMuSigTradeEvent(trade, event))
-                        .after(1000));
+                        .after(24, TimeUnit.HOURS));
     }
 
     public void stopCooperativeCloseTimeout(MuSigTrade trade) {
@@ -458,7 +459,7 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
     }
 
     public void sellerConfirmFiatReceipt(MuSigTrade trade) {
-        // handleMuSigTradeEvent(trade, new MuSigConfirmFiatReceiptEvent());
+         handleMuSigTradeEvent(trade, new MuSigPaymentReceiptConfirmedEvent());
     }
 
     public void sellerConfirmBtcSent(MuSigTrade trade, Optional<String> paymentProof) {

@@ -118,21 +118,21 @@ public class MuSigTradeDetailsController extends NavigationController implements
                 ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
                 : trade.getPaymentAccountData().get());
 
-        model.setBtcPaymentAddress(trade.getBitcoinPaymentData().get() == null
+        model.setBtcPaymentAddress(trade.getBtcAddress().get() == null
                 ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
-                : trade.getBitcoinPaymentData().get());
-        model.setBtcPaymentDataEmpty(trade.getBitcoinPaymentData().get() == null);
+                : trade.getBtcAddress().get());
+        model.setBtcPaymentDataEmpty(trade.getBtcAddress().get() == null);
 
-        model.setPaymentProof(trade.getPaymentProof().get() == null
+        model.setPaymentProof(trade.getDepositTxId().get() == null
                 ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
-                : trade.getPaymentProof().get());
-        model.setPaymentProofEmpty(trade.getPaymentProof().get() == null);
+                : trade.getDepositTxId().get());
+        model.setPaymentProofEmpty(trade.getDepositTxId().get() == null);
 
         boolean isOnChainSettlement = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
         model.setOnChainSettlement(isOnChainSettlement);
 
         // At LN its optional, so we show it only if set
-        model.setPaymentProofVisible(isOnChainSettlement || trade.getPaymentProof().get() != null);
+        model.setPaymentProofVisible(isOnChainSettlement || trade.getDepositTxId().get() != null);
     }
 
     @Override

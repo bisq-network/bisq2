@@ -94,8 +94,8 @@ public abstract class WaitForDepositConfirmationState<C extends WaitForDepositCo
         public void onActivate() {
             super.onActivate();
 
-            model.setTxId(model.getTrade().getPaymentProof().get());
-            model.setBitcoinPaymentData(model.getTrade().getBitcoinPaymentData().get());
+            model.setTxId(model.getTrade().getDepositTxId().get());
+            model.setBitcoinPaymentData(model.getTrade().getBtcAddress().get());
 
             if (model.getConfirmationState().get() == null) {
                 model.getConfirmationState().set(Model.ConfirmationState.REQUEST_STARTED);

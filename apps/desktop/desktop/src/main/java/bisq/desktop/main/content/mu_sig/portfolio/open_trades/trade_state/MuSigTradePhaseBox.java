@@ -125,88 +125,36 @@ class MuSigTradePhaseBox {
             model.getPhase3Info().set(Res.get("muSig.tradeState.phase3").toUpperCase());
             model.getPhase4Info().set(Res.get("muSig.tradeState.phase4").toUpperCase());
 
+
             muSigTradeStatePin = trade.tradeStateObservable().addObserver(state -> UIThread.run(() -> {
-               /* switch (state) {
-                    case INIT:
-                        break;
+                model.getRequestMediationButtonVisible().set(!state.isFinalState());
 
-                    case TAKER_SENT_TAKE_OFFER_REQUEST:
-
-                        // Seller
-                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-                    case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-                    case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-                    case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS_:
-                    case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-                        // Buyer
-                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA_:
-                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-                    case TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-                    case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-                    case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-                    case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-                    case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-                    case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_:
+                switch (state) {
+                    case INIT,
+                         BUYER_AS_TAKER_INITIALIZED_TRADE,
+                         SELLER_AS_MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES,
+                         BUYER_AS_TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES,
+                         SELLER_AS_MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX,
+                         BUYER_AS_TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX -> {
                         model.getPhaseIndex().set(0);
-                        model.getRequestMediationButtonVisible().set(false);
-                        model.getReportToMediatorButtonVisible().set(true);
-                        break;
-
-                    // Seller
-                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS_:
-                    case TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-                    case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-                    case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-                    case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
-                        // Buyer
-                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-                    case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-                    case BUYER_SENT_FIAT_SENT_CONFIRMATION:
+                    }
+                    case DEPOSIT_TX_CONFIRMED -> {
                         model.getPhaseIndex().set(1);
-                        boolean showRequestMediationButton =
-                                state == MuSigTradeState.BUYER_SENT_FIAT_SENT_CONFIRMATION
-                                        || state == MuSigTradeState.SELLER_RECEIVED_FIAT_SENT_CONFIRMATION;
-                        model.getRequestMediationButtonVisible().set(showRequestMediationButton);
-                        model.getReportToMediatorButtonVisible().set(!showRequestMediationButton);
-                        break;
-
-                    case SELLER_CONFIRMED_FIAT_RECEIPT:
-                    case SELLER_SENT_BTC_SENT_CONFIRMATION:
-                    case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION:
-                    case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
+                    }
+                    case BUYER_AS_TAKER_INITIATED_PAYMENT -> {
                         model.getPhaseIndex().set(2);
-                        model.getRequestMediationButtonVisible().set(true);
-                        model.getReportToMediatorButtonVisible().set(false);
-                        break;
-
-                    case BTC_CONFIRMED:
+                    }
+                    case SELLER_AS_MAKER_RECEIVED_INITIATED_PAYMENT_MESSAGE,
+                         SELLER_AS_MAKER_CONFIRMED_PAYMENT_RECEIPT -> {
+                        model.getPhaseIndex().set(2);
+                    }
+                    case BUYER_AS_TAKER_CLOSED_TRADE,
+                         SELLER_AS_MAKER_CLOSED_TRADE,
+                         BUYER_AS_TAKER_FORCE_CLOSED_TRADE,
+                         SELLER_AS_MAKER_FORCE_CLOSED_TRADE -> {
                         model.getPhaseIndex().set(3);
-                        model.getRequestMediationButtonVisible().set(false);
-                        model.getReportToMediatorButtonVisible().set(true);
-                        break;
-
-                    case REJECTED:
-                    case PEER_REJECTED:
-                    case CANCELLED:
-                    case PEER_CANCELLED:
-                        model.getRequestMediationButtonVisible().set(false);
-                        model.getReportToMediatorButtonVisible().set(true);
-                        break;
-
-                    case FAILED:
-                    case FAILED_AT_PEER:
-                        model.getRequestMediationButtonVisible().set(false);
-                        model.getReportToMediatorButtonVisible().set(false);
-                        break;
-
-                    default:
-                        log.error("State {} not handled", state.name());
-                }*/
+                    }
+                }
             }));
         }
 
@@ -243,7 +191,6 @@ class MuSigTradePhaseBox {
         @Setter
         private MuSigTrade trade;
         private final BooleanProperty requestMediationButtonVisible = new SimpleBooleanProperty();
-        private final BooleanProperty reportToMediatorButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty isInMediation = new SimpleBooleanProperty();
         private final IntegerProperty phaseIndex = new SimpleIntegerProperty();
         private final StringProperty phase1Info = new SimpleStringProperty();
@@ -255,7 +202,6 @@ class MuSigTradePhaseBox {
             selectedChannel = null;
             trade = null;
             requestMediationButtonVisible.set(false);
-            reportToMediatorButtonVisible.set(false);
             isInMediation.set(false);
             phaseIndex.set(0);
             phase1Info.set(null);
@@ -268,7 +214,7 @@ class MuSigTradePhaseBox {
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final Label phase1Label, phase2Label, phase3Label, phase4Label;
         private final Button requestMediationButton;
-        private final BisqMenuItem openTradeGuide, walletHelp, reportToMediator;
+        private final BisqMenuItem openTradeGuide, walletHelp;
         private final List<Triple<HBox, Label, Badge>> phaseItems;
         private Subscription phaseIndexPin;
 
@@ -300,9 +246,7 @@ class MuSigTradePhaseBox {
             walletHelp.setPrefWidth(width);
             openTradeGuide = new BisqMenuItem("trade-guide-grey", "trade-guide-white", Res.get("bisqEasy.tradeGuide.open"));
             openTradeGuide.setPrefWidth(width);
-            reportToMediator = new BisqMenuItem("icon-report", "icon-report-white", Res.get("bisqEasy.tradeState.reportToMediator"));
-            reportToMediator.setPrefWidth(width);
-            VBox tradeOptionsVBox = new VBox(10, walletHelp, openTradeGuide, reportToMediator);
+            VBox tradeOptionsVBox = new VBox(10, walletHelp, openTradeGuide);
             tradeOptionsVBox.setPadding(new Insets(0, 20, 0, 0));
 
             requestMediationButton = new Button(Res.get("bisqEasy.tradeState.requestMediation"));
@@ -330,14 +274,11 @@ class MuSigTradePhaseBox {
             phase2Label.textProperty().bind(model.getPhase2Info());
             phase3Label.textProperty().bind(model.getPhase3Info());
             phase4Label.textProperty().bind(model.getPhase4Info());
-            reportToMediator.visibleProperty().bind(model.getReportToMediatorButtonVisible().and(model.getIsInMediation().not()));
-            reportToMediator.managedProperty().bind(reportToMediator.visibleProperty());
             requestMediationButton.visibleProperty().bind(model.getRequestMediationButtonVisible());
             requestMediationButton.managedProperty().bind(model.getRequestMediationButtonVisible());
             requestMediationButton.disableProperty().bind(model.getIsInMediation());
 
             requestMediationButton.setOnAction(e -> controller.onRequestMediation());
-            reportToMediator.setOnAction(e -> controller.onRequestMediation());
             openTradeGuide.setOnAction(e -> controller.onOpenTradeGuide());
             walletHelp.setOnAction(e -> controller.onOpenWalletHelp());
             phaseIndexPin = EasyBind.subscribe(model.getPhaseIndex(), this::phaseIndexChanged);
@@ -349,14 +290,11 @@ class MuSigTradePhaseBox {
             phase2Label.textProperty().unbind();
             phase3Label.textProperty().unbind();
             phase4Label.textProperty().unbind();
-            reportToMediator.visibleProperty().unbind();
-            reportToMediator.managedProperty().unbind();
             requestMediationButton.visibleProperty().unbind();
             requestMediationButton.managedProperty().unbind();
             requestMediationButton.disableProperty().unbind();
 
             requestMediationButton.setOnAction(null);
-            reportToMediator.setOnAction(null);
             walletHelp.setOnAction(null);
             openTradeGuide.setOnAction(null);
 

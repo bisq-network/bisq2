@@ -38,8 +38,8 @@ import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigPaymentRec
 import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigSetupTradeMessage_B_Handler;
 import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigSetupTradeMessage_D_Handler;
 
-import static bisq.trade.bisq_easy.protocol.BisqEasyTradeState.FAILED;
-import static bisq.trade.bisq_easy.protocol.BisqEasyTradeState.FAILED_AT_PEER;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.FAILED;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.FAILED_AT_PEER;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_CLOSED_TRADE;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_FORCE_CLOSED_TRADE;
@@ -96,7 +96,7 @@ public class MuSigBuyerAsTakerProtocol extends MuSigProtocol {
 
                 // Settlement
                 .then()
-                .from(BUYER_AS_TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX)
+                .from(DEPOSIT_TX_CONFIRMED)
                 .on(MuSigPaymentInitiatedEvent.class)
                 .run(MuSigPaymentInitiatedEventHandler.class)
                 .to(BUYER_AS_TAKER_INITIATED_PAYMENT)
