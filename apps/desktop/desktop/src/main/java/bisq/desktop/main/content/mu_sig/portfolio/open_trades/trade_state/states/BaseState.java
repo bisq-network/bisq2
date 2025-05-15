@@ -76,8 +76,6 @@ public abstract class BaseState {
         @Override
         public void onActivate() {
             MuSigOffer muSigOffer = model.getMuSigOffer();
-            model.setQuoteCode(muSigOffer.getMarket().getQuoteCurrencyCode());
-
             long baseSideAmount = model.getTrade().getContract().getBaseSideAmount();
             long quoteSideAmount = model.getTrade().getContract().getQuoteSideAmount();
             model.setBaseAmount(AmountFormatter.formatBaseAmount(Coin.asBtcFromValue(baseSideAmount)));
@@ -108,8 +106,7 @@ public abstract class BaseState {
     protected static class Model implements bisq.desktop.common.view.Model {
         protected final MuSigTrade trade;
         protected final MuSigOpenTradeChannel channel;
-        @Setter
-        protected String quoteCode;
+        protected final String quoteCode;
         @Setter
         protected String baseAmount;
         @Setter
@@ -122,6 +119,8 @@ public abstract class BaseState {
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             this.trade = trade;
             this.channel = channel;
+
+            quoteCode=  trade.getContract().getOffer().getMarket().getQuoteCurrencyCode();
         }
 
         protected MuSigOffer getMuSigOffer() {

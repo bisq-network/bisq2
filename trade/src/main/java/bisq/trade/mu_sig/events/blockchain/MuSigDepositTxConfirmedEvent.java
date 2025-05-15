@@ -18,7 +18,6 @@
 package bisq.trade.mu_sig.events.blockchain;
 
 import bisq.trade.mu_sig.events.MuSigTradeEvent;
-import bisq.trade.mu_sig.messages.grpc.TxConfirmationStatus;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -27,10 +26,6 @@ import lombok.ToString;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class MuSigDepositTxConfirmedEvent extends MuSigTradeEvent {
-
-    private final TxConfirmationStatus txConfirmationStatus;
-
-    public MuSigDepositTxConfirmedEvent(TxConfirmationStatus txConfirmationStatus) {
-        this.txConfirmationStatus = txConfirmationStatus;
+    public MuSigDepositTxConfirmedEvent() {
     }
 }

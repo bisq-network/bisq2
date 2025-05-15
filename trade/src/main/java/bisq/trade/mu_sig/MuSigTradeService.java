@@ -368,7 +368,16 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
         handleMuSigTradeEvent(trade, new MuSigTakeOfferEvent());
     }
 
+    public void skipWaitForConfirmation(MuSigTrade trade) {
+        handleMuSigTradeEvent(trade, new MuSigDepositTxConfirmedEvent());
+    }
+
     public void observeDepositTxConfirmationStatus(MuSigTrade trade) {
+        // ignore the mocked confirmations and use the skip button for better control at development
+        if (true) {
+            return;
+        }
+
         String tradeId = trade.getId();
         if (observeDepositTxConfirmationStatusFutureByTradeId.containsKey(tradeId)) {
             return;
@@ -387,7 +396,7 @@ public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Se
                     TxConfirmationStatus status = TxConfirmationStatus.fromProto(proto);
                     if (status.getNumConfirmations() > 0) {
                         if (trade.isDepositTxCreatedButNotConfirmed()) {
-                            handleMuSigTradeEvent(trade, new MuSigDepositTxConfirmedEvent(status));
+                            handleMuSigTradeEvent(trade, new MuSigDepositTxConfirmedEvent());
                         }
                     }
                 }

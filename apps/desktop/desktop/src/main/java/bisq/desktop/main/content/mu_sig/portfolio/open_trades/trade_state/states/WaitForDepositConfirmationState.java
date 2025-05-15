@@ -23,7 +23,6 @@ import bisq.bonded_roles.explorer.dto.Tx;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.common.monetary.Coin;
 import bisq.common.util.ExceptionUtil;
-import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIScheduler;
@@ -31,8 +30,6 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.components.controls.validator.BitcoinTransactionValidator;
-import bisq.desktop.components.controls.validator.ExplorerResultValidator;
-import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.i18n.Res;
@@ -63,12 +60,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public abstract class AwaitDepositConfirmationState<C extends AwaitDepositConfirmationState.Controller<?, ?>> extends BaseState {
+public abstract class WaitForDepositConfirmationState<C extends WaitForDepositConfirmationState.Controller<?, ?>> extends BaseState {
     protected final C controller;
 
-    protected AwaitDepositConfirmationState(ServiceProvider serviceProvider,
-                                            MuSigTrade trade,
-                                            MuSigOpenTradeChannel channel) {
+    protected WaitForDepositConfirmationState(ServiceProvider serviceProvider,
+                                              MuSigTrade trade,
+                                              MuSigOpenTradeChannel channel) {
         controller = getController(serviceProvider, trade, channel);
     }
 
@@ -97,7 +94,7 @@ public abstract class AwaitDepositConfirmationState<C extends AwaitDepositConfir
         public void onActivate() {
             super.onActivate();
 
-            model.setPaymentProof(model.getTrade().getPaymentProof().get());
+            model.setTxId(model.getTrade().getPaymentProof().get());
             model.setBitcoinPaymentData(model.getTrade().getBitcoinPaymentData().get());
 
             if (model.getConfirmationState().get() == null) {
@@ -108,7 +105,7 @@ public abstract class AwaitDepositConfirmationState<C extends AwaitDepositConfir
             if (model.getConfirmationState().get() == Model.ConfirmationState.CONFIRMED) {
                 model.getButtonText().set(Res.get("bisqEasy.tradeState.info.phase3b.button.next"));
             } else {
-                model.getButtonText().set(Res.get("bisqEasy.tradeState.info.phase3b.button.skip"));
+                model.getButtonText().set("SKIP (just for dev)");
             }
         }
 
@@ -127,50 +124,18 @@ public abstract class AwaitDepositConfirmationState<C extends AwaitDepositConfir
 
         public void openExplorer() {
             ExplorerService.Provider provider = explorerService.getSelectedProvider().get();
-            String url = provider.getBaseUrl() + "/" + provider.getTxPath() + model.getPaymentProof();
+            String url = provider.getBaseUrl() + "/" + provider.getTxPath() + model.getTxId();
             Browser.open(url);
         }
 
-        void onCompleteTrade() {
-            if (model.getExplorerResultValidator().isHasErrors()) {
-                String warning = createWarningMessage();
-                showWarningPopup(warning);
-            } else {
-                doCompleteTrade();
-            }
-        }
-
-        private String createWarningMessage() {
-            String txValue = model.getBtcBalance().get();
-            String address = model.getBitcoinPaymentData();
-            String txId = model.getPaymentProof();
-
-            if (StringUtils.isEmpty(txValue)) {
-                return Res.get("bisqEasy.tradeState.info.phase3b.button.next.noOutputForAddress", address, txId);
-            } else {
-                String tradeAmount = getFormattedBaseAmount(model.getTrade().getContract().getBaseSideAmount());
-                return Res.get("bisqEasy.tradeState.info.phase3b.button.next.amountNotMatching", address, txId, txValue, tradeAmount);
-            }
-        }
-
-        private void showWarningPopup(String warning) {
-            new Popup().warning(warning)
-                    .actionButtonText(Res.get("bisqEasy.tradeState.info.phase3b.button.next.amountNotMatching.resolved"))
-                    .onAction(this::doCompleteTrade)
-                    .show();
-        }
-
-        private void doCompleteTrade() {
-            // todo should we send a system message? if so we should change the text
-            //sendTradeLogMessage(Res.get("muSig.tradeState.info.phase3b.tradeLogMessage", model.getChannel().getMyUserIdentity().getUserName()));
-            muSigTradeService.btcConfirmed(model.getTrade());
+        void onSkipWaitForConfirmation() {
+            muSigTradeService.skipWaitForConfirmation(model.getTrade());
         }
 
         private void requestTx() {
-            String paymentProof = model.getPaymentProof();
+            String paymentProof = model.getTxId();
             if (CONFIRMED_TX_CACHE.containsKey(paymentProof)) {
                 Tx tx = CONFIRMED_TX_CACHE.get(paymentProof);
-                handleTxBalance(tx);
                 model.getIsConfirmed().set(tx.getStatus().isConfirmed());
                 model.getConfirmationState().set(Model.ConfirmationState.CONFIRMED);
                 model.getButtonText().set(Res.get("bisqEasy.tradeState.info.phase3b.button.next"));
@@ -189,7 +154,6 @@ public abstract class AwaitDepositConfirmationState<C extends AwaitDepositConfir
                             scheduler.stop();
                         }
                         if (throwable == null) {
-                            handleTxBalance(tx);
                             model.getIsConfirmed().set(tx.getStatus().isConfirmed());
                             if (tx.getStatus().isConfirmed()) {
                                 CONFIRMED_TX_CACHE.put(paymentProof, tx);
@@ -213,27 +177,6 @@ public abstract class AwaitDepositConfirmationState<C extends AwaitDepositConfir
                                     ExceptionUtil.getRootCauseMessage(rootCause)));
                         }
                     }));
-        }
-
-        private void handleTxBalance(Tx tx) {
-            model.getBtcBalance().set("");
-            ExplorerResultValidator explorerResultValidator = model.getExplorerResultValidator();
-            explorerResultValidator.setMessage(null);
-            List<Long> txOutputValuesForAddress = findTxOutputValuesForAddress(tx, model.getBitcoinPaymentData());
-            if (txOutputValuesForAddress.isEmpty()) {
-                explorerResultValidator.setMessage(Res.get("bisqEasy.tradeState.info.phase3b.balance.invalid.noOutputsForAddress"));
-            } else if (txOutputValuesForAddress.size() == 1) {
-                long outputValue = txOutputValuesForAddress.get(0);
-                model.getBtcBalance().set(getFormattedBaseAmount(outputValue));
-                long tradeAmount = model.getTrade().getContract().getBaseSideAmount();
-                if (outputValue != tradeAmount) {
-                    explorerResultValidator.setMessage(Res.get("bisqEasy.tradeState.info.phase3b.balance.invalid.amountNotMatching"));
-                }
-            } else {
-                // Not expected use case and not further handled. User should look up in explorer to validate tx
-                explorerResultValidator.setMessage(Res.get("bisqEasy.tradeState.info.phase3b.balance.invalid.multipleOutputsForAddress"));
-            }
-            UIThread.runOnNextRenderFrame(explorerResultValidator::validate);
         }
 
         private static String getFormattedBaseAmount(long value) {
@@ -260,28 +203,26 @@ public abstract class AwaitDepositConfirmationState<C extends AwaitDepositConfir
         @Setter
         protected String bitcoinPaymentData;
         @Setter
-        protected String paymentProof;
+        protected String txId;
         @Setter
         private long txOutputValueForAddress;
         @Setter
         private String role;
 
-        private final StringProperty btcBalance = new SimpleStringProperty();
         private final StringProperty confirmationInfo = new SimpleStringProperty();
         private final StringProperty buttonText = new SimpleStringProperty();
         private final BooleanProperty isConfirmed = new SimpleBooleanProperty();
         private final ObjectProperty<ConfirmationState> confirmationState = new SimpleObjectProperty<>();
-        private final ExplorerResultValidator explorerResultValidator = new ExplorerResultValidator();
 
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
-            role = this instanceof BuyerState1AwaitDepositConfirmation.Model ? "buyer" : "seller";
+            role = this instanceof BuyerState1WaitForDepositConfirmation.Model ? "buyer" : "seller";
         }
     }
 
     public static abstract class View<M extends Model, C extends Controller<?, ?>> extends BaseState.View<M, C> {
         private final Button button;
-        private final MaterialTextField paymentProof, btcBalance;
+        private final MaterialTextField txId;
         private final WaitingAnimation waitingAnimation;
         private Subscription confirmationStatePin;
 
@@ -289,65 +230,60 @@ public abstract class AwaitDepositConfirmationState<C extends AwaitDepositConfir
             super(model, controller);
 
             String role = model.getRole();
-            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info." + role + ".phase3b.headline.MAIN_CHAIN"));
-            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info." + role + ".phase3b.info.MAIN_CHAIN"));
+            WrappingText headline = FormUtils.getHeadline(Res.get("muSig.tradeState.info.phase1.headline"));
+            WrappingText info = FormUtils.getInfo(Res.get("muSig.tradeState.info.phase1.info."+role, model.getQuoteCode()));
             waitingAnimation = new WaitingAnimation(WaitingState.BITCOIN_CONFIRMATION);
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
 
-            paymentProof = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.phase3b.txId"), "", false);
-            paymentProof.setIcon(AwesomeIcon.EXTERNAL_LINK);
-            paymentProof.setIconTooltip(Res.get("bisqEasy.tradeState.info.phase3b.txId.tooltip"));
-            paymentProof.setValidator(new BitcoinTransactionValidator());
-
-            btcBalance = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info." + role + ".phase3b.balance"), "", false);
-            btcBalance.setHelpText(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.explorerLookup"));
-            btcBalance.setPromptText(Res.get("bisqEasy.tradeState.info." + role + ".phase3b.balance.prompt"));
-            btcBalance.filterMouseEventOnNonEditableText();
-            btcBalance.setValidator(model.getExplorerResultValidator());
+            txId = FormUtils.getTextField(Res.get("muSig.tradeState.info.phase1.txId"), "", false);
+            txId.setHelpText(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.explorerLookup"));
+            txId.setPromptText(Res.get("muSig.tradeState.info.phase1.txId.prompt"));
+            txId.setIcon(AwesomeIcon.EXTERNAL_LINK);
+            txId.setIconTooltip(Res.get("muSig.tradeState.info.phase1.txId.tooltip"));
+            txId.setValidator(new BitcoinTransactionValidator());
+            txId.filterMouseEventOnNonEditableText();
 
             button = new Button();
-            VBox.setMargin(button, new Insets(5, 0, 5, 0));
+            VBox.setMargin(txId, new Insets(10, 0, 5, 0));
+          //  VBox.setMargin(button, new Insets(5, 0, 5, 0));
 
-            root.getChildren().addAll(waitingInfo, paymentProof, btcBalance, button);
+            root.getChildren().addAll(waitingInfo, txId, button);
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
 
-            paymentProof.setText(model.getPaymentProof());
-            paymentProof.validate();
+            txId.setText(model.getTxId());
+            txId.validate();
 
             button.defaultButtonProperty().bind(model.getIsConfirmed());
             button.textProperty().bind(model.getButtonText());
-            btcBalance.textProperty().bind(model.getBtcBalance());
-            btcBalance.helpProperty().bind(model.getConfirmationInfo());
-            btcBalance.validate();
+            txId.helpProperty().bind(model.getConfirmationInfo());
 
             confirmationStatePin = EasyBind.subscribe(model.getConfirmationState(), confirmationState -> {
                 if (confirmationState != null) {
-                    btcBalance.validate();
-                    btcBalance.getHelpLabel().getStyleClass().remove("tx-lookup-in-mempool");
-                    btcBalance.getHelpLabel().getStyleClass().remove("tx-lookup-confirmed");
-                    btcBalance.getHelpLabel().getStyleClass().remove("tx-lookup-failed");
+                    txId.getHelpLabel().getStyleClass().remove("tx-lookup-in-mempool");
+                    txId.getHelpLabel().getStyleClass().remove("tx-lookup-confirmed");
+                    txId.getHelpLabel().getStyleClass().remove("tx-lookup-failed");
                     switch (confirmationState) {
                         case REQUEST_STARTED:
                             break;
                         case IN_MEMPOOL:
-                            btcBalance.getHelpLabel().getStyleClass().add("tx-lookup-in-mempool");
+                            txId.getHelpLabel().getStyleClass().add("tx-lookup-in-mempool");
                             break;
                         case CONFIRMED:
-                            btcBalance.getHelpLabel().getStyleClass().add("tx-lookup-confirmed");
+                            txId.getHelpLabel().getStyleClass().add("tx-lookup-confirmed");
                             break;
                         case FAILED:
-                            btcBalance.getHelpLabel().getStyleClass().add("tx-lookup-failed");
+                            txId.getHelpLabel().getStyleClass().add("tx-lookup-failed");
                             break;
                     }
                 }
             });
 
-            button.setOnAction(e -> controller.onCompleteTrade());
-            paymentProof.getIconButton().setOnAction(e -> controller.openExplorer());
+            button.setOnAction(e -> controller.onSkipWaitForConfirmation());
+            txId.getIconButton().setOnAction(e -> controller.openExplorer());
 
             waitingAnimation.play();
         }
@@ -358,15 +294,13 @@ public abstract class AwaitDepositConfirmationState<C extends AwaitDepositConfir
 
             button.defaultButtonProperty().unbind();
             button.textProperty().unbind();
-            btcBalance.textProperty().unbind();
-            btcBalance.helpProperty().unbind();
+            txId.helpProperty().unbind();
             confirmationStatePin.unsubscribe();
 
             button.setOnAction(null);
-            paymentProof.getIconButton().setOnAction(null);
+            txId.getIconButton().setOnAction(null);
 
-            paymentProof.resetValidation();
-            btcBalance.resetValidation();
+            txId.resetValidation();
 
             waitingAnimation.stop();
         }

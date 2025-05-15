@@ -32,11 +32,11 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_details.MuSigTradeDetailsController;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState1AwaitDepositConfirmation;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState1WaitForDepositConfirmation;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState2SendQuoteSideAsset;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState2b;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState4;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState1AwaitDepositConfirmation;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState1WaitForDepositConfirmation;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState2AwaitQuoteSideAsset;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState3a;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState4;
@@ -290,14 +290,14 @@ public class MuSigTradeStateController implements Controller {
                 // todo protocol started state
             }
             case BUYER_AS_TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX -> {
-                model.getStateInfoVBox().set(new BuyerState1AwaitDepositConfirmation(serviceProvider, trade, channel).getView().getRoot());
+                model.getStateInfoVBox().set(new BuyerState1WaitForDepositConfirmation(serviceProvider, trade, channel).getView().getRoot());
             }
             case SELLER_AS_MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES,
                  SELLER_AS_MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX -> {
                 // todo protocol started state
 
                 //todo add state when deposit is seen in network
-                model.getStateInfoVBox().set(new SellerState1AwaitDepositConfirmation(serviceProvider, trade, channel).getView().getRoot());
+                model.getStateInfoVBox().set(new SellerState1WaitForDepositConfirmation(serviceProvider, trade, channel).getView().getRoot());
             }
 
             case DEPOSIT_TX_CONFIRMED -> {

@@ -120,10 +120,10 @@ class MuSigTradePhaseBox {
                 return;
             }
 
-            model.getPhase1Info().set(Res.get("bisqEasy.tradeState.phase1").toUpperCase());
-            model.getPhase2Info().set(Res.get("bisqEasy.tradeState.phase2").toUpperCase());
-            model.getPhase3Info().set(Res.get("bisqEasy.tradeState.phase3").toUpperCase());
-            model.getPhase4Info().set(Res.get("bisqEasy.tradeState.phase4").toUpperCase());
+            model.getPhase1Info().set(Res.get("muSig.tradeState.phase1").toUpperCase());
+            model.getPhase2Info().set(Res.get("muSig.tradeState.phase2").toUpperCase());
+            model.getPhase3Info().set(Res.get("muSig.tradeState.phase3").toUpperCase());
+            model.getPhase4Info().set(Res.get("muSig.tradeState.phase4").toUpperCase());
 
             muSigTradeStatePin = trade.tradeStateObservable().addObserver(state -> UIThread.run(() -> {
                /* switch (state) {

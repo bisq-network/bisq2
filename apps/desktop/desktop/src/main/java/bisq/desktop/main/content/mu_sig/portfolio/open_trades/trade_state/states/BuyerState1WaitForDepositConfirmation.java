@@ -24,10 +24,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuyerState1AwaitDepositConfirmation extends AwaitDepositConfirmationState<BuyerState1AwaitDepositConfirmation.Controller> {
-    public BuyerState1AwaitDepositConfirmation(ServiceProvider serviceProvider,
-                                               MuSigTrade trade,
-                                               MuSigOpenTradeChannel channel) {
+public class BuyerState1WaitForDepositConfirmation extends WaitForDepositConfirmationState<BuyerState1WaitForDepositConfirmation.Controller> {
+    public BuyerState1WaitForDepositConfirmation(ServiceProvider serviceProvider,
+                                                 MuSigTrade trade,
+                                                 MuSigOpenTradeChannel channel) {
         super(serviceProvider, trade, channel);
     }
 
@@ -42,7 +42,7 @@ public class BuyerState1AwaitDepositConfirmation extends AwaitDepositConfirmatio
         return new Controller(serviceProvider, trade, channel);
     }
 
-    protected static class Controller extends AwaitDepositConfirmationState.Controller<Model, View> {
+    protected static class Controller extends WaitForDepositConfirmationState.Controller<Model, View> {
         protected Controller(ServiceProvider serviceProvider,
                              MuSigTrade trade,
                              MuSigOpenTradeChannel channel) {
@@ -61,13 +61,13 @@ public class BuyerState1AwaitDepositConfirmation extends AwaitDepositConfirmatio
     }
 
     @Getter
-    protected static class Model extends AwaitDepositConfirmationState.Model {
+    protected static class Model extends WaitForDepositConfirmationState.Model {
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
         }
     }
 
-    public static class View extends AwaitDepositConfirmationState.View<Model, Controller> {
+    public static class View extends WaitForDepositConfirmationState.View<Model, Controller> {
         protected View(Model model, Controller controller) {
             super(model, controller);
         }
