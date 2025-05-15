@@ -42,11 +42,15 @@ public class TorControlProtocol implements AutoCloseable {
     public void initialize(int port) {
         try {
             connectToTor(port);
-            torControlReader.start(controlSocket.getInputStream());
-            outputStream = Optional.of(controlSocket.getOutputStream());
-        } catch (IOException | InterruptedException e) {
-            close();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Restore interruption status
+            close(); // Attempt to clean up resources
             throw new CannotConnectWithTorException(e);
+        } catch (CannotConnectWithTorException e) {
+            // connectToTor might have already called close() if it threw this due to an internal IOException.
+            // Calling close() again is safe due to its idempotency (closeInProgress flag).
+            close();
+            throw e; // Re-throw the original exception from connectToTor
         }
     }
 
@@ -248,31 +252,50 @@ public class TorControlProtocol implements AutoCloseable {
 
     private void connectToTor(int port) throws InterruptedException {
         int connectionAttempt = 0;
+        Exception lastConnectException = null;
+
         while (connectionAttempt < MAX_CONNECTION_ATTEMPTS) {
+            Socket attemptSocket = new Socket();
             try {
-                // Create a new socket for each attempt
-                Socket attemptSocket = new Socket();
                 var socketAddress = new InetSocketAddress("127.0.0.1", port);
+                log.debug("Attempting to connect to Tor control port {}/{} on attempt {}/{}",
+                        socketAddress.getAddress(), socketAddress.getPort(), connectionAttempt + 1, MAX_CONNECTION_ATTEMPTS);
                 attemptSocket.connect(socketAddress);
 
-                // Assign the successful socket to the class member
-                controlSocket = attemptSocket;
-                // Setup streams for the successful socket
+                this.controlSocket = attemptSocket;
                 setupStreams();
-
-                break;
+                log.info("Successfully connected to Tor control port {} after {} attempts", port, connectionAttempt + 1);
+                return;
             } catch (ConnectException e) {
-                connectionAttempt++;
-                Thread.sleep(200);
+                lastConnectException = e;
+                try {
+                    attemptSocket.close();
+                } catch (IOException closeEx) {
+                    log.warn("Failed to close unconnected socket after ConnectException on port {}: {}", port, closeEx.getMessage());
+                }
             } catch (IOException e) {
-                close();
+                try {
+                    attemptSocket.close();
+                } catch (IOException closeEx) {
+                    log.warn("Failed to close socket after IOException on port {}: {}", port, closeEx.getMessage());
+                }
+                if (this.controlSocket == attemptSocket) { // Indicates setupStreams failed for this attemptSocket
+                    this.close();
+                }
+                // This type of IOException is more severe than a simple ConnectException for retrying, so propagate up.
                 throw new CannotConnectWithTorException(e);
             }
+            
+            connectionAttempt++;
+            if (connectionAttempt < MAX_CONNECTION_ATTEMPTS) {
+                log.debug("Connection attempt {}/{} to Tor control port {} failed. Retrying in 200ms...",
+                        connectionAttempt, MAX_CONNECTION_ATTEMPTS, port);
+                Thread.sleep(200); // Wait before retrying
+            }
         }
-        if (controlSocket == null || !controlSocket.isConnected()) {
-            throw new CannotConnectWithTorException(
-                    new IOException("Failed to connect after " + MAX_CONNECTION_ATTEMPTS + " attempts."));
-        }
+
+        String errorMessage = "Failed to connect to Tor control port " + port + " after " + MAX_CONNECTION_ATTEMPTS + " attempts.";
+        throw new CannotConnectWithTorException(new IOException(errorMessage, lastConnectException));
     }
 
     private void setupStreams() throws IOException {
