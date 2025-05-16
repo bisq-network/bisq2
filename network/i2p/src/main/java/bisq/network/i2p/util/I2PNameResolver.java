@@ -1,0 +1,90 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.network.i2p.util;
+
+import lombok.extern.slf4j.Slf4j;
+import net.i2p.data.Base32;
+import net.i2p.data.Destination;
+import net.i2p.data.Hash;
+import net.i2p.router.RouterContext;
+import net.i2p.client.naming.SingleFileNamingService;
+import net.i2p.client.naming.NamingService;
+import net.i2p.client.naming.HostsTxtNamingService;
+
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+@Slf4j
+public class I2PNameResolver {
+
+    private final RouterContext ctx;
+    private final NamingService namingService;
+    private final ConcurrentHashMap<String, Destination> cache = new ConcurrentHashMap<>();
+
+    public I2PNameResolver(RouterContext context) {
+        this.ctx = context;
+        this.namingService = SingleFileNamingService.createInstance(context);
+    }
+
+    public Optional<Destination> resolve(String hostname) {
+        // Check cache first
+        Destination cachedDest = cache.get(hostname);
+        if (cachedDest != null) {
+            log.debug("Cache hit for hostname: {}", hostname);
+            return Optional.of(cachedDest);
+        }
+
+        // Attempt resolution
+        try {
+            // First try Blockfile/NetDb
+            Destination dest = namingService.lookup(hostname);
+            if (dest != null) {
+                log.debug("Resolved via NetDB: {}", hostname);
+                cache.put(hostname, dest); // Cache the result
+                return Optional.of(dest);
+            }
+
+            // Fall back to host.txt
+            HostsTxtNamingService hostService = new HostsTxtNamingService(ctx);
+            dest = hostService.lookup(hostname);
+            if (dest != null) {
+                log.debug("Resolved via host.txt: {}", hostname);
+                cache.put(hostname, dest); // Cache the result
+                return Optional.of(dest);
+            }
+
+            // Check if it's a valid base32 (can reconstruct Destination from it)
+            if (hostname.endsWith(".b32.i2p")) {
+                String base32 = hostname.substring(0, hostname.indexOf(".b32.i2p"));
+                byte[] hash = Base32.decode(base32);
+                Destination destFromBase32 = ctx.netDb().lookupDestinationLocally(new Hash(hash));
+                if (destFromBase32 != null) {
+                    log.debug("Reconstructed Destination from base32: {}", hostname);
+                    cache.put(hostname, destFromBase32); // Cache the result
+                    return Optional.of(destFromBase32);
+                }
+            }
+
+        } catch (Exception e) {
+            log.warn("Failed to resolve hostname: {}", hostname, e);
+        }
+
+        return Optional.empty();
+    }
+}

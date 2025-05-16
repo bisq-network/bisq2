@@ -17,28 +17,58 @@
 
 package bisq.security.keys;
 
+import net.i2p.data.Base32;
+import net.i2p.data.Destination;
+import net.i2p.crypto.SHA256Generator;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
+import java.security.*;
+import java.security.spec.PKCS8EncodedKeySpec;
+
 public class I2pKeyGeneration {
-    public static byte[] generatePrivateKey() {
-        @SuppressWarnings("UnnecessaryLocalVariable") byte[] privateKey = new byte[32];
-        //todo (deferred) impl
-        return privateKey;
+    static {
+        Security.addProvider(new BouncyCastleProvider());
     }
 
     public static I2pKeyPair generateKeyPair() {
-        byte[] privateKey = generatePrivateKey();
-        return new I2pKeyPair(privateKey, getPublicKey(privateKey));
+        try {
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("Ed25519", "BC");
+            keyGen.initialize(256, new SecureRandom());
+            KeyPair keyPair = keyGen.generateKeyPair();
+            byte[] privateKey = keyPair.getPrivate().getEncoded();  // PKCS#8
+            byte[] publicKey = keyPair.getPublic().getEncoded();    // X.509
+            return new I2pKeyPair(privateKey, publicKey);
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating key pair", e);
+        }
     }
 
-    private static byte[] getPublicKey(byte[] privateKey) {
-        @SuppressWarnings("UnnecessaryLocalVariable") byte[] publicKey = new byte[32];
-        //todo (deferred) impl
-        return publicKey;
+    public static byte[] getPublicKey(byte[] privateKeyEncoded) {
+        try {
+            KeyFactory keyFactory = KeyFactory.getInstance("Ed25519", "BC");
+            PrivateKey privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(privateKeyEncoded));
+            throw new UnsupportedOperationException("Ed25519 public key cannot be derived from PKCS#8 private key alone.");
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to derive public key from private key", e);
+        }
     }
 
-
-    public static String getDestinationFromPublicKey(byte[] publicKey) {
-        // todo (deferred) impl
-        return "TODO.destination";
+    /**
+     * Derives a valid .b32.i2p address from a Destination byte array.
+     * This expects a complete I2P Destination object (usually ~387 bytes).
+     *
+     * @param publicKeyBytes The raw I2P Destination byte array.
+     * @return The corresponding .b32.i2p address.
+     */
+    public static String getDestinationFromPublicKey(byte[] publicKeyBytes) {
+        try {
+            Destination destination = new Destination();
+            destination.fromByteArray(publicKeyBytes);
+            byte[] hash = SHA256Generator.getInstance().calculateHash(destination.toByteArray()).getData();
+            return Base32.encode(hash).toLowerCase() + ".b32.i2p";
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating .b32.i2p address from Destination bytes", e);
+        }
     }
+
 }
-

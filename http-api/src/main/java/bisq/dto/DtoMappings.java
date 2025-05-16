@@ -84,6 +84,7 @@ import bisq.dto.offer.price.spec.FixPriceSpecDto;
 import bisq.dto.offer.price.spec.FloatPriceSpecDto;
 import bisq.dto.offer.price.spec.MarketPriceSpecDto;
 import bisq.dto.offer.price.spec.PriceSpecDto;
+import bisq.dto.security.keys.I2pKeyPairDto;
 import bisq.dto.security.keys.KeyBundleDto;
 import bisq.dto.security.keys.KeyPairDto;
 import bisq.dto.security.keys.PrivateKeyDto;
@@ -122,10 +123,7 @@ import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.security.DigestUtil;
-import bisq.security.keys.KeyBundle;
-import bisq.security.keys.KeyGeneration;
-import bisq.security.keys.PubKey;
-import bisq.security.keys.TorKeyPair;
+import bisq.security.keys.*;
 import bisq.security.pow.ProofOfWork;
 import bisq.settings.SettingsService;
 import bisq.trade.TradeRole;
@@ -1047,21 +1045,43 @@ public class DtoMappings {
         }
     }
 
+    public static class I2pKeyPairMapping {
+
+        public static I2pKeyPair toBisq2Model(I2pKeyPairDto value) {
+            if (value == null) {
+                return null;
+            }
+            return new I2pKeyPair(
+                    Base64.getDecoder().decode(value.privateKeyEncoded()),
+                    Base64.getDecoder().decode(value.publicKeyEncoded()),
+                    value.destination()
+            );
+        }
+
+        public static I2pKeyPairDto fromBisq2Model(I2pKeyPair model) {
+            return new I2pKeyPairDto(
+                    Base64.getEncoder().encodeToString(model.getPrivateKey()),
+                    Base64.getEncoder().encodeToString(model.getPublicKey()),
+                    model.getDestination()
+            );
+        }
+    }
 
     public static class KeyBundleMapping {
         public static KeyBundle toBisq2Model(KeyBundleDto value) {
             return new KeyBundle(
                     value.keyId(),
                     KeyPairMapping.toBisq2Model(value.keyPair()),
-                    TorKeyPairMapping.toBisq2Model(value.torKeyPair())
-            );
+                    TorKeyPairMapping.toBisq2Model(value.torKeyPair()),
+                    I2pKeyPairMapping.toBisq2Model(value.i2pKeyPair()));
         }
 
         public static KeyBundleDto fromBisq2Model(KeyBundle value) {
             return new KeyBundleDto(
                     value.getKeyId(),
                     KeyPairMapping.fromBisq2Model(value.getKeyPair()),
-                    TorKeyPairMapping.fromBisq2Model(value.getTorKeyPair())
+                    TorKeyPairMapping.fromBisq2Model(value.getTorKeyPair()),
+                            I2pKeyPairMapping.fromBisq2Model(value.getI2PKeyPair())
             );
         }
     }

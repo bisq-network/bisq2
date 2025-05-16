@@ -5,23 +5,29 @@ import bisq.common.timer.Scheduler;
 import bisq.network.i2p.util.I2PLogManager;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.i2p.client.I2PClient;
 import net.i2p.client.streaming.I2PSocketManager;
 import net.i2p.client.streaming.I2PSocketManagerFactory;
+import net.i2p.data.DataHelper;
 import net.i2p.router.CommSystemFacade;
 import net.i2p.router.Router;
 import net.i2p.router.RouterContext;
+import net.i2p.router.RouterLaunch;
+import net.i2p.util.FileUtil;
+import net.i2p.util.Log;
+import net.i2p.util.OrderedProperties;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.util.Enumeration;
 import java.util.List;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 @Slf4j
 @Getter
@@ -36,6 +42,9 @@ public class I2pEmbeddedRouter {
     private final int outboundKBytesPerSecond;
     private final int bandwidthSharePercentage;
     private final String dirPath;
+    private File i2pDir;
+    private final Integer restartAttempts=0;
+    private static final Integer RESTART_ATTEMPTS_UNTIL_HARD_RESTART = 3;
     private static boolean initialized = false;
 
     private static I2pEmbeddedRouter localRouter;
@@ -69,6 +78,7 @@ public class I2pEmbeddedRouter {
         this.inboundKBytesPerSecond = inboundKBytesPerSecond;
         this.outboundKBytesPerSecond = outboundKBytesPerSecond;
         this.bandwidthSharePercentage = bandwidthSharePercentage;
+        this.i2pDir = new File(i2pDirPath);
 
         try {
             startEmbeddedRouter(extendedI2pLogging);
@@ -131,11 +141,13 @@ public class I2pEmbeddedRouter {
 
     }
 
-    public void shutdown() {
+    public boolean shutdown() {
         // If using embedded router, shut it down
         if (router != null) {
             router.shutdown(1);
+            return true;
         }
+        return false;
     }
 
     public void checkRouterStats() {
@@ -167,18 +179,23 @@ public class I2pEmbeddedRouter {
         I2PSocketManager manager = null;
         System.setProperty("I2P_DISABLE_OUTPUT_OVERRIDE", "true");
 
-        Properties p = getPropertiesForEmbeddedRouter();
+       setupRouterDirectories();
 
         try {
-
+            log.info("Launching I2P Router...");
+            RouterLaunch.main(null);
+            List<RouterContext> routerContexts = RouterContext.listContexts();
+            routerContext = routerContexts.get(0);
+            router = routerContext.router();
             //Check for running routers on the JVM, if none, create.
-            router = new Router(p);
             if(extendedI2pLogging) {
                 router.getContext().setLogManager(new I2PLogManager());
             }
             router.setKillVMOnEnd(false);
-            router.runRouter();
-            routerContext = RouterContext.listContexts().get(0);
+            routerContext.logManager().setDefaultLimit(Log.STR_INFO);
+            routerContext.logManager().setFileSize(10_000_000);
+            long startTime = System.currentTimeMillis();
+            final long timeoutMs = 60_000;
             while(!router.isRunning()) {
                 try {
                     //noinspection BusyWait
@@ -201,54 +218,274 @@ public class I2pEmbeddedRouter {
         }
     }
 
-    private Properties getPropertiesForEmbeddedRouter() throws IOException {
-        Properties p = new Properties();
-        String i2pDirBasePath = dirPath + "/i2p-dir-base";
-        p.put("i2p.dir.base", i2pDirBasePath);
-        Files.createDirectories(Path.of(i2pDirBasePath));
-
-        // Contains the I2P data files
-        String i2pDirConfig = dirPath + "/i2p-dir-config";
-        p.put("i2p.dir.config", i2pDirConfig);
-        Files.createDirectories(Path.of(i2pDirConfig));
-
-        //Parameters related to router size and badwidth share
-        p.put("i2np.bandwidth.inboundKBytesPerSecond", inboundKBytesPerSecond);
-        p.put("i2np.bandwidth.inboundBurstKBytesPerSecond", inboundKBytesPerSecond);
-        p.put("i2np.bandwidth.outboundKBytesPerSecond", outboundKBytesPerSecond);
-        p.put("i2np.bandwidth.outboundBurstKBytesPerSecond", outboundKBytesPerSecond);
-        p.put("router.sharePercentage", bandwidthSharePercentage);
-
-        p.put("i2cp.disableInterface", "true");
-        p.put("i2np.ntcp.nodelay", "true");
-        p.put("router.encType","4");
-        p.put("router.useShortTBM","true");
-
-        // Copy reseed certificates
-        String embeddedRouterCertPath = i2pDirBasePath + "/certificates/reseed";
-        Files.createDirectories(Path.of(embeddedRouterCertPath));
-        // Retrieved from https://github.com/i2p/i2p.i2p/tree/master/installer/resources/certificates/reseed
-        // Saved under 'resources/embedded/certificates/reseed/'
-        for (String s : List.of(
-                "creativecowpat_at_mail.i2p.crt",
-                "echelon3_at_mail.i2p.crt",
-                "hankhill19580_at_gmail.com.crt",
-                "hottuna_at_mail.i2p.crt",
-                "igor_at_novg.net.crt",
-                "lazygravy_at_mail.i2p.crt",
-                "rambler_at_mail.i2p.crt",
-                "reseed_at_diva.exchange.crt")) {
-            Files.copy(
-                    Objects.requireNonNull(getClass().getResourceAsStream("/embedded/certificates/reseed/" + s)),
-                    Paths.get(embeddedRouterCertPath, s),
-                    StandardCopyOption.REPLACE_EXISTING);
+private void setupRouterDirectories() throws IOException {
+    // Set up I2P base directory
+    if(System.getProperty("i2p.dir.base") == null) {
+        File homeDir = SystemSettings.getUserHomeDir();
+        File bisqDir = new File(homeDir, ".bisq2");
+        if (!bisqDir.exists() && !bisqDir.mkdir()) {
+            throw new IOException("Unable to create home/.bisq2 directory.");
         }
-
-        return p;
+        File servicesDir = new File(bisqDir, "services");
+        if (!servicesDir.exists() && !servicesDir.mkdir()) {
+            throw new IOException("Unable to create services directory in home/.bisq2");
+        }
+        i2pDir = new File(servicesDir, I2pEmbeddedRouter.class.getName());
+        if (!i2pDir.exists() && !i2pDir.mkdir()) {
+            throw new IOException("Unable to create " + I2pEmbeddedRouter.class.getName() + " directory in home/.bisq2/services");
+        }
+    } else {
+        i2pDir = new File(System.getProperty("i2p.dir.base"));
     }
 
+    // Set up directory structure and system properties
+    setupDirectory("config", "i2p.dir.config");
+    setupDirectory("router", "i2p.dir.router");
+    setupDirectory("pid", "i2p.dir.pid");
+    setupDirectory("log", "i2p.dir.log");
+    setupDirectory("app", "i2p.dir.app");
+
+    // Set up client properties
+    System.setProperty(I2PClient.PROP_TCP_HOST, "internal");
+    System.setProperty(I2PClient.PROP_TCP_PORT, "internal");
+    System.setProperty("i2p.dir.base", i2pDir.getAbsolutePath());
+
+    Properties p = new Properties();
+
+    //Parameters related to router size and badwidth share
+    p.put("i2np.bandwidth.inboundKBytesPerSecond", inboundKBytesPerSecond);
+    p.put("i2np.bandwidth.inboundBurstKBytesPerSecond", inboundKBytesPerSecond);
+    p.put("i2np.bandwidth.outboundKBytesPerSecond", outboundKBytesPerSecond);
+    p.put("i2np.bandwidth.outboundBurstKBytesPerSecond", outboundKBytesPerSecond);
+    p.put("router.sharePercentage", bandwidthSharePercentage);
+
+    p.put("i2cp.disableInterface", "true");
+    p.put("i2np.ntcp.nodelay", "true");
+    p.put("router.encType","4");
+    p.put("router.useShortTBM","true");
+
+    // Set up configuration and certificates
+    mergeRouterConfig(p);
+    setupCertificatesDirectories();
+
+}
+
+    private void setupDirectory(String dirName, String propertyName) throws IOException {
+        File dir = new File(i2pDir, dirName);
+        if (!dir.exists() && !dir.mkdir()) {
+            throw new IOException("Unable to create I2P " + dirName + " directory: " + dir.getAbsolutePath());
+        }
+        System.setProperty(propertyName, dir.getAbsolutePath());
+    }
+
+    private void setupCertificatesDirectories() throws IOException {
+        File certDir = new File(i2pDir, "certificates");
+        if (!certDir.exists() && !certDir.mkdir()) {
+            throw new IOException("Unable to create certificates directory: " + certDir.getAbsolutePath());
+        }
+
+        File seedDir = new File(certDir, "reseed");
+        if (!seedDir.exists() && !seedDir.mkdir()) {
+            throw new IOException("Unable to create reseed certificates directory: " + seedDir.getAbsolutePath());
+        }
+
+        File sslDir = new File(certDir, "ssl");
+        if (!sslDir.exists() && !sslDir.mkdir()) {
+            throw new IOException("Unable to create SSL certificates directory: " + sslDir.getAbsolutePath());
+        }
+
+        copyCertificatesToBaseDir(seedDir, sslDir);
+    }
     private CommSystemFacade.Status getRouterStatus() {
         return routerContext.commSystem().getStatus();
+    }
+
+    /**
+     *  Load defaults from internal router.config on classpath,
+     *  then add props from i2pDir/router.config overriding any from internal router.config,
+     *  then override these with the supplied overrides if not null which would likely come from 3rd party app (not yet supported),
+     *  then write back to i2pDir/router.config.
+     *
+     *  @param overrides local overrides or null
+     */
+    private void mergeRouterConfig(Properties overrides) {
+        Properties props = new OrderedProperties();
+        File f = new File(i2pDir, "router.config");
+        boolean i2pBaseRouterConfigIsNew = false;
+        if (!f.exists()) {
+            try {
+                if (!f.createNewFile()) {
+                    log.warn("While merging router.config files, unable to create router.config in i2pBaseDirectory: " + i2pDir.getAbsolutePath());
+                } else{
+                    i2pBaseRouterConfigIsNew = true;
+                }
+            } catch (IOException e) {
+                log.warn("While merging router.config files, unable to create router.config in i2pBaseDirectory: " + i2pDir.getAbsolutePath());
+            }
+        }
+        InputStream i2pBaseRouterConfig = null;
+        try {
+            props.putAll(loadFromClasspath("router.config"));
+
+            if (!i2pBaseRouterConfigIsNew) {
+                i2pBaseRouterConfig = new FileInputStream(f);
+                DataHelper.loadProps(props, i2pBaseRouterConfig);
+            }
+
+            // override with user settings
+            if (overrides != null)
+                props.putAll(overrides);
+
+            DataHelper.storeProps(props, f);
+        } catch (Exception e) {
+            log.warn("Exception caught while merging router.config properties: " + e.getLocalizedMessage());
+        } finally {
+            if (i2pBaseRouterConfig != null) try {
+                i2pBaseRouterConfig.close();
+            } catch (IOException ioe) {
+            }
+        }
+    }
+
+    private Properties loadFromClasspath(String resourcePath) throws IOException {
+        Properties props = new Properties();
+        try (InputStream in = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
+            if (in == null) {
+                throw new FileNotFoundException("Resource not found in classpath: " + resourcePath);
+            }
+            props.load(in);
+        }
+        return props;
+    }
+
+    public File getDirectory() {
+        return i2pDir;
+    }
+
+    /**
+     *  Copy all certificates found in certificates on classpath
+     *  into i2pDir/certificates
+     *
+     *  @param reseedCertificates destination directory for reseed certificates
+     *  @param sslCertificates destination directory for ssl certificates
+     */
+    private boolean copyCertificatesToBaseDir(File reseedCertificates, File sslCertificates) {
+        String jarPath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+        final File jarFile = new File(jarPath);
+        if (jarFile.isFile()) {
+            try {
+                final JarFile jar = new JarFile(jarFile);
+                JarEntry entry;
+                File f = null;
+                final Enumeration<JarEntry> entries = jar.entries(); //gives ALL entries in jar
+                while (entries.hasMoreElements()) {
+                    entry = entries.nextElement();
+                    final String name = entry.getName();
+                    if (name.startsWith("certificates/reseed/")) { //filter according to the path
+                        if (!name.endsWith("/")) {
+                            String fileName = name.substring(name.lastIndexOf("/") + 1);
+                            log.info("fileName to save: " + fileName);
+                            f = new File(reseedCertificates, fileName);
+                        }
+                    }
+                    if (name.startsWith("certificates/ssl/")) {
+                        if (!name.endsWith("/")) {
+                            String fileName = name.substring(name.lastIndexOf("/") + 1);
+                            log.info("fileName to save: " + fileName);
+                            f = new File(sslCertificates, fileName);
+                        }
+                    }
+                    if (f != null) {
+                        boolean fileReadyToSave = false;
+                        if (!f.exists() && f.createNewFile()) fileReadyToSave = true;
+                        else if (f.exists() && f.delete() && f.createNewFile()) fileReadyToSave = true;
+                        if (fileReadyToSave) {
+                            FileOutputStream fos = new FileOutputStream(f);
+                            byte[] byteArray = new byte[1024];
+                            int i;
+                            InputStream is = getClass().getClassLoader().getResourceAsStream(name);
+                            //While the input stream has bytes
+                            while ((i = is.read(byteArray)) > 0) {
+                                //Write the bytes to the output stream
+                                fos.write(byteArray, 0, i);
+                            }
+                            //Close streams to prevent errors
+                            is.close();
+                            fos.close();
+                            f = null;
+                        } else {
+                            log.warn("Unable to save file from 1M5 jar and is required: " + name);
+                            return false;
+                        }
+                    }
+                }
+                jar.close();
+            } catch (IOException e) {
+                log.warn(e.getLocalizedMessage());
+                return false;
+            }
+        } else {
+            // called while testing in an IDE
+            URL resource = I2pEmbeddedRouter.class.getClassLoader().getResource(".");
+            File file = null;
+            try {
+                file = new File(resource.toURI());
+            } catch (URISyntaxException e) {
+                log.warn("Unable to access I2P resource directory.");
+                return false;
+            }
+            File[] resFolderFiles = file.listFiles();
+            File certResFolder = null;
+            for (File f : resFolderFiles) {
+                if ("certificates".equals(f.getName())) {
+                    certResFolder = f;
+                    break;
+                }
+            }
+            if (certResFolder != null) {
+                File[] folders = certResFolder.listFiles();
+                for (File folder : folders) {
+                    if ("reseed".equals(folder.getName())) {
+                        File[] reseedCerts = folder.listFiles();
+                        for (File reseedCert : reseedCerts) {
+                            FileUtil.copy(reseedCert, reseedCertificates, true, false);
+                        }
+                    } else if ("ssl".equals(folder.getName())) {
+                        File[] sslCerts = folder.listFiles();
+                        for (File sslCert : sslCerts) {
+                            FileUtil.copy(sslCert, sslCertificates, true, false);
+                        }
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    public void restart() {
+        if(router==null) {
+            router = routerContext.router();
+            if(router==null) {
+                log.warn("Unable to restart I2P Router. Router instance not found in RouterContext.");
+            }
+        } else {
+            log.info("Soft restart of I2P Router...");
+            router.restart();
+            int maxWaitSec = 10 * 60; // 10 minutes
+            int currentWait = 0;
+            while(!routerContext.router().isAlive()) {
+                currentWait+=10;
+                if(currentWait > maxWaitSec) {
+                    log.warn("Restart failed.");
+                    return ;
+                }
+            }
+            log.info("Router hiddenMode="+router.isHidden());
+            log.info("I2P Router soft restart completed.");
+        }
     }
 
     private void reportRouterStatus() {
@@ -269,7 +506,7 @@ public class I2pEmbeddedRouter {
         }
         else if(i2pRouterStatus == CommSystemFacade.Status.DISCONNECTED) {
             log.warn("I2P Router status - {}", i2pRouterStatus.toStatusString());
-            //todo - create a restart() routine?
+            restart();
         }
         else {
             log.warn("Not connected to I2P Network.");
