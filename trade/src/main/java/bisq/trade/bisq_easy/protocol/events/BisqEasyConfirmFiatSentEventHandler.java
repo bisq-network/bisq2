@@ -40,7 +40,7 @@ public class BisqEasyConfirmFiatSentEventHandler extends TradeEventHandlerAsMess
 
     @Override
     protected void sendMessage() {
-        sendMessage(new BisqEasyConfirmFiatSentMessage(StringUtils.createUid(),
+        send(new BisqEasyConfirmFiatSentMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),

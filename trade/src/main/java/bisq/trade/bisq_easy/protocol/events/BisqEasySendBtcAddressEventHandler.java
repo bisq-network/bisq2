@@ -45,7 +45,7 @@ public class BisqEasySendBtcAddressEventHandler extends TradeEventHandlerAsMessa
 
     @Override
     protected void sendMessage() {
-        sendMessage(new BisqEasyBtcAddressMessage(StringUtils.createUid(),
+        send(new BisqEasyBtcAddressMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),

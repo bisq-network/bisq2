@@ -41,7 +41,7 @@ public abstract class TradeEventHandlerAsMessageSender<T extends Trade<?, ?, ?>>
 
     abstract protected void sendMessage();
 
-    protected CompletableFuture<SendMessageResult> sendMessage(TradeMessage message) {
+    protected CompletableFuture<SendMessageResult> send(TradeMessage message) {
         return sendMessage(message, serviceProvider, trade);
     }
 

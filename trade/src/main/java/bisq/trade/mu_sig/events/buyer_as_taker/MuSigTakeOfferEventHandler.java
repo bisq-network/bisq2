@@ -84,7 +84,7 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
     }
     @Override
     protected void sendMessage() {
-        sendMessage(new MuSigSetupTradeMessage_A(StringUtils.createUid(),
+        send(new MuSigSetupTradeMessage_A(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),

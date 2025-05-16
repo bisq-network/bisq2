@@ -41,7 +41,7 @@ public final class MuSigPaymentInitiatedEventHandler extends MuSigTradeEventHand
 
     @Override
     protected void sendMessage() {
-        sendMessage(new MuSigPaymentInitiatedMessage_E(StringUtils.createUid(),
+        send(new MuSigPaymentInitiatedMessage_E(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),

@@ -64,7 +64,7 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
     @Override
     protected void sendMessage() {
         // TODO do we want to send the full SwapTxSignatureResponse?
-        sendMessage(new MuSigPaymentReceivedMessage_F(StringUtils.createUid(),
+        send(new MuSigPaymentReceivedMessage_F(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),

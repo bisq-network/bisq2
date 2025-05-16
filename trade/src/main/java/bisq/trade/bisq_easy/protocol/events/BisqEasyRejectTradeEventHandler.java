@@ -42,7 +42,7 @@ public class BisqEasyRejectTradeEventHandler extends TradeEventHandlerAsMessageS
 
     @Override
     protected void sendMessage() {
-        sendMessage(new BisqEasyRejectTradeMessage(StringUtils.createUid(),
+        send(new BisqEasyRejectTradeMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),

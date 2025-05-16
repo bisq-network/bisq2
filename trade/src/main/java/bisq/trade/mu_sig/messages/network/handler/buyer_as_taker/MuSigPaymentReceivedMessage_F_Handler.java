@@ -70,7 +70,7 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
 
     @Override
     protected void sendMessage() {
-        sendMessage(new MuSigCooperativeClosureMessage_G(StringUtils.createUid(),
+        send(new MuSigCooperativeClosureMessage_G(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),

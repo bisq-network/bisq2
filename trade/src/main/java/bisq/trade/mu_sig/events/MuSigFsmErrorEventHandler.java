@@ -60,7 +60,7 @@ public final class MuSigFsmErrorEventHandler extends MuSigTradeEventHandlerAsMes
     protected void sendMessage() {
         log.warn("We send the cause stack and stackTrace to our peer.\n" +
                 "errorMessage={}\nstackTrace={}", errorMessage, errorStackTrace);
-        sendMessage(new MuSigReportErrorMessage(createUid(),
+        send(new MuSigReportErrorMessage(createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),

@@ -60,7 +60,7 @@ public class BisqEasyFsmErrorEventHandler extends TradeEventHandlerAsMessageSend
     protected void sendMessage() {
         log.warn("We send the cause stack and stackTrace to our peer.\n" +
                 "errorMessage={}\nstackTrace={}", errorMessage, errorStackTrace);
-        sendMessage(new BisqEasyReportErrorMessage(createUid(),
+        send(new BisqEasyReportErrorMessage(createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),

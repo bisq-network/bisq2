@@ -42,7 +42,7 @@ public class BisqEasyCancelTradeEventHandler extends TradeEventHandlerAsMessageS
 
     @Override
     protected void sendMessage() {
-        sendMessage(new BisqEasyCancelTradeMessage(StringUtils.createUid(),
+        send(new BisqEasyCancelTradeMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),

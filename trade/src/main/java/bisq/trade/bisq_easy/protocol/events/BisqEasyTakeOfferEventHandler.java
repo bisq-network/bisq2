@@ -52,7 +52,7 @@ public class BisqEasyTakeOfferEventHandler extends TradeEventHandlerAsMessageSen
 
     @Override
     protected void sendMessage() {
-        sendMessage(new BisqEasyTakeOfferRequest(StringUtils.createUid(),
+        send(new BisqEasyTakeOfferRequest(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),

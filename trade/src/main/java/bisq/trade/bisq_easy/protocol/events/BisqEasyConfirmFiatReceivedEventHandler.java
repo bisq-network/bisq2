@@ -40,7 +40,7 @@ public class BisqEasyConfirmFiatReceivedEventHandler extends TradeEventHandlerAs
 
     @Override
     protected void sendMessage() {
-        sendMessage(new BisqEasyConfirmFiatReceiptMessage(StringUtils.createUid(),
+        send(new BisqEasyConfirmFiatReceiptMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),

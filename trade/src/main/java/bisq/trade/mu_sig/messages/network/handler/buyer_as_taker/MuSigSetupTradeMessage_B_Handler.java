@@ -114,7 +114,7 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
     @Override
     protected void sendMessage() {
         // TODO we probably don't want to send all the data here
-        sendMessage(new MuSigSetupTradeMessage_C(StringUtils.createUid(),
+        send(new MuSigSetupTradeMessage_C(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyself().getNetworkId(),

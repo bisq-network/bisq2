@@ -45,7 +45,7 @@ public class BisqEasyAccountDataEventHandler extends TradeEventHandlerAsMessageS
 
     @Override
     protected void sendMessage() {
-        sendMessage(new BisqEasyAccountDataMessage(StringUtils.createUid(),
+        send(new BisqEasyAccountDataMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
