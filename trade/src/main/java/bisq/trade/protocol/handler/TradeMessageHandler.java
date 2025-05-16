@@ -24,13 +24,13 @@ import bisq.trade.protocol.messages.TradeMessage;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public abstract class TradeMessageHandler<M extends Trade<?, ?, ?>, S extends TradeMessage> extends TradeEventHandler<M> {
+public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends TradeMessage> extends TradeEventHandler<T> {
 
-    protected TradeMessageHandler(ServiceProvider serviceProvider, M model) {
+    protected TradeMessageHandler(ServiceProvider serviceProvider, T model) {
         super(serviceProvider, model);
     }
 
-    protected void verifyMessage(S message) {
+    protected void verifyMessage(M message) {
         checkArgument(message.getTradeId().equals(trade.getId()),
                 "TradeId of message not matching the tradeId from the trade data");
         NetworkId sender = message.getSender();

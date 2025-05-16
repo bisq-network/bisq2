@@ -26,9 +26,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public abstract class SendTradeMessageHandler<M extends Trade<?, ?, ?>> extends TradeEventHandler<M> implements TradeMessageSender<M> {
+public abstract class SendTradeMessageHandler<T extends Trade<?, ?, ?>> extends TradeEventHandler<T> implements TradeMessageSender<T> {
 
-    protected SendTradeMessageHandler(ServiceProvider serviceProvider, M model) {
+    protected SendTradeMessageHandler(ServiceProvider serviceProvider, T model) {
         super(serviceProvider, model);
     }
 
