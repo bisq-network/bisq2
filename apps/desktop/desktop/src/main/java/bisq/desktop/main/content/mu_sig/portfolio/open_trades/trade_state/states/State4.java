@@ -117,10 +117,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
         protected void onCloseCompletedTrade() {
             new Popup().feedback(Res.get("bisqEasy.openTrades.closeTrade.warning.completed"))
                     .actionButtonText(Res.get("bisqEasy.openTrades.confirmCloseTrade"))
-                    .onAction(() -> {
-                        muSigTradeService.removeTrade(model.getTrade());
-                        leavePrivateChatManager.leaveChannel(model.getChannel());
-                    })
+                    .onAction(() -> muSigService.closeTrade(model.getTrade(),model.getChannel()))
                     .closeButtonText(Res.get("action.cancel"))
                     .show();
         }
