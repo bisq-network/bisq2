@@ -34,6 +34,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigPaymentReceivedMessage_F> {
 
+    private CloseTradeResponse buyersCloseTradeResponse;
+    private SwapTxSignatureResponse sellerSwapTxSignatureResponse;
+
     public MuSigPaymentReceivedMessage_F_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
@@ -44,14 +47,12 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
 
         // ClosureType.COOPERATIVE
         // *** BUYER CLOSES TRADE ***
-        SwapTxSignatureResponse sellerSwapTxSignatureResponse = message.getSwapTxSignatureResponse();
+        sellerSwapTxSignatureResponse = message.getSwapTxSignatureResponse();
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
-        CloseTradeResponse buyersCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(CloseTradeRequest.newBuilder()
+        buyersCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(sellerSwapTxSignatureResponse.getPeerOutputPrvKeyShare()))
                 .build()));
-
-        commitToModel(buyersCloseTradeResponse, sellerSwapTxSignatureResponse);
 
         MuSigCooperativeClosureMessage_G responseMessage = new MuSigCooperativeClosureMessage_G(StringUtils.createUid(),
                 trade.getId(),
@@ -66,8 +67,8 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
     protected void verifyMessage(MuSigPaymentReceivedMessage_F message) {
     }
 
-    private void commitToModel(CloseTradeResponse buyersCloseTradeResponse,
-                               SwapTxSignatureResponse sellerSwapTxSignatureResponse) {
+    @Override
+    protected void commitToModel() {
         MuSigTradeParty buyerAsTaker = trade.getTaker();
         MuSigTradeParty sellerAsMaker = trade.getMaker();
 

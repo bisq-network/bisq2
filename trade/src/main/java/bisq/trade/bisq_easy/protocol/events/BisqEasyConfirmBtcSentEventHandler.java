@@ -28,15 +28,17 @@ import java.util.Optional;
 
 public class BisqEasyConfirmBtcSentEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade> {
 
+    private Optional<String> paymentProof;
+
     public BisqEasyConfirmBtcSentEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
+    public void processEvent(Event event) {
         BisqEasyConfirmBtcSentEvent bisqEasyConfirmBtcSentEvent = (BisqEasyConfirmBtcSentEvent) event;
-        Optional<String> paymentProof = bisqEasyConfirmBtcSentEvent.getPaymentProof();
-        commitToModel(paymentProof);
+        paymentProof = bisqEasyConfirmBtcSentEvent.getPaymentProof();
+
         sendMessage(new BisqEasyConfirmBtcSentMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
@@ -45,7 +47,8 @@ public class BisqEasyConfirmBtcSentEventHandler extends TradeEventHandlerAsMessa
                 paymentProof));
     }
 
-    private void commitToModel(Optional<String> paymentProof) {
+    @Override
+    protected void commitToModel() {
         paymentProof.ifPresent(e -> trade.getPaymentProof().set(e));
     }
 }

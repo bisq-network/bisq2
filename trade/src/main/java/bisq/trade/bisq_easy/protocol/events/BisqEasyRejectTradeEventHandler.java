@@ -32,8 +32,8 @@ public class BisqEasyRejectTradeEventHandler extends TradeEventHandlerAsMessageS
     }
 
     @Override
-    public void handle(Event event) {
-        commitToModel();
+    public void processEvent(Event event) {
+
         sendMessage(new BisqEasyRejectTradeMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
@@ -41,7 +41,8 @@ public class BisqEasyRejectTradeEventHandler extends TradeEventHandlerAsMessageS
                 trade.getPeer().getNetworkId()));
     }
 
-    private void commitToModel() {
+    @Override
+    protected void commitToModel() {
         trade.getInterruptTradeInitiator().set(trade.isMaker() ? Role.MAKER : Role.TAKER);
     }
 }

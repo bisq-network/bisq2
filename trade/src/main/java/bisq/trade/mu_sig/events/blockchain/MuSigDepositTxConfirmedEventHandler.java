@@ -21,7 +21,6 @@ import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.handler.MuSigTradeEventHandler;
-import bisq.trade.mu_sig.messages.grpc.TxConfirmationStatus;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -32,13 +31,14 @@ public final class MuSigDepositTxConfirmedEventHandler extends MuSigTradeEventHa
     }
 
     @Override
-    public void handle(Event event) {
+    public void processEvent(Event event) {
         MuSigDepositTxConfirmedEvent muSigDepositTxConfirmedEvent = (MuSigDepositTxConfirmedEvent) event;
         //commitToModel(muSigDepositTxConfirmedEvent.getTxConfirmationStatus());
 
     }
 
-    private void commitToModel(TxConfirmationStatus txConfirmationStatus) {
-        trade.setDepositTxConfirmationStatus(txConfirmationStatus);
+    @Override
+    protected void commitToModel( ) {
+        //trade.setDepositTxConfirmationStatus(txConfirmationStatus);
     }
 }

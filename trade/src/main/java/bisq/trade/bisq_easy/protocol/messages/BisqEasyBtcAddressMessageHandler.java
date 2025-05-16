@@ -32,13 +32,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class BisqEasyBtcAddressMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyBtcAddressMessage> {
 
+    private String bitcoinPaymentData;
+
     public BisqEasyBtcAddressMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
     protected void processMessage(BisqEasyBtcAddressMessage message) {
-        commitToModel(message.getBitcoinPaymentData());
+        bitcoinPaymentData = message.getBitcoinPaymentData();
+
     }
 
     @Override
@@ -60,7 +63,8 @@ public class BisqEasyBtcAddressMessageHandler extends TradeMessageHandler<BisqEa
         checkNotNull(message.getBisqEasyOffer(), "BisqEasyOffer must not be null");
     }
 
-    private void commitToModel(String btcAddress) {
-        trade.getBitcoinPaymentData().set(btcAddress);
+    @Override
+    protected void commitToModel() {
+        trade.getBitcoinPaymentData().set(bitcoinPaymentData);
     }
 }

@@ -34,31 +34,33 @@ import static bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage.
 
 @Slf4j
 public class BisqEasyFsmErrorEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade> {
+    private String errorMessage;
+    private String errorStackTrace;
+
     public BisqEasyFsmErrorEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
+    public void processEvent(Event event) {
         FsmErrorEvent fsmErrorEvent = (FsmErrorEvent) event;
         FsmException fsmException = fsmErrorEvent.getFsmException();
-        commitToModel(ExceptionUtil.getRootCauseMessage(fsmException),
-                ExceptionUtil.getStackTraceAsString(fsmException));
+        errorMessage = ExceptionUtil.getRootCauseMessage(fsmException);
+        errorStackTrace = ExceptionUtil.getSafeStackTraceAsString(fsmException);
 
-        String errorMessage = truncate(ExceptionUtil.getRootCauseMessage(fsmException), MAX_LENGTH_ERROR_MESSAGE);
-        String stackTrace = truncate(ExceptionUtil.getSafeStackTraceAsString(fsmException), MAX_LENGTH_STACKTRACE);
         log.warn("We send the cause stack and stackTrace to our peer.\n" +
-                "errorMessage={}\nstackTrace={}", errorMessage, stackTrace);
+                "errorMessage={}\nstackTrace={}", errorMessage, errorStackTrace);
         sendMessage(new BisqEasyReportErrorMessage(createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
-                errorMessage,
-                stackTrace));
+                truncate(errorMessage, MAX_LENGTH_ERROR_MESSAGE),
+                truncate(errorStackTrace, MAX_LENGTH_STACKTRACE)));
     }
 
-    private void commitToModel(String errorMessage, String errorStackTrace) {
+    @Override
+    protected void commitToModel() {
         // Set errorStackTrace first as we use errorMessage observable in the handler code accessing both fields
         trade.setErrorStackTrace(errorStackTrace);
         trade.setErrorMessage(errorMessage);

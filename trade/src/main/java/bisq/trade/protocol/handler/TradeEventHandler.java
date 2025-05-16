@@ -17,6 +17,7 @@
 
 package bisq.trade.protocol.handler;
 
+import bisq.common.fsm.Event;
 import bisq.common.fsm.EventHandler;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
@@ -29,4 +30,13 @@ public abstract class TradeEventHandler<T extends Trade<?, ?, ?>> implements Eve
         this.serviceProvider = serviceProvider;
         this.trade = trade;
     }
+
+    public final void handle(Event event) {
+        processEvent(event);
+        commitToModel();
+    }
+
+    protected abstract void processEvent(Event event);
+
+    protected abstract void commitToModel();
 }

@@ -36,4 +36,8 @@ public class BisqEasyConfirmFiatSentMessageHandler extends TradeMessageHandler<B
     @Override
     protected void verifyMessage(BisqEasyConfirmFiatSentMessage message) {
     }
+
+    @Override
+    protected void commitToModel() {
+    }
 }

@@ -32,24 +32,26 @@ import com.google.protobuf.ByteString;
 
 public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade> {
 
+    private SwapTxSignatureResponse sellerSwapTxSignatureResponse;
+
     public MuSigPaymentReceiptConfirmedEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
+    public void processEvent(Event event) {
         MuSigTradeParty buyerAsTaker = trade.getTaker();
         // We got that from an earlier message
         PartialSignaturesMessage buyerPartialSignaturesMessage = buyerAsTaker.getPartialSignaturesMessage();
 
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
-        SwapTxSignatureResponse sellerSwapTxSignatureResponse = SwapTxSignatureResponse.fromProto(musigBlockingStub.signSwapTx(SwapTxSignatureRequest.newBuilder()
+        sellerSwapTxSignatureResponse = SwapTxSignatureResponse.fromProto(musigBlockingStub.signSwapTx(SwapTxSignatureRequest.newBuilder()
                 .setTradeId(trade.getId())
                 // NOW send the redacted buyer's swapTxInputPartialSignature:
                 .setSwapTxInputPeersPartialSignature(ByteString.copyFrom(buyerPartialSignaturesMessage.getSwapTxInputPartialSignature()))
                 .build()));
 
-        commitToModel(sellerSwapTxSignatureResponse);
+
         //ClosureType.COOPERATIVE
 
         MuSigPaymentReceivedMessage_F responseMessage = new MuSigPaymentReceivedMessage_F(StringUtils.createUid(),
@@ -63,7 +65,8 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
         muSigTradeService.startCooperativeCloseTimeout(trade, new MuSigSellersCooperativeCloseTimeoutEvent());
     }
 
-    private void commitToModel(SwapTxSignatureResponse sellerSwapTxSignatureResponse) {
+    @Override
+    protected void commitToModel() {
         MuSigTradeParty sellerAsMaker = trade.getMaker();
         sellerAsMaker.setSwapTxSignatureResponse(sellerSwapTxSignatureResponse);
     }

@@ -32,13 +32,16 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class BisqEasyTakeOfferResponseHandler extends TradeMessageHandlerAsMessageSender<BisqEasyTrade, BisqEasyTakeOfferResponse> {
 
+    private ContractSignatureData makersContractSignatureData;
+
     public BisqEasyTakeOfferResponseHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
     protected void processMessage(BisqEasyTakeOfferResponse message) {
-        commitToModel(message.getContractSignatureData());
+        makersContractSignatureData = message.getContractSignatureData();
+
     }
 
     @Override
@@ -58,7 +61,8 @@ public class BisqEasyTakeOfferResponseHandler extends TradeMessageHandlerAsMessa
         }
     }
 
-    private void commitToModel(ContractSignatureData makersContractSignatureData) {
+    @Override
+    protected void commitToModel() {
         trade.getMaker().getContractSignatureData().set(makersContractSignatureData);
     }
 }

@@ -32,13 +32,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class BisqEasyConfirmBtcSentMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyConfirmBtcSentMessage> {
+    private Optional<String> paymentProof;
+
     public BisqEasyConfirmBtcSentMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
     protected void processMessage(BisqEasyConfirmBtcSentMessage message) {
-        commitToModel(message.getPaymentProof());
+        paymentProof = message.getPaymentProof();
     }
 
     @Override
@@ -59,7 +61,8 @@ public class BisqEasyConfirmBtcSentMessageHandler extends TradeMessageHandler<Bi
         });
     }
 
-    private void commitToModel(Optional<String> paymentProof) {
+    @Override
+    protected void commitToModel() {
         paymentProof.ifPresent(e -> trade.getPaymentProof().set(e));
     }
 }

@@ -18,6 +18,7 @@
 package bisq.trade.protocol.handler;
 
 import bisq.common.fsm.Event;
+import bisq.common.fsm.EventHandler;
 import bisq.network.identity.NetworkId;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
@@ -25,20 +26,22 @@ import bisq.trade.protocol.messages.TradeMessage;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends TradeMessage> extends TradeEventHandler<T> {
+public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends TradeMessage> implements EventHandler {
+    protected final ServiceProvider serviceProvider;
+    protected final T trade;
 
     protected TradeMessageHandler(ServiceProvider serviceProvider, T trade) {
-        super(serviceProvider, trade);
+        this.serviceProvider = serviceProvider;
+        this.trade = trade;
     }
 
-    //todo make final
     public final void handle(Event event) {
         if (event instanceof TradeMessage tradeMessage) {
             M message = unsafeCast(tradeMessage);
             verifyInternal(message);
             verifyMessage(message);
             processMessage(message);
-           // commitToModel();
+            commitToModel();
         } else {
             throw new IllegalArgumentException("Event must be a subclass of TradeMessage in " + getClass().getSimpleName());
         }
@@ -48,7 +51,7 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
 
     protected abstract void processMessage(M message);
 
-  //  protected abstract void commitToModel();
+    protected abstract void commitToModel();
 
     private void verifyInternal(M message) {
         checkArgument(message.getTradeId().equals(trade.getId()),

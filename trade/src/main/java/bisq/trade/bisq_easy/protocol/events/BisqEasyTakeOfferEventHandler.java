@@ -30,17 +30,19 @@ import java.security.GeneralSecurityException;
 
 public class BisqEasyTakeOfferEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade> {
 
+    private ContractSignatureData contractSignatureData;
+
     public BisqEasyTakeOfferEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
+    public void processEvent(Event event) {
         BisqEasyContract bisqEasyContract = trade.getContract();
         try {
-            ContractSignatureData contractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract,
+            contractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract,
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
-            commitToModel(contractSignatureData);
+
             sendMessage(new BisqEasyTakeOfferRequest(StringUtils.createUid(),
                     trade.getId(),
                     trade.getProtocolVersion(),
@@ -53,7 +55,8 @@ public class BisqEasyTakeOfferEventHandler extends TradeEventHandlerAsMessageSen
         }
     }
 
-    private void commitToModel(ContractSignatureData contractSignatureData) {
+    @Override
+    protected void commitToModel() {
         trade.getTaker().getContractSignatureData().set(contractSignatureData);
     }
 }

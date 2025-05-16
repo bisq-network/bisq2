@@ -25,6 +25,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BisqEasyReportErrorMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyReportErrorMessage> {
 
+    private String stackTrace;
+    private String errorMessage;
+
     public BisqEasyReportErrorMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
@@ -34,16 +37,19 @@ public class BisqEasyReportErrorMessageHandler extends TradeMessageHandler<BisqE
         log.warn("We received an error report from our peer.\n" +
                         "errorMessage={}\nstackTrace={}\ntradeId={}",
                 message.getErrorMessage(), message.getStackTrace(), trade.getId());
-        commitToModel(message);
+        stackTrace = message.getStackTrace();
+        errorMessage = message.getErrorMessage();
+
     }
 
     @Override
     protected void verifyMessage(BisqEasyReportErrorMessage message) {
     }
 
-    private void commitToModel(BisqEasyReportErrorMessage message) {
+    @Override
+    protected void commitToModel() {
         // Set peersErrorStackTrace first as we use peersErrorMessage observable in the handler code accessing both fields
-        trade.setPeersErrorStackTrace(message.getStackTrace());
-        trade.setPeersErrorMessage(message.getErrorMessage());
+        trade.setPeersErrorStackTrace(stackTrace);
+        trade.setPeersErrorMessage(errorMessage);
     }
 }

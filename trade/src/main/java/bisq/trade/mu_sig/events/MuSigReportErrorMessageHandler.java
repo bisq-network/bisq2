@@ -26,25 +26,31 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class MuSigReportErrorMessageHandler extends MuSigTradeMessageHandler<MuSigTrade, MuSigReportErrorMessage> {
 
+    private String errorMessage;
+    private String stackTrace;
+
     public MuSigReportErrorMessageHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
     protected void processMessage(MuSigReportErrorMessage message) {
+        errorMessage = message.getErrorMessage();
+        stackTrace = message.getStackTrace();
         log.warn("We received an error report from our peer.\n" +
                         "errorMessage={}\nstackTrace={}\ntradeId={}",
-                message.getErrorMessage(), message.getStackTrace(), trade.getId());
-        commitToModel(message);
+                errorMessage, stackTrace, trade.getId());
+
     }
 
     @Override
     protected void verifyMessage(MuSigReportErrorMessage message) {
     }
 
-    private void commitToModel(MuSigReportErrorMessage message) {
+    @Override
+    protected void commitToModel() {
         // Set peersErrorStackTrace first as we use peersErrorMessage observable in the handler code accessing both fields
-        trade.setPeersErrorStackTrace(message.getStackTrace());
-        trade.setPeersErrorMessage(message.getErrorMessage());
+        trade.setPeersErrorStackTrace(stackTrace);
+        trade.setPeersErrorMessage(errorMessage);
     }
 }

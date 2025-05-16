@@ -35,15 +35,18 @@ import java.util.Iterator;
 @Slf4j
 public final class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_D> {
 
+    private PartialSignaturesMessage sellerPartialSignaturesMessage;
+    private DepositPsbt buyerDepositPsbt;
+
     public MuSigSetupTradeMessage_D_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
     protected void processMessage(MuSigSetupTradeMessage_D message) {
-        PartialSignaturesMessage sellerPartialSignaturesMessage = message.getPartialSignaturesMessage();
+        sellerPartialSignaturesMessage = message.getPartialSignaturesMessage();
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
-        DepositPsbt buyerDepositPsbt = DepositPsbt.fromProto(musigBlockingStub.signDepositTx(DepositTxSignatureRequest.newBuilder()
+        buyerDepositPsbt = DepositPsbt.fromProto(musigBlockingStub.signDepositTx(DepositTxSignatureRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setPeersPartialSignatures(sellerPartialSignaturesMessage.toProto(true))
                 .build()));
@@ -57,16 +60,14 @@ public final class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHan
                 .setTradeId(trade.getId())
                 .setDepositPsbt(buyerDepositPsbt.toProto(true))
                 .build());
-
-        commitToModel(buyerDepositPsbt, sellerPartialSignaturesMessage);
     }
 
     @Override
     protected void verifyMessage(MuSigSetupTradeMessage_D message) {
     }
 
-    private void commitToModel(DepositPsbt buyerDepositPsbt,
-                               PartialSignaturesMessage sellerPartialSignaturesMessage) {
+    @Override
+    protected void commitToModel() {
         MuSigTradeParty buyerAsTaker = trade.getTaker();
         MuSigTradeParty sellerAsMaker = trade.getMaker();
 

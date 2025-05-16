@@ -20,7 +20,6 @@ package bisq.trade.mu_sig.messages.network.handler.seller_as_maker;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.handler.MuSigTradeMessageHandler;
-import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,6 +38,7 @@ public final class MuSigPaymentInitiatedMessage_E_Handler extends MuSigTradeMess
     protected void verifyMessage(MuSigPaymentInitiatedMessage_E message) {
     }
 
-    private void commitToModel(SwapTxSignatureResponse sellerSwapTxSignatureResponse) {
+    @Override
+    protected void commitToModel() {
     }
 }

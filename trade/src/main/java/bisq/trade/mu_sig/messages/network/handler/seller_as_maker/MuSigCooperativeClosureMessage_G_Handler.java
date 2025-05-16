@@ -31,6 +31,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigCooperativeClosureMessage_G> {
 
+    private CloseTradeResponse buyerCloseTradeResponse;
+    private CloseTradeResponse sellersCloseTradeResponse;
+
     public MuSigCooperativeClosureMessage_G_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
@@ -41,22 +44,20 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
 
         // ClosureType.COOPERATIVE
         // *** SELLER CLOSES TRADE ***
-        CloseTradeResponse buyerCloseTradeResponse = message.getCloseTradeResponse();
+        buyerCloseTradeResponse = message.getCloseTradeResponse();
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
-        CloseTradeResponse sellersCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(CloseTradeRequest.newBuilder()
+        sellersCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(buyerCloseTradeResponse.getPeerOutputPrvKeyShare()))
                 .build()));
-
-        commitToModel(sellersCloseTradeResponse, buyerCloseTradeResponse);
     }
 
     @Override
     protected void verifyMessage(MuSigCooperativeClosureMessage_G message) {
     }
 
-    private void commitToModel(CloseTradeResponse sellersCloseTradeResponse,
-                               CloseTradeResponse buyerCloseTradeResponse) {
+    @Override
+    protected void commitToModel() {
         MuSigTradeParty buyerAsTaker = trade.getTaker();
         MuSigTradeParty sellerAsMaker = trade.getMaker();
 

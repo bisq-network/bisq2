@@ -30,13 +30,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class BisqEasyAccountDataMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyAccountDataMessage> {
 
+    private String paymentAccountData;
+
     public BisqEasyAccountDataMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
     protected void processMessage(BisqEasyAccountDataMessage message) {
-        commitToModel(message.getPaymentAccountData());
+        paymentAccountData = message.getPaymentAccountData();
+
     }
 
     @Override
@@ -47,7 +50,8 @@ public class BisqEasyAccountDataMessageHandler extends TradeMessageHandler<BisqE
         checkNotNull(message.getBisqEasyOffer(), "BisqEasyOffer must not be null");
     }
 
-    private void commitToModel(String paymentAccountData) {
+    @Override
+    protected void commitToModel() {
         trade.getPaymentAccountData().set(paymentAccountData);
     }
 }

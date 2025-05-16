@@ -48,6 +48,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandlerAsMessageSender<BisqEasyTrade, BisqEasyTakeOfferRequest> {
 
+    private ContractSignatureData takersContractSignatureData;
+    private ContractSignatureData makersContractSignatureData;
+
     public BisqEasyTakeOfferRequestHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
@@ -57,12 +60,11 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandlerAsMessag
         BisqEasyContract contract = message.getBisqEasyContract();
 //        checkArgument(trade.getOffer().getPriceSpec().equals(contract.getAgreedPriceSpec()),
 //                "Price spec cannot be changed from the one set in offer since v2.0.3.");
-        ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
+        takersContractSignatureData = message.getContractSignatureData();
         ContractService contractService = serviceProvider.getContractService();
         try {
-            ContractSignatureData makersContractSignatureData = contractService.signContract(contract,
+            makersContractSignatureData = contractService.signContract(contract,
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
-            commitToModel(takersContractSignatureData, makersContractSignatureData);
 
             BisqEasyTakeOfferResponse response = new BisqEasyTakeOfferResponse(StringUtils.createUid(),
                     trade.getId(),
@@ -158,8 +160,8 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandlerAsMessag
         }
     }
 
-    private void commitToModel(ContractSignatureData takersContractSignatureData,
-                               ContractSignatureData makersContractSignatureData) {
+    @Override
+    protected void commitToModel() {
         trade.getTaker().getContractSignatureData().set(takersContractSignatureData);
         trade.getMaker().getContractSignatureData().set(makersContractSignatureData);
     }

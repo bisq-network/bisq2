@@ -39,25 +39,28 @@ import java.util.Optional;
 @Slf4j
 public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade> {
 
+    private PubKeySharesResponse buyerPubKeySharesResponse;
+    private ContractSignatureData contractSignatureData;
+
     public MuSigTakeOfferEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
+    public void processEvent(Event event) {
         try {
             MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
             bisq.trade.protobuf.PubKeySharesResponse proto = musigBlockingStub.initTrade(PubKeySharesRequest.newBuilder()
                     .setTradeId(trade.getId())
                     .setMyRole(Role.BUYER_AS_TAKER)
                     .build());
-            PubKeySharesResponse buyerPubKeySharesResponse = PubKeySharesResponse.fromProto(proto);
+            buyerPubKeySharesResponse = PubKeySharesResponse.fromProto(proto);
 
             MuSigContract contract = trade.getContract();
 
-            ContractSignatureData contractSignatureData = serviceProvider.getContractService().signContract(contract,
+            contractSignatureData = serviceProvider.getContractService().signContract(contract,
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
-            commitToModel(contractSignatureData, buyerPubKeySharesResponse);
+
 
             sendMessage(new MuSigSetupTradeMessage_A(StringUtils.createUid(),
                     trade.getId(),
@@ -89,8 +92,8 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
         }
     }
 
-    private void commitToModel(ContractSignatureData contractSignatureData,
-                               PubKeySharesResponse buyerPubKeySharesResponse) {
+    @Override
+    protected void commitToModel() {
         trade.getTaker().getContractSignatureData().set(contractSignatureData);
         trade.getTaker().setPubKeySharesResponse(buyerPubKeySharesResponse);
     }
