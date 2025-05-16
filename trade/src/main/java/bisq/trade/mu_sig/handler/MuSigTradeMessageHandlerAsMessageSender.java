@@ -43,12 +43,12 @@ public abstract class MuSigTradeMessageHandlerAsMessageSender<T extends MuSigTra
     public void handle(Event event) {
         super.handle(event);
 
-        sendTradeLogMessage();
+        sendLogMessage();
     }
 
-    protected abstract void sendTradeLogMessage();
+    protected abstract void sendLogMessage();
 
-    protected Optional<CompletableFuture<SendMessageResult>> sendTradeLogMessage(String encoded) {
+    protected Optional<CompletableFuture<SendMessageResult>> sendLogMessage(String encoded) {
         MuSigOpenTradeChannelService openTradeChannelService = serviceProvider.getChatService().getMuSigOpenTradeChannelService();
         return openTradeChannelService.findChannelByTradeId(trade.getId())
                 .map(channel ->

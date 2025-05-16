@@ -49,7 +49,7 @@ public final class MuSigPaymentInitiatedEventHandler extends MuSigTradeEventHand
     }
 
     @Override
-    protected void sendTradeLogMessage() {
+    protected void sendLogMessage() {
 
     }
 }

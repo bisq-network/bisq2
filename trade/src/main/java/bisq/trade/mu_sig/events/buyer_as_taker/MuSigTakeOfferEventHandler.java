@@ -63,7 +63,7 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
 
             sendMessage();
 
-            sendTradeLogMessage();
+            sendLogMessage();
         } catch (Exception e) {
             log.error("{}.handle() failed", getClass().getSimpleName(), e);
             throw new RuntimeException(e);
@@ -71,13 +71,13 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
     }
 
     @Override
-    protected  void sendTradeLogMessage() {
+    protected  void sendLogMessage() {
         String takerId = trade.getTaker().getNetworkId().getId();
         MuSigOffer offer = trade.getOffer();
         Optional<UserProfile> takerUserProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(takerId);
         String makerId = offer.getMakersUserProfileId();
         Optional<UserProfile> makerUserProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(makerId);
-        sendTradeLogMessage(Res.encode("muSig.protocol.logMessage.takeOffer",
+        sendLogMessage(Res.encode("muSig.protocol.logMessage.takeOffer",
                 takerUserProfile.orElseThrow().getUserName(),
                 makerUserProfile.orElseThrow().getUserName(),
                 offer.getShortId()));

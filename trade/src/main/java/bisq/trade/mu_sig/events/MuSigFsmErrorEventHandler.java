@@ -70,7 +70,7 @@ public final class MuSigFsmErrorEventHandler extends MuSigTradeEventHandlerAsMes
     }
 
     @Override
-    protected void sendTradeLogMessage() {
+    protected void sendLogMessage() {
 
     }
 

@@ -99,7 +99,7 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
     }
 
     @Override
-    protected void sendTradeLogMessage() {
+    protected void sendLogMessage() {
 
     }
 

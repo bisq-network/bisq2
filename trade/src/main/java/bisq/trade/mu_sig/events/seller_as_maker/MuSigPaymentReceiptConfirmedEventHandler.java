@@ -73,7 +73,7 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
     }
 
     @Override
-    protected void sendTradeLogMessage() {
+    protected void sendLogMessage() {
 
     }
 

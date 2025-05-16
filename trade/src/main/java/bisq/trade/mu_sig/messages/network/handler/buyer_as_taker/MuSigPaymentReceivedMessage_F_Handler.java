@@ -79,7 +79,7 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
     }
 
     @Override
-    protected void sendTradeLogMessage() {
+    protected void sendLogMessage() {
 
     }
 }
