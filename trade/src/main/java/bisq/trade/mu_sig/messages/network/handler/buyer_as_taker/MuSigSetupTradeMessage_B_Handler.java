@@ -54,7 +54,7 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
     }
 
     @Override
-    protected void processMessage(MuSigSetupTradeMessage_B message) {
+    protected void process(MuSigSetupTradeMessage_B message) {
         sellerAsMakerNonceSharesMessage = message.getNonceSharesMessage();
 
         // Request NonceSharesMessage from rust server
@@ -84,11 +84,11 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
     }
 
     @Override
-    protected void verifyMessage(MuSigSetupTradeMessage_B message) {
+    protected void verify(MuSigSetupTradeMessage_B message) {
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
         MuSigTradeParty buyerAsTaker = trade.getTaker();
         MuSigTradeParty sellerAsMaker = trade.getMaker();
 

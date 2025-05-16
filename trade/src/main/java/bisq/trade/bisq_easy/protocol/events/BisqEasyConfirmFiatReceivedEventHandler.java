@@ -31,11 +31,11 @@ public class BisqEasyConfirmFiatReceivedEventHandler extends TradeEventHandlerAs
     }
 
     @Override
-    public void processEvent(Event event) {
+    public void process(Event event) {
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
     }
 
     @Override

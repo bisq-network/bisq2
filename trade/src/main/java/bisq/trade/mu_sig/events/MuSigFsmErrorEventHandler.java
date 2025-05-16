@@ -42,7 +42,7 @@ public final class MuSigFsmErrorEventHandler extends MuSigTradeEventHandlerAsMes
     }
 
     @Override
-    public void processEvent(Event event) {
+    public void process(Event event) {
         FsmErrorEvent fsmErrorEvent = (FsmErrorEvent) event;
         FsmException fsmException = fsmErrorEvent.getFsmException();
         errorMessage = ExceptionUtil.getRootCauseMessage(fsmException);
@@ -50,7 +50,7 @@ public final class MuSigFsmErrorEventHandler extends MuSigTradeEventHandlerAsMes
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
         // Set errorStackTrace first as we use errorMessage observable in the handler code accessing both fields
         trade.setErrorStackTrace(errorStackTrace);
         trade.setErrorMessage(errorMessage);

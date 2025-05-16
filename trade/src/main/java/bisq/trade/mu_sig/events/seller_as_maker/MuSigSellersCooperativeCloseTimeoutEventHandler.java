@@ -33,7 +33,7 @@ public final class MuSigSellersCooperativeCloseTimeoutEventHandler extends MuSig
     }
 
     @Override
-    public void processEvent(Event event) {
+    public void process(Event event) {
         muSigTradeService.stopCooperativeCloseTimeout(trade);
 
         MuSigTradeParty buyerAsTake = trade.getTaker();
@@ -48,6 +48,6 @@ public final class MuSigSellersCooperativeCloseTimeoutEventHandler extends MuSig
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
     }
 }

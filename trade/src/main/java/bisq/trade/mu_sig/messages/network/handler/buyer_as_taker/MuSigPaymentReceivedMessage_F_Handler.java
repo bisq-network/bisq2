@@ -42,7 +42,7 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
     }
 
     @Override
-    protected void processMessage(MuSigPaymentReceivedMessage_F message) {
+    protected void process(MuSigPaymentReceivedMessage_F message) {
         muSigTradeService.stopCooperativeCloseTimeout(trade);
 
         // ClosureType.COOPERATIVE
@@ -56,11 +56,11 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
     }
 
     @Override
-    protected void verifyMessage(MuSigPaymentReceivedMessage_F message) {
+    protected void verify(MuSigPaymentReceivedMessage_F message) {
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
         MuSigTradeParty buyerAsTaker = trade.getTaker();
         MuSigTradeParty sellerAsMaker = trade.getMaker();
 

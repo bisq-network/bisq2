@@ -39,7 +39,7 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
     }
 
     @Override
-    public void processEvent(Event event) {
+    public void process(Event event) {
         MuSigTradeParty buyerAsTaker = trade.getTaker();
         // We got that from an earlier message
         PartialSignaturesMessage buyerPartialSignaturesMessage = buyerAsTaker.getPartialSignaturesMessage();
@@ -56,7 +56,7 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
         MuSigTradeParty sellerAsMaker = trade.getMaker();
         sellerAsMaker.setSwapTxSignatureResponse(sellerSwapTxSignatureResponse);
     }

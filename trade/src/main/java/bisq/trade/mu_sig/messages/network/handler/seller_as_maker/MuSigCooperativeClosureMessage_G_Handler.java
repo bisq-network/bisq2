@@ -39,7 +39,7 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
     }
 
     @Override
-    protected void processMessage(MuSigCooperativeClosureMessage_G message) {
+    protected void process(MuSigCooperativeClosureMessage_G message) {
         muSigTradeService.stopCooperativeCloseTimeout(trade);
 
         // ClosureType.COOPERATIVE
@@ -53,11 +53,11 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
     }
 
     @Override
-    protected void verifyMessage(MuSigCooperativeClosureMessage_G message) {
+    protected void verify(MuSigCooperativeClosureMessage_G message) {
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
         MuSigTradeParty buyerAsTaker = trade.getTaker();
         MuSigTradeParty sellerAsMaker = trade.getMaker();
 

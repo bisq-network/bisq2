@@ -31,12 +31,12 @@ public final class MuSigPaymentInitiatedEventHandler extends MuSigTradeEventHand
     }
 
     @Override
-    public void processEvent(Event event) {
+    public void process(Event event) {
         muSigTradeService.startCooperativeCloseTimeout(trade, new MuSigBuyersCooperativeCloseTimeoutEvent());
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
     }
 
     @Override

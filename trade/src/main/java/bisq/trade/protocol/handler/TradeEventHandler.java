@@ -32,11 +32,11 @@ public abstract class TradeEventHandler<T extends Trade<?, ?, ?>> implements Eve
     }
 
     public void handle(Event event) {
-        processEvent(event);
-        commitToModel();
+        process(event);
+        commit();
     }
 
-    protected abstract void processEvent(Event event);
+    protected abstract void process(Event event);
 
-    protected abstract void commitToModel();
+    protected abstract void commit();
 }

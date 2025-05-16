@@ -31,11 +31,11 @@ public class BisqEasyBtcConfirmedEventHandler extends TradeEventHandler<BisqEasy
     }
 
     @Override
-    public void processEvent(Event event) {
+    public void process(Event event) {
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
         trade.setTradeCompletedDate(Optional.of(System.currentTimeMillis()));
     }
 }

@@ -33,13 +33,13 @@ public class BisqEasySendBtcAddressEventHandler extends TradeEventHandlerAsMessa
     }
 
     @Override
-    public void processEvent(Event event) {
+    public void process(Event event) {
         BisqEasySendBtcAddressEvent bisqEasySendBtcAddressEvent = (BisqEasySendBtcAddressEvent) event;
         bitcoinPaymentData = bisqEasySendBtcAddressEvent.getBitcoinPaymentData();
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
         trade.getBitcoinPaymentData().set(bitcoinPaymentData);
     }
 

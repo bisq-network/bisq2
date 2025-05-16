@@ -34,7 +34,7 @@ public final class MuSigReportErrorMessageHandler extends MuSigTradeMessageHandl
     }
 
     @Override
-    protected void processMessage(MuSigReportErrorMessage message) {
+    protected void process(MuSigReportErrorMessage message) {
         errorMessage = message.getErrorMessage();
         stackTrace = message.getStackTrace();
         log.warn("We received an error report from our peer.\n" +
@@ -44,11 +44,11 @@ public final class MuSigReportErrorMessageHandler extends MuSigTradeMessageHandl
     }
 
     @Override
-    protected void verifyMessage(MuSigReportErrorMessage message) {
+    protected void verify(MuSigReportErrorMessage message) {
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
         // Set peersErrorStackTrace first as we use peersErrorMessage observable in the handler code accessing both fields
         trade.setPeersErrorStackTrace(stackTrace);
         trade.setPeersErrorMessage(errorMessage);

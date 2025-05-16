@@ -30,14 +30,14 @@ public class BisqEasyConfirmFiatSentMessageHandler extends TradeMessageHandler<B
     }
 
     @Override
-    protected void processMessage(BisqEasyConfirmFiatSentMessage message) {
+    protected void process(BisqEasyConfirmFiatSentMessage message) {
     }
 
     @Override
-    protected void verifyMessage(BisqEasyConfirmFiatSentMessage message) {
+    protected void verify(BisqEasyConfirmFiatSentMessage message) {
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
     }
 }

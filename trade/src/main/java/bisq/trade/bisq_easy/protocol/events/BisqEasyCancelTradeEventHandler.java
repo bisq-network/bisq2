@@ -32,11 +32,11 @@ public class BisqEasyCancelTradeEventHandler extends TradeEventHandlerAsMessageS
     }
 
     @Override
-    public void processEvent(Event event) {
+    public void process(Event event) {
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
         trade.getInterruptTradeInitiator().set(trade.isMaker() ? Role.MAKER : Role.TAKER);
     }
 

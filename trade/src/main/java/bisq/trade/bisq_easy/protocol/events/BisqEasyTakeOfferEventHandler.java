@@ -36,7 +36,7 @@ public class BisqEasyTakeOfferEventHandler extends TradeEventHandlerAsMessageSen
     }
 
     @Override
-    public void processEvent(Event event) {
+    public void process(Event event) {
         try {
             contractSignatureData = serviceProvider.getContractService().signContract(trade.getContract(),
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
@@ -46,7 +46,7 @@ public class BisqEasyTakeOfferEventHandler extends TradeEventHandlerAsMessageSen
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
         trade.getTaker().getContractSignatureData().set(contractSignatureData);
     }
 

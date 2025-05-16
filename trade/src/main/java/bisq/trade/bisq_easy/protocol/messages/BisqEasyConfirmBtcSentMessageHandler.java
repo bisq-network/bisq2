@@ -39,12 +39,12 @@ public class BisqEasyConfirmBtcSentMessageHandler extends TradeMessageHandler<Bi
     }
 
     @Override
-    protected void processMessage(BisqEasyConfirmBtcSentMessage message) {
+    protected void process(BisqEasyConfirmBtcSentMessage message) {
         paymentProof = message.getPaymentProof();
     }
 
     @Override
-    protected void verifyMessage(BisqEasyConfirmBtcSentMessage message) {
+    protected void verify(BisqEasyConfirmBtcSentMessage message) {
         message.getPaymentProof().ifPresent(paymentProof -> {
             boolean isMainChain = trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
             if (isMainChain) {
@@ -62,7 +62,7 @@ public class BisqEasyConfirmBtcSentMessageHandler extends TradeMessageHandler<Bi
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
         paymentProof.ifPresent(e -> trade.getPaymentProof().set(e));
     }
 }

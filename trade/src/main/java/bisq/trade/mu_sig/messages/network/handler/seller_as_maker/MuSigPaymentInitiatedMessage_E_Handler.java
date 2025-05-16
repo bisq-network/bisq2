@@ -31,14 +31,14 @@ public final class MuSigPaymentInitiatedMessage_E_Handler extends MuSigTradeMess
     }
 
     @Override
-    protected void processMessage(MuSigPaymentInitiatedMessage_E message) {
+    protected void process(MuSigPaymentInitiatedMessage_E message) {
     }
 
     @Override
-    protected void verifyMessage(MuSigPaymentInitiatedMessage_E message) {
+    protected void verify(MuSigPaymentInitiatedMessage_E message) {
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
     }
 }

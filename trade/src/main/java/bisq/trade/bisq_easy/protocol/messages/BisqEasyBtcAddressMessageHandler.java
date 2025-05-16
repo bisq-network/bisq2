@@ -39,13 +39,13 @@ public class BisqEasyBtcAddressMessageHandler extends TradeMessageHandler<BisqEa
     }
 
     @Override
-    protected void processMessage(BisqEasyBtcAddressMessage message) {
+    protected void process(BisqEasyBtcAddressMessage message) {
         bitcoinPaymentData = message.getBitcoinPaymentData();
 
     }
 
     @Override
-    protected void verifyMessage(BisqEasyBtcAddressMessage message) {
+    protected void verify(BisqEasyBtcAddressMessage message) {
         String bitcoinPaymentData = message.getBitcoinPaymentData();
         checkArgument(StringUtils.isNotEmpty(bitcoinPaymentData), "Bitcoin payment data must not be empty");
 
@@ -64,7 +64,7 @@ public class BisqEasyBtcAddressMessageHandler extends TradeMessageHandler<BisqEa
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
         trade.getBitcoinPaymentData().set(bitcoinPaymentData);
     }
 }

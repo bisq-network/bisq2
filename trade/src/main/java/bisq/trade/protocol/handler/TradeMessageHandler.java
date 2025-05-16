@@ -39,19 +39,19 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
         if (event instanceof TradeMessage tradeMessage) {
             M message = unsafeCast(tradeMessage);
             verifyInternal(message);
-            verifyMessage(message);
-            processMessage(message);
-            commitToModel();
+            verify(message);
+            process(message);
+            commit();
         } else {
             throw new IllegalArgumentException("Event must be a subclass of TradeMessage in " + getClass().getSimpleName());
         }
     }
 
-    protected abstract void verifyMessage(M message);
+    protected abstract void verify(M message);
 
-    protected abstract void processMessage(M message);
+    protected abstract void process(M message);
 
-    protected abstract void commitToModel();
+    protected abstract void commit();
 
     private void verifyInternal(M message) {
         checkArgument(message.getTradeId().equals(trade.getId()),

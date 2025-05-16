@@ -31,16 +31,16 @@ public class BisqEasyRejectTradeMessageHandler extends TradeMessageHandler<BisqE
     }
 
     @Override
-    protected void processMessage(BisqEasyRejectTradeMessage message) {
+    protected void process(BisqEasyRejectTradeMessage message) {
 
     }
 
     @Override
-    protected void verifyMessage(BisqEasyRejectTradeMessage message) {
+    protected void verify(BisqEasyRejectTradeMessage message) {
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
         trade.getInterruptTradeInitiator().set(trade.isTaker() ? Role.MAKER : Role.TAKER);
     }
 }

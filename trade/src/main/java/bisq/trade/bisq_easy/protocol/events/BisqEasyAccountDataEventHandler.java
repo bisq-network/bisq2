@@ -33,13 +33,13 @@ public class BisqEasyAccountDataEventHandler extends TradeEventHandlerAsMessageS
     }
 
     @Override
-    public void processEvent(Event event) {
+    public void process(Event event) {
         BisqEasyAccountDataEvent bisqEasyTakeOfferEvent = (BisqEasyAccountDataEvent) event;
         paymentAccountData = bisqEasyTakeOfferEvent.getPaymentAccountData();
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
         trade.getPaymentAccountData().set(paymentAccountData);
     }
 

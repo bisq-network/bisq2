@@ -47,7 +47,7 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
     }
 
     @Override
-    public void processEvent(Event event) {
+    public void process(Event event) {
         try {
             MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
             bisq.trade.protobuf.PubKeySharesResponse proto = musigBlockingStub.initTrade(PubKeySharesRequest.newBuilder()
@@ -95,7 +95,7 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
         trade.getTaker().getContractSignatureData().set(contractSignatureData);
         trade.getTaker().setPubKeySharesResponse(buyerPubKeySharesResponse);
     }

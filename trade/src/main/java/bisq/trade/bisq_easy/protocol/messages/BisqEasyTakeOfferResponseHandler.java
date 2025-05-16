@@ -39,13 +39,13 @@ public class BisqEasyTakeOfferResponseHandler extends TradeMessageHandler<BisqEa
     }
 
     @Override
-    protected void processMessage(BisqEasyTakeOfferResponse message) {
+    protected void process(BisqEasyTakeOfferResponse message) {
         makersContractSignatureData = message.getContractSignatureData();
 
     }
 
     @Override
-    protected void verifyMessage(BisqEasyTakeOfferResponse message) {
+    protected void verify(BisqEasyTakeOfferResponse message) {
         ContractSignatureData makersContractSignatureData = message.getContractSignatureData();
         ContractSignatureData takersContractSignatureData = trade.getTaker().getContractSignatureData().get();
         checkArgument(Arrays.equals(makersContractSignatureData.getContractHash(), takersContractSignatureData.getContractHash()),
@@ -62,7 +62,7 @@ public class BisqEasyTakeOfferResponseHandler extends TradeMessageHandler<BisqEa
     }
 
     @Override
-    protected void commitToModel() {
+    protected void commit() {
         trade.getMaker().getContractSignatureData().set(makersContractSignatureData);
     }
 }
