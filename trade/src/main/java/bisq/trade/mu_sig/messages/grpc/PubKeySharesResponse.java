@@ -24,7 +24,7 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-public class PubKeySharesResponse implements Proto {
+public final class PubKeySharesResponse implements Proto {
     private final byte[] buyerOutputPubKeyShare;
     private final byte[] sellerOutputPubKeyShare;
     private final int currentBlockHeight;

@@ -42,8 +42,7 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
     private final HBox phaseAndInfoHBox, topHBox, errorHBox, isInMediationHBox;
     private final Button closeTradeButton, exportButton, reportToMediatorButton,
             tradeDetailsButton;
-    private final Label errorMessage, buyerPriceDescriptionApprovalOverlay,
-            sellerPriceDescriptionApprovalOverlay, mediationBannerLabel;
+    private final Label errorMessage, mediationBannerLabel;
     private final VBox tradePhaseBox, tradeDataHeaderBox;
     private final BisqMenuItem tryAgainMenuItem;
     private Subscription stateInfoVBoxPin, requestMediationDeliveryStatusPin,
@@ -112,12 +111,6 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         VBox content = new VBox(tradeDataHeaderBox, isInMediationHBox, topHBox, phaseAndInfoHBox);
         content.getStyleClass().add("bisq-easy-container");
 
-        // Accept seller's price overlay
-        buyerPriceDescriptionApprovalOverlay = new Label();
-        sellerPriceDescriptionApprovalOverlay = new Label();
-        VBox priceDescriptionBox = new VBox(buyerPriceDescriptionApprovalOverlay, sellerPriceDescriptionApprovalOverlay);
-        priceDescriptionBox.getStyleClass().setAll("seller-price-approval-content");
-
         root.getChildren().add(content);
     }
 
@@ -139,9 +132,6 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         phaseAndInfoHBox.managedProperty().bind(model.getPhaseAndInfoVisible());
 
         errorMessage.textProperty().bind(model.getErrorMessage());
-
-        buyerPriceDescriptionApprovalOverlay.textProperty().bind(model.getBuyerPriceDescriptionApprovalOverlay());
-        sellerPriceDescriptionApprovalOverlay.textProperty().bind(model.getSellerPriceDescriptionApprovalOverlay());
 
         stateInfoVBoxPin = EasyBind.subscribe(model.getStateInfoVBox(), stateInfoVBox -> {
             if (phaseAndInfoHBox.getChildren().size() == 2) {
@@ -203,9 +193,6 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         phaseAndInfoHBox.managedProperty().unbind();
 
         errorMessage.textProperty().unbind();
-
-        buyerPriceDescriptionApprovalOverlay.textProperty().unbind();
-        sellerPriceDescriptionApprovalOverlay.textProperty().unbind();
 
         stateInfoVBoxPin.unsubscribe();
         requestMediationDeliveryStatusPin.unsubscribe();

@@ -28,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static com.google.protobuf.ByteString.copyFrom;
 
-public class MusigServer {
+public final class MusigServer {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Server server = ServerBuilder

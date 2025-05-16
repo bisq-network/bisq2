@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.GeneralSecurityException;
 
 @Slf4j
-public class MuSigSetupTradeMessage_A_Handler extends TradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_A>
+public final class MuSigSetupTradeMessage_A_Handler extends TradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_A>
         implements TradeMessageSender<MuSigTrade> {
 
     public MuSigSetupTradeMessage_A_Handler(ServiceProvider serviceProvider, MuSigTrade model) {

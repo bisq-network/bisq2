@@ -50,7 +50,7 @@ import static bisq.trade.mu_sig.protocol.MuSigTradeState.SELLER_AS_MAKER_INITIAL
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.SELLER_AS_MAKER_RECEIVED_INITIATED_PAYMENT_MESSAGE;
 
 
-public class MuSigSellerAsMakerProtocol extends MuSigProtocol {
+public final class MuSigSellerAsMakerProtocol extends MuSigProtocol {
 
     public MuSigSellerAsMakerProtocol(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);

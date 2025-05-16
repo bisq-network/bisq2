@@ -28,7 +28,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public class MuSigTradeParty extends TradeParty {
+public final class MuSigTradeParty extends TradeParty {
     @Setter
     private PubKeySharesResponse pubKeySharesResponse;
     @Setter

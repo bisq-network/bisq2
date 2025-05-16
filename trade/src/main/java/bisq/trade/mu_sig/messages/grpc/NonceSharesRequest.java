@@ -24,7 +24,7 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-public class NonceSharesRequest implements Proto {
+public final class NonceSharesRequest implements Proto {
     private final String tradeId;
     private final byte[] buyerOutputPeersPubKeyShare;
     private final byte[] sellerOutputPeersPubKeyShare;

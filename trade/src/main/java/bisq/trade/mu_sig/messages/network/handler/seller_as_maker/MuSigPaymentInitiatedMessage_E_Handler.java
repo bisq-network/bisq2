@@ -27,7 +27,7 @@ import bisq.trade.protocol.handler.TradeMessageSender;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MuSigPaymentInitiatedMessage_E_Handler extends TradeMessageHandler<MuSigTrade, MuSigPaymentInitiatedMessage_E>
+public final class MuSigPaymentInitiatedMessage_E_Handler extends TradeMessageHandler<MuSigTrade, MuSigPaymentInitiatedMessage_E>
         implements TradeMessageSender<MuSigTrade> {
 
     public MuSigPaymentInitiatedMessage_E_Handler(ServiceProvider serviceProvider, MuSigTrade model) {

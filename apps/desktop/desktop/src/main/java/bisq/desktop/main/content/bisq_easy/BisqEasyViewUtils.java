@@ -71,8 +71,9 @@ public class BisqEasyViewUtils {
         Label initialLabel = new Label(String.valueOf(initial).toUpperCase());
         initialLabel.getStyleClass().add("bisq-easy-custom-payment-icon");
 
-        int deterministicInt = Math.abs(new BigInteger(DigestUtil.sha256(customPaymentMethod.getBytes())).intValue());
-        int iconIndex = deterministicInt % customPaymentIconIds.length;
+        int deterministicInt = new BigInteger(DigestUtil.sha256(customPaymentMethod.getBytes())).intValue();
+        int iconIndex = Math.floorMod(deterministicInt, customPaymentIconIds.length);
+
         ImageView customPaymentIcon = ImageUtil.getImageViewById(customPaymentIconIds[iconIndex]);
 
         StackPane stackPane = new StackPane(customPaymentIcon, initialLabel);

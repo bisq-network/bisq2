@@ -80,10 +80,10 @@ public class BuyerState3a extends BaseState {
             super(model, controller);
 
             waitingAnimation = new WaitingAnimation(WaitingState.BITCOIN_PAYMENT);
-            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase3a.headline"));
+            WrappingText headline = MuSigFormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase3a.headline"));
             String name = model.getTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail().name();
             String bitcoinPaymentData = Res.get("bisqEasy.tradeState.bitcoinPaymentData." + name);
-            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.buyer.phase3a.info", bitcoinPaymentData));
+            WrappingText info = MuSigFormUtils.getInfo(Res.get("bisqEasy.tradeState.info.buyer.phase3a.info", bitcoinPaymentData));
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
             root.getChildren().add(waitingInfo);
         }

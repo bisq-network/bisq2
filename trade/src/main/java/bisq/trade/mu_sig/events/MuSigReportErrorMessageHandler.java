@@ -25,7 +25,7 @@ import bisq.trade.protocol.events.TradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MuSigReportErrorMessageHandler extends TradeMessageHandler<MuSigTrade, MuSigReportErrorMessage> {
+public final class MuSigReportErrorMessageHandler extends TradeMessageHandler<MuSigTrade, MuSigReportErrorMessage> {
 
     public MuSigReportErrorMessageHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);

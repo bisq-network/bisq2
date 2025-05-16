@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class MuSigTakeOfferEventHandler extends MuSigSendTradeMessageHandler<MuSigTrade> {
+public final class MuSigTakeOfferEventHandler extends MuSigSendTradeMessageHandler<MuSigTrade> {
 
     public MuSigTakeOfferEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);

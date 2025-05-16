@@ -21,7 +21,7 @@ import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.contract.mu_sig.MuSigContract;
 
-public class MuSigTradeUtils {
+public final class MuSigTradeUtils {
     public static Monetary getBaseSideMonetary(MuSigTrade trade) {
         return getBaseSideMonetary(trade.getContract());
     }

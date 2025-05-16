@@ -209,11 +209,11 @@ public class MuSigTradeDataHeader {
             tradeId.getThird().setTranslateY(8);
 
             StackPane leftAmountPane = (StackPane) leftAmount.getFirst().getSecond();
-            leftBitcoinAmountDisplay = (BitcoinAmountDisplay) leftAmountPane.getChildren().getFirst();
+            leftBitcoinAmountDisplay = (BitcoinAmountDisplay) leftAmountPane.getChildren().get(0);
             configureBitcoinAmountDisplay(leftBitcoinAmountDisplay);
 
             StackPane rightAmountPane = (StackPane) rightAmount.getFirst().getSecond();
-            rightBitcoinAmountDisplay = (BitcoinAmountDisplay) rightAmountPane.getChildren().getFirst();
+            rightBitcoinAmountDisplay = (BitcoinAmountDisplay) rightAmountPane.getChildren().get(0);
             configureBitcoinAmountDisplay(rightBitcoinAmountDisplay);
 
             root.getChildren().addAll(peerVBox,

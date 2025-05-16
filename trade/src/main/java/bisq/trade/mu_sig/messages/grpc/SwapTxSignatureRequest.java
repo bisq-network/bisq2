@@ -24,7 +24,7 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-public class SwapTxSignatureRequest implements Proto {
+public final class SwapTxSignatureRequest implements Proto {
     private final String tradeId;
     private final byte[] swapTxInputPeersPartialSignature;
 

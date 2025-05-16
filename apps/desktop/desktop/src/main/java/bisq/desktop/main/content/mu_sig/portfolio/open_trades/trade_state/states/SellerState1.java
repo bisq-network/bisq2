@@ -137,7 +137,7 @@ public class SellerState1 extends BaseState {
 
         private void maybeSelectFirstAccount() {
             if (!model.getSortedAccounts().isEmpty() && accountService.getSelectedAccount().isEmpty()) {
-                accountService.setSelectedAccount(model.getSortedAccounts().getFirst());
+                accountService.setSelectedAccount(model.getSortedAccounts().get(0));
             }
         }
     }
@@ -192,7 +192,7 @@ public class SellerState1 extends BaseState {
                 }
             });
 
-            paymentAccountData = FormUtils.addTextArea(Res.get("bisqEasy.tradeState.info.seller.phase1.accountData"), "", true);
+            paymentAccountData = MuSigFormUtils.addTextArea(Res.get("bisqEasy.tradeState.info.seller.phase1.accountData"), "", true);
             paymentAccountData.setPromptText(Res.get("bisqEasy.tradeState.info.seller.phase1.accountData.prompt"));
 
             button = new Button(Res.get("bisqEasy.tradeState.info.seller.phase1.buttonText"));
@@ -201,12 +201,12 @@ public class SellerState1 extends BaseState {
 
             VBox.setMargin(button, new Insets(5, 0, 5, 0));
             root.getChildren().addAll(
-                    FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.seller.phase1.headline")),
+                    MuSigFormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.seller.phase1.headline")),
                     accountSelection,
                     paymentAccountData,
                     button,
                     Spacer.fillVBox(),
-                    FormUtils.getHelp(Res.get("bisqEasy.tradeState.info.seller.phase1.note")));
+                    MuSigFormUtils.getHelp(Res.get("bisqEasy.tradeState.info.seller.phase1.note")));
         }
 
         @Override

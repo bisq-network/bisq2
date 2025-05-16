@@ -35,7 +35,7 @@ import javafx.scene.layout.VBox;
 
 import javax.annotation.Nullable;
 
-public class FormUtils {
+public class MuSigFormUtils {
     public static WrappingText getHeadline() {
         return getHeadline(null);
     }
@@ -65,7 +65,7 @@ public class FormUtils {
     }
 
     public static Pair<WrappingText, HBox> getConfirmHeadline(@Nullable String text) {
-        WrappingText headline = FormUtils.getHeadline(text);
+        WrappingText headline = MuSigFormUtils.getHeadline(text);
         HBox hBox = new HBox(10, ImageUtil.getImageViewById("check-circle"), headline);
         hBox.setAlignment(Pos.CENTER_LEFT);
         return new Pair<>(headline, hBox);
@@ -76,7 +76,7 @@ public class FormUtils {
     }
 
     public static Pair<WrappingText, HBox> getConfirmInfo(@Nullable String text) {
-        WrappingText headline = FormUtils.getInfo(text);
+        WrappingText headline = MuSigFormUtils.getInfo(text);
         HBox hBox = new HBox(10, ImageUtil.getImageViewById("check-circle"), headline);
         hBox.setAlignment(Pos.CENTER_LEFT);
         return new Pair<>(headline, hBox);

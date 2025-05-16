@@ -80,8 +80,8 @@ public class BuyerState1b extends BaseState {
             super(model, controller);
 
             waitingAnimation = new WaitingAnimation(WaitingState.ACCOUNT_DATA);
-            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase1b.headline"));
-            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.buyer.phase1b.info"));
+            WrappingText headline = MuSigFormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase1b.headline"));
+            WrappingText info = MuSigFormUtils.getInfo(Res.get("bisqEasy.tradeState.info.buyer.phase1b.info"));
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
             root.getChildren().add(waitingInfo);
         }

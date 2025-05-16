@@ -46,7 +46,6 @@ import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
-import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.settings.DontShowAgainService;
 import bisq.support.mediation.MediationRequest;
 import bisq.support.mediation.MediationRequestService;
@@ -163,13 +162,6 @@ public class MuSigTradeStateController implements Controller {
                         }
                     }
             );
-
-            model.getBuyerPriceDescriptionApprovalOverlay().set(
-                    Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.buyersPrice",
-                            PriceSpecFormatter.getFormattedPriceSpec(trade.getOffer().getPriceSpec())));
-            model.getSellerPriceDescriptionApprovalOverlay().set(
-                    Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.sellersPrice",
-                            PriceSpecFormatter.getFormattedPriceSpec(trade.getContract().getPriceSpec())));
 
             messageDeliveryStatusByMessageIdPin = networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
                 @Override
@@ -474,6 +466,10 @@ public class MuSigTradeStateController implements Controller {
         if (messageDeliveryStatusByMessageIdPin != null) {
             messageDeliveryStatusByMessageIdPin.unbind();
             messageDeliveryStatusByMessageIdPin = null;
+        }
+        if (requestMediationDeliveryStatusPin != null) {
+            requestMediationDeliveryStatusPin.unbind();
+            requestMediationDeliveryStatusPin = null;
         }
     }
 }

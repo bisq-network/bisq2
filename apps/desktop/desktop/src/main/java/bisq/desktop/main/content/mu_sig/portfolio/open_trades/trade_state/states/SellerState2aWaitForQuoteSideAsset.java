@@ -81,8 +81,8 @@ public class SellerState2aWaitForQuoteSideAsset extends BaseState {
             super(model, controller);
 
             waitingAnimation = new WaitingAnimation(WaitingState.FIAT_PAYMENT);
-            headline = FormUtils.getHeadline();
-            info = FormUtils.getInfo();
+            headline = MuSigFormUtils.getHeadline();
+            info = MuSigFormUtils.getInfo();
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
             root.getChildren().add(waitingInfo);
         }

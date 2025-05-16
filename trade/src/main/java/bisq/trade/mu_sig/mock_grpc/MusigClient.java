@@ -24,7 +24,7 @@ import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
 
-public class MusigClient {
+public final class MusigClient {
     public static void main(String[] args) {
         ManagedChannel grpcChannel = Grpc.newChannelBuilderForAddress(
                 "127.0.0.1",

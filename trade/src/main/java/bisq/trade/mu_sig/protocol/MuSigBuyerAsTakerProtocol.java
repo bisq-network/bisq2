@@ -50,7 +50,7 @@ import static bisq.trade.mu_sig.protocol.MuSigTradeState.DEPOSIT_TX_CONFIRMED;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.INIT;
 
 
-public class MuSigBuyerAsTakerProtocol extends MuSigProtocol {
+public final class MuSigBuyerAsTakerProtocol extends MuSigProtocol {
 
     public MuSigBuyerAsTakerProtocol(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);

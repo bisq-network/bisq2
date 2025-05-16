@@ -260,11 +260,11 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         assignedMediatorBox.setVisible(model.isHasMediatorBeenAssigned());
         assignedMediatorBox.setManaged(model.isHasMediatorBeenAssigned());
         paymentAccountDataCopyButton.setVisible(!model.isPaymentAccountDataEmpty());
-        paymentAccountDataCopyButton.setVisible(!model.isPaymentAccountDataEmpty());
+        paymentAccountDataCopyButton.setManaged(!model.isPaymentAccountDataEmpty());
         btcPaymentAddressCopyButton.setVisible(!model.isBtcPaymentDataEmpty());
         btcPaymentAddressCopyButton.setManaged(!model.isBtcPaymentDataEmpty());
         paymentProofCopyButton.setVisible(!model.isPaymentProofEmpty());
-        paymentProofCopyButton.setVisible(!model.isPaymentProofEmpty());
+        paymentProofCopyButton.setManaged(!model.isPaymentProofEmpty());
 
         paymentAccountDataLabel.getStyleClass().clear();
         paymentAccountDataLabel.getStyleClass().add(model.isPaymentAccountDataEmpty()

@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class MuSigSetupTradeMessage_C_Handler extends TradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_C>
+public final class MuSigSetupTradeMessage_C_Handler extends TradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_C>
         implements TradeMessageSender<MuSigTrade> {
 
     public MuSigSetupTradeMessage_C_Handler(ServiceProvider serviceProvider, MuSigTrade model) {

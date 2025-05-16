@@ -81,7 +81,7 @@ public class BuyerState2aSendQuoteSideAsset extends BaseState {
 
             MuSigTrade trade = model.getTrade();
             String sellersAccountData = trade.getPaymentAccountData().get();
-            if (muSigService.isAccountDataBanned(sellersAccountData)) {
+            if (sellersAccountData != null && muSigService.isAccountDataBanned(sellersAccountData)) {
                 model.getConfirmFiatSentButtonDisabled().set(true);
                 model.getAccountDataBannedValidator().setIsInvalid(true);
 
@@ -130,11 +130,11 @@ public class BuyerState2aSendQuoteSideAsset extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            headline = FormUtils.getHeadline();
+            headline = MuSigFormUtils.getHeadline();
 
-            quoteAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase2a.quoteAmount"), "", false);
-            paymentReason = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase2a.paymentReason"), "", false);
-            account = FormUtils.addTextArea(Res.get("bisqEasy.tradeState.info.buyer.phase2a.sellersAccount"), "", false);
+            quoteAmount = MuSigFormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase2a.quoteAmount"), "", false);
+            paymentReason = MuSigFormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase2a.paymentReason"), "", false);
+            account = MuSigFormUtils.addTextArea(Res.get("bisqEasy.tradeState.info.buyer.phase2a.sellersAccount"), "", false);
             account.setValidator(model.getAccountDataBannedValidator());
 
             confirmFiatSentButton = new Button();

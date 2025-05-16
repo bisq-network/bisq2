@@ -34,7 +34,7 @@ import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MuSigPaymentReceivedMessage_F_Handler extends TradeMessageHandler<MuSigTrade, MuSigPaymentReceivedMessage_F>
+public final class MuSigPaymentReceivedMessage_F_Handler extends TradeMessageHandler<MuSigTrade, MuSigPaymentReceivedMessage_F>
         implements TradeMessageSender<MuSigTrade> {
 
     public MuSigPaymentReceivedMessage_F_Handler(ServiceProvider serviceProvider, MuSigTrade model) {

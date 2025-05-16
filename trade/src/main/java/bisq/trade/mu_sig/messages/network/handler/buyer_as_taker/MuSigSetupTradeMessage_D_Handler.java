@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Iterator;
 
 @Slf4j
-public class MuSigSetupTradeMessage_D_Handler extends TradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_D> {
+public final class MuSigSetupTradeMessage_D_Handler extends TradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_D> {
 
     public MuSigSetupTradeMessage_D_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);

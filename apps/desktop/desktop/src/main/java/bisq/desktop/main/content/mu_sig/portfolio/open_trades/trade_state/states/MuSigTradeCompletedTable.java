@@ -43,18 +43,18 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class TradeCompletedTable extends VBox {
+public class MuSigTradeCompletedTable extends VBox {
     private final GridPane headerGridPane, bodyGridPane;
     @Getter
     private final BisqMenuItem copyTxIdButton, copyTxExplorerLinkButton, openTxExplorerButton;
     private final WaitingAnimation waitingAnimation;
     private final BitcoinAmountDisplay bitcoinAmountDisplay;
 
-    public TradeCompletedTable() {
+    public MuSigTradeCompletedTable() {
         waitingAnimation = new WaitingAnimation(WaitingState.TRADE_COMPLETED);
 
-        WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeCompleted.title"));
-        WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeCompleted.info"));
+        WrappingText headline = MuSigFormUtils.getHeadline(Res.get("bisqEasy.tradeCompleted.title"));
+        WrappingText info = MuSigFormUtils.getInfo(Res.get("bisqEasy.tradeCompleted.info"));
 
         HBox headerHBox = createWaitingInfo(waitingAnimation, headline, info);
         headerHBox.setAlignment(Pos.CENTER);

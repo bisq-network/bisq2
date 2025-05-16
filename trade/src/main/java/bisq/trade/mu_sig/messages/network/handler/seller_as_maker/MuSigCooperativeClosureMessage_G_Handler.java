@@ -30,7 +30,7 @@ import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MuSigCooperativeClosureMessage_G_Handler extends TradeMessageHandler<MuSigTrade, MuSigCooperativeClosureMessage_G> {
+public final class MuSigCooperativeClosureMessage_G_Handler extends TradeMessageHandler<MuSigTrade, MuSigCooperativeClosureMessage_G> {
 
     public MuSigCooperativeClosureMessage_G_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);

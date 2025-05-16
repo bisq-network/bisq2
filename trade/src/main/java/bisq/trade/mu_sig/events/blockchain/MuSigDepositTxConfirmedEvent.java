@@ -25,7 +25,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class MuSigDepositTxConfirmedEvent extends MuSigTradeEvent {
+public final class MuSigDepositTxConfirmedEvent extends MuSigTradeEvent {
     public MuSigDepositTxConfirmedEvent() {
     }
 }

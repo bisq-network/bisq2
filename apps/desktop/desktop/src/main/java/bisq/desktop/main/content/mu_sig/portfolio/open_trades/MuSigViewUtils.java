@@ -21,6 +21,7 @@ import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.data.Quadruple;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -37,10 +38,12 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigInteger;
 import java.util.List;
 
+@Slf4j
 public class MuSigViewUtils {
     public static final String POSITIVE_NUMERIC_WITH_DECIMAL_REGEX = "\\d*([.,]\\d*)?";
     public static final String NUMERIC_WITH_DECIMAL_REGEX = "-?\\d*([.,]\\d*)?";
@@ -70,13 +73,17 @@ public class MuSigViewUtils {
     }
 
     public static StackPane getCustomPaymentMethodIcon(String customPaymentMethod) {
+        if (StringUtils.isEmpty(customPaymentMethod)) {
+            log.error("Custom payment method at getCustomPaymentMethodIcon() must not be null or empty");
+            return new StackPane();
+        }
         char initial = customPaymentMethod.charAt(0);
 
         Label initialLabel = new Label(String.valueOf(initial).toUpperCase());
         initialLabel.getStyleClass().add("bisq-easy-custom-payment-icon");
 
-        int deterministicInt = Math.abs(new BigInteger(DigestUtil.sha256(customPaymentMethod.getBytes())).intValue());
-        int iconIndex = deterministicInt % customPaymentIconIds.length;
+        int deterministicInt = new BigInteger(DigestUtil.sha256(customPaymentMethod.getBytes())).intValue();
+        int iconIndex = Math.floorMod(deterministicInt, customPaymentIconIds.length);
         ImageView customPaymentIcon = ImageUtil.getImageViewById(customPaymentIconIds[iconIndex]);
 
         StackPane stackPane = new StackPane(customPaymentIcon, initialLabel);

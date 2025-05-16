@@ -87,7 +87,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-public class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Service, ConfidentialMessageService.Listener {
+public final class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Service, ConfidentialMessageService.Listener {
     private final ServiceProvider serviceProvider;
     private final NetworkService networkService;
     private final IdentityService identityService;

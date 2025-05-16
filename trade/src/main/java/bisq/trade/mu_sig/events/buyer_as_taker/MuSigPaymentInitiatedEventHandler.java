@@ -24,7 +24,7 @@ import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
 import bisq.trade.protocol.handler.SendTradeMessageHandler;
 
-public class MuSigPaymentInitiatedEventHandler extends SendTradeMessageHandler<MuSigTrade> {
+public final class MuSigPaymentInitiatedEventHandler extends SendTradeMessageHandler<MuSigTrade> {
 
     public MuSigPaymentInitiatedEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);

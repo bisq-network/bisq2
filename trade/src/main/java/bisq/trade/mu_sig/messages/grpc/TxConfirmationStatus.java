@@ -26,7 +26,7 @@ import lombok.ToString;
 @ToString
 @Getter
 @EqualsAndHashCode
-public class TxConfirmationStatus implements Proto {
+public final class TxConfirmationStatus implements Proto {
     private final byte[] tx;
     private final int currentBlockHeight;
     private final int numConfirmations;

@@ -329,10 +329,10 @@ public class BuyerState1a extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            bitcoinPaymentHeadline = FormUtils.getHeadline();
+            bitcoinPaymentHeadline = MuSigFormUtils.getHeadline();
             VBox.setMargin(bitcoinPaymentHeadline, new Insets(5, 0, 0, 0));
 
-            bitcoinPayment = FormUtils.getTextField("", "", true);
+            bitcoinPayment = MuSigFormUtils.getTextField("", "", true);
 
             ImageView scanQrCodeButtonIcon = ImageUtil.getImageViewById("scan-qr-code");
             scanQrCodeButtonIcon.setOpacity(0.5);

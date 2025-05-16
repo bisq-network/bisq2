@@ -175,12 +175,12 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
     public static abstract class View<M extends Model, C extends Controller<?, ?>> extends BaseState.View<M, C> {
         private final UserProfileDisplay peerProfileDisplay;
         protected final Button closeTradeButton, exportButton, detailsButton;
-        protected final TradeCompletedTable tradeCompletedTable;
+        protected final MuSigTradeCompletedTable muSigTradeCompletedTable;
 
         protected View(M model, C controller) {
             super(model, controller);
 
-            tradeCompletedTable = new TradeCompletedTable();
+            muSigTradeCompletedTable = new MuSigTradeCompletedTable();
             peerProfileDisplay = new UserProfileDisplay();
 
             detailsButton = new Button(Res.get("bisqEasy.tradeState.info.phase4.showDetails"));
@@ -191,7 +191,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
             buttons.setAlignment(Pos.BOTTOM_RIGHT);
             VBox.setMargin(buttons, new Insets(0, 0, 20, 0));
 
-            VBox content = new VBox(10, tradeCompletedTable, buttons);
+            VBox content = new VBox(10, muSigTradeCompletedTable, buttons);
             content.setMaxWidth(1160);
             root.getChildren().addAll(content);
             root.setAlignment(Pos.CENTER);
@@ -207,13 +207,13 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
             }
             peerProfileDisplay.setUserProfile(model.getTradePeer());
             peerProfileDisplay.setReputationScore(model.getTradePeerReputationScore());
-            tradeCompletedTable.initialize(peerProfileDisplay, model.isBuyer(), model.getBaseAmount(),
+            muSigTradeCompletedTable.initialize(peerProfileDisplay, model.isBuyer(), model.getBaseAmount(),
                     model.getQuoteAmount(), model.getFiatCurrency(), model.getPaymentMethod(), model.getTradeId(),
                     model.getTradeDate(), model.getTradeDuration(), model.getPrice(), model.getPriceSymbol(), txIdDescriptionAndValue);
             if (model.isBlockExplorerLinkVisible()) {
-                tradeCompletedTable.showBlockExplorerLink();
-                tradeCompletedTable.getOpenTxExplorerButton().setOnAction(e -> controller.openExplorer());
-                tradeCompletedTable.getCopyTxExplorerLinkButton().setOnAction(e -> controller.onCopyExplorerLink());
+                muSigTradeCompletedTable.showBlockExplorerLink();
+                muSigTradeCompletedTable.getOpenTxExplorerButton().setOnAction(e -> controller.openExplorer());
+                muSigTradeCompletedTable.getCopyTxExplorerLinkButton().setOnAction(e -> controller.onCopyExplorerLink());
             }
             detailsButton.setOnAction(e -> controller.onShowDetails());
             exportButton.setOnAction(e -> controller.onExportTrade());
@@ -224,7 +224,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
         protected void onViewDetached() {
             super.onViewDetached();
 
-            tradeCompletedTable.dispose();
+            muSigTradeCompletedTable.dispose();
             peerProfileDisplay.dispose();
 
             detailsButton.setOnAction(null);

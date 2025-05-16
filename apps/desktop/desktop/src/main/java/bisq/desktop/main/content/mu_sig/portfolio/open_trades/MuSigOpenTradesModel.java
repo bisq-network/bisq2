@@ -60,8 +60,11 @@ public final class MuSigOpenTradesModel extends ChatModel {
         chatVisible.set(false);
         tradeStateVisible.set(false);
         isAnyTradeInMediation.set(false);
+        if (chatWindow.get() != null) {
+            chatWindow.get().close();
+            chatWindow.set(null);
+        }
         chatWindowTitle.set(null);
-        chatWindow.set(null);
         selectedItem.set(null);
         listItems.forEach(MuSigOpenTradeListItem::dispose);
         listItems.clear();

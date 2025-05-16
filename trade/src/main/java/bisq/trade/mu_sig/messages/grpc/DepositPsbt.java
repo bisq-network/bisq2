@@ -24,7 +24,7 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-public class DepositPsbt implements Proto {
+public final class DepositPsbt implements Proto {
     private final byte[] depositPsbt;
 
     public DepositPsbt(byte[] depositPsbt) {

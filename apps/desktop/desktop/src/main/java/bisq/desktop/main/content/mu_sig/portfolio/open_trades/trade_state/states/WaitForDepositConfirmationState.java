@@ -230,12 +230,12 @@ public abstract class WaitForDepositConfirmationState<C extends WaitForDepositCo
             super(model, controller);
 
             String role = model.getRole();
-            WrappingText headline = FormUtils.getHeadline(Res.get("muSig.tradeState.info.phase1.headline"));
-            WrappingText info = FormUtils.getInfo(Res.get("muSig.tradeState.info.phase1.info."+role, model.getQuoteCode()));
+            WrappingText headline = MuSigFormUtils.getHeadline(Res.get("muSig.tradeState.info.phase1.headline"));
+            WrappingText info = MuSigFormUtils.getInfo(Res.get("muSig.tradeState.info.phase1.info."+role, model.getQuoteCode()));
             waitingAnimation = new WaitingAnimation(WaitingState.BITCOIN_CONFIRMATION);
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
 
-            txId = FormUtils.getTextField(Res.get("muSig.tradeState.info.phase1.txId"), "", false);
+            txId = MuSigFormUtils.getTextField(Res.get("muSig.tradeState.info.phase1.txId"), "", false);
             txId.setHelpText(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.explorerLookup"));
             txId.setPromptText(Res.get("muSig.tradeState.info.phase1.txId.prompt"));
             txId.setIcon(AwesomeIcon.EXTERNAL_LINK);

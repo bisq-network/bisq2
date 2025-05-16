@@ -36,11 +36,6 @@ public abstract class MuSigSendTradeMessageHandler<M extends MuSigTrade> extends
 
     protected Optional<CompletableFuture<SendMessageResult>> sendTradeLogMessage(String encoded) {
         MuSigOpenTradeChannelService openTradeChannelService = serviceProvider.getChatService().getMuSigOpenTradeChannelService();
-
-        openTradeChannelService.findChannelByTradeId(trade.getId())
-                .map(channel ->
-                        openTradeChannelService.sendTextMessage("test", Optional.empty(), channel));
-
         return openTradeChannelService.findChannelByTradeId(trade.getId())
                 .map(channel ->
                         openTradeChannelService.sendTradeLogMessage(encoded, channel));

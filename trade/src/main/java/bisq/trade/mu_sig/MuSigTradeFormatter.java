@@ -23,7 +23,7 @@ import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 
-public class MuSigTradeFormatter {
+public final class MuSigTradeFormatter {
     public static String formatBaseSideAmount(MuSigTrade trade) {
         return formatBaseSideAmount(trade.getContract());
     }

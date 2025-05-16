@@ -105,6 +105,7 @@ class MuSigTradePhaseBox {
             model.setSelectedChannel(channel);
             if (isInMediationPin != null) {
                 isInMediationPin.unbind();
+                isInMediationPin = null;
             }
             if (channel != null) {
                 isInMediationPin = FxBindings.bind(model.getIsInMediation()).to(channel.isInMediationObservable());
@@ -115,6 +116,7 @@ class MuSigTradePhaseBox {
             model.setTrade(trade);
             if (muSigTradeStatePin != null) {
                 muSigTradeStatePin.unbind();
+                muSigTradeStatePin = null;
             }
             if (trade == null) {
                 return;
@@ -166,6 +168,12 @@ class MuSigTradePhaseBox {
         public void onDeactivate() {
             if (isInMediationPin != null) {
                 isInMediationPin.unbind();
+                isInMediationPin = null;
+            }
+
+            if (muSigTradeStatePin != null) {
+                muSigTradeStatePin.unbind();
+                muSigTradeStatePin = null;
             }
         }
 
