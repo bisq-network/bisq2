@@ -23,8 +23,8 @@ import bisq.common.fsm.FsmException;
 import bisq.common.util.ExceptionUtil;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
-import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.common.util.StringUtils.createUid;
@@ -33,7 +33,7 @@ import static bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage.MAX_LEN
 import static bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage.MAX_LENGTH_STACKTRACE;
 
 @Slf4j
-public final class MuSigFsmErrorEventHandler extends TradeEventHandlerAsMessageSender<MuSigTrade> {
+public final class MuSigFsmErrorEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade> {
     public MuSigFsmErrorEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }

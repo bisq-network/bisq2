@@ -34,8 +34,7 @@ import bisq.offer.price.PriceUtil;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
-import bisq.trade.protocol.handler.TradeMessageHandler;
-import bisq.trade.protocol.handler.TradeMessageSender;
+import bisq.trade.protocol.handler.TradeMessageHandlerAsMessageSender;
 import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,7 +47,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyTakeOfferRequest> implements TradeMessageSender<BisqEasyTrade> {
+public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandlerAsMessageSender<BisqEasyTrade, BisqEasyTakeOfferRequest> {
 
     public BisqEasyTakeOfferRequestHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);

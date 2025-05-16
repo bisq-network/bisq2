@@ -28,10 +28,10 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public abstract class MuSigSendTradeMessageHandler<M extends MuSigTrade> extends TradeEventHandlerAsMessageSender<M> {
+public abstract class MuSigTradeEventHandlerAsMessageSender<T extends MuSigTrade> extends TradeEventHandlerAsMessageSender<T> {
 
-    protected MuSigSendTradeMessageHandler(ServiceProvider serviceProvider, M model) {
-        super(serviceProvider, model);
+    protected MuSigTradeEventHandlerAsMessageSender(ServiceProvider serviceProvider, T trade) {
+        super(serviceProvider, trade);
     }
 
     protected Optional<CompletableFuture<SendMessageResult>> sendTradeLogMessage(String encoded) {

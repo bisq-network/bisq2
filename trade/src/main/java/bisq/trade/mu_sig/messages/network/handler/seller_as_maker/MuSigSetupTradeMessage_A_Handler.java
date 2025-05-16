@@ -25,6 +25,7 @@ import bisq.contract.mu_sig.MuSigContract;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
+import bisq.trade.mu_sig.handler.MuSigTradeMessageHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
@@ -33,16 +34,13 @@ import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protobuf.NonceSharesRequest;
 import bisq.trade.protobuf.PubKeySharesRequest;
 import bisq.trade.protobuf.Role;
-import bisq.trade.protocol.handler.TradeMessageHandler;
-import bisq.trade.protocol.handler.TradeMessageSender;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 
 @Slf4j
-public final class MuSigSetupTradeMessage_A_Handler extends TradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_A>
-        implements TradeMessageSender<MuSigTrade> {
+public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_A> {
 
     public MuSigSetupTradeMessage_A_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);

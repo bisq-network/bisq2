@@ -20,12 +20,12 @@ package bisq.trade.mu_sig.events.blockchain;
 import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
-import bisq.trade.mu_sig.handler.MuSigSendTradeMessageHandler;
 import bisq.trade.mu_sig.messages.grpc.TxConfirmationStatus;
+import bisq.trade.protocol.handler.TradeEventHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class MuSigDepositTxConfirmedEventHandler extends MuSigSendTradeMessageHandler<MuSigTrade> {
+public final class MuSigDepositTxConfirmedEventHandler extends TradeEventHandler<MuSigTrade> {
 
     public MuSigDepositTxConfirmedEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);

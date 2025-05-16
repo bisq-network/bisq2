@@ -22,11 +22,10 @@ import bisq.contract.ContractSignatureData;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.protocol.handler.TradeMessageHandler;
-import bisq.trade.protocol.handler.TradeMessageSender;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class MuSigTakeOfferRequestHandler extends TradeMessageHandler<MuSigTrade, MuSigTakeOfferRequest> implements TradeMessageSender<MuSigTrade> {
+public final class MuSigTakeOfferRequestHandler extends TradeMessageHandler<MuSigTrade, MuSigTakeOfferRequest> {
     public MuSigTakeOfferRequestHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
