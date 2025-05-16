@@ -26,7 +26,7 @@ import bisq.trade.protocol.handler.TradeMessageSender;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MuSigTakeOfferRequestHandler extends TradeMessageHandler<MuSigTrade, MuSigTakeOfferRequest> implements TradeMessageSender<MuSigTrade> {
+public final class MuSigTakeOfferRequestHandler extends TradeMessageHandler<MuSigTrade, MuSigTakeOfferRequest> implements TradeMessageSender<MuSigTrade> {
     public MuSigTakeOfferRequestHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }

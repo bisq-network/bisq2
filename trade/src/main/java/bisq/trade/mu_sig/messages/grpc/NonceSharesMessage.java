@@ -24,7 +24,7 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-public class NonceSharesMessage implements Proto {
+public final class NonceSharesMessage implements Proto {
     private final String warningTxFeeBumpAddress;
     private final String redirectTxFeeBumpAddress;
     private final byte[] halfDepositPsbt;

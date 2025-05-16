@@ -24,7 +24,7 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-public class CloseTradeResponse implements Proto {
+public final class CloseTradeResponse implements Proto {
     private final byte[] peerOutputPrvKeyShare;
 
     public CloseTradeResponse(byte[] peerOutputPrvKeyShare) {

@@ -33,7 +33,7 @@ import static bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage.MAX_LEN
 import static bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage.MAX_LENGTH_STACKTRACE;
 
 @Slf4j
-public class MuSigFsmErrorEventHandler extends SendTradeMessageHandler<MuSigTrade> {
+public final class MuSigFsmErrorEventHandler extends SendTradeMessageHandler<MuSigTrade> {
     public MuSigFsmErrorEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }

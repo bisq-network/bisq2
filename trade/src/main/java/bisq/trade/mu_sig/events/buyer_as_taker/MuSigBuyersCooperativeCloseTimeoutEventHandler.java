@@ -27,7 +27,7 @@ import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
 import bisq.trade.protocol.events.TradeEventHandler;
 import com.google.protobuf.ByteString;
 
-public class MuSigBuyersCooperativeCloseTimeoutEventHandler extends TradeEventHandler<MuSigTrade> {
+public final class MuSigBuyersCooperativeCloseTimeoutEventHandler extends TradeEventHandler<MuSigTrade> {
 
     public MuSigBuyersCooperativeCloseTimeoutEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -45,8 +45,8 @@ public class MuSigBuyersCooperativeCloseTimeoutEventHandler extends TradeEventHa
         // TODO get swap tx from bitcoin network
         //ByteString swapTx = swapTxSignatureResponse.getSwapTx();
         byte[] swapTx = new byte[]{};
-        MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
-        CloseTradeResponse buyersCloseTradeResponse = CloseTradeResponse.fromProto(stub.closeTrade(CloseTradeRequest.newBuilder()
+        MusigGrpc.MusigBlockingStub musigBlockingStub = serviceProvider.getMuSigTradeService().getMusigBlockingStub();
+        CloseTradeResponse buyersCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setSwapTx(ByteString.copyFrom(swapTx))
                 .build()));

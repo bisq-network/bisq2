@@ -26,33 +26,31 @@ import lombok.ToString;
 public enum MuSigTradeState implements State {
     INIT,
 
-    // BUYER AS TAKER *****************************/,
-
     // Deposit tx setup phase
     BUYER_AS_TAKER_INITIALIZED_TRADE,
+    SELLER_AS_MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES,
     BUYER_AS_TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES,
+    SELLER_AS_MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX,
     BUYER_AS_TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX,
+
+    // Deposit confirmation phase
+    DEPOSIT_TX_CONFIRMED,
 
     // Settlement phase
     BUYER_AS_TAKER_INITIATED_PAYMENT,
+    SELLER_AS_MAKER_RECEIVED_INITIATED_PAYMENT_MESSAGE,
+    SELLER_AS_MAKER_CONFIRMED_PAYMENT_RECEIPT,
+
     // Cooperative path
     BUYER_AS_TAKER_CLOSED_TRADE(true),
+    SELLER_AS_MAKER_CLOSED_TRADE(true),
+
     // Uncooperative path
     BUYER_AS_TAKER_FORCE_CLOSED_TRADE(true),
+    SELLER_AS_MAKER_FORCE_CLOSED_TRADE(true),
 
-
-    // SELLER AS MAKER *****************************/
-    // Deposit tx setup phase
-    SELLER_AS_MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES,
-    SELLER_AS_MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX,
-
-    // Settlement phase
-    SELLER_AS_MAKER_RECEIVED_PAYMENT,
-    // Cooperative path
-    SELLER_AS_MAKER_CLOSED_TRADE(true),
-    // Uncooperative path
-    SELLER_AS_MAKER_FORCE_CLOSED_TRADE(true);
-
+    FAILED(true),
+    FAILED_AT_PEER(true);
 
     private final boolean isFinalState;
     private final int ordinal;

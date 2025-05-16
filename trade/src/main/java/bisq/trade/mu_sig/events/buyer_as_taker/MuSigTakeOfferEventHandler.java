@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class MuSigTakeOfferEventHandler extends MuSigSendTradeMessageHandler<MuSigTrade> {
+public final class MuSigTakeOfferEventHandler extends MuSigSendTradeMessageHandler<MuSigTrade> {
 
     public MuSigTakeOfferEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -46,8 +46,8 @@ public class MuSigTakeOfferEventHandler extends MuSigSendTradeMessageHandler<MuS
     @Override
     public void handle(Event event) {
         try {
-            MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
-            bisq.trade.protobuf.PubKeySharesResponse proto = stub.initTrade(PubKeySharesRequest.newBuilder()
+            MusigGrpc.MusigBlockingStub musigBlockingStub = serviceProvider.getMuSigTradeService().getMusigBlockingStub();
+            bisq.trade.protobuf.PubKeySharesResponse proto = musigBlockingStub.initTrade(PubKeySharesRequest.newBuilder()
                     .setTradeId(trade.getId())
                     .setMyRole(Role.BUYER_AS_TAKER)
                     .build());

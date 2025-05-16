@@ -23,7 +23,7 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-public class DepositTxSignatureRequest implements Proto {
+public final class DepositTxSignatureRequest implements Proto {
     private final String tradeId;
     private final PartialSignaturesMessage peersPartialSignatures;
 

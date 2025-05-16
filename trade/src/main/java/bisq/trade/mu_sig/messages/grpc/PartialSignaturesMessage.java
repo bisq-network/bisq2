@@ -24,7 +24,7 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-public class PartialSignaturesMessage implements Proto {
+public final class PartialSignaturesMessage implements Proto {
     private final byte[] peersWarningTxBuyerInputPartialSignature;
     private final byte[] peersWarningTxSellerInputPartialSignature;
     private final byte[] peersRedirectTxInputPartialSignature;

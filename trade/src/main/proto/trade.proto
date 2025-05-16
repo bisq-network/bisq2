@@ -162,6 +162,8 @@ service Musig {
 
   rpc PublishDepositTx (PublishDepositTxRequest) returns (stream TxConfirmationStatus);
 
+  rpc SubscribeTxConfirmationStatus (SubscribeTxConfirmationStatusRequest) returns (stream TxConfirmationStatus);
+
   rpc SignSwapTx (SwapTxSignatureRequest) returns (SwapTxSignatureResponse);
 
   rpc CloseTrade (CloseTradeRequest) returns (CloseTradeResponse);
@@ -238,6 +240,11 @@ message DepositPsbt {
 }
 
 message PublishDepositTxRequest {
+  string tradeId = 1;
+  DepositPsbt depositPsbt = 2;
+}
+
+message SubscribeTxConfirmationStatusRequest {
   string tradeId = 1;
   DepositPsbt depositPsbt = 2;
 }

@@ -23,7 +23,7 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-public class PublishDepositTxRequest implements Proto {
+public final class PublishDepositTxRequest implements Proto {
     private final String tradeId;
     private final DepositPsbt depositPsbt;
 

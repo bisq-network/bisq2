@@ -22,6 +22,8 @@ import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.events.MuSigFsmErrorEventHandler;
 import bisq.trade.mu_sig.events.MuSigReportErrorMessageHandler;
+import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEvent;
+import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEventHandler;
 import bisq.trade.mu_sig.events.buyer_as_taker.MuSigBuyersCooperativeCloseTimeoutEvent;
 import bisq.trade.mu_sig.events.buyer_as_taker.MuSigBuyersCooperativeCloseTimeoutEventHandler;
 import bisq.trade.mu_sig.events.buyer_as_taker.MuSigPaymentInitiatedEvent;
@@ -36,18 +38,19 @@ import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigPaymentRec
 import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigSetupTradeMessage_B_Handler;
 import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigSetupTradeMessage_D_Handler;
 
-import static bisq.trade.bisq_easy.protocol.BisqEasyTradeState.FAILED;
-import static bisq.trade.bisq_easy.protocol.BisqEasyTradeState.FAILED_AT_PEER;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.FAILED;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.FAILED_AT_PEER;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_CLOSED_TRADE;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_FORCE_CLOSED_TRADE;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_INITIALIZED_TRADE;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_INITIATED_PAYMENT;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.DEPOSIT_TX_CONFIRMED;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.INIT;
 
 
-public class MuSigBuyerAsTakerProtocol extends MuSigProtocol {
+public final class MuSigBuyerAsTakerProtocol extends MuSigProtocol {
 
     public MuSigBuyerAsTakerProtocol(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -84,9 +87,16 @@ public class MuSigBuyerAsTakerProtocol extends MuSigProtocol {
                 .run(MuSigSetupTradeMessage_D_Handler.class)
                 .to(BUYER_AS_TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX)
 
-                // Settlement
+                // Deposit confirmation phase
                 .then()
                 .from(BUYER_AS_TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX)
+                .on(MuSigDepositTxConfirmedEvent.class)
+                .run(MuSigDepositTxConfirmedEventHandler.class)
+                .to(DEPOSIT_TX_CONFIRMED)
+
+                // Settlement
+                .then()
+                .from(DEPOSIT_TX_CONFIRMED)
                 .on(MuSigPaymentInitiatedEvent.class)
                 .run(MuSigPaymentInitiatedEventHandler.class)
                 .to(BUYER_AS_TAKER_INITIATED_PAYMENT)

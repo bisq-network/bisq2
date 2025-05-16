@@ -24,10 +24,11 @@ import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 
 import static com.google.protobuf.ByteString.copyFrom;
 
-public class MusigServer {
+public final class MusigServer {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Server server = ServerBuilder
@@ -109,7 +110,7 @@ public class MusigServer {
                         .build();
                 responseObserver.onNext(response);
                 try {
-                    Thread.sleep(500); // simulate delay
+                    Thread.sleep(2500); // simulate delay
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
@@ -117,6 +118,25 @@ public class MusigServer {
             responseObserver.onCompleted();
         }
 
+        public void subscribeTxConfirmationStatus(bisq.trade.protobuf.SubscribeTxConfirmationStatusRequest request,
+                                                  StreamObserver<bisq.trade.protobuf.TxConfirmationStatus> responseObserver) {
+            CompletableFuture.runAsync(() -> {
+                for (int i = 0; i <= 10; i++) {
+                    var response = bisq.trade.protobuf.TxConfirmationStatus.newBuilder()
+                            .setTx(copyFrom(randomBytes(100)))
+                            .setCurrentBlockHeight(800000 + i)
+                            .setNumConfirmations(i)
+                            .build();
+                    responseObserver.onNext(response);
+                    try {
+                        Thread.sleep(2000); // simulate delay
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+                responseObserver.onCompleted();
+            });
+        }
 
         public void signSwapTx(bisq.trade.protobuf.SwapTxSignatureRequest request,
                                StreamObserver<bisq.trade.protobuf.SwapTxSignatureResponse> responseObserver) {

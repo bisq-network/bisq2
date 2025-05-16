@@ -21,17 +21,20 @@ import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
-import bisq.trade.protobuf.*;
 import bisq.trade.mu_sig.messages.grpc.DepositPsbt;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
+import bisq.trade.protobuf.DepositTxSignatureRequest;
+import bisq.trade.protobuf.MusigGrpc;
+import bisq.trade.protobuf.PublishDepositTxRequest;
+import bisq.trade.protobuf.TxConfirmationStatus;
 import bisq.trade.protocol.events.TradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Iterator;
 
 @Slf4j
-public class MuSigSetupTradeMessage_D_Handler extends TradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_D> {
+public final class MuSigSetupTradeMessage_D_Handler extends TradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_D> {
 
     public MuSigSetupTradeMessage_D_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -43,14 +46,18 @@ public class MuSigSetupTradeMessage_D_Handler extends TradeMessageHandler<MuSigT
         verifyMessage(message);
 
         PartialSignaturesMessage sellerPartialSignaturesMessage = message.getPartialSignaturesMessage();
-        MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
-        DepositPsbt buyerDepositPsbt = DepositPsbt.fromProto(stub.signDepositTx(DepositTxSignatureRequest.newBuilder()
+        MusigGrpc.MusigBlockingStub musigBlockingStub = serviceProvider.getMuSigTradeService().getMusigBlockingStub();
+        DepositPsbt buyerDepositPsbt = DepositPsbt.fromProto(musigBlockingStub.signDepositTx(DepositTxSignatureRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setPeersPartialSignatures(sellerPartialSignaturesMessage.toProto(true))
                 .build()));
 
         // *** BUYER BROADCASTS DEPOSIT TX ***
-        Iterator<TxConfirmationStatus> depositTxConfirmationIter = stub.publishDepositTx(PublishDepositTxRequest.newBuilder()
+        // Before publishing we start observing the txConfirmationStatus (avoiding code duplication to handle it
+        // here directly).
+        serviceProvider.getMuSigTradeService().observeDepositTxConfirmationStatus(trade);
+
+        Iterator<TxConfirmationStatus> depositTxConfirmationIter = musigBlockingStub.publishDepositTx(PublishDepositTxRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setDepositPsbt(buyerDepositPsbt.toProto(true))
                 .build());

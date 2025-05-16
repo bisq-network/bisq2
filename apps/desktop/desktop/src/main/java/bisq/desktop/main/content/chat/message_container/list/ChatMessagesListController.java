@@ -19,10 +19,14 @@ package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.bisq_easy.BisqEasyOfferbookMessageService;
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.chat.*;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelSelectionService;
+import bisq.chat.ChatMessage;
+import bisq.chat.ChatMessageType;
+import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.BisqEasyOfferMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
@@ -31,13 +35,19 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.common.CommonPublicChatChannelService;
 import bisq.chat.common.CommonPublicChatMessage;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeMessage;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.chat.priv.PrivateChatChannel;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatMessage;
-import bisq.chat.reactions.*;
+import bisq.chat.reactions.BisqEasyOfferbookMessageReaction;
+import bisq.chat.reactions.ChatMessageReaction;
+import bisq.chat.reactions.CommonPublicChatMessageReaction;
+import bisq.chat.reactions.PrivateChatMessageReaction;
+import bisq.chat.reactions.Reaction;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.observable.Pin;
@@ -52,6 +62,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
@@ -76,7 +87,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -226,6 +242,8 @@ public class ChatMessagesListController implements Controller {
                 chatMessagesPin = bindChatMessages(bisqEasyOfferbookChannel);
             } else if (channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
                 chatMessagesPin = bindChatMessages(bisqEasyOpenTradeChannel);
+            } else if (channel instanceof MuSigOpenTradeChannel muSigOpenTradeChannel) {
+                chatMessagesPin = bindChatMessages(muSigOpenTradeChannel);
             } else if (channel instanceof CommonPublicChatChannel commonPublicChatChannel) {
                 chatMessagesPin = bindChatMessages(commonPublicChatChannel);
             } else if (channel instanceof TwoPartyPrivateChatChannel twoPartyPrivateChatChannel) {
@@ -566,7 +584,7 @@ public class ChatMessagesListController implements Controller {
     public void onDismissChatRulesWarning() {
         dontShowAgainService.putDontShowAgain(DONT_SHOW_CHAT_RULES_WARNING_KEY, true);
 
-         model.getSortedChatMessages().stream()
+        model.getSortedChatMessages().stream()
                 .filter(item -> item.getChatMessage().getChatMessageType() == ChatMessageType.CHAT_RULES_WARNING)
                 .findFirst()
                 .ifPresent(itemToRemove -> {
@@ -773,6 +791,11 @@ public class ChatMessagesListController implements Controller {
             BisqEasyOpenTradeChannel channel = (BisqEasyOpenTradeChannel) chatChannel;
             chatService.getBisqEasyOpenTradeChannelService()
                     .sendTextMessageReaction((BisqEasyOpenTradeMessage) chatMessage, channel, reaction, isRemoved);
+        } else if (chatMessage instanceof MuSigOpenTradeMessage) {
+            checkArgument(chatChannel instanceof MuSigOpenTradeChannel, "Channel needs to be of type MuSigOpenTradeChannel.");
+            MuSigOpenTradeChannel channel = (MuSigOpenTradeChannel) chatChannel;
+            chatService.getMuSigOpenTradeChannelService()
+                    .sendTextMessageReaction((MuSigOpenTradeMessage) chatMessage, channel, reaction, isRemoved);
         }
     }
 
@@ -793,6 +816,9 @@ public class ChatMessagesListController implements Controller {
         } else if (channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
             BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage = createChatRulesWarningMessage(bisqEasyOpenTradeChannel);
             model.getChatMessages().add(createChatMessageListItem(bisqEasyOpenTradeMessage, bisqEasyOpenTradeChannel));
+        } else if (channel instanceof MuSigOpenTradeChannel muSigOpenTradeChannel) {
+            MuSigOpenTradeMessage muSigOpenTradeMessage = createChatRulesWarningMessage(muSigOpenTradeChannel);
+            model.getChatMessages().add(createChatMessageListItem(muSigOpenTradeMessage, muSigOpenTradeChannel));
         }
     }
 
@@ -819,6 +845,26 @@ public class ChatMessagesListController implements Controller {
         UserProfile senderUserProfile = channel.getPeer();
         String text = Res.get("chat.private.chatRulesWarningMessage.text");
         return new BisqEasyOpenTradeMessage(channel.getTradeId(),
+                StringUtils.createUid(),
+                channel.getId(),
+                senderUserProfile,
+                receiverUserProfile.getId(),
+                receiverUserProfile.getNetworkId(),
+                text,
+                Optional.empty(),
+                0L,
+                false,
+                channel.getMediator(),
+                ChatMessageType.CHAT_RULES_WARNING,
+                Optional.empty(),
+                new HashSet<>());
+    }
+
+    private MuSigOpenTradeMessage createChatRulesWarningMessage(MuSigOpenTradeChannel channel) {
+        UserProfile receiverUserProfile = channel.getMyUserIdentity().getUserProfile();
+        UserProfile senderUserProfile = channel.getPeer();
+        String text = Res.get("chat.private.chatRulesWarningMessage.text");
+        return new MuSigOpenTradeMessage(channel.getTradeId(),
                 StringUtils.createUid(),
                 channel.getId(),
                 senderUserProfile,

@@ -30,7 +30,7 @@ import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MuSigCooperativeClosureMessage_G_Handler extends TradeMessageHandler<MuSigTrade, MuSigCooperativeClosureMessage_G> {
+public final class MuSigCooperativeClosureMessage_G_Handler extends TradeMessageHandler<MuSigTrade, MuSigCooperativeClosureMessage_G> {
 
     public MuSigCooperativeClosureMessage_G_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -46,8 +46,8 @@ public class MuSigCooperativeClosureMessage_G_Handler extends TradeMessageHandle
         // ClosureType.COOPERATIVE
         // *** SELLER CLOSES TRADE ***
         CloseTradeResponse buyerCloseTradeResponse = message.getCloseTradeResponse();
-        MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
-        CloseTradeResponse sellersCloseTradeResponse = CloseTradeResponse.fromProto(stub.closeTrade(CloseTradeRequest.newBuilder()
+        MusigGrpc.MusigBlockingStub musigBlockingStub = serviceProvider.getMuSigTradeService().getMusigBlockingStub();
+        CloseTradeResponse sellersCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setMyOutputPeersPrvKeyShare(ByteString.copyFrom( buyerCloseTradeResponse.getPeerOutputPrvKeyShare()))
                 .build()));

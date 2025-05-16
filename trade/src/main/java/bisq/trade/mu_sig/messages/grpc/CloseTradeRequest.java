@@ -24,7 +24,7 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-public class CloseTradeRequest implements Proto {
+public final class CloseTradeRequest implements Proto {
     private final String tradeId;
     private final byte[] myOutputPeersPrvKeyShare;
     private final byte[] swapTx;

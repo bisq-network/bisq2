@@ -20,14 +20,19 @@ package bisq.trade.mu_sig.protocol.ignore;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.protocol.MuSigProtocol;
+import lombok.extern.slf4j.Slf4j;
 
-public class MuSigBuyerAsMakerProtocol extends MuSigProtocol {
+@Slf4j
+public final class MuSigBuyerAsMakerProtocol extends MuSigProtocol {
 
     public MuSigBuyerAsMakerProtocol(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
+        log.error("MuSigBuyerAsMakerProtocol not implemented yet");
     }
 
     @Override
     public void configTransitions() {
+        // TODO: Implement state transitions for buyer-as-maker protocol
+        throw new UnsupportedOperationException("MuSigBuyerAsMakerProtocol not implemented yet");
     }
 }
