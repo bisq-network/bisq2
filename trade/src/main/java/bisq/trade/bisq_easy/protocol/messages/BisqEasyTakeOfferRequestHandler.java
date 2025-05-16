@@ -54,8 +54,6 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandlerAsMessag
 
     @Override
     public void handle(BisqEasyTakeOfferRequest message) {
-        verifyMessage(message);
-
         BisqEasyContract contract = message.getBisqEasyContract();
 //        checkArgument(trade.getOffer().getPriceSpec().equals(contract.getAgreedPriceSpec()),
 //                "Price spec cannot be changed from the one set in offer since v2.0.3.");
@@ -93,8 +91,6 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandlerAsMessag
 
     @Override
     protected void verifyMessage(BisqEasyTakeOfferRequest message) {
-        super.verifyMessage(message);
-
         BisqEasyContract takersContract = checkNotNull(message.getBisqEasyContract(), "Takers contract must not be null");
         BisqEasyOffer takersOffer = checkNotNull(takersContract.getOffer(), "Offer from takers contract must not be null");
 

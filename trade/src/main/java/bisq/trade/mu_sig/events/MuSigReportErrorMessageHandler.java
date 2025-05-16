@@ -32,7 +32,6 @@ public final class MuSigReportErrorMessageHandler extends MuSigTradeMessageHandl
 
     @Override
     public void handle(MuSigReportErrorMessage message) {
-        verifyMessage(message);
         log.warn("We received an error report from our peer.\n" +
                         "errorMessage={}\nstackTrace={}\ntradeId={}",
                 message.getErrorMessage(), message.getStackTrace(), trade.getId());
@@ -41,7 +40,6 @@ public final class MuSigReportErrorMessageHandler extends MuSigTradeMessageHandl
 
     @Override
     protected void verifyMessage(MuSigReportErrorMessage message) {
-        super.verifyMessage(message);
     }
 
     private void commitToModel(MuSigReportErrorMessage message) {

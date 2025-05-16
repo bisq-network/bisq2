@@ -37,8 +37,6 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
 
     @Override
     public void handle(MuSigCooperativeClosureMessage_G message) {
-        verifyMessage(message);
-
         muSigTradeService.stopCooperativeCloseTimeout(trade);
 
         // ClosureType.COOPERATIVE
@@ -47,7 +45,7 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         CloseTradeResponse sellersCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
-                .setMyOutputPeersPrvKeyShare(ByteString.copyFrom( buyerCloseTradeResponse.getPeerOutputPrvKeyShare()))
+                .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(buyerCloseTradeResponse.getPeerOutputPrvKeyShare()))
                 .build()));
 
         commitToModel(sellersCloseTradeResponse, buyerCloseTradeResponse);
@@ -55,7 +53,6 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
 
     @Override
     protected void verifyMessage(MuSigCooperativeClosureMessage_G message) {
-        super.verifyMessage(message);
     }
 
     private void commitToModel(CloseTradeResponse sellersCloseTradeResponse,

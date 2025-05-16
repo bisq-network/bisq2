@@ -31,7 +31,6 @@ public class BisqEasyReportErrorMessageHandler extends TradeMessageHandler<BisqE
 
     @Override
     public void handle(BisqEasyReportErrorMessage message) {
-        verifyMessage(message);
         log.warn("We received an error report from our peer.\n" +
                         "errorMessage={}\nstackTrace={}\ntradeId={}",
                 message.getErrorMessage(), message.getStackTrace(), trade.getId());
@@ -40,7 +39,6 @@ public class BisqEasyReportErrorMessageHandler extends TradeMessageHandler<BisqE
 
     @Override
     protected void verifyMessage(BisqEasyReportErrorMessage message) {
-        super.verifyMessage(message);
     }
 
     private void commitToModel(BisqEasyReportErrorMessage message) {

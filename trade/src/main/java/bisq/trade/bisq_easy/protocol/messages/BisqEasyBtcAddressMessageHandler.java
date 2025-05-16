@@ -38,15 +38,11 @@ public class BisqEasyBtcAddressMessageHandler extends TradeMessageHandler<BisqEa
 
     @Override
     public void handle(BisqEasyBtcAddressMessage message) {
-        verifyMessage(message);
-
         commitToModel(message.getBitcoinPaymentData());
     }
 
     @Override
     protected void verifyMessage(BisqEasyBtcAddressMessage message) {
-        super.verifyMessage(message);
-
         String bitcoinPaymentData = message.getBitcoinPaymentData();
         checkArgument(StringUtils.isNotEmpty(bitcoinPaymentData), "Bitcoin payment data must not be empty");
 

@@ -31,11 +31,9 @@ public class BisqEasyConfirmFiatReceiptMessageHandler extends TradeMessageHandle
 
     @Override
     public void handle(BisqEasyConfirmFiatReceiptMessage message) {
-        verifyMessage(message);
     }
 
     @Override
     protected void verifyMessage(BisqEasyConfirmFiatReceiptMessage message) {
-        super.verifyMessage(message);
     }
 }

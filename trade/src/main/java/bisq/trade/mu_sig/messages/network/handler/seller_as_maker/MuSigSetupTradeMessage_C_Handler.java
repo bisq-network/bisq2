@@ -46,8 +46,6 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
 
     @Override
     public void handle(MuSigSetupTradeMessage_C message) {
-        verifyMessage(message);
-
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         NonceSharesMessage buyerNonceSharesMessage = message.getNonceSharesMessage();
         PartialSignaturesMessage sellerPartialSignaturesMessage = PartialSignaturesMessage.fromProto(musigBlockingStub.getPartialSignatures(PartialSignaturesRequest.newBuilder()
@@ -81,7 +79,6 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void verifyMessage(MuSigSetupTradeMessage_C message) {
-        super.verifyMessage(message);
     }
 
     private void commitToModel(PartialSignaturesMessage sellerPartialSignaturesMessage,

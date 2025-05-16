@@ -38,14 +38,11 @@ public class BisqEasyTakeOfferResponseHandler extends TradeMessageHandlerAsMessa
 
     @Override
     public void handle(BisqEasyTakeOfferResponse message) {
-        verifyMessage(message);
         commitToModel(message.getContractSignatureData());
     }
 
     @Override
     protected void verifyMessage(BisqEasyTakeOfferResponse message) {
-        super.verifyMessage(message);
-
         ContractSignatureData makersContractSignatureData = message.getContractSignatureData();
         ContractSignatureData takersContractSignatureData = trade.getTaker().getContractSignatureData().get();
         checkArgument(Arrays.equals(makersContractSignatureData.getContractHash(), takersContractSignatureData.getContractHash()),

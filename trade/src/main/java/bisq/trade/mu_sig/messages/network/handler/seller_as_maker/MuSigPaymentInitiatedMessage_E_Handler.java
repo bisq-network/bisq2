@@ -33,12 +33,10 @@ public final class MuSigPaymentInitiatedMessage_E_Handler extends MuSigTradeMess
 
     @Override
     public void handle(MuSigPaymentInitiatedMessage_E message) {
-        verifyMessage(message);
     }
 
     @Override
     protected void verifyMessage(MuSigPaymentInitiatedMessage_E message) {
-        super.verifyMessage(message);
     }
 
     private void commitToModel(SwapTxSignatureResponse sellerSwapTxSignatureResponse) {

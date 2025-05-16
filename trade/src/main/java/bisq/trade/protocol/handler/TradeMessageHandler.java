@@ -31,17 +31,24 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
         super(serviceProvider, trade);
     }
 
+    //todo make final
     public void handle(Event event) {
         if (event instanceof TradeMessage tradeMessage) {
-            handle(unsafeCast(tradeMessage));
+            M message = unsafeCast(tradeMessage);
+            verifyInternal(message);
+            verifyMessage(message);
+            handle(message);
         } else {
             throw new IllegalArgumentException("Event must be a subclass of TradeMessage in " + getClass().getSimpleName());
         }
     }
 
+    protected abstract void verifyMessage(M message);
+
+    //todo make protected
     public abstract void handle(M message);
 
-    protected void verifyMessage(M message) {
+    private void verifyInternal(M message) {
         checkArgument(message.getTradeId().equals(trade.getId()),
                 "TradeId of message not matching the tradeId from the trade data");
         NetworkId sender = message.getSender();

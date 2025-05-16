@@ -36,14 +36,11 @@ public class BisqEasyAccountDataMessageHandler extends TradeMessageHandler<BisqE
 
     @Override
     public void handle(BisqEasyAccountDataMessage message) {
-        verifyMessage(message);
         commitToModel(message.getPaymentAccountData());
     }
 
     @Override
     protected void verifyMessage(BisqEasyAccountDataMessage message) {
-        super.verifyMessage(message);
-
         checkArgument(StringUtils.isNotEmpty(message.getPaymentAccountData()), "PaymentAccountData must not be empty");
         checkArgument(message.getPaymentAccountData().length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH,
                 "PaymentAccountData length must not be longer than " + UserDefinedFiatAccountPayload.MAX_DATA_LENGTH);
