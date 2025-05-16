@@ -81,16 +81,6 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
         makersContractSignatureData = message.getContractSignatureData();
 
         // TODO verify both contracts are the same, and verify peers signature
-
-
-        MuSigSetupTradeMessage_C response = new MuSigSetupTradeMessage_C(StringUtils.createUid(),
-                trade.getId(),
-                trade.getProtocolVersion(),
-                trade.getMyself().getNetworkId(),
-                trade.getPeer().getNetworkId(),
-                buyerNonceSharesMessage,
-                buyerPartialSignaturesMessage); // TODO we probably don't want to send all the data here
-        sendMessage(response, serviceProvider, trade);
     }
 
     @Override
@@ -119,5 +109,22 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
                 .entrySet().stream()
                 .map(e -> ReceiverAddressAndAmount.newBuilder().setAddress(e.getKey()).setAmount(e.getValue()).build())
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    protected void sendMessage() {
+        // TODO we probably don't want to send all the data here
+        sendMessage(new MuSigSetupTradeMessage_C(StringUtils.createUid(),
+                trade.getId(),
+                trade.getProtocolVersion(),
+                trade.getMyself().getNetworkId(),
+                trade.getPeer().getNetworkId(),
+                buyerNonceSharesMessage,
+                buyerPartialSignaturesMessage));
+    }
+
+    @Override
+    protected void sendTradeLogMessage() {
+
     }
 }

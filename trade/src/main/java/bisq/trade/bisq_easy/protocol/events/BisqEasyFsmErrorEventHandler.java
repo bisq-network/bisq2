@@ -47,7 +47,17 @@ public class BisqEasyFsmErrorEventHandler extends TradeEventHandlerAsMessageSend
         FsmException fsmException = fsmErrorEvent.getFsmException();
         errorMessage = ExceptionUtil.getRootCauseMessage(fsmException);
         errorStackTrace = ExceptionUtil.getSafeStackTraceAsString(fsmException);
+    }
 
+    @Override
+    protected void commitToModel() {
+        // Set errorStackTrace first as we use errorMessage observable in the handler code accessing both fields
+        trade.setErrorStackTrace(errorStackTrace);
+        trade.setErrorMessage(errorMessage);
+    }
+
+    @Override
+    protected void sendMessage() {
         log.warn("We send the cause stack and stackTrace to our peer.\n" +
                 "errorMessage={}\nstackTrace={}", errorMessage, errorStackTrace);
         sendMessage(new BisqEasyReportErrorMessage(createUid(),
@@ -57,12 +67,5 @@ public class BisqEasyFsmErrorEventHandler extends TradeEventHandlerAsMessageSend
                 trade.getPeer().getNetworkId(),
                 truncate(errorMessage, MAX_LENGTH_ERROR_MESSAGE),
                 truncate(errorStackTrace, MAX_LENGTH_STACKTRACE)));
-    }
-
-    @Override
-    protected void commitToModel() {
-        // Set errorStackTrace first as we use errorMessage observable in the handler code accessing both fields
-        trade.setErrorStackTrace(errorStackTrace);
-        trade.setErrorMessage(errorMessage);
     }
 }

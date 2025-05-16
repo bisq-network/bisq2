@@ -53,14 +53,6 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
                 .setTradeId(trade.getId())
                 .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(sellerSwapTxSignatureResponse.getPeerOutputPrvKeyShare()))
                 .build()));
-
-        MuSigCooperativeClosureMessage_G responseMessage = new MuSigCooperativeClosureMessage_G(StringUtils.createUid(),
-                trade.getId(),
-                trade.getProtocolVersion(),
-                trade.getMyIdentity().getNetworkId(),
-                trade.getPeer().getNetworkId(),
-                buyersCloseTradeResponse);
-        sendMessage(responseMessage, serviceProvider, trade);
     }
 
     @Override
@@ -74,5 +66,20 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
 
         buyerAsTaker.setCloseTradeResponse(buyersCloseTradeResponse);
         sellerAsMaker.setSwapTxSignatureResponse(sellerSwapTxSignatureResponse);
+    }
+
+    @Override
+    protected void sendMessage() {
+        sendMessage(new MuSigCooperativeClosureMessage_G(StringUtils.createUid(),
+                trade.getId(),
+                trade.getProtocolVersion(),
+                trade.getMyIdentity().getNetworkId(),
+                trade.getPeer().getNetworkId(),
+                buyersCloseTradeResponse));
+    }
+
+    @Override
+    protected void sendTradeLogMessage() {
+
     }
 }

@@ -66,14 +66,6 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandlerAsMessag
             makersContractSignatureData = contractService.signContract(contract,
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
 
-            BisqEasyTakeOfferResponse response = new BisqEasyTakeOfferResponse(StringUtils.createUid(),
-                    trade.getId(),
-                    trade.getProtocolVersion(),
-                    trade.getMyself().getNetworkId(),
-                    trade.getPeer().getNetworkId(),
-                    makersContractSignatureData);
-            sendMessage(response, serviceProvider, trade);
-
             if (serviceProvider.getSettingsService().getCloseMyOfferWhenTaken().get()) {
                 BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
                 bisqEasyOfferbookChannelService.findMessageByOffer(trade.getOffer())
@@ -89,6 +81,16 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandlerAsMessag
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    protected void sendMessage() {
+        sendMessage(new BisqEasyTakeOfferResponse(StringUtils.createUid(),
+                trade.getId(),
+                trade.getProtocolVersion(),
+                trade.getMyself().getNetworkId(),
+                trade.getPeer().getNetworkId(),
+                makersContractSignatureData));
     }
 
     @Override

@@ -33,15 +33,19 @@ public class BisqEasyCancelTradeEventHandler extends TradeEventHandlerAsMessageS
 
     @Override
     public void processEvent(Event event) {
-        sendMessage(new BisqEasyCancelTradeMessage(StringUtils.createUid(),
-                trade.getId(),
-                trade.getProtocolVersion(),
-                trade.getMyIdentity().getNetworkId(),
-                trade.getPeer().getNetworkId()));
     }
 
     @Override
     protected void commitToModel() {
         trade.getInterruptTradeInitiator().set(trade.isMaker() ? Role.MAKER : Role.TAKER);
+    }
+
+    @Override
+    protected void sendMessage() {
+        sendMessage(new BisqEasyCancelTradeMessage(StringUtils.createUid(),
+                trade.getId(),
+                trade.getProtocolVersion(),
+                trade.getMyIdentity().getNetworkId(),
+                trade.getPeer().getNetworkId()));
     }
 }

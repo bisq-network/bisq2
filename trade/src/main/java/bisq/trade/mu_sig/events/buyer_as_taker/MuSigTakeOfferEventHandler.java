@@ -38,9 +38,9 @@ import java.util.Optional;
 
 @Slf4j
 public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade> {
-
     private PubKeySharesResponse buyerPubKeySharesResponse;
     private ContractSignatureData contractSignatureData;
+    private MuSigContract contract;
 
     public MuSigTakeOfferEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -56,40 +56,42 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
                     .build());
             buyerPubKeySharesResponse = PubKeySharesResponse.fromProto(proto);
 
-            MuSigContract contract = trade.getContract();
+            contract = trade.getContract();
 
             contractSignatureData = serviceProvider.getContractService().signContract(contract,
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
 
+            sendMessage();
 
-            sendMessage(new MuSigSetupTradeMessage_A(StringUtils.createUid(),
-                    trade.getId(),
-                    trade.getProtocolVersion(),
-                    trade.getMyIdentity().getNetworkId(),
-                    trade.getPeer().getNetworkId(),
-                    contract,
-                    contractSignatureData,
-                    buyerPubKeySharesResponse));
-
-            String takerId = trade.getTaker().getNetworkId().getId();
-            MuSigOffer offer = trade.getOffer();
-            Optional<UserProfile> takerUserProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(takerId);
-
-            String makerId = offer.getMakersUserProfileId();
-            Optional<UserProfile> makerUserProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(makerId);
-            try {
-                sendTradeLogMessage(Res.encode("muSig.protocol.logMessage.takeOffer",
-                        takerUserProfile.orElseThrow().getUserName(),
-                        makerUserProfile.orElseThrow().getUserName(),
-                        offer.getShortId()));
-            } catch (Exception e) {
-                log.error("sendTradeLogMessage failed", e);
-            }
-
+            sendTradeLogMessage();
         } catch (Exception e) {
             log.error("{}.handle() failed", getClass().getSimpleName(), e);
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    protected  void sendTradeLogMessage() {
+        String takerId = trade.getTaker().getNetworkId().getId();
+        MuSigOffer offer = trade.getOffer();
+        Optional<UserProfile> takerUserProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(takerId);
+        String makerId = offer.getMakersUserProfileId();
+        Optional<UserProfile> makerUserProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(makerId);
+        sendTradeLogMessage(Res.encode("muSig.protocol.logMessage.takeOffer",
+                takerUserProfile.orElseThrow().getUserName(),
+                makerUserProfile.orElseThrow().getUserName(),
+                offer.getShortId()));
+    }
+    @Override
+    protected void sendMessage() {
+        sendMessage(new MuSigSetupTradeMessage_A(StringUtils.createUid(),
+                trade.getId(),
+                trade.getProtocolVersion(),
+                trade.getMyIdentity().getNetworkId(),
+                trade.getPeer().getNetworkId(),
+                contract,
+                contractSignatureData,
+                buyerPubKeySharesResponse));
     }
 
     @Override

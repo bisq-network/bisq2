@@ -51,17 +51,7 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
                 .setSwapTxInputPeersPartialSignature(ByteString.copyFrom(buyerPartialSignaturesMessage.getSwapTxInputPartialSignature()))
                 .build()));
 
-
         //ClosureType.COOPERATIVE
-
-        MuSigPaymentReceivedMessage_F responseMessage = new MuSigPaymentReceivedMessage_F(StringUtils.createUid(),
-                trade.getId(),
-                trade.getProtocolVersion(),
-                trade.getMyIdentity().getNetworkId(),
-                trade.getPeer().getNetworkId(),
-                sellerSwapTxSignatureResponse); // TODO do we want to send the full SwapTxSignatureResponse?
-        sendMessage(responseMessage, serviceProvider, trade);
-
         muSigTradeService.startCooperativeCloseTimeout(trade, new MuSigSellersCooperativeCloseTimeoutEvent());
     }
 
@@ -70,4 +60,21 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
         MuSigTradeParty sellerAsMaker = trade.getMaker();
         sellerAsMaker.setSwapTxSignatureResponse(sellerSwapTxSignatureResponse);
     }
+
+    @Override
+    protected void sendMessage() {
+        // TODO do we want to send the full SwapTxSignatureResponse?
+        sendMessage(new MuSigPaymentReceivedMessage_F(StringUtils.createUid(),
+                trade.getId(),
+                trade.getProtocolVersion(),
+                trade.getMyIdentity().getNetworkId(),
+                trade.getPeer().getNetworkId(),
+                sellerSwapTxSignatureResponse));
+    }
+
+    @Override
+    protected void sendTradeLogMessage() {
+
+    }
+
 }

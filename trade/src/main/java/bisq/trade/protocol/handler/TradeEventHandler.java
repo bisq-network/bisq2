@@ -31,7 +31,7 @@ public abstract class TradeEventHandler<T extends Trade<?, ?, ?>> implements Eve
         this.trade = trade;
     }
 
-    public final void handle(Event event) {
+    public void handle(Event event) {
         processEvent(event);
         commitToModel();
     }

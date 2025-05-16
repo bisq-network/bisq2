@@ -20,7 +20,6 @@ package bisq.trade.bisq_easy.protocol.events;
 import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractSignatureData;
-import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
@@ -38,18 +37,9 @@ public class BisqEasyTakeOfferEventHandler extends TradeEventHandlerAsMessageSen
 
     @Override
     public void processEvent(Event event) {
-        BisqEasyContract bisqEasyContract = trade.getContract();
         try {
-            contractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract,
+            contractSignatureData = serviceProvider.getContractService().signContract(trade.getContract(),
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
-
-            sendMessage(new BisqEasyTakeOfferRequest(StringUtils.createUid(),
-                    trade.getId(),
-                    trade.getProtocolVersion(),
-                    trade.getMyIdentity().getNetworkId(),
-                    trade.getPeer().getNetworkId(),
-                    bisqEasyContract,
-                    contractSignatureData));
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
@@ -58,5 +48,16 @@ public class BisqEasyTakeOfferEventHandler extends TradeEventHandlerAsMessageSen
     @Override
     protected void commitToModel() {
         trade.getTaker().getContractSignatureData().set(contractSignatureData);
+    }
+
+    @Override
+    protected void sendMessage() {
+        sendMessage(new BisqEasyTakeOfferRequest(StringUtils.createUid(),
+                trade.getId(),
+                trade.getProtocolVersion(),
+                trade.getMyIdentity().getNetworkId(),
+                trade.getPeer().getNetworkId(),
+                trade.getContract(),
+                contractSignatureData));
     }
 }

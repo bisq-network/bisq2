@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.handler;
 
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
+import bisq.common.fsm.Event;
 import bisq.network.SendMessageResult;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -37,6 +38,14 @@ public abstract class MuSigTradeEventHandlerAsMessageSender<T extends MuSigTrade
 
         muSigTradeService = serviceProvider.getMuSigTradeService();
     }
+
+    public void handle(Event event) {
+        super.handle(event);
+
+        sendTradeLogMessage();
+    }
+
+    protected abstract void sendTradeLogMessage();
 
     protected Optional<CompletableFuture<SendMessageResult>> sendTradeLogMessage(String encoded) {
         MuSigOpenTradeChannelService openTradeChannelService = serviceProvider.getChatService().getMuSigOpenTradeChannelService();

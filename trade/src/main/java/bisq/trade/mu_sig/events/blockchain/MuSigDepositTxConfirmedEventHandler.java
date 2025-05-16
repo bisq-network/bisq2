@@ -33,8 +33,6 @@ public final class MuSigDepositTxConfirmedEventHandler extends MuSigTradeEventHa
     @Override
     public void processEvent(Event event) {
         MuSigDepositTxConfirmedEvent muSigDepositTxConfirmedEvent = (MuSigDepositTxConfirmedEvent) event;
-        //commitToModel(muSigDepositTxConfirmedEvent.getTxConfirmationStatus());
-
     }
 
     @Override

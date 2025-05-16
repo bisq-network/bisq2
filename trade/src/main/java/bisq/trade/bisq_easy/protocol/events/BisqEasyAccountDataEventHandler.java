@@ -36,7 +36,15 @@ public class BisqEasyAccountDataEventHandler extends TradeEventHandlerAsMessageS
     public void processEvent(Event event) {
         BisqEasyAccountDataEvent bisqEasyTakeOfferEvent = (BisqEasyAccountDataEvent) event;
         paymentAccountData = bisqEasyTakeOfferEvent.getPaymentAccountData();
+    }
 
+    @Override
+    protected void commitToModel() {
+        trade.getPaymentAccountData().set(paymentAccountData);
+    }
+
+    @Override
+    protected void sendMessage() {
         sendMessage(new BisqEasyAccountDataMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
@@ -44,10 +52,5 @@ public class BisqEasyAccountDataEventHandler extends TradeEventHandlerAsMessageS
                 trade.getPeer().getNetworkId(),
                 paymentAccountData,
                 trade.getOffer()));
-    }
-
-    @Override
-    protected void commitToModel() {
-        trade.getPaymentAccountData().set(paymentAccountData);
     }
 }

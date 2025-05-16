@@ -35,7 +35,7 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
         this.trade = trade;
     }
 
-    public final void handle(Event event) {
+    public void handle(Event event) {
         if (event instanceof TradeMessage tradeMessage) {
             M message = unsafeCast(tradeMessage);
             verifyInternal(message);
@@ -68,7 +68,7 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
         try {
             return (M) tradeMessage;
         } catch (Exception e) {
-            throw new ClassCastException("Could not cast tradeMessage to generic type in " + getClass().getSimpleName() + ". " + e.getMessage());
+            throw new ClassCastException("Could not cast tradeMessage to generic TradeMessage type in " + getClass().getSimpleName() + ". " + e.getMessage());
         }
     }
 }

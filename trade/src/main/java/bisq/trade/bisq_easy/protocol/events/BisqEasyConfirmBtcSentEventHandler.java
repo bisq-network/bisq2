@@ -38,17 +38,20 @@ public class BisqEasyConfirmBtcSentEventHandler extends TradeEventHandlerAsMessa
     public void processEvent(Event event) {
         BisqEasyConfirmBtcSentEvent bisqEasyConfirmBtcSentEvent = (BisqEasyConfirmBtcSentEvent) event;
         paymentProof = bisqEasyConfirmBtcSentEvent.getPaymentProof();
+    }
 
+    @Override
+    protected void commitToModel() {
+        paymentProof.ifPresent(e -> trade.getPaymentProof().set(e));
+    }
+
+    @Override
+    protected void sendMessage() {
         sendMessage(new BisqEasyConfirmBtcSentMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 paymentProof));
-    }
-
-    @Override
-    protected void commitToModel() {
-        paymentProof.ifPresent(e -> trade.getPaymentProof().set(e));
     }
 }

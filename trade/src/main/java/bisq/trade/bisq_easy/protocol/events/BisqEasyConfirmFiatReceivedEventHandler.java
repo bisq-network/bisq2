@@ -32,14 +32,18 @@ public class BisqEasyConfirmFiatReceivedEventHandler extends TradeEventHandlerAs
 
     @Override
     public void processEvent(Event event) {
+    }
+
+    @Override
+    protected void commitToModel() {
+    }
+
+    @Override
+    protected void sendMessage() {
         sendMessage(new BisqEasyConfirmFiatReceiptMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId()));
-    }
-
-    @Override
-    protected void commitToModel() {
     }
 }

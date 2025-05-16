@@ -36,7 +36,15 @@ public class BisqEasySendBtcAddressEventHandler extends TradeEventHandlerAsMessa
     public void processEvent(Event event) {
         BisqEasySendBtcAddressEvent bisqEasySendBtcAddressEvent = (BisqEasySendBtcAddressEvent) event;
         bitcoinPaymentData = bisqEasySendBtcAddressEvent.getBitcoinPaymentData();
+    }
 
+    @Override
+    protected void commitToModel() {
+        trade.getBitcoinPaymentData().set(bitcoinPaymentData);
+    }
+
+    @Override
+    protected void sendMessage() {
         sendMessage(new BisqEasyBtcAddressMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
@@ -44,10 +52,5 @@ public class BisqEasySendBtcAddressEventHandler extends TradeEventHandlerAsMessa
                 trade.getPeer().getNetworkId(),
                 bitcoinPaymentData,
                 trade.getOffer()));
-    }
-
-    @Override
-    protected void commitToModel() {
-        trade.getBitcoinPaymentData().set(bitcoinPaymentData);
     }
 }

@@ -32,16 +32,24 @@ public final class MuSigPaymentInitiatedEventHandler extends MuSigTradeEventHand
 
     @Override
     public void processEvent(Event event) {
-        sendMessage(new MuSigPaymentInitiatedMessage_E(StringUtils.createUid(),
-                trade.getId(),
-                trade.getProtocolVersion(),
-                trade.getMyIdentity().getNetworkId(),
-                trade.getPeer().getNetworkId()));
-
         muSigTradeService.startCooperativeCloseTimeout(trade, new MuSigBuyersCooperativeCloseTimeoutEvent());
     }
 
     @Override
     protected void commitToModel() {
+    }
+
+    @Override
+    protected void sendMessage() {
+        sendMessage(new MuSigPaymentInitiatedMessage_E(StringUtils.createUid(),
+                trade.getId(),
+                trade.getProtocolVersion(),
+                trade.getMyIdentity().getNetworkId(),
+                trade.getPeer().getNetworkId()));
+    }
+
+    @Override
+    protected void sendTradeLogMessage() {
+
     }
 }
