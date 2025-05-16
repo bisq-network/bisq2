@@ -24,7 +24,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SellerState1WaitForDepositConfirmation extends WaitForDepositConfirmationState<SellerState1WaitForDepositConfirmation.Controller> {
+public class SellerState1WaitForDepositConfirmation extends WaitForDepositConfirmation<SellerState1WaitForDepositConfirmation.Controller> {
     public SellerState1WaitForDepositConfirmation(ServiceProvider serviceProvider,
                                                   MuSigTrade trade,
                                                   MuSigOpenTradeChannel channel) {
@@ -42,7 +42,7 @@ public class SellerState1WaitForDepositConfirmation extends WaitForDepositConfir
         return new Controller(serviceProvider, trade, channel);
     }
 
-    protected static class Controller extends WaitForDepositConfirmationState.Controller<Model, View> {
+    protected static class Controller extends WaitForDepositConfirmation.Controller<Model, View> {
         protected Controller(ServiceProvider serviceProvider,
                              MuSigTrade trade,
                              MuSigOpenTradeChannel channel) {
@@ -61,13 +61,13 @@ public class SellerState1WaitForDepositConfirmation extends WaitForDepositConfir
     }
 
     @Getter
-    protected static class Model extends WaitForDepositConfirmationState.Model {
+    protected static class Model extends WaitForDepositConfirmation.Model {
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
         }
     }
 
-    public static class View extends WaitForDepositConfirmationState.View<Model, Controller> {
+    public static class View extends WaitForDepositConfirmation.View<Model, Controller> {
         protected View(Model model, Controller controller) {
             super(model, controller);
         }

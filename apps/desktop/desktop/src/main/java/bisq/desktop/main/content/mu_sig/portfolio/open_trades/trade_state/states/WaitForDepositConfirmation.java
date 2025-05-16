@@ -60,12 +60,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public abstract class WaitForDepositConfirmationState<C extends WaitForDepositConfirmationState.Controller<?, ?>> extends BaseState {
+public abstract class WaitForDepositConfirmation<C extends WaitForDepositConfirmation.Controller<?, ?>> extends BaseState {
     protected final C controller;
 
-    protected WaitForDepositConfirmationState(ServiceProvider serviceProvider,
-                                              MuSigTrade trade,
-                                              MuSigOpenTradeChannel channel) {
+    protected WaitForDepositConfirmation(ServiceProvider serviceProvider,
+                                         MuSigTrade trade,
+                                         MuSigOpenTradeChannel channel) {
         controller = getController(serviceProvider, trade, channel);
     }
 
