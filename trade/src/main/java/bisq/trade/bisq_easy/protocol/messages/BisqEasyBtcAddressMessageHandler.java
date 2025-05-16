@@ -37,7 +37,7 @@ public class BisqEasyBtcAddressMessageHandler extends TradeMessageHandler<BisqEa
     }
 
     @Override
-    public void handle(BisqEasyBtcAddressMessage message) {
+    public void processMessage(BisqEasyBtcAddressMessage message) {
         commitToModel(message.getBitcoinPaymentData());
     }
 

@@ -30,7 +30,7 @@ public class BisqEasyConfirmFiatSentMessageHandler extends TradeMessageHandler<B
     }
 
     @Override
-    public void handle(BisqEasyConfirmFiatSentMessage message) {
+    public void processMessage(BisqEasyConfirmFiatSentMessage message) {
     }
 
     @Override

@@ -32,12 +32,12 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
     }
 
     //todo make final
-    public void handle(Event event) {
+    public final void handle(Event event) {
         if (event instanceof TradeMessage tradeMessage) {
             M message = unsafeCast(tradeMessage);
             verifyInternal(message);
             verifyMessage(message);
-            handle(message);
+            processMessage(message);
         } else {
             throw new IllegalArgumentException("Event must be a subclass of TradeMessage in " + getClass().getSimpleName());
         }
@@ -46,7 +46,7 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
     protected abstract void verifyMessage(M message);
 
     //todo make protected
-    public abstract void handle(M message);
+    public abstract void processMessage(M message);
 
     private void verifyInternal(M message) {
         checkArgument(message.getTradeId().equals(trade.getId()),
@@ -58,9 +58,9 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
         // As the message handler is optional we prefer to block banned messages at the level instead of handling it here.
     }
 
+    @SuppressWarnings("unchecked")
     private M unsafeCast(TradeMessage tradeMessage) {
         try {
-            //noinspection unchecked
             return (M) tradeMessage;
         } catch (Exception e) {
             throw new ClassCastException("Could not cast tradeMessage to generic type in " + getClass().getSimpleName() + ". " + e.getMessage());

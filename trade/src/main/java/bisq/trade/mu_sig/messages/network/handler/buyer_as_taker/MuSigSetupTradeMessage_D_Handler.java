@@ -40,7 +40,7 @@ public final class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHan
     }
 
     @Override
-    public void handle(MuSigSetupTradeMessage_D message) {
+    public void processMessage(MuSigSetupTradeMessage_D message) {
         PartialSignaturesMessage sellerPartialSignaturesMessage = message.getPartialSignaturesMessage();
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         DepositPsbt buyerDepositPsbt = DepositPsbt.fromProto(musigBlockingStub.signDepositTx(DepositTxSignatureRequest.newBuilder()

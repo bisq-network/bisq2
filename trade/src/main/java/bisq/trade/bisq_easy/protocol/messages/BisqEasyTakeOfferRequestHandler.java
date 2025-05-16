@@ -53,7 +53,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandlerAsMessag
     }
 
     @Override
-    public void handle(BisqEasyTakeOfferRequest message) {
+    public void processMessage(BisqEasyTakeOfferRequest message) {
         BisqEasyContract contract = message.getBisqEasyContract();
 //        checkArgument(trade.getOffer().getPriceSpec().equals(contract.getAgreedPriceSpec()),
 //                "Price spec cannot be changed from the one set in offer since v2.0.3.");

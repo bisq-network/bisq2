@@ -31,7 +31,7 @@ public class BisqEasyCancelTradeMessageHandler extends TradeMessageHandler<BisqE
     }
 
     @Override
-    public void handle(BisqEasyCancelTradeMessage message) {
+    public void processMessage(BisqEasyCancelTradeMessage message) {
         commitToModel();
     }
 

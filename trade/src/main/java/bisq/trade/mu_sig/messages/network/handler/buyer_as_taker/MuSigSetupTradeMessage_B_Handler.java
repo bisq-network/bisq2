@@ -48,7 +48,7 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
     }
 
     @Override
-    public void handle(MuSigSetupTradeMessage_B message) {
+    public void processMessage(MuSigSetupTradeMessage_B message) {
         NonceSharesMessage sellerAsMakerNonceSharesMessage = message.getNonceSharesMessage();
 
         // Request NonceSharesMessage from rust server
