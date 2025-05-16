@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.messages.network.handler.buyer_as_taker;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.mu_sig.MuSigContract;
@@ -43,22 +42,29 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_B> {
+    private ContractSignatureData makersContractSignatureData;
+    private NonceSharesMessage buyerNonceSharesMessage;
+    private PubKeySharesResponse sellerPubKeySharesResponse;
+    private NonceSharesMessage sellerAsMakerNonceSharesMessage;
+    private PartialSignaturesMessage buyerPartialSignaturesMessage;
 
     public MuSigSetupTradeMessage_B_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        MuSigSetupTradeMessage_B message = (MuSigSetupTradeMessage_B) event;
-        verifyMessage(message);
+    protected void verify(MuSigSetupTradeMessage_B message) {
+        // TODO verify both contracts are the same, and verify peers signature
+    }
 
-        NonceSharesMessage sellerAsMakerNonceSharesMessage = message.getNonceSharesMessage();
+    @Override
+    protected void process(MuSigSetupTradeMessage_B message) {
+        sellerAsMakerNonceSharesMessage = message.getNonceSharesMessage();
 
         // Request NonceSharesMessage from rust server
-        PubKeySharesResponse sellerPubKeySharesResponse = message.getPubKeySharesResponse();
+        sellerPubKeySharesResponse = message.getPubKeySharesResponse();
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
-        NonceSharesMessage buyerNonceSharesMessage = NonceSharesMessage.fromProto(musigBlockingStub.getNonceShares(NonceSharesRequest.newBuilder()
+        buyerNonceSharesMessage = NonceSharesMessage.fromProto(musigBlockingStub.getNonceShares(NonceSharesRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setBuyerOutputPeersPubKeyShare(ByteString.copyFrom(sellerPubKeySharesResponse.getBuyerOutputPubKeyShare()))
                 .setSellerOutputPeersPubKeyShare(ByteString.copyFrom(sellerPubKeySharesResponse.getSellerOutputPubKeyShare()))
@@ -69,44 +75,18 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
                 .setSellersSecurityDeposit(30_000)
                 .build()));
 
-        PartialSignaturesMessage buyerPartialSignaturesMessage = PartialSignaturesMessage.fromProto(musigBlockingStub.getPartialSignatures(PartialSignaturesRequest.newBuilder()
+        buyerPartialSignaturesMessage = PartialSignaturesMessage.fromProto(musigBlockingStub.getPartialSignatures(PartialSignaturesRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setPeersNonceShares(sellerAsMakerNonceSharesMessage.toProto(true))
                 .addAllReceivers(mockReceivers())
                 .build()));
 
         MuSigContract makersContract = message.getContract();
-        ContractSignatureData makersContractSignatureData = message.getContractSignatureData();
-
-        // TODO verify both contracts are the same, and verify peers signature
-
-        commitToModel(makersContractSignatureData,
-                buyerNonceSharesMessage,
-                buyerPartialSignaturesMessage,
-                sellerPubKeySharesResponse,
-                sellerAsMakerNonceSharesMessage
-        );
-
-        MuSigSetupTradeMessage_C response = new MuSigSetupTradeMessage_C(StringUtils.createUid(),
-                trade.getId(),
-                trade.getProtocolVersion(),
-                trade.getMyself().getNetworkId(),
-                trade.getPeer().getNetworkId(),
-                buyerNonceSharesMessage,
-                buyerPartialSignaturesMessage); // TODO we probably don't want to send all the data here
-        sendMessage(response, serviceProvider, trade);
+        makersContractSignatureData = message.getContractSignatureData();
     }
 
     @Override
-    protected void verifyMessage(MuSigSetupTradeMessage_B message) {
-        super.verifyMessage(message);
-    }
-
-    private void commitToModel(ContractSignatureData makersContractSignatureData,
-                               NonceSharesMessage buyerNonceSharesMessage,
-                               PartialSignaturesMessage buyerPartialSignaturesMessage,
-                               PubKeySharesResponse sellerPubKeySharesResponse,
-                               NonceSharesMessage sellerAsMakerNonceSharesMessage) {
+    protected void commit() {
         MuSigTradeParty buyerAsTaker = trade.getTaker();
         MuSigTradeParty sellerAsMaker = trade.getMaker();
 
@@ -116,6 +96,22 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
         buyerAsTaker.setPartialSignaturesMessage(buyerPartialSignaturesMessage);
         sellerAsMaker.setPubKeySharesResponse(sellerPubKeySharesResponse);
         sellerAsMaker.setNonceSharesMessage(sellerAsMakerNonceSharesMessage);
+    }
+
+    @Override
+    protected void sendMessage() {
+        // TODO we probably don't want to send all the data here
+        send(new MuSigSetupTradeMessage_C(StringUtils.createUid(),
+                trade.getId(),
+                trade.getProtocolVersion(),
+                trade.getMyself().getNetworkId(),
+                trade.getPeer().getNetworkId(),
+                buyerNonceSharesMessage,
+                buyerPartialSignaturesMessage));
+    }
+
+    @Override
+    protected void sendLogMessage() {
     }
 
     private static List<ReceiverAddressAndAmount> mockReceivers() {

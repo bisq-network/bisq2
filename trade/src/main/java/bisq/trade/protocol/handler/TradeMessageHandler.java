@@ -17,6 +17,8 @@
 
 package bisq.trade.protocol.handler;
 
+import bisq.common.fsm.Event;
+import bisq.common.fsm.EventHandler;
 import bisq.network.identity.NetworkId;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
@@ -24,13 +26,34 @@ import bisq.trade.protocol.messages.TradeMessage;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends TradeMessage> extends TradeEventHandler<T> {
+public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends TradeMessage> implements EventHandler {
+    protected final ServiceProvider serviceProvider;
+    protected final T trade;
 
     protected TradeMessageHandler(ServiceProvider serviceProvider, T trade) {
-        super(serviceProvider, trade);
+        this.serviceProvider = serviceProvider;
+        this.trade = trade;
     }
 
-    protected void verifyMessage(M message) {
+    public void handle(Event event) {
+        if (event instanceof TradeMessage tradeMessage) {
+            M message = unsafeCast(tradeMessage);
+            verifyInternal(message);
+            verify(message);
+            process(message);
+            commit();
+        } else {
+            throw new IllegalArgumentException("Event must be a subclass of TradeMessage in " + getClass().getSimpleName());
+        }
+    }
+
+    protected abstract void verify(M message);
+
+    protected abstract void process(M message);
+
+    protected abstract void commit();
+
+    private void verifyInternal(M message) {
         checkArgument(message.getTradeId().equals(trade.getId()),
                 "TradeId of message not matching the tradeId from the trade data");
         NetworkId sender = message.getSender();
@@ -38,5 +61,14 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
                 "Message sender networkID not matching the peers networkId from the trade data");
         // We verify if the sender of the message is banned at the message handler in the service class.
         // As the message handler is optional we prefer to block banned messages at the level instead of handling it here.
+    }
+
+    @SuppressWarnings("unchecked")
+    private M unsafeCast(TradeMessage tradeMessage) {
+        try {
+            return (M) tradeMessage;
+        } catch (Exception e) {
+            throw new ClassCastException("Could not cast tradeMessage to generic TradeMessage type in " + getClass().getSimpleName() + ". " + e.getMessage());
+        }
     }
 }

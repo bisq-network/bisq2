@@ -18,7 +18,6 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.BitcoinTransactionValidation;
 import bisq.common.validation.LightningPreImageValidation;
@@ -33,22 +32,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class BisqEasyConfirmBtcSentMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyConfirmBtcSentMessage> {
+    private Optional<String> paymentProof;
+
     public BisqEasyConfirmBtcSentMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyConfirmBtcSentMessage message = (BisqEasyConfirmBtcSentMessage) event;
-        verifyMessage(message);
-
-        commitToModel(message.getPaymentProof());
-    }
-
-    @Override
-    protected void verifyMessage(BisqEasyConfirmBtcSentMessage message) {
-        super.verifyMessage(message);
-
+    protected void verify(BisqEasyConfirmBtcSentMessage message) {
         message.getPaymentProof().ifPresent(paymentProof -> {
             boolean isMainChain = trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
             if (isMainChain) {
@@ -65,7 +56,14 @@ public class BisqEasyConfirmBtcSentMessageHandler extends TradeMessageHandler<Bi
         });
     }
 
-    private void commitToModel(Optional<String> paymentProof) {
+    @Override
+    protected void process(BisqEasyConfirmBtcSentMessage message) {
+        paymentProof = message.getPaymentProof();
+    }
+
+
+    @Override
+    protected void commit() {
         paymentProof.ifPresent(e -> trade.getPaymentProof().set(e));
     }
 }

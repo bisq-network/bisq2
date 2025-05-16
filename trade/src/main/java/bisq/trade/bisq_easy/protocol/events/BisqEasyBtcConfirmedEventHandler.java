@@ -17,25 +17,23 @@
 
 package bisq.trade.bisq_easy.protocol.events;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.handler.TradeEventHandler;
 
 import java.util.Optional;
 
-public class BisqEasyBtcConfirmedEventHandler extends TradeEventHandler<BisqEasyTrade> {
-
+public class BisqEasyBtcConfirmedEventHandler extends TradeEventHandler<BisqEasyTrade, BisqEasyBtcConfirmedEvent> {
     public BisqEasyBtcConfirmedEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        commitToModel();
+    public void process(BisqEasyBtcConfirmedEvent event) {
     }
 
-    private void commitToModel() {
+    @Override
+    protected void commit() {
         trade.setTradeCompletedDate(Optional.of(System.currentTimeMillis()));
     }
 }

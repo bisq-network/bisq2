@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.events.seller_as_maker;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
@@ -26,27 +25,28 @@ import bisq.trade.protobuf.CloseTradeRequest;
 import bisq.trade.protobuf.CloseTradeResponse;
 import bisq.trade.protobuf.MusigGrpc;
 
-public final class MuSigSellersCooperativeCloseTimeoutEventHandler extends MuSigTradeEventHandler<MuSigTrade> {
+public final class MuSigSellersCooperativeCloseTimeoutEventHandler extends MuSigTradeEventHandler<MuSigTrade, MuSigSellersCooperativeCloseTimeoutEvent> {
 
     public MuSigSellersCooperativeCloseTimeoutEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
+    public void process(MuSigSellersCooperativeCloseTimeoutEvent event) {
         muSigTradeService.stopCooperativeCloseTimeout(trade);
 
         MuSigTradeParty buyerAsTake = trade.getTaker();
 
         // ClosureType.UNCOOPERATIVE
         // *** SELLER FORCE-CLOSES TRADE ***
-         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
+        MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         //TODO isn't here the swap Tx needed to pass?
         CloseTradeResponse sellersCloseTradeResponse = musigBlockingStub.closeTrade(CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .build());
     }
 
-    private void commitToModel() {
+    @Override
+    protected void commit() {
     }
 }

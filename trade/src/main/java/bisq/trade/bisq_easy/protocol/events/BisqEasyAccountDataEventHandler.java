@@ -17,34 +17,37 @@
 
 package bisq.trade.bisq_easy.protocol.events;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
 import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
-public class BisqEasyAccountDataEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade> {
+public class BisqEasyAccountDataEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyAccountDataEvent> {
+    private String paymentAccountData;
 
     public BisqEasyAccountDataEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyAccountDataEvent bisqEasyTakeOfferEvent = (BisqEasyAccountDataEvent) event;
-        String paymentAccountData = bisqEasyTakeOfferEvent.getPaymentAccountData();
-        commitToModel(paymentAccountData);
-        sendMessage(new BisqEasyAccountDataMessage(StringUtils.createUid(),
+    public void process(BisqEasyAccountDataEvent event) {
+        paymentAccountData = event.getPaymentAccountData();
+    }
+
+    @Override
+    protected void commit() {
+        trade.getPaymentAccountData().set(paymentAccountData);
+    }
+
+    @Override
+    protected void sendMessage() {
+        send(new BisqEasyAccountDataMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 paymentAccountData,
                 trade.getOffer()));
-    }
-
-    private void commitToModel(String paymentAccountData) {
-        trade.getPaymentAccountData().set(paymentAccountData);
     }
 }

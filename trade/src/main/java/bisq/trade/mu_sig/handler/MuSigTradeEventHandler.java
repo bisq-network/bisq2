@@ -17,31 +17,20 @@
 
 package bisq.trade.mu_sig.handler;
 
-import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
-import bisq.network.SendMessageResult;
+import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeService;
 import bisq.trade.protocol.handler.TradeEventHandler;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-
 @Slf4j
-public abstract class MuSigTradeEventHandler<T extends MuSigTrade> extends TradeEventHandler<T> {
+public abstract class MuSigTradeEventHandler<T extends MuSigTrade, E extends Event> extends TradeEventHandler<T, E> {
     protected final MuSigTradeService muSigTradeService;
 
     protected MuSigTradeEventHandler(ServiceProvider serviceProvider, T trade) {
         super(serviceProvider, trade);
 
         muSigTradeService = serviceProvider.getMuSigTradeService();
-    }
-
-    protected Optional<CompletableFuture<SendMessageResult>> sendTradeLogMessage(String encoded) {
-        MuSigOpenTradeChannelService openTradeChannelService = serviceProvider.getChatService().getMuSigOpenTradeChannelService();
-        return openTradeChannelService.findChannelByTradeId(trade.getId())
-                .map(channel ->
-                        openTradeChannelService.sendTradeLogMessage(encoded, channel));
     }
 }

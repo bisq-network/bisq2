@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.messages.network.handler.seller_as_maker;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
@@ -42,23 +41,30 @@ import java.security.GeneralSecurityException;
 @Slf4j
 public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_A> {
 
+    private PubKeySharesResponse sellerPubKeySharesResponse;
+    private PubKeySharesResponse buyerPubKeySharesResponse;
+    private NonceSharesMessage sellerNonceSharesMessage;
+    private ContractSignatureData takersContractSignatureData;
+    private ContractSignatureData makersContractSignatureData;
+
     public MuSigSetupTradeMessage_A_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        MuSigSetupTradeMessage_A message = (MuSigSetupTradeMessage_A) event;
-        verifyMessage(message);
+    protected void verify(MuSigSetupTradeMessage_A message) {
+    }
 
+    @Override
+    protected void process(MuSigSetupTradeMessage_A message) {
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
-        PubKeySharesResponse sellerPubKeyShareResponse = PubKeySharesResponse.fromProto(musigBlockingStub.initTrade(PubKeySharesRequest.newBuilder()
+        sellerPubKeySharesResponse = PubKeySharesResponse.fromProto(musigBlockingStub.initTrade(PubKeySharesRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setMyRole(Role.SELLER_AS_MAKER)
                 .build()));
 
-        PubKeySharesResponse buyerPubKeySharesResponse = message.getPubKeySharesResponse();
-        NonceSharesMessage sellerNonceSharesMessage = NonceSharesMessage.fromProto(musigBlockingStub.getNonceShares(NonceSharesRequest.newBuilder()
+        buyerPubKeySharesResponse = message.getPubKeySharesResponse();
+        sellerNonceSharesMessage = NonceSharesMessage.fromProto(musigBlockingStub.getNonceShares(NonceSharesRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setBuyerOutputPeersPubKeyShare(ByteString.copyFrom(buyerPubKeySharesResponse.getBuyerOutputPubKeyShare()))
                 .setSellerOutputPeersPubKeyShare(ByteString.copyFrom(buyerPubKeySharesResponse.getSellerOutputPubKeyShare()))
@@ -70,55 +76,46 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
                 .build()));
 
         MuSigContract takersContract = message.getContract();
-        ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
+        takersContractSignatureData = message.getContractSignatureData();
         ContractService contractService = serviceProvider.getContractService();
         try {
             MuSigContract makersContract = trade.getContract();
-            ContractSignatureData makersContractSignatureData = contractService.signContract(makersContract,
+            makersContractSignatureData = contractService.signContract(makersContract,
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
 
             // TODO verify both contracts are the same, and verify peers signature
-
-            commitToModel(takersContractSignatureData,
-                    makersContractSignatureData,
-                    buyerPubKeySharesResponse,
-                    sellerPubKeyShareResponse,
-                    sellerNonceSharesMessage);
-
-            MuSigSetupTradeMessage_B responseMessage = new MuSigSetupTradeMessage_B(StringUtils.createUid(),
-                    trade.getId(),
-                    trade.getProtocolVersion(),
-                    trade.getMyIdentity().getNetworkId(),
-                    trade.getPeer().getNetworkId(),
-                    makersContract,
-                    makersContractSignatureData,
-                    sellerPubKeyShareResponse,
-                    sellerNonceSharesMessage);
-            sendMessage(responseMessage, serviceProvider, trade);
-
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    protected void verifyMessage(MuSigSetupTradeMessage_A message) {
-        super.verifyMessage(message);
-    }
-
-    private void commitToModel(ContractSignatureData takersContractSignatureData,
-                               ContractSignatureData makersContractSignatureData,
-                               PubKeySharesResponse buyerPubKeyShareResponse,
-                               PubKeySharesResponse sellerPubKeyShareResponse,
-                               NonceSharesMessage sellerNonceShareMessage) {
+    protected void commit() {
         MuSigTradeParty buyerAsTaker = trade.getTaker();
         MuSigTradeParty sellerAsMaker = trade.getMaker();
 
         buyerAsTaker.getContractSignatureData().set(takersContractSignatureData);
         sellerAsMaker.getContractSignatureData().set(makersContractSignatureData);
 
-        buyerAsTaker.setPubKeySharesResponse(buyerPubKeyShareResponse);
-        sellerAsMaker.setPubKeySharesResponse(sellerPubKeyShareResponse);
-        sellerAsMaker.setNonceSharesMessage(sellerNonceShareMessage);
+        buyerAsTaker.setPubKeySharesResponse(buyerPubKeySharesResponse);
+        sellerAsMaker.setPubKeySharesResponse(sellerPubKeySharesResponse);
+        sellerAsMaker.setNonceSharesMessage(sellerNonceSharesMessage);
+    }
+
+    @Override
+    protected void sendMessage() {
+        send(new MuSigSetupTradeMessage_B(StringUtils.createUid(),
+                trade.getId(),
+                trade.getProtocolVersion(),
+                trade.getMyIdentity().getNetworkId(),
+                trade.getPeer().getNetworkId(),
+                trade.getContract(),
+                makersContractSignatureData,
+                sellerPubKeySharesResponse,
+                sellerNonceSharesMessage));
+    }
+
+    @Override
+    protected void sendLogMessage() {
     }
 }

@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.events;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.handler.MuSigTradeMessageHandler;
@@ -26,29 +25,30 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class MuSigReportErrorMessageHandler extends MuSigTradeMessageHandler<MuSigTrade, MuSigReportErrorMessage> {
+    private String errorMessage;
+    private String stackTrace;
 
     public MuSigReportErrorMessageHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        MuSigReportErrorMessage message = (MuSigReportErrorMessage) event;
-        verifyMessage(message);
-        log.warn("We received an error report from our peer.\n" +
-                        "errorMessage={}\nstackTrace={}\ntradeId={}",
-                message.getErrorMessage(), message.getStackTrace(), trade.getId());
-        commitToModel(message);
+    protected void verify(MuSigReportErrorMessage message) {
     }
 
     @Override
-    protected void verifyMessage(MuSigReportErrorMessage message) {
-        super.verifyMessage(message);
+    protected void process(MuSigReportErrorMessage message) {
+        errorMessage = message.getErrorMessage();
+        stackTrace = message.getStackTrace();
+        log.warn("We received an error report from our peer.\n" +
+                        "errorMessage={}\nstackTrace={}\ntradeId={}",
+                errorMessage, stackTrace, trade.getId());
     }
 
-    private void commitToModel(MuSigReportErrorMessage message) {
+    @Override
+    protected void commit() {
         // Set peersErrorStackTrace first as we use peersErrorMessage observable in the handler code accessing both fields
-        trade.setPeersErrorStackTrace(message.getStackTrace());
-        trade.setPeersErrorMessage(message.getErrorMessage());
+        trade.setPeersErrorStackTrace(stackTrace);
+        trade.setPeersErrorMessage(errorMessage);
     }
 }

@@ -18,7 +18,6 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.BitcoinAddressValidation;
 import bisq.common.validation.LightningInvoiceValidation;
@@ -27,27 +26,19 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.handler.TradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BisqEasyBtcAddressMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyBtcAddressMessage> {
+    private String bitcoinPaymentData;
 
     public BisqEasyBtcAddressMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyBtcAddressMessage message = (BisqEasyBtcAddressMessage) event;
-        verifyMessage(message);
-
-        commitToModel(message.getBitcoinPaymentData());
-    }
-
-    @Override
-    protected void verifyMessage(BisqEasyBtcAddressMessage message) {
-        super.verifyMessage(message);
-
+    protected void verify(BisqEasyBtcAddressMessage message) {
         String bitcoinPaymentData = message.getBitcoinPaymentData();
         checkArgument(StringUtils.isNotEmpty(bitcoinPaymentData), "Bitcoin payment data must not be empty");
 
@@ -65,7 +56,13 @@ public class BisqEasyBtcAddressMessageHandler extends TradeMessageHandler<BisqEa
         checkNotNull(message.getBisqEasyOffer(), "BisqEasyOffer must not be null");
     }
 
-    private void commitToModel(String btcAddress) {
-        trade.getBitcoinPaymentData().set(btcAddress);
+    @Override
+    protected void process(BisqEasyBtcAddressMessage message) {
+        bitcoinPaymentData = message.getBitcoinPaymentData();
+    }
+
+    @Override
+    protected void commit() {
+        trade.getBitcoinPaymentData().set(bitcoinPaymentData);
     }
 }

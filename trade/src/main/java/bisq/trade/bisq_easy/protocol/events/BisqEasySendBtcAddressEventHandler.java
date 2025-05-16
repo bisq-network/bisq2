@@ -17,34 +17,37 @@
 
 package bisq.trade.bisq_easy.protocol.events;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyBtcAddressMessage;
 import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
-public class BisqEasySendBtcAddressEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade> {
+public class BisqEasySendBtcAddressEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasySendBtcAddressEvent> {
+    private String bitcoinPaymentData;
 
     public BisqEasySendBtcAddressEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasySendBtcAddressEvent bisqEasySendBtcAddressEvent = (BisqEasySendBtcAddressEvent) event;
-        String bitcoinPaymentData = bisqEasySendBtcAddressEvent.getBitcoinPaymentData();
-        commitToModel(bitcoinPaymentData);
-        sendMessage(new BisqEasyBtcAddressMessage(StringUtils.createUid(),
+    public void process(BisqEasySendBtcAddressEvent event) {
+        bitcoinPaymentData = event.getBitcoinPaymentData();
+    }
+
+    @Override
+    protected void commit() {
+        trade.getBitcoinPaymentData().set(bitcoinPaymentData);
+    }
+
+    @Override
+    protected void sendMessage() {
+        send(new BisqEasyBtcAddressMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 bitcoinPaymentData,
                 trade.getOffer()));
-    }
-
-    private void commitToModel(String bitcoinPaymentData) {
-        trade.getBitcoinPaymentData().set(bitcoinPaymentData);
     }
 }

@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.handler.TradeMessageHandler;
@@ -25,29 +24,31 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BisqEasyReportErrorMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyReportErrorMessage> {
+    private String stackTrace;
+    private String errorMessage;
 
     public BisqEasyReportErrorMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyReportErrorMessage message = (BisqEasyReportErrorMessage) event;
-        verifyMessage(message);
-        log.warn("We received an error report from our peer.\n" +
-                        "errorMessage={}\nstackTrace={}\ntradeId={}",
-                message.getErrorMessage(), message.getStackTrace(), trade.getId());
-        commitToModel(message);
+    protected void verify(BisqEasyReportErrorMessage message) {
     }
 
     @Override
-    protected void verifyMessage(BisqEasyReportErrorMessage message) {
-        super.verifyMessage(message);
+    protected void process(BisqEasyReportErrorMessage message) {
+        log.warn("We received an error report from our peer.\n" +
+                        "errorMessage={}\nstackTrace={}\ntradeId={}",
+                message.getErrorMessage(), message.getStackTrace(), trade.getId());
+        stackTrace = message.getStackTrace();
+        errorMessage = message.getErrorMessage();
+
     }
 
-    private void commitToModel(BisqEasyReportErrorMessage message) {
+    @Override
+    protected void commit() {
         // Set peersErrorStackTrace first as we use peersErrorMessage observable in the handler code accessing both fields
-        trade.setPeersErrorStackTrace(message.getStackTrace());
-        trade.setPeersErrorMessage(message.getErrorMessage());
+        trade.setPeersErrorStackTrace(stackTrace);
+        trade.setPeersErrorMessage(errorMessage);
     }
 }

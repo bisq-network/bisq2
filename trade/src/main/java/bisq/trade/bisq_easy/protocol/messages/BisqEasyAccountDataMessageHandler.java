@@ -18,40 +18,38 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.account.accounts.UserDefinedFiatAccountPayload;
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.handler.TradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BisqEasyAccountDataMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyAccountDataMessage> {
+    private String paymentAccountData;
 
     public BisqEasyAccountDataMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyAccountDataMessage message = (BisqEasyAccountDataMessage) event;
-        verifyMessage(message);
-        commitToModel(message.getPaymentAccountData());
-    }
-
-    @Override
-    protected void verifyMessage(BisqEasyAccountDataMessage message) {
-        super.verifyMessage(message);
-
+    protected void verify(BisqEasyAccountDataMessage message) {
         checkArgument(StringUtils.isNotEmpty(message.getPaymentAccountData()), "PaymentAccountData must not be empty");
         checkArgument(message.getPaymentAccountData().length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH,
                 "PaymentAccountData length must not be longer than " + UserDefinedFiatAccountPayload.MAX_DATA_LENGTH);
         checkNotNull(message.getBisqEasyOffer(), "BisqEasyOffer must not be null");
     }
 
-    private void commitToModel(String paymentAccountData) {
+    @Override
+    protected void process(BisqEasyAccountDataMessage message) {
+        paymentAccountData = message.getPaymentAccountData();
+    }
+
+    @Override
+    protected void commit() {
         trade.getPaymentAccountData().set(paymentAccountData);
     }
 }

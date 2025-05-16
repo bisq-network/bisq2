@@ -17,32 +17,27 @@
 
 package bisq.trade.mu_sig.messages.network.handler.seller_as_maker;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.handler.MuSigTradeMessageHandler;
-import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class MuSigPaymentInitiatedMessage_E_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigPaymentInitiatedMessage_E> {
-
     public MuSigPaymentInitiatedMessage_E_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        MuSigPaymentInitiatedMessage_E message = (MuSigPaymentInitiatedMessage_E) event;
-        verifyMessage(message);
+    protected void verify(MuSigPaymentInitiatedMessage_E message) {
     }
 
     @Override
-    protected void verifyMessage(MuSigPaymentInitiatedMessage_E message) {
-        super.verifyMessage(message);
+    protected void process(MuSigPaymentInitiatedMessage_E message) {
     }
 
-    private void commitToModel(SwapTxSignatureResponse sellerSwapTxSignatureResponse) {
+    @Override
+    protected void commit() {
     }
 }

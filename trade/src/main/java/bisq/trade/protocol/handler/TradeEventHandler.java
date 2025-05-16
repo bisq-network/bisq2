@@ -17,16 +17,35 @@
 
 package bisq.trade.protocol.handler;
 
+import bisq.common.fsm.Event;
 import bisq.common.fsm.EventHandler;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
 
-public abstract class TradeEventHandler<T extends Trade<?, ?, ?>> implements EventHandler {
+public abstract class TradeEventHandler<T extends Trade<?, ?, ?>, E extends Event> implements EventHandler {
     protected final ServiceProvider serviceProvider;
     protected final T trade;
 
     protected TradeEventHandler(ServiceProvider serviceProvider, T trade) {
         this.serviceProvider = serviceProvider;
         this.trade = trade;
+    }
+
+    public void handle(Event event) {
+        process(unsafeCast(event));
+        commit();
+    }
+
+    protected abstract void process(E event);
+
+    protected abstract void commit();
+
+    @SuppressWarnings("unchecked")
+    private E unsafeCast(Event event) {
+        try {
+            return (E) event;
+        } catch (Exception e) {
+            throw new ClassCastException("Could not cast event to generic Event type in " + getClass().getSimpleName() + ". " + e.getMessage());
+        }
     }
 }

@@ -17,22 +17,28 @@
 
 package bisq.trade.bisq_easy.protocol.events;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmFiatReceiptMessage;
 import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
-public class BisqEasyConfirmFiatReceivedEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade> {
-
-    public BisqEasyConfirmFiatReceivedEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
+public class BisqEasyConfirmFiatReceiptEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyConfirmFiatReceiptEvent> {
+    public BisqEasyConfirmFiatReceiptEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        sendMessage(new BisqEasyConfirmFiatReceiptMessage(StringUtils.createUid(),
+    public void process(BisqEasyConfirmFiatReceiptEvent event) {
+    }
+
+    @Override
+    protected void commit() {
+    }
+
+    @Override
+    protected void sendMessage() {
+        send(new BisqEasyConfirmFiatReceiptMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),

@@ -17,28 +17,23 @@
 
 package bisq.trade.mu_sig.events.blockchain;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.handler.MuSigTradeEventHandler;
-import bisq.trade.mu_sig.messages.grpc.TxConfirmationStatus;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class MuSigDepositTxConfirmedEventHandler extends MuSigTradeEventHandler<MuSigTrade> {
-
+public final class MuSigDepositTxConfirmedEventHandler extends MuSigTradeEventHandler<MuSigTrade, MuSigDepositTxConfirmedEvent> {
     public MuSigDepositTxConfirmedEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        MuSigDepositTxConfirmedEvent muSigDepositTxConfirmedEvent = (MuSigDepositTxConfirmedEvent) event;
-        //commitToModel(muSigDepositTxConfirmedEvent.getTxConfirmationStatus());
-
+    public void process(MuSigDepositTxConfirmedEvent event) {
     }
 
-    private void commitToModel(TxConfirmationStatus txConfirmationStatus) {
-        trade.setDepositTxConfirmationStatus(txConfirmationStatus);
+    @Override
+    protected void commit() {
+        //trade.setDepositTxConfirmationStatus(txConfirmationStatus);
     }
 }

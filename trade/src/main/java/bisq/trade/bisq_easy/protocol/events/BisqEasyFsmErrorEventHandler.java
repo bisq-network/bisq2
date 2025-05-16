@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy.protocol.events;
 
-import bisq.common.fsm.Event;
 import bisq.common.fsm.FsmErrorEvent;
 import bisq.common.fsm.FsmException;
 import bisq.common.util.ExceptionUtil;
@@ -33,34 +32,38 @@ import static bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage.
 import static bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage.MAX_LENGTH_STACKTRACE;
 
 @Slf4j
-public class BisqEasyFsmErrorEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade> {
+public class BisqEasyFsmErrorEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, FsmErrorEvent> {
+    private String errorMessage;
+    private String errorStackTrace;
+
     public BisqEasyFsmErrorEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        FsmErrorEvent fsmErrorEvent = (FsmErrorEvent) event;
-        FsmException fsmException = fsmErrorEvent.getFsmException();
-        commitToModel(ExceptionUtil.getRootCauseMessage(fsmException),
-                ExceptionUtil.getStackTraceAsString(fsmException));
+    public void process(FsmErrorEvent event) {
+        FsmException fsmException = event.getFsmException();
+        errorMessage = ExceptionUtil.getRootCauseMessage(fsmException);
+        errorStackTrace = ExceptionUtil.getSafeStackTraceAsString(fsmException);
+    }
 
-        String errorMessage = truncate(ExceptionUtil.getRootCauseMessage(fsmException), MAX_LENGTH_ERROR_MESSAGE);
-        String stackTrace = truncate(ExceptionUtil.getSafeStackTraceAsString(fsmException), MAX_LENGTH_STACKTRACE);
+    @Override
+    protected void commit() {
+        // Set errorStackTrace first as we use errorMessage observable in the handler code accessing both fields
+        trade.setErrorStackTrace(errorStackTrace);
+        trade.setErrorMessage(errorMessage);
+    }
+
+    @Override
+    protected void sendMessage() {
         log.warn("We send the cause stack and stackTrace to our peer.\n" +
-                "errorMessage={}\nstackTrace={}", errorMessage, stackTrace);
-        sendMessage(new BisqEasyReportErrorMessage(createUid(),
+                "errorMessage={}\nstackTrace={}", errorMessage, errorStackTrace);
+        send(new BisqEasyReportErrorMessage(createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
-                errorMessage,
-                stackTrace));
-    }
-
-    private void commitToModel(String errorMessage, String errorStackTrace) {
-        // Set errorStackTrace first as we use errorMessage observable in the handler code accessing both fields
-        trade.setErrorStackTrace(errorStackTrace);
-        trade.setErrorMessage(errorMessage);
+                truncate(errorMessage, MAX_LENGTH_ERROR_MESSAGE),
+                truncate(errorStackTrace, MAX_LENGTH_STACKTRACE)));
     }
 }

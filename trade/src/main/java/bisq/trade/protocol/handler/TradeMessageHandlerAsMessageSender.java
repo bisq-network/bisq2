@@ -17,6 +17,7 @@
 
 package bisq.trade.protocol.handler;
 
+import bisq.common.fsm.Event;
 import bisq.network.SendMessageResult;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
@@ -33,7 +34,15 @@ public abstract class TradeMessageHandlerAsMessageSender<T extends Trade<?, ?, ?
         super(serviceProvider, trade);
     }
 
-    protected CompletableFuture<SendMessageResult> sendMessage(M message) {
+    public void handle(Event event) {
+        super.handle(event);
+
+        sendMessage();
+    }
+
+    abstract protected void sendMessage();
+
+    protected CompletableFuture<SendMessageResult> send(TradeMessage message) {
         return sendMessage(message, serviceProvider, trade);
     }
 }

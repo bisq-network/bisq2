@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.messages.network.handler.buyer_as_taker;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
@@ -35,19 +34,22 @@ import java.util.Iterator;
 
 @Slf4j
 public final class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_D> {
+    private PartialSignaturesMessage sellerPartialSignaturesMessage;
+    private DepositPsbt buyerDepositPsbt;
 
     public MuSigSetupTradeMessage_D_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        MuSigSetupTradeMessage_D message = (MuSigSetupTradeMessage_D) event;
-        verifyMessage(message);
+    protected void verify(MuSigSetupTradeMessage_D message) {
+    }
 
-        PartialSignaturesMessage sellerPartialSignaturesMessage = message.getPartialSignaturesMessage();
+    @Override
+    protected void process(MuSigSetupTradeMessage_D message) {
+        sellerPartialSignaturesMessage = message.getPartialSignaturesMessage();
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
-        DepositPsbt buyerDepositPsbt = DepositPsbt.fromProto(musigBlockingStub.signDepositTx(DepositTxSignatureRequest.newBuilder()
+        buyerDepositPsbt = DepositPsbt.fromProto(musigBlockingStub.signDepositTx(DepositTxSignatureRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setPeersPartialSignatures(sellerPartialSignaturesMessage.toProto(true))
                 .build()));
@@ -61,17 +63,10 @@ public final class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHan
                 .setTradeId(trade.getId())
                 .setDepositPsbt(buyerDepositPsbt.toProto(true))
                 .build());
-
-        commitToModel(buyerDepositPsbt, sellerPartialSignaturesMessage);
     }
 
     @Override
-    protected void verifyMessage(MuSigSetupTradeMessage_D message) {
-        super.verifyMessage(message);
-    }
-
-    private void commitToModel(DepositPsbt buyerDepositPsbt,
-                               PartialSignaturesMessage sellerPartialSignaturesMessage) {
+    protected void commit() {
         MuSigTradeParty buyerAsTaker = trade.getTaker();
         MuSigTradeParty sellerAsMaker = trade.getMaker();
 

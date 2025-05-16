@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy.protocol.events;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.contract.Role;
 import bisq.trade.ServiceProvider;
@@ -25,23 +24,26 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyCancelTradeMessage;
 import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
-public class BisqEasyCancelTradeEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade> {
-
+public class BisqEasyCancelTradeEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyCancelTradeEvent> {
     public BisqEasyCancelTradeEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        commitToModel();
-        sendMessage(new BisqEasyCancelTradeMessage(StringUtils.createUid(),
+    public void process(BisqEasyCancelTradeEvent event) {
+    }
+
+    @Override
+    protected void commit() {
+        trade.getInterruptTradeInitiator().set(trade.isMaker() ? Role.MAKER : Role.TAKER);
+    }
+
+    @Override
+    protected void sendMessage() {
+        send(new BisqEasyCancelTradeMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId()));
-    }
-
-    private void commitToModel() {
-        trade.getInterruptTradeInitiator().set(trade.isMaker() ? Role.MAKER : Role.TAKER);
     }
 }

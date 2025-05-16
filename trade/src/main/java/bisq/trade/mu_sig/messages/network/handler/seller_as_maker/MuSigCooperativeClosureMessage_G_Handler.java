@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.messages.network.handler.seller_as_maker;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
@@ -31,37 +30,33 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigCooperativeClosureMessage_G> {
+    private CloseTradeResponse buyerCloseTradeResponse;
+    private CloseTradeResponse sellersCloseTradeResponse;
 
     public MuSigCooperativeClosureMessage_G_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        MuSigCooperativeClosureMessage_G message = (MuSigCooperativeClosureMessage_G) event;
-        verifyMessage(message);
+    protected void verify(MuSigCooperativeClosureMessage_G message) {
+    }
 
+    @Override
+    protected void process(MuSigCooperativeClosureMessage_G message) {
         muSigTradeService.stopCooperativeCloseTimeout(trade);
 
         // ClosureType.COOPERATIVE
         // *** SELLER CLOSES TRADE ***
-        CloseTradeResponse buyerCloseTradeResponse = message.getCloseTradeResponse();
+        buyerCloseTradeResponse = message.getCloseTradeResponse();
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
-        CloseTradeResponse sellersCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(CloseTradeRequest.newBuilder()
+        sellersCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
-                .setMyOutputPeersPrvKeyShare(ByteString.copyFrom( buyerCloseTradeResponse.getPeerOutputPrvKeyShare()))
+                .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(buyerCloseTradeResponse.getPeerOutputPrvKeyShare()))
                 .build()));
-
-        commitToModel(sellersCloseTradeResponse, buyerCloseTradeResponse);
     }
 
     @Override
-    protected void verifyMessage(MuSigCooperativeClosureMessage_G message) {
-        super.verifyMessage(message);
-    }
-
-    private void commitToModel(CloseTradeResponse sellersCloseTradeResponse,
-                               CloseTradeResponse buyerCloseTradeResponse) {
+    protected void commit() {
         MuSigTradeParty buyerAsTaker = trade.getTaker();
         MuSigTradeParty sellerAsMaker = trade.getMaker();
 

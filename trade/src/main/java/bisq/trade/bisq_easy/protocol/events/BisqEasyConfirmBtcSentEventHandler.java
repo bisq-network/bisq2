@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy.protocol.events;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -26,26 +25,30 @@ import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
 import java.util.Optional;
 
-public class BisqEasyConfirmBtcSentEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade> {
+public class BisqEasyConfirmBtcSentEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyConfirmBtcSentEvent> {
+    private Optional<String> paymentProof;
 
     public BisqEasyConfirmBtcSentEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyConfirmBtcSentEvent bisqEasyConfirmBtcSentEvent = (BisqEasyConfirmBtcSentEvent) event;
-        Optional<String> paymentProof = bisqEasyConfirmBtcSentEvent.getPaymentProof();
-        commitToModel(paymentProof);
-        sendMessage(new BisqEasyConfirmBtcSentMessage(StringUtils.createUid(),
+    public void process(BisqEasyConfirmBtcSentEvent event) {
+        paymentProof = event.getPaymentProof();
+    }
+
+    @Override
+    protected void commit() {
+        paymentProof.ifPresent(e -> trade.getPaymentProof().set(e));
+    }
+
+    @Override
+    protected void sendMessage() {
+        send(new BisqEasyConfirmBtcSentMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 paymentProof));
-    }
-
-    private void commitToModel(Optional<String> paymentProof) {
-        paymentProof.ifPresent(e -> trade.getPaymentProof().set(e));
     }
 }

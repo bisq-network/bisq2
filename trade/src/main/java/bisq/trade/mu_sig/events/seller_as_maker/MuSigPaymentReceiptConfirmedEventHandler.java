@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.events.seller_as_maker;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -30,41 +29,50 @@ import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protobuf.SwapTxSignatureRequest;
 import com.google.protobuf.ByteString;
 
-public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade> {
+public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade, MuSigPaymentReceiptConfirmedEvent> {
+    private SwapTxSignatureResponse sellerSwapTxSignatureResponse;
 
     public MuSigPaymentReceiptConfirmedEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
+    public void process(MuSigPaymentReceiptConfirmedEvent event) {
         MuSigTradeParty buyerAsTaker = trade.getTaker();
         // We got that from an earlier message
         PartialSignaturesMessage buyerPartialSignaturesMessage = buyerAsTaker.getPartialSignaturesMessage();
 
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
-        SwapTxSignatureResponse sellerSwapTxSignatureResponse = SwapTxSignatureResponse.fromProto(musigBlockingStub.signSwapTx(SwapTxSignatureRequest.newBuilder()
+        sellerSwapTxSignatureResponse = SwapTxSignatureResponse.fromProto(musigBlockingStub.signSwapTx(SwapTxSignatureRequest.newBuilder()
                 .setTradeId(trade.getId())
                 // NOW send the redacted buyer's swapTxInputPartialSignature:
                 .setSwapTxInputPeersPartialSignature(ByteString.copyFrom(buyerPartialSignaturesMessage.getSwapTxInputPartialSignature()))
                 .build()));
 
-        commitToModel(sellerSwapTxSignatureResponse);
         //ClosureType.COOPERATIVE
+        muSigTradeService.startCooperativeCloseTimeout(trade, new MuSigSellersCooperativeCloseTimeoutEvent());
+    }
 
-        MuSigPaymentReceivedMessage_F responseMessage = new MuSigPaymentReceivedMessage_F(StringUtils.createUid(),
+    @Override
+    protected void commit() {
+        MuSigTradeParty sellerAsMaker = trade.getMaker();
+        sellerAsMaker.setSwapTxSignatureResponse(sellerSwapTxSignatureResponse);
+    }
+
+    @Override
+    protected void sendMessage() {
+        // TODO do we want to send the full SwapTxSignatureResponse?
+        send(new MuSigPaymentReceivedMessage_F(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
-                sellerSwapTxSignatureResponse); // TODO do we want to send the full SwapTxSignatureResponse?
-        sendMessage(responseMessage, serviceProvider, trade);
-
-        muSigTradeService.startCooperativeCloseTimeout(trade, new MuSigSellersCooperativeCloseTimeoutEvent());
+                sellerSwapTxSignatureResponse));
     }
 
-    private void commitToModel(SwapTxSignatureResponse sellerSwapTxSignatureResponse) {
-        MuSigTradeParty sellerAsMaker = trade.getMaker();
-        sellerAsMaker.setSwapTxSignatureResponse(sellerSwapTxSignatureResponse);
+    @Override
+    protected void sendLogMessage() {
+
     }
+
 }

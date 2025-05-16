@@ -17,30 +17,36 @@
 
 package bisq.trade.mu_sig.events.buyer_as_taker;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
 
-public final class MuSigPaymentInitiatedEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade> {
-
+public final class MuSigPaymentInitiatedEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade, MuSigPaymentInitiatedEvent> {
     public MuSigPaymentInitiatedEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        sendMessage(new MuSigPaymentInitiatedMessage_E(StringUtils.createUid(),
+    public void process(MuSigPaymentInitiatedEvent event) {
+        muSigTradeService.startCooperativeCloseTimeout(trade, new MuSigBuyersCooperativeCloseTimeoutEvent());
+    }
+
+    @Override
+    protected void commit() {
+    }
+
+    @Override
+    protected void sendMessage() {
+        send(new MuSigPaymentInitiatedMessage_E(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId()));
-
-        muSigTradeService.startCooperativeCloseTimeout(trade, new MuSigBuyersCooperativeCloseTimeoutEvent());
     }
 
-    private void commitToModel() {
+    @Override
+    protected void sendLogMessage() {
     }
 }

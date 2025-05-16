@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.handler.TradeMessageHandler;
@@ -25,19 +24,19 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BisqEasyConfirmFiatReceiptMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyConfirmFiatReceiptMessage> {
-
     public BisqEasyConfirmFiatReceiptMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyConfirmFiatReceiptMessage message = (BisqEasyConfirmFiatReceiptMessage) event;
-        verifyMessage(message);
+    protected void verify(BisqEasyConfirmFiatReceiptMessage message) {
     }
 
     @Override
-    protected void verifyMessage(BisqEasyConfirmFiatReceiptMessage message) {
-        super.verifyMessage(message);
+    protected void process(BisqEasyConfirmFiatReceiptMessage message) {
+    }
+
+    @Override
+    protected void commit() {
     }
 }
