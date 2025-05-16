@@ -28,7 +28,7 @@ import bisq.trade.protobuf.DepositTxSignatureRequest;
 import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protobuf.PublishDepositTxRequest;
 import bisq.trade.protobuf.TxConfirmationStatus;
-import bisq.trade.protocol.events.TradeMessageHandler;
+import bisq.trade.protocol.handler.TradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Iterator;

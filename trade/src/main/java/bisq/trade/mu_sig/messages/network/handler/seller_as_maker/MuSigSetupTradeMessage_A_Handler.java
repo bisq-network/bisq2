@@ -33,7 +33,7 @@ import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protobuf.NonceSharesRequest;
 import bisq.trade.protobuf.PubKeySharesRequest;
 import bisq.trade.protobuf.Role;
-import bisq.trade.protocol.events.TradeMessageHandler;
+import bisq.trade.protocol.handler.TradeMessageHandler;
 import bisq.trade.protocol.handler.TradeMessageSender;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;

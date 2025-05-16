@@ -22,7 +22,7 @@ import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
-import bisq.trade.protocol.events.TradeMessageHandler;
+import bisq.trade.protocol.handler.TradeMessageHandler;
 import bisq.trade.protocol.handler.TradeMessageSender;
 import lombok.extern.slf4j.Slf4j;
 

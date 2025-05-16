@@ -20,7 +20,6 @@ package bisq.trade.protocol.handler;
 import bisq.network.SendMessageResult;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
-import bisq.trade.protocol.events.TradeEventHandler;
 import bisq.trade.protocol.messages.TradeMessage;
 import lombok.extern.slf4j.Slf4j;
 

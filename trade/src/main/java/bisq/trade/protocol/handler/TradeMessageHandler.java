@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.protocol.events;
+package bisq.trade.protocol.handler;
 
 import bisq.network.identity.NetworkId;
 import bisq.trade.ServiceProvider;

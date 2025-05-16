@@ -34,7 +34,7 @@ import bisq.offer.price.PriceUtil;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
-import bisq.trade.protocol.events.TradeMessageHandler;
+import bisq.trade.protocol.handler.TradeMessageHandler;
 import bisq.trade.protocol.handler.TradeMessageSender;
 import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
