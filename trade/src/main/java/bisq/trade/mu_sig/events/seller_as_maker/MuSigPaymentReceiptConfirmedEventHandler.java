@@ -30,7 +30,6 @@ import bisq.trade.protobuf.SwapTxSignatureRequest;
 import com.google.protobuf.ByteString;
 
 public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade, MuSigPaymentReceiptConfirmedEvent> {
-
     private SwapTxSignatureResponse sellerSwapTxSignatureResponse;
 
     public MuSigPaymentReceiptConfirmedEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {

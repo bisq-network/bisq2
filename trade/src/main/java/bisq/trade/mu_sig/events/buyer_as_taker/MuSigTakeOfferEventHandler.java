@@ -59,10 +59,6 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
 
             contractSignatureData = serviceProvider.getContractService().signContract(contract,
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
-
-            sendMessage();
-
-            sendLogMessage();
         } catch (Exception e) {
             log.error("{}.handle() failed", getClass().getSimpleName(), e);
             throw new RuntimeException(e);

@@ -40,7 +40,7 @@ public abstract class MuSigTradeMessageHandlerAsMessageSender<T extends MuSigTra
         muSigTradeService = serviceProvider.getMuSigTradeService();
     }
 
-    public void handle(Event event) {
+    public final void handle(Event event) {
         super.handle(event);
 
         sendLogMessage();
