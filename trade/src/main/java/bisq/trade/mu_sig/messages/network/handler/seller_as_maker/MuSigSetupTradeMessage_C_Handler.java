@@ -50,7 +50,7 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
         MuSigSetupTradeMessage_C message = (MuSigSetupTradeMessage_C) event;
         verifyMessage(message);
 
-        MusigGrpc.MusigBlockingStub musigBlockingStub = serviceProvider.getMuSigTradeService().getMusigBlockingStub();
+        MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         NonceSharesMessage buyerNonceSharesMessage = message.getNonceSharesMessage();
         PartialSignaturesMessage sellerPartialSignaturesMessage = PartialSignaturesMessage.fromProto(musigBlockingStub.getPartialSignatures(PartialSignaturesRequest.newBuilder()
                 .setTradeId(trade.getId())
@@ -77,7 +77,7 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
 
         // We observe the txConfirmationStatus to get informed once the deposit tx is confirmed (gets published by the
         // buyer when they receive the MuSigSetupTradeMessage_D).
-        serviceProvider.getMuSigTradeService().observeDepositTxConfirmationStatus(trade);
+        muSigTradeService.observeDepositTxConfirmationStatus(trade);
 
     }
 

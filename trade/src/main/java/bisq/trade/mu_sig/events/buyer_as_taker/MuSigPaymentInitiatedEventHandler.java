@@ -38,7 +38,7 @@ public final class MuSigPaymentInitiatedEventHandler extends MuSigTradeEventHand
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId()));
 
-        serviceProvider.getMuSigTradeService().startCooperativeCloseTimeout(trade, new MuSigBuyersCooperativeCloseTimeoutEvent());
+        muSigTradeService.startCooperativeCloseTimeout(trade, new MuSigBuyersCooperativeCloseTimeoutEvent());
     }
 
     private void commitToModel() {

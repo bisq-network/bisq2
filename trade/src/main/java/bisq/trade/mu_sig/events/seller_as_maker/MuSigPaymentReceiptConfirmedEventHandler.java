@@ -42,7 +42,7 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
         // We got that from an earlier message
         PartialSignaturesMessage buyerPartialSignaturesMessage = buyerAsTaker.getPartialSignaturesMessage();
 
-        MusigGrpc.MusigBlockingStub musigBlockingStub = serviceProvider.getMuSigTradeService().getMusigBlockingStub();
+        MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         SwapTxSignatureResponse sellerSwapTxSignatureResponse = SwapTxSignatureResponse.fromProto(musigBlockingStub.signSwapTx(SwapTxSignatureRequest.newBuilder()
                 .setTradeId(trade.getId())
                 // NOW send the redacted buyer's swapTxInputPartialSignature:
@@ -60,7 +60,7 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
                 sellerSwapTxSignatureResponse); // TODO do we want to send the full SwapTxSignatureResponse?
         sendMessage(responseMessage, serviceProvider, trade);
 
-        serviceProvider.getMuSigTradeService().startCooperativeCloseTimeout(trade, new MuSigSellersCooperativeCloseTimeoutEvent());
+        muSigTradeService.startCooperativeCloseTimeout(trade, new MuSigSellersCooperativeCloseTimeoutEvent());
     }
 
     private void commitToModel(SwapTxSignatureResponse sellerSwapTxSignatureResponse) {

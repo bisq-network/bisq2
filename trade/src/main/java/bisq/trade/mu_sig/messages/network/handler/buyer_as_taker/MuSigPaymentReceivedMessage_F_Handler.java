@@ -44,12 +44,12 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
         MuSigPaymentReceivedMessage_F message = (MuSigPaymentReceivedMessage_F) event;
         verifyMessage(message);
 
-        serviceProvider.getMuSigTradeService().stopCooperativeCloseTimeout(trade);
+        muSigTradeService.stopCooperativeCloseTimeout(trade);
 
         // ClosureType.COOPERATIVE
         // *** BUYER CLOSES TRADE ***
         SwapTxSignatureResponse sellerSwapTxSignatureResponse = message.getSwapTxSignatureResponse();
-        MusigGrpc.MusigBlockingStub musigBlockingStub = serviceProvider.getMuSigTradeService().getMusigBlockingStub();
+        MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         CloseTradeResponse buyersCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(sellerSwapTxSignatureResponse.getPeerOutputPrvKeyShare()))

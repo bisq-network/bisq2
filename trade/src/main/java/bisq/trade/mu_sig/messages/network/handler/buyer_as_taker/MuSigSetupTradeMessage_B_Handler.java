@@ -57,7 +57,7 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
 
         // Request NonceSharesMessage from rust server
         PubKeySharesResponse sellerPubKeySharesResponse = message.getPubKeySharesResponse();
-        MusigGrpc.MusigBlockingStub musigBlockingStub = serviceProvider.getMuSigTradeService().getMusigBlockingStub();
+        MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         NonceSharesMessage buyerNonceSharesMessage = NonceSharesMessage.fromProto(musigBlockingStub.getNonceShares(NonceSharesRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setBuyerOutputPeersPubKeyShare(ByteString.copyFrom(sellerPubKeySharesResponse.getBuyerOutputPubKeyShare()))

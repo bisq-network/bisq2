@@ -21,16 +21,16 @@ import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
-import bisq.trade.protobuf.CloseTradeRequest;
-import bisq.trade.protobuf.MusigGrpc;
+import bisq.trade.mu_sig.handler.MuSigTradeMessageHandler;
 import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
 import bisq.trade.mu_sig.messages.network.MuSigCooperativeClosureMessage_G;
-import bisq.trade.protocol.handler.TradeMessageHandler;
+import bisq.trade.protobuf.CloseTradeRequest;
+import bisq.trade.protobuf.MusigGrpc;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class MuSigCooperativeClosureMessage_G_Handler extends TradeMessageHandler<MuSigTrade, MuSigCooperativeClosureMessage_G> {
+public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigCooperativeClosureMessage_G> {
 
     public MuSigCooperativeClosureMessage_G_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -41,12 +41,12 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends TradeMessage
         MuSigCooperativeClosureMessage_G message = (MuSigCooperativeClosureMessage_G) event;
         verifyMessage(message);
 
-        serviceProvider.getMuSigTradeService().stopCooperativeCloseTimeout(trade);
+        muSigTradeService.stopCooperativeCloseTimeout(trade);
 
         // ClosureType.COOPERATIVE
         // *** SELLER CLOSES TRADE ***
         CloseTradeResponse buyerCloseTradeResponse = message.getCloseTradeResponse();
-        MusigGrpc.MusigBlockingStub musigBlockingStub = serviceProvider.getMuSigTradeService().getMusigBlockingStub();
+        MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         CloseTradeResponse sellersCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setMyOutputPeersPrvKeyShare(ByteString.copyFrom( buyerCloseTradeResponse.getPeerOutputPrvKeyShare()))
