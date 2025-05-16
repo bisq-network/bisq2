@@ -21,14 +21,14 @@ import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.network.SendMessageResult;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
-import bisq.trade.protocol.handler.SendTradeMessageHandler;
+import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public abstract class MuSigSendTradeMessageHandler<M extends MuSigTrade> extends SendTradeMessageHandler<M> {
+public abstract class MuSigSendTradeMessageHandler<M extends MuSigTrade> extends TradeEventHandlerAsMessageSender<M> {
 
     protected MuSigSendTradeMessageHandler(ServiceProvider serviceProvider, M model) {
         super(serviceProvider, model);

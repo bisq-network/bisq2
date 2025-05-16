@@ -24,11 +24,11 @@ import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
-import bisq.trade.protocol.handler.SendTradeMessageHandler;
+import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
 import java.security.GeneralSecurityException;
 
-public class BisqEasyTakeOfferEventHandler extends SendTradeMessageHandler<BisqEasyTrade> {
+public class BisqEasyTakeOfferEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade> {
 
     public BisqEasyTakeOfferEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
