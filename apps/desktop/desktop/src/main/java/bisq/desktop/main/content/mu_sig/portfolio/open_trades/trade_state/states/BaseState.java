@@ -28,6 +28,7 @@ import bisq.common.monetary.Fiat;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
+import bisq.mu_sig.MuSigService;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -49,6 +50,7 @@ public abstract class BaseState {
         @Getter
         protected final V view;
         protected final MuSigTradeService muSigTradeService;
+        protected final MuSigService muSigService;
         protected final ChatService chatService;
         protected final AccountService accountService;
         protected final UserIdentityService userIdentityService;
@@ -60,6 +62,7 @@ public abstract class BaseState {
                              MuSigOpenTradeChannel channel) {
             chatService = serviceProvider.getChatService();
             muSigTradeService = serviceProvider.getTradeService().getMuSigTradeService();
+            muSigService = serviceProvider.getMuSigService();
             accountService = serviceProvider.getAccountService();
             userIdentityService = serviceProvider.getUserService().getUserIdentityService();
             channelService = serviceProvider.getChatService().getMuSigOpenTradeChannelService();

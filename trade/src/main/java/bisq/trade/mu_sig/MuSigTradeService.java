@@ -323,7 +323,53 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
 
 
     /* --------------------------------------------------------------------- */
-    // Events
+    // User events
+    /* --------------------------------------------------------------------- */
+
+    public void takeOffer(MuSigTrade trade) {
+        handleMuSigTradeEvent(trade, new MuSigTakeOfferEvent());
+    }
+
+    // TODO just temp for dev
+    public void skipWaitForConfirmation(MuSigTrade trade) {
+        handleMuSigTradeEvent(trade, new MuSigDepositTxConfirmedEvent());
+    }
+
+    public void paymentInitiated(MuSigTrade trade) {
+        handleMuSigTradeEvent(trade, new MuSigPaymentInitiatedEvent());
+    }
+
+    public void paymentReceiptConfirmed(MuSigTrade trade) {
+        handleMuSigTradeEvent(trade, new MuSigPaymentReceiptConfirmedEvent());
+    }
+
+    public void closeTrade(MuSigTrade trade) {
+        //todo: just temp, we will move it to closed trades in future
+        removeTrade(trade);
+    }
+
+    public void removeTrade(MuSigTrade trade) {
+        persistableStore.removeTrade(trade.getId());
+        tradeProtocolById.remove(trade.getId());
+        persist();
+    }
+
+    private void handleMuSigTradeEvent(MuSigTrade trade, MuSigTradeEvent event) {
+        verifyTradingNotOnHalt();
+        verifyMinVersionForTrading();
+        String tradeId = trade.getId();
+        findProtocol(tradeId).ifPresentOrElse(protocol -> {
+                    CompletableFuture.runAsync(() -> {
+                        protocol.handle(event);
+                        persist();
+                    });
+                },
+                () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Setup
     /* --------------------------------------------------------------------- */
 
     public MuSigProtocol createMuSigProtocol(Identity takerIdentity,
@@ -361,20 +407,8 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         return createAndAddTradeProtocol(muSigTrade);
     }
 
-    public Optional<MuSigOpenTradeChannel> findMuSigOpenTradeChannel(String tradeId) {
-        return muSigOpenTradeChannelService.findChannelByTradeId(tradeId);
-    }
-
-    public void takeOffer(MuSigTrade trade) {
-        handleMuSigTradeEvent(trade, new MuSigTakeOfferEvent());
-    }
-
-    public void skipWaitForConfirmation(MuSigTrade trade) {
-        handleMuSigTradeEvent(trade, new MuSigDepositTxConfirmedEvent());
-    }
-
     public void observeDepositTxConfirmationStatus(MuSigTrade trade) {
-        // ignore the mocked confirmations and use the skip button for better control at development
+        // TODO Ignore the mocked confirmations and use the skip button for better control at development
         if (true) {
             return;
         }
@@ -414,11 +448,6 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         observeDepositTxConfirmationStatusFutureByTradeId.put(tradeId, future);
     }
 
-    public void buyerConfirmFiatSent(MuSigTrade trade) {
-        handleMuSigTradeEvent(trade, new MuSigPaymentInitiatedEvent());
-    }
-
-
     public void startCooperativeCloseTimeout(MuSigTrade trade, MuSigTradeEvent event) {
         stopCooperativeCloseTimeout(trade);
         cooperativeCloseTimeoutSchedulerByTradeId.computeIfAbsent(trade.getId(), key ->
@@ -434,47 +463,14 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         }
     }
 
-    private void handleMuSigTradeEvent(MuSigTrade trade, MuSigTradeEvent event) {
-        verifyTradingNotOnHalt();
-        verifyMinVersionForTrading();
-        String tradeId = trade.getId();
-        findProtocol(tradeId).ifPresentOrElse(protocol -> {
-                    CompletableFuture.runAsync(() -> {
-                        protocol.handle(event);
-                        persist();
-                    });
-                },
-                () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
-    }
-
-    //temp
-
-
-    public void sellerSendsPaymentAccount(MuSigTrade trade, String paymentAccountData) {
-        // handleMuSigTradeEvent(trade, new MuSigAccountDataEvent(paymentAccountData));
-    }
-
-    public void buyerSendBitcoinPaymentData(MuSigTrade trade, String buyersBitcoinPaymentData) {
-        //   handleMuSigTradeEvent(trade, new MuSigSendBtcAddressEvent(buyersBitcoinPaymentData));
-    }
-
-    public void sellerConfirmFiatReceipt(MuSigTrade trade) {
-         handleMuSigTradeEvent(trade, new MuSigPaymentReceiptConfirmedEvent());
-    }
-
-    public void sellerConfirmBtcSent(MuSigTrade trade, Optional<String> paymentProof) {
-        // handleMuSigTradeEvent(trade, new MuSigConfirmBtcSentEvent(paymentProof));
-    }
-
-    public void btcConfirmed(MuSigTrade trade) {
-        // handleMuSigTradeEvent(trade, new MuSigBtcConfirmedEvent());
-    }
-
-
 
     /* --------------------------------------------------------------------- */
-    // Misc API
+    // Misc
     /* --------------------------------------------------------------------- */
+
+    public Optional<MuSigOpenTradeChannel> findMuSigOpenTradeChannel(String tradeId) {
+        return muSigOpenTradeChannelService.findChannelByTradeId(tradeId);
+    }
 
     public Optional<MuSigProtocol> findProtocol(String id) {
         return Optional.ofNullable(tradeProtocolById.get(id));
@@ -510,12 +506,6 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
 
     public ObservableHashMap<String, MuSigTrade> getTradeById() {
         return persistableStore.getTradeById();
-    }
-
-    public void removeTrade(MuSigTrade trade) {
-        persistableStore.removeTrade(trade.getId());
-        tradeProtocolById.remove(trade.getId());
-        persist();
     }
 
 

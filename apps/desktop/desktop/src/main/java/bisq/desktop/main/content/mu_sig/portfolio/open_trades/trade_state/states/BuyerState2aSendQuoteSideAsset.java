@@ -107,7 +107,7 @@ public class BuyerState2aSendQuoteSideAsset extends BaseState {
         private void onConfirmFiatSent() {
             sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.buyer.phase2a.tradeLogMessage",
                     model.getChannel().getMyUserIdentity().getUserName(), model.getQuoteCode()));
-            muSigTradeService.buyerConfirmFiatSent(model.getTrade());
+            muSigTradeService.paymentInitiated(model.getTrade());
         }
     }
 

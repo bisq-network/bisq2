@@ -43,6 +43,7 @@ import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState4;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
+import bisq.mu_sig.MuSigService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
@@ -72,6 +73,7 @@ public class MuSigTradeStateController implements Controller {
     private final MuSigTradeDataHeader muSigTradeDataHeader;
     private final NetworkService networkService;
     private final MuSigTradeService tradeService;
+    private final MuSigService muSigService;
     private final MuSigOpenTradeChannelService openTradeChannelService;
     private final MediationRequestService mediationRequestService;
     private final DontShowAgainService dontShowAgainService;
@@ -85,6 +87,7 @@ public class MuSigTradeStateController implements Controller {
         this.serviceProvider = serviceProvider;
         networkService = serviceProvider.getNetworkService();
         tradeService = serviceProvider.getTradeService().getMuSigTradeService();
+        muSigService = serviceProvider.getMuSigService();
         ChatService chatService = serviceProvider.getChatService();
         openTradeChannelService = chatService.getMuSigOpenTradeChannelService();
         leavePrivateChatManager = chatService.getLeavePrivateChatManager();
@@ -205,11 +208,7 @@ public class MuSigTradeStateController implements Controller {
     }
 
     private void doCloseTrade() {
-        // We need to pin the chatChannel to close as the one in the model would get updated after
-        // muSigTradeService.removeTrade, and then we would close the wrong channel.
-        MuSigOpenTradeChannel chatChannel = model.getChannel().get();
-        tradeService.removeTrade(model.getTrade().get());
-        leavePrivateChatManager.leaveChannel(chatChannel);
+        muSigService.closeTrade(model.getTrade().get(), model.getChannel().get());
     }
 
     void onExportTrade() {

@@ -65,10 +65,10 @@ public class SellerState3aConfirmQuoteSideAssetReceipt extends BaseState {
             super.onDeactivate();
         }
 
-        private void onConfirmFiatReceipt() {
+        private void onPaymentReceiptConfirmed() {
             sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase2b.tradeLogMessage",
                     model.getChannel().getMyUserIdentity().getUserName(), model.getFormattedQuoteAmount()));
-            muSigTradeService.sellerConfirmFiatReceipt(model.getTrade());
+            muSigTradeService.paymentReceiptConfirmed(model.getTrade());
         }
     }
 
@@ -81,17 +81,17 @@ public class SellerState3aConfirmQuoteSideAssetReceipt extends BaseState {
 
     public static class View extends BaseState.View<Model, Controller> {
         private final WrappingText headline;
-        private final Button fiatReceivedButton;
+        private final Button confirmPaymentReceiptButton;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
             headline = MuSigFormUtils.getHeadline();
             WrappingText info = MuSigFormUtils.getInfo(Res.get("bisqEasy.tradeState.info.seller.phase2b.info"));
-            fiatReceivedButton = new Button();
-            fiatReceivedButton.setDefaultButton(true);
-            VBox.setMargin(fiatReceivedButton, new Insets(5, 0, 10, 0));
-            root.getChildren().addAll(headline, info, fiatReceivedButton);
+            confirmPaymentReceiptButton = new Button();
+            confirmPaymentReceiptButton.setDefaultButton(true);
+            VBox.setMargin(confirmPaymentReceiptButton, new Insets(5, 0, 10, 0));
+            root.getChildren().addAll(headline, info, confirmPaymentReceiptButton);
         }
 
         @Override
@@ -99,15 +99,15 @@ public class SellerState3aConfirmQuoteSideAssetReceipt extends BaseState {
             super.onViewAttached();
 
             headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.headline", model.getFormattedQuoteAmount(), model.getTrade().getShortId()));
-            fiatReceivedButton.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.fiatReceivedButton", model.getFormattedQuoteAmount()));
-            fiatReceivedButton.setOnAction(e -> controller.onConfirmFiatReceipt());
+            confirmPaymentReceiptButton.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.fiatReceivedButton", model.getFormattedQuoteAmount()));
+            confirmPaymentReceiptButton.setOnAction(e -> controller.onPaymentReceiptConfirmed());
         }
 
         @Override
         protected void onViewDetached() {
             super.onViewDetached();
 
-            fiatReceivedButton.setOnAction(null);
+            confirmPaymentReceiptButton.setOnAction(null);
         }
     }
 }
