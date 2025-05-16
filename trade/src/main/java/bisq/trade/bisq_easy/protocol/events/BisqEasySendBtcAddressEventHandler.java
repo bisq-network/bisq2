@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy.protocol.events;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -33,9 +32,8 @@ public class BisqEasySendBtcAddressEventHandler extends TradeEventHandlerAsMessa
     }
 
     @Override
-    public void process(Event event) {
-        BisqEasySendBtcAddressEvent bisqEasySendBtcAddressEvent = (BisqEasySendBtcAddressEvent) event;
-        bitcoinPaymentData = bisqEasySendBtcAddressEvent.getBitcoinPaymentData();
+    public void process(BisqEasySendBtcAddressEvent event) {
+        bitcoinPaymentData = event.getBitcoinPaymentData();
     }
 
     @Override

@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy.protocol.events;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractSignatureData;
 import bisq.trade.ServiceProvider;
@@ -36,7 +35,7 @@ public class BisqEasyTakeOfferEventHandler extends TradeEventHandlerAsMessageSen
     }
 
     @Override
-    public void process(Event event) {
+    public void process(BisqEasyTakeOfferEvent event) {
         try {
             contractSignatureData = serviceProvider.getContractService().signContract(trade.getContract(),
                     trade.getMyIdentity().getKeyBundle().getKeyPair());

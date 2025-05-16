@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy.protocol.events;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -33,9 +32,8 @@ public class BisqEasyAccountDataEventHandler extends TradeEventHandlerAsMessageS
     }
 
     @Override
-    public void process(Event event) {
-        BisqEasyAccountDataEvent bisqEasyTakeOfferEvent = (BisqEasyAccountDataEvent) event;
-        paymentAccountData = bisqEasyTakeOfferEvent.getPaymentAccountData();
+    public void process(BisqEasyAccountDataEvent event) {
+        paymentAccountData = event.getPaymentAccountData();
     }
 
     @Override

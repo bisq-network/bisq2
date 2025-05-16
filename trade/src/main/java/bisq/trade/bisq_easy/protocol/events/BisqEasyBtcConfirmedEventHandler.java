@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy.protocol.events;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.handler.TradeEventHandler;
@@ -31,7 +30,7 @@ public class BisqEasyBtcConfirmedEventHandler extends TradeEventHandler<BisqEasy
     }
 
     @Override
-    public void process(Event event) {
+    public void process(BisqEasyBtcConfirmedEvent event) {
     }
 
     @Override

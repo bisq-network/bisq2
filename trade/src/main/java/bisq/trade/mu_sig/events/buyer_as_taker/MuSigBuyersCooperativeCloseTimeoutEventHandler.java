@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.events.buyer_as_taker;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
@@ -34,7 +33,7 @@ public final class MuSigBuyersCooperativeCloseTimeoutEventHandler extends MuSigT
     }
 
     @Override
-    public void process(Event event) {
+    public void process(MuSigBuyersCooperativeCloseTimeoutEvent event) {
         muSigTradeService.stopCooperativeCloseTimeout(trade);
 
         MuSigTradeParty buyerAsTake = trade.getTaker();

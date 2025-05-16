@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.events;
 
-import bisq.common.fsm.Event;
 import bisq.common.fsm.FsmErrorEvent;
 import bisq.common.fsm.FsmException;
 import bisq.common.util.ExceptionUtil;
@@ -42,9 +41,8 @@ public final class MuSigFsmErrorEventHandler extends MuSigTradeEventHandlerAsMes
     }
 
     @Override
-    public void process(Event event) {
-        FsmErrorEvent fsmErrorEvent = (FsmErrorEvent) event;
-        FsmException fsmException = fsmErrorEvent.getFsmException();
+    public void process(FsmErrorEvent event) {
+        FsmException fsmException = event.getFsmException();
         errorMessage = ExceptionUtil.getRootCauseMessage(fsmException);
         errorStackTrace = ExceptionUtil.getSafeStackTraceAsString(fsmException);
     }

@@ -32,11 +32,11 @@ public abstract class TradeEventHandler<T extends Trade<?, ?, ?>, E extends Even
     }
 
     public void handle(Event event) {
-        process(event);
+        process(unsafeCast(event));
         commit();
     }
 
-    protected abstract void process(Event event);
+    protected abstract void process(E event);
 
     protected abstract void commit();
 

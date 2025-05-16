@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy.protocol.events;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.contract.Role;
 import bisq.trade.ServiceProvider;
@@ -32,7 +31,7 @@ public class BisqEasyRejectTradeEventHandler extends TradeEventHandlerAsMessageS
     }
 
     @Override
-    public void process(Event event) {
+    public void process(BisqEasyRejectTradeEvent event) {
     }
 
     @Override

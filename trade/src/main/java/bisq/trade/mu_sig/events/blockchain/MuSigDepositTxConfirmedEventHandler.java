@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.events.blockchain;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.handler.MuSigTradeEventHandler;
@@ -31,8 +30,7 @@ public final class MuSigDepositTxConfirmedEventHandler extends MuSigTradeEventHa
     }
 
     @Override
-    public void process(Event event) {
-        MuSigDepositTxConfirmedEvent muSigDepositTxConfirmedEvent = (MuSigDepositTxConfirmedEvent) event;
+    public void process(MuSigDepositTxConfirmedEvent event) {
     }
 
     @Override

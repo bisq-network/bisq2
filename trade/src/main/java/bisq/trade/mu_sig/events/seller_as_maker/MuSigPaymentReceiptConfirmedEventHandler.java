@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.events.seller_as_maker;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -39,7 +38,7 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
     }
 
     @Override
-    public void process(Event event) {
+    public void process(MuSigPaymentReceiptConfirmedEvent event) {
         MuSigTradeParty buyerAsTaker = trade.getTaker();
         // We got that from an earlier message
         PartialSignaturesMessage buyerPartialSignaturesMessage = buyerAsTaker.getPartialSignaturesMessage();

@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy.protocol.events;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -35,9 +34,8 @@ public class BisqEasyConfirmBtcSentEventHandler extends TradeEventHandlerAsMessa
     }
 
     @Override
-    public void process(Event event) {
-        BisqEasyConfirmBtcSentEvent bisqEasyConfirmBtcSentEvent = (BisqEasyConfirmBtcSentEvent) event;
-        paymentProof = bisqEasyConfirmBtcSentEvent.getPaymentProof();
+    public void process(BisqEasyConfirmBtcSentEvent event) {
+        paymentProof = event.getPaymentProof();
     }
 
     @Override
