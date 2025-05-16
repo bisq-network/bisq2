@@ -21,12 +21,12 @@ import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
+import bisq.trade.mu_sig.handler.MuSigTradeEventHandler;
 import bisq.trade.protobuf.CloseTradeRequest;
 import bisq.trade.protobuf.CloseTradeResponse;
 import bisq.trade.protobuf.MusigGrpc;
-import bisq.trade.protocol.events.TradeEventHandler;
 
-public final class MuSigSellersCooperativeCloseTimeoutEventHandler extends TradeEventHandler<MuSigTrade> {
+public final class MuSigSellersCooperativeCloseTimeoutEventHandler extends MuSigTradeEventHandler<MuSigTrade> {
 
     public MuSigSellersCooperativeCloseTimeoutEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -34,13 +34,13 @@ public final class MuSigSellersCooperativeCloseTimeoutEventHandler extends Trade
 
     @Override
     public void handle(Event event) {
-        serviceProvider.getMuSigTradeService().stopCooperativeCloseTimeout(trade);
+        muSigTradeService.stopCooperativeCloseTimeout(trade);
 
         MuSigTradeParty buyerAsTake = trade.getTaker();
 
         // ClosureType.UNCOOPERATIVE
         // *** SELLER FORCE-CLOSES TRADE ***
-         MusigGrpc.MusigBlockingStub musigBlockingStub = serviceProvider.getMuSigTradeService().getMusigBlockingStub();
+         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         //TODO isn't here the swap Tx needed to pass?
         CloseTradeResponse sellersCloseTradeResponse = musigBlockingStub.closeTrade(CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())

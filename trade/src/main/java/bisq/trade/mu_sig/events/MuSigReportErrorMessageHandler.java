@@ -20,12 +20,12 @@ package bisq.trade.mu_sig.events;
 import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.handler.MuSigTradeMessageHandler;
 import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
-import bisq.trade.protocol.events.TradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class MuSigReportErrorMessageHandler extends TradeMessageHandler<MuSigTrade, MuSigReportErrorMessage> {
+public final class MuSigReportErrorMessageHandler extends MuSigTradeMessageHandler<MuSigTrade, MuSigReportErrorMessage> {
 
     public MuSigReportErrorMessageHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);

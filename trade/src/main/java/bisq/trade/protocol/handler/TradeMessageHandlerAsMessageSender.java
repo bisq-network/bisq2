@@ -15,29 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.bisq_easy.protocol.messages;
+package bisq.trade.protocol.handler;
 
-import bisq.common.fsm.Event;
+import bisq.network.SendMessageResult;
 import bisq.trade.ServiceProvider;
-import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.handler.TradeMessageHandler;
+import bisq.trade.Trade;
+import bisq.trade.protocol.messages.TradeMessage;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.CompletableFuture;
+
 @Slf4j
-public class BisqEasyConfirmFiatSentMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyConfirmFiatSentMessage> {
+public abstract class TradeMessageHandlerAsMessageSender<T extends Trade<?, ?, ?>, M extends TradeMessage> extends TradeMessageHandler<T, M>
+        implements TradeMessageSender<T> {
 
-    public BisqEasyConfirmFiatSentMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
-        super(serviceProvider, model);
+    protected TradeMessageHandlerAsMessageSender(ServiceProvider serviceProvider, T trade) {
+        super(serviceProvider, trade);
     }
 
-    @Override
-    public void handle(Event event) {
-        BisqEasyConfirmFiatSentMessage message = (BisqEasyConfirmFiatSentMessage) event;
-        verifyMessage(message);
-    }
-
-    @Override
-    protected void verifyMessage(BisqEasyConfirmFiatSentMessage message) {
-        super.verifyMessage(message);
+    protected CompletableFuture<SendMessageResult> sendMessage(M message) {
+        return sendMessage(message, serviceProvider, trade);
     }
 }

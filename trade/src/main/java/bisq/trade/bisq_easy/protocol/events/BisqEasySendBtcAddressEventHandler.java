@@ -22,9 +22,9 @@ import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyBtcAddressMessage;
-import bisq.trade.protocol.handler.SendTradeMessageHandler;
+import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
-public class BisqEasySendBtcAddressEventHandler extends SendTradeMessageHandler<BisqEasyTrade> {
+public class BisqEasySendBtcAddressEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade> {
 
     public BisqEasySendBtcAddressEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);

@@ -22,8 +22,7 @@ import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.events.TradeMessageHandler;
-import bisq.trade.protocol.handler.TradeMessageSender;
+import bisq.trade.protocol.handler.TradeMessageHandlerAsMessageSender;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
@@ -32,7 +31,7 @@ import java.util.Arrays;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class BisqEasyTakeOfferResponseHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyTakeOfferResponse> implements TradeMessageSender<BisqEasyTrade> {
+public class BisqEasyTakeOfferResponseHandler extends TradeMessageHandlerAsMessageSender<BisqEasyTrade, BisqEasyTakeOfferResponse> {
 
     public BisqEasyTakeOfferResponseHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);

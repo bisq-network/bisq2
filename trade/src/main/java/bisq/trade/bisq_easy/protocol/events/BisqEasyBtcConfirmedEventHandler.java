@@ -20,7 +20,7 @@ package bisq.trade.bisq_easy.protocol.events;
 import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.events.TradeEventHandler;
+import bisq.trade.protocol.handler.TradeEventHandler;
 
 import java.util.Optional;
 

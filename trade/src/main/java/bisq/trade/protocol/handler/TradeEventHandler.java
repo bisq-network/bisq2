@@ -15,17 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.protocol.events;
+package bisq.trade.protocol.handler;
 
 import bisq.common.fsm.EventHandler;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
 
-public abstract class TradeEventHandler<M extends Trade<?, ?, ?>> implements EventHandler {
+public abstract class TradeEventHandler<T extends Trade<?, ?, ?>> implements EventHandler {
     protected final ServiceProvider serviceProvider;
-    protected final M trade;
+    protected final T trade;
 
-    protected TradeEventHandler(ServiceProvider serviceProvider, M trade) {
+    protected TradeEventHandler(ServiceProvider serviceProvider, T trade) {
         this.serviceProvider = serviceProvider;
         this.trade = trade;
     }

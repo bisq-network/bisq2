@@ -22,6 +22,7 @@ import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
+import bisq.trade.mu_sig.handler.MuSigTradeMessageHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.DepositPsbt;
 import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
@@ -31,8 +32,6 @@ import bisq.trade.protobuf.DepositTxSignatureRequest;
 import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protobuf.PartialSignaturesRequest;
 import bisq.trade.protobuf.ReceiverAddressAndAmount;
-import bisq.trade.protocol.events.TradeMessageHandler;
-import bisq.trade.protocol.handler.TradeMessageSender;
 import com.google.common.collect.ImmutableMap;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,8 +39,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
-public final class MuSigSetupTradeMessage_C_Handler extends TradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_C>
-        implements TradeMessageSender<MuSigTrade> {
+public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_C> {
 
     public MuSigSetupTradeMessage_C_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -52,7 +50,7 @@ public final class MuSigSetupTradeMessage_C_Handler extends TradeMessageHandler<
         MuSigSetupTradeMessage_C message = (MuSigSetupTradeMessage_C) event;
         verifyMessage(message);
 
-        MusigGrpc.MusigBlockingStub musigBlockingStub = serviceProvider.getMuSigTradeService().getMusigBlockingStub();
+        MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         NonceSharesMessage buyerNonceSharesMessage = message.getNonceSharesMessage();
         PartialSignaturesMessage sellerPartialSignaturesMessage = PartialSignaturesMessage.fromProto(musigBlockingStub.getPartialSignatures(PartialSignaturesRequest.newBuilder()
                 .setTradeId(trade.getId())
@@ -79,7 +77,7 @@ public final class MuSigSetupTradeMessage_C_Handler extends TradeMessageHandler<
 
         // We observe the txConfirmationStatus to get informed once the deposit tx is confirmed (gets published by the
         // buyer when they receive the MuSigSetupTradeMessage_D).
-        serviceProvider.getMuSigTradeService().observeDepositTxConfirmationStatus(trade);
+        muSigTradeService.observeDepositTxConfirmationStatus(trade);
 
     }
 

@@ -22,11 +22,11 @@ import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmBtcSentMessage;
-import bisq.trade.protocol.handler.SendTradeMessageHandler;
+import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
 import java.util.Optional;
 
-public class BisqEasyConfirmBtcSentEventHandler extends SendTradeMessageHandler<BisqEasyTrade> {
+public class BisqEasyConfirmBtcSentEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade> {
 
     public BisqEasyConfirmBtcSentEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);

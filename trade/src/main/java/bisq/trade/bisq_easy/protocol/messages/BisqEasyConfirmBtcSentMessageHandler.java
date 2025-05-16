@@ -24,7 +24,7 @@ import bisq.common.validation.BitcoinTransactionValidation;
 import bisq.common.validation.LightningPreImageValidation;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.events.TradeMessageHandler;
+import bisq.trade.protocol.handler.TradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;

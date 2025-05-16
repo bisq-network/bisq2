@@ -24,6 +24,7 @@ import bisq.contract.mu_sig.MuSigContract;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
+import bisq.trade.mu_sig.handler.MuSigTradeMessageHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
@@ -33,8 +34,6 @@ import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protobuf.NonceSharesRequest;
 import bisq.trade.protobuf.PartialSignaturesRequest;
 import bisq.trade.protobuf.ReceiverAddressAndAmount;
-import bisq.trade.protocol.events.TradeMessageHandler;
-import bisq.trade.protocol.handler.TradeMessageSender;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
@@ -43,8 +42,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
-public final class MuSigSetupTradeMessage_B_Handler extends TradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_B>
-        implements TradeMessageSender<MuSigTrade> {
+public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_B> {
 
     public MuSigSetupTradeMessage_B_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -59,7 +57,7 @@ public final class MuSigSetupTradeMessage_B_Handler extends TradeMessageHandler<
 
         // Request NonceSharesMessage from rust server
         PubKeySharesResponse sellerPubKeySharesResponse = message.getPubKeySharesResponse();
-        MusigGrpc.MusigBlockingStub musigBlockingStub = serviceProvider.getMuSigTradeService().getMusigBlockingStub();
+        MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         NonceSharesMessage buyerNonceSharesMessage = NonceSharesMessage.fromProto(musigBlockingStub.getNonceShares(NonceSharesRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setBuyerOutputPeersPubKeyShare(ByteString.copyFrom(sellerPubKeySharesResponse.getBuyerOutputPubKeyShare()))

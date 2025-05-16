@@ -22,7 +22,7 @@ import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.events.TradeMessageHandler;
+import bisq.trade.protocol.handler.TradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.*;

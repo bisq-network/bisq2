@@ -21,10 +21,10 @@ import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
-import bisq.trade.protocol.handler.SendTradeMessageHandler;
 
-public final class MuSigPaymentInitiatedEventHandler extends SendTradeMessageHandler<MuSigTrade> {
+public final class MuSigPaymentInitiatedEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade> {
 
     public MuSigPaymentInitiatedEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -38,7 +38,7 @@ public final class MuSigPaymentInitiatedEventHandler extends SendTradeMessageHan
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId()));
 
-        serviceProvider.getMuSigTradeService().startCooperativeCloseTimeout(trade, new MuSigBuyersCooperativeCloseTimeoutEvent());
+        muSigTradeService.startCooperativeCloseTimeout(trade, new MuSigBuyersCooperativeCloseTimeoutEvent());
     }
 
     private void commitToModel() {

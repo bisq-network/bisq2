@@ -22,20 +22,18 @@ import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
+import bisq.trade.mu_sig.handler.MuSigTradeMessageHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
 import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
 import bisq.trade.mu_sig.messages.network.MuSigCooperativeClosureMessage_G;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentReceivedMessage_F;
 import bisq.trade.protobuf.CloseTradeRequest;
 import bisq.trade.protobuf.MusigGrpc;
-import bisq.trade.protocol.events.TradeMessageHandler;
-import bisq.trade.protocol.handler.TradeMessageSender;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class MuSigPaymentReceivedMessage_F_Handler extends TradeMessageHandler<MuSigTrade, MuSigPaymentReceivedMessage_F>
-        implements TradeMessageSender<MuSigTrade> {
+public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigPaymentReceivedMessage_F> {
 
     public MuSigPaymentReceivedMessage_F_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -46,12 +44,12 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends TradeMessageHan
         MuSigPaymentReceivedMessage_F message = (MuSigPaymentReceivedMessage_F) event;
         verifyMessage(message);
 
-        serviceProvider.getMuSigTradeService().stopCooperativeCloseTimeout(trade);
+        muSigTradeService.stopCooperativeCloseTimeout(trade);
 
         // ClosureType.COOPERATIVE
         // *** BUYER CLOSES TRADE ***
         SwapTxSignatureResponse sellerSwapTxSignatureResponse = message.getSwapTxSignatureResponse();
-        MusigGrpc.MusigBlockingStub musigBlockingStub = serviceProvider.getMuSigTradeService().getMusigBlockingStub();
+        MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         CloseTradeResponse buyersCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(sellerSwapTxSignatureResponse.getPeerOutputPrvKeyShare()))

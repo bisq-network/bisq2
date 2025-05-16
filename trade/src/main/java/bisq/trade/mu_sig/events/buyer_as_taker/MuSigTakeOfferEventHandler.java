@@ -25,7 +25,7 @@ import bisq.i18n.Res;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
-import bisq.trade.mu_sig.handler.MuSigSendTradeMessageHandler;
+import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
 import bisq.trade.protobuf.MusigGrpc;
@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public final class MuSigTakeOfferEventHandler extends MuSigSendTradeMessageHandler<MuSigTrade> {
+public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade> {
 
     public MuSigTakeOfferEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -46,7 +46,7 @@ public final class MuSigTakeOfferEventHandler extends MuSigSendTradeMessageHandl
     @Override
     public void handle(Event event) {
         try {
-            MusigGrpc.MusigBlockingStub musigBlockingStub = serviceProvider.getMuSigTradeService().getMusigBlockingStub();
+            MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
             bisq.trade.protobuf.PubKeySharesResponse proto = musigBlockingStub.initTrade(PubKeySharesRequest.newBuilder()
                     .setTradeId(trade.getId())
                     .setMyRole(Role.BUYER_AS_TAKER)
