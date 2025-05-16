@@ -19,6 +19,7 @@ package bisq.common.validation;
 
 import bisq.common.platform.Version;
 import bisq.common.util.DateUtils;
+import bisq.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.PublicKey;
@@ -91,6 +92,11 @@ public class NetworkDataValidation {
         text.ifPresent(e -> validateText(e, maxTextLength));
     }
 
+    public static void validateRequiredText(String text, int maxLength) {
+        checkArgument(!StringUtils.isEmpty(text), "Text must not be null or empty");
+        validateText(text, maxLength);
+    }
+
     public static void validateByteArray(byte[] bytes, int maxLength) {
         checkArgument(bytes.length <= maxLength,
                 "Byte array must not be longer than " + maxLength + ". bytes.length=" + bytes.length);
@@ -107,6 +113,11 @@ public class NetworkDataValidation {
     public static void validateCode(String code) {
         checkArgument(code.length() < 10,
                 "Code too long. code=" + code);
+    }
+
+    public static void validateRequiredCode(String code) {
+        checkArgument(!StringUtils.isEmpty(code), "Code must not be null or empty");
+        validateCode(code);
     }
 
     public static void validateBtcTxId(String txId) {
@@ -146,5 +157,20 @@ public class NetworkDataValidation {
     public static void validateBondUserName(String bondUserName) {
         checkArgument(bondUserName.length() < 100,
                 "Bond username too long. bondUserName=" + bondUserName);
+    }
+
+    // Format: country code (2 letters) + check digits (2 numbers) + BBAN (up to 30 alphanumeric chars)
+    public static void validateIbanFormat(String iban) {
+        checkArgument(!StringUtils.isEmpty(iban), "IBAN must not be null or empty");
+        checkArgument(iban.matches("[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}"),
+                "Invalid IBAN format. Must start with country code (2 letters) followed by check digits (2 numbers) and BBAN. iban=" + iban);
+    }
+
+    // Format: institution code (4 letters) + country code (2 letters) + location code (2 alphanumeric) +
+    // optional branch code (3 alphanumeric).
+    public static void validateBicFormat(String bic) {
+        checkArgument(!StringUtils.isEmpty(bic), "BIC must not be null or empty");
+        checkArgument(bic.matches("[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?"),
+                "Invalid BIC/SWIFT format. Must follow pattern of institution code (4 letters) + country code (2 letters) + location code (2 alphanumeric) + optional branch code (3 alphanumeric). bic=" + bic);
     }
 }
