@@ -29,17 +29,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BisqEasyAccountDataMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyAccountDataMessage> {
-
     private String paymentAccountData;
 
     public BisqEasyAccountDataMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
-    }
-
-    @Override
-    protected void process(BisqEasyAccountDataMessage message) {
-        paymentAccountData = message.getPaymentAccountData();
-
     }
 
     @Override
@@ -48,6 +41,11 @@ public class BisqEasyAccountDataMessageHandler extends TradeMessageHandler<BisqE
         checkArgument(message.getPaymentAccountData().length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH,
                 "PaymentAccountData length must not be longer than " + UserDefinedFiatAccountPayload.MAX_DATA_LENGTH);
         checkNotNull(message.getBisqEasyOffer(), "BisqEasyOffer must not be null");
+    }
+
+    @Override
+    protected void process(BisqEasyAccountDataMessage message) {
+        paymentAccountData = message.getPaymentAccountData();
     }
 
     @Override

@@ -34,12 +34,15 @@ import java.util.Iterator;
 
 @Slf4j
 public final class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_D> {
-
     private PartialSignaturesMessage sellerPartialSignaturesMessage;
     private DepositPsbt buyerDepositPsbt;
 
     public MuSigSetupTradeMessage_D_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
+    }
+
+    @Override
+    protected void verify(MuSigSetupTradeMessage_D message) {
     }
 
     @Override
@@ -60,10 +63,6 @@ public final class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHan
                 .setTradeId(trade.getId())
                 .setDepositPsbt(buyerDepositPsbt.toProto(true))
                 .build());
-    }
-
-    @Override
-    protected void verify(MuSigSetupTradeMessage_D message) {
     }
 
     @Override

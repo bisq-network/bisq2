@@ -25,12 +25,15 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class MuSigReportErrorMessageHandler extends MuSigTradeMessageHandler<MuSigTrade, MuSigReportErrorMessage> {
-
     private String errorMessage;
     private String stackTrace;
 
     public MuSigReportErrorMessageHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
+    }
+
+    @Override
+    protected void verify(MuSigReportErrorMessage message) {
     }
 
     @Override
@@ -40,11 +43,6 @@ public final class MuSigReportErrorMessageHandler extends MuSigTradeMessageHandl
         log.warn("We received an error report from our peer.\n" +
                         "errorMessage={}\nstackTrace={}\ntradeId={}",
                 errorMessage, stackTrace, trade.getId());
-
-    }
-
-    @Override
-    protected void verify(MuSigReportErrorMessage message) {
     }
 
     @Override

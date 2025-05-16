@@ -42,7 +42,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_B> {
-
     private ContractSignatureData makersContractSignatureData;
     private NonceSharesMessage buyerNonceSharesMessage;
     private PubKeySharesResponse sellerPubKeySharesResponse;
@@ -51,6 +50,11 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
 
     public MuSigSetupTradeMessage_B_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
+    }
+
+    @Override
+    protected void verify(MuSigSetupTradeMessage_B message) {
+        // TODO verify both contracts are the same, and verify peers signature
     }
 
     @Override
@@ -79,12 +83,6 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
 
         MuSigContract makersContract = message.getContract();
         makersContractSignatureData = message.getContractSignatureData();
-
-        // TODO verify both contracts are the same, and verify peers signature
-    }
-
-    @Override
-    protected void verify(MuSigSetupTradeMessage_B message) {
     }
 
     @Override
@@ -98,17 +96,6 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
         buyerAsTaker.setPartialSignaturesMessage(buyerPartialSignaturesMessage);
         sellerAsMaker.setPubKeySharesResponse(sellerPubKeySharesResponse);
         sellerAsMaker.setNonceSharesMessage(sellerAsMakerNonceSharesMessage);
-    }
-
-    private static List<ReceiverAddressAndAmount> mockReceivers() {
-        return ImmutableMap.of(
-                        "tb1pwxlp4v9v7v03nx0e7vunlc87d4936wnyqegw0fuahudypan64wys5stxh7", 200_000,
-                        "tb1qpg889v22f3gefuvwpe3963t5a00nvfmkhlgqw5", 80_000,
-                        "2N2x2bA28AsLZZEHss4SjFoyToQV5YYZsJM", 12_345
-                )
-                .entrySet().stream()
-                .map(e -> ReceiverAddressAndAmount.newBuilder().setAddress(e.getKey()).setAmount(e.getValue()).build())
-                .collect(Collectors.toList());
     }
 
     @Override
@@ -125,6 +112,16 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void sendLogMessage() {
+    }
 
+    private static List<ReceiverAddressAndAmount> mockReceivers() {
+        return ImmutableMap.of(
+                        "tb1pwxlp4v9v7v03nx0e7vunlc87d4936wnyqegw0fuahudypan64wys5stxh7", 200_000,
+                        "tb1qpg889v22f3gefuvwpe3963t5a00nvfmkhlgqw5", 80_000,
+                        "2N2x2bA28AsLZZEHss4SjFoyToQV5YYZsJM", 12_345
+                )
+                .entrySet().stream()
+                .map(e -> ReceiverAddressAndAmount.newBuilder().setAddress(e.getKey()).setAmount(e.getValue()).build())
+                .collect(Collectors.toList());
     }
 }

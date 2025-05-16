@@ -52,6 +52,10 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
     }
 
     @Override
+    protected void verify(MuSigSetupTradeMessage_A message) {
+    }
+
+    @Override
     protected void process(MuSigSetupTradeMessage_A message) {
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         sellerPubKeySharesResponse = PubKeySharesResponse.fromProto(musigBlockingStub.initTrade(PubKeySharesRequest.newBuilder()
@@ -86,10 +90,6 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
     }
 
     @Override
-    protected void verify(MuSigSetupTradeMessage_A message) {
-    }
-
-    @Override
     protected void commit() {
         MuSigTradeParty buyerAsTaker = trade.getTaker();
         MuSigTradeParty sellerAsMaker = trade.getMaker();
@@ -104,7 +104,7 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void sendMessage() {
-        send( new MuSigSetupTradeMessage_B(StringUtils.createUid(),
+        send(new MuSigSetupTradeMessage_B(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
@@ -117,6 +117,5 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void sendLogMessage() {
-
     }
 }

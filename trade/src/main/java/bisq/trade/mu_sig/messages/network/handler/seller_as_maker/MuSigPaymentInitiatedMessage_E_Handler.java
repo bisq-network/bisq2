@@ -25,17 +25,16 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class MuSigPaymentInitiatedMessage_E_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigPaymentInitiatedMessage_E> {
-
     public MuSigPaymentInitiatedMessage_E_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    protected void process(MuSigPaymentInitiatedMessage_E message) {
+    protected void verify(MuSigPaymentInitiatedMessage_E message) {
     }
 
     @Override
-    protected void verify(MuSigPaymentInitiatedMessage_E message) {
+    protected void process(MuSigPaymentInitiatedMessage_E message) {
     }
 
     @Override

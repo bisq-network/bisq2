@@ -31,17 +31,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class BisqEasyTakeOfferResponseHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyTakeOfferResponse> {
-
     private ContractSignatureData makersContractSignatureData;
 
     public BisqEasyTakeOfferResponseHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
-    }
-
-    @Override
-    protected void process(BisqEasyTakeOfferResponse message) {
-        makersContractSignatureData = message.getContractSignatureData();
-
     }
 
     @Override
@@ -59,6 +52,11 @@ public class BisqEasyTakeOfferResponseHandler extends TradeMessageHandler<BisqEa
             log.error("Verifying makers contract signature failed", e);
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    protected void process(BisqEasyTakeOfferResponse message) {
+        makersContractSignatureData = message.getContractSignatureData();
     }
 
     @Override

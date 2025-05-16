@@ -24,12 +24,15 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BisqEasyReportErrorMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyReportErrorMessage> {
-
     private String stackTrace;
     private String errorMessage;
 
     public BisqEasyReportErrorMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
+    }
+
+    @Override
+    protected void verify(BisqEasyReportErrorMessage message) {
     }
 
     @Override
@@ -40,10 +43,6 @@ public class BisqEasyReportErrorMessageHandler extends TradeMessageHandler<BisqE
         stackTrace = message.getStackTrace();
         errorMessage = message.getErrorMessage();
 
-    }
-
-    @Override
-    protected void verify(BisqEasyReportErrorMessage message) {
     }
 
     @Override

@@ -33,12 +33,15 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigPaymentReceivedMessage_F> {
-
     private CloseTradeResponse buyersCloseTradeResponse;
     private SwapTxSignatureResponse sellerSwapTxSignatureResponse;
 
     public MuSigPaymentReceivedMessage_F_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
+    }
+
+    @Override
+    protected void verify(MuSigPaymentReceivedMessage_F message) {
     }
 
     @Override
@@ -53,10 +56,6 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
                 .setTradeId(trade.getId())
                 .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(sellerSwapTxSignatureResponse.getPeerOutputPrvKeyShare()))
                 .build()));
-    }
-
-    @Override
-    protected void verify(MuSigPaymentReceivedMessage_F message) {
     }
 
     @Override
@@ -80,6 +79,5 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
 
     @Override
     protected void sendLogMessage() {
-
     }
 }

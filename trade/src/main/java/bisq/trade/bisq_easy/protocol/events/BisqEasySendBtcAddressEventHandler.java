@@ -24,7 +24,6 @@ import bisq.trade.bisq_easy.protocol.messages.BisqEasyBtcAddressMessage;
 import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
 public class BisqEasySendBtcAddressEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasySendBtcAddressEvent> {
-
     private String bitcoinPaymentData;
 
     public BisqEasySendBtcAddressEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {

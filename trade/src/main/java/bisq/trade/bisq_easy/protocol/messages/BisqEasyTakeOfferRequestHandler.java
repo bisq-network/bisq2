@@ -47,50 +47,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandlerAsMessageSender<BisqEasyTrade, BisqEasyTakeOfferRequest> {
-
     private ContractSignatureData takersContractSignatureData;
     private ContractSignatureData makersContractSignatureData;
 
     public BisqEasyTakeOfferRequestHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
-    }
-
-    @Override
-    protected void process(BisqEasyTakeOfferRequest message) {
-        BisqEasyContract contract = message.getBisqEasyContract();
-//        checkArgument(trade.getOffer().getPriceSpec().equals(contract.getAgreedPriceSpec()),
-//                "Price spec cannot be changed from the one set in offer since v2.0.3.");
-        takersContractSignatureData = message.getContractSignatureData();
-        ContractService contractService = serviceProvider.getContractService();
-        try {
-            makersContractSignatureData = contractService.signContract(contract,
-                    trade.getMyIdentity().getKeyBundle().getKeyPair());
-
-            if (serviceProvider.getSettingsService().getCloseMyOfferWhenTaken().get()) {
-                BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
-                bisqEasyOfferbookChannelService.findMessageByOffer(trade.getOffer())
-                        .ifPresent(chatMessage -> bisqEasyOfferbookChannelService.deleteChatMessage(chatMessage, trade.getMyIdentity().getNetworkIdWithKeyPair())
-                                .whenComplete((deleteChatMessageResult, throwable) -> {
-                                    if (throwable == null) {
-                                        log.info("Offer with ID {} removed", chatMessage.getBisqEasyOffer().map(Offer::getId).orElse("N/A"));
-                                    } else {
-                                        log.error("We got an error at doDeleteMessage", throwable);
-                                    }
-                                }));
-            }
-        } catch (GeneralSecurityException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    protected void sendMessage() {
-        send(new BisqEasyTakeOfferResponse(StringUtils.createUid(),
-                trade.getId(),
-                trade.getProtocolVersion(),
-                trade.getMyself().getNetworkId(),
-                trade.getPeer().getNetworkId(),
-                makersContractSignatureData));
     }
 
     @Override
@@ -163,9 +124,47 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandlerAsMessag
     }
 
     @Override
+    protected void process(BisqEasyTakeOfferRequest message) {
+        BisqEasyContract contract = message.getBisqEasyContract();
+//        checkArgument(trade.getOffer().getPriceSpec().equals(contract.getAgreedPriceSpec()),
+//                "Price spec cannot be changed from the one set in offer since v2.0.3.");
+        takersContractSignatureData = message.getContractSignatureData();
+        ContractService contractService = serviceProvider.getContractService();
+        try {
+            makersContractSignatureData = contractService.signContract(contract,
+                    trade.getMyIdentity().getKeyBundle().getKeyPair());
+
+            if (serviceProvider.getSettingsService().getCloseMyOfferWhenTaken().get()) {
+                BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
+                bisqEasyOfferbookChannelService.findMessageByOffer(trade.getOffer())
+                        .ifPresent(chatMessage -> bisqEasyOfferbookChannelService.deleteChatMessage(chatMessage, trade.getMyIdentity().getNetworkIdWithKeyPair())
+                                .whenComplete((deleteChatMessageResult, throwable) -> {
+                                    if (throwable == null) {
+                                        log.info("Offer with ID {} removed", chatMessage.getBisqEasyOffer().map(Offer::getId).orElse("N/A"));
+                                    } else {
+                                        log.error("We got an error at doDeleteMessage", throwable);
+                                    }
+                                }));
+            }
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     protected void commit() {
         trade.getTaker().getContractSignatureData().set(takersContractSignatureData);
         trade.getMaker().getContractSignatureData().set(makersContractSignatureData);
+    }
+
+    @Override
+    protected void sendMessage() {
+        send(new BisqEasyTakeOfferResponse(StringUtils.createUid(),
+                trade.getId(),
+                trade.getProtocolVersion(),
+                trade.getMyself().getNetworkId(),
+                trade.getPeer().getNetworkId(),
+                makersContractSignatureData));
     }
 
     private void validateAmount(BisqEasyOffer takersOffer, BisqEasyContract takersContract) {

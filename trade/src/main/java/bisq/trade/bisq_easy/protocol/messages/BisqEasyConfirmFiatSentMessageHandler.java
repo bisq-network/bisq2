@@ -24,17 +24,16 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BisqEasyConfirmFiatSentMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyConfirmFiatSentMessage> {
-
     public BisqEasyConfirmFiatSentMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    protected void process(BisqEasyConfirmFiatSentMessage message) {
+    protected void verify(BisqEasyConfirmFiatSentMessage message) {
     }
 
     @Override
-    protected void verify(BisqEasyConfirmFiatSentMessage message) {
+    protected void process(BisqEasyConfirmFiatSentMessage message) {
     }
 
     @Override

@@ -50,6 +50,10 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
     }
 
     @Override
+    protected void verify(MuSigSetupTradeMessage_C message) {
+    }
+
+    @Override
     protected void process(MuSigSetupTradeMessage_C message) {
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         buyerNonceSharesMessage = message.getNonceSharesMessage();
@@ -70,10 +74,6 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
         // buyer when they receive the MuSigSetupTradeMessage_D).
         muSigTradeService.observeDepositTxConfirmationStatus(trade);
 
-    }
-
-    @Override
-    protected void verify(MuSigSetupTradeMessage_C message) {
     }
 
     @Override
@@ -100,7 +100,6 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void sendLogMessage() {
-
     }
 
     private static List<ReceiverAddressAndAmount> mockReceivers() {

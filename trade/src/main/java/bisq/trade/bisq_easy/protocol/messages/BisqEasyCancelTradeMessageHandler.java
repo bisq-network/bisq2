@@ -25,18 +25,17 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BisqEasyCancelTradeMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyCancelTradeMessage> {
-
     public BisqEasyCancelTradeMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    protected void process(BisqEasyCancelTradeMessage message) {
-
+    protected void verify(BisqEasyCancelTradeMessage message) {
     }
 
     @Override
-    protected void verify(BisqEasyCancelTradeMessage message) {
+    protected void process(BisqEasyCancelTradeMessage message) {
+
     }
 
     @Override

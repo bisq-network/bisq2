@@ -24,7 +24,6 @@ import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmFiatReceiptMessage;
 import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
 public class BisqEasyConfirmFiatReceiptEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyConfirmFiatReceiptEvent> {
-
     public BisqEasyConfirmFiatReceiptEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }

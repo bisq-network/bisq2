@@ -70,16 +70,9 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
     }
 
     @Override
-    protected void sendLogMessage() {
-        String takerId = trade.getTaker().getNetworkId().getId();
-        MuSigOffer offer = trade.getOffer();
-        Optional<UserProfile> takerUserProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(takerId);
-        String makerId = offer.getMakersUserProfileId();
-        Optional<UserProfile> makerUserProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(makerId);
-        sendLogMessage(Res.encode("muSig.protocol.logMessage.takeOffer",
-                takerUserProfile.orElseThrow().getUserName(),
-                makerUserProfile.orElseThrow().getUserName(),
-                offer.getShortId()));
+    protected void commit() {
+        trade.getTaker().getContractSignatureData().set(contractSignatureData);
+        trade.getTaker().setPubKeySharesResponse(buyerPubKeySharesResponse);
     }
 
     @Override
@@ -95,8 +88,15 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
     }
 
     @Override
-    protected void commit() {
-        trade.getTaker().getContractSignatureData().set(contractSignatureData);
-        trade.getTaker().setPubKeySharesResponse(buyerPubKeySharesResponse);
+    protected void sendLogMessage() {
+        String takerId = trade.getTaker().getNetworkId().getId();
+        MuSigOffer offer = trade.getOffer();
+        Optional<UserProfile> takerUserProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(takerId);
+        String makerId = offer.getMakersUserProfileId();
+        Optional<UserProfile> makerUserProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(makerId);
+        sendLogMessage(Res.encode("muSig.protocol.logMessage.takeOffer",
+                takerUserProfile.orElseThrow().getUserName(),
+                makerUserProfile.orElseThrow().getUserName(),
+                offer.getShortId()));
     }
 }

@@ -30,12 +30,15 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigCooperativeClosureMessage_G> {
-
     private CloseTradeResponse buyerCloseTradeResponse;
     private CloseTradeResponse sellersCloseTradeResponse;
 
     public MuSigCooperativeClosureMessage_G_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
+    }
+
+    @Override
+    protected void verify(MuSigCooperativeClosureMessage_G message) {
     }
 
     @Override
@@ -50,10 +53,6 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
                 .setTradeId(trade.getId())
                 .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(buyerCloseTradeResponse.getPeerOutputPrvKeyShare()))
                 .build()));
-    }
-
-    @Override
-    protected void verify(MuSigCooperativeClosureMessage_G message) {
     }
 
     @Override

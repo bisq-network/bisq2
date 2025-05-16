@@ -27,7 +27,6 @@ import bisq.trade.protobuf.MusigGrpc;
 import com.google.protobuf.ByteString;
 
 public final class MuSigBuyersCooperativeCloseTimeoutEventHandler extends MuSigTradeEventHandler<MuSigTrade, MuSigBuyersCooperativeCloseTimeoutEvent> {
-
     public MuSigBuyersCooperativeCloseTimeoutEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }

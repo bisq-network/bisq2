@@ -24,7 +24,6 @@ import bisq.trade.protocol.handler.TradeEventHandler;
 import java.util.Optional;
 
 public class BisqEasyBtcConfirmedEventHandler extends TradeEventHandler<BisqEasyTrade, BisqEasyBtcConfirmedEvent> {
-
     public BisqEasyBtcConfirmedEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }

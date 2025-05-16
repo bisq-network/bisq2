@@ -24,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class MuSigDepositTxConfirmedEventHandler extends MuSigTradeEventHandler<MuSigTrade, MuSigDepositTxConfirmedEvent> {
-
     public MuSigDepositTxConfirmedEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
