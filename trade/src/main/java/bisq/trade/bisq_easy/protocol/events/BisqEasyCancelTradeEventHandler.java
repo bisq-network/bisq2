@@ -25,7 +25,7 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyCancelTradeMessage;
 import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
-public class BisqEasyCancelTradeEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade> {
+public class BisqEasyCancelTradeEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyCancelTradeEvent> {
 
     public BisqEasyCancelTradeEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);

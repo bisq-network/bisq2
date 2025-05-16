@@ -25,7 +25,7 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyRejectTradeMessage;
 import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
-public class BisqEasyRejectTradeEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade> {
+public class BisqEasyRejectTradeEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyRejectTradeEvent> {
 
     public BisqEasyRejectTradeEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);

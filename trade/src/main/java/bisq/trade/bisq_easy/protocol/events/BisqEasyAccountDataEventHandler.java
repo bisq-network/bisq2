@@ -24,7 +24,7 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
 import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
-public class BisqEasyAccountDataEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade> {
+public class BisqEasyAccountDataEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyAccountDataEvent> {
 
     private String paymentAccountData;
 

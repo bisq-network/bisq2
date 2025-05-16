@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public abstract class MuSigTradeEventHandlerAsMessageSender<T extends MuSigTrade> extends TradeEventHandlerAsMessageSender<T> {
+public abstract class MuSigTradeEventHandlerAsMessageSender<T extends MuSigTrade, E extends Event> extends TradeEventHandlerAsMessageSender<T, E> {
     protected final MuSigTradeService muSigTradeService;
 
     protected MuSigTradeEventHandlerAsMessageSender(ServiceProvider serviceProvider, T trade) {

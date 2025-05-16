@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade> {
+public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade, MuSigTakeOfferEvent> {
     private PubKeySharesResponse buyerPubKeySharesResponse;
     private ContractSignatureData contractSignatureData;
     private MuSigContract contract;
@@ -71,7 +71,7 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
     }
 
     @Override
-    protected  void sendLogMessage() {
+    protected void sendLogMessage() {
         String takerId = trade.getTaker().getNetworkId().getId();
         MuSigOffer offer = trade.getOffer();
         Optional<UserProfile> takerUserProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(takerId);
@@ -82,6 +82,7 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
                 makerUserProfile.orElseThrow().getUserName(),
                 offer.getShortId()));
     }
+
     @Override
     protected void sendMessage() {
         send(new MuSigSetupTradeMessage_A(StringUtils.createUid(),

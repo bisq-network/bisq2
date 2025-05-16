@@ -27,7 +27,7 @@ import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
 import java.security.GeneralSecurityException;
 
-public class BisqEasyTakeOfferEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade> {
+public class BisqEasyTakeOfferEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyTakeOfferEvent> {
 
     private ContractSignatureData contractSignatureData;
 

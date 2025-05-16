@@ -26,7 +26,7 @@ import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
 import java.util.Optional;
 
-public class BisqEasyConfirmBtcSentEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade> {
+public class BisqEasyConfirmBtcSentEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyConfirmBtcSentEvent> {
 
     private Optional<String> paymentProof;
 

@@ -33,7 +33,7 @@ import static bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage.
 import static bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage.MAX_LENGTH_STACKTRACE;
 
 @Slf4j
-public class BisqEasyFsmErrorEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade> {
+public class BisqEasyFsmErrorEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, FsmErrorEvent> {
     private String errorMessage;
     private String errorStackTrace;
 

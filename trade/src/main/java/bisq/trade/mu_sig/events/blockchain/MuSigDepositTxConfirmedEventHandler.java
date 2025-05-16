@@ -24,7 +24,7 @@ import bisq.trade.mu_sig.handler.MuSigTradeEventHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class MuSigDepositTxConfirmedEventHandler extends MuSigTradeEventHandler<MuSigTrade> {
+public final class MuSigDepositTxConfirmedEventHandler extends MuSigTradeEventHandler<MuSigTrade, MuSigDepositTxConfirmedEvent> {
 
     public MuSigDepositTxConfirmedEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -36,7 +36,7 @@ public final class MuSigDepositTxConfirmedEventHandler extends MuSigTradeEventHa
     }
 
     @Override
-    protected void commit( ) {
+    protected void commit() {
         //trade.setDepositTxConfirmationStatus(txConfirmationStatus);
     }
 }
