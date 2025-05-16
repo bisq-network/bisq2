@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.messages.network.handler.seller_as_maker;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.handler.MuSigTradeMessageHandler;
@@ -33,8 +32,7 @@ public final class MuSigPaymentInitiatedMessage_E_Handler extends MuSigTradeMess
     }
 
     @Override
-    public void handle(Event event) {
-        MuSigPaymentInitiatedMessage_E message = (MuSigPaymentInitiatedMessage_E) event;
+    public void handle(MuSigPaymentInitiatedMessage_E message) {
         verifyMessage(message);
     }
 

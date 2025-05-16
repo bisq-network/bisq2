@@ -17,6 +17,7 @@
 
 package bisq.trade.protocol.handler;
 
+import bisq.common.fsm.Event;
 import bisq.network.identity.NetworkId;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
@@ -30,6 +31,16 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
         super(serviceProvider, trade);
     }
 
+    public void handle(Event event) {
+        if (event instanceof TradeMessage tradeMessage) {
+            handle(unsafeCast(tradeMessage));
+        } else {
+            throw new IllegalArgumentException("Event must be a subclass of TradeMessage in " + getClass().getSimpleName());
+        }
+    }
+
+    public abstract void handle(M message);
+
     protected void verifyMessage(M message) {
         checkArgument(message.getTradeId().equals(trade.getId()),
                 "TradeId of message not matching the tradeId from the trade data");
@@ -38,5 +49,14 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
                 "Message sender networkID not matching the peers networkId from the trade data");
         // We verify if the sender of the message is banned at the message handler in the service class.
         // As the message handler is optional we prefer to block banned messages at the level instead of handling it here.
+    }
+
+    private M unsafeCast(TradeMessage tradeMessage) {
+        try {
+            //noinspection unchecked
+            return (M) tradeMessage;
+        } catch (Exception e) {
+            throw new ClassCastException("Could not cast tradeMessage to generic type in " + getClass().getSimpleName() + ". " + e.getMessage());
+        }
     }
 }

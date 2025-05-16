@@ -278,7 +278,6 @@ message CloseTradeResponse {
 // MuSig network messages
 message MuSigTradeMessage {
   oneof message {
-    MuSigTakeOfferRequest muSigTakeOfferRequest = 19;
     MuSigSetupTradeMessage_A muSigSetupTradeMessage_A = 20;
     MuSigSetupTradeMessage_B muSigSetupTradeMessage_B = 21;
     MuSigSetupTradeMessage_C muSigSetupTradeMessage_C = 22;
@@ -293,10 +292,6 @@ message MuSigSetupTradeMessage_A {
   contract.Contract contract = 1;
   contract.ContractSignatureData contractSignatureData = 2;
   PubKeySharesResponse pubKeySharesResponse = 3;
-}
-message MuSigTakeOfferRequest {
-  contract.Contract contract = 1;
-  contract.ContractSignatureData contractSignatureData = 2;
 }
 
 message MuSigSetupTradeMessage_B {

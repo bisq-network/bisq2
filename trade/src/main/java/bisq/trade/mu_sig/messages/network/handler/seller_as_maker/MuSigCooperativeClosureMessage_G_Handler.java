@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.messages.network.handler.seller_as_maker;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
@@ -37,8 +36,7 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
     }
 
     @Override
-    public void handle(Event event) {
-        MuSigCooperativeClosureMessage_G message = (MuSigCooperativeClosureMessage_G) event;
+    public void handle(MuSigCooperativeClosureMessage_G message) {
         verifyMessage(message);
 
         muSigTradeService.stopCooperativeCloseTimeout(trade);

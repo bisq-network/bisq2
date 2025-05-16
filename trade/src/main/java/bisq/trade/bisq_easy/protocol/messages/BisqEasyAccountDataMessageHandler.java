@@ -18,14 +18,14 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.account.accounts.UserDefinedFiatAccountPayload;
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.handler.TradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BisqEasyAccountDataMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyAccountDataMessage> {
@@ -35,8 +35,7 @@ public class BisqEasyAccountDataMessageHandler extends TradeMessageHandler<BisqE
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyAccountDataMessage message = (BisqEasyAccountDataMessage) event;
+    public void handle(BisqEasyAccountDataMessage message) {
         verifyMessage(message);
         commitToModel(message.getPaymentAccountData());
     }

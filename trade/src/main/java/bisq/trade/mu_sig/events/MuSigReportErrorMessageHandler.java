@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.events;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.handler.MuSigTradeMessageHandler;
@@ -32,8 +31,7 @@ public final class MuSigReportErrorMessageHandler extends MuSigTradeMessageHandl
     }
 
     @Override
-    public void handle(Event event) {
-        MuSigReportErrorMessage message = (MuSigReportErrorMessage) event;
+    public void handle(MuSigReportErrorMessage message) {
         verifyMessage(message);
         log.warn("We received an error report from our peer.\n" +
                         "errorMessage={}\nstackTrace={}\ntradeId={}",

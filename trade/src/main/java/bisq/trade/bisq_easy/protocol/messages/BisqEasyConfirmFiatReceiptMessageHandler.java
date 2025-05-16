@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.handler.TradeMessageHandler;
@@ -31,8 +30,7 @@ public class BisqEasyConfirmFiatReceiptMessageHandler extends TradeMessageHandle
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyConfirmFiatReceiptMessage message = (BisqEasyConfirmFiatReceiptMessage) event;
+    public void handle(BisqEasyConfirmFiatReceiptMessage message) {
         verifyMessage(message);
     }
 

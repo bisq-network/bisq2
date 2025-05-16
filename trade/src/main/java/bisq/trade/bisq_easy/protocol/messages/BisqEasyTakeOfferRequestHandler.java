@@ -21,7 +21,6 @@ import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.common.currency.Market;
-import bisq.common.fsm.Event;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.util.StringUtils;
@@ -54,8 +53,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandlerAsMessag
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyTakeOfferRequest message = (BisqEasyTakeOfferRequest) event;
+    public void handle(BisqEasyTakeOfferRequest message) {
         verifyMessage(message);
 
         BisqEasyContract contract = message.getBisqEasyContract();

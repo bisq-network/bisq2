@@ -18,7 +18,6 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.BitcoinTransactionValidation;
 import bisq.common.validation.LightningPreImageValidation;
@@ -38,8 +37,7 @@ public class BisqEasyConfirmBtcSentMessageHandler extends TradeMessageHandler<Bi
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyConfirmBtcSentMessage message = (BisqEasyConfirmBtcSentMessage) event;
+    public void handle(BisqEasyConfirmBtcSentMessage message) {
         verifyMessage(message);
 
         commitToModel(message.getPaymentProof());

@@ -18,7 +18,6 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.BitcoinAddressValidation;
 import bisq.common.validation.LightningInvoiceValidation;
@@ -27,7 +26,8 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.handler.TradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BisqEasyBtcAddressMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyBtcAddressMessage> {
@@ -37,8 +37,7 @@ public class BisqEasyBtcAddressMessageHandler extends TradeMessageHandler<BisqEa
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyBtcAddressMessage message = (BisqEasyBtcAddressMessage) event;
+    public void handle(BisqEasyBtcAddressMessage message) {
         verifyMessage(message);
 
         commitToModel(message.getBitcoinPaymentData());

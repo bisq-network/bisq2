@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.messages.network.handler.buyer_as_taker;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
@@ -41,8 +40,7 @@ public final class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHan
     }
 
     @Override
-    public void handle(Event event) {
-        MuSigSetupTradeMessage_D message = (MuSigSetupTradeMessage_D) event;
+    public void handle(MuSigSetupTradeMessage_D message) {
         verifyMessage(message);
 
         PartialSignaturesMessage sellerPartialSignaturesMessage = message.getPartialSignaturesMessage();

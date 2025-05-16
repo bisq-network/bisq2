@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
-import bisq.common.fsm.Event;
 import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
 import bisq.trade.ServiceProvider;
@@ -38,8 +37,7 @@ public class BisqEasyTakeOfferResponseHandler extends TradeMessageHandlerAsMessa
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyTakeOfferResponse message = (BisqEasyTakeOfferResponse) event;
+    public void handle(BisqEasyTakeOfferResponse message) {
         verifyMessage(message);
         commitToModel(message.getContractSignatureData());
     }

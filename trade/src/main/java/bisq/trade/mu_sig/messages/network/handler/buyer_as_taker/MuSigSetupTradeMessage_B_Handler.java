@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.messages.network.handler.buyer_as_taker;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.mu_sig.MuSigContract;
@@ -49,8 +48,7 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
     }
 
     @Override
-    public void handle(Event event) {
-        MuSigSetupTradeMessage_B message = (MuSigSetupTradeMessage_B) event;
+    public void handle(MuSigSetupTradeMessage_B message) {
         verifyMessage(message);
 
         NonceSharesMessage sellerAsMakerNonceSharesMessage = message.getNonceSharesMessage();

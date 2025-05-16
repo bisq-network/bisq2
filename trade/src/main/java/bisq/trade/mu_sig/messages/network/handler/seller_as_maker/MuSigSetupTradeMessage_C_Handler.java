@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.messages.network.handler.seller_as_maker;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -46,8 +45,7 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
     }
 
     @Override
-    public void handle(Event event) {
-        MuSigSetupTradeMessage_C message = (MuSigSetupTradeMessage_C) event;
+    public void handle(MuSigSetupTradeMessage_C message) {
         verifyMessage(message);
 
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();

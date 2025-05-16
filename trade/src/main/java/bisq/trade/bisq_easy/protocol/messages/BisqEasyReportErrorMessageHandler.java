@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.handler.TradeMessageHandler;
@@ -31,8 +30,7 @@ public class BisqEasyReportErrorMessageHandler extends TradeMessageHandler<BisqE
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyReportErrorMessage message = (BisqEasyReportErrorMessage) event;
+    public void handle(BisqEasyReportErrorMessage message) {
         verifyMessage(message);
         log.warn("We received an error report from our peer.\n" +
                         "errorMessage={}\nstackTrace={}\ntradeId={}",

@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
-import bisq.common.fsm.Event;
 import bisq.contract.Role;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -32,8 +31,7 @@ public class BisqEasyRejectTradeMessageHandler extends TradeMessageHandler<BisqE
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyRejectTradeMessage message = (BisqEasyRejectTradeMessage) event;
+    public void handle(BisqEasyRejectTradeMessage message) {
         verifyMessage(message);
         commitToModel();
     }

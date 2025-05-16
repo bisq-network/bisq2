@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.messages.network.handler.buyer_as_taker;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -40,8 +39,7 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
     }
 
     @Override
-    public void handle(Event event) {
-        MuSigPaymentReceivedMessage_F message = (MuSigPaymentReceivedMessage_F) event;
+    public void handle(MuSigPaymentReceivedMessage_F message) {
         verifyMessage(message);
 
         muSigTradeService.stopCooperativeCloseTimeout(trade);
