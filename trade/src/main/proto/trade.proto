@@ -18,13 +18,14 @@
 syntax = "proto3";
 
 package trade;
-option java_package = "bisq.trade.protobuf";
-option java_multiple_files = true;
 
-import "offer.proto";
-import "network_identity.proto";
 import "contract.proto";
 import "identity.proto";
+import "network_identity.proto";
+import "offer.proto";
+
+option java_package = "bisq.trade.protobuf";
+option java_multiple_files = true;
 
 message TradeParty {
   network.identity.NetworkId networkId = 1;
@@ -42,6 +43,14 @@ enum TradeRole{
   TRADEROLE_SELLER_AS_TAKER = 3;
   TRADEROLE_SELLER_AS_MAKER = 4;
 }
+
+enum TradeLifecycleState {
+  TRADELIFECYCLESTATE_UNSPECIFIED = 0;
+  TRADELIFECYCLESTATE_ACTIVE = 1;
+  TRADELIFECYCLESTATE_HISTORICAL = 2;
+  TRADELIFECYCLESTATE_FAILED = 3;
+}
+
 message Trade {
   string state = 1;
   string id = 2;
@@ -54,6 +63,7 @@ message Trade {
   optional string errorStackTrace = 9;
   optional string peersErrorMessage = 10;
   optional string peersErrorStackTrace = 11;
+  TradeLifecycleState lifecycleState = 12;
 
   oneof message {
     BisqEasyTrade bisqEasyTrade = 30;

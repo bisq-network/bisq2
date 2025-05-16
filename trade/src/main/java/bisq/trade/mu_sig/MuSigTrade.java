@@ -26,6 +26,7 @@ import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.trade.Trade;
+import bisq.trade.TradeLifecycleState;
 import bisq.trade.TradeParty;
 import bisq.trade.TradeRole;
 import bisq.trade.mu_sig.messages.grpc.TxConfirmationStatus;
@@ -84,7 +85,8 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
                 myIdentity,
                 offer,
                 new MuSigTradeParty(takerNetworkId),
-                new MuSigTradeParty(makerNetworkId));
+                new MuSigTradeParty(makerNetworkId),
+                TradeLifecycleState.ACTIVE);
 
         stateObservable().addObserver(state -> tradeState.set((MuSigTradeState) state));
     }
@@ -95,8 +97,9 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
                       TradeRole tradeRole,
                       Identity myIdentity,
                       MuSigTradeParty taker,
-                      MuSigTradeParty maker) {
-        super(contract, state, id, tradeRole, myIdentity, taker, maker);
+                      MuSigTradeParty maker,
+                      TradeLifecycleState lifecycleState) {
+        super(contract, state, id, tradeRole, myIdentity, taker, maker,lifecycleState);
 
         stateObservable().addObserver(s -> tradeState.set((MuSigTradeState) s));
     }
@@ -131,7 +134,8 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
                 TradeRole.fromProto(proto.getTradeRole()),
                 Identity.fromProto(proto.getMyIdentity()),
                 TradeParty.protoToMuSigTradeParty(proto.getTaker()),
-                TradeParty.protoToMuSigTradeParty(proto.getMaker()));
+                TradeParty.protoToMuSigTradeParty(proto.getMaker()),
+                TradeLifecycleState.fromProto(proto.getLifecycleState()));
         if (proto.hasErrorMessage()) {
             trade.setErrorMessage(proto.getErrorMessage());
         }

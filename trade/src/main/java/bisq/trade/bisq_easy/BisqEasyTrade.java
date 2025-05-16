@@ -26,6 +26,7 @@ import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.Trade;
+import bisq.trade.TradeLifecycleState;
 import bisq.trade.TradeParty;
 import bisq.trade.TradeRole;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
@@ -74,7 +75,8 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                 myIdentity,
                 offer,
                 new BisqEasyTradeParty(takerNetworkId),
-                new BisqEasyTradeParty(makerNetworkId));
+                new BisqEasyTradeParty(makerNetworkId),
+                TradeLifecycleState.ACTIVE);
 
         stateObservable().addObserver(state -> tradeState.set((BisqEasyTradeState) state));
     }
@@ -85,8 +87,9 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                          TradeRole tradeRole,
                          Identity myIdentity,
                          BisqEasyTradeParty taker,
-                         BisqEasyTradeParty maker) {
-        super(contract, state, id, tradeRole, myIdentity, taker, maker);
+                         BisqEasyTradeParty maker,
+                         TradeLifecycleState lifecycleState) {
+        super(contract, state, id, tradeRole, myIdentity, taker, maker,lifecycleState);
 
         stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
@@ -122,7 +125,8 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                 TradeRole.fromProto(proto.getTradeRole()),
                 Identity.fromProto(proto.getMyIdentity()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getTaker()),
-                TradeParty.protoToBisqEasyTradeParty(proto.getMaker()));
+                TradeParty.protoToBisqEasyTradeParty(proto.getMaker()),
+                TradeLifecycleState.fromProto(proto.getLifecycleState()));
         if (proto.hasErrorMessage()) {
             trade.setErrorMessage(proto.getErrorMessage());
         }
