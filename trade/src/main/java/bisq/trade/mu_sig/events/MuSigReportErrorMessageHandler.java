@@ -31,7 +31,7 @@ public final class MuSigReportErrorMessageHandler extends MuSigTradeMessageHandl
     }
 
     @Override
-    public void processMessage(MuSigReportErrorMessage message) {
+    protected void processMessage(MuSigReportErrorMessage message) {
         log.warn("We received an error report from our peer.\n" +
                         "errorMessage={}\nstackTrace={}\ntradeId={}",
                 message.getErrorMessage(), message.getStackTrace(), trade.getId());

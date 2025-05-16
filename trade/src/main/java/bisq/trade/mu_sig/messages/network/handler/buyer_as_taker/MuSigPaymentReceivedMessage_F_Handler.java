@@ -39,7 +39,7 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
     }
 
     @Override
-    public void processMessage(MuSigPaymentReceivedMessage_F message) {
+    protected void processMessage(MuSigPaymentReceivedMessage_F message) {
         muSigTradeService.stopCooperativeCloseTimeout(trade);
 
         // ClosureType.COOPERATIVE

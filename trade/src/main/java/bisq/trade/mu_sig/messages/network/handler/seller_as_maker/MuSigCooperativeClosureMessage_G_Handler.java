@@ -36,7 +36,7 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
     }
 
     @Override
-    public void processMessage(MuSigCooperativeClosureMessage_G message) {
+    protected void processMessage(MuSigCooperativeClosureMessage_G message) {
         muSigTradeService.stopCooperativeCloseTimeout(trade);
 
         // ClosureType.COOPERATIVE

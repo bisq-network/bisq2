@@ -32,7 +32,7 @@ public final class MuSigPaymentInitiatedMessage_E_Handler extends MuSigTradeMess
     }
 
     @Override
-    public void processMessage(MuSigPaymentInitiatedMessage_E message) {
+    protected void processMessage(MuSigPaymentInitiatedMessage_E message) {
     }
 
     @Override

@@ -46,7 +46,7 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
     }
 
     @Override
-    public void processMessage(MuSigSetupTradeMessage_A message) {
+    protected void processMessage(MuSigSetupTradeMessage_A message) {
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         PubKeySharesResponse sellerPubKeyShareResponse = PubKeySharesResponse.fromProto(musigBlockingStub.initTrade(PubKeySharesRequest.newBuilder()
                 .setTradeId(trade.getId())

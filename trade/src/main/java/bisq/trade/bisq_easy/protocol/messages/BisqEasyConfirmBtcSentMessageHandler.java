@@ -37,7 +37,7 @@ public class BisqEasyConfirmBtcSentMessageHandler extends TradeMessageHandler<Bi
     }
 
     @Override
-    public void processMessage(BisqEasyConfirmBtcSentMessage message) {
+    protected void processMessage(BisqEasyConfirmBtcSentMessage message) {
         commitToModel(message.getPaymentProof());
     }
 

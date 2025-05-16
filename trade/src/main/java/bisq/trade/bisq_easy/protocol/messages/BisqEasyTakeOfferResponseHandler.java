@@ -37,7 +37,7 @@ public class BisqEasyTakeOfferResponseHandler extends TradeMessageHandlerAsMessa
     }
 
     @Override
-    public void processMessage(BisqEasyTakeOfferResponse message) {
+    protected void processMessage(BisqEasyTakeOfferResponse message) {
         commitToModel(message.getContractSignatureData());
     }
 

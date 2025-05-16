@@ -30,7 +30,7 @@ public class BisqEasyReportErrorMessageHandler extends TradeMessageHandler<BisqE
     }
 
     @Override
-    public void processMessage(BisqEasyReportErrorMessage message) {
+    protected void processMessage(BisqEasyReportErrorMessage message) {
         log.warn("We received an error report from our peer.\n" +
                         "errorMessage={}\nstackTrace={}\ntradeId={}",
                 message.getErrorMessage(), message.getStackTrace(), trade.getId());

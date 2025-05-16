@@ -35,7 +35,7 @@ public class BisqEasyAccountDataMessageHandler extends TradeMessageHandler<BisqE
     }
 
     @Override
-    public void processMessage(BisqEasyAccountDataMessage message) {
+    protected void processMessage(BisqEasyAccountDataMessage message) {
         commitToModel(message.getPaymentAccountData());
     }
 
