@@ -28,8 +28,8 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public abstract class SendTradeMessageHandler<T extends Trade<?, ?, ?>> extends TradeEventHandler<T> implements TradeMessageSender<T> {
 
-    protected SendTradeMessageHandler(ServiceProvider serviceProvider, T model) {
-        super(serviceProvider, model);
+    protected SendTradeMessageHandler(ServiceProvider serviceProvider, T trade) {
+        super(serviceProvider, trade);
     }
 
     protected CompletableFuture<SendMessageResult> sendMessage(TradeMessage message) {
