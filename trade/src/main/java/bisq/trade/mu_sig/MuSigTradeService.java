@@ -84,6 +84,23 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 public final class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Service, ConfidentialMessageService.Listener {
+    @Getter
+    public static class Config {
+        private final String host;
+        private final int port;
+
+        public Config(String host, int port) {
+            this.host = host;
+            this.port = port;
+        }
+
+        public static Config from(com.typesafe.config.Config config) {
+            com.typesafe.config.Config grpcServer = config.getConfig("grpcServer");
+            return new Config(grpcServer.getString("host"),
+                    grpcServer.getInt("port"));
+        }
+    }
+
     private final ServiceProvider serviceProvider;
     private final NetworkService networkService;
     private final IdentityService identityService;
@@ -112,7 +129,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
     private final Map<String, Scheduler> cooperativeCloseTimeoutSchedulerByTradeId = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<Void>> observeDepositTxConfirmationStatusFutureByTradeId = new ConcurrentHashMap<>();
 
-    public MuSigTradeService(ServiceProvider serviceProvider) {
+    public MuSigTradeService(Config config, ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
         networkService = serviceProvider.getNetworkService();
         identityService = serviceProvider.getIdentityService();
@@ -123,8 +140,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
 
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
 
-        //todo add host/port to config
-        musigGrpcClient = new MusigGrpcClient("127.0.0.1", 50051);
+        musigGrpcClient = new MusigGrpcClient(config.getHost(), config.getPort());
     }
 
 
@@ -474,6 +490,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
     public ObservableHashMap<String, MuSigTrade> getTradeById() {
         return persistableStore.getTradeById();
     }
+
     public MusigGrpc.MusigBlockingStub getMusigBlockingStub() {
         return musigGrpcClient.getBlockingStub();
     }
