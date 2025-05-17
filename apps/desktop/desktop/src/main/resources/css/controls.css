@@ -20,7 +20,6 @@
     -fx-font-family: "IBM Plex Sans";
     -fx-padding: 5 32 5 32;
     -fx-cursor: hand;
-    -fx-label-padding: 0 -15 0 -15;
 }
 
 .button:hover {
@@ -1035,7 +1034,7 @@
 
 .dropdown-menu-popup .menu-item .dropdown-menu-item-content {
     -fx-background-color: transparent;
-    -fx-padding: 10 10 10 18;
+    -fx-padding: 10;
     -fx-cursor: hand;
 }
 
