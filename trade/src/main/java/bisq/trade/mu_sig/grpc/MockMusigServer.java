@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.mock_grpc;
+package bisq.trade.mu_sig.grpc;
 
 import bisq.trade.protobuf.MusigGrpc;
 import io.grpc.Server;
@@ -28,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static com.google.protobuf.ByteString.copyFrom;
 
-public final class MusigServer {
+public final class MockMusigServer {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Server server = ServerBuilder
