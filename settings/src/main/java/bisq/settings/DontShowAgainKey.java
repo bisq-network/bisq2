@@ -17,10 +17,23 @@
 
 package bisq.settings;
 
+import lombok.Getter;
+
 /**
  * Enum for don't show again checkboxes. If possible use the enum and not local keys to have better control about
  * the entries. We do not persist the key, but use the name of the enum as string for the key.
  */
 public enum DontShowAgainKey {
-    WELCOME
+    WELCOME;
+
+    @Getter
+    private final String key;
+
+    DontShowAgainKey() {
+        this.key = name();
+    }
+
+    DontShowAgainKey(String key) {
+        this.key = key;
+    }
 }
