@@ -29,7 +29,7 @@ public class DontShowAgainService implements Service {
     }
 
     public boolean showAgain(DontShowAgainKey key) {
-        return showAgain(key.name());
+        return showAgain(key.getKey());
     }
 
     public boolean showAgain(String key) {
@@ -38,7 +38,7 @@ public class DontShowAgainService implements Service {
     }
 
     public void dontShowAgain(DontShowAgainKey key) {
-        putDontShowAgain(key.name(), true);
+        putDontShowAgain(key.getKey(), true);
     }
 
     public void putDontShowAgain(String key, boolean dontShowAgain) {
