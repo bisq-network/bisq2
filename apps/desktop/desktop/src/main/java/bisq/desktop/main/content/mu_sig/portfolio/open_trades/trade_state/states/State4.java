@@ -35,6 +35,8 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.formatters.TimeFormatter;
+import bisq.settings.DontShowAgainKey;
+import bisq.settings.DontShowAgainService;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeUtils;
 import bisq.user.profile.UserProfile;
@@ -66,6 +68,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
     protected static abstract class Controller<M extends Model, V extends View<?, ?>> extends BaseState.Controller<M, V> {
         private final ReputationService reputationService;
         protected final ExplorerService explorerService;
+        private final DontShowAgainService dontShowAgainService;
 
         protected Controller(ServiceProvider serviceProvider,
                              MuSigTrade trade,
@@ -74,6 +77,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
 
             explorerService = serviceProvider.getBondedRolesService().getExplorerService();
             reputationService = serviceProvider.getUserService().getReputationService();
+            dontShowAgainService = serviceProvider.getDontShowAgainService();
         }
 
         @Override
@@ -115,11 +119,21 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
         }
 
         protected void onCloseCompletedTrade() {
-            new Popup().feedback(Res.get("bisqEasy.openTrades.closeTrade.warning.completed"))
-                    .actionButtonText(Res.get("bisqEasy.openTrades.confirmCloseTrade"))
-                    .onAction(() -> muSigService.closeTrade(model.getTrade(),model.getChannel()))
-                    .closeButtonText(Res.get("action.cancel"))
-                    .show();
+            DontShowAgainKey key = DontShowAgainKey.CONFIRM_CLOSE_MU_SIG_TRADE;
+            if (dontShowAgainService.showAgain(key)) {
+                new Popup().feedback(Res.get("bisqEasy.openTrades.closeTrade.warning.completed"))
+                        .actionButtonText(Res.get("bisqEasy.openTrades.confirmCloseTrade"))
+                        .onAction(this::doCloseCompletedTrade)
+                        .closeButtonText(Res.get("action.cancel"))
+                        .dontShowAgainId(key)
+                        .show();
+            } else {
+                doCloseCompletedTrade();
+            }
+        }
+
+        private void doCloseCompletedTrade() {
+            muSigService.closeTrade(model.getTrade(), model.getChannel());
         }
 
         protected void onShowDetails() {

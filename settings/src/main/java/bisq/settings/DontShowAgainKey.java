@@ -24,7 +24,9 @@ import lombok.Getter;
  * the entries. We do not persist the key, but use the name of the enum as string for the key.
  */
 public enum DontShowAgainKey {
-    WELCOME;
+    WELCOME,
+    CONFIRM_CLOSE_BISQ_EASY_TRADE,
+    CONFIRM_CLOSE_MU_SIG_TRADE;
 
     @Getter
     private final String key;
