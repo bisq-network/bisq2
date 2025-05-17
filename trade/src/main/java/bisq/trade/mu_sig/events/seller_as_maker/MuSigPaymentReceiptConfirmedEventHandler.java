@@ -40,7 +40,7 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
     public void process(MuSigPaymentReceiptConfirmedEvent event) {
         MuSigTradeParty buyerAsTaker = trade.getTaker();
         // We got that from an earlier message
-        PartialSignaturesMessage buyerPartialSignaturesMessage = buyerAsTaker.getPartialSignaturesMessage();
+        PartialSignaturesMessage buyerPartialSignaturesMessage = buyerAsTaker.getPartialSignaturesMessage().orElseThrow();
 
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         sellerSwapTxSignatureResponse = SwapTxSignatureResponse.fromProto(musigBlockingStub.signSwapTx(SwapTxSignatureRequest.newBuilder()
