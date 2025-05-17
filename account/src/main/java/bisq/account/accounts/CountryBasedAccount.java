@@ -40,6 +40,21 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, 
         this.country = country;
     }
 
+    public static CountryBasedAccount<?, ?> fromProto(bisq.account.protobuf.Account proto) {
+        return switch (proto.getCountryBasedAccount().getMessageCase()) {
+            case BANKACCOUNT -> BankAccount.fromProto(proto);
+            case SEPAACCOUNT -> SepaAccount.fromProto(proto);
+            case SEPAINSTANTACCOUNT -> SepaInstantAccount.fromProto(proto);
+            case F2FACCOUNT -> F2FAccount.fromProto(proto);
+            case PIXACCOUNT -> PixAccount.fromProto(proto);
+            case STRIKEACCOUNT -> StrikeAccount.fromProto(proto);
+            case AMAZONGIFTCARDACCOUNT -> AmazonGiftCardAccount.fromProto(proto);
+            case UPIACCOUNT -> UpiAccount.fromProto(proto);
+            case BIZUMACCOUNT -> BizumAccount.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+        };
+    }
+
     protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.CountryBasedAccount.newBuilder()
                 .setCountry(country.toProto(serializeForHash));
@@ -53,19 +68,5 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, 
 
     private bisq.account.protobuf.CountryBasedAccount toCountryBasedAccountProto(boolean serializeForHash) {
         return resolveBuilder(getCountryBasedAccountBuilder(serializeForHash), serializeForHash).build();
-    }
-
-    public static CountryBasedAccount<?, ?> fromProto(bisq.account.protobuf.Account proto) {
-        return switch (proto.getCountryBasedAccount().getMessageCase()) {
-            case BANKACCOUNT -> BankAccount.fromProto(proto);
-            case SEPAACCOUNT -> SepaAccount.fromProto(proto);
-            case F2FACCOUNT -> F2FAccount.fromProto(proto);
-            case PIXACCOUNT -> PixAccount.fromProto(proto);
-            case STRIKEACCOUNT -> StrikeAccount.fromProto(proto);
-            case AMAZONGIFTCARDACCOUNT -> AmazonGiftCardAccount.fromProto(proto);
-            case UPIACCOUNT -> UpiAccount.fromProto(proto);
-            case BIZUMACCOUNT -> BizumAccount.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-        };
     }
 }

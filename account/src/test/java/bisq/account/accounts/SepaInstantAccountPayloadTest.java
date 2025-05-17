@@ -1,0 +1,246 @@
+package bisq.account.accounts;
+
+import bisq.account.protobuf.AccountPayload;
+import bisq.account.protobuf.CountryBasedAccountPayload;
+import bisq.account.protobuf.SepaInstantAccountPayload;
+import org.junit.jupiter.api.Test;
+
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+class SepaInstantAccountPayloadTest {
+
+    private static final AccountPayload PROTO = AccountPayload.newBuilder()
+            .setId("id")
+            .setPaymentMethodName("SEPA_INSTANT")
+            .setCountryBasedAccountPayload(
+                    CountryBasedAccountPayload.newBuilder()
+                            .setCountryCode("DE")
+                            .setSepaInstantAccountPayload(SepaInstantAccountPayload.newBuilder()
+                                    .setHolderName("holderName")
+                                    .setIban("DE89370400440532013000")
+                                    .setBic("DEUTDEBBXXX")
+                                    .addAllAcceptedCountryCodes(List.of("DE", "FR", "IT"))))
+            .build();
+
+    private static final bisq.account.accounts.SepaInstantAccountPayload PAYLOAD =
+            new bisq.account.accounts.SepaInstantAccountPayload(
+                    "id",
+                    "SEPA_INSTANT",
+                    "holderName",
+                    "DE89370400440532013000",
+                    "DEUTDEBBXXX",
+                    "DE",
+                    List.of("DE", "FR", "IT"));
+
+    @Test
+    void testToProto() {
+        assertEquals(PROTO, PAYLOAD.completeProto());
+    }
+
+    @Test
+    void testFromProto() {
+        assertEquals(PAYLOAD, bisq.account.accounts.SepaInstantAccountPayload.fromProto(PROTO));
+    }
+
+    @Test
+    void testToProtoWithEmptyAcceptedCountries() {
+        var payloadWithoutCountries = new bisq.account.accounts.SepaInstantAccountPayload(
+                "id",
+                "SEPA_INSTANT",
+                "holderName",
+                "DE89370400440532013000",
+                "DEUTDEBBXXX",
+                "DE",
+                null);
+
+        var protoWithoutCountries = AccountPayload.newBuilder()
+                .setId("id")
+                .setPaymentMethodName("SEPA_INSTANT")
+                .setCountryBasedAccountPayload(
+                        CountryBasedAccountPayload.newBuilder()
+                                .setCountryCode("DE")
+                                .setSepaInstantAccountPayload(SepaInstantAccountPayload.newBuilder()
+                                        .setHolderName("holderName")
+                                        .setIban("DE89370400440532013000")
+                                        .setBic("DEUTDEBBXXX")))
+                .build();
+
+        assertEquals(protoWithoutCountries, payloadWithoutCountries.completeProto());
+    }
+
+    @Test
+    void testToProtoWithEmptyAcceptedCountriesList() {
+        var payloadWithEmptyList = new bisq.account.accounts.SepaInstantAccountPayload(
+                "id",
+                "SEPA_INSTANT",
+                "holderName",
+                "DE89370400440532013000",
+                "DEUTDEBBXXX",
+                "DE",
+                Collections.emptyList());
+
+        var protoWithEmptyList = AccountPayload.newBuilder()
+                .setId("id")
+                .setPaymentMethodName("SEPA_INSTANT")
+                .setCountryBasedAccountPayload(
+                        CountryBasedAccountPayload.newBuilder()
+                                .setCountryCode("DE")
+                                .setSepaInstantAccountPayload(SepaInstantAccountPayload.newBuilder()
+                                        .setHolderName("holderName")
+                                        .setIban("DE89370400440532013000")
+                                        .setBic("DEUTDEBBXXX")))
+                .build();
+
+        assertEquals(protoWithEmptyList, payloadWithEmptyList.completeProto());
+    }
+
+    @Test
+    void testVerifyWithValidFields() {
+        assertDoesNotThrow(() -> new bisq.account.accounts.SepaInstantAccountPayload(
+                "id",
+                "SEPA_INSTANT",
+                "holderName",
+                "DE89370400440532013000",
+                "DEUTDEBBXXX",
+                "DE",
+                List.of("DE", "FR", "IT")));
+    }
+
+    @Test
+    void testIbanValidation() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new bisq.account.accounts.SepaInstantAccountPayload(
+                        "id",
+                        "SEPA_INSTANT",
+                        "holderName",
+                        "INVALID-IBAN",
+                        "DEUTDEBBXXX",
+                        "DE",
+                        List.of("DE")));
+
+        assertThrows(IllegalArgumentException.class, () ->
+                new bisq.account.accounts.SepaInstantAccountPayload(
+                        "id",
+                        "SEPA_INSTANT",
+                        "holderName",
+                        "DE12", // Too short
+                        "DEUTDEBBXXX",
+                        "DE",
+                        List.of("DE")));
+
+        assertThrows(IllegalArgumentException.class, () ->
+                new bisq.account.accounts.SepaInstantAccountPayload(
+                        "id",
+                        "SEPA_INSTANT",
+                        "holderName",
+                        "DEAB370400440532013000", // Letters in check digits
+                        "DEUTDEBBXXX",
+                        "DE",
+                        List.of("DE")));
+    }
+
+    @Test
+    void testBicValidation() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new bisq.account.accounts.SepaInstantAccountPayload(
+                        "id",
+                        "SEPA_INSTANT",
+                        "holderName",
+                        "DE89370400440532013000",
+                        "INVALID", // Too short
+                        "DE",
+                        List.of("DE")));
+
+        assertThrows(IllegalArgumentException.class, () ->
+                new bisq.account.accounts.SepaInstantAccountPayload(
+                        "id",
+                        "SEPA_INSTANT",
+                        "holderName",
+                        "DE89370400440532013000",
+                        "12UTDEBBXXX", // Digits in bank code
+                        "DE",
+                        List.of("DE")));
+
+        assertThrows(IllegalArgumentException.class, () ->
+                new bisq.account.accounts.SepaInstantAccountPayload(
+                        "id",
+                        "SEPA_INSTANT",
+                        "holderName",
+                        "DE89370400440532013000",
+                        "DEUT12BBXXX", // Digits in country code
+                        "DE",
+                        List.of("DE")));
+    }
+
+    @Test
+    void testHolderNameValidation() {
+        StringBuilder longName = new StringBuilder();
+        for (int i = 0; i < 101; i++) {
+            longName.append("X");
+        }
+
+        assertThrows(IllegalArgumentException.class, () ->
+                new bisq.account.accounts.SepaInstantAccountPayload(
+                        "id",
+                        "SEPA_INSTANT",
+                        longName.toString(), // >100 chars
+                        "DE89370400440532013000",
+                        "DEUTDEBBXXX",
+                        "DE",
+                        List.of("DE")));
+    }
+
+    @Test
+    void testCountryCodeValidation() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new bisq.account.accounts.SepaInstantAccountPayload(
+                        "id",
+                        "SEPA_INSTANT",
+                        "holderName",
+                        "DE89370400440532013000",
+                        "DEUTDEBBXXX",
+                        "DE",
+                        List.of("INVALIDCOUNTRYCODE"))); // Too long country code
+    }
+
+    @Test
+    void testEquals() {
+        bisq.account.accounts.SepaInstantAccountPayload payload1 = new bisq.account.accounts.SepaInstantAccountPayload(
+                "id",
+                "SEPA_INSTANT",
+                "holderName",
+                "DE89370400440532013000",
+                "DEUTDEBBXXX",
+                "DE",
+                List.of("DE", "FR", "IT"));
+
+        bisq.account.accounts.SepaInstantAccountPayload payload2 = new bisq.account.accounts.SepaInstantAccountPayload(
+                "id",
+                "SEPA_INSTANT",
+                "holderName",
+                "DE89370400440532013000",
+                "DEUTDEBBXXX",
+                "DE",
+                List.of("DE", "FR", "IT"));
+
+        assertEquals(payload1, payload2);
+        assertEquals(payload1.hashCode(), payload2.hashCode());
+
+        bisq.account.accounts.SepaInstantAccountPayload differentPayload = new bisq.account.accounts.SepaInstantAccountPayload(
+                "id",
+                "SEPA_INSTANT",
+                "differentHolder",
+                "DE89370400440532013000",
+                "DEUTDEBBXXX",
+                "DE",
+                List.of("DE", "FR", "IT"));
+
+        assertNotEquals(payload1, differentPayload);
+    }
+}

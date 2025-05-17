@@ -48,19 +48,11 @@ public abstract class CountryBasedAccountPayload extends AccountPayload {
                 .setCountryBasedAccountPayload(toCountryBasedAccountPayloadProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.CountryBasedAccountPayload toCountryBasedAccountPayloadProto(boolean serializeForHash) {
-        return resolveBuilder(getCountryBasedAccountPayloadBuilder(serializeForHash), serializeForHash).build();
-    }
-
-    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.CountryBasedAccountPayload.newBuilder()
-                .setCountryCode(countryCode);
-    }
-
     public static CountryBasedAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         return switch (proto.getCountryBasedAccountPayload().getMessageCase()) {
             case BANKACCOUNTPAYLOAD -> BankAccountPayload.fromProto(proto);
             case SEPAACCOUNTPAYLOAD -> SepaAccountPayload.fromProto(proto);
+            case SEPAINSTANTACCOUNTPAYLOAD -> SepaInstantAccountPayload.fromProto(proto);
             case F2FACCOUNTPAYLOAD -> F2FAccountPayload.fromProto(proto);
             case PIXACCOUNTPAYLOAD -> PixAccountPayload.fromProto(proto);
             case STRIKEACCOUNTPAYLOAD -> StrikeAccountPayload.fromProto(proto);
@@ -69,5 +61,14 @@ public abstract class CountryBasedAccountPayload extends AccountPayload {
             case BIZUMACCOUNTPAYLOAD -> BizumAccountPayload.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
+    }
+
+    private bisq.account.protobuf.CountryBasedAccountPayload toCountryBasedAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getCountryBasedAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.CountryBasedAccountPayload.newBuilder()
+                .setCountryCode(countryCode);
     }
 }
