@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.protocol.ignore;
+package bisq.trade.mu_sig.protocol.not_yet_impl;
 
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
