@@ -51,8 +51,6 @@ public class MuSigTradeDetailsModel extends NavigationModel {
     private String tradeId;
     private String peerNetworkAddress;
     private boolean isOnChainSettlement;
-    private String btcPaymentAddress;
-    private boolean isBtcPaymentDataEmpty;
     private String depositTxId;
     private boolean isDepositTxIdEmpty;
     private boolean isDepositTxIdVisible;

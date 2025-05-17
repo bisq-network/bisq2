@@ -110,29 +110,24 @@ public class MuSigTradeDetailsController extends NavigationController implements
         model.setTradeId(trade.getId());
         model.setPeerNetworkAddress(channel.getPeer().getAddressByTransportDisplayString(50));
 
-        model.setPaymentAccountDataEmpty(trade.getPaymentAccountData().get() == null);
+        model.setPaymentAccountDataEmpty(trade.getPaymentAccountData() == null);
         model.setAssignedMediator(channel.getMediator().map(UserProfile::getUserName).orElse(""));
         model.setHasMediatorBeenAssigned(channel.getMediator().isPresent());
 
-        model.setPaymentAccountData(trade.getPaymentAccountData().get() == null
+        model.setPaymentAccountData(trade.getPaymentAccountData() == null
                 ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
-                : trade.getPaymentAccountData().get());
+                : trade.getPaymentAccountData());
 
-        model.setBtcPaymentAddress(trade.getBtcAddress().get() == null
+        model.setDepositTxId(trade.getDepositTxId() == null
                 ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
-                : trade.getBtcAddress().get());
-        model.setBtcPaymentDataEmpty(trade.getBtcAddress().get() == null);
-
-        model.setDepositTxId(trade.getDepositTxId().get() == null
-                ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
-                : trade.getDepositTxId().get());
-        model.setDepositTxIdEmpty(trade.getDepositTxId().get() == null);
+                : trade.getDepositTxId());
+        model.setDepositTxIdEmpty(trade.getDepositTxId() == null);
 
         boolean isOnChainSettlement = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
         model.setOnChainSettlement(isOnChainSettlement);
 
         // At LN its optional, so we show it only if set
-        model.setDepositTxIdVisible(isOnChainSettlement || trade.getDepositTxId().get() != null);
+        model.setDepositTxIdVisible(isOnChainSettlement || trade.getDepositTxId() != null);
     }
 
     @Override

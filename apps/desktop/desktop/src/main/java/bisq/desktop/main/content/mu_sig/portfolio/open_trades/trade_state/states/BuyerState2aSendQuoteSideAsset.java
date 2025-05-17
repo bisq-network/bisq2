@@ -80,7 +80,7 @@ public class BuyerState2aSendQuoteSideAsset extends BaseState {
             super.onActivate();
 
             MuSigTrade trade = model.getTrade();
-            String sellersAccountData = trade.getPaymentAccountData().get();
+            String sellersAccountData = trade.getPaymentAccountData();
             if (sellersAccountData != null && muSigService.isAccountDataBanned(sellersAccountData)) {
                 model.getConfirmFiatSentButtonDisabled().set(true);
                 model.getAccountDataBannedValidator().setIsInvalid(true);
@@ -158,7 +158,7 @@ public class BuyerState2aSendQuoteSideAsset extends BaseState {
             quoteAmount.getIconButton().setOnAction(e -> ClipboardUtil.copyToClipboard(model.getQuoteAmount()));
             paymentReason.setText(model.getTrade().getShortId());
             paymentReason.getIconButton().setOnAction(e -> ClipboardUtil.copyToClipboard(model.getTrade().getShortId()));
-            account.setText(model.getTrade().getPaymentAccountData().get());
+            account.setText(model.getTrade().getPaymentAccountData());
             account.validate();
             confirmFiatSentButton.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2a.confirmFiatSent", model.getFormattedQuoteAmount()));
             confirmFiatSentButton.setOnAction(e -> controller.onConfirmFiatSent());

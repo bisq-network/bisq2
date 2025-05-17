@@ -94,8 +94,7 @@ public abstract class WaitForDepositConfirmation<C extends WaitForDepositConfirm
         public void onActivate() {
             super.onActivate();
 
-            model.setTxId(model.getTrade().getDepositTxId().get());
-            model.setBitcoinPaymentData(model.getTrade().getBtcAddress().get());
+            model.setTxId(model.getTrade().getDepositTxId());
 
             if (model.getConfirmationState().get() == null) {
                 model.getConfirmationState().set(Model.ConfirmationState.REQUEST_STARTED);
@@ -200,8 +199,6 @@ public abstract class WaitForDepositConfirmation<C extends WaitForDepositConfirm
             FAILED,
         }
 
-        @Setter
-        protected String bitcoinPaymentData;
         @Setter
         protected String txId;
         @Setter

@@ -33,8 +33,7 @@ public class MuSigOpenTradesUtils {
             long quoteSideAmount = contract.getQuoteSideAmount();
             String formattedBaseAmount = AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(baseSideAmount));
             String formattedQuoteAmount = AmountFormatter.formatQuoteAmountWithCode(Fiat.from(quoteSideAmount, quoteCurrencyCode));
-            String paymentProof = Optional.ofNullable(trade.getDepositTxId().get()).orElse(Res.get("data.na"));
-            String bitcoinPaymentData = trade.getBtcAddress().get();
+            String paymentProof = Optional.ofNullable(trade.getDepositTxId()).orElse(Res.get("data.na"));
             String bitcoinMethod = contract.getBaseSidePaymentMethodSpec().getDisplayString();
             String fiatMethod = contract.getQuoteSidePaymentMethodSpec().getDisplayString();
             String paymentMethod = bitcoinMethod + " / " + fiatMethod;
@@ -43,7 +42,6 @@ public class MuSigOpenTradesUtils {
                     Res.get("bisqEasy.openTrades.table.baseAmount"),
                     Res.get("bisqEasy.openTrades.csv.quoteAmount", quoteCurrencyCode),
                     Res.get("bisqEasy.openTrades.csv.txIdOrPreimage"),
-                    Res.get("bisqEasy.openTrades.csv.receiverAddressOrInvoice"),
                     Res.get("bisqEasy.openTrades.csv.paymentMethod")
             );
             List<List<String>> tradeData = List.of(
@@ -52,7 +50,6 @@ public class MuSigOpenTradesUtils {
                             formattedBaseAmount,
                             formattedQuoteAmount,
                             paymentProof,
-                            bitcoinPaymentData,
                             paymentMethod
                     )
             );

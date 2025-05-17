@@ -42,12 +42,12 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
     private final Button closeButton;
     private final Label tradeDateLabel, tradeDurationLabel, meLabel, peerLabel, offerTypeLabel, marketLabel, fiatAmountLabel,
             fiatCurrencyLabel, btcAmountLabel, priceLabel, priceCodesLabel, priceSpecLabel, paymentMethodLabel,
-            settlementMethodLabel, tradeIdLabel, peerNetworkAddressLabel, btcPaymentAddressTitleLabel,
-            btcPaymentAddressDetailsLabel, depositTxTitleLabel, depositTxDetailsLabel,
+            settlementMethodLabel, tradeIdLabel, peerNetworkAddressLabel,
+           depositTxTitleLabel, depositTxDetailsLabel,
             paymentAccountDataLabel, assignedMediatorLabel;
     private final HBox assignedMediatorBox;
     private final BisqMenuItem tradersAndRoleCopyButton, tradeIdCopyButton, peerNetworkAddressCopyButton,
-            btcPaymentAddressCopyButton, depositTxCopyButton, paymentAccountDataCopyButton;
+            depositTxCopyButton, paymentAccountDataCopyButton;
     private final HBox depositTxBox, tradeDurationBox;
 
     public MuSigTradeDetailsView(MuSigTradeDetailsModel model, MuSigTradeDetailsController controller) {
@@ -151,13 +151,6 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         HBox paymentAccountDataBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.paymentAccountData",
                 paymentAccountDataLabel, paymentAccountDataCopyButton);
 
-        // BTC payment address
-        btcPaymentAddressTitleLabel = getDescriptionLabel("");
-        btcPaymentAddressDetailsLabel = getValueLabel();
-        btcPaymentAddressCopyButton = getTradeIdCopyButton("");
-        HBox btcPaymentAddressBox = createAndGetDescriptionAndValueBox(btcPaymentAddressTitleLabel,
-                btcPaymentAddressDetailsLabel, btcPaymentAddressCopyButton);
-
         // DepositTx
         depositTxTitleLabel = getDescriptionLabel("");
         depositTxDetailsLabel = getValueLabel();
@@ -187,7 +180,6 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
                 amountAndPriceBox,
                 paymentMethodsBox,
                 paymentAccountDataBox,
-                btcPaymentAddressBox,
                 depositTxBox,
                 detailsLabel,
                 detailsLine,
@@ -237,13 +229,6 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         settlementMethodLabel.setText(model.getSettlementMethod());
         tradeIdLabel.setText(model.getTradeId());
         peerNetworkAddressLabel.setText(model.getPeerNetworkAddress());
-        btcPaymentAddressTitleLabel.setText(model.isOnChainSettlement()
-                ? Res.get("bisqEasy.openTrades.tradeDetails.btcPaymentAddress")
-                : Res.get("bisqEasy.openTrades.tradeDetails.lightningInvoice"));
-        btcPaymentAddressDetailsLabel.setText(model.getBtcPaymentAddress());
-        btcPaymentAddressCopyButton.setTooltip(model.isOnChainSettlement()
-                ? Res.get("bisqEasy.openTrades.tradeDetails.btcPaymentAddress.copy")
-                : Res.get("bisqEasy.openTrades.tradeDetails.lightningInvoice.copy"));
 
         depositTxTitleLabel.setText(model.isOnChainSettlement()
                 ? Res.get("bisqEasy.openTrades.tradeDetails.txId")
@@ -261,8 +246,6 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         assignedMediatorBox.setManaged(model.isHasMediatorBeenAssigned());
         paymentAccountDataCopyButton.setVisible(!model.isPaymentAccountDataEmpty());
         paymentAccountDataCopyButton.setManaged(!model.isPaymentAccountDataEmpty());
-        btcPaymentAddressCopyButton.setVisible(!model.isBtcPaymentDataEmpty());
-        btcPaymentAddressCopyButton.setManaged(!model.isBtcPaymentDataEmpty());
         depositTxCopyButton.setVisible(!model.isDepositTxIdEmpty());
         depositTxCopyButton.setManaged(!model.isDepositTxIdEmpty());
 
@@ -271,12 +254,6 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
                 ? "text-fill-grey-dimmed"
                 : "text-fill-white");
         paymentAccountDataLabel.getStyleClass().add("normal-text");
-
-        btcPaymentAddressDetailsLabel.getStyleClass().clear();
-        btcPaymentAddressDetailsLabel.getStyleClass().add(model.isBtcPaymentDataEmpty()
-                ? "text-fill-grey-dimmed"
-                : "text-fill-white");
-        btcPaymentAddressDetailsLabel.getStyleClass().add("normal-text");
 
         depositTxDetailsLabel.getStyleClass().clear();
         depositTxDetailsLabel.getStyleClass().add(model.isDepositTxIdEmpty()
@@ -289,7 +266,6 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         tradeIdCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getTradeId()));
         peerNetworkAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeerNetworkAddress()));
         paymentAccountDataCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPaymentAccountData()));
-        btcPaymentAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBtcPaymentAddress()));
         depositTxCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getDepositTxId()));
     }
 
@@ -300,7 +276,6 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         tradeIdCopyButton.setOnAction(null);
         peerNetworkAddressCopyButton.setOnAction(null);
         paymentAccountDataCopyButton.setOnAction(null);
-        btcPaymentAddressCopyButton.setOnAction(null);
         depositTxCopyButton.setOnAction(null);
     }
 

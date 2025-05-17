@@ -20,7 +20,6 @@ package bisq.trade.mu_sig;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.ProtobufUtils;
-import bisq.contract.Role;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
@@ -33,7 +32,6 @@ import bisq.trade.mu_sig.messages.grpc.TxConfirmationStatus;
 import bisq.trade.mu_sig.protocol.MuSigTradeState;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,30 +44,17 @@ import static bisq.trade.mu_sig.protocol.MuSigTradeState.INIT;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTradeParty> {
-
-    //todo use ReadOnlyObservable
-    // The role who cancelled or rejected the trade
-    @Getter
-    private final Observable<Role> interruptTradeInitiator = new Observable<>();
-
     // Wrapper for stateObservable which is not handled as generic in Fsm
     private final transient Observable<MuSigTradeState> tradeState = new Observable<>();
 
-    private final Observable<TxConfirmationStatus> depositTxConfirmationStatus = new Observable<>();
+    private final transient Observable<TxConfirmationStatus> depositTxConfirmationStatus = new Observable<>();
 
     //todo temp
-    @Getter
     private final Observable<String> paymentAccountData = new Observable<>("TODO paymentAccountData");
-    @Getter
-    private final Observable<String> btcAddress = new Observable<>("TODO btcAddress");
-    // paymentProof can be null in Observable
-
-    @Getter
     private final Observable<String> depositTxId = new Observable<>("TODO depositTxId");
-
-    @Setter
     @Getter
     private Optional<Long> tradeCompletedDate = Optional.empty();
+
 
     public MuSigTrade(MuSigContract contract,
                       boolean isBuyer,
@@ -99,7 +84,7 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
                       MuSigTradeParty taker,
                       MuSigTradeParty maker,
                       TradeLifecycleState lifecycleState) {
-        super(contract, state, id, tradeRole, myIdentity, taker, maker,lifecycleState);
+        super(contract, state, id, tradeRole, myIdentity, taker, maker, lifecycleState);
 
         stateObservable().addObserver(s -> tradeState.set((MuSigTradeState) s));
     }
@@ -121,7 +106,8 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
 
     private bisq.trade.protobuf.MuSigTrade.Builder getMuSigTradeBuilder(boolean serializeForHash) {
         var builder = bisq.trade.protobuf.MuSigTrade.newBuilder();
-        Optional.ofNullable(interruptTradeInitiator.get()).ifPresent(e -> builder.setInterruptTradeInitiator(e.toProtoEnum()));
+        Optional.ofNullable(depositTxId.get()).ifPresent(builder::setDepositTxId);
+        Optional.ofNullable(paymentAccountData.get()).ifPresent(builder::setPaymentAccountData);
         tradeCompletedDate.ifPresent(builder::setTradeCompletedDate);
         return builder;
     }
@@ -149,11 +135,16 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
             trade.setPeersErrorStackTrace(proto.getPeersErrorStackTrace());
         }
 
-        if (muSigTradeProto.hasInterruptTradeInitiator()) {
-            trade.getInterruptTradeInitiator().set(Role.fromProto(muSigTradeProto.getInterruptTradeInitiator()));
-        }
         if (muSigTradeProto.hasTradeCompletedDate()) {
-            trade.setTradeCompletedDate(Optional.of(muSigTradeProto.getTradeCompletedDate()));
+            trade.setTradeCompletedDate(muSigTradeProto.getTradeCompletedDate());
+        }
+
+        if (muSigTradeProto.hasDepositTxId()) {
+            trade.setDepositTxId(muSigTradeProto.getDepositTxId());
+        }
+
+        if (muSigTradeProto.hasPaymentAccountData()) {
+            trade.setPaymentAccountData(muSigTradeProto.getPaymentAccountData());
         }
         return trade;
     }
@@ -181,6 +172,34 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
 
     public ReadOnlyObservable<TxConfirmationStatus> getDepositTxConfirmationStatus() {
         return depositTxConfirmationStatus;
+    }
+
+    public void setPaymentAccountData(String value) {
+        paymentAccountData.set(value);
+    }
+
+    public void setDepositTxId(String value) {
+        depositTxId.set(value);
+    }
+
+    public ReadOnlyObservable<String> paymentAccountData() {
+        return paymentAccountData;
+    }
+
+    public ReadOnlyObservable<String> depositTxId() {
+        return depositTxId;
+    }
+
+    public String getPaymentAccountData() {
+        return paymentAccountData.get();
+    }
+
+    public String getDepositTxId() {
+        return depositTxId.get();
+    }
+
+    public void setTradeCompletedDate(long tradeCompletedDate) {
+        this.tradeCompletedDate = Optional.of(tradeCompletedDate);
     }
 
 }
