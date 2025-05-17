@@ -43,7 +43,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
     private MessageDeliveryStatusBox messageDeliveryStatusBox;
 
-    private final Subscription setAsEditedPin;
+    private final Subscription setAsEditingPin;
     private BisqMenuItem editAction, deleteAction;
     private BisqTextArea editInputField;
     private Button saveEditButton, cancelEditButton;
@@ -81,7 +81,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
 
         editFieldEnterKeyFilter = createEditFieldEnterKeyFilter(item, controller);
 
-        setAsEditedPin = EasyBind.subscribe(item.getSetAsEditing(), setAsEditing -> {
+        setAsEditingPin = EasyBind.subscribe(item.getSetAsEditing(), setAsEditing -> {
             if (setAsEditing) {
                 UIThread.runOnNextRenderFrame(() -> {
                     onEditMessage();
@@ -239,6 +239,6 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         messageDeliveryStatusBox.dispose();
         editInputField.removeEventFilter(KeyEvent.KEY_PRESSED, editFieldEnterKeyFilter);
 
-        setAsEditedPin.unsubscribe();
+        setAsEditingPin.unsubscribe();
     }
 }
