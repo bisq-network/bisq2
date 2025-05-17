@@ -123,16 +123,16 @@ public class MuSigTradeDetailsController extends NavigationController implements
                 : trade.getBtcAddress().get());
         model.setBtcPaymentDataEmpty(trade.getBtcAddress().get() == null);
 
-        model.setPaymentProof(trade.getDepositTxId().get() == null
+        model.setDepositTxId(trade.getDepositTxId().get() == null
                 ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
                 : trade.getDepositTxId().get());
-        model.setPaymentProofEmpty(trade.getDepositTxId().get() == null);
+        model.setDepositTxIdEmpty(trade.getDepositTxId().get() == null);
 
         boolean isOnChainSettlement = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
         model.setOnChainSettlement(isOnChainSettlement);
 
         // At LN its optional, so we show it only if set
-        model.setPaymentProofVisible(isOnChainSettlement || trade.getDepositTxId().get() != null);
+        model.setDepositTxIdVisible(isOnChainSettlement || trade.getDepositTxId().get() != null);
     }
 
     @Override
