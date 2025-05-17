@@ -20,6 +20,7 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTextArea;
@@ -35,11 +36,14 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 public final class MyTextMessageBox extends BubbleMessageBox {
     private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
     private MessageDeliveryStatusBox messageDeliveryStatusBox;
 
+    private final Subscription setAsEditedPin;
     private BisqMenuItem editAction, deleteAction;
     private BisqTextArea editInputField;
     private Button saveEditButton, cancelEditButton;
@@ -76,6 +80,15 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, actionsHBox);
 
         editFieldEnterKeyFilter = createEditFieldEnterKeyFilter(item, controller);
+
+        setAsEditedPin = EasyBind.subscribe(item.getSetAsEditing(), setAsEditing -> {
+            if (setAsEditing) {
+                UIThread.runOnNextRenderFrame(() -> {
+                    onEditMessage();
+                    item.getSetAsEditing().set(false);
+                });
+            }
+        });
     }
 
     @Override
@@ -225,5 +238,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
 
         messageDeliveryStatusBox.dispose();
         editInputField.removeEventFilter(KeyEvent.KEY_PRESSED, editFieldEnterKeyFilter);
+
+        setAsEditedPin.unsubscribe();
     }
 }
