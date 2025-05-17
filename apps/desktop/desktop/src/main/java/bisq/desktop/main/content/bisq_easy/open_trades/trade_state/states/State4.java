@@ -84,7 +84,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
         public void onActivate() {
             super.onActivate();
 
-            BisqEasyTrade bisqEasyTrade = model.getBisqEasyTrade();
+            BisqEasyTrade bisqEasyTrade = model.getTrade();
             BisqEasyContract contract = bisqEasyTrade.getContract();
             BitcoinPaymentRail paymentRail = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
             String name = paymentRail.name();
@@ -133,17 +133,17 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
         }
 
         private void doCloseCompletedTrade() {
-            bisqEasyTradeService.removeTrade(model.getBisqEasyTrade());
+            bisqEasyTradeService.removeTrade(model.getTrade());
             leavePrivateChatManager.leaveChannel(model.getChannel());
         }
 
         protected void onShowDetails() {
             Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_DETAILS,
-                    new TradeDetailsController.InitData(model.getBisqEasyTrade(), model.getChannel()));
+                    new TradeDetailsController.InitData(model.getTrade(), model.getChannel()));
         }
 
         protected void onExportTrade() {
-            OpenTradesUtils.exportTrade(model.getBisqEasyTrade(), getView().getRoot().getScene());
+            OpenTradesUtils.exportTrade(model.getTrade(), getView().getRoot().getScene());
         }
 
         protected void openExplorer() {

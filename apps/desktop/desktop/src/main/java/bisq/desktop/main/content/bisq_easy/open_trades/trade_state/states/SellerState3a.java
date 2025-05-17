@@ -129,7 +129,7 @@ public class SellerState3a extends BaseState {
             model.setPaymentProofDescription(Res.get("bisqEasy.tradeState.info.seller.phase3a.paymentProof.description." + name));
             model.setPaymentProofPrompt(Res.get("bisqEasy.tradeState.info.seller.phase3a.paymentProof.prompt." + name));
 
-            model.setBitcoinPaymentData(model.getBisqEasyTrade().getBitcoinPaymentData().get());
+            model.setBitcoinPaymentData(model.getTrade().getBitcoinPaymentData().get());
             double factor = 2.5;
             if (paymentRail.equals(BitcoinPaymentRail.MAIN_CHAIN)) {
                 // Typical bitcoin address require size of 29 or a multiple of it
@@ -195,7 +195,7 @@ public class SellerState3a extends BaseState {
                 sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage",
                         userName, proofType, paymentProof.get()));
             }
-            bisqEasyTradeService.sellerConfirmBtcSent(model.getBisqEasyTrade(), paymentProof);
+            bisqEasyTradeService.sellerConfirmBtcSent(model.getTrade(), paymentProof);
         }
 
         void onShowQrCodeDisplay() {
@@ -236,7 +236,7 @@ public class SellerState3a extends BaseState {
         }
 
         private BitcoinPaymentRail getPaymentRail() {
-            return model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
+            return model.getTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
         }
     }
 
@@ -446,7 +446,7 @@ public class SellerState3a extends BaseState {
         private void qrCodeWindowChanged(Stage qrCodeWindow) {
             if (qrCodeWindow != null) {
                 int qrCodeSize = model.getLargeQrCodeSize();
-                String shortTradeId = model.getBisqEasyTrade().getShortId();
+                String shortTradeId = model.getTrade().getShortId();
 
                 Label headline =
                         new Label(Res.get("bisqEasy.tradeState.info.seller.phase3a.qrCodeDisplay.window.title",

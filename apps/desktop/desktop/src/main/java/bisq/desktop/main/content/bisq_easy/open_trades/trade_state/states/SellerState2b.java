@@ -68,7 +68,7 @@ public class SellerState2b extends BaseState {
         private void onConfirmFiatReceipt() {
             sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase2b.tradeLogMessage",
                     model.getChannel().getMyUserIdentity().getUserName(), model.getFormattedQuoteAmount()));
-            bisqEasyTradeService.sellerConfirmFiatReceipt(model.getBisqEasyTrade());
+            bisqEasyTradeService.sellerConfirmFiatReceipt(model.getTrade());
         }
     }
 
@@ -98,7 +98,7 @@ public class SellerState2b extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
-            headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.headline", model.getFormattedQuoteAmount(), model.getBisqEasyTrade().getShortId()));
+            headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.headline", model.getFormattedQuoteAmount(), model.getTrade().getShortId()));
             fiatReceivedButton.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.fiatReceivedButton", model.getFormattedQuoteAmount()));
             fiatReceivedButton.setOnAction(e -> controller.onConfirmFiatReceipt());
         }

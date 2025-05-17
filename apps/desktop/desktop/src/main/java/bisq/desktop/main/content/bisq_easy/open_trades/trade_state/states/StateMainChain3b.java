@@ -92,8 +92,8 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
         public void onActivate() {
             super.onActivate();
 
-            model.setPaymentProof(model.getBisqEasyTrade().getPaymentProof().get());
-            model.setBitcoinPaymentData(model.getBisqEasyTrade().getBitcoinPaymentData().get());
+            model.setPaymentProof(model.getTrade().getPaymentProof().get());
+            model.setBitcoinPaymentData(model.getTrade().getBitcoinPaymentData().get());
 
             if (model.getConfirmationState().get() == null) {
                 model.getConfirmationState().set(Model.ConfirmationState.REQUEST_STARTED);
@@ -143,7 +143,7 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
             if (StringUtils.isEmpty(txValue)) {
                 return Res.get("bisqEasy.tradeState.info.phase3b.button.next.noOutputForAddress", address, txId);
             } else {
-                String tradeAmount = getFormattedBaseAmount(model.getBisqEasyTrade().getContract().getBaseSideAmount());
+                String tradeAmount = getFormattedBaseAmount(model.getTrade().getContract().getBaseSideAmount());
                 return Res.get("bisqEasy.tradeState.info.phase3b.button.next.amountNotMatching", address, txId, txValue, tradeAmount);
             }
         }
@@ -158,7 +158,7 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
         private void doCompleteTrade() {
             // todo should we send a system message? if so we should change the text
             //sendTradeLogMessage(Res.get("bisqEasy.tradeState.info.phase3b.tradeLogMessage", model.getChannel().getMyUserIdentity().getUserName()));
-            bisqEasyTradeService.btcConfirmed(model.getBisqEasyTrade());
+            bisqEasyTradeService.btcConfirmed(model.getTrade());
         }
 
         private void requestTx() {
@@ -220,7 +220,7 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
             } else if (txOutputValuesForAddress.size() == 1) {
                 long outputValue = txOutputValuesForAddress.get(0);
                 model.getBtcBalance().set(getFormattedBaseAmount(outputValue));
-                long tradeAmount = model.getBisqEasyTrade().getContract().getBaseSideAmount();
+                long tradeAmount = model.getTrade().getContract().getBaseSideAmount();
                 if (outputValue != tradeAmount) {
                     explorerResultValidator.setMessage(Res.get("bisqEasy.tradeState.info.phase3b.balance.invalid.amountNotMatching"));
                 }

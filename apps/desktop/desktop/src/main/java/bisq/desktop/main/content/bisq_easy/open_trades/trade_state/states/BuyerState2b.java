@@ -92,7 +92,7 @@ public class BuyerState2b extends BaseState {
             super.onViewAttached();
 
             headline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2b.headline"));
-            String name = model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail().name();
+            String name = model.getTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail().name();
             String bitcoinPaymentData = Res.get("bisqEasy.tradeState.bitcoinPaymentData." + name);
             info.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2b.info", model.getFormattedQuoteAmount(), bitcoinPaymentData));
             waitingAnimation.play();

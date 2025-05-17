@@ -124,7 +124,7 @@ public class SellerState1 extends BaseState {
             }
             sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase1.tradeLogMessage",
                     model.getChannel().getMyUserIdentity().getUserName(), model.getPaymentAccountData().get()));
-            bisqEasyTradeService.sellerSendsPaymentAccount(model.getBisqEasyTrade(), paymentAccountData);
+            bisqEasyTradeService.sellerSendsPaymentAccount(model.getTrade(), paymentAccountData);
         }
 
         private void onSelectAccount(UserDefinedFiatAccount account) {
