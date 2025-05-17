@@ -126,7 +126,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 break;*/
             case NONE:
             default:
-                walletService = Optional.empty();
+                // walletService = Optional.empty();
+                walletService = Optional.of(new MockWalletService());
                 break;
         }
 
@@ -177,7 +178,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 userService,
                 bondedRolesService);
 
-        tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
+        TradeService.Config tradeConfig = TradeService.Config.from(getConfig("trade"));
+        tradeService = new TradeService(tradeConfig, networkService, identityService, persistenceService, offerService,
                 contractService, supportService, chatService, bondedRolesService, userService, settingsService);
 
         updaterService = new UpdaterService(getConfig(),
