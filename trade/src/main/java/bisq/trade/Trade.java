@@ -148,12 +148,12 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                 .setMyIdentity(myIdentity.toProto(serializeForHash))
                 .setTaker(taker.toProto(serializeForHash))
                 .setMaker(maker.toProto(serializeForHash))
-                .setState(getState().name());
+                .setState(getState().name())
+                .setLifecycleState(getLifecycleState().toProtoEnum());
         Optional.ofNullable(getErrorMessage()).ifPresent(builder::setErrorMessage);
         Optional.ofNullable(getErrorStackTrace()).ifPresent(builder::setErrorStackTrace);
         Optional.ofNullable(getPeersErrorMessage()).ifPresent(builder::setPeersErrorMessage);
         Optional.ofNullable(getPeersErrorStackTrace()).ifPresent(builder::setPeersErrorStackTrace);
-        Optional.ofNullable(getLifecycleState()).ifPresent(s -> builder.setLifecycleState(s.toProtoEnum()));
         return builder;
     }
 
