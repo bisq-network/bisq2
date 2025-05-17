@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network.handler.seller_as_maker;
 
 import bisq.common.util.StringUtils;
+import bisq.offer.mu_sig.MuSigOffer;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
@@ -39,7 +40,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_C> {
-
     private NonceSharesMessage buyerNonceSharesMessage;
     private PartialSignaturesMessage sellerPartialSignaturesMessage;
     private PartialSignaturesMessage buyerPartialSignaturesMessage;
@@ -74,6 +74,18 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
         // buyer when they receive the MuSigSetupTradeMessage_D).
         muSigTradeService.observeDepositTxConfirmationStatus(trade);
 
+        // Maybe remove makers offer
+        if (serviceProvider.getSettingsService().getCloseMyOfferWhenTaken().get()) {
+            MuSigOffer offer = trade.getContract().getOffer();
+            serviceProvider.getOfferService().getMuSigOfferService().removeOffer(offer)
+                    .whenComplete((deleteChatMessageResult, throwable) -> {
+                        if (throwable == null) {
+                            log.info("Offer with ID {} removed", offer.getId());
+                        } else {
+                            log.error("We got an error when removing offer with ID {}", offer.getId(), throwable);
+                        }
+                    });
+        }
     }
 
     @Override

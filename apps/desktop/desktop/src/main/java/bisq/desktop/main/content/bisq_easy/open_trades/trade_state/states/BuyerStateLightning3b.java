@@ -71,7 +71,7 @@ public class BuyerStateLightning3b extends BaseState {
         public void onActivate() {
             super.onActivate();
 
-            model.setPaymentProof(Optional.ofNullable(model.getBisqEasyTrade().getPaymentProof().get()));
+            model.setPaymentProof(Optional.ofNullable(model.getTrade().getPaymentProof().get()));
         }
 
         @Override
@@ -81,7 +81,7 @@ public class BuyerStateLightning3b extends BaseState {
 
         private void onButtonClicked() {
             sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln", model.getChannel().getMyUserIdentity().getUserName()));
-            bisqEasyTradeService.btcConfirmed(model.getBisqEasyTrade());
+            bisqEasyTradeService.btcConfirmed(model.getTrade());
         }
     }
 

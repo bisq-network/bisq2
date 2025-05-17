@@ -42,13 +42,13 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
     private final Button closeButton;
     private final Label tradeDateLabel, tradeDurationLabel, meLabel, peerLabel, offerTypeLabel, marketLabel, fiatAmountLabel,
             fiatCurrencyLabel, btcAmountLabel, priceLabel, priceCodesLabel, priceSpecLabel, paymentMethodLabel,
-            settlementMethodLabel, tradeIdLabel, peerNetworkAddressLabel, btcPaymentAddressTitleLabel,
-            btcPaymentAddressDetailsLabel, paymentProofTitleLabel, paymentProofDetailsLabel,
+            settlementMethodLabel, tradeIdLabel, peerNetworkAddressLabel,
+           depositTxTitleLabel, depositTxDetailsLabel,
             paymentAccountDataLabel, assignedMediatorLabel;
     private final HBox assignedMediatorBox;
     private final BisqMenuItem tradersAndRoleCopyButton, tradeIdCopyButton, peerNetworkAddressCopyButton,
-            btcPaymentAddressCopyButton, paymentProofCopyButton, paymentAccountDataCopyButton;
-    private final HBox paymentProofBox, tradeDurationBox;
+            depositTxCopyButton, paymentAccountDataCopyButton;
+    private final HBox depositTxBox, tradeDurationBox;
 
     public MuSigTradeDetailsView(MuSigTradeDetailsModel model, MuSigTradeDetailsController controller) {
         super(new VBox(), model, controller);
@@ -151,19 +151,12 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         HBox paymentAccountDataBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.paymentAccountData",
                 paymentAccountDataLabel, paymentAccountDataCopyButton);
 
-        // BTC payment address
-        btcPaymentAddressTitleLabel = getDescriptionLabel("");
-        btcPaymentAddressDetailsLabel = getValueLabel();
-        btcPaymentAddressCopyButton = getTradeIdCopyButton("");
-        HBox btcPaymentAddressBox = createAndGetDescriptionAndValueBox(btcPaymentAddressTitleLabel,
-                btcPaymentAddressDetailsLabel, btcPaymentAddressCopyButton);
-
-        // Payment proof (tx ID or optional LN pre-image)
-        paymentProofTitleLabel = getDescriptionLabel("");
-        paymentProofDetailsLabel = getValueLabel();
-        paymentProofCopyButton = getTradeIdCopyButton("");
-        paymentProofBox = createAndGetDescriptionAndValueBox(paymentProofTitleLabel,
-                paymentProofDetailsLabel, paymentProofCopyButton);
+        // DepositTx
+        depositTxTitleLabel = getDescriptionLabel("");
+        depositTxDetailsLabel = getValueLabel();
+        depositTxCopyButton = getTradeIdCopyButton("");
+        depositTxBox = createAndGetDescriptionAndValueBox(depositTxTitleLabel,
+                depositTxDetailsLabel, depositTxCopyButton);
 
         // Assigned mediator
         assignedMediatorLabel = getValueLabel();
@@ -187,8 +180,7 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
                 amountAndPriceBox,
                 paymentMethodsBox,
                 paymentAccountDataBox,
-                btcPaymentAddressBox,
-                paymentProofBox,
+                depositTxBox,
                 detailsLabel,
                 detailsLine,
                 tradeIdBox,
@@ -237,23 +229,16 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         settlementMethodLabel.setText(model.getSettlementMethod());
         tradeIdLabel.setText(model.getTradeId());
         peerNetworkAddressLabel.setText(model.getPeerNetworkAddress());
-        btcPaymentAddressTitleLabel.setText(model.isOnChainSettlement()
-                ? Res.get("bisqEasy.openTrades.tradeDetails.btcPaymentAddress")
-                : Res.get("bisqEasy.openTrades.tradeDetails.lightningInvoice"));
-        btcPaymentAddressDetailsLabel.setText(model.getBtcPaymentAddress());
-        btcPaymentAddressCopyButton.setTooltip(model.isOnChainSettlement()
-                ? Res.get("bisqEasy.openTrades.tradeDetails.btcPaymentAddress.copy")
-                : Res.get("bisqEasy.openTrades.tradeDetails.lightningInvoice.copy"));
 
-        paymentProofTitleLabel.setText(model.isOnChainSettlement()
+        depositTxTitleLabel.setText(model.isOnChainSettlement()
                 ? Res.get("bisqEasy.openTrades.tradeDetails.txId")
                 : Res.get("bisqEasy.openTrades.tradeDetails.lightningPreImage"));
-        paymentProofDetailsLabel.setText(model.getPaymentProof());
-        paymentProofCopyButton.setTooltip(model.isOnChainSettlement()
+        depositTxDetailsLabel.setText(model.getDepositTxId());
+        depositTxCopyButton.setTooltip(model.isOnChainSettlement()
                 ? Res.get("bisqEasy.openTrades.tradeDetails.txId.copy")
                 : Res.get("bisqEasy.openTrades.tradeDetails.lightningPreImage.copy"));
-        paymentProofBox.setVisible(model.isPaymentProofVisible());
-        paymentProofBox.setManaged(model.isPaymentProofVisible());
+        depositTxBox.setVisible(model.isDepositTxIdVisible());
+        depositTxBox.setManaged(model.isDepositTxIdVisible());
 
         paymentAccountDataLabel.setText(model.getPaymentAccountData());
         assignedMediatorLabel.setText(model.getAssignedMediator());
@@ -261,10 +246,8 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         assignedMediatorBox.setManaged(model.isHasMediatorBeenAssigned());
         paymentAccountDataCopyButton.setVisible(!model.isPaymentAccountDataEmpty());
         paymentAccountDataCopyButton.setManaged(!model.isPaymentAccountDataEmpty());
-        btcPaymentAddressCopyButton.setVisible(!model.isBtcPaymentDataEmpty());
-        btcPaymentAddressCopyButton.setManaged(!model.isBtcPaymentDataEmpty());
-        paymentProofCopyButton.setVisible(!model.isPaymentProofEmpty());
-        paymentProofCopyButton.setManaged(!model.isPaymentProofEmpty());
+        depositTxCopyButton.setVisible(!model.isDepositTxIdEmpty());
+        depositTxCopyButton.setManaged(!model.isDepositTxIdEmpty());
 
         paymentAccountDataLabel.getStyleClass().clear();
         paymentAccountDataLabel.getStyleClass().add(model.isPaymentAccountDataEmpty()
@@ -272,25 +255,18 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
                 : "text-fill-white");
         paymentAccountDataLabel.getStyleClass().add("normal-text");
 
-        btcPaymentAddressDetailsLabel.getStyleClass().clear();
-        btcPaymentAddressDetailsLabel.getStyleClass().add(model.isBtcPaymentDataEmpty()
+        depositTxDetailsLabel.getStyleClass().clear();
+        depositTxDetailsLabel.getStyleClass().add(model.isDepositTxIdEmpty()
                 ? "text-fill-grey-dimmed"
                 : "text-fill-white");
-        btcPaymentAddressDetailsLabel.getStyleClass().add("normal-text");
-
-        paymentProofDetailsLabel.getStyleClass().clear();
-        paymentProofDetailsLabel.getStyleClass().add(model.isPaymentProofEmpty()
-                ? "text-fill-grey-dimmed"
-                : "text-fill-white");
-        paymentProofDetailsLabel.getStyleClass().add("normal-text");
+        depositTxDetailsLabel.getStyleClass().add("normal-text");
 
         closeButton.setOnAction(e -> controller.onClose());
         tradersAndRoleCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeer()));
         tradeIdCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getTradeId()));
         peerNetworkAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeerNetworkAddress()));
         paymentAccountDataCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPaymentAccountData()));
-        btcPaymentAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBtcPaymentAddress()));
-        paymentProofCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPaymentProof()));
+        depositTxCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getDepositTxId()));
     }
 
     @Override
@@ -300,8 +276,7 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         tradeIdCopyButton.setOnAction(null);
         peerNetworkAddressCopyButton.setOnAction(null);
         paymentAccountDataCopyButton.setOnAction(null);
-        btcPaymentAddressCopyButton.setOnAction(null);
-        paymentProofCopyButton.setOnAction(null);
+        depositTxCopyButton.setOnAction(null);
     }
 
     private HBox createAndGetDescriptionAndValueBox(String descriptionKey, Node valueNode) {

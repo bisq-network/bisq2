@@ -53,6 +53,18 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void verify(MuSigSetupTradeMessage_A message) {
+        MuSigContract takersContract = message.getContract();
+        takersContractSignatureData = message.getContractSignatureData();
+        ContractService contractService = serviceProvider.getContractService();
+        try {
+            MuSigContract makersContract = trade.getContract();
+            makersContractSignatureData = contractService.signContract(makersContract,
+                    trade.getMyIdentity().getKeyBundle().getKeyPair());
+
+            // TODO verify both contracts are the same, and verify peers signature
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -74,19 +86,6 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
                 .setBuyersSecurityDeposit(30_000)
                 .setSellersSecurityDeposit(30_000)
                 .build()));
-
-        MuSigContract takersContract = message.getContract();
-        takersContractSignatureData = message.getContractSignatureData();
-        ContractService contractService = serviceProvider.getContractService();
-        try {
-            MuSigContract makersContract = trade.getContract();
-            makersContractSignatureData = contractService.signContract(makersContract,
-                    trade.getMyIdentity().getKeyBundle().getKeyPair());
-
-            // TODO verify both contracts are the same, and verify peers signature
-        } catch (GeneralSecurityException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override

@@ -148,11 +148,18 @@ message BisqEasyReportErrorMessage {
 
 // MuSig
 message MuSigTradeParty {
+  PubKeySharesResponse pubKeySharesResponse = 1;
+  NonceSharesMessage nonceSharesMessage = 2;
+  PartialSignaturesMessage partialSignaturesMessage = 3;
+  DepositPsbt depositPsbt = 4;
+  SwapTxSignatureResponse swapTxSignatureResponse = 5;
+  CloseTradeResponse closeTradeResponse = 6;
 }
 
 message MuSigTrade {
-  optional contract.Role interruptTradeInitiator = 1;
-  optional sint64 tradeCompletedDate = 2;
+  optional string depositTxId = 1;
+  optional string paymentAccountData = 2;
+  optional sint64 tradeCompletedDate = 3;
 }
 
 message MuSigTradeStore {

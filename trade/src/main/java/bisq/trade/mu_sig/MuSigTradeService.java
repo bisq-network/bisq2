@@ -29,7 +29,6 @@ import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.platform.Version;
-import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.identity.Identity;
@@ -52,6 +51,7 @@ import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEvent;
 import bisq.trade.mu_sig.events.buyer_as_taker.MuSigPaymentInitiatedEvent;
 import bisq.trade.mu_sig.events.buyer_as_taker.MuSigTakeOfferEvent;
 import bisq.trade.mu_sig.events.seller_as_maker.MuSigPaymentReceiptConfirmedEvent;
+import bisq.trade.mu_sig.grpc.MusigGrpcClient;
 import bisq.trade.mu_sig.messages.grpc.DepositPsbt;
 import bisq.trade.mu_sig.messages.grpc.TxConfirmationStatus;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
@@ -59,15 +59,12 @@ import bisq.trade.mu_sig.messages.network.MuSigTradeMessage;
 import bisq.trade.mu_sig.protocol.MuSigBuyerAsTakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigProtocol;
 import bisq.trade.mu_sig.protocol.MuSigSellerAsMakerProtocol;
-import bisq.trade.mu_sig.protocol.ignore.MuSigBuyerAsMakerProtocol;
-import bisq.trade.mu_sig.protocol.ignore.MuSigSellerAsTakerProtocol;
+import bisq.trade.mu_sig.protocol.not_yet_impl.MuSigBuyerAsMakerProtocol;
+import bisq.trade.mu_sig.protocol.not_yet_impl.MuSigSellerAsTakerProtocol;
 import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protobuf.SubscribeTxConfirmationStatusRequest;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
-import io.grpc.Grpc;
-import io.grpc.InsecureChannelCredentials;
-import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -80,7 +77,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -95,12 +91,13 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
     private final BannedUserService bannedUserService;
     private final AlertService alertService;
     private final MuSigOpenTradeChannelService muSigOpenTradeChannelService;
-    private ExecutorService musigGrpcExecutorService;
 
     @Getter
     private final MuSigTradeStore persistableStore = new MuSigTradeStore();
     @Getter
     private final Persistence<MuSigTradeStore> persistence;
+    @Getter
+    private final MusigGrpcClient musigGrpcClient;
 
     // We don't persist the protocol, only the model.
     private final Map<String, MuSigProtocol> tradeProtocolById = new ConcurrentHashMap<>();
@@ -115,12 +112,6 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
     private final Map<String, Scheduler> cooperativeCloseTimeoutSchedulerByTradeId = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<Void>> observeDepositTxConfirmationStatusFutureByTradeId = new ConcurrentHashMap<>();
 
-    @Getter
-    private MusigGrpc.MusigBlockingStub musigBlockingStub;
-    @Getter
-    private MusigGrpc.MusigStub musigAsyncStub;
-    private ManagedChannel grpcChannel;
-
     public MuSigTradeService(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
         networkService = serviceProvider.getNetworkService();
@@ -131,6 +122,9 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         muSigOpenTradeChannelService = serviceProvider.getChatService().getMuSigOpenTradeChannelService();
 
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
+
+        //todo add host/port to config
+        musigGrpcClient = new MusigGrpcClient("127.0.0.1", 50051);
     }
 
 
@@ -139,78 +133,61 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
-        persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
+        return musigGrpcClient.initialize()
+                .thenApply(result -> {
+                    persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
 
-        networkService.getConfidentialMessageServices().stream()
-                .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
-                .forEach(this::onMessage);
-        networkService.addConfidentialMessageListener(this);
+                    networkService.getConfidentialMessageServices().stream()
+                            .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
+                            .forEach(this::onMessage);
+                    networkService.addConfidentialMessageListener(this);
 
-        musigGrpcExecutorService = ExecutorFactory.newSingleThreadExecutor("musigGrpcExecutorService");
-        musigGrpcExecutorService.submit(() -> {
-            //todo add host/port to config
-            grpcChannel = Grpc.newChannelBuilderForAddress(
-                    "127.0.0.1",
-                    50051,
-                    InsecureChannelCredentials.create()
-            ).build();
+                    // At startup we observe all unconfirmed deposit txs
+                    getTrades().stream()
+                            .filter(MuSigTrade::isDepositTxCreatedButNotConfirmed)
+                            .forEach(this::observeDepositTxConfirmationStatus);
 
-            try {
-                musigBlockingStub = MusigGrpc.newBlockingStub(grpcChannel);
-                musigAsyncStub = MusigGrpc.newStub(grpcChannel);
-                // At startup we observe all unconfirmed deposit txs
-                getTrades().stream()
-                        .filter(MuSigTrade::isDepositTxCreatedButNotConfirmed)
-                        .forEach(this::observeDepositTxConfirmationStatus);
-            } catch (Exception e) {
-                log.error("Error at setting up MusigGrpc client", e);
-                grpcChannel.shutdown();
-                grpcChannel = null;
-                musigBlockingStub = null;
-            }
-        });
-
-        authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
-            @Override
-            public void add(AuthorizedAlertData authorizedAlertData) {
-                if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY) {
-                    if (authorizedAlertData.isHaltTrading()) {
-                        haltTrading = true;
-                    }
-                    if (authorizedAlertData.isRequireVersionForTrading()) {
-                        requireVersionForTrading = true;
-                        minRequiredVersionForTrading = authorizedAlertData.getMinVersion();
-                    }
-                }
-            }
-
-            @Override
-            public void remove(Object element) {
-                if (element instanceof AuthorizedAlertData authorizedAlertData) {
-                    if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY) {
-                        if (authorizedAlertData.isHaltTrading()) {
-                            haltTrading = false;
+                    authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
+                        @Override
+                        public void add(AuthorizedAlertData authorizedAlertData) {
+                            if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY) {
+                                if (authorizedAlertData.isHaltTrading()) {
+                                    haltTrading = true;
+                                }
+                                if (authorizedAlertData.isRequireVersionForTrading()) {
+                                    requireVersionForTrading = true;
+                                    minRequiredVersionForTrading = authorizedAlertData.getMinVersion();
+                                }
+                            }
                         }
-                        if (authorizedAlertData.isRequireVersionForTrading()) {
+
+                        @Override
+                        public void remove(Object element) {
+                            if (element instanceof AuthorizedAlertData authorizedAlertData) {
+                                if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY) {
+                                    if (authorizedAlertData.isHaltTrading()) {
+                                        haltTrading = false;
+                                    }
+                                    if (authorizedAlertData.isRequireVersionForTrading()) {
+                                        requireVersionForTrading = false;
+                                        minRequiredVersionForTrading = Optional.empty();
+                                    }
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void clear() {
+                            haltTrading = false;
                             requireVersionForTrading = false;
                             minRequiredVersionForTrading = Optional.empty();
                         }
-                    }
-                }
-            }
+                    });
 
-            @Override
-            public void clear() {
-                haltTrading = false;
-                requireVersionForTrading = false;
-                minRequiredVersionForTrading = Optional.empty();
-            }
-        });
-
-        numDaysAfterRedactingTradeDataScheduler = Scheduler.run(this::maybeRedactDataOfCompletedTrades).periodically(1, TimeUnit.HOURS);
-        numDaysAfterRedactingTradeDataPin = settingsService.getNumDaysAfterRedactingTradeData().addObserver(numDays -> maybeRedactDataOfCompletedTrades());
-
-        return CompletableFuture.completedFuture(true);
+                    numDaysAfterRedactingTradeDataScheduler = Scheduler.run(this::maybeRedactDataOfCompletedTrades).periodically(1, TimeUnit.HOURS);
+                    numDaysAfterRedactingTradeDataPin = settingsService.getNumDaysAfterRedactingTradeData().addObserver(numDays -> maybeRedactDataOfCompletedTrades());
+                    return true;
+                });
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -230,16 +207,6 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
 
         observeDepositTxConfirmationStatusFutureByTradeId.values().forEach(future -> future.cancel(true));
         observeDepositTxConfirmationStatusFutureByTradeId.clear();
-
-        if (musigGrpcExecutorService != null) {
-            ExecutorFactory.shutdownAndAwaitTermination(musigGrpcExecutorService);
-            musigGrpcExecutorService = null;
-        }
-        if (grpcChannel != null) {
-            grpcChannel.shutdown();
-            grpcChannel = null;
-        }
-        musigBlockingStub = null;
 
         networkService.removeConfidentialMessageListener(this);
 
@@ -420,12 +387,12 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
 
         // todo we dont want to create a thread for each trade... but lets see how real impl. will look like
         CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-            DepositPsbt depositPsbt = trade.getMyself().getDepositPsbt(); // todo not persisted yet
+            DepositPsbt depositPsbt = trade.getMyself().getDepositPsbt().orElseThrow();
             SubscribeTxConfirmationStatusRequest request = SubscribeTxConfirmationStatusRequest.newBuilder()
                     .setTradeId(tradeId)
-                    // .setDepositPsbt(depositPsbt.toProto(true))  // todo not persisted yet
+                    .setDepositPsbt(depositPsbt.toProto(true))
                     .build();
-            musigAsyncStub.subscribeTxConfirmationStatus(request, new StreamObserver<>() {
+            getMusigAsyncStub().subscribeTxConfirmationStatus(request, new StreamObserver<>() {
                 @Override
                 public void onNext(bisq.trade.protobuf.TxConfirmationStatus proto) {
                     TxConfirmationStatus status = TxConfirmationStatus.fromProto(proto);
@@ -507,7 +474,13 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
     public ObservableHashMap<String, MuSigTrade> getTradeById() {
         return persistableStore.getTradeById();
     }
+    public MusigGrpc.MusigBlockingStub getMusigBlockingStub() {
+        return musigGrpcClient.getBlockingStub();
+    }
 
+    public MusigGrpc.MusigStub getMusigAsyncStub() {
+        return musigGrpcClient.getAsyncStub();
+    }
 
     /* --------------------------------------------------------------------- */
     // TradeProtocol factory
