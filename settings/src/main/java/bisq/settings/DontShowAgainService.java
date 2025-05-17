@@ -18,15 +18,10 @@
 package bisq.settings;
 
 import bisq.common.application.Service;
-import bisq.common.observable.Observable;
-import lombok.Getter;
 
 import java.util.concurrent.CompletableFuture;
 
 public class DontShowAgainService implements Service {
-    @Getter
-    private static final Observable<Integer> updateFlag = new Observable<>(0);
-
     private final SettingsService settingsService;
 
     public DontShowAgainService(SettingsService settingsService) {
@@ -34,7 +29,7 @@ public class DontShowAgainService implements Service {
     }
 
     public boolean showAgain(DontShowAgainKey key) {
-        return showAgain(key.name());
+        return showAgain(key.getKey());
     }
 
     public boolean showAgain(String key) {
@@ -43,7 +38,7 @@ public class DontShowAgainService implements Service {
     }
 
     public void dontShowAgain(DontShowAgainKey key) {
-        putDontShowAgain(key.name(), true);
+        putDontShowAgain(key.getKey(), true);
     }
 
     public void putDontShowAgain(String key, boolean dontShowAgain) {
@@ -57,7 +52,6 @@ public class DontShowAgainService implements Service {
     }
 
     private void persist() {
-        updateFlag.set(updateFlag.get() + 1);
         settingsService.persist();
     }
 
