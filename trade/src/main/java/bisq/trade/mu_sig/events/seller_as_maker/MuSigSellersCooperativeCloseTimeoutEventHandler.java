@@ -50,7 +50,7 @@ public final class MuSigSellersCooperativeCloseTimeoutEventHandler extends MuSig
     protected void commit() {
         MuSigTradeParty mySelf = trade.getMaker();
 
-        mySelf.setCloseTradeResponse(myCloseTradeResponse);
+        mySelf.setMyCloseTradeResponse(myCloseTradeResponse);
     }
 
     @Override

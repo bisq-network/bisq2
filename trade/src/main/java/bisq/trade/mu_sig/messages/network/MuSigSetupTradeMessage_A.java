@@ -20,7 +20,7 @@ package bisq.trade.mu_sig.messages.network;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.network.identity.NetworkId;
-import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
+import bisq.trade.mu_sig.messages.network.vo.PubKeyShares;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -31,10 +31,9 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class MuSigSetupTradeMessage_A extends MuSigTradeMessage {
-    public final static int MAX_LENGTH = 1000;
     private final MuSigContract contract;
     private final ContractSignatureData contractSignatureData;
-    private final PubKeySharesResponse pubKeySharesResponse;
+    private final PubKeyShares pubKeyShares;
 
     public MuSigSetupTradeMessage_A(String id,
                                     String tradeId,
@@ -43,11 +42,11 @@ public final class MuSigSetupTradeMessage_A extends MuSigTradeMessage {
                                     NetworkId receiver,
                                     MuSigContract contract,
                                     ContractSignatureData contractSignatureData,
-                                    PubKeySharesResponse pubKeySharesResponse) {
+                                    PubKeyShares pubKeyShares) {
         super(id, tradeId, protocolVersion, sender, receiver);
         this.contract = contract;
         this.contractSignatureData = contractSignatureData;
-        this.pubKeySharesResponse = pubKeySharesResponse;
+        this.pubKeyShares = pubKeyShares;
 
         verify();
     }
@@ -72,7 +71,7 @@ public final class MuSigSetupTradeMessage_A extends MuSigTradeMessage {
         return bisq.trade.protobuf.MuSigSetupTradeMessage_A.newBuilder()
                 .setContract(contract.toProto(serializeForHash))
                 .setContractSignatureData(contractSignatureData.toProto(serializeForHash))
-                .setPubKeySharesResponse(pubKeySharesResponse.toProto(serializeForHash));
+                .setPubKeyShares(pubKeyShares.toProto(serializeForHash));
     }
 
     public static MuSigSetupTradeMessage_A fromProto(bisq.trade.protobuf.TradeMessage proto) {
@@ -85,7 +84,7 @@ public final class MuSigSetupTradeMessage_A extends MuSigTradeMessage {
                 NetworkId.fromProto(proto.getReceiver()),
                 MuSigContract.fromProto(muSigMessageProto.getContract()),
                 ContractSignatureData.fromProto(muSigMessageProto.getContractSignatureData()),
-                PubKeySharesResponse.fromProto(muSigMessageProto.getPubKeySharesResponse()));
+                PubKeyShares.fromProto(muSigMessageProto.getPubKeyShares()));
     }
 
     @Override

@@ -28,7 +28,7 @@ public final class DepositTxSignatureRequest implements Proto {
     private final PartialSignaturesMessage peersPartialSignatures;
 
     public DepositTxSignatureRequest(String tradeId,
-            PartialSignaturesMessage peersPartialSignatures) {
+                                     PartialSignaturesMessage peersPartialSignatures) {
         this.tradeId = tradeId;
         this.peersPartialSignatures = peersPartialSignatures;
     }

@@ -28,6 +28,8 @@ import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_C;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
+import bisq.trade.mu_sig.messages.network.vo.NonceShares;
+import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
 import bisq.trade.protobuf.DepositTxSignatureRequest;
 import bisq.trade.protobuf.PartialSignaturesRequest;
 import bisq.trade.protobuf.ReceiverAddressAndAmount;
@@ -39,9 +41,9 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_C> {
-    private NonceSharesMessage peersNonceShares;
+    private NonceShares peersNonceShares;
     private PartialSignaturesMessage myPartialSignatures;
-    private PartialSignaturesMessage peersPartialSignatures;
+    private PartialSignatures peersPartialSignatures;
     private DepositPsbt myDepositPsbt;
 
     public MuSigSetupTradeMessage_C_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
@@ -54,20 +56,50 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void process(MuSigSetupTradeMessage_C message) {
-        peersNonceShares = message.getNonceSharesMessage();
-        peersPartialSignatures = message.getPartialSignaturesMessage();
+        peersNonceShares = message.getNonceShares();
+        peersPartialSignatures = message.getPartialSignatures();
+
+
+        // todo maybe adjust grpc api
+        NonceSharesMessage peersNonceSharesMessage = new NonceSharesMessage(
+                peersNonceShares.getWarningTxFeeBumpAddress(),
+                peersNonceShares.getRedirectTxFeeBumpAddress(),
+                peersNonceShares.getHalfDepositPsbt(),
+                peersNonceShares.getSwapTxInputNonceShare(),
+                peersNonceShares.getBuyersWarningTxBuyerInputNonceShare(),
+                peersNonceShares.getBuyersWarningTxSellerInputNonceShare(),
+                peersNonceShares.getSellersWarningTxBuyerInputNonceShare(),
+                peersNonceShares.getSellersWarningTxSellerInputNonceShare(),
+                peersNonceShares.getBuyersRedirectTxInputNonceShare(),
+                peersNonceShares.getSellersRedirectTxInputNonceShare()
+        );
 
         PartialSignaturesRequest partialSignaturesRequest = PartialSignaturesRequest.newBuilder()
                 .setTradeId(trade.getId())
-                .setPeersNonceShares(peersNonceShares.toProto(true))
+                .setPeersNonceShares(peersNonceSharesMessage.toProto(true))
                 .addAllReceivers(mockReceivers())
                 .build();
         myPartialSignatures = PartialSignaturesMessage.fromProto(musigBlockingStub.getPartialSignatures(partialSignaturesRequest));
 
+        PartialSignaturesMessage peersPartialSignaturesMessage = new PartialSignaturesMessage(
+                peersPartialSignatures.getPeersWarningTxBuyerInputPartialSignature(),
+                peersPartialSignatures.getPeersWarningTxSellerInputPartialSignature(),
+                peersPartialSignatures.getPeersRedirectTxInputPartialSignature(),
+                peersPartialSignatures.getSwapTxInputPartialSignature()
+        );
+
+        // TODO
+        //       @stejbac: redacting would make sense at senders side, but then it fails at MuSigPaymentReceiptConfirmedEventHandler.
+        //       if swapTxInputPartialSignature is empty byte array (redacted by the peer),
+        //       passing that to setPeersPartialSignatures results in a backend error.
+        //       Currently redaction is done on the sellers side, with clearSwapTxInputPartialSignature which results in
+        //       ByteString.EMPTY.
+        var signaturesProto = peersPartialSignaturesMessage.toProto(true)
+                .toBuilder()
+                .clearSwapTxInputPartialSignature();
         DepositTxSignatureRequest depositTxSignatureRequest = DepositTxSignatureRequest.newBuilder()
                 .setTradeId(trade.getId())
-                // REDACT buyer's swapTxInputPartialSignature:
-                .setPeersPartialSignatures(peersPartialSignatures.toProto(true).toBuilder().clearSwapTxInputPartialSignature())
+                .setPeersPartialSignatures(signaturesProto)
                 .build();
         myDepositPsbt = DepositPsbt.fromProto(musigBlockingStub.signDepositTx(depositTxSignatureRequest));
 
@@ -94,21 +126,27 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
         MuSigTradeParty peer = trade.getTaker();
         MuSigTradeParty mySelf = trade.getMaker();
 
-        mySelf.setPartialSignaturesMessage(myPartialSignatures);
-        mySelf.setDepositPsbt(myDepositPsbt);
+        mySelf.setMyPartialSignaturesMessage(myPartialSignatures);
+        mySelf.setMyDepositPsbt(myDepositPsbt);
 
-        peer.setNonceSharesMessage(peersNonceShares);
-        peer.setPartialSignaturesMessage(peersPartialSignatures);
+        peer.setPeersNonceShares(peersNonceShares);
+        peer.setPeersPartialSignatures(peersPartialSignatures);
     }
 
     @Override
     protected void sendMessage() {
+        PartialSignatures partialSignatures = new PartialSignatures(
+                myPartialSignatures.getPeersWarningTxBuyerInputPartialSignature(),
+                myPartialSignatures.getPeersWarningTxSellerInputPartialSignature(),
+                myPartialSignatures.getPeersRedirectTxInputPartialSignature(),
+                myPartialSignatures.getSwapTxInputPartialSignature()
+        );
         send(new MuSigSetupTradeMessage_D(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
-                myPartialSignatures));
+                partialSignatures));
     }
 
     @Override

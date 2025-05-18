@@ -403,7 +403,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
 
         // todo we dont want to create a thread for each trade... but lets see how real impl. will look like
         CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-            DepositPsbt depositPsbt = trade.getMyself().getDepositPsbt().orElseThrow();
+            DepositPsbt depositPsbt = trade.getMyself().getMyDepositPsbt().orElseThrow();
             SubscribeTxConfirmationStatusRequest request = SubscribeTxConfirmationStatusRequest.newBuilder()
                     .setTradeId(tradeId)
                     .setDepositPsbt(depositPsbt.toProto(true))

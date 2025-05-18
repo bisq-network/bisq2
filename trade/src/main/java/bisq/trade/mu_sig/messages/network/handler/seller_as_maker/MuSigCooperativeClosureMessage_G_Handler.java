@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigCooperativeClosureMessage_G> {
-    private CloseTradeResponse peersCloseTradeResponse;
+    private byte[] peersOutputPrvKeyShare;
     private CloseTradeResponse myCloseTradeResponse;
 
     public MuSigCooperativeClosureMessage_G_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
@@ -42,7 +42,7 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
 
     @Override
     protected void process(MuSigCooperativeClosureMessage_G message) {
-        peersCloseTradeResponse = message.getCloseTradeResponse();
+        peersOutputPrvKeyShare = message.getPeerOutputPrvKeyShare();
 
         muSigTradeService.stopCooperativeCloseTimeout(trade);
 
@@ -50,7 +50,7 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
         // *** SELLER CLOSES TRADE ***
         CloseTradeRequest closeTradeRequest = CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
-                .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(peersCloseTradeResponse.getPeerOutputPrvKeyShare()))
+                .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(peersOutputPrvKeyShare))
                 .build();
         myCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(closeTradeRequest));
     }
@@ -60,8 +60,8 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
         MuSigTradeParty peer = trade.getTaker();
         MuSigTradeParty mySelf = trade.getMaker();
 
-        mySelf.setCloseTradeResponse(myCloseTradeResponse);
-        peer.setCloseTradeResponse(peersCloseTradeResponse);
+        mySelf.setMyCloseTradeResponse(myCloseTradeResponse);
+        peer.setPeersOutputPrvKeyShare(peersOutputPrvKeyShare);
     }
 
     @Override

@@ -32,8 +32,8 @@ public final class TxConfirmationStatus implements Proto {
     private final int numConfirmations;
 
     public TxConfirmationStatus(byte[] tx,
-            int currentBlockHeight,
-            int numConfirmations) {
+                                int currentBlockHeight,
+                                int numConfirmations) {
         this.tx = tx;
         this.currentBlockHeight = currentBlockHeight;
         this.numConfirmations = numConfirmations;
