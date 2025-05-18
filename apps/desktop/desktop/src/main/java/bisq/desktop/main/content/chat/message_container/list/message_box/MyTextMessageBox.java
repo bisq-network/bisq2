@@ -56,7 +56,6 @@ public final class MyTextMessageBox extends BubbleMessageBox {
                             ChatMessagesListController controller) {
         super(item, list, controller);
 
-
         quotedMessageVBox.setId("chat-message-quote-box-my-msg");
         setUpEditFunctionality();
         message.setAlignment(Pos.CENTER_RIGHT);
@@ -72,7 +71,6 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
         HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
         messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
-
 
         activeReactionsDisplayHBox.getStyleClass().add("my-text-message-box-active-reactions");
         editInputField.maxWidthProperty().bind(message.widthProperty());
@@ -130,7 +128,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
                     editInputField.setText(newText);
                     editInputField.positionCaret(caretPos + 1);
                 } else if (!editInputField.getText().trim().isEmpty()) { // trim() here is good
-                    controller.onSaveEditedMessage(item.getChatMessage(), editInputField.getText().trim());
+                    controller.onSaveEditedMessageUsingEnterKeyShortcut(item.getChatMessage(), editInputField.getText().trim());
                     onCloseEditMessage(); // This will remove the filter
                 }
             }
