@@ -501,6 +501,11 @@ public class ChatMessagesListController implements Controller {
         checkArgument(chatMessage instanceof PublicChatMessage);
         checkArgument(model.isMyMessage(chatMessage));
 
+        if (chatMessage.getText().isPresent() && chatMessage.getText().get().equals(editedText)) {
+            // Nothing was changed, thus no need for saving.
+            return;
+        }
+
         if (editedText.length() > ChatMessage.MAX_TEXT_LENGTH) {
             new Popup().warning(Res.get("validation.tooLong", ChatMessage.MAX_TEXT_LENGTH)).show();
             return;
