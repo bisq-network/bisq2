@@ -54,7 +54,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
     public final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
     private final BisqTextArea inputField = new BisqTextArea();
-    private final EventHandler<KeyEvent> enterKeyPressedHandler = this::processEnterKeyPressed;
+    private final EventHandler<KeyEvent> keyPressedHandler = this::processKeyPressed;
     private final Button sendButton = new Button();
     private final Pane messagesListView;
     private final VBox emptyMessageList;
@@ -109,7 +109,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
             }
         });
 
-        inputField.addEventFilter(KEY_PRESSED, enterKeyPressedHandler);
+        inputField.addEventFilter(KEY_PRESSED, keyPressedHandler);
 
         sendButton.setOnAction(event -> {
             controller.onSendMessage(inputField.getText().trim());
@@ -148,7 +148,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
 
         myProfileCatHashImageView.setOnMouseClicked(null);
         inputField.setOnKeyPressed(null);
-        inputField.removeEventFilter(KEY_PRESSED, enterKeyPressedHandler);
+        inputField.removeEventFilter(KEY_PRESSED, keyPressedHandler);
         sendButton.setOnAction(null);
         userMentionPopup.cleanup();
     }
@@ -230,7 +230,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         userProfileSelectionRoot.disableProperty().unbind();
     }
 
-    private void processEnterKeyPressed(KeyEvent keyEvent) {
+    private void processKeyPressed(KeyEvent keyEvent) {
         if (keyEvent.getCode() == KeyCode.ENTER) {
             keyEvent.consume();
             if (keyEvent.isShiftDown()) {
@@ -240,6 +240,11 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
             } else if (!inputField.getText().isEmpty()) {
                 controller.onSendMessage(inputField.getText().trim());
                 inputField.clear();
+            }
+        } else if (keyEvent.getCode() == KeyCode.UP) {
+            keyEvent.consume();
+            if (inputField.getText().isEmpty() || inputField.getCaretPosition() == 0) {
+                controller.onArrowUpKeyPressed();
             }
         }
     }
