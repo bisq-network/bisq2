@@ -87,6 +87,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static bisq.settings.DontShowAgainKey.SEND_OFFER_MSG_TEXT_ONLY_WARN;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -400,15 +401,13 @@ public class TradeWizardReviewController implements Controller {
 
     public void publishOffer() {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-
-        String dontShowAgainId = "sendOfferMsgTextOnlyWarn";
         boolean hasShowOnlyTextFilter = settingsService.getBisqEasyOfferbookMessageTypeFilter().get() == ChatMessageType.TEXT;
         if (hasShowOnlyTextFilter) {
             new Popup().information(Res.get("chat.message.send.textMsgOnly.warn"))
                     .actionButtonText(Res.get("confirmation.yes"))
                     .onAction(() -> settingsService.setBisqEasyOfferbookMessageTypeFilter(ChatMessageType.ALL))
                     .closeButtonText(Res.get("confirmation.no"))
-                    .dontShowAgainId(dontShowAgainId)
+                    .dontShowAgainId(SEND_OFFER_MSG_TEXT_ONLY_WARN.getKey())
                     .show();
         }
         bisqEasyOfferbookChannelService.publishChatMessage(model.getMyOfferMessage(), userIdentity)

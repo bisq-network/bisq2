@@ -99,6 +99,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static bisq.chat.ChatMessageType.TAKE_BISQ_EASY_OFFER;
+import static bisq.settings.DontShowAgainKey.OFFERALREADYTAKEN_WARN;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -351,10 +352,9 @@ public class ChatMessagesListController implements Controller {
         BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().get();
         if (bisqEasyTradeService.wasOfferAlreadyTaken(bisqEasyOffer, takerNetworkId)) {
             if (new Date().after(Trade.TRADE_ID_V1_ACTIVATION_DATE)) {
-                String key = "offerAlreadyTaken.warn";
-                if (dontShowAgainService.showAgain(key)) {
+                if (dontShowAgainService.showAgain(OFFERALREADYTAKEN_WARN)) {
                     new Popup().information(Res.get("chat.message.offer.offerAlreadyTaken.info"))
-                            .dontShowAgainId(key)
+                            .dontShowAgainId(OFFERALREADYTAKEN_WARN.getKey())
                             .actionButtonText(Res.get("confirmation.yes"))
                             .onAction(() -> doTakeOffer(bisqEasyOfferbookMessage, userProfile, bisqEasyOffer))
                             .closeButtonText(Res.get("confirmation.no"))

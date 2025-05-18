@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.authorized_role.mediator;
 
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
@@ -29,6 +28,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.authorized_role.mediator.details.MediationCaseDetailsController;
 import bisq.desktop.main.content.components.UserProfileDisplay;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.settings.DontShowAgainService;
 import bisq.support.mediation.MediatorService;
@@ -50,6 +50,10 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
+
+import static bisq.settings.DontShowAgainKey.MEDIATOR_CLOSE_WARNING;
+import static bisq.settings.DontShowAgainKey.MEDIATOR_LEAVECHANNEL_WARNING;
+import static bisq.settings.DontShowAgainKey.MEDIATOR_REMOVECASE_WARNING;
 
 public class MediationCaseHeader {
     private final Controller controller;
@@ -111,10 +115,9 @@ public class MediationCaseHeader {
             if (model.getShowClosedCases().get()) {
                 doReOpen();
             } else {
-                String key = "mediator.close.warning";
-                if (dontShowAgainService.showAgain(key)) {
+                if (dontShowAgainService.showAgain(MEDIATOR_CLOSE_WARNING)) {
                     new Popup().warning(Res.get("authorizedRole.mediator.close.warning"))
-                            .dontShowAgainId(key)
+                            .dontShowAgainId(MEDIATOR_CLOSE_WARNING.getKey())
                             .actionButtonText(Res.get("confirmation.yes"))
                             .onAction(this::doClose)
                             .closeButtonText(Res.get("confirmation.no"))
@@ -126,10 +129,9 @@ public class MediationCaseHeader {
         }
 
         void onLeaveChannel() {
-            String key = "mediator.leaveChannel.warning";
-            if (dontShowAgainService.showAgain(key)) {
+            if (dontShowAgainService.showAgain(MEDIATOR_LEAVECHANNEL_WARNING)) {
                 new Popup().warning(Res.get("authorizedRole.mediator.leaveChannel.warning"))
-                        .dontShowAgainId(key)
+                        .dontShowAgainId(MEDIATOR_LEAVECHANNEL_WARNING.getKey())
                         .actionButtonText(Res.get("confirmation.yes"))
                         .onAction(this::doLeave)
                         .closeButtonText(Res.get("confirmation.no"))
@@ -140,10 +142,9 @@ public class MediationCaseHeader {
         }
 
         void onRemoveCase() {
-            String key = "mediator.removeCase.warning";
-            if (dontShowAgainService.showAgain(key)) {
+            if (dontShowAgainService.showAgain(MEDIATOR_REMOVECASE_WARNING)) {
                 new Popup().warning(Res.get("authorizedRole.mediator.removeCase.warning"))
-                        .dontShowAgainId(key)
+                        .dontShowAgainId(MEDIATOR_REMOVECASE_WARNING.getKey())
                         .actionButtonText(Res.get("confirmation.yes"))
                         .onAction(this::deRemoveCase)
                         .closeButtonText(Res.get("confirmation.no"))
