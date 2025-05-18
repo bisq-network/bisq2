@@ -39,7 +39,6 @@ import java.security.GeneralSecurityException;
 
 @Slf4j
 public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_A> {
-
     private PubKeySharesResponse myPubKeyShares;
     private PubKeySharesResponse peersPubKeyShares;
     private NonceSharesMessage myNonceShares;
@@ -119,7 +118,7 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Seller received peers pubKeyShares\n." +
+        sendLogMessage("Seller received peers pubKeyShares.\n" +
                 "Seller created his pubKeyShares and nonceShares.\n " +
                 "Seller sent his pubKeyShares and his nonceShares to buyer.");
     }

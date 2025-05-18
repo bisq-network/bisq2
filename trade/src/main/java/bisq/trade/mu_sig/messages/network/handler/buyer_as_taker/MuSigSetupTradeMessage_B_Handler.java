@@ -114,7 +114,7 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Buyer received peers pubKeyShares\n." +
+        sendLogMessage("Buyer received peers pubKeyShares.\n" +
                 "Buyer created his nonceShares and partialSignatures.\n " +
                 "Buyer sent his nonceShares and his partialSignatures to seller.");
     }

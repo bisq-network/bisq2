@@ -66,7 +66,7 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Seller received peers closeTradeResponse\n." +
+        sendLogMessage("Seller received peers closeTradeResponse.\n" +
                 "Seller created his closeTradeResponse.");
     }
 }

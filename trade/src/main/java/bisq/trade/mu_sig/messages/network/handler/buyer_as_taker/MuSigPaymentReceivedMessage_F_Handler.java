@@ -79,7 +79,7 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Buyer confirmed to have received the payment and closed the trade.\n." +
+        sendLogMessage("Buyer confirmed to have received the payment and closed the trade..\n" +
                 "Buyer sent his closeTradeResponse to the seller.");
     }
 }

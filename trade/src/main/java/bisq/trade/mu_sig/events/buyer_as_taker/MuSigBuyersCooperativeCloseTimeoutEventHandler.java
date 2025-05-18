@@ -58,7 +58,7 @@ public final class MuSigBuyersCooperativeCloseTimeoutEventHandler extends MuSigT
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Buyer did not receive peers swapTxSignature and the timeout got triggered\n." +
+        sendLogMessage("Buyer did not receive peers swapTxSignature and the timeout got triggered.\n" +
                 "Buyer created his closeTradeResponse and force-close the trade.");
     }
 }
