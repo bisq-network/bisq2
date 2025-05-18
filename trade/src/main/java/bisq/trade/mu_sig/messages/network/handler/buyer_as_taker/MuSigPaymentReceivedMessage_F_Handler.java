@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig.messages.network.handler.buyer_as_taker;
 
+import bisq.common.data.ByteArray;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -75,7 +76,7 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
-                peerOutputPrvKeyShare));
+                new ByteArray(peerOutputPrvKeyShare)));
     }
 
     @Override

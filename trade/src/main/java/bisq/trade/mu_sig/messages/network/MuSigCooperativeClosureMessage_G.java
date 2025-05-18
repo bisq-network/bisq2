@@ -17,27 +17,26 @@
 
 package bisq.trade.mu_sig.messages.network;
 
+import bisq.common.data.ByteArray;
 import bisq.network.identity.NetworkId;
-import com.google.protobuf.ByteString;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Arrays;
-
 @Slf4j
 @ToString(callSuper = true)
 @Getter
-//@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
 public final class MuSigCooperativeClosureMessage_G extends MuSigTradeMessage {
-    private final byte[] peerOutputPrvKeyShare;
+    private final ByteArray peerOutputPrvKeyShare;
 
     public MuSigCooperativeClosureMessage_G(String id,
                                             String tradeId,
                                             String protocolVersion,
                                             NetworkId sender,
                                             NetworkId receiver,
-                                            byte[] peerOutputPrvKeyShare) {
+                                            ByteArray peerOutputPrvKeyShare) {
         super(id, tradeId, protocolVersion, sender, receiver);
         this.peerOutputPrvKeyShare = peerOutputPrvKeyShare;
 
@@ -62,7 +61,7 @@ public final class MuSigCooperativeClosureMessage_G extends MuSigTradeMessage {
 
     private bisq.trade.protobuf.MuSigCooperativeClosureMessage_G.Builder getMuSigCooperativeClosureMessage_G(boolean serializeForHash) {
         return bisq.trade.protobuf.MuSigCooperativeClosureMessage_G.newBuilder()
-                .setPeerOutputPrvKeyShare(ByteString.copyFrom(peerOutputPrvKeyShare));
+                .setPeerOutputPrvKeyShare(peerOutputPrvKeyShare.toProto(serializeForHash));
     }
 
     public static MuSigCooperativeClosureMessage_G fromProto(bisq.trade.protobuf.TradeMessage proto) {
@@ -73,26 +72,11 @@ public final class MuSigCooperativeClosureMessage_G extends MuSigTradeMessage {
                 proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
-                muSigMessageProto.getPeerOutputPrvKeyShare().toByteArray());
+                ByteArray.fromProto(muSigMessageProto.getPeerOutputPrvKeyShare()));
     }
 
     @Override
     public double getCostFactor() {
         return getCostFactor(0.1, 0.3);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof MuSigCooperativeClosureMessage_G that)) return false;
-        if (!super.equals(o)) return false;
-
-        return Arrays.equals(peerOutputPrvKeyShare, that.peerOutputPrvKeyShare);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + Arrays.hashCode(peerOutputPrvKeyShare);
-        return result;
     }
 }

@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig.messages.network.handler.seller_as_maker;
 
+import bisq.common.data.ByteArray;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
@@ -29,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigCooperativeClosureMessage_G> {
-    private byte[] peersOutputPrvKeyShare;
+    private ByteArray peersOutputPrvKeyShare;
     private CloseTradeResponse myCloseTradeResponse;
 
     public MuSigCooperativeClosureMessage_G_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
@@ -50,7 +51,7 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
         // *** SELLER CLOSES TRADE ***
         CloseTradeRequest closeTradeRequest = CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
-                .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(peersOutputPrvKeyShare))
+                .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(peersOutputPrvKeyShare.getBytes()))
                 .build();
         myCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(closeTradeRequest));
     }

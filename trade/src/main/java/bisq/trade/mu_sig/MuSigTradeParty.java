@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig;
 
+import bisq.common.data.ByteArray;
 import bisq.network.identity.NetworkId;
 import bisq.trade.TradeParty;
 import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
@@ -49,7 +50,7 @@ public final class MuSigTradeParty extends TradeParty {
     private Optional<SwapTxSignatureResponse> mySwapTxSignatureResponse = Optional.empty();
     private Optional<SwapTxSignature> peersSwapTxSignature = Optional.empty();
     private Optional<CloseTradeResponse> myCloseTradeResponse = Optional.empty();
-    private Optional<byte[]> peersOutputPrvKeyShare = Optional.empty();
+    private Optional<ByteArray> peersOutputPrvKeyShare = Optional.empty();
 
     public MuSigTradeParty(NetworkId networkId) {
         super(networkId);
@@ -66,7 +67,7 @@ public final class MuSigTradeParty extends TradeParty {
                            Optional<SwapTxSignatureResponse> mySwapTxSignatureResponse,
                            Optional<SwapTxSignature> peersSwapTxSignature,
                            Optional<CloseTradeResponse> myCloseTradeResponse,
-                           Optional<byte[]> peersOutputPrvKeyShare) {
+                           Optional<ByteArray> peersOutputPrvKeyShare) {
         super(networkId);
 
         this.myPubKeySharesResponse = myPubKeySharesResponse;
@@ -79,6 +80,7 @@ public final class MuSigTradeParty extends TradeParty {
         this.mySwapTxSignatureResponse = mySwapTxSignatureResponse;
         this.peersSwapTxSignature = peersSwapTxSignature;
         this.myCloseTradeResponse = myCloseTradeResponse;
+        this.peersOutputPrvKeyShare = peersOutputPrvKeyShare;
     }
 
     @Override
@@ -93,6 +95,7 @@ public final class MuSigTradeParty extends TradeParty {
         myDepositPsbt.ifPresent(e -> builder.setMyDepositPsbt(e.toProto(serializeForHash)));
         mySwapTxSignatureResponse.ifPresent(e -> builder.setMySwapTxSignatureResponse(e.toProto(serializeForHash)));
         myCloseTradeResponse.ifPresent(e -> builder.setMyCloseTradeResponse(e.toProto(serializeForHash)));
+        peersOutputPrvKeyShare.ifPresent(e -> builder.setPeersOutputPrvKeyShare(e.toProto(serializeForHash)));
         return getTradePartyBuilder(serializeForHash).setMuSigTradeParty(builder);
     }
 
@@ -131,7 +134,7 @@ public final class MuSigTradeParty extends TradeParty {
                         ? Optional.of(CloseTradeResponse.fromProto(muSigTradePartyProto.getMyCloseTradeResponse()))
                         : Optional.empty(),
                 muSigTradePartyProto.hasPeersOutputPrvKeyShare()
-                        ? Optional.of(muSigTradePartyProto.getPeersOutputPrvKeyShare().toByteArray())
+                        ? Optional.of(ByteArray.fromProto(muSigTradePartyProto.getPeersOutputPrvKeyShare()))
                         : Optional.empty()
         );
     }
@@ -176,7 +179,7 @@ public final class MuSigTradeParty extends TradeParty {
         this.myCloseTradeResponse = Optional.of(myCloseTradeResponse);
     }
 
-    public void setPeersOutputPrvKeyShare(byte[] peersOutputPrvKeyShare) {
+    public void setPeersOutputPrvKeyShare(ByteArray peersOutputPrvKeyShare) {
         this.peersOutputPrvKeyShare = Optional.of(peersOutputPrvKeyShare);
     }
 }

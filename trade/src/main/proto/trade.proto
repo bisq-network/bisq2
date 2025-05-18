@@ -19,6 +19,7 @@ syntax = "proto3";
 
 package trade;
 
+import "common.proto";
 import "contract.proto";
 import "identity.proto";
 import "network_identity.proto";
@@ -193,7 +194,7 @@ message MuSigTradeParty {
   optional musigrpc.SwapTxSignatureResponse mySwapTxSignatureResponse = 9;
   optional SwapTxSignature peersSwapTxSignature = 10;
   optional musigrpc.CloseTradeResponse myCloseTradeResponse = 11;
-  optional  bytes peersOutputPrvKeyShare = 12;
+  optional common.ByteArray peersOutputPrvKeyShare = 12;
 }
 
 message MuSigTrade {
@@ -250,5 +251,5 @@ message MuSigPaymentReceivedMessage_F {
 }
 
 message MuSigCooperativeClosureMessage_G {
-  bytes peerOutputPrvKeyShare = 1;
+  common.ByteArray peerOutputPrvKeyShare = 1;
 }
