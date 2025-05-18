@@ -248,4 +248,8 @@ public class StringUtils {
         }
         return string.replace(PlatformUtils.getHomeDirectory(), "<HOME_DIR>");
     }
+
+    public static String normalizeText(String text) {
+        return text.replaceAll("\r\n|\n|\r", Matcher.quoteReplacement(System.lineSeparator()));
+    }
 }

@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.chat.message_container;
 
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.cathash.CatHash;
@@ -248,7 +249,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
                 controller.onArrowUpKeyPressed();
             } else {
                 // Need to normalize text to ensure cross-OS compatibility
-                String normalizedText = inputField.getText().replaceAll("\r\n|\n|\r", System.lineSeparator());
+                String normalizedText = StringUtils.normalizeText(inputField.getText());
                 // If no line break is found from the start to the caret position, it means we are in the first line, so we should move to the start
                 if (normalizedText.indexOf(System.lineSeparator(), 0, inputField.getCaretPosition()) == -1) {
                     // Only consume event in this case, otherwise allow falling back to default behavior

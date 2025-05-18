@@ -20,6 +20,7 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
@@ -136,7 +137,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
                 onCloseEditMessage();
             } else if (keyEvent.getCode() == KeyCode.UP) {
                 // Need to normalize text to ensure cross-OS compatibility
-                String normalizedText = editInputField.getText().replaceAll("\r\n|\n|\r", System.lineSeparator());
+                String normalizedText = StringUtils.normalizeText(editInputField.getText());
                 // If no line break is found from the start to the caret position, it means we are in the first line, so we should move to the start
                 if (normalizedText.indexOf(System.lineSeparator(), 0, editInputField.getCaretPosition()) == -1) {
                     // Only consume event in this case, otherwise allow falling back to default behavior
