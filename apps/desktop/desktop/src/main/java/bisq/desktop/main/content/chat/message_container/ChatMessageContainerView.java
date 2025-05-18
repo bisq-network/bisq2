@@ -248,8 +248,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
                 keyEvent.consume();
                 controller.onArrowUpKeyPressed();
             } else {
-                // Need to normalize text to ensure cross-OS compatibility
-                String normalizedText = StringUtils.normalizeText(inputField.getText());
+                String normalizedText = StringUtils.normalizeLineBreaks(inputField.getText());
                 // If no line break is found from the start to the caret position, it means we are in the first line, so we should move to the start
                 if (normalizedText.indexOf(System.lineSeparator(), 0, inputField.getCaretPosition()) == -1) {
                     // Only consume event in this case, otherwise allow falling back to default behavior

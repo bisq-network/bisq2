@@ -249,7 +249,17 @@ public class StringUtils {
         return string.replace(PlatformUtils.getHomeDirectory(), "<HOME_DIR>");
     }
 
-    public static String normalizeText(String text) {
+    /**
+      * Normalizes line breaks in the provided text to use the system's default line separator.
+      * This ensures consistent text handling across different operating systems (Windows, Unix/Linux, Mac).
+      *
+      * @param text The text to normalize, may be null
+      * @return The normalized text with consistent line separators, or null if input was null
+      */
+    public static String normalizeLineBreaks(String text) {
+        if (text == null) {
+            return null;
+        }
         return text.replaceAll("\r\n|\n|\r", Matcher.quoteReplacement(System.lineSeparator()));
     }
 }
