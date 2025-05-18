@@ -18,7 +18,7 @@
 package bisq.trade.mu_sig.messages.network;
 
 import bisq.network.identity.NetworkId;
-import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
+import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -29,17 +29,16 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class MuSigSetupTradeMessage_D extends MuSigTradeMessage {
-    public final static int MAX_LENGTH = 1000;
-    private final PartialSignaturesMessage partialSignaturesMessage;
+    private final PartialSignatures partialSignatures;
 
     public MuSigSetupTradeMessage_D(String id,
                                     String tradeId,
                                     String protocolVersion,
                                     NetworkId sender,
                                     NetworkId receiver,
-                                    PartialSignaturesMessage partialSignaturesMessage) {
+                                    PartialSignatures partialSignatures) {
         super(id, tradeId, protocolVersion, sender, receiver);
-        this.partialSignaturesMessage = partialSignaturesMessage;
+        this.partialSignatures = partialSignatures;
 
         verify();
     }
@@ -62,7 +61,7 @@ public final class MuSigSetupTradeMessage_D extends MuSigTradeMessage {
 
     private bisq.trade.protobuf.MuSigSetupTradeMessage_D.Builder getMuSigSetupTradeMessage_D(boolean serializeForHash) {
         return bisq.trade.protobuf.MuSigSetupTradeMessage_D.newBuilder()
-                .setPartialSignaturesMessage(partialSignaturesMessage.toProto(serializeForHash));
+                .setPartialSignatures(partialSignatures.toProto(serializeForHash));
     }
 
     public static MuSigSetupTradeMessage_D fromProto(bisq.trade.protobuf.TradeMessage proto) {
@@ -73,7 +72,7 @@ public final class MuSigSetupTradeMessage_D extends MuSigTradeMessage {
                 proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
-                PartialSignaturesMessage.fromProto(muSigMessageProto.getPartialSignaturesMessage()));
+                PartialSignatures.fromProto(muSigMessageProto.getPartialSignatures()));
     }
 
     @Override

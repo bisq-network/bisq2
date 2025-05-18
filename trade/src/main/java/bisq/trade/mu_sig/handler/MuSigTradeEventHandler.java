@@ -23,6 +23,7 @@ import bisq.network.SendMessageResult;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeService;
+import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protocol.handler.TradeEventHandler;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,11 +33,13 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public abstract class MuSigTradeEventHandler<T extends MuSigTrade, E extends Event> extends TradeEventHandler<T, E> {
     protected final MuSigTradeService muSigTradeService;
+    protected final MusigGrpc.MusigBlockingStub musigBlockingStub;
 
     protected MuSigTradeEventHandler(ServiceProvider serviceProvider, T trade) {
         super(serviceProvider, trade);
 
         muSigTradeService = serviceProvider.getMuSigTradeService();
+        musigBlockingStub = muSigTradeService.getMusigBlockingStub();
     }
 
     public final void handle(Event event) {

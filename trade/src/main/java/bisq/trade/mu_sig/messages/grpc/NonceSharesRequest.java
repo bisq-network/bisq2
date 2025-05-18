@@ -35,13 +35,13 @@ public final class NonceSharesRequest implements Proto {
     private final long sellersSecurityDeposit;
 
     public NonceSharesRequest(String tradeId,
-            byte[] buyerOutputPeersPubKeyShare,
-            byte[] sellerOutputPeersPubKeyShare,
-            long depositTxFeeRate,
-            long preparedTxFeeRate,
-            long tradeAmount,
-            long buyersSecurityDeposit,
-            long sellersSecurityDeposit) {
+                              byte[] buyerOutputPeersPubKeyShare,
+                              byte[] sellerOutputPeersPubKeyShare,
+                              long depositTxFeeRate,
+                              long preparedTxFeeRate,
+                              long tradeAmount,
+                              long buyersSecurityDeposit,
+                              long sellersSecurityDeposit) {
         this.tradeId = tradeId;
         this.buyerOutputPeersPubKeyShare = buyerOutputPeersPubKeyShare;
         this.sellerOutputPeersPubKeyShare = sellerOutputPeersPubKeyShare;

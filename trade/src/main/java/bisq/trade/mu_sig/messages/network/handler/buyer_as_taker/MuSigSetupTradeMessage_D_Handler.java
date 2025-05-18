@@ -24,8 +24,8 @@ import bisq.trade.mu_sig.handler.MuSigTradeMessageHandler;
 import bisq.trade.mu_sig.messages.grpc.DepositPsbt;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
+import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
 import bisq.trade.protobuf.DepositTxSignatureRequest;
-import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protobuf.PublishDepositTxRequest;
 import bisq.trade.protobuf.TxConfirmationStatus;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,7 @@ import java.util.Iterator;
 
 @Slf4j
 public final class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_D> {
-    private PartialSignaturesMessage peersPartialSignatures;
+    private PartialSignatures peersPartialSignatures;
     private DepositPsbt myDepositPsbt;
 
     public MuSigSetupTradeMessage_D_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
@@ -47,12 +47,12 @@ public final class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void process(MuSigSetupTradeMessage_D message) {
-        peersPartialSignatures = message.getPartialSignaturesMessage();
+        peersPartialSignatures = message.getPartialSignatures();
 
-        MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
+        PartialSignaturesMessage peersPartialSignaturesMessage =  PartialSignaturesMessage.from(peersPartialSignatures);
         DepositTxSignatureRequest depositTxSignatureRequest = DepositTxSignatureRequest.newBuilder()
                 .setTradeId(trade.getId())
-                .setPeersPartialSignatures(peersPartialSignatures.toProto(true))
+                .setPeersPartialSignatures(peersPartialSignaturesMessage.toProto(true))
                 .build();
         myDepositPsbt = DepositPsbt.fromProto(musigBlockingStub.signDepositTx(depositTxSignatureRequest));
 
@@ -73,13 +73,13 @@ public final class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHan
         MuSigTradeParty mySelf = trade.getTaker();
         MuSigTradeParty peer = trade.getMaker();
 
-        mySelf.setDepositPsbt(myDepositPsbt);
-        peer.setPartialSignaturesMessage(peersPartialSignatures);
+        mySelf.setMyDepositPsbt(myDepositPsbt);
+        peer.setPeersPartialSignatures(peersPartialSignatures);
     }
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Seller received peers partialSignatures\n." +
+        sendLogMessage("Seller received peers partialSignatures.\n" +
                 "Seller created his partialSignatures.");
     }
 }

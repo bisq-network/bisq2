@@ -38,9 +38,9 @@ import bisq.trade.mu_sig.messages.network.handler.seller_as_maker.MuSigPaymentIn
 import bisq.trade.mu_sig.messages.network.handler.seller_as_maker.MuSigSetupTradeMessage_A_Handler;
 import bisq.trade.mu_sig.messages.network.handler.seller_as_maker.MuSigSetupTradeMessage_C_Handler;
 
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.DEPOSIT_TX_CONFIRMED;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.FAILED;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.FAILED_AT_PEER;
-import static bisq.trade.mu_sig.protocol.MuSigTradeState.DEPOSIT_TX_CONFIRMED;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.INIT;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.SELLER_AS_MAKER_CLOSED_TRADE;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.SELLER_AS_MAKER_CONFIRMED_PAYMENT_RECEIPT;

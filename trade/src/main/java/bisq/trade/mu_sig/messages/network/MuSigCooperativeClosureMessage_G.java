@@ -17,8 +17,8 @@
 
 package bisq.trade.mu_sig.messages.network;
 
+import bisq.common.data.ByteArray;
 import bisq.network.identity.NetworkId;
-import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -29,17 +29,16 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class MuSigCooperativeClosureMessage_G extends MuSigTradeMessage {
-    public final static int MAX_LENGTH = 1000;
-    private final CloseTradeResponse closeTradeResponse;
+    private final ByteArray peerOutputPrvKeyShare;
 
     public MuSigCooperativeClosureMessage_G(String id,
                                             String tradeId,
                                             String protocolVersion,
                                             NetworkId sender,
                                             NetworkId receiver,
-                                            CloseTradeResponse closeTradeResponse) {
+                                            ByteArray peerOutputPrvKeyShare) {
         super(id, tradeId, protocolVersion, sender, receiver);
-        this.closeTradeResponse = closeTradeResponse;
+        this.peerOutputPrvKeyShare = peerOutputPrvKeyShare;
 
         verify();
     }
@@ -62,7 +61,7 @@ public final class MuSigCooperativeClosureMessage_G extends MuSigTradeMessage {
 
     private bisq.trade.protobuf.MuSigCooperativeClosureMessage_G.Builder getMuSigCooperativeClosureMessage_G(boolean serializeForHash) {
         return bisq.trade.protobuf.MuSigCooperativeClosureMessage_G.newBuilder()
-                .setCloseTradeResponse(closeTradeResponse.toProto(serializeForHash));
+                .setPeerOutputPrvKeyShare(peerOutputPrvKeyShare.toProto(serializeForHash));
     }
 
     public static MuSigCooperativeClosureMessage_G fromProto(bisq.trade.protobuf.TradeMessage proto) {
@@ -73,7 +72,7 @@ public final class MuSigCooperativeClosureMessage_G extends MuSigTradeMessage {
                 proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
-                CloseTradeResponse.fromProto(muSigMessageProto.getCloseTradeResponse()));
+                ByteArray.fromProto(muSigMessageProto.getPeerOutputPrvKeyShare()));
     }
 
     @Override
