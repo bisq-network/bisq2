@@ -19,11 +19,11 @@ package bisq.trade.mu_sig.messages.network.vo;
 
 import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.Arrays;
+
 @Getter
-@EqualsAndHashCode
 public final class PubKeyShares implements Proto {
     private final byte[] buyerOutputPubKeyShare;
     private final byte[] sellerOutputPubKeyShare;
@@ -49,5 +49,20 @@ public final class PubKeyShares implements Proto {
     public static PubKeyShares fromProto(bisq.trade.protobuf.PubKeyShares proto) {
         return new PubKeyShares(proto.getBuyerOutputPubKeyShare().toByteArray(),
                 proto.getSellerOutputPubKeyShare().toByteArray());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof PubKeyShares that)) return false;
+
+        return Arrays.equals(buyerOutputPubKeyShare, that.buyerOutputPubKeyShare) &&
+                Arrays.equals(sellerOutputPubKeyShare, that.sellerOutputPubKeyShare);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Arrays.hashCode(buyerOutputPubKeyShare);
+        result = 31 * result + Arrays.hashCode(sellerOutputPubKeyShare);
+        return result;
     }
 }

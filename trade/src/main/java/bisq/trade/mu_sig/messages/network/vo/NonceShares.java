@@ -19,11 +19,12 @@ package bisq.trade.mu_sig.messages.network.vo;
 
 import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 @Getter
-@EqualsAndHashCode
 public final class NonceShares implements Proto {
     private final String warningTxFeeBumpAddress;
     private final String redirectTxFeeBumpAddress;
@@ -89,5 +90,36 @@ public final class NonceShares implements Proto {
                 proto.getSellersWarningTxSellerInputNonceShare().toByteArray(),
                 proto.getBuyersRedirectTxInputNonceShare().toByteArray(),
                 proto.getSellersRedirectTxInputNonceShare().toByteArray());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof NonceShares that)) return false;
+
+        return Objects.equals(warningTxFeeBumpAddress, that.warningTxFeeBumpAddress) &&
+                Objects.equals(redirectTxFeeBumpAddress, that.redirectTxFeeBumpAddress) &&
+                Arrays.equals(halfDepositPsbt, that.halfDepositPsbt) &&
+                Arrays.equals(swapTxInputNonceShare, that.swapTxInputNonceShare) &&
+                Arrays.equals(buyersWarningTxBuyerInputNonceShare, that.buyersWarningTxBuyerInputNonceShare) &&
+                Arrays.equals(buyersWarningTxSellerInputNonceShare, that.buyersWarningTxSellerInputNonceShare) &&
+                Arrays.equals(sellersWarningTxBuyerInputNonceShare, that.sellersWarningTxBuyerInputNonceShare) &&
+                Arrays.equals(sellersWarningTxSellerInputNonceShare, that.sellersWarningTxSellerInputNonceShare) &&
+                Arrays.equals(buyersRedirectTxInputNonceShare, that.buyersRedirectTxInputNonceShare) &&
+                Arrays.equals(sellersRedirectTxInputNonceShare, that.sellersRedirectTxInputNonceShare);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(warningTxFeeBumpAddress);
+        result = 31 * result + Objects.hashCode(redirectTxFeeBumpAddress);
+        result = 31 * result + Arrays.hashCode(halfDepositPsbt);
+        result = 31 * result + Arrays.hashCode(swapTxInputNonceShare);
+        result = 31 * result + Arrays.hashCode(buyersWarningTxBuyerInputNonceShare);
+        result = 31 * result + Arrays.hashCode(buyersWarningTxSellerInputNonceShare);
+        result = 31 * result + Arrays.hashCode(sellersWarningTxBuyerInputNonceShare);
+        result = 31 * result + Arrays.hashCode(sellersWarningTxSellerInputNonceShare);
+        result = 31 * result + Arrays.hashCode(buyersRedirectTxInputNonceShare);
+        result = 31 * result + Arrays.hashCode(sellersRedirectTxInputNonceShare);
+        return result;
     }
 }

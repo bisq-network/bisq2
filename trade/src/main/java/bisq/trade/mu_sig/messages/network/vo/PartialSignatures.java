@@ -19,11 +19,11 @@ package bisq.trade.mu_sig.messages.network.vo;
 
 import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.Arrays;
+
 @Getter
-@EqualsAndHashCode
 public final class PartialSignatures implements Proto {
     private final byte[] peersWarningTxBuyerInputPartialSignature;
     private final byte[] peersWarningTxSellerInputPartialSignature;
@@ -60,5 +60,24 @@ public final class PartialSignatures implements Proto {
                 proto.getPeersWarningTxSellerInputPartialSignature().toByteArray(),
                 proto.getPeersRedirectTxInputPartialSignature().toByteArray(),
                 proto.getSwapTxInputPartialSignature().toByteArray());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof PartialSignatures that)) return false;
+
+        return Arrays.equals(peersWarningTxBuyerInputPartialSignature, that.peersWarningTxBuyerInputPartialSignature) &&
+                Arrays.equals(peersWarningTxSellerInputPartialSignature, that.peersWarningTxSellerInputPartialSignature) &&
+                Arrays.equals(peersRedirectTxInputPartialSignature, that.peersRedirectTxInputPartialSignature) &&
+                Arrays.equals(swapTxInputPartialSignature, that.swapTxInputPartialSignature);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Arrays.hashCode(peersWarningTxBuyerInputPartialSignature);
+        result = 31 * result + Arrays.hashCode(peersWarningTxSellerInputPartialSignature);
+        result = 31 * result + Arrays.hashCode(peersRedirectTxInputPartialSignature);
+        result = 31 * result + Arrays.hashCode(swapTxInputPartialSignature);
+        return result;
     }
 }
