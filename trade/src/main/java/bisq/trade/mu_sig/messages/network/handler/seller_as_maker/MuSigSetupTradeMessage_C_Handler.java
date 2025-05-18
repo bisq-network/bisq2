@@ -136,11 +136,12 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
     @Override
     protected void sendMessage() {
         PartialSignatures partialSignatures = new PartialSignatures(
-                myPartialSignatures.getPeersWarningTxBuyerInputPartialSignature(),
-                myPartialSignatures.getPeersWarningTxSellerInputPartialSignature(),
-                myPartialSignatures.getPeersRedirectTxInputPartialSignature(),
-                myPartialSignatures.getSwapTxInputPartialSignature()
+                myPartialSignatures.getPeersWarningTxBuyerInputPartialSignature().clone(),
+                myPartialSignatures.getPeersWarningTxSellerInputPartialSignature().clone(),
+                myPartialSignatures.getPeersRedirectTxInputPartialSignature().clone(),
+                myPartialSignatures.getSwapTxInputPartialSignature().clone()
         );
+
         send(new MuSigSetupTradeMessage_D(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),

@@ -105,22 +105,21 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void sendMessage() {
-        PubKeyShares pubKeyShares = new PubKeyShares(myPubKeySharesResponse.getBuyerOutputPubKeyShare(),
-                myPubKeySharesResponse.getSellerOutputPubKeyShare());
+        PubKeyShares pubKeyShares = new PubKeyShares(myPubKeySharesResponse.getBuyerOutputPubKeyShare().clone(),
+                myPubKeySharesResponse.getSellerOutputPubKeyShare().clone());
 
         NonceShares nonceShares = new NonceShares(
                 myNonceShares.getWarningTxFeeBumpAddress(),
                 myNonceShares.getRedirectTxFeeBumpAddress(),
-                myNonceShares.getHalfDepositPsbt(),
-                myNonceShares.getSwapTxInputNonceShare(),
-                myNonceShares.getBuyersWarningTxBuyerInputNonceShare(),
-                myNonceShares.getBuyersWarningTxSellerInputNonceShare(),
-                myNonceShares.getSellersWarningTxBuyerInputNonceShare(),
-                myNonceShares.getSellersWarningTxSellerInputNonceShare(),
-                myNonceShares.getBuyersRedirectTxInputNonceShare(),
-                myNonceShares.getSellersRedirectTxInputNonceShare()
+                myNonceShares.getHalfDepositPsbt().clone(),
+                myNonceShares.getSwapTxInputNonceShare().clone(),
+                myNonceShares.getBuyersWarningTxBuyerInputNonceShare().clone(),
+                myNonceShares.getBuyersWarningTxSellerInputNonceShare().clone(),
+                myNonceShares.getSellersWarningTxBuyerInputNonceShare().clone(),
+                myNonceShares.getSellersWarningTxSellerInputNonceShare().clone(),
+                myNonceShares.getBuyersRedirectTxInputNonceShare().clone(),
+                myNonceShares.getSellersRedirectTxInputNonceShare().clone()
         );
-        //todo redact fields in sellerNonceSharesMessage?
 
         send(new MuSigSetupTradeMessage_B(StringUtils.createUid(),
                 trade.getId(),

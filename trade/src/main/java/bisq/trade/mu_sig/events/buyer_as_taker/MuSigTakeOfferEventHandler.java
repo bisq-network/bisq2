@@ -73,8 +73,9 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
 
     @Override
     protected void sendMessage() {
-        PubKeyShares peersPubKeyShares = new PubKeyShares(myPubKeySharesResponse.getBuyerOutputPubKeyShare(),
-                myPubKeySharesResponse.getSellerOutputPubKeyShare());
+        PubKeyShares peersPubKeyShares = new PubKeyShares(myPubKeySharesResponse.getBuyerOutputPubKeyShare().clone(),
+                myPubKeySharesResponse.getSellerOutputPubKeyShare().clone());
+
         send(new MuSigSetupTradeMessage_A(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),

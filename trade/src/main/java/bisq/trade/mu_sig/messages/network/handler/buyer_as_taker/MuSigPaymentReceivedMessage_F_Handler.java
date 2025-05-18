@@ -69,7 +69,7 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
 
     @Override
     protected void sendMessage() {
-        byte[] peerOutputPrvKeyShare = myCloseTradeResponse.getPeerOutputPrvKeyShare();
+        byte[] peerOutputPrvKeyShare = myCloseTradeResponse.getPeerOutputPrvKeyShare().clone();
         send(new MuSigCooperativeClosureMessage_G(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),

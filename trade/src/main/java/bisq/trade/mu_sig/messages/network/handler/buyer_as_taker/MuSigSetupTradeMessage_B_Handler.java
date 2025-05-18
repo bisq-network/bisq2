@@ -118,26 +118,25 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void sendMessage() {
-        // TODO we probably don't want to send all the data here
         NonceShares nonceShares = new NonceShares(
                 myNonceShares.getWarningTxFeeBumpAddress(),
                 myNonceShares.getRedirectTxFeeBumpAddress(),
-                myNonceShares.getHalfDepositPsbt(),
-                myNonceShares.getSwapTxInputNonceShare(),
-                myNonceShares.getBuyersWarningTxBuyerInputNonceShare(),
-                myNonceShares.getBuyersWarningTxSellerInputNonceShare(),
-                myNonceShares.getSellersWarningTxBuyerInputNonceShare(),
-                myNonceShares.getSellersWarningTxSellerInputNonceShare(),
-                myNonceShares.getBuyersRedirectTxInputNonceShare(),
-                myNonceShares.getSellersRedirectTxInputNonceShare()
+                myNonceShares.getHalfDepositPsbt().clone(),
+                myNonceShares.getSwapTxInputNonceShare().clone(),
+                myNonceShares.getBuyersWarningTxBuyerInputNonceShare().clone(),
+                myNonceShares.getBuyersWarningTxSellerInputNonceShare().clone(),
+                myNonceShares.getSellersWarningTxBuyerInputNonceShare().clone(),
+                myNonceShares.getSellersWarningTxSellerInputNonceShare().clone(),
+                myNonceShares.getBuyersRedirectTxInputNonceShare().clone(),
+                myNonceShares.getSellersRedirectTxInputNonceShare().clone()
         );
 
         // TODO redacting swapTxInputPartialSignature fails at MuSigPaymentReceiptConfirmedEventHandler
         PartialSignatures partialSignatures = new PartialSignatures(
-                myPartialSignatures.getPeersWarningTxBuyerInputPartialSignature(),
-                myPartialSignatures.getPeersWarningTxSellerInputPartialSignature(),
-                myPartialSignatures.getPeersRedirectTxInputPartialSignature(),
-                myPartialSignatures.getSwapTxInputPartialSignature()
+                myPartialSignatures.getPeersWarningTxBuyerInputPartialSignature().clone(),
+                myPartialSignatures.getPeersWarningTxSellerInputPartialSignature().clone(),
+                myPartialSignatures.getPeersRedirectTxInputPartialSignature().clone(),
+                myPartialSignatures.getSwapTxInputPartialSignature().clone()
                 // new byte[]{}
         );
 
