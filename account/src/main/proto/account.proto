@@ -103,6 +103,7 @@ message CountryBasedAccountPayload {
     AmazonGiftCardAccountPayload amazonGiftCardAccountPayload = 14;
     UpiAccountPayload upiAccountPayload = 15;
     BizumAccountPayload bizumAccountPayload = 16;
+    SepaInstantAccountPayload sepaInstantAccountPayload = 17;
   }
 }
 message SepaAccountPayload {
@@ -110,6 +111,13 @@ message SepaAccountPayload {
   string iban = 2;
   string bic = 3;
 
+}
+
+message SepaInstantAccountPayload {
+  string holderName = 1;
+  string iban = 2;
+  string bic = 3;
+  repeated string acceptedCountryCodes = 5;
 }
 
 message F2FAccountPayload {
@@ -239,9 +247,13 @@ message CountryBasedAccount {
     AmazonGiftCardAccount amazonGiftCardAccount = 24;
     UpiAccount upiAccount = 25;
     BizumAccount bizumAccount = 26;
+    SepaInstantAccount sepaInstantAccount = 27;
   }
 }
 message SepaAccount {
+}
+
+message SepaInstantAccount {
 }
 
 message F2FAccount {
