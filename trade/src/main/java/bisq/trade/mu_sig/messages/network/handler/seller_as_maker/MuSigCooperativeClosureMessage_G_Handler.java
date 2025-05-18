@@ -30,8 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigCooperativeClosureMessage_G> {
-    private CloseTradeResponse buyerCloseTradeResponse;
-    private CloseTradeResponse sellersCloseTradeResponse;
+    private CloseTradeResponse peersCloseTradeResponse;
+    private CloseTradeResponse myCloseTradeResponse;
 
     public MuSigCooperativeClosureMessage_G_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -43,24 +43,32 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
 
     @Override
     protected void process(MuSigCooperativeClosureMessage_G message) {
+        peersCloseTradeResponse = message.getCloseTradeResponse();
+
         muSigTradeService.stopCooperativeCloseTimeout(trade);
 
         // ClosureType.COOPERATIVE
         // *** SELLER CLOSES TRADE ***
-        buyerCloseTradeResponse = message.getCloseTradeResponse();
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
-        sellersCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(CloseTradeRequest.newBuilder()
+        CloseTradeRequest closeTradeRequest = CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
-                .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(buyerCloseTradeResponse.getPeerOutputPrvKeyShare()))
-                .build()));
+                .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(peersCloseTradeResponse.getPeerOutputPrvKeyShare()))
+                .build();
+        myCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(closeTradeRequest));
     }
 
     @Override
     protected void commit() {
-        MuSigTradeParty buyerAsTaker = trade.getTaker();
-        MuSigTradeParty sellerAsMaker = trade.getMaker();
+        MuSigTradeParty peer = trade.getTaker();
+        MuSigTradeParty mySelf = trade.getMaker();
 
-        sellerAsMaker.setCloseTradeResponse(sellersCloseTradeResponse);
-        buyerAsTaker.setCloseTradeResponse(buyerCloseTradeResponse);
+        mySelf.setCloseTradeResponse(myCloseTradeResponse);
+        peer.setCloseTradeResponse(peersCloseTradeResponse);
+    }
+
+    @Override
+    protected void sendLogMessage() {
+        sendLogMessage("Seller received peers closeTradeResponse\n." +
+                "Seller created his closeTradeResponse.");
     }
 }

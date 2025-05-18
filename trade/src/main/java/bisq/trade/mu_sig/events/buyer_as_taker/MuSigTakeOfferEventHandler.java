@@ -24,6 +24,7 @@ import bisq.i18n.Res;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
@@ -37,8 +38,8 @@ import java.util.Optional;
 
 @Slf4j
 public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade, MuSigTakeOfferEvent> {
-    private PubKeySharesResponse buyerPubKeySharesResponse;
-    private ContractSignatureData contractSignatureData;
+    private PubKeySharesResponse myPubKeyShares;
+    private ContractSignatureData myContractSignatureData;
     private MuSigContract contract;
 
     public MuSigTakeOfferEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
@@ -53,11 +54,10 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
                     .setTradeId(trade.getId())
                     .setMyRole(Role.BUYER_AS_TAKER)
                     .build());
-            buyerPubKeySharesResponse = PubKeySharesResponse.fromProto(proto);
+            myPubKeyShares = PubKeySharesResponse.fromProto(proto);
 
             contract = trade.getContract();
-
-            contractSignatureData = serviceProvider.getContractService().signContract(contract,
+            myContractSignatureData = serviceProvider.getContractService().signContract(contract,
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
         } catch (Exception e) {
             log.error("{}.handle() failed", getClass().getSimpleName(), e);
@@ -67,8 +67,9 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
 
     @Override
     protected void commit() {
-        trade.getTaker().getContractSignatureData().set(contractSignatureData);
-        trade.getTaker().setPubKeySharesResponse(buyerPubKeySharesResponse);
+        MuSigTradeParty mySelf = trade.getTaker();
+        mySelf.getContractSignatureData().set(myContractSignatureData);
+        mySelf.setPubKeySharesResponse(myPubKeyShares);
     }
 
     @Override
@@ -79,8 +80,8 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 contract,
-                contractSignatureData,
-                buyerPubKeySharesResponse));
+                myContractSignatureData,
+                myPubKeyShares));
     }
 
     @Override
@@ -94,5 +95,8 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
                 takerUserProfile.orElseThrow().getUserName(),
                 makerUserProfile.orElseThrow().getUserName(),
                 offer.getShortId()));
+
+        sendLogMessage("Buyer created his pubKeyShares.\n" +
+                "Buyer sent his pubKeyShares to seller.");
     }
 }

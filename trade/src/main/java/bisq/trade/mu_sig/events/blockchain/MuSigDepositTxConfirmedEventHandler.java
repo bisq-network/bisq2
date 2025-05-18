@@ -36,4 +36,9 @@ public final class MuSigDepositTxConfirmedEventHandler extends MuSigTradeEventHa
     protected void commit() {
         //trade.setDepositTxConfirmationStatus(txConfirmationStatus);
     }
+
+    @Override
+    protected void sendLogMessage() {
+        sendLogMessage("Deposit transaction confirmed");
+    }
 }

@@ -27,6 +27,8 @@ import bisq.trade.protobuf.MusigGrpc;
 import com.google.protobuf.ByteString;
 
 public final class MuSigBuyersCooperativeCloseTimeoutEventHandler extends MuSigTradeEventHandler<MuSigTrade, MuSigBuyersCooperativeCloseTimeoutEvent> {
+    private CloseTradeResponse myCloseTradeResponse;
+
     public MuSigBuyersCooperativeCloseTimeoutEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
@@ -35,8 +37,6 @@ public final class MuSigBuyersCooperativeCloseTimeoutEventHandler extends MuSigT
     public void process(MuSigBuyersCooperativeCloseTimeoutEvent event) {
         muSigTradeService.stopCooperativeCloseTimeout(trade);
 
-        MuSigTradeParty buyerAsTake = trade.getTaker();
-
         // ClosureType.UNCOOPERATIVE
         // Buyer never got Message F from seller -- picks up Swap Tx from bitcoin network instead.
         // *** BUYER CLOSES TRADE ***
@@ -44,13 +44,23 @@ public final class MuSigBuyersCooperativeCloseTimeoutEventHandler extends MuSigT
         //ByteString swapTx = swapTxSignatureResponse.getSwapTx();
         byte[] swapTx = new byte[]{};
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
-        CloseTradeResponse buyersCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(CloseTradeRequest.newBuilder()
+        CloseTradeRequest closeTradeRequest = CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setSwapTx(ByteString.copyFrom(swapTx))
-                .build()));
+                .build();
+        myCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(closeTradeRequest));
     }
 
     @Override
     protected void commit() {
+        MuSigTradeParty mySelf = trade.getMaker();
+
+        mySelf.setCloseTradeResponse(myCloseTradeResponse);
+    }
+
+    @Override
+    protected void sendLogMessage() {
+        sendLogMessage("Buyer did not receive peers swapTxSignature and the timeout got triggered\n." +
+                "Buyer created his closeTradeResponse and force-close the trade.");
     }
 }
