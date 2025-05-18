@@ -49,7 +49,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     private Button saveEditButton, cancelEditButton;
     private HBox editButtonsHBox;
 
-    private final javafx.event.EventHandler<KeyEvent> editFieldKeyFilter;
+    private final javafx.event.EventHandler<KeyEvent> editInputFieldKeyPressedFilter;
 
     public MyTextMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -77,7 +77,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         messageHBox.getChildren().setAll(Spacer.fillHBox(), activeReactionsDisplayHBox, messageBgHBox);
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, actionsHBox);
 
-        editFieldKeyFilter = createEditFieldEnterKeyFilter(item, controller);
+        editInputFieldKeyPressedFilter = createEditInputFieldKeyPressedFilter(item, controller);
 
         setAsEditingPin = EasyBind.subscribe(item.getSetAsEditing(), setAsEditing -> {
             if (setAsEditing) {
@@ -116,8 +116,8 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         HBox.setMargin(deleteAction, ACTION_ITEMS_MARGIN);
     }
 
-    private EventHandler<KeyEvent> createEditFieldEnterKeyFilter(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
-                                                                 ChatMessagesListController controller) {
+    private EventHandler<KeyEvent> createEditInputFieldKeyPressedFilter(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+                                                                        ChatMessagesListController controller) {
         return keyEvent -> {
             if (keyEvent.getCode() == KeyCode.ENTER) {
                 keyEvent.consume(); // Good practice
@@ -215,7 +215,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         editButtonsHBox.setManaged(true);
         message.setVisible(false);
         message.setManaged(false);
-        editInputField.addEventFilter(KeyEvent.KEY_PRESSED, editFieldKeyFilter);
+        editInputField.addEventFilter(KeyEvent.KEY_PRESSED, editInputFieldKeyPressedFilter);
     }
 
     private void onCloseEditMessage() {
@@ -225,7 +225,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         editButtonsHBox.setManaged(false);
         message.setVisible(true);
         message.setManaged(true);
-        editInputField.removeEventFilter(KeyEvent.KEY_PRESSED, editFieldKeyFilter);
+        editInputField.removeEventFilter(KeyEvent.KEY_PRESSED, editInputFieldKeyPressedFilter);
     }
 
     @Override
@@ -246,7 +246,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         userProfileIcon.dispose();
 
         messageDeliveryStatusBox.dispose();
-        editInputField.removeEventFilter(KeyEvent.KEY_PRESSED, editFieldKeyFilter);
+        editInputField.removeEventFilter(KeyEvent.KEY_PRESSED, editInputFieldKeyPressedFilter);
 
         setAsEditingPin.unsubscribe();
     }
