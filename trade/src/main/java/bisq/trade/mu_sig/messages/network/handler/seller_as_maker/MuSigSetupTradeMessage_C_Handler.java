@@ -29,7 +29,6 @@ import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_C;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
 import bisq.trade.protobuf.DepositTxSignatureRequest;
-import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protobuf.PartialSignaturesRequest;
 import bisq.trade.protobuf.ReceiverAddressAndAmount;
 import com.google.common.collect.ImmutableMap;
@@ -58,7 +57,6 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
         peersNonceShares = message.getNonceSharesMessage();
         peersPartialSignatures = message.getPartialSignaturesMessage();
 
-        MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         PartialSignaturesRequest partialSignaturesRequest = PartialSignaturesRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setPeersNonceShares(peersNonceShares.toProto(true))

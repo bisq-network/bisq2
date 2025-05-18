@@ -25,7 +25,6 @@ import bisq.trade.mu_sig.messages.grpc.DepositPsbt;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
 import bisq.trade.protobuf.DepositTxSignatureRequest;
-import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protobuf.PublishDepositTxRequest;
 import bisq.trade.protobuf.TxConfirmationStatus;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +48,6 @@ public final class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHan
     protected void process(MuSigSetupTradeMessage_D message) {
         peersPartialSignatures = message.getPartialSignaturesMessage();
 
-        MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         DepositTxSignatureRequest depositTxSignatureRequest = DepositTxSignatureRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setPeersPartialSignatures(peersPartialSignatures.toProto(true))
