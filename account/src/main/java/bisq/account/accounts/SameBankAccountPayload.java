@@ -18,7 +18,6 @@
 package bisq.account.accounts;
 
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,9 +27,8 @@ import static bisq.common.util.OptionalUtils.toOptional;
 
 @Slf4j
 @ToString
-@Getter
 @EqualsAndHashCode(callSuper = true)
-public final class SameBankAccountPayload extends BankAccountPayload {
+public final class SameBankAccountPayload extends NationalBankAccountPayload {
 
     public SameBankAccountPayload(String id,
                                   String paymentMethodName,
@@ -47,6 +45,21 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                 holderName, bankName, branchId,
                 accountNr, accountType, holderTaxId,
                 bankId, nationalAccountId);
+        verify();
+    }
+
+    @Override
+    protected bisq.account.protobuf.BankAccountPayload.Builder getBankAccountPayloadBuilder(boolean serializeForHash) {
+        return super.getBankAccountPayloadBuilder(serializeForHash)
+                .setSameBankAccountPayload(buildSameBankAccountPayloadProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.SameBankAccountPayload buildSameBankAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getSameBankAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.SameBankAccountPayload.Builder getSameBankAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.SameBankAccountPayload.newBuilder();
     }
 
     public static SameBankAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
@@ -64,19 +77,5 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                 toOptional(bankAccountPayload.getHolderTaxId()),
                 toOptional(bankAccountPayload.getBankId()),
                 toOptional(bankAccountPayload.getNationalAccountId()));
-    }
-
-    @Override
-    protected bisq.account.protobuf.BankAccountPayload.Builder getBankAccountPayloadBuilder(boolean serializeForHash) {
-        return super.getBankAccountPayloadBuilder(serializeForHash).setSameBankAccountPayload(
-                toSameBankAccountPayloadProto(serializeForHash));
-    }
-
-    private bisq.account.protobuf.SameBankAccountPayload toSameBankAccountPayloadProto(boolean serializeForHash) {
-        return resolveBuilder(getSameBankAccountPayloadBuilder(serializeForHash), serializeForHash).build();
-    }
-
-    private bisq.account.protobuf.SameBankAccountPayload.Builder getSameBankAccountPayloadBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.SameBankAccountPayload.newBuilder();
     }
 }

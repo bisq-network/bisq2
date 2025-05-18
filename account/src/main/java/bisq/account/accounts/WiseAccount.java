@@ -29,33 +29,33 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class TransferwiseAccount extends CountryBasedAccount<TransferwiseAccountPayload, FiatPaymentMethod> {
+public final class WiseAccount extends CountryBasedAccount<WiseAccountPayload, FiatPaymentMethod> {
 
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.WISE);
 
-    public TransferwiseAccount(String accountName, TransferwiseAccountPayload payload, Country country) {
+    public WiseAccount(String accountName, WiseAccountPayload payload, Country country) {
         super(accountName, PAYMENT_METHOD, payload, country);
+    }
+
+    public static WiseAccount fromProto(bisq.account.protobuf.Account proto) {
+        return new WiseAccount(
+                proto.getAccountName(),
+                WiseAccountPayload.fromProto(proto.getAccountPayload()),
+                Country.fromProto(proto.getCountryBasedAccount().getCountry())
+        );
     }
 
     @Override
     protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
         return super.getCountryBasedAccountBuilder(serializeForHash)
-                .setTransferwiseAccount(toTransferwiseAccountProto(serializeForHash));
+                .setWiseAccount(toWiseAccountProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.TransferwiseAccount toTransferwiseAccountProto(boolean serializeForHash) {
-        return resolveBuilder(getTransferwiseAccountBuilder(serializeForHash), serializeForHash).build();
+    private bisq.account.protobuf.WiseAccount toWiseAccountProto(boolean serializeForHash) {
+        return resolveBuilder(getWiseAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private bisq.account.protobuf.TransferwiseAccount.Builder getTransferwiseAccountBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.TransferwiseAccount.newBuilder();
-    }
-
-    public static TransferwiseAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new TransferwiseAccount(
-                proto.getAccountName(),
-                TransferwiseAccountPayload.fromProto(proto.getAccountPayload()),
-                Country.fromProto(proto.getCountryBasedAccount().getCountry())
-        );
+    private bisq.account.protobuf.WiseAccount.Builder getWiseAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.WiseAccount.newBuilder();
     }
 }

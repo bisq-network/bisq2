@@ -22,15 +22,15 @@ import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
-import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentReceivedMessage_F;
-import bisq.trade.protobuf.MusigGrpc;
+import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
+import bisq.trade.mu_sig.messages.network.vo.SwapTxSignature;
 import bisq.trade.protobuf.SwapTxSignatureRequest;
 import com.google.protobuf.ByteString;
 
 public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade, MuSigPaymentReceiptConfirmedEvent> {
-    private SwapTxSignatureResponse sellerSwapTxSignatureResponse;
+    private SwapTxSignatureResponse mySwapTxSignatureResponse;
 
     public MuSigPaymentReceiptConfirmedEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -38,15 +38,14 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
 
     @Override
     public void process(MuSigPaymentReceiptConfirmedEvent event) {
-        MuSigTradeParty buyerAsTaker = trade.getTaker();
+        MuSigTradeParty peer = trade.getTaker();
         // We got that from an earlier message
-        PartialSignaturesMessage buyerPartialSignaturesMessage = buyerAsTaker.getPartialSignaturesMessage().orElseThrow();
+        PartialSignatures peersPartialSignatures = peer.getPeersPartialSignatures().orElseThrow();
 
-        MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
-        sellerSwapTxSignatureResponse = SwapTxSignatureResponse.fromProto(musigBlockingStub.signSwapTx(SwapTxSignatureRequest.newBuilder()
+        mySwapTxSignatureResponse = SwapTxSignatureResponse.fromProto(musigBlockingStub.signSwapTx(SwapTxSignatureRequest.newBuilder()
                 .setTradeId(trade.getId())
                 // NOW send the redacted buyer's swapTxInputPartialSignature:
-                .setSwapTxInputPeersPartialSignature(ByteString.copyFrom(buyerPartialSignaturesMessage.getSwapTxInputPartialSignature()))
+                .setSwapTxInputPeersPartialSignature(ByteString.copyFrom(peersPartialSignatures.getSwapTxInputPartialSignature()))
                 .build()));
 
         //ClosureType.COOPERATIVE
@@ -55,19 +54,19 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
 
     @Override
     protected void commit() {
-        MuSigTradeParty sellerAsMaker = trade.getMaker();
-        sellerAsMaker.setSwapTxSignatureResponse(sellerSwapTxSignatureResponse);
+        MuSigTradeParty mySelf = trade.getMaker();
+        mySelf.setMySwapTxSignatureResponse(mySwapTxSignatureResponse);
     }
 
     @Override
     protected void sendMessage() {
-        // TODO do we want to send the full SwapTxSignatureResponse?
+        SwapTxSignature peersSwapTxSignature = SwapTxSignature.from(mySwapTxSignatureResponse);
         send(new MuSigPaymentReceivedMessage_F(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
-                sellerSwapTxSignatureResponse));
+                peersSwapTxSignature));
     }
 
     @Override

@@ -17,24 +17,24 @@
 
 package bisq.trade.mu_sig.messages.network.handler.buyer_as_taker;
 
+import bisq.common.data.ByteArray;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.handler.MuSigTradeMessageHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
-import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
 import bisq.trade.mu_sig.messages.network.MuSigCooperativeClosureMessage_G;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentReceivedMessage_F;
+import bisq.trade.mu_sig.messages.network.vo.SwapTxSignature;
 import bisq.trade.protobuf.CloseTradeRequest;
-import bisq.trade.protobuf.MusigGrpc;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigPaymentReceivedMessage_F> {
     private CloseTradeResponse myCloseTradeResponse;
-    private SwapTxSignatureResponse peersSwapTxSignature;
+    private SwapTxSignature peersSwapTxSignature;
 
     public MuSigPaymentReceivedMessage_F_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -46,13 +46,12 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
 
     @Override
     protected void process(MuSigPaymentReceivedMessage_F message) {
-        peersSwapTxSignature = message.getSwapTxSignatureResponse();
+        peersSwapTxSignature = message.getSwapTxSignature();
 
         muSigTradeService.stopCooperativeCloseTimeout(trade);
 
         // ClosureType.COOPERATIVE
         // *** BUYER CLOSES TRADE ***
-        MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         CloseTradeRequest closeTradeRequest = CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(peersSwapTxSignature.getPeerOutputPrvKeyShare()))
@@ -65,23 +64,24 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
         MuSigTradeParty mySelf = trade.getTaker();
         MuSigTradeParty peer = trade.getMaker();
 
-        mySelf.setCloseTradeResponse(myCloseTradeResponse);
-        peer.setSwapTxSignatureResponse(peersSwapTxSignature);
+        mySelf.setMyCloseTradeResponse(myCloseTradeResponse);
+        peer.setPeersSwapTxSignature(peersSwapTxSignature);
     }
 
     @Override
     protected void sendMessage() {
+        byte[] peerOutputPrvKeyShare = myCloseTradeResponse.getPeerOutputPrvKeyShare().clone();
         send(new MuSigCooperativeClosureMessage_G(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
-                myCloseTradeResponse));
+                new ByteArray(peerOutputPrvKeyShare)));
     }
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Buyer confirmed to have received the payment and closed the trade.\n." +
+        sendLogMessage("Buyer confirmed to have received the payment and closed the trade..\n" +
                 "Buyer sent his closeTradeResponse to the seller.");
     }
 }

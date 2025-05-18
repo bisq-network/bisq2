@@ -18,8 +18,8 @@
 package bisq.trade.mu_sig.messages.network;
 
 import bisq.network.identity.NetworkId;
-import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
-import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
+import bisq.trade.mu_sig.messages.network.vo.NonceShares;
+import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,20 +30,19 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class MuSigSetupTradeMessage_C extends MuSigTradeMessage {
-    public final static int MAX_LENGTH = 1000;
-    private final NonceSharesMessage nonceSharesMessage;
-    private final PartialSignaturesMessage partialSignaturesMessage;
+    private final NonceShares nonceShares;
+    private final PartialSignatures partialSignatures;
 
     public MuSigSetupTradeMessage_C(String id,
                                     String tradeId,
                                     String protocolVersion,
                                     NetworkId sender,
                                     NetworkId receiver,
-                                    NonceSharesMessage nonceSharesMessage,
-                                    PartialSignaturesMessage partialSignaturesMessage) {
+                                    NonceShares nonceShares,
+                                    PartialSignatures partialSignatures) {
         super(id, tradeId, protocolVersion, sender, receiver);
-        this.nonceSharesMessage = nonceSharesMessage;
-        this.partialSignaturesMessage = partialSignaturesMessage;
+        this.nonceShares = nonceShares;
+        this.partialSignatures = partialSignatures;
 
         verify();
     }
@@ -66,8 +65,8 @@ public final class MuSigSetupTradeMessage_C extends MuSigTradeMessage {
 
     private bisq.trade.protobuf.MuSigSetupTradeMessage_C.Builder getMuSigSetupTradeMessage_C(boolean serializeForHash) {
         return bisq.trade.protobuf.MuSigSetupTradeMessage_C.newBuilder()
-                .setNonceSharesMessage(nonceSharesMessage.toProto(serializeForHash))
-                .setPartialSignaturesMessage(partialSignaturesMessage.toProto(serializeForHash));
+                .setNonceShares(nonceShares.toProto(serializeForHash))
+                .setPartialSignatures(partialSignatures.toProto(serializeForHash));
     }
 
     public static MuSigSetupTradeMessage_C fromProto(bisq.trade.protobuf.TradeMessage proto) {
@@ -78,9 +77,10 @@ public final class MuSigSetupTradeMessage_C extends MuSigTradeMessage {
                 proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
-                NonceSharesMessage.fromProto(muSigMessageProto.getNonceSharesMessage()),
-                PartialSignaturesMessage.fromProto(muSigMessageProto.getPartialSignaturesMessage()));
+                NonceShares.fromProto(muSigMessageProto.getNonceShares()),
+                PartialSignatures.fromProto(muSigMessageProto.getPartialSignatures()));
     }
+
     @Override
     public double getCostFactor() {
         return getCostFactor(0.1, 0.3);

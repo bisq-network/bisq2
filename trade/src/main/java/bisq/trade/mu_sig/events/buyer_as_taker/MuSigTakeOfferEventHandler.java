@@ -28,7 +28,7 @@ import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
-import bisq.trade.protobuf.MusigGrpc;
+import bisq.trade.mu_sig.messages.network.vo.PubKeyShares;
 import bisq.trade.protobuf.PubKeySharesRequest;
 import bisq.trade.protobuf.Role;
 import bisq.user.profile.UserProfile;
@@ -38,7 +38,7 @@ import java.util.Optional;
 
 @Slf4j
 public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade, MuSigTakeOfferEvent> {
-    private PubKeySharesResponse myPubKeyShares;
+    private PubKeySharesResponse myPubKeySharesResponse;
     private ContractSignatureData myContractSignatureData;
     private MuSigContract contract;
 
@@ -49,12 +49,11 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
     @Override
     public void process(MuSigTakeOfferEvent event) {
         try {
-            MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
             bisq.trade.protobuf.PubKeySharesResponse proto = musigBlockingStub.initTrade(PubKeySharesRequest.newBuilder()
                     .setTradeId(trade.getId())
                     .setMyRole(Role.BUYER_AS_TAKER)
                     .build());
-            myPubKeyShares = PubKeySharesResponse.fromProto(proto);
+            myPubKeySharesResponse = PubKeySharesResponse.fromProto(proto);
 
             contract = trade.getContract();
             myContractSignatureData = serviceProvider.getContractService().signContract(contract,
@@ -69,11 +68,13 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
     protected void commit() {
         MuSigTradeParty mySelf = trade.getTaker();
         mySelf.getContractSignatureData().set(myContractSignatureData);
-        mySelf.setPubKeySharesResponse(myPubKeyShares);
+        mySelf.setMyPubKeySharesResponse(myPubKeySharesResponse);
     }
 
     @Override
     protected void sendMessage() {
+        PubKeyShares pubKeyShares = PubKeyShares.from(myPubKeySharesResponse);
+
         send(new MuSigSetupTradeMessage_A(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
@@ -81,7 +82,7 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
                 trade.getPeer().getNetworkId(),
                 contract,
                 myContractSignatureData,
-                myPubKeyShares));
+                pubKeyShares));
     }
 
     @Override

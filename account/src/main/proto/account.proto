@@ -104,7 +104,7 @@ message CountryBasedAccountPayload {
     UpiAccountPayload upiAccountPayload = 15;
     BizumAccountPayload bizumAccountPayload = 16;
     SepaInstantAccountPayload sepaInstantAccountPayload = 17;
-    TransferwiseAccountPayload transferwiseAccountPayload = 18;
+    WiseAccountPayload wiseAccountPayload = 18;
   }
 }
 message SepaAccountPayload {
@@ -121,8 +121,10 @@ message SepaInstantAccountPayload {
   repeated string acceptedCountryCodes = 5;
 }
 
-message TransferwiseAccountPayload {
+message WiseAccountPayload {
   string email = 1;
+  string holderName = 2;
+  string beneficiaryAddress = 3;
 }
 
 message F2FAccountPayload {
@@ -141,10 +143,6 @@ message NationalBankAccountPayload {
 message SameBankAccountPayload {
 }
 
-message DomesticWireTransferAccountPayload {
-  string holder_address = 1;
-}
-
 message BankAccountPayload {
   string holder_name = 1;
   string bank_name = 2;
@@ -158,8 +156,7 @@ message BankAccountPayload {
     AchTransferAccountPayload achTransferAccountPayload = 13;
     NationalBankAccountPayload nationalBankAccountPayload = 14;
     CashDepositAccountPayload cashDepositAccountPayload = 15;
-    DomesticWireTransferAccountPayload domesticWireTransferAccountPayload = 16;
-    SameBankAccountPayload sameBankAccountPayload = 17;
+    SameBankAccountPayload sameBankAccountPayload = 16;
   }
 }
 
@@ -262,7 +259,7 @@ message CountryBasedAccount {
     UpiAccount upiAccount = 25;
     BizumAccount bizumAccount = 26;
     SepaInstantAccount sepaInstantAccount = 27;
-    TransferwiseAccount transferwiseAccount = 28;
+    WiseAccount wiseAccount = 28;
   }
 }
 message SepaAccount {
@@ -271,7 +268,7 @@ message SepaAccount {
 message SepaInstantAccount {
 }
 
-message TransferwiseAccount {
+message WiseAccount {
 }
 
 message F2FAccount {
@@ -282,8 +279,7 @@ message BankAccount {
     AchTransferAccount achTransferAccount = 1;
     NationalBankAccount nationalBankAccount = 2;
     CashDepositAccount cashDepositAccount = 3;
-    DomesticWireTransferAccount domesticWireTransferAccount = 4;
-    SameBankAccount sameBankAccount = 5;
+    SameBankAccount sameBankAccount = 4;
   }
 }
 

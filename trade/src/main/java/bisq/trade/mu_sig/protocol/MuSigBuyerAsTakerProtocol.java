@@ -38,8 +38,6 @@ import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigPaymentRec
 import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigSetupTradeMessage_B_Handler;
 import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigSetupTradeMessage_D_Handler;
 
-import static bisq.trade.mu_sig.protocol.MuSigTradeState.FAILED;
-import static bisq.trade.mu_sig.protocol.MuSigTradeState.FAILED_AT_PEER;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_CLOSED_TRADE;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_FORCE_CLOSED_TRADE;
@@ -47,6 +45,8 @@ import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_INITIALI
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_INITIATED_PAYMENT;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.DEPOSIT_TX_CONFIRMED;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.FAILED;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.FAILED_AT_PEER;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.INIT;
 
 

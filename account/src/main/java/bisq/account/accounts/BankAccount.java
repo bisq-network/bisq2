@@ -1,7 +1,6 @@
 package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.protobuf.Account;
 import bisq.common.locale.Country;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
@@ -24,12 +23,11 @@ public abstract class BankAccount<P extends BankAccountPayload> extends CountryB
                 .setBankAccount(toBankAccountProto(serializeForHash));
     }
 
-    public static BankAccount<?> fromProto(Account proto) {
+    public static BankAccount<?> fromProto(bisq.account.protobuf.Account proto) {
         return switch (proto.getCountryBasedAccount().getBankAccount().getMessageCase()) {
             case ACHTRANSFERACCOUNT -> AchTransferAccount.fromProto(proto);
             case NATIONALBANKACCOUNT -> NationalBankAccount.fromProto(proto);
             case CASHDEPOSITACCOUNT -> CashDepositAccount.fromProto(proto);
-            case DOMESTICWIRETRANSFERACCOUNT -> DomesticWireTransferAccount.fromProto(proto);
             case SAMEBANKACCOUNT -> SameBankAccount.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };

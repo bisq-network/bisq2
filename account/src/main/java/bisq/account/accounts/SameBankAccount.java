@@ -17,23 +17,32 @@
 
 package bisq.account.accounts;
 
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentRail;
 import bisq.common.locale.Country;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-@Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class SameBankAccount extends BankAccount<SameBankAccountPayload> {
-    private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.NATIONAL_BANK);
+public final class SameBankAccount extends NationalBankAccount {
 
     public SameBankAccount(String accountName, SameBankAccountPayload payload, Country country) {
-        super(accountName, PAYMENT_METHOD, payload, country);
+        super(accountName, payload, country);
+    }
+
+    @Override
+    protected bisq.account.protobuf.BankAccount.Builder getBankAccountBuilder(boolean serializeForHash) {
+        return super.getBankAccountBuilder(serializeForHash)
+                .setSameBankAccount(buildSameBankAccountProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.SameBankAccount buildSameBankAccountProto(boolean serializeForHash) {
+        return resolveBuilder(getSameBankAccountBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.SameBankAccount.Builder getSameBankAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.SameBankAccount.newBuilder();
     }
 
     public static SameBankAccount fromProto(bisq.account.protobuf.Account proto) {
@@ -41,19 +50,5 @@ public final class SameBankAccount extends BankAccount<SameBankAccountPayload> {
                 proto.getAccountName(),
                 SameBankAccountPayload.fromProto(proto.getAccountPayload()),
                 Country.fromProto(proto.getCountryBasedAccount().getCountry()));
-    }
-
-    @Override
-    protected bisq.account.protobuf.BankAccount.Builder getBankAccountBuilder(boolean serializeForHash) {
-        return super.getBankAccountBuilder(serializeForHash).setSameBankAccount(
-                toSameBankAccountProto(serializeForHash));
-    }
-
-    private bisq.account.protobuf.SameBankAccount toSameBankAccountProto(boolean serializeForHash) {
-        return resolveBuilder(getSameBankAccountBuilder(serializeForHash), serializeForHash).build();
-    }
-
-    private bisq.account.protobuf.SameBankAccount.Builder getSameBankAccountBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.SameBankAccount.newBuilder();
     }
 }

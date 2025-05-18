@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig;
 
+import bisq.common.data.ByteArray;
 import bisq.network.identity.NetworkId;
 import bisq.trade.TradeParty;
 import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
@@ -25,6 +26,10 @@ import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
 import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
+import bisq.trade.mu_sig.messages.network.vo.NonceShares;
+import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
+import bisq.trade.mu_sig.messages.network.vo.PubKeyShares;
+import bisq.trade.mu_sig.messages.network.vo.SwapTxSignature;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -35,43 +40,63 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public final class MuSigTradeParty extends TradeParty {
-    private Optional<PubKeySharesResponse> pubKeySharesResponse = Optional.empty();
-    private Optional<NonceSharesMessage> nonceSharesMessage = Optional.empty();
-    private Optional<PartialSignaturesMessage> partialSignaturesMessage = Optional.empty();
-    private Optional<DepositPsbt> depositPsbt = Optional.empty();
-    private Optional<SwapTxSignatureResponse> swapTxSignatureResponse = Optional.empty();
-    private Optional<CloseTradeResponse> closeTradeResponse = Optional.empty();
+    private Optional<PubKeySharesResponse> myPubKeySharesResponse = Optional.empty();
+    private Optional<PubKeyShares> peersPubKeyShares = Optional.empty();
+    private Optional<NonceSharesMessage> myNonceSharesMessage = Optional.empty();
+    private Optional<NonceShares> peersNonceShares = Optional.empty();
+    private Optional<PartialSignaturesMessage> myPartialSignaturesMessage = Optional.empty();
+    private Optional<PartialSignatures> peersPartialSignatures = Optional.empty();
+    private Optional<DepositPsbt> myDepositPsbt = Optional.empty();
+    private Optional<SwapTxSignatureResponse> mySwapTxSignatureResponse = Optional.empty();
+    private Optional<SwapTxSignature> peersSwapTxSignature = Optional.empty();
+    private Optional<CloseTradeResponse> myCloseTradeResponse = Optional.empty();
+    private Optional<ByteArray> peersOutputPrvKeyShare = Optional.empty();
 
     public MuSigTradeParty(NetworkId networkId) {
         super(networkId);
     }
 
     public MuSigTradeParty(NetworkId networkId,
-                           Optional<PubKeySharesResponse> pubKeySharesResponse,
-                           Optional<NonceSharesMessage> nonceSharesMessage,
-                           Optional<PartialSignaturesMessage> partialSignaturesMessage,
-                           Optional<DepositPsbt> depositPsbt,
-                           Optional<SwapTxSignatureResponse> swapTxSignatureResponse,
-                           Optional<CloseTradeResponse> closeTradeResponse) {
+                           Optional<PubKeySharesResponse> myPubKeySharesResponse,
+                           Optional<PubKeyShares> peersPubKeyShares,
+                           Optional<NonceSharesMessage> myNonceSharesMessage,
+                           Optional<NonceShares> peersNonceShares,
+                           Optional<PartialSignaturesMessage> myPartialSignaturesMessage,
+                           Optional<PartialSignatures> peersPartialSignatures,
+                           Optional<DepositPsbt> myDepositPsbt,
+                           Optional<SwapTxSignatureResponse> mySwapTxSignatureResponse,
+                           Optional<SwapTxSignature> peersSwapTxSignature,
+                           Optional<CloseTradeResponse> myCloseTradeResponse,
+                           Optional<ByteArray> peersOutputPrvKeyShare) {
         super(networkId);
 
-        this.pubKeySharesResponse = pubKeySharesResponse;
-        this.nonceSharesMessage = nonceSharesMessage;
-        this.partialSignaturesMessage = partialSignaturesMessage;
-        this.depositPsbt = depositPsbt;
-        this.swapTxSignatureResponse = swapTxSignatureResponse;
-        this.closeTradeResponse = closeTradeResponse;
+        this.myPubKeySharesResponse = myPubKeySharesResponse;
+        this.peersPubKeyShares = peersPubKeyShares;
+        this.myNonceSharesMessage = myNonceSharesMessage;
+        this.peersNonceShares = peersNonceShares;
+        this.myPartialSignaturesMessage = myPartialSignaturesMessage;
+        this.peersPartialSignatures = peersPartialSignatures;
+        this.myDepositPsbt = myDepositPsbt;
+        this.mySwapTxSignatureResponse = mySwapTxSignatureResponse;
+        this.peersSwapTxSignature = peersSwapTxSignature;
+        this.myCloseTradeResponse = myCloseTradeResponse;
+        this.peersOutputPrvKeyShare = peersOutputPrvKeyShare;
     }
 
     @Override
     public bisq.trade.protobuf.TradeParty.Builder getBuilder(boolean serializeForHash) {
         bisq.trade.protobuf.MuSigTradeParty.Builder builder = bisq.trade.protobuf.MuSigTradeParty.newBuilder();
-        pubKeySharesResponse.ifPresent(e -> builder.setPubKeySharesResponse(e.toProto(serializeForHash)));
-        nonceSharesMessage.ifPresent(e -> builder.setNonceSharesMessage(e.toProto(serializeForHash)));
-        partialSignaturesMessage.ifPresent(e -> builder.setPartialSignaturesMessage(e.toProto(serializeForHash)));
-        depositPsbt.ifPresent(e -> builder.setDepositPsbt(e.toProto(serializeForHash)));
-        swapTxSignatureResponse.ifPresent(e -> builder.setSwapTxSignatureResponse(e.toProto(serializeForHash)));
-        closeTradeResponse.ifPresent(e -> builder.setCloseTradeResponse(e.toProto(serializeForHash)));
+        myPubKeySharesResponse.ifPresent(e -> builder.setMyPubKeySharesResponse(e.toProto(serializeForHash)));
+        peersPubKeyShares.ifPresent(e -> builder.setPeersPubKeyShares(e.toProto(serializeForHash)));
+        myNonceSharesMessage.ifPresent(e -> builder.setMyNonceSharesMessage(e.toProto(serializeForHash)));
+        peersNonceShares.ifPresent(e -> builder.setPeersNonceShares(e.toProto(serializeForHash)));
+        myPartialSignaturesMessage.ifPresent(e -> builder.setMyPartialSignaturesMessage(e.toProto(serializeForHash)));
+        peersPartialSignatures.ifPresent(e -> builder.setPeersPartialSignatures(e.toProto(serializeForHash)));
+        myDepositPsbt.ifPresent(e -> builder.setMyDepositPsbt(e.toProto(serializeForHash)));
+        mySwapTxSignatureResponse.ifPresent(e -> builder.setMySwapTxSignatureResponse(e.toProto(serializeForHash)));
+        peersSwapTxSignature.ifPresent(e -> builder.setPeersSwapTxSignature(e.toProto(serializeForHash)));
+        myCloseTradeResponse.ifPresent(e -> builder.setMyCloseTradeResponse(e.toProto(serializeForHash)));
+        peersOutputPrvKeyShare.ifPresent(e -> builder.setPeersOutputPrvKeyShare(e.toProto(serializeForHash)));
         return getTradePartyBuilder(serializeForHash).setMuSigTradeParty(builder);
     }
 
@@ -79,48 +104,83 @@ public final class MuSigTradeParty extends TradeParty {
         bisq.trade.protobuf.MuSigTradeParty muSigTradePartyProto = proto.getMuSigTradeParty();
         return new MuSigTradeParty(
                 NetworkId.fromProto(proto.getNetworkId()),
-                muSigTradePartyProto.hasPubKeySharesResponse()
-                        ? Optional.of(PubKeySharesResponse.fromProto(muSigTradePartyProto.getPubKeySharesResponse()))
+                muSigTradePartyProto.hasMyPubKeySharesResponse()
+                        ? Optional.of(PubKeySharesResponse.fromProto(muSigTradePartyProto.getMyPubKeySharesResponse()))
                         : Optional.empty(),
-                muSigTradePartyProto.hasNonceSharesMessage()
-                        ? Optional.of(NonceSharesMessage.fromProto(muSigTradePartyProto.getNonceSharesMessage()))
+                muSigTradePartyProto.hasPeersPubKeyShares()
+                        ? Optional.of(PubKeyShares.fromProto(muSigTradePartyProto.getPeersPubKeyShares()))
                         : Optional.empty(),
-                muSigTradePartyProto.hasPartialSignaturesMessage()
-                        ? Optional.of(PartialSignaturesMessage.fromProto(muSigTradePartyProto.getPartialSignaturesMessage()))
+                muSigTradePartyProto.hasMyNonceSharesMessage()
+                        ? Optional.of(NonceSharesMessage.fromProto(muSigTradePartyProto.getMyNonceSharesMessage()))
                         : Optional.empty(),
-                muSigTradePartyProto.hasDepositPsbt()
-                        ? Optional.of(DepositPsbt.fromProto(muSigTradePartyProto.getDepositPsbt()))
+                muSigTradePartyProto.hasPeersNonceShares()
+                        ? Optional.of(NonceShares.fromProto(muSigTradePartyProto.getPeersNonceShares()))
                         : Optional.empty(),
-                muSigTradePartyProto.hasSwapTxSignatureResponse()
-                        ? Optional.of(SwapTxSignatureResponse.fromProto(muSigTradePartyProto.getSwapTxSignatureResponse()))
+                muSigTradePartyProto.hasMyPartialSignaturesMessage()
+                        ? Optional.of(PartialSignaturesMessage.fromProto(muSigTradePartyProto.getMyPartialSignaturesMessage()))
                         : Optional.empty(),
-                muSigTradePartyProto.hasCloseTradeResponse()
-                        ? Optional.of(CloseTradeResponse.fromProto(muSigTradePartyProto.getCloseTradeResponse()))
+                muSigTradePartyProto.hasPeersPartialSignatures()
+                        ? Optional.of(PartialSignatures.fromProto(muSigTradePartyProto.getPeersPartialSignatures()))
+                        : Optional.empty(),
+                muSigTradePartyProto.hasMyDepositPsbt()
+                        ? Optional.of(DepositPsbt.fromProto(muSigTradePartyProto.getMyDepositPsbt()))
+                        : Optional.empty(),
+                muSigTradePartyProto.hasMySwapTxSignatureResponse()
+                        ? Optional.of(SwapTxSignatureResponse.fromProto(muSigTradePartyProto.getMySwapTxSignatureResponse()))
+                        : Optional.empty(),
+                muSigTradePartyProto.hasPeersSwapTxSignature()
+                        ? Optional.of(SwapTxSignature.fromProto(muSigTradePartyProto.getPeersSwapTxSignature()))
+                        : Optional.empty(),
+                muSigTradePartyProto.hasMyCloseTradeResponse()
+                        ? Optional.of(CloseTradeResponse.fromProto(muSigTradePartyProto.getMyCloseTradeResponse()))
+                        : Optional.empty(),
+                muSigTradePartyProto.hasPeersOutputPrvKeyShare()
+                        ? Optional.of(ByteArray.fromProto(muSigTradePartyProto.getPeersOutputPrvKeyShare()))
                         : Optional.empty()
         );
     }
 
-    public void setPubKeySharesResponse(PubKeySharesResponse pubKeySharesResponse) {
-        this.pubKeySharesResponse = Optional.of(pubKeySharesResponse);
+    public void setMyPubKeySharesResponse(PubKeySharesResponse myPubKeySharesResponse) {
+        this.myPubKeySharesResponse = Optional.of(myPubKeySharesResponse);
     }
 
-    public void setNonceSharesMessage(NonceSharesMessage nonceSharesMessage) {
-        this.nonceSharesMessage = Optional.of(nonceSharesMessage);
+    public void setPeersPubKeySharesResponse(PubKeyShares peersPubKeyShares) {
+        this.peersPubKeyShares = Optional.of(peersPubKeyShares);
     }
 
-    public void setPartialSignaturesMessage(PartialSignaturesMessage partialSignaturesMessage) {
-        this.partialSignaturesMessage = Optional.of(partialSignaturesMessage);
+    public void setMyNonceSharesMessage(NonceSharesMessage myNonceSharesMessage) {
+        this.myNonceSharesMessage = Optional.of(myNonceSharesMessage);
     }
 
-    public void setDepositPsbt(DepositPsbt depositPsbt) {
-        this.depositPsbt = Optional.of(depositPsbt);
+    public void setPeersNonceShares(NonceShares peersNonceShares) {
+        this.peersNonceShares = Optional.of(peersNonceShares);
     }
 
-    public void setSwapTxSignatureResponse(SwapTxSignatureResponse swapTxSignatureResponse) {
-        this.swapTxSignatureResponse = Optional.of(swapTxSignatureResponse);
+    public void setMyPartialSignaturesMessage(PartialSignaturesMessage myPartialSignaturesMessage) {
+        this.myPartialSignaturesMessage = Optional.of(myPartialSignaturesMessage);
     }
 
-    public void setCloseTradeResponse(CloseTradeResponse closeTradeResponse) {
-        this.closeTradeResponse = Optional.of(closeTradeResponse);
+    public void setPeersPartialSignatures(PartialSignatures peersPartialSignatures) {
+        this.peersPartialSignatures = Optional.of(peersPartialSignatures);
+    }
+
+    public void setMyDepositPsbt(DepositPsbt myDepositPsbt) {
+        this.myDepositPsbt = Optional.of(myDepositPsbt);
+    }
+
+    public void setMySwapTxSignatureResponse(SwapTxSignatureResponse mySwapTxSignatureResponse) {
+        this.mySwapTxSignatureResponse = Optional.of(mySwapTxSignatureResponse);
+    }
+
+    public void setPeersSwapTxSignature(SwapTxSignature peersSwapTxSignature) {
+        this.peersSwapTxSignature = Optional.of(peersSwapTxSignature);
+    }
+
+    public void setMyCloseTradeResponse(CloseTradeResponse myCloseTradeResponse) {
+        this.myCloseTradeResponse = Optional.of(myCloseTradeResponse);
+    }
+
+    public void setPeersOutputPrvKeyShare(ByteArray peersOutputPrvKeyShare) {
+        this.peersOutputPrvKeyShare = Optional.of(peersOutputPrvKeyShare);
     }
 }

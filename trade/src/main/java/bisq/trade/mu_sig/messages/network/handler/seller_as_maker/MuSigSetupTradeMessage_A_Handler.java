@@ -29,7 +29,8 @@ import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_B;
-import bisq.trade.protobuf.MusigGrpc;
+import bisq.trade.mu_sig.messages.network.vo.NonceShares;
+import bisq.trade.mu_sig.messages.network.vo.PubKeyShares;
 import bisq.trade.protobuf.NonceSharesRequest;
 import bisq.trade.protobuf.PubKeySharesRequest;
 import bisq.trade.protobuf.Role;
@@ -40,9 +41,8 @@ import java.security.GeneralSecurityException;
 
 @Slf4j
 public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_A> {
-
-    private PubKeySharesResponse myPubKeyShares;
-    private PubKeySharesResponse peersPubKeyShares;
+    private PubKeySharesResponse myPubKeySharesResponse;
+    private PubKeyShares peersPubKeyShares;
     private NonceSharesMessage myNonceShares;
     private ContractSignatureData takersContractSignatureData;
     private ContractSignatureData myContractSignatureData;
@@ -69,14 +69,13 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void process(MuSigSetupTradeMessage_A message) {
-        peersPubKeyShares = message.getPubKeySharesResponse();
+        peersPubKeyShares = message.getPubKeyShares();
 
-        MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
         PubKeySharesRequest pubKeySharesRequest = PubKeySharesRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setMyRole(Role.SELLER_AS_MAKER)
                 .build();
-        myPubKeyShares = PubKeySharesResponse.fromProto(musigBlockingStub.initTrade(pubKeySharesRequest));
+        myPubKeySharesResponse = PubKeySharesResponse.fromProto(musigBlockingStub.initTrade(pubKeySharesRequest));
 
         NonceSharesRequest nonceSharesRequest = NonceSharesRequest.newBuilder()
                 .setTradeId(trade.getId())
@@ -99,14 +98,15 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
         peer.getContractSignatureData().set(takersContractSignatureData);
         mySelf.getContractSignatureData().set(myContractSignatureData);
 
-        peer.setPubKeySharesResponse(peersPubKeyShares);
-        mySelf.setPubKeySharesResponse(myPubKeyShares);
-        mySelf.setNonceSharesMessage(myNonceShares);
+        peer.setPeersPubKeySharesResponse(peersPubKeyShares);
+        mySelf.setMyPubKeySharesResponse(myPubKeySharesResponse);
+        mySelf.setMyNonceSharesMessage(myNonceShares);
     }
 
     @Override
     protected void sendMessage() {
-        //todo redact fields in sellerNonceSharesMessage?
+        PubKeyShares pubKeyShares = PubKeyShares.from(myPubKeySharesResponse);
+        NonceShares nonceShares = NonceShares.from(myNonceShares);
 
         send(new MuSigSetupTradeMessage_B(StringUtils.createUid(),
                 trade.getId(),
@@ -115,13 +115,13 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
                 trade.getPeer().getNetworkId(),
                 trade.getContract(),
                 myContractSignatureData,
-                myPubKeyShares,
-                myNonceShares));
+                pubKeyShares,
+                nonceShares));
     }
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Seller received peers pubKeyShares\n." +
+        sendLogMessage("Seller received peers pubKeyShares.\n" +
                 "Seller created his pubKeyShares and nonceShares.\n " +
                 "Seller sent his pubKeyShares and his nonceShares to buyer.");
     }

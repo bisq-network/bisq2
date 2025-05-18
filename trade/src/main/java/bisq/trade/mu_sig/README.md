@@ -1,8 +1,10 @@
 ### Setup for musig trade protocol
 
-Clone the Bisq Musig project from https://github.com/bisq-network/bisq-musig, follow the instructions in rpc readme file.
+Clone the Bisq Musig project from https://github.com/bisq-network/bisq-musig, follow the instructions in rpc readme
+file.
 
-As long branch https://github.com/stejbac/bisq-musig/tree/add-more-rpc-integration-tests is not merged, use that as that comes with support for custom ports.
+As long branch https://github.com/stejbac/bisq-musig/tree/add-more-rpc-integration-tests is not merged, use that as that
+comes with support for custom ports.
 You need to run 2 instances for the 2 trade peers with different ports.
 
 `cargo run --bin musigd -- --port 50090`
@@ -11,6 +13,7 @@ You need to run 2 instances for the 2 trade peers with different ports.
 Start Bisq apps with the distinct port:
 
 Alice:
+
 ```
 -Dapplication.appName=bisq2_Alice
 -Dapplication.network.supportedTransportTypes.2=CLEAR
@@ -19,6 +22,7 @@ Alice:
 ```
 
 Bob:
+
 ```
 -Dapplication.appName=bisq2_Bob
 -Dapplication.network.supportedTransportTypes.2=CLEAR

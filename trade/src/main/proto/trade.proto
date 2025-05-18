@@ -19,6 +19,7 @@ syntax = "proto3";
 
 package trade;
 
+import "common.proto";
 import "contract.proto";
 import "identity.proto";
 import "network_identity.proto";
@@ -148,13 +149,52 @@ message BisqEasyReportErrorMessage {
 
 
 // MuSig
+
+// Value objects for network messages (based on grpc messages)
+message PubKeyShares {
+  bytes buyerOutputPubKeyShare = 1;
+  bytes sellerOutputPubKeyShare = 2;
+}
+
+message NonceShares {
+  string warningTxFeeBumpAddress = 1;
+  string redirectTxFeeBumpAddress = 2;
+  bytes halfDepositPsbt = 3;
+  bytes swapTxInputNonceShare = 4;
+  bytes buyersWarningTxBuyerInputNonceShare = 5;
+  bytes buyersWarningTxSellerInputNonceShare = 6;
+  bytes sellersWarningTxBuyerInputNonceShare = 7;
+  bytes sellersWarningTxSellerInputNonceShare = 8;
+  bytes buyersRedirectTxInputNonceShare = 9;
+  bytes sellersRedirectTxInputNonceShare = 10;
+}
+
+message PartialSignatures {
+  bytes peersWarningTxBuyerInputPartialSignature = 1;
+  bytes peersWarningTxSellerInputPartialSignature = 2;
+  bytes peersRedirectTxInputPartialSignature = 3;
+  optional bytes swapTxInputPartialSignature = 4;
+}
+
+
+message SwapTxSignature {
+  bytes swapTx = 1;
+  bytes peerOutputPrvKeyShare = 2;
+}
+
+// Trade domain
 message MuSigTradeParty {
-  musigrpc.PubKeySharesResponse pubKeySharesResponse = 1;
-  musigrpc.NonceSharesMessage nonceSharesMessage = 2;
-  musigrpc.PartialSignaturesMessage partialSignaturesMessage = 3;
-  musigrpc.DepositPsbt depositPsbt = 4;
-  musigrpc.SwapTxSignatureResponse swapTxSignatureResponse = 5;
-  musigrpc.CloseTradeResponse closeTradeResponse = 6;
+  optional musigrpc.PubKeySharesResponse myPubKeySharesResponse = 1;
+  optional PubKeyShares peersPubKeyShares = 2;
+  optional musigrpc.NonceSharesMessage myNonceSharesMessage = 3;
+  optional  NonceShares peersNonceShares = 4;
+  optional musigrpc.PartialSignaturesMessage myPartialSignaturesMessage = 5;
+  optional PartialSignatures peersPartialSignatures = 6;
+  optional musigrpc.DepositPsbt myDepositPsbt = 7;
+  optional musigrpc.SwapTxSignatureResponse mySwapTxSignatureResponse = 9;
+  optional SwapTxSignature peersSwapTxSignature = 10;
+  optional musigrpc.CloseTradeResponse myCloseTradeResponse = 11;
+  optional common.ByteArray peersOutputPrvKeyShare = 12;
 }
 
 message MuSigTrade {
@@ -183,23 +223,23 @@ message MuSigTradeMessage {
 message MuSigSetupTradeMessage_A {
   contract.Contract contract = 1;
   contract.ContractSignatureData contractSignatureData = 2;
-  musigrpc.PubKeySharesResponse pubKeySharesResponse = 3;
+  PubKeyShares pubKeyShares = 3;
 }
 
 message MuSigSetupTradeMessage_B {
   contract.Contract contract = 1;
   contract.ContractSignatureData contractSignatureData = 2;
-  musigrpc.PubKeySharesResponse pubKeySharesResponse = 3;
-  musigrpc.NonceSharesMessage nonceSharesMessage = 4;
+  PubKeyShares pubKeyShares = 3;
+  NonceShares nonceShares = 4;
 }
 
 message MuSigSetupTradeMessage_C {
-  musigrpc.NonceSharesMessage nonceSharesMessage = 1;
-  musigrpc.PartialSignaturesMessage partialSignaturesMessage = 2;
+  NonceShares nonceShares = 1;
+  PartialSignatures partialSignatures = 2;
 }
 
 message MuSigSetupTradeMessage_D {
-  musigrpc.PartialSignaturesMessage partialSignaturesMessage = 1;
+  PartialSignatures partialSignatures = 1;
 }
 
 message MuSigPaymentInitiatedMessage_E {
@@ -207,9 +247,9 @@ message MuSigPaymentInitiatedMessage_E {
 }
 
 message MuSigPaymentReceivedMessage_F {
-  musigrpc.SwapTxSignatureResponse swapTxSignatureResponse = 1;
+  SwapTxSignature swapTxSignature = 1;
 }
 
 message MuSigCooperativeClosureMessage_G {
-  musigrpc.CloseTradeResponse closeTradeResponse = 1;
+  common.ByteArray peerOutputPrvKeyShare = 1;
 }
