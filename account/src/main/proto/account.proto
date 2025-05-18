@@ -104,6 +104,7 @@ message CountryBasedAccountPayload {
     UpiAccountPayload upiAccountPayload = 15;
     BizumAccountPayload bizumAccountPayload = 16;
     SepaInstantAccountPayload sepaInstantAccountPayload = 17;
+    TransferwiseAccountPayload transferwiseAccountPayload = 18;
   }
 }
 message SepaAccountPayload {
@@ -120,6 +121,10 @@ message SepaInstantAccountPayload {
   repeated string acceptedCountryCodes = 5;
 }
 
+message TransferwiseAccountPayload {
+  string email = 1;
+}
+
 message F2FAccountPayload {
   string contact = 1;
   string city = 2;
@@ -131,6 +136,13 @@ message AchTransferAccountPayload {
 }
 
 message NationalBankAccountPayload {
+}
+
+message SameBankAccountPayload {
+}
+
+message DomesticWireTransferAccountPayload {
+  string holder_address = 1;
 }
 
 message BankAccountPayload {
@@ -146,6 +158,8 @@ message BankAccountPayload {
     AchTransferAccountPayload achTransferAccountPayload = 13;
     NationalBankAccountPayload nationalBankAccountPayload = 14;
     CashDepositAccountPayload cashDepositAccountPayload = 15;
+    DomesticWireTransferAccountPayload domesticWireTransferAccountPayload = 16;
+    SameBankAccountPayload sameBankAccountPayload = 17;
   }
 }
 
@@ -248,12 +262,16 @@ message CountryBasedAccount {
     UpiAccount upiAccount = 25;
     BizumAccount bizumAccount = 26;
     SepaInstantAccount sepaInstantAccount = 27;
+    TransferwiseAccount transferwiseAccount = 28;
   }
 }
 message SepaAccount {
 }
 
 message SepaInstantAccount {
+}
+
+message TransferwiseAccount {
 }
 
 message F2FAccount {
@@ -264,10 +282,18 @@ message BankAccount {
     AchTransferAccount achTransferAccount = 1;
     NationalBankAccount nationalBankAccount = 2;
     CashDepositAccount cashDepositAccount = 3;
+    DomesticWireTransferAccount domesticWireTransferAccount = 4;
+    SameBankAccount sameBankAccount = 5;
   }
 }
 
 message AchTransferAccount {
+}
+
+message SameBankAccount {
+}
+
+message DomesticWireTransferAccount {
 }
 
 message ZelleAccount {
