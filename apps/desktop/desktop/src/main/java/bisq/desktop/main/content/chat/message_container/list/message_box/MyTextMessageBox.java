@@ -134,6 +134,15 @@ public final class MyTextMessageBox extends BubbleMessageBox {
             } else if (keyEvent.getCode() == KeyCode.ESCAPE) {
                 keyEvent.consume();
                 onCloseEditMessage();
+            } else if (keyEvent.getCode() == KeyCode.UP) {
+                // Need to normalize text to ensure cross-OS compatibility
+                String normalizedText = editInputField.getText().replaceAll("\r\n|\n|\r", System.lineSeparator());
+                // If no line break is found from the start to the caret position, it means we are in the first line, so we should move to the start
+                if (normalizedText.indexOf(System.lineSeparator(), 0, editInputField.getCaretPosition()) == -1) {
+                    // Only consume event in this case, otherwise allow falling back to default behavior
+                    keyEvent.consume();
+                    editInputField.positionCaret(0);
+                }
             }
         };
     }

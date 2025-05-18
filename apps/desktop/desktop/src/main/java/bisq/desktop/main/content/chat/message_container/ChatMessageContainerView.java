@@ -242,9 +242,19 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
                 inputField.clear();
             }
         } else if (keyEvent.getCode() == KeyCode.UP) {
-            keyEvent.consume();
             if (inputField.getText().isEmpty() || inputField.getCaretPosition() == 0) {
+                // Only consume event in this case, otherwise allow falling back to default behavior
+                keyEvent.consume();
                 controller.onArrowUpKeyPressed();
+            } else {
+                // Need to normalize text to ensure cross-OS compatibility
+                String normalizedText = inputField.getText().replaceAll("\r\n|\n|\r", System.lineSeparator());
+                // If no line break is found from the start to the caret position, it means we are in the first line, so we should move to the start
+                if (normalizedText.indexOf(System.lineSeparator(), 0, inputField.getCaretPosition()) == -1) {
+                    // Only consume event in this case, otherwise allow falling back to default behavior
+                    keyEvent.consume();
+                    inputField.positionCaret(0);
+                }
             }
         }
     }
