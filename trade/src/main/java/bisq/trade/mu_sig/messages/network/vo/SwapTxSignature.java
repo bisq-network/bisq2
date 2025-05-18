@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network.vo;
 
 import bisq.common.proto.Proto;
+import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 
@@ -25,10 +26,15 @@ import java.util.Arrays;
 
 @Getter
 public final class SwapTxSignature implements Proto {
+    public static SwapTxSignature from(SwapTxSignatureResponse swapTxSignatureResponse) {
+        return new SwapTxSignature(swapTxSignatureResponse.getSwapTx(),
+                swapTxSignatureResponse.getPeerOutputPrvKeyShare());
+    }
+
     private final byte[] swapTx;
     private final byte[] peerOutputPrvKeyShare;
 
-    public SwapTxSignature(byte[] swapTx, byte[] peerOutputPrvKeyShare) {
+    private SwapTxSignature(byte[] swapTx, byte[] peerOutputPrvKeyShare) {
         this.swapTx = swapTx;
         this.peerOutputPrvKeyShare = peerOutputPrvKeyShare;
     }

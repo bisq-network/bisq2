@@ -79,19 +79,7 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
                 .build();
         myNonceShares = NonceSharesMessage.fromProto(musigBlockingStub.getNonceShares(nonceSharesRequest));
 
-        // todo maybe adjust grpc api
-        NonceSharesMessage peersNonceSharesMessage = new NonceSharesMessage(
-                peersNonceShares.getWarningTxFeeBumpAddress(),
-                peersNonceShares.getRedirectTxFeeBumpAddress(),
-                peersNonceShares.getHalfDepositPsbt(),
-                peersNonceShares.getSwapTxInputNonceShare(),
-                peersNonceShares.getBuyersWarningTxBuyerInputNonceShare(),
-                peersNonceShares.getBuyersWarningTxSellerInputNonceShare(),
-                peersNonceShares.getSellersWarningTxBuyerInputNonceShare(),
-                peersNonceShares.getSellersWarningTxSellerInputNonceShare(),
-                peersNonceShares.getBuyersRedirectTxInputNonceShare(),
-                peersNonceShares.getSellersRedirectTxInputNonceShare()
-        );
+        NonceSharesMessage peersNonceSharesMessage =  NonceSharesMessage.from(peersNonceShares);
 
         PartialSignaturesRequest partialSignaturesRequest = PartialSignaturesRequest.newBuilder()
                 .setTradeId(trade.getId())
@@ -118,27 +106,10 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void sendMessage() {
-        NonceShares nonceShares = new NonceShares(
-                myNonceShares.getWarningTxFeeBumpAddress(),
-                myNonceShares.getRedirectTxFeeBumpAddress(),
-                myNonceShares.getHalfDepositPsbt().clone(),
-                myNonceShares.getSwapTxInputNonceShare().clone(),
-                myNonceShares.getBuyersWarningTxBuyerInputNonceShare().clone(),
-                myNonceShares.getBuyersWarningTxSellerInputNonceShare().clone(),
-                myNonceShares.getSellersWarningTxBuyerInputNonceShare().clone(),
-                myNonceShares.getSellersWarningTxSellerInputNonceShare().clone(),
-                myNonceShares.getBuyersRedirectTxInputNonceShare().clone(),
-                myNonceShares.getSellersRedirectTxInputNonceShare().clone()
-        );
+        NonceShares nonceShares = NonceShares.from(myNonceShares);
 
         // TODO redacting swapTxInputPartialSignature fails at MuSigPaymentReceiptConfirmedEventHandler
-        PartialSignatures partialSignatures = new PartialSignatures(
-                myPartialSignatures.getPeersWarningTxBuyerInputPartialSignature().clone(),
-                myPartialSignatures.getPeersWarningTxSellerInputPartialSignature().clone(),
-                myPartialSignatures.getPeersRedirectTxInputPartialSignature().clone(),
-                myPartialSignatures.getSwapTxInputPartialSignature().clone()
-                // new byte[]{}
-        );
+        PartialSignatures partialSignatures =  PartialSignatures.from(myPartialSignatures);
 
         send(new MuSigSetupTradeMessage_C(StringUtils.createUid(),
                 trade.getId(),

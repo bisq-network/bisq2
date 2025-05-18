@@ -49,13 +49,7 @@ public final class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHan
     protected void process(MuSigSetupTradeMessage_D message) {
         peersPartialSignatures = message.getPartialSignatures();
 
-        PartialSignaturesMessage peersPartialSignaturesMessage = new PartialSignaturesMessage(
-                peersPartialSignatures.getPeersWarningTxBuyerInputPartialSignature(),
-                peersPartialSignatures.getPeersWarningTxSellerInputPartialSignature(),
-                peersPartialSignatures.getPeersRedirectTxInputPartialSignature(),
-                peersPartialSignatures.getSwapTxInputPartialSignature()
-        );
-
+        PartialSignaturesMessage peersPartialSignaturesMessage =  PartialSignaturesMessage.from(peersPartialSignatures);
         DepositTxSignatureRequest depositTxSignatureRequest = DepositTxSignatureRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setPeersPartialSignatures(peersPartialSignaturesMessage.toProto(true))

@@ -60,19 +60,7 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
         peersPartialSignatures = message.getPartialSignatures();
 
 
-        // todo maybe adjust grpc api
-        NonceSharesMessage peersNonceSharesMessage = new NonceSharesMessage(
-                peersNonceShares.getWarningTxFeeBumpAddress(),
-                peersNonceShares.getRedirectTxFeeBumpAddress(),
-                peersNonceShares.getHalfDepositPsbt(),
-                peersNonceShares.getSwapTxInputNonceShare(),
-                peersNonceShares.getBuyersWarningTxBuyerInputNonceShare(),
-                peersNonceShares.getBuyersWarningTxSellerInputNonceShare(),
-                peersNonceShares.getSellersWarningTxBuyerInputNonceShare(),
-                peersNonceShares.getSellersWarningTxSellerInputNonceShare(),
-                peersNonceShares.getBuyersRedirectTxInputNonceShare(),
-                peersNonceShares.getSellersRedirectTxInputNonceShare()
-        );
+        NonceSharesMessage peersNonceSharesMessage =  NonceSharesMessage.from(peersNonceShares);
 
         PartialSignaturesRequest partialSignaturesRequest = PartialSignaturesRequest.newBuilder()
                 .setTradeId(trade.getId())
@@ -81,12 +69,7 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
                 .build();
         myPartialSignatures = PartialSignaturesMessage.fromProto(musigBlockingStub.getPartialSignatures(partialSignaturesRequest));
 
-        PartialSignaturesMessage peersPartialSignaturesMessage = new PartialSignaturesMessage(
-                peersPartialSignatures.getPeersWarningTxBuyerInputPartialSignature(),
-                peersPartialSignatures.getPeersWarningTxSellerInputPartialSignature(),
-                peersPartialSignatures.getPeersRedirectTxInputPartialSignature(),
-                peersPartialSignatures.getSwapTxInputPartialSignature()
-        );
+        PartialSignaturesMessage peersPartialSignaturesMessage =  PartialSignaturesMessage.from(peersPartialSignatures);
 
         // TODO
         //       @stejbac: redacting would make sense at senders side, but then it fails at MuSigPaymentReceiptConfirmedEventHandler.
@@ -135,12 +118,7 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void sendMessage() {
-        PartialSignatures partialSignatures = new PartialSignatures(
-                myPartialSignatures.getPeersWarningTxBuyerInputPartialSignature().clone(),
-                myPartialSignatures.getPeersWarningTxSellerInputPartialSignature().clone(),
-                myPartialSignatures.getPeersRedirectTxInputPartialSignature().clone(),
-                myPartialSignatures.getSwapTxInputPartialSignature().clone()
-        );
+        PartialSignatures partialSignatures =  PartialSignatures.from(myPartialSignatures);
 
         send(new MuSigSetupTradeMessage_D(StringUtils.createUid(),
                 trade.getId(),

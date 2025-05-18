@@ -73,8 +73,7 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
 
     @Override
     protected void sendMessage() {
-        PubKeyShares peersPubKeyShares = new PubKeyShares(myPubKeySharesResponse.getBuyerOutputPubKeyShare().clone(),
-                myPubKeySharesResponse.getSellerOutputPubKeyShare().clone());
+        PubKeyShares pubKeyShares = PubKeyShares.from(myPubKeySharesResponse);
 
         send(new MuSigSetupTradeMessage_A(StringUtils.createUid(),
                 trade.getId(),
@@ -83,7 +82,7 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
                 trade.getPeer().getNetworkId(),
                 contract,
                 myContractSignatureData,
-                peersPubKeyShares));
+                pubKeyShares));
     }
 
     @Override

@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network.vo;
 
 import bisq.common.proto.Proto;
+import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 
@@ -26,6 +27,21 @@ import java.util.Objects;
 
 @Getter
 public final class NonceShares implements Proto {
+    public static NonceShares from(NonceSharesMessage nonceSharesMessage) {
+        return new NonceShares(
+                nonceSharesMessage.getWarningTxFeeBumpAddress(),
+                nonceSharesMessage.getRedirectTxFeeBumpAddress(),
+                nonceSharesMessage.getHalfDepositPsbt().clone(),
+                nonceSharesMessage.getSwapTxInputNonceShare().clone(),
+                nonceSharesMessage.getBuyersWarningTxBuyerInputNonceShare().clone(),
+                nonceSharesMessage.getBuyersWarningTxSellerInputNonceShare().clone(),
+                nonceSharesMessage.getSellersWarningTxBuyerInputNonceShare().clone(),
+                nonceSharesMessage.getSellersWarningTxSellerInputNonceShare().clone(),
+                nonceSharesMessage.getBuyersRedirectTxInputNonceShare().clone(),
+                nonceSharesMessage.getSellersRedirectTxInputNonceShare().clone()
+        );
+    }
+
     private final String warningTxFeeBumpAddress;
     private final String redirectTxFeeBumpAddress;
     private final byte[] halfDepositPsbt;
@@ -37,7 +53,7 @@ public final class NonceShares implements Proto {
     private final byte[] buyersRedirectTxInputNonceShare;
     private final byte[] sellersRedirectTxInputNonceShare;
 
-    public NonceShares(String warningTxFeeBumpAddress,
+    private NonceShares(String warningTxFeeBumpAddress,
                        String redirectTxFeeBumpAddress,
                        byte[] halfDepositPsbt,
                        byte[] swapTxInputNonceShare,

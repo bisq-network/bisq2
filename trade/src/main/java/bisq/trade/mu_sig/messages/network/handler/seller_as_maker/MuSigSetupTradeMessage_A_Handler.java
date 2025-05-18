@@ -105,21 +105,8 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void sendMessage() {
-        PubKeyShares pubKeyShares = new PubKeyShares(myPubKeySharesResponse.getBuyerOutputPubKeyShare().clone(),
-                myPubKeySharesResponse.getSellerOutputPubKeyShare().clone());
-
-        NonceShares nonceShares = new NonceShares(
-                myNonceShares.getWarningTxFeeBumpAddress(),
-                myNonceShares.getRedirectTxFeeBumpAddress(),
-                myNonceShares.getHalfDepositPsbt().clone(),
-                myNonceShares.getSwapTxInputNonceShare().clone(),
-                myNonceShares.getBuyersWarningTxBuyerInputNonceShare().clone(),
-                myNonceShares.getBuyersWarningTxSellerInputNonceShare().clone(),
-                myNonceShares.getSellersWarningTxBuyerInputNonceShare().clone(),
-                myNonceShares.getSellersWarningTxSellerInputNonceShare().clone(),
-                myNonceShares.getBuyersRedirectTxInputNonceShare().clone(),
-                myNonceShares.getSellersRedirectTxInputNonceShare().clone()
-        );
+        PubKeyShares pubKeyShares = PubKeyShares.from(myPubKeySharesResponse);
+        NonceShares nonceShares = NonceShares.from(myNonceShares);
 
         send(new MuSigSetupTradeMessage_B(StringUtils.createUid(),
                 trade.getId(),

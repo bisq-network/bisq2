@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
+import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -25,6 +26,15 @@ import lombok.Getter;
 @Getter
 @EqualsAndHashCode
 public final class PartialSignaturesMessage implements Proto {
+    public static PartialSignaturesMessage from(PartialSignatures peersPartialSignatures) {
+        return new PartialSignaturesMessage(
+                peersPartialSignatures.getPeersWarningTxBuyerInputPartialSignature(),
+                peersPartialSignatures.getPeersWarningTxSellerInputPartialSignature(),
+                peersPartialSignatures.getPeersRedirectTxInputPartialSignature(),
+                peersPartialSignatures.getSwapTxInputPartialSignature()
+        );
+    }
+
     private final byte[] peersWarningTxBuyerInputPartialSignature;
     private final byte[] peersWarningTxSellerInputPartialSignature;
     private final byte[] peersRedirectTxInputPartialSignature;

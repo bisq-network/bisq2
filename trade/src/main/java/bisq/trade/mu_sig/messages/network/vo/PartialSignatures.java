@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network.vo;
 
 import bisq.common.proto.Proto;
+import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 
@@ -25,13 +26,22 @@ import java.util.Arrays;
 
 @Getter
 public final class PartialSignatures implements Proto {
+    public static PartialSignatures from(PartialSignaturesMessage partialSignaturesMessage) {
+        return new PartialSignatures(
+                partialSignaturesMessage.getPeersWarningTxBuyerInputPartialSignature().clone(),
+                partialSignaturesMessage.getPeersWarningTxSellerInputPartialSignature().clone(),
+                partialSignaturesMessage.getPeersRedirectTxInputPartialSignature().clone(),
+                partialSignaturesMessage.getSwapTxInputPartialSignature().clone()
+        );
+    }
+
     private final byte[] peersWarningTxBuyerInputPartialSignature;
     private final byte[] peersWarningTxSellerInputPartialSignature;
     private final byte[] peersRedirectTxInputPartialSignature;
     // todo swapTxInputPartialSignature can be empty byte array (redacted), consider to make optional or make 2 classes
     private final byte[] swapTxInputPartialSignature;
 
-    public PartialSignatures(byte[] peersWarningTxBuyerInputPartialSignature,
+    private PartialSignatures(byte[] peersWarningTxBuyerInputPartialSignature,
                              byte[] peersWarningTxSellerInputPartialSignature,
                              byte[] peersRedirectTxInputPartialSignature,
                              byte[] swapTxInputPartialSignature) {
