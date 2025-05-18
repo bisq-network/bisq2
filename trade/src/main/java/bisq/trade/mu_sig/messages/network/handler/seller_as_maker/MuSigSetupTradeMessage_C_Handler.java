@@ -40,10 +40,10 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_C> {
-    private NonceSharesMessage buyerNonceSharesMessage;
-    private PartialSignaturesMessage sellerPartialSignaturesMessage;
-    private PartialSignaturesMessage buyerPartialSignaturesMessage;
-    private DepositPsbt sellerDepositPsbt;
+    private NonceSharesMessage peersNonceShares;
+    private PartialSignaturesMessage myPartialSignatures;
+    private PartialSignaturesMessage peersPartialSignatures;
+    private DepositPsbt myDepositPsbt;
 
     public MuSigSetupTradeMessage_C_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -55,20 +55,23 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void process(MuSigSetupTradeMessage_C message) {
-        MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
-        buyerNonceSharesMessage = message.getNonceSharesMessage();
-        sellerPartialSignaturesMessage = PartialSignaturesMessage.fromProto(musigBlockingStub.getPartialSignatures(PartialSignaturesRequest.newBuilder()
-                .setTradeId(trade.getId())
-                .setPeersNonceShares(buyerNonceSharesMessage.toProto(true))
-                .addAllReceivers(mockReceivers())
-                .build()));
+        peersNonceShares = message.getNonceSharesMessage();
+        peersPartialSignatures = message.getPartialSignaturesMessage();
 
-        buyerPartialSignaturesMessage = message.getPartialSignaturesMessage();
-        sellerDepositPsbt = DepositPsbt.fromProto(musigBlockingStub.signDepositTx(DepositTxSignatureRequest.newBuilder()
+        MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
+        PartialSignaturesRequest partialSignaturesRequest = PartialSignaturesRequest.newBuilder()
+                .setTradeId(trade.getId())
+                .setPeersNonceShares(peersNonceShares.toProto(true))
+                .addAllReceivers(mockReceivers())
+                .build();
+        myPartialSignatures = PartialSignaturesMessage.fromProto(musigBlockingStub.getPartialSignatures(partialSignaturesRequest));
+
+        DepositTxSignatureRequest depositTxSignatureRequest = DepositTxSignatureRequest.newBuilder()
                 .setTradeId(trade.getId())
                 // REDACT buyer's swapTxInputPartialSignature:
-                .setPeersPartialSignatures(buyerPartialSignaturesMessage.toProto(true).toBuilder().clearSwapTxInputPartialSignature())
-                .build()));
+                .setPeersPartialSignatures(peersPartialSignatures.toProto(true).toBuilder().clearSwapTxInputPartialSignature())
+                .build();
+        myDepositPsbt = DepositPsbt.fromProto(musigBlockingStub.signDepositTx(depositTxSignatureRequest));
 
         // We observe the txConfirmationStatus to get informed once the deposit tx is confirmed (gets published by the
         // buyer when they receive the MuSigSetupTradeMessage_D).
@@ -90,14 +93,14 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void commit() {
-        MuSigTradeParty buyerAsTaker = trade.getTaker();
-        MuSigTradeParty sellerAsMaker = trade.getMaker();
+        MuSigTradeParty peer = trade.getTaker();
+        MuSigTradeParty mySelf = trade.getMaker();
 
-        sellerAsMaker.setPartialSignaturesMessage(sellerPartialSignaturesMessage);
-        sellerAsMaker.setDepositPsbt(sellerDepositPsbt);
+        mySelf.setPartialSignaturesMessage(myPartialSignatures);
+        mySelf.setDepositPsbt(myDepositPsbt);
 
-        buyerAsTaker.setNonceSharesMessage(buyerNonceSharesMessage);
-        buyerAsTaker.setPartialSignaturesMessage(buyerPartialSignaturesMessage);
+        peer.setNonceSharesMessage(peersNonceShares);
+        peer.setPartialSignaturesMessage(peersPartialSignatures);
     }
 
     @Override
@@ -107,11 +110,14 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
-                sellerPartialSignaturesMessage));
+                myPartialSignatures));
     }
 
     @Override
     protected void sendLogMessage() {
+        sendLogMessage("Seller received peers nonceShares and partialSignatures\n." +
+                "Seller created his nonceShares and partialSignatures.\n " +
+                "Seller sent his nonceShares and his partialSignatures to buyer.");
     }
 
     private static List<ReceiverAddressAndAmount> mockReceivers() {

@@ -33,8 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigPaymentReceivedMessage_F> {
-    private CloseTradeResponse buyersCloseTradeResponse;
-    private SwapTxSignatureResponse sellerSwapTxSignatureResponse;
+    private CloseTradeResponse myCloseTradeResponse;
+    private SwapTxSignatureResponse peersSwapTxSignature;
 
     public MuSigPaymentReceivedMessage_F_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -46,25 +46,27 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
 
     @Override
     protected void process(MuSigPaymentReceivedMessage_F message) {
+        peersSwapTxSignature = message.getSwapTxSignatureResponse();
+
         muSigTradeService.stopCooperativeCloseTimeout(trade);
 
         // ClosureType.COOPERATIVE
         // *** BUYER CLOSES TRADE ***
-        sellerSwapTxSignatureResponse = message.getSwapTxSignatureResponse();
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
-        buyersCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(CloseTradeRequest.newBuilder()
+        CloseTradeRequest closeTradeRequest = CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
-                .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(sellerSwapTxSignatureResponse.getPeerOutputPrvKeyShare()))
-                .build()));
+                .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(peersSwapTxSignature.getPeerOutputPrvKeyShare()))
+                .build();
+        myCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(closeTradeRequest));
     }
 
     @Override
     protected void commit() {
-        MuSigTradeParty buyerAsTaker = trade.getTaker();
-        MuSigTradeParty sellerAsMaker = trade.getMaker();
+        MuSigTradeParty mySelf = trade.getTaker();
+        MuSigTradeParty peer = trade.getMaker();
 
-        buyerAsTaker.setCloseTradeResponse(buyersCloseTradeResponse);
-        sellerAsMaker.setSwapTxSignatureResponse(sellerSwapTxSignatureResponse);
+        mySelf.setCloseTradeResponse(myCloseTradeResponse);
+        peer.setSwapTxSignatureResponse(peersSwapTxSignature);
     }
 
     @Override
@@ -74,10 +76,12 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
-                buyersCloseTradeResponse));
+                myCloseTradeResponse));
     }
 
     @Override
     protected void sendLogMessage() {
+        sendLogMessage("Buyer confirmed to have received the payment and closed the trade.\n." +
+                "Buyer sent his closeTradeResponse to the seller.");
     }
 }

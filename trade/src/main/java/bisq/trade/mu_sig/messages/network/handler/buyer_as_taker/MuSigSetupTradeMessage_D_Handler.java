@@ -34,8 +34,8 @@ import java.util.Iterator;
 
 @Slf4j
 public final class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_D> {
-    private PartialSignaturesMessage sellerPartialSignaturesMessage;
-    private DepositPsbt buyerDepositPsbt;
+    private PartialSignaturesMessage peersPartialSignatures;
+    private DepositPsbt myDepositPsbt;
 
     public MuSigSetupTradeMessage_D_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -47,30 +47,39 @@ public final class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void process(MuSigSetupTradeMessage_D message) {
-        sellerPartialSignaturesMessage = message.getPartialSignaturesMessage();
+        peersPartialSignatures = message.getPartialSignaturesMessage();
+
         MusigGrpc.MusigBlockingStub musigBlockingStub = muSigTradeService.getMusigBlockingStub();
-        buyerDepositPsbt = DepositPsbt.fromProto(musigBlockingStub.signDepositTx(DepositTxSignatureRequest.newBuilder()
+        DepositTxSignatureRequest depositTxSignatureRequest = DepositTxSignatureRequest.newBuilder()
                 .setTradeId(trade.getId())
-                .setPeersPartialSignatures(sellerPartialSignaturesMessage.toProto(true))
-                .build()));
+                .setPeersPartialSignatures(peersPartialSignatures.toProto(true))
+                .build();
+        myDepositPsbt = DepositPsbt.fromProto(musigBlockingStub.signDepositTx(depositTxSignatureRequest));
 
         // *** BUYER BROADCASTS DEPOSIT TX ***
         // Before publishing we start observing the txConfirmationStatus (avoiding code duplication to handle it
         // here directly).
         muSigTradeService.observeDepositTxConfirmationStatus(trade);
 
-        Iterator<TxConfirmationStatus> depositTxConfirmationIter = musigBlockingStub.publishDepositTx(PublishDepositTxRequest.newBuilder()
+        PublishDepositTxRequest publishDepositTxRequest = PublishDepositTxRequest.newBuilder()
                 .setTradeId(trade.getId())
-                .setDepositPsbt(buyerDepositPsbt.toProto(true))
-                .build());
+                .setDepositPsbt(myDepositPsbt.toProto(true))
+                .build();
+        Iterator<TxConfirmationStatus> depositTxConfirmationIter = musigBlockingStub.publishDepositTx(publishDepositTxRequest);
     }
 
     @Override
     protected void commit() {
-        MuSigTradeParty buyerAsTaker = trade.getTaker();
-        MuSigTradeParty sellerAsMaker = trade.getMaker();
+        MuSigTradeParty mySelf = trade.getTaker();
+        MuSigTradeParty peer = trade.getMaker();
 
-        buyerAsTaker.setDepositPsbt(buyerDepositPsbt);
-        sellerAsMaker.setPartialSignaturesMessage(sellerPartialSignaturesMessage);
+        mySelf.setDepositPsbt(myDepositPsbt);
+        peer.setPartialSignaturesMessage(peersPartialSignatures);
+    }
+
+    @Override
+    protected void sendLogMessage() {
+        sendLogMessage("Seller received peers partialSignatures\n." +
+                "Seller created his partialSignatures.");
     }
 }

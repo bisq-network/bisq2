@@ -51,4 +51,9 @@ public final class MuSigReportErrorMessageHandler extends MuSigTradeMessageHandl
         trade.setPeersErrorStackTrace(stackTrace);
         trade.setPeersErrorMessage(errorMessage);
     }
+
+    @Override
+    protected void sendLogMessage() {
+        sendLogMessage("Error occurred");
+    }
 }
