@@ -21,6 +21,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.mu_sig.market.MuSigMarketTabController;
+import bisq.desktop.main.content.mu_sig.offerbook.MuSigOfferbookController;
 import bisq.desktop.main.content.mu_sig.old_offerbook.buy.MuSigBuyOfferbookTabController;
 import bisq.desktop.main.content.mu_sig.old_offerbook.sell.MuSigSellOfferbookTabController;
 import bisq.desktop.main.content.mu_sig.portfolio.MuSigPortfolioTabController;
@@ -53,6 +54,7 @@ public class MuSigController extends ContentTabController<MuSigModel> {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
            // case MU_SIG_ONBOARDING -> Optional.of(new MuSigOnboardingController(serviceProvider));
+            case MU_SIG_OFFERBOOK -> Optional.of(new MuSigOfferbookController(serviceProvider));
             case MU_SIG_MARKET -> Optional.of(new MuSigMarketTabController(serviceProvider));
             case MU_SIG_OFFERBOOK_BUY -> Optional.of(new MuSigBuyOfferbookTabController(serviceProvider));
             case MU_SIG_OFFERBOOK_SELL -> Optional.of(new MuSigSellOfferbookTabController(serviceProvider));
