@@ -117,7 +117,7 @@ public class MediationCaseHeader {
             } else {
                 if (dontShowAgainService.showAgain(MEDIATOR_CLOSE_WARNING)) {
                     new Popup().warning(Res.get("authorizedRole.mediator.close.warning"))
-                            .dontShowAgainId(MEDIATOR_CLOSE_WARNING.getKey())
+                            .dontShowAgainId(MEDIATOR_CLOSE_WARNING)
                             .actionButtonText(Res.get("confirmation.yes"))
                             .onAction(this::doClose)
                             .closeButtonText(Res.get("confirmation.no"))
@@ -131,7 +131,7 @@ public class MediationCaseHeader {
         void onLeaveChannel() {
             if (dontShowAgainService.showAgain(MEDIATOR_LEAVECHANNEL_WARNING)) {
                 new Popup().warning(Res.get("authorizedRole.mediator.leaveChannel.warning"))
-                        .dontShowAgainId(MEDIATOR_LEAVECHANNEL_WARNING.getKey())
+                        .dontShowAgainId(MEDIATOR_LEAVECHANNEL_WARNING)
                         .actionButtonText(Res.get("confirmation.yes"))
                         .onAction(this::doLeave)
                         .closeButtonText(Res.get("confirmation.no"))
@@ -144,7 +144,7 @@ public class MediationCaseHeader {
         void onRemoveCase() {
             if (dontShowAgainService.showAgain(MEDIATOR_REMOVECASE_WARNING)) {
                 new Popup().warning(Res.get("authorizedRole.mediator.removeCase.warning"))
-                        .dontShowAgainId(MEDIATOR_REMOVECASE_WARNING.getKey())
+                        .dontShowAgainId(MEDIATOR_REMOVECASE_WARNING)
                         .actionButtonText(Res.get("confirmation.yes"))
                         .onAction(this::deRemoveCase)
                         .closeButtonText(Res.get("confirmation.no"))

@@ -279,7 +279,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
                         .actionButtonText(Res.get("confirmation.yes"))
                         .onAction(() -> settingsService.setBisqEasyOfferbookMessageTypeFilter(ChatMessageType.ALL))
                         .closeButtonText(Res.get("confirmation.no"))
-                        .dontShowAgainId(SEND_MSG_OFFER_ONLY_WARN.getKey())
+                        .dontShowAgainId(SEND_MSG_OFFER_ONLY_WARN)
                         .show();
             }
             chatService.getBisqEasyOfferbookChannelService().publishChatMessage(text, citation, (BisqEasyOfferbookChannel) chatChannel, userIdentity);

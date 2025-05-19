@@ -354,7 +354,7 @@ public class ChatMessagesListController implements Controller {
             if (new Date().after(Trade.TRADE_ID_V1_ACTIVATION_DATE)) {
                 if (dontShowAgainService.showAgain(OFFERALREADYTAKEN_WARN)) {
                     new Popup().information(Res.get("chat.message.offer.offerAlreadyTaken.info"))
-                            .dontShowAgainId(OFFERALREADYTAKEN_WARN.getKey())
+                            .dontShowAgainId(OFFERALREADYTAKEN_WARN)
                             .actionButtonText(Res.get("confirmation.yes"))
                             .onAction(() -> doTakeOffer(bisqEasyOfferbookMessage, userProfile, bisqEasyOffer))
                             .closeButtonText(Res.get("confirmation.no"))

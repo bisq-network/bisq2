@@ -62,7 +62,7 @@ public class Browser {
                         settingsService.setCookie(CookieKey.PERMIT_OPENING_BROWSER, true);
                         doOpen(url);
                     })
-                    .dontShowAgainId(HYPERLINKS_OPEN_IN_BROWSER.getKey())
+                    .dontShowAgainId(HYPERLINKS_OPEN_IN_BROWSER)
                     .show();
         } else if (settingsService.getCookie().asBoolean(CookieKey.PERMIT_OPENING_BROWSER).orElse(false)) {
             doOpen(url);

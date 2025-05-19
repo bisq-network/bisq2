@@ -31,7 +31,7 @@ public enum DontShowAgainKey {
     MEDIATOR_REMOVECASE_WARNING("mediator.removeCase.warning"),
     MEDIATOR_CLOSE_WARNING("mediator.close.warning"),
     MEDIATOR_LEAVECHANNEL_WARNING("mediator.leaveChannel.warning"),
-    HYPERLINKS_OPEN_IN_BROWSER("hyperlinksOpenInBrowser"),
+    HYPERLINKS_OPEN_IN_BROWSER("hyperlinks.openInBrowser"),
     SEND_MSG_OFFER_ONLY_WARN("sendMsgOfferOnlyWarn"),
     SEND_OFFER_MSG_TEXT_ONLY_WARN("sendOfferMsgTextOnlyWarn");
 

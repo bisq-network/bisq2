@@ -407,7 +407,7 @@ public class TradeWizardReviewController implements Controller {
                     .actionButtonText(Res.get("confirmation.yes"))
                     .onAction(() -> settingsService.setBisqEasyOfferbookMessageTypeFilter(ChatMessageType.ALL))
                     .closeButtonText(Res.get("confirmation.no"))
-                    .dontShowAgainId(SEND_OFFER_MSG_TEXT_ONLY_WARN.getKey())
+                    .dontShowAgainId(SEND_OFFER_MSG_TEXT_ONLY_WARN)
                     .show();
         }
         bisqEasyOfferbookChannelService.publishChatMessage(model.getMyOfferMessage(), userIdentity)
