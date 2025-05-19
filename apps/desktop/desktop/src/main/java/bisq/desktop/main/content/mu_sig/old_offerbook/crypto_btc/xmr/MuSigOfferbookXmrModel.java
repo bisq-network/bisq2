@@ -15,18 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.market;
+package bisq.desktop.main.content.mu_sig.old_offerbook.crypto_btc.xmr;
 
-import bisq.desktop.main.content.mu_sig.old_offerbook.MuSigLevel2TabModel;
-import bisq.desktop.navigation.NavigationTarget;
+import bisq.common.currency.Market;
+import bisq.desktop.main.content.mu_sig.old_offerbook.crypto_btc.MuSigOfferbookCryptoBtcModel;
+import bisq.offer.Direction;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
+
 @Slf4j
 @Getter
-public class MuSigMarketTabModel extends MuSigLevel2TabModel {
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.MU_SIG_MARKET_CHART;
+public class MuSigOfferbookXmrModel extends MuSigOfferbookCryptoBtcModel {
+    public MuSigOfferbookXmrModel(Direction direction, Market xmrMarket) {
+        super(direction);
+        getSelectedMarket().set(xmrMarket);
+        setMarketPredicate(item -> item.getOffer().getMarket().equals(xmrMarket));
+        getMarkets().setAll(Collections.singletonList(xmrMarket));
     }
 }

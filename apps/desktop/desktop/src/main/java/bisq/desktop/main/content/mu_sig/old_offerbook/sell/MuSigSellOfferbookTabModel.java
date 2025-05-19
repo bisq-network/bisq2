@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.market;
+package bisq.desktop.main.content.mu_sig.old_offerbook.sell;
 
 import bisq.desktop.main.content.mu_sig.old_offerbook.MuSigLevel2TabModel;
 import bisq.desktop.navigation.NavigationTarget;
@@ -24,9 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class MuSigMarketTabModel extends MuSigLevel2TabModel {
+public class MuSigSellOfferbookTabModel extends MuSigLevel2TabModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.MU_SIG_MARKET_CHART;
+        return NavigationTarget.MU_SIG_OFFERBOOK_SELL_BTC;
     }
 }

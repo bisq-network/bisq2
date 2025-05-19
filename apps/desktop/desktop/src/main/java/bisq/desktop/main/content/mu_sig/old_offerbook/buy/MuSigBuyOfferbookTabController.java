@@ -15,41 +15,42 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.portfolio;
+package bisq.desktop.main.content.mu_sig.old_offerbook.buy;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.mu_sig.old_offerbook.MuSigLevel2TabController;
 import bisq.desktop.main.content.mu_sig.old_offerbook.MuSigLevel2TabView;
-import bisq.desktop.main.content.mu_sig.portfolio.history.MuSigHistoryController;
-import bisq.desktop.main.content.mu_sig.portfolio.offers.MuSigOpenOffersController;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.MuSigOpenTradesController;
+import bisq.desktop.main.content.mu_sig.old_offerbook.btc.MuSigOfferbookBtcController;
+import bisq.desktop.main.content.mu_sig.old_offerbook.crypto_btc.other.MuSigOfferbookOtherController;
+import bisq.desktop.main.content.mu_sig.old_offerbook.crypto_btc.xmr.MuSigOfferbookXmrController;
 import bisq.desktop.navigation.NavigationTarget;
+import bisq.offer.Direction;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 @Slf4j
-public class MuSigPortfolioTabController extends MuSigLevel2TabController<MuSigPortfolioTabModel> {
+public class MuSigBuyOfferbookTabController extends MuSigLevel2TabController<MuSigBuyOfferbookTabModel> {
 
-    public MuSigPortfolioTabController(ServiceProvider serviceProvider) {
-        super(new MuSigPortfolioTabModel(), NavigationTarget.MU_SIG_PORTFOLIO, serviceProvider);
+    public MuSigBuyOfferbookTabController(ServiceProvider serviceProvider) {
+        super(new MuSigBuyOfferbookTabModel(), NavigationTarget.MU_SIG_OFFERBOOK_BUY, serviceProvider);
     }
 
     @Override
-    protected MuSigLevel2TabView<MuSigPortfolioTabModel, MuSigPortfolioTabController> createAndGetView() {
-        return new MuSigPortfolioTabView(model, this);
+    protected MuSigLevel2TabView<MuSigBuyOfferbookTabModel, MuSigBuyOfferbookTabController> createAndGetView() {
+        return new MuSigBuyOfferbookTabView(model, this);
     }
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case MU_SIG_OPEN_OFFERS ->
-                    Optional.of(new MuSigOpenOffersController(serviceProvider));
-            case MU_SIG_OPEN_TRADES ->
-                    Optional.of(new MuSigOpenTradesController(serviceProvider));
-            case MU_SIG_HISTORY ->
-                    Optional.of(new MuSigHistoryController(serviceProvider));
+            case MU_SIG_OFFERBOOK_BUY_BTC ->
+                    Optional.of(new MuSigOfferbookBtcController(serviceProvider, Direction.BUY));
+            case MU_SIG_OFFERBOOK_BUY_XMR ->
+                    Optional.of(new MuSigOfferbookXmrController(serviceProvider, Direction.BUY));
+            case MU_SIG_OFFERBOOK_BUY_OTHER ->
+                    Optional.of(new MuSigOfferbookOtherController(serviceProvider, Direction.BUY));
             default -> Optional.empty();
         };
     }

@@ -22,8 +22,8 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.mu_sig.market.chart.MuSigMarketChartController;
 import bisq.desktop.main.content.mu_sig.market.currency.MuSigMarketByCurrencyController;
 import bisq.desktop.main.content.mu_sig.market.payment_methods.MuSigMarketByPaymentMethodController;
-import bisq.desktop.main.content.mu_sig.offerbook.MuSigLevel2TabController;
-import bisq.desktop.main.content.mu_sig.offerbook.MuSigLevel2TabView;
+import bisq.desktop.main.content.mu_sig.old_offerbook.MuSigLevel2TabController;
+import bisq.desktop.main.content.mu_sig.old_offerbook.MuSigLevel2TabView;
 import bisq.desktop.navigation.NavigationTarget;
 import lombok.extern.slf4j.Slf4j;
 

@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.mu_sig.market;
 
 import bisq.desktop.common.Styles;
-import bisq.desktop.main.content.mu_sig.offerbook.MuSigLevel2TabView;
+import bisq.desktop.main.content.mu_sig.old_offerbook.MuSigLevel2TabView;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;
