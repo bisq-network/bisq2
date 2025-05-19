@@ -18,6 +18,7 @@
 package bisq.network.i2p;
 
 import bisq.common.file.FileUtils;
+import bisq.network.i2p.util.I2PNameResolver;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.I2PAppContext;
 import net.i2p.I2PException;
@@ -52,8 +53,7 @@ public class I2pClient {
     private I2pEmbeddedRouter i2pRouter;
     private final long socketTimeout;
     private final String dirPath;
-//    private final I2PNameResolver i2PNameResolver = new I2PNameResolver(
-//            RouterContext.getCurrentContext() != null ? (RouterContext) RouterContext.getCurrentContext() : null);
+
     private final Map<String, I2PSocketManager> sessionMap = new ConcurrentHashMap<>();
 
 
@@ -183,9 +183,9 @@ public class I2pClient {
 
     private Destination getDestinationFor(String peer) throws IOException {
         try {
-//            if (peer.endsWith(".b32.i2p")) {
-//                return i2PNameResolver.resolve(peer);
-//            }
+            if (peer.endsWith(".b32.i2p") || peer.endsWith(".i2p")) {
+                return I2PNameResolver.getDestinationFor(peer);
+            }
             return new Destination(peer);
         } catch (DataFormatException e) {
             log.warn("Invalid destination format: {}", peer);
