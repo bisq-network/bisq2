@@ -19,9 +19,6 @@ package bisq.desktop.main.content.mu_sig.offerbook;
 
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
-import bisq.desktop.main.content.mu_sig.old_offerbook.MuSigOfferListItem;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -29,11 +26,14 @@ import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Slf4j
 @Getter
 public class MuSigOfferbookModel implements Model {
     private final ObservableList<Market> markets = FXCollections.observableArrayList();
-    private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
+    private final Set<String> offerIds = new HashSet<>();
     private final ObservableList<MuSigOfferListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<MuSigOfferListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<MuSigOfferListItem> sortedList = new SortedList<>(filteredList);
