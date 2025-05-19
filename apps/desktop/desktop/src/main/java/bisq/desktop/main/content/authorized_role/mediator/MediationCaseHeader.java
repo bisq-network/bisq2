@@ -52,8 +52,8 @@ import org.fxmisc.easybind.Subscription;
 import javax.annotation.Nullable;
 
 import static bisq.settings.DontShowAgainKey.MEDIATOR_CLOSE_WARNING;
-import static bisq.settings.DontShowAgainKey.MEDIATOR_LEAVECHANNEL_WARNING;
-import static bisq.settings.DontShowAgainKey.MEDIATOR_REMOVECASE_WARNING;
+import static bisq.settings.DontShowAgainKey.MEDIATOR_LEAVE_CHANNEL_WARNING;
+import static bisq.settings.DontShowAgainKey.MEDIATOR_REMOVE_CASE_WARNING;
 
 public class MediationCaseHeader {
     private final Controller controller;
@@ -129,9 +129,9 @@ public class MediationCaseHeader {
         }
 
         void onLeaveChannel() {
-            if (dontShowAgainService.showAgain(MEDIATOR_LEAVECHANNEL_WARNING)) {
+            if (dontShowAgainService.showAgain(MEDIATOR_LEAVE_CHANNEL_WARNING)) {
                 new Popup().warning(Res.get("authorizedRole.mediator.leaveChannel.warning"))
-                        .dontShowAgainId(MEDIATOR_LEAVECHANNEL_WARNING)
+                        .dontShowAgainId(MEDIATOR_LEAVE_CHANNEL_WARNING)
                         .actionButtonText(Res.get("confirmation.yes"))
                         .onAction(this::doLeave)
                         .closeButtonText(Res.get("confirmation.no"))
@@ -142,9 +142,9 @@ public class MediationCaseHeader {
         }
 
         void onRemoveCase() {
-            if (dontShowAgainService.showAgain(MEDIATOR_REMOVECASE_WARNING)) {
+            if (dontShowAgainService.showAgain(MEDIATOR_REMOVE_CASE_WARNING)) {
                 new Popup().warning(Res.get("authorizedRole.mediator.removeCase.warning"))
-                        .dontShowAgainId(MEDIATOR_REMOVECASE_WARNING)
+                        .dontShowAgainId(MEDIATOR_REMOVE_CASE_WARNING)
                         .actionButtonText(Res.get("confirmation.yes"))
                         .onAction(this::deRemoveCase)
                         .closeButtonText(Res.get("confirmation.no"))
