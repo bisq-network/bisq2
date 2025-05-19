@@ -32,6 +32,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -110,7 +111,7 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
         OverlayController.hide();
     }
 
-    protected void onSave() {
+    protected void onSave() throws GeneralSecurityException {
         checkNotNull(model.getKeyPair());
         checkNotNull(model.getProofOfWork());
         checkNotNull(model.getPubKeyHash());

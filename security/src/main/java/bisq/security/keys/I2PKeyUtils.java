@@ -24,24 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Locale;
-import net.i2p.data.*;
-
 
 @Slf4j
 public class I2PKeyUtils {
 
-    public static byte[] getPublicKeyFromB32Address(String b32Address) {
-        if (b32Address == null || !b32Address.endsWith(".b32.i2p")) {
-                    throw new IllegalArgumentException("Invalid I2P base32 host: " + b32Address);
-                }
-            String base32 = b32Address
-                            .substring(0, b32Address.length() - ".b32.i2p".length())
-                            .toUpperCase(Locale.ROOT);
-            return Base32.decode(base32);
-    }
-
-    public static void writePrivateKey(I2pKeyPair i2pKeyPair, Path storageDir, String tag) {
+    public static void writePrivateKey(I2PKeyPair i2pKeyPair, Path storageDir, String tag) {
         Path targetPath = Paths.get(storageDir.toString(), tag);
         File i2pPrivateKeyDir = targetPath.toFile();
         try {
@@ -49,10 +36,10 @@ public class I2PKeyUtils {
             FileUtils.makeDirs(i2pPrivateKeyDir);
             String dir = i2pPrivateKeyDir.getAbsolutePath();
 
-            FileUtils.writeToFile(Hex.encode(i2pKeyPair.getPrivateKey()),
+            FileUtils.writeToFile(Hex.encode(i2pKeyPair.getPrivateKey().getData()),
                     Paths.get(dir, "private_key_hex").toFile());
 
-            String b32Address = Base32.encode(i2pKeyPair.getPublicKey()) + ".b32.i2p";
+            String b32Address = i2pKeyPair.getBase32Address();
             FileUtils.writeToFile(b32Address, Paths.get(dir, "hostname").toFile());
 
             log.info("Persisted I2P private key in hex encoding for b32Address {} for tag {} to {}.",

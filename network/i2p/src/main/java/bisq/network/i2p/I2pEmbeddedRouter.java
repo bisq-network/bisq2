@@ -33,8 +33,6 @@ import java.util.jar.JarFile;
 @Getter
 public class I2pEmbeddedRouter {
 
-    //TODO - Restart of embedded router not implemented yet
-
     private Router router;
     private RouterContext routerContext;
     protected CommSystemFacade.Status i2pRouterStatus;
@@ -252,12 +250,12 @@ private void setupRouterDirectories() throws IOException {
 
     Properties p = new Properties();
 
-    //Parameters related to router size and badwidth share
-    p.put("i2np.bandwidth.inboundKBytesPerSecond", inboundKBytesPerSecond);
-    p.put("i2np.bandwidth.inboundBurstKBytesPerSecond", inboundKBytesPerSecond);
-    p.put("i2np.bandwidth.outboundKBytesPerSecond", outboundKBytesPerSecond);
-    p.put("i2np.bandwidth.outboundBurstKBytesPerSecond", outboundKBytesPerSecond);
-    p.put("router.sharePercentage", bandwidthSharePercentage);
+    //Parameters related to router size and bandwidth share
+    p.put("i2np.bandwidth.inboundKBytesPerSecond", String.valueOf(inboundKBytesPerSecond));
+    p.put("i2np.bandwidth.inboundBurstKBytesPerSecond", String.valueOf(inboundKBytesPerSecond));
+    p.put("i2np.bandwidth.outboundKBytesPerSecond", String.valueOf(outboundKBytesPerSecond));
+    p.put("i2np.bandwidth.outboundBurstKBytesPerSecond", String.valueOf(outboundKBytesPerSecond));
+    p.put("router.sharePercentage", String.valueOf(bandwidthSharePercentage));
 
     p.put("i2cp.disableInterface", "true");
     p.put("i2np.ntcp.nodelay", "true");
@@ -300,14 +298,6 @@ private void setupRouterDirectories() throws IOException {
         return routerContext.commSystem().getStatus();
     }
 
-    /**
-     *  Load defaults from internal router.config on classpath,
-     *  then add props from i2pDir/router.config overriding any from internal router.config,
-     *  then override these with the supplied overrides if not null which would likely come from 3rd party app (not yet supported),
-     *  then write back to i2pDir/router.config.
-     *
-     *  @param overrides local overrides or null
-     */
     private void mergeRouterConfig(Properties overrides) {
         Properties props = new OrderedProperties();
         File f = new File(i2pDir, "router.config");
