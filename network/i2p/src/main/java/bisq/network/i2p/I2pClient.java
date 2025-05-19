@@ -183,7 +183,7 @@ public class I2pClient {
 
     private Destination getDestinationFor(String peer) throws IOException {
         try {
-            if (peer.endsWith(".b32.i2p")) {
+            if (peer.endsWith(".b32.i2p") || peer.endsWith(".i2p")) {
                 return I2PNameResolver.getDestinationFor(peer);
             }
             return new Destination(peer);
