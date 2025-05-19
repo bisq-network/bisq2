@@ -87,6 +87,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
                 this::mentionUserHandler,
                 this::showChatUserDetailsHandler,
                 this::replyHandler,
+                this::requestFocusInputTextFieldHandler,
                 chatChannelDomain);
 
         model = new ChatMessageContainerModel(chatChannelDomain);
@@ -162,6 +163,11 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
             model.getFocusInputTextField().set(null);
             model.getFocusInputTextField().set(true);
         }
+    }
+
+    private void requestFocusInputTextFieldHandler() {
+        model.getFocusInputTextField().set(null);
+        model.getFocusInputTextField().set(true);
     }
 
     private void showChatUserDetailsHandler(ChatMessage chatMessage) {

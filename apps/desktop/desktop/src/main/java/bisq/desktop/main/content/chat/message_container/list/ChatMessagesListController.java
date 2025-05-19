@@ -110,6 +110,7 @@ public class ChatMessagesListController implements Controller {
     private final SettingsService settingsService;
     private final Consumer<UserProfile> mentionUserHandler;
     private final Consumer<ChatMessage> replyHandler;
+    private final Runnable requestFocusInputTextFieldHandler;
     private final Consumer<ChatMessage> showChatUserDetailsHandler;
     private final ChatMessagesListModel model;
     @Getter
@@ -133,6 +134,7 @@ public class ChatMessagesListController implements Controller {
                                       Consumer<UserProfile> mentionUserHandler,
                                       Consumer<ChatMessage> showChatUserDetailsHandler,
                                       Consumer<ChatMessage> replyHandler,
+                                      Runnable requestFocusInputTextFieldHandler,
                                       ChatChannelDomain chatChannelDomain) {
         chatService = serviceProvider.getChatService();
         chatNotificationService = chatService.getChatNotificationService();
@@ -153,6 +155,7 @@ public class ChatMessagesListController implements Controller {
         this.mentionUserHandler = mentionUserHandler;
         this.showChatUserDetailsHandler = showChatUserDetailsHandler;
         this.replyHandler = replyHandler;
+        this.requestFocusInputTextFieldHandler = requestFocusInputTextFieldHandler;
 
         model = new ChatMessagesListModel(userIdentityService, chatChannelDomain);
         view = new ChatMessagesListView(model, this);
@@ -489,9 +492,19 @@ public class ChatMessagesListController implements Controller {
                 .ifPresent(this::createAndSelectTwoPartyPrivateChatChannel);
     }
 
+    public void onSaveEditedMessageUsingEnterKeyShortcut(ChatMessage chatMessage, String editedText) {
+        onSaveEditedMessage(chatMessage, editedText);
+        requestFocusInputTextFieldHandler.run();
+    }
+
     public void onSaveEditedMessage(ChatMessage chatMessage, String editedText) {
         checkArgument(chatMessage instanceof PublicChatMessage);
         checkArgument(model.isMyMessage(chatMessage));
+
+        if (chatMessage.getText().isPresent() && chatMessage.getText().get().equals(editedText)) {
+            // Nothing was changed, thus no need for saving.
+            return;
+        }
 
         if (editedText.length() > ChatMessage.MAX_TEXT_LENGTH) {
             new Popup().warning(Res.get("validation.tooLong", ChatMessage.MAX_TEXT_LENGTH)).show();
