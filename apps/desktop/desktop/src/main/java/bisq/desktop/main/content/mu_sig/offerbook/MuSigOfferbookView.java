@@ -17,34 +17,67 @@
 
 package bisq.desktop.main.content.mu_sig.offerbook;
 
+import bisq.common.util.StringUtils;
+import bisq.desktop.common.Layout;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.Badge;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.RichTableView;
+import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.CacheHint;
+import javafx.scene.Cursor;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 
 @Slf4j
 public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, MuSigOfferbookController> {
-    private final RichTableView<MuSigOfferListItem> richTableView;
-    private BisqTableColumn<MuSigOfferListItem> priceColumn;
+    public final static double HEADER_HEIGHT = 61;
+    private static final double LIST_CELL_HEIGHT = 53;
+    private static final double MARKET_LIST_WIDTH = 210;
+
+    private final RichTableView<MuSigOfferListItem> muSigOfferListView;
+    private VBox marketListVBox;
+    private Label marketListTitle;
+    private BisqTableView<MarketChannelItem> marketListView;
+    private Subscription selectedMarketChannelItemPin;
 
     public MuSigOfferbookView(MuSigOfferbookModel model, MuSigOfferbookController controller) {
         super(new VBox(20), model, controller);
 
-        richTableView = new RichTableView<>(model.getSortedList());
-        richTableView.getFooterVBox().setVisible(false);
-        richTableView.getFooterVBox().setManaged(false);
+        muSigOfferListView = new RichTableView<>(model.getSortedMuSigOfferListItems());
+        muSigOfferListView.getFooterVBox().setVisible(false);
+        muSigOfferListView.getFooterVBox().setManaged(false);
+        configMuSigOfferListView();
 
-        configTableView();
+        addMarketList();
 
-        VBox.setVgrow(richTableView, Priority.ALWAYS);
+        HBox marketAndOfferListHBox = new HBox(20, marketListVBox, muSigOfferListView);
+        VBox.setVgrow(muSigOfferListView, Priority.ALWAYS);
+
         VBox contentBox = new VBox(20);
-        contentBox.getChildren().addAll(richTableView);
+        contentBox.getChildren().addAll(marketAndOfferListHBox);
         contentBox.getStyleClass().add("bisq-common-bg");
         root.getChildren().addAll(contentBox);
         root.setPadding(new Insets(0, 40, 20, 40));
@@ -52,45 +85,47 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
     @Override
     protected void onViewAttached() {
-        richTableView.initialize();
-        richTableView.resetSearch();
-        richTableView.sort();
+        muSigOfferListView.initialize();
+        muSigOfferListView.resetSearch();
+        muSigOfferListView.sort();
+
+        marketListView.initialize();
     }
 
     @Override
     protected void onViewDetached() {
-        richTableView.dispose();
+        muSigOfferListView.dispose();
     }
 
-    private void configTableView() {
+    private void configMuSigOfferListView() {
 //        richTableView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
 //                .title(Res.get("muSig.offerbook.table.header.intent"))
 //                .setCellFactory(getActionButtonCellFactory())
 //                .fixWidth(130)
 //                .build());
 
-        richTableView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+        muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title("Amount to send") // TODO: FIXME
                 .comparator(Comparator.comparing(MuSigOfferListItem::getBaseAmountAsString))
                 .valueSupplier(MuSigOfferListItem::getBaseAmountAsString)
                 .build());
 
-        richTableView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+        muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title("Amount to receive") // TODO: FIXME
                 .comparator(Comparator.comparing(MuSigOfferListItem::getQuoteAmountAsString))
                 .valueSupplier(MuSigOfferListItem::getQuoteAmountAsString)
                 .build());
 
-        priceColumn = new BisqTableColumn.Builder<MuSigOfferListItem>()
+        BisqTableColumn<MuSigOfferListItem> priceColumn = new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .left()
                 .comparator(Comparator.comparing(MuSigOfferListItem::getPrice))
                 .valueSupplier(MuSigOfferListItem::getPrice)
                 .tooltipSupplier(MuSigOfferListItem::getPriceTooltip)
                 .build();
-        richTableView.getColumns().add(priceColumn);
-        richTableView.getSortOrder().add(priceColumn);
+        muSigOfferListView.getColumns().add(priceColumn);
+        muSigOfferListView.getSortOrder().add(priceColumn);
 
-        richTableView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+        muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title(Res.get("muSig.offerbook.table.header.paymentMethod"))
                 .comparator(Comparator.comparing(MuSigOfferListItem::getPaymentMethod))
                 .valueSupplier(MuSigOfferListItem::getPaymentMethod)
@@ -98,16 +133,216 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 .build());
 
 
-        richTableView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+        muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title("Peer profile") // TODO: FIXME
                 .comparator(Comparator.comparing(MuSigOfferListItem::getMaker))
                 .valueSupplier(MuSigOfferListItem::getMaker)
                 .build());
 
-        richTableView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+        muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title(Res.get("muSig.offerbook.table.header.deposit"))
                 .comparator(Comparator.comparing(MuSigOfferListItem::getDeposit))
                 .valueSupplier(MuSigOfferListItem::getDeposit)
                 .build());
+    }
+
+    private void addMarketList() {
+        marketListTitle = new Label(Res.get("bisqEasy.offerbook.markets"));
+        HBox.setHgrow(marketListTitle, Priority.ALWAYS);
+
+        HBox header = new HBox(marketListTitle);
+        header.setMinHeight(HEADER_HEIGHT);
+        header.setMaxHeight(HEADER_HEIGHT);
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.setPadding(new Insets(4, 12, 0, 12));
+        header.getStyleClass().add("chat-header-title");
+
+//        marketSelectorSearchBox = new SearchBox();
+//        marketSelectorSearchBox.getStyleClass().add("offerbook-search-box");
+//        sortAndFilterMarketsMenu = createAndGetSortAndFilterMarketsMenu();
+//        HBox subheader = new HBox(marketSelectorSearchBox, Spacer.fillHBox(), sortAndFilterMarketsMenu);
+//        subheader.setAlignment(Pos.CENTER);
+//        subheader.getStyleClass().add("market-selection-subheader");
+//
+//        withOffersRemoveFilterDefaultIcon = ImageUtil.getImageViewById("close-mini-grey");
+//        withOffersRemoveFilterActiveIcon = ImageUtil.getImageViewById("close-mini-white");
+//        removeWithOffersFilter = createAndGetRemoveFilterLabel(withOffersRemoveFilterDefaultIcon);
+//        withOffersDisplayHint = createAndGetDisplayHintHBox(
+//                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.withOffers"), removeWithOffersFilter);
+//
+//        favouritesRemoveFilterDefaultIcon = ImageUtil.getImageViewById("close-mini-grey");
+//        favouritesRemoveFilterActiveIcon = ImageUtil.getImageViewById("close-mini-white");
+//        removeFavouritesFilter = createAndGetRemoveFilterLabel(favouritesRemoveFilterDefaultIcon);
+//        onlyFavouritesDisplayHint = createAndGetDisplayHintHBox(
+//                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.favourites"), removeFavouritesFilter);
+//
+//        appliedFiltersSection = new HBox(withOffersDisplayHint, onlyFavouritesDisplayHint);
+//        appliedFiltersSection.setAlignment(Pos.CENTER_RIGHT);
+//        HBox.setHgrow(appliedFiltersSection, Priority.ALWAYS);
+//
+//        favouritesTableView = new BisqTableView<>(getModel().getFavouriteMarketChannelItems());
+//        favouritesTableView.getStyleClass().addAll("market-selection-list", "favourites-list");
+//        favouritesTableView.hideVerticalScrollbar();
+//        favouritesTableView.hideHorizontalScrollbar();
+//        favouritesTableView.setFixedCellSize(LIST_CELL_HEIGHT);
+//        configMarketsTableView(favouritesTableView);
+
+        marketListView = new BisqTableView<>(model.getSortedMarketChannelItems(), false);
+        marketListView.getStyleClass().addAll("market-selection-list", "markets-list");
+        marketListView.allowVerticalScrollbar();
+        marketListView.hideHorizontalScrollbar();
+        marketListView.setFixedCellSize(LIST_CELL_HEIGHT);
+        marketListView.setPlaceholder(new Label());
+        configMarketsTableView(marketListView);
+        VBox.setVgrow(marketListView, Priority.ALWAYS);
+
+        marketListVBox = new VBox(header, Layout.hLine(), /*subheader, appliedFiltersSection, favouritesTableView,*/
+                marketListView);
+        marketListVBox.setMaxWidth(MARKET_LIST_WIDTH);
+        marketListVBox.setPrefWidth(MARKET_LIST_WIDTH);
+        marketListVBox.setMinWidth(MARKET_LIST_WIDTH);
+        marketListVBox.setFillWidth(true);
+        marketListVBox.getStyleClass().add("chat-container");
+        HBox.setMargin(marketListVBox, new Insets(1, 0, 0, 0));
+    }
+
+    private void configMarketsTableView(BisqTableView<MarketChannelItem> tableView) {
+        BisqTableColumn<MarketChannelItem> marketLogoTableColumn = new BisqTableColumn.Builder<MarketChannelItem>()
+                .fixWidth(55)
+                .setCellFactory(getMarketLogoCellFactory())
+                .isSortable(false)
+                .build();
+
+        BisqTableColumn<MarketChannelItem> marketLabelTableColumn = new BisqTableColumn.Builder<MarketChannelItem>()
+                .minWidth(100)
+                .left()
+                .setCellFactory(getMarketLabelCellFactory(false))
+                .build();
+
+        tableView.getColumns().add(tableView.getSelectionMarkerColumn());
+        tableView.getColumns().add(marketLogoTableColumn);
+        tableView.getColumns().add(marketLabelTableColumn);
+    }
+
+    private static Callback<TableColumn<MarketChannelItem, MarketChannelItem>,
+            TableCell<MarketChannelItem, MarketChannelItem>> getMarketLogoCellFactory() {
+        return column -> new TableCell<>() {
+            private final Badge numMessagesBadge = new Badge(Pos.CENTER);
+            private Subscription selectedPin;
+
+            {
+                setCursor(Cursor.HAND);
+                numMessagesBadge.getStyleClass().add("market-badge");
+                numMessagesBadge.getLabel().setStyle("-fx-text-fill: -fx-dark-text-color !important; -fx-font-family: \"IBM Plex Sans SemiBold\";");
+            }
+
+            @Override
+            protected void updateItem(MarketChannelItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    numMessagesBadge.textProperty().bind(item.getNumMarketNotifications());
+
+                    Node marketLogo = MarketImageComposition.createMarketLogo(item.getMarket().getQuoteCurrencyCode());
+                    marketLogo.setCache(true);
+                    marketLogo.setCacheHint(CacheHint.SPEED);
+                    marketLogo.setEffect(MarketChannelItem.DIMMED);
+
+                    TableRow<MarketChannelItem> tableRow = getTableRow();
+                    if (tableRow != null) {
+                        selectedPin = EasyBind.subscribe(tableRow.selectedProperty(), isSelectedMarket ->
+                                marketLogo.setEffect(isSelectedMarket ? MarketChannelItem.SELECTED : MarketChannelItem.DIMMED));
+                    }
+
+                    StackPane pane = new StackPane(marketLogo, numMessagesBadge);
+                    StackPane.setMargin(numMessagesBadge, new Insets(33, 0, 0, 35));
+                    setGraphic(pane);
+                } else {
+                    numMessagesBadge.textProperty().unbind();
+                    numMessagesBadge.setText("");
+                    if (selectedPin != null) {
+                        selectedPin.unsubscribe();
+                        selectedPin = null;
+                    }
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    private static Callback<TableColumn<MarketChannelItem, MarketChannelItem>,
+            TableCell<MarketChannelItem, MarketChannelItem>> getMarketLabelCellFactory(boolean isFavouritesTableView) {
+        return column -> new TableCell<>() {
+            private final Label marketName = new Label();
+            private final Label marketCode = new Label();
+            private final Label numOffers = new Label();
+            private final Label favouritesLabel = new Label();
+            private final HBox hBox = new HBox(5, marketCode, numOffers);
+            private final VBox vBox = new VBox(0, marketName, hBox);
+            private final HBox container = new HBox(0, vBox, Spacer.fillHBox(), favouritesLabel);
+            private final Tooltip marketDetailsTooltip = new BisqTooltip();
+            private final Tooltip favouritesTooltip = new BisqTooltip();
+
+            private static final Insets COMPACT_PADDING = new Insets(0, -10, 0, 0);
+
+            {
+                hBox.setPadding(COMPACT_PADDING);
+                setCursor(Cursor.HAND);
+                marketName.getStyleClass().add("market-name");
+                hBox.setAlignment(Pos.CENTER_LEFT);
+                vBox.setAlignment(Pos.CENTER_LEFT);
+                Tooltip.install(vBox, marketDetailsTooltip);
+
+                favouritesTooltip.textProperty().set(isFavouritesTableView
+                        ? Res.get("bisqEasy.offerbook.marketListCell.favourites.tooltip.removeFromFavourites")
+                        : Res.get("bisqEasy.offerbook.marketListCell.favourites.tooltip.addToFavourites"));
+                ImageView star = ImageUtil.getImageViewById(isFavouritesTableView
+                        ? "star-yellow"
+                        : "star-grey-hollow");
+                favouritesLabel.setGraphic(star);
+                favouritesLabel.getStyleClass().add("favourite-label");
+                Tooltip.install(favouritesLabel, favouritesTooltip);
+
+                container.setAlignment(Pos.CENTER_LEFT);
+            }
+
+            @Override
+            protected void updateItem(MarketChannelItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    numOffers.setText(getFormattedOfferNumber(item.getNumOffers().get()));
+                    String quoteCurrencyDisplayName = StringUtils.capitalize(item.getMarket().getQuoteCurrencyDisplayName());
+                    marketDetailsTooltip.setText(getFormattedTooltip(item.getNumOffers().get(), quoteCurrencyDisplayName));
+                    marketName.setText(quoteCurrencyDisplayName);
+                    marketCode.setText(item.getMarket().getQuoteCurrencyCode());
+                    favouritesLabel.setOnMouseClicked(e -> item.toggleFavourite());
+                    setGraphic(container);
+                } else {
+                    favouritesLabel.setOnMouseClicked(null);
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    private static String getFormattedOfferNumber(long numOffers) {
+        if (numOffers == 0) {
+            return "";
+        }
+        return String.format("(%s)",
+                numOffers > 1
+                        ? Res.get("bisqEasy.offerbook.marketListCell.numOffers.many", numOffers)
+                        : Res.get("bisqEasy.offerbook.marketListCell.numOffers.one", numOffers)
+        );
+    }
+
+    private static String getFormattedTooltip(long numOffers, String quoteCurrencyName) {
+        if (numOffers == 0) {
+            return Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.none", quoteCurrencyName);
+        }
+        return numOffers > 1
+                ? Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.many", numOffers, quoteCurrencyName)
+                : Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.one", numOffers, quoteCurrencyName);
     }
 }

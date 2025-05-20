@@ -17,8 +17,9 @@
 
 package bisq.desktop.main.content.mu_sig.offerbook;
 
-import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -32,9 +33,14 @@ import java.util.Set;
 @Slf4j
 @Getter
 public class MuSigOfferbookModel implements Model {
-    private final ObservableList<Market> markets = FXCollections.observableArrayList();
-    private final Set<String> offerIds = new HashSet<>();
-    private final ObservableList<MuSigOfferListItem> listItems = FXCollections.observableArrayList();
-    private final FilteredList<MuSigOfferListItem> filteredList = new FilteredList<>(listItems);
-    private final SortedList<MuSigOfferListItem> sortedList = new SortedList<>(filteredList);
+    private final Set<String> muSigOfferIds = new HashSet<>();
+    private final ObservableList<MuSigOfferListItem> muSigOfferListItems = FXCollections.observableArrayList();
+    private final FilteredList<MuSigOfferListItem> filteredMuSigOfferListItems = new FilteredList<>(muSigOfferListItems);
+    private final SortedList<MuSigOfferListItem> sortedMuSigOfferListItems = new SortedList<>(filteredMuSigOfferListItems);
+
+    private final ObservableList<MarketChannelItem> marketChannelItems = FXCollections.observableArrayList();
+    private final FilteredList<MarketChannelItem> filteredMarketChannelItems = new FilteredList<>(marketChannelItems);
+    private final SortedList<MarketChannelItem> sortedMarketChannelItems = new SortedList<>(filteredMarketChannelItems);
+    private final FilteredList<MarketChannelItem> favouriteMarketChannelItems = new FilteredList<>(marketChannelItems);
+    private final ObjectProperty<MarketChannelItem> selectedMarketChannelItem = new SimpleObjectProperty<>();
 }

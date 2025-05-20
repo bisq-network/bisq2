@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.mu_sig.offerbook;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
@@ -26,25 +27,29 @@ import bisq.desktop.common.view.Controller;
 import bisq.identity.IdentityService;
 import bisq.mu_sig.MuSigService;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.ReputationService;
 import lombok.Getter;
-import org.fxmisc.easybind.Subscription;
 
+import java.util.List;
 import java.util.Optional;
 
 public class MuSigOfferbookController implements Controller {
     @Getter
     private final MuSigOfferbookView view;
     private final MuSigOfferbookModel model;
-    protected final MuSigService muSigService;
-    protected final MarketPriceService marketPriceService;
-    protected final UserProfileService userProfileService;
-    protected final SettingsService settingsService;
+    private final MuSigService muSigService;
+    private final MarketPriceService marketPriceService;
+    private final UserProfileService userProfileService;
+    private final SettingsService settingsService;
     private final IdentityService identityService;
     private final BannedUserService bannedUserService;
-    protected Pin offersPin;
+    private final FavouriteMarketsService favouriteMarketsService;
+    private final ReputationService reputationService;
+    private Pin offersPin;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
         muSigService = serviceProvider.getMuSigService();
@@ -53,6 +58,8 @@ public class MuSigOfferbookController implements Controller {
         identityService = serviceProvider.getIdentityService();
         settingsService = serviceProvider.getSettingsService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
+        favouriteMarketsService = serviceProvider.getFavouriteMarketsService();
+        reputationService = serviceProvider.getUserService().getReputationService();
 
         model = new MuSigOfferbookModel();
         view = new MuSigOfferbookView(model, this);
@@ -60,14 +67,24 @@ public class MuSigOfferbookController implements Controller {
 
     @Override
     public void onActivate() {
+        List<MarketChannelItem> marketChannelItems = MarketRepository.getAllFiatMarkets().stream()
+                .map(market -> new MarketChannelItem(market,
+                        favouriteMarketsService,
+                        marketPriceService,
+                        userProfileService,
+                        reputationService,
+                        muSigService))
+                .toList();
+        model.getMarketChannelItems().setAll(marketChannelItems);
+
         offersPin = muSigService.getObservableOffers().addObserver(new CollectionObserver<>() {
             @Override
             public void add(MuSigOffer muSigOffer) {
                 UIThread.run(() -> {
                     String offerId = muSigOffer.getId();
-                    if (/*isExpectedMarket(muSigOffer.getMarket()) && */!model.getOfferIds().contains(offerId)) {
-                        model.getListItems().add(new MuSigOfferListItem(muSigOffer, marketPriceService, userProfileService, identityService));
-                        model.getOfferIds().add(offerId);
+                    if (/*isExpectedMarket(muSigOffer.getMarket()) && */!model.getMuSigOfferIds().contains(offerId)) {
+                        model.getMuSigOfferListItems().add(new MuSigOfferListItem(muSigOffer, marketPriceService, userProfileService, identityService));
+                        model.getMuSigOfferIds().add(offerId);
                         //updatePredicate();
                     }
                 });
@@ -78,12 +95,12 @@ public class MuSigOfferbookController implements Controller {
                 if (element instanceof MuSigOffer muSigOffer) {
                     UIThread.run(() -> {
                         String offerId = muSigOffer.getId();
-                        Optional<MuSigOfferListItem> toRemove = model.getListItems().stream()
+                        Optional<MuSigOfferListItem> toRemove = model.getMuSigOfferListItems().stream()
                                 .filter(item -> item.getOffer().getId().equals(offerId))
                                 .findAny();
                         toRemove.ifPresent(offer -> {
-                            model.getListItems().remove(offer);
-                            model.getOfferIds().remove(offerId);
+                            model.getMuSigOfferListItems().remove(offer);
+                            model.getMuSigOfferIds().remove(offerId);
                         });
                     });
                 }
@@ -92,8 +109,8 @@ public class MuSigOfferbookController implements Controller {
             @Override
             public void clear() {
                 UIThread.run(() -> {
-                    model.getListItems().clear();
-                    model.getOfferIds().clear();
+                    model.getMuSigOfferListItems().clear();
+                    model.getMuSigOfferIds().clear();
                 });
             }
         });
@@ -102,8 +119,8 @@ public class MuSigOfferbookController implements Controller {
     @Override
     public void onDeactivate() {
         offersPin.unbind();
-        model.getListItems().forEach(MuSigOfferListItem::dispose);
-        model.getListItems().clear();
-        model.getOfferIds().clear();
+        model.getMuSigOfferListItems().forEach(MuSigOfferListItem::dispose);
+        model.getMuSigOfferListItems().clear();
+        model.getMuSigOfferIds().clear();
     }
 }
