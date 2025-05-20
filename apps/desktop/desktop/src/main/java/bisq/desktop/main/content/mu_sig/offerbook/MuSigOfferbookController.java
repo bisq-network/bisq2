@@ -31,7 +31,6 @@ import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfileService;
-import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 
 import java.util.List;
@@ -48,7 +47,6 @@ public class MuSigOfferbookController implements Controller {
     private final IdentityService identityService;
     private final BannedUserService bannedUserService;
     private final FavouriteMarketsService favouriteMarketsService;
-    private final ReputationService reputationService;
     private Pin offersPin;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
@@ -59,7 +57,6 @@ public class MuSigOfferbookController implements Controller {
         settingsService = serviceProvider.getSettingsService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         favouriteMarketsService = serviceProvider.getFavouriteMarketsService();
-        reputationService = serviceProvider.getUserService().getReputationService();
 
         model = new MuSigOfferbookModel();
         view = new MuSigOfferbookView(model, this);
@@ -72,7 +69,6 @@ public class MuSigOfferbookController implements Controller {
                         favouriteMarketsService,
                         marketPriceService,
                         userProfileService,
-                        reputationService,
                         muSigService))
                 .toList();
         model.getMarketChannelItems().setAll(marketChannelItems);

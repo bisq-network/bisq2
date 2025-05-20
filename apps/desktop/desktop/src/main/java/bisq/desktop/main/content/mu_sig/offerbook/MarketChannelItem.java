@@ -26,7 +26,6 @@ import bisq.i18n.Res;
 import bisq.mu_sig.MuSigService;
 import bisq.settings.FavouriteMarketsService;
 import bisq.user.profile.UserProfileService;
-import bisq.user.reputation.ReputationService;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -50,7 +49,6 @@ public class MarketChannelItem {
     private final FavouriteMarketsService favouriteMarketsService;
     private final MarketPriceService marketPriceService;
     private final UserProfileService userProfileService;
-    private final ReputationService reputationService;
     private final MuSigService muSigService;
     private final SimpleLongProperty numOffers = new SimpleLongProperty(0);
     private final SimpleBooleanProperty isFavourite = new SimpleBooleanProperty(false);
@@ -61,13 +59,11 @@ public class MarketChannelItem {
                       FavouriteMarketsService favouriteMarketsService,
                       MarketPriceService marketPriceService,
                       UserProfileService userProfileService,
-                      ReputationService reputationService,
                       MuSigService muSigService) {
         this.market = market;
         this.favouriteMarketsService = favouriteMarketsService;
         this.marketPriceService = marketPriceService;
         this.userProfileService = userProfileService;
-        this.reputationService = reputationService;
         this.muSigService = muSigService;
 
 //        refreshNotifications();
