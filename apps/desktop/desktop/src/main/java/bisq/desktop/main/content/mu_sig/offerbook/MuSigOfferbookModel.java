@@ -20,6 +20,8 @@ package bisq.desktop.main.content.mu_sig.offerbook;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -33,6 +35,10 @@ import java.util.Set;
 @Slf4j
 @Getter
 public class MuSigOfferbookModel implements Model {
+    private final StringProperty marketTitle = new SimpleStringProperty("");
+    private final StringProperty marketDescription = new SimpleStringProperty("");
+    private final StringProperty marketPrice = new SimpleStringProperty("");
+
     private final Set<String> muSigOfferIds = new HashSet<>();
     private final ObservableList<MuSigOfferListItem> muSigOfferListItems = FXCollections.observableArrayList();
     private final FilteredList<MuSigOfferListItem> filteredMuSigOfferListItems = new FilteredList<>(muSigOfferListItems);

@@ -50,6 +50,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
+import java.util.Optional;
 
 @Slf4j
 public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, MuSigOfferbookController> {
@@ -61,7 +62,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     private final RichTableView<MuSigOfferListItem> muSigOfferListView;
     private final HBox titleHBox = new HBox(10);
     private VBox marketListVBox;
-    private Label marketListTitle;
+    private Label marketListTitle, marketHeaderIcon, marketTitle, marketDescription, marketPrice;
     private BisqTableView<MarketItem> marketListView;
     private Subscription selectedMarketItemPin, marketListViewSelectionPin;
 
@@ -72,10 +73,9 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         muSigOfferListView.getFooterVBox().setVisible(false);
         muSigOfferListView.getFooterVBox().setManaged(false);
         configMuSigOfferListView();
-
         createAndconfigMarketListView();
+        configTitleHBox();
 
-        titleHBox.getChildren().add(new Label("Market for trading BTC/FIAT"));
         VBox centerVBox = new VBox(titleHBox, Layout.hLine(), /*subheader, */muSigOfferListView);
         VBox.setVgrow(muSigOfferListView, Priority.ALWAYS);
         VBox.setVgrow(marketListVBox, Priority.ALWAYS);
@@ -98,6 +98,10 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
         marketListView.initialize();
 
+        marketTitle.textProperty().bind(model.getMarketTitle());
+        marketDescription.textProperty().bind(model.getMarketDescription());
+        marketPrice.textProperty().bind(model.getMarketPrice());
+
         selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), this::selectedMarketItemChanged);
         marketListViewSelectionPin = EasyBind.subscribe(marketListView.getSelectionModel().selectedItemProperty(), item -> {
             if (item != null) {
@@ -109,6 +113,10 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     @Override
     protected void onViewDetached() {
         muSigOfferListView.dispose();
+
+        marketTitle.textProperty().unbind();
+        marketDescription.textProperty().unbind();
+        marketPrice.textProperty().unbind();
 
         selectedMarketItemPin.unsubscribe();
         marketListViewSelectionPin.unsubscribe();
@@ -369,7 +377,34 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 //        favouritesTableView.getSelectionModel().clearSelection();
 //        favouritesTableView.getSelectionModel().select(selectedItem);
 
-//        StackPane marketsImage = MarketImageComposition.getMarketIcons(selectedItem.getMarket(), Optional.empty());
-//        channelHeaderIcon.setGraphic(marketsImage);
+        if (selectedItem != null && marketHeaderIcon != null) {
+            // TODO: This now needs to take into account the base market as well
+            StackPane marketsImage = MarketImageComposition.getMarketIcons(selectedItem.getMarket(), Optional.empty());
+            marketHeaderIcon.setGraphic(marketsImage);
+        }
+    }
+
+    private void configTitleHBox() {
+        titleHBox.getStyleClass().add("chat-container-header");
+
+        marketDescription = new Label();
+        marketDescription.getStyleClass().addAll("chat-header-description", "offerbook-channel-market-code");
+        marketPrice = new Label();
+        marketPrice.getStyleClass().addAll("chat-header-description", "offerbook-channel-market-price");
+        HBox marketDescriptionHbox = new HBox(5, marketDescription, marketPrice);
+
+        marketTitle = new Label();
+        marketTitle.getStyleClass().addAll("chat-header-title", "offerbook-channel-title");
+        VBox titleAndDescription = new VBox(marketTitle, marketDescriptionHbox);
+
+        marketHeaderIcon = new Label();
+        HBox headerTitle = new HBox(10, marketHeaderIcon, titleAndDescription);
+        headerTitle.setAlignment(Pos.CENTER_LEFT);
+
+//        createOfferButton = createAndGetCreateOfferButton();
+//        createOfferButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
+
+        HBox.setHgrow(headerTitle, Priority.ALWAYS);
+        titleHBox.getChildren().setAll(headerTitle/*, createOfferButton, ellipsisMenu, notificationsSettingsMenu*/);
     }
 }

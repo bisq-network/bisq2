@@ -25,9 +25,11 @@ import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.mu_sig.MuSigService;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
@@ -121,6 +123,7 @@ public class MuSigOfferbookController implements Controller {
         selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarketItem -> {
             if (selectedMarketItem != null) {
                 updateMuSigOfferListItemsPredicate();
+                updateMarketTitle(selectedMarketItem);
             }
         });
     }
@@ -186,5 +189,23 @@ public class MuSigOfferbookController implements Controller {
         model.getFilteredMuSigOfferListItems().setPredicate(null);
         model.getFilteredMuSigOfferListItems().setPredicate(item ->
             model.getSelectedMarketItem().get().getMarket().equals(item.getMarket()));
+    }
+
+    private void updateMarketTitle(MarketItem selectedMarketItem) {
+        if (selectedMarketItem != null) {
+            model.getMarketTitle().set(Res.get("muSig.offerbook.marketHeader.title", selectedMarketItem.getMarket().getMarketDisplayName()));
+            model.getMarketDescription().set(selectedMarketItem.getMarket().getMarketCodes());
+            Market selectedMarket = selectedMarketItem.getMarket();
+            if (selectedMarket != null) {
+                marketPriceService
+                        .findMarketPrice(selectedMarket)
+                        .ifPresent(marketPrice ->
+                                model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true)));
+            }
+        } else {
+            model.getMarketTitle().set("");
+            model.getMarketDescription().set("");
+            model.getMarketPrice().set("");
+        }
     }
 }
