@@ -53,34 +53,41 @@ import java.util.Comparator;
 
 @Slf4j
 public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, MuSigOfferbookController> {
-    public final static double HEADER_HEIGHT = 61;
+    private final static double HEADER_HEIGHT = 61;
     private static final double LIST_CELL_HEIGHT = 53;
     private static final double MARKET_LIST_WIDTH = 210;
+    private static final double SIDE_PADDING = 40;
 
     private final RichTableView<MuSigOfferListItem> muSigOfferListView;
+    private final HBox titleHBox = new HBox(10);
     private VBox marketListVBox;
     private Label marketListTitle;
     private BisqTableView<MarketChannelItem> marketListView;
     private Subscription selectedMarketChannelItemPin;
 
     public MuSigOfferbookView(MuSigOfferbookModel model, MuSigOfferbookController controller) {
-        super(new VBox(20), model, controller);
+        super(new VBox(), model, controller);
 
         muSigOfferListView = new RichTableView<>(model.getSortedMuSigOfferListItems());
         muSigOfferListView.getFooterVBox().setVisible(false);
         muSigOfferListView.getFooterVBox().setManaged(false);
         configMuSigOfferListView();
 
-        addMarketList();
+        createAndconfigMarketListView();
 
-        HBox marketAndOfferListHBox = new HBox(20, marketListVBox, muSigOfferListView);
+        titleHBox.getChildren().add(new Label("Market for trading BTC/FIAT"));
+        VBox centerVBox = new VBox(titleHBox, Layout.hLine(), /*subheader, */muSigOfferListView);
         VBox.setVgrow(muSigOfferListView, Priority.ALWAYS);
+        VBox.setVgrow(marketListVBox, Priority.ALWAYS);
+        centerVBox.getStyleClass().add("bisq-easy-container");
+        HBox.setHgrow(centerVBox, Priority.ALWAYS);
+        VBox.setVgrow(centerVBox, Priority.ALWAYS);
 
-        VBox contentBox = new VBox(20);
-        contentBox.getChildren().addAll(marketAndOfferListHBox);
-        contentBox.getStyleClass().add("bisq-common-bg");
-        root.getChildren().addAll(contentBox);
-        root.setPadding(new Insets(0, 40, 20, 40));
+        HBox marketAndOfferListHBox = new HBox(20, marketListVBox, centerVBox);
+        VBox.setVgrow(marketAndOfferListHBox, Priority.ALWAYS);
+
+        root.getChildren().add(marketAndOfferListHBox);
+        root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
     }
 
     @Override
@@ -146,7 +153,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 .build());
     }
 
-    private void addMarketList() {
+    private void createAndconfigMarketListView() {
         marketListTitle = new Label(Res.get("bisqEasy.offerbook.markets"));
         HBox.setHgrow(marketListTitle, Priority.ALWAYS);
 
@@ -203,7 +210,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         marketListVBox.setMinWidth(MARKET_LIST_WIDTH);
         marketListVBox.setFillWidth(true);
         marketListVBox.getStyleClass().add("chat-container");
-        HBox.setMargin(marketListVBox, new Insets(1, 0, 0, 0));
+//        HBox.setMargin(marketListVBox, new Insets(1, 0, 0, 0));
     }
 
     private void configMarketsTableView(BisqTableView<MarketChannelItem> tableView) {

@@ -41,16 +41,6 @@ public class MuSigController extends ContentTabController<MuSigModel> {
     }
 
     @Override
-    public void onActivate() {
-        super.onActivate();
-    }
-
-    @Override
-    public void onDeactivate() {
-        super.onDeactivate();
-    }
-
-    @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
            // case MU_SIG_ONBOARDING -> Optional.of(new MuSigOnboardingController(serviceProvider));
