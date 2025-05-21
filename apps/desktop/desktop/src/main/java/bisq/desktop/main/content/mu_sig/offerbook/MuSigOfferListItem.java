@@ -66,6 +66,7 @@ public class MuSigOfferListItem {
     private final String deposit;
     private final String maker;
     private final Market market;
+    private final String takeOfferButtonText;
 
     private double priceSpecAsPercent = 0;
     private String formattedPercentagePrice = Res.get("data.na");
@@ -91,7 +92,9 @@ public class MuSigOfferListItem {
         market = offer.getMarket();
         baseAmountAsString = OfferAmountFormatter.formatBaseAmount(marketPriceService, offer, false);
         quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, false);
-
+        takeOfferButtonText = offer.getDirection().isBuy()
+                ? Res.get("muSig.offerbook.table.cell.intent.buy")
+                : Res.get("muSig.offerbook.table.cell.intent.sell");
 
         // ImageUtil.getImageViewById(fiatPaymentMethod.getName());
         paymentMethodTooltip = Joiner.on(", ")

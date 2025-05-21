@@ -34,6 +34,7 @@ import javafx.geometry.Pos;
 import javafx.scene.CacheHint;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -50,6 +51,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
+import java.util.Locale;
 import java.util.Optional;
 
 @Slf4j
@@ -124,15 +126,10 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
     private void configMuSigOfferListView() {
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
-                .titleProperty(model.getBaseCodeTitle())
-                .comparator(Comparator.comparing(MuSigOfferListItem::getBaseAmountAsString))
-                .valueSupplier(MuSigOfferListItem::getBaseAmountAsString)
-                .build());
-
-        muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
-                .titleProperty(model.getQuoteCodeTitle())
-                .comparator(Comparator.comparing(MuSigOfferListItem::getQuoteAmountAsString))
-                .valueSupplier(MuSigOfferListItem::getQuoteAmountAsString)
+                .title(Res.get("muSig.offerbook.table.header.peerProfile"))
+                .comparator(Comparator.comparing(MuSigOfferListItem::getMaker))
+                .valueSupplier(MuSigOfferListItem::getMaker)
+                .minWidth(200)
                 .build());
 
         BisqTableColumn<MuSigOfferListItem> priceColumn = new BisqTableColumn.Builder<MuSigOfferListItem>()
@@ -146,17 +143,22 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         muSigOfferListView.getSortOrder().add(priceColumn);
 
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+                .titleProperty(model.getBaseCodeTitle())
+                .comparator(Comparator.comparing(MuSigOfferListItem::getBaseAmountAsString))
+                .valueSupplier(MuSigOfferListItem::getBaseAmountAsString)
+                .build());
+
+        muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+                .titleProperty(model.getQuoteCodeTitle())
+                .comparator(Comparator.comparing(MuSigOfferListItem::getQuoteAmountAsString))
+                .valueSupplier(MuSigOfferListItem::getQuoteAmountAsString)
+                .build());
+
+        muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title(Res.get("muSig.offerbook.table.header.paymentMethod"))
                 .comparator(Comparator.comparing(MuSigOfferListItem::getPaymentMethod))
                 .valueSupplier(MuSigOfferListItem::getPaymentMethod)
                 .tooltipSupplier(MuSigOfferListItem::getPaymentMethodTooltip)
-                .build());
-
-
-        muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
-                .title(Res.get("muSig.offerbook.table.header.peerProfile"))
-                .comparator(Comparator.comparing(MuSigOfferListItem::getMaker))
-                .valueSupplier(MuSigOfferListItem::getMaker)
                 .build());
 
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
@@ -165,11 +167,10 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 .valueSupplier(MuSigOfferListItem::getDeposit)
                 .build());
 
-//        muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
-//                .title(Res.get("muSig.offerbook.table.header.intent"))
-//                .setCellFactory(getActionButtonCellFactory())
-//                .fixWidth(130)
-//                .build());
+        muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+                .setCellFactory(getActionButtonCellFactory())
+                .minWidth(150)
+                .build());
     }
 
     private void createAndconfigMarketListView() {
@@ -370,6 +371,57 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         return numOffers > 1
                 ? Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.many", numOffers, quoteCurrencyName)
                 : Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.one", numOffers, quoteCurrencyName);
+    }
+
+    private Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>, TableCell<MuSigOfferListItem, MuSigOfferListItem>> getActionButtonCellFactory() {
+        return column -> new TableCell<>() {
+            private final Button takeOfferButton = new Button();
+
+            {
+                takeOfferButton.setMinWidth(110);
+                takeOfferButton.setMaxWidth(takeOfferButton.getMinWidth());
+                takeOfferButton.getStyleClass().add("button-min-horizontal-padding");
+                takeOfferButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
+            }
+
+            @Override
+            protected void updateItem(MuSigOfferListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    if (item.isMyOffer()) {
+                        takeOfferButton.setText(Res.get("muSig.offerbook.table.cell.intent.remove").toUpperCase(Locale.ROOT));
+                        resetStyles();
+                        // FIXME Label text always stays white independent of style class or even if setting style here directly.
+                        //  If using grey-transparent-outlined-button we have a white label. Quick fix is to use opacity with a while style...
+                        takeOfferButton.getStyleClass().add("white-transparent-outlined-button");
+                        takeOfferButton.setOpacity(0.5);
+//                        takeOfferButton.setOnAction(e -> controller.onRemoveOffer(item.getOffer()));
+                    } else {
+                        takeOfferButton.setText(item.getTakeOfferButtonText());
+                        takeOfferButton.setOpacity(1);
+                        resetStyles();
+                        if (item.getOffer().getDirection().mirror().isBuy()) {
+                            takeOfferButton.getStyleClass().add("buy-button");
+                        } else {
+                            takeOfferButton.getStyleClass().add("sell-button");
+                        }
+//                        takeOfferButton.setOnAction(e -> controller.onTakeOffer(item.getOffer()));
+                    }
+                    setGraphic(takeOfferButton);
+                } else {
+                    resetStyles();
+                    takeOfferButton.setOnAction(null);
+                    setGraphic(null);
+                }
+            }
+
+            private void resetStyles() {
+                takeOfferButton.getStyleClass().remove("buy-button");
+                takeOfferButton.getStyleClass().remove("sell-button");
+                takeOfferButton.getStyleClass().remove("white-transparent-outlined-button");
+            }
+        };
     }
 
     private void selectedMarketItemChanged(MarketItem selectedItem) {
