@@ -27,12 +27,13 @@ import bisq.i18n.Res;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
+import java.util.Arrays;
+import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -42,7 +43,6 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
 
     @Getter
     @ToString
-    @EqualsAndHashCode
     public static final class InitData {
         private final KeyPair keyPair;
         private final byte[] pubKeyHash;
@@ -60,6 +60,27 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
             this.proofOfWork = proofOfWork;
             this.nickName = nickName;
             this.nym = nym;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof InitData initData)) return false;
+
+            return Objects.equals(keyPair, initData.keyPair) &&
+                    Arrays.equals(pubKeyHash, initData.pubKeyHash) &&
+                    Objects.equals(proofOfWork, initData.proofOfWork) &&
+                    Objects.equals(nickName, initData.nickName) &&
+                    Objects.equals(nym, initData.nym);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = Objects.hashCode(keyPair);
+            result = 31 * result + Arrays.hashCode(pubKeyHash);
+            result = 31 * result + Objects.hashCode(proofOfWork);
+            result = 31 * result + Objects.hashCode(nickName);
+            result = 31 * result + Objects.hashCode(nym);
+            return result;
         }
     }
 

@@ -19,13 +19,13 @@ package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Arrays;
+
 @ToString
 @Getter
-@EqualsAndHashCode
 public final class TxConfirmationStatus implements Proto {
     private final byte[] tx;
     private final int currentBlockHeight;
@@ -56,5 +56,22 @@ public final class TxConfirmationStatus implements Proto {
         return new TxConfirmationStatus(proto.getTx().toByteArray(),
                 proto.getCurrentBlockHeight(),
                 proto.getNumConfirmations());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof TxConfirmationStatus status)) return false;
+
+        return currentBlockHeight == status.currentBlockHeight &&
+                numConfirmations == status.numConfirmations &&
+                Arrays.equals(tx, status.tx);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Arrays.hashCode(tx);
+        result = 31 * result + currentBlockHeight;
+        result = 31 * result + numConfirmations;
+        return result;
     }
 }

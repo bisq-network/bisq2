@@ -19,11 +19,12 @@ package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 @Getter
-@EqualsAndHashCode
 public final class CloseTradeRequest implements Proto {
     private final String tradeId;
     private final byte[] myOutputPeersPrvKeyShare;
@@ -56,5 +57,22 @@ public final class CloseTradeRequest implements Proto {
                 proto.getTradeId(),
                 proto.getMyOutputPeersPrvKeyShare().toByteArray(),
                 proto.getSwapTx().toByteArray());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof CloseTradeRequest that)) return false;
+
+        return Objects.equals(tradeId, that.tradeId) &&
+                Arrays.equals(myOutputPeersPrvKeyShare, that.myOutputPeersPrvKeyShare) &&
+                Arrays.equals(swapTx, that.swapTx);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(tradeId);
+        result = 31 * result + Arrays.hashCode(myOutputPeersPrvKeyShare);
+        result = 31 * result + Arrays.hashCode(swapTx);
+        return result;
     }
 }
