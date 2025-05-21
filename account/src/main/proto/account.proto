@@ -143,6 +143,10 @@ message NationalBankAccountPayload {
 message SameBankAccountPayload {
 }
 
+message DomesticWireTransferAccountPayload {
+  string holder_address = 1;
+}
+
 message BankAccountPayload {
   string holder_name = 1;
   string bank_name = 2;
@@ -157,6 +161,7 @@ message BankAccountPayload {
     NationalBankAccountPayload nationalBankAccountPayload = 14;
     CashDepositAccountPayload cashDepositAccountPayload = 15;
     SameBankAccountPayload sameBankAccountPayload = 16;
+    DomesticWireTransferAccountPayload domesticWireTransferAccountPayload = 17;
   }
 }
 
@@ -280,6 +285,7 @@ message BankAccount {
     NationalBankAccount nationalBankAccount = 2;
     CashDepositAccount cashDepositAccount = 3;
     SameBankAccount sameBankAccount = 4;
+    DomesticWireTransferAccount domesticWireTransferAccount = 5;
   }
 }
 

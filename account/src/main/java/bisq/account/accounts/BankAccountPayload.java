@@ -94,6 +94,7 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
             case NATIONALBANKACCOUNTPAYLOAD -> NationalBankAccountPayload.fromProto(proto);
             case CASHDEPOSITACCOUNTPAYLOAD -> CashDepositAccountPayload.fromProto(proto);
             case SAMEBANKACCOUNTPAYLOAD -> SameBankAccountPayload.fromProto(proto);
+            case DOMESTICWIRETRANSFERACCOUNTPAYLOAD -> DomesticWireTransferAccountPayload.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
