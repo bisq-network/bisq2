@@ -204,6 +204,7 @@ public class MuSigOfferbookController implements Controller {
                 model.getBaseCodeTitle().set(selectedMarket.getBaseCurrencyCode());
                 model.getQuoteCodeTitle().set(selectedMarket.getQuoteCurrencyCode());
                 model.getPriceTitle().set(Res.get("muSig.offerbook.table.header.price", selectedMarket.getMarketCodes()).toUpperCase());
+                model.getMarketIconId().set(selectedMarket.getBaseCurrencyCode());
             }
         } else {
             model.getMarketTitle().set("");

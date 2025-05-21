@@ -63,6 +63,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
     private final RichTableView<MuSigOfferListItem> muSigOfferListView;
     private final HBox titleHBox = new HBox(10);
+    private HBox appliedFiltersSection;
     private VBox marketListVBox;
     private Label marketListTitle, marketHeaderIcon, marketTitle, marketDescription, marketPrice;
     private BisqTableView<MarketItem> marketListView;
@@ -78,14 +79,18 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         createAndconfigMarketListView();
         configTitleHBox();
 
-        VBox centerVBox = new VBox(titleHBox, Layout.hLine(), /*subheader, */muSigOfferListView);
+        HBox subheader = new HBox(/*marketSelectorSearchBox, Spacer.fillHBox(), sortAndFilterMarketsMenu*/);
+        subheader.setAlignment(Pos.CENTER);
+        subheader.getStyleClass().add("market-selection-subheader");
+        VBox.setMargin(subheader, new Insets(0, 0, 5, 0));
+        VBox centerVBox = new VBox(titleHBox, Layout.hLine(), subheader, muSigOfferListView);
         VBox.setVgrow(muSigOfferListView, Priority.ALWAYS);
         VBox.setVgrow(marketListVBox, Priority.ALWAYS);
         centerVBox.getStyleClass().add("bisq-easy-container");
         HBox.setHgrow(centerVBox, Priority.ALWAYS);
         VBox.setVgrow(centerVBox, Priority.ALWAYS);
 
-        HBox marketAndOfferListHBox = new HBox(20, marketListVBox, centerVBox);
+        HBox marketAndOfferListHBox = new HBox(12, marketListVBox, centerVBox);
         VBox.setVgrow(marketAndOfferListHBox, Priority.ALWAYS);
 
         root.getChildren().add(marketAndOfferListHBox);
@@ -99,6 +104,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         muSigOfferListView.sort();
 
         marketListView.initialize();
+
+        updateAppliedFiltersSectionStyles(false);
 
         marketTitle.textProperty().bind(model.getMarketTitle());
         marketDescription.textProperty().bind(model.getMarketDescription());
@@ -175,21 +182,22 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
     private void createAndconfigMarketListView() {
         marketListTitle = new Label(Res.get("bisqEasy.offerbook.markets"));
+        marketListTitle.setGraphicTextGap(10);
         HBox.setHgrow(marketListTitle, Priority.ALWAYS);
 
         HBox header = new HBox(marketListTitle);
         header.setMinHeight(HEADER_HEIGHT);
         header.setMaxHeight(HEADER_HEIGHT);
         header.setAlignment(Pos.CENTER_LEFT);
-        header.setPadding(new Insets(4, 12, 0, 12));
+        header.setPadding(new Insets(4, 12, 0, 13));
         header.getStyleClass().add("chat-header-title");
 
 //        marketSelectorSearchBox = new SearchBox();
 //        marketSelectorSearchBox.getStyleClass().add("offerbook-search-box");
 //        sortAndFilterMarketsMenu = createAndGetSortAndFilterMarketsMenu();
-//        HBox subheader = new HBox(marketSelectorSearchBox, Spacer.fillHBox(), sortAndFilterMarketsMenu);
-//        subheader.setAlignment(Pos.CENTER);
-//        subheader.getStyleClass().add("market-selection-subheader");
+        HBox subheader = new HBox(/*marketSelectorSearchBox, Spacer.fillHBox(), sortAndFilterMarketsMenu*/);
+        subheader.setAlignment(Pos.CENTER);
+        subheader.getStyleClass().add("market-selection-subheader");
 //
 //        withOffersRemoveFilterDefaultIcon = ImageUtil.getImageViewById("close-mini-grey");
 //        withOffersRemoveFilterActiveIcon = ImageUtil.getImageViewById("close-mini-white");
@@ -203,9 +211,9 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 //        onlyFavouritesDisplayHint = createAndGetDisplayHintHBox(
 //                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.favourites"), removeFavouritesFilter);
 //
-//        appliedFiltersSection = new HBox(withOffersDisplayHint, onlyFavouritesDisplayHint);
-//        appliedFiltersSection.setAlignment(Pos.CENTER_RIGHT);
-//        HBox.setHgrow(appliedFiltersSection, Priority.ALWAYS);
+        appliedFiltersSection = new HBox(/*withOffersDisplayHint, onlyFavouritesDisplayHint*/);
+        appliedFiltersSection.setAlignment(Pos.CENTER_RIGHT);
+        HBox.setHgrow(appliedFiltersSection, Priority.ALWAYS);
 //
 //        favouritesTableView = new BisqTableView<>(getModel().getFavouriteMarketChannelItems());
 //        favouritesTableView.getStyleClass().addAll("market-selection-list", "favourites-list");
@@ -223,14 +231,13 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         configMarketsTableView(marketListView);
         VBox.setVgrow(marketListView, Priority.ALWAYS);
 
-        marketListVBox = new VBox(header, Layout.hLine(), /*subheader, appliedFiltersSection, favouritesTableView,*/
+        marketListVBox = new VBox(header, Layout.hLine(), subheader, appliedFiltersSection, /*favouritesTableView,*/
                 marketListView);
         marketListVBox.setMaxWidth(MARKET_LIST_WIDTH);
         marketListVBox.setPrefWidth(MARKET_LIST_WIDTH);
         marketListVBox.setMinWidth(MARKET_LIST_WIDTH);
         marketListVBox.setFillWidth(true);
         marketListVBox.getStyleClass().add("chat-container");
-//        HBox.setMargin(marketListVBox, new Insets(1, 0, 0, 0));
     }
 
     private void configMarketsTableView(BisqTableView<MarketItem> tableView) {
@@ -430,10 +437,15 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 //        favouritesTableView.getSelectionModel().clearSelection();
 //        favouritesTableView.getSelectionModel().select(selectedItem);
 
-        if (selectedItem != null && marketHeaderIcon != null) {
+        if (selectedItem != null) {
+            Node baseMarketImage = MarketImageComposition.createMarketLogo(model.getMarketIconId().get());
+            marketListTitle.setGraphic(baseMarketImage);
+
             // TODO: This now needs to take into account the base market as well
-            StackPane marketsImage = MarketImageComposition.getMarketIcons(selectedItem.getMarket(), Optional.empty());
-            marketHeaderIcon.setGraphic(marketsImage);
+            if (marketHeaderIcon != null) {
+                StackPane tradePairImage = MarketImageComposition.getMarketIcons(selectedItem.getMarket(), Optional.empty());
+                marketHeaderIcon.setGraphic(tradePairImage);
+            }
         }
     }
 
@@ -459,5 +471,12 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
         HBox.setHgrow(headerTitle, Priority.ALWAYS);
         titleHBox.getChildren().setAll(headerTitle/*, createOfferButton, ellipsisMenu, notificationsSettingsMenu*/);
+    }
+
+    private void updateAppliedFiltersSectionStyles(boolean shouldShowAppliedFilters) {
+        appliedFiltersSection.getStyleClass().clear();
+        appliedFiltersSection.getStyleClass().add(shouldShowAppliedFilters
+                ? "market-selection-show-applied-filters"
+                : "market-selection-no-filters");
     }
 }
