@@ -65,6 +65,7 @@ public class MuSigOfferListItem {
     private final String paymentMethod;
     private final String deposit;
     private final String maker;
+    private final Market market;
 
     private double priceSpecAsPercent = 0;
     private String formattedPercentagePrice = Res.get("data.na");
@@ -87,7 +88,7 @@ public class MuSigOfferListItem {
         AmountSpec amountSpec = offer.getAmountSpec();
         PriceSpec priceSpec = offer.getPriceSpec();
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
-        Market market = offer.getMarket();
+        market = offer.getMarket();
         baseAmountAsString = OfferAmountFormatter.formatBaseAmount(marketPriceService, offer, false);
         quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, false);
 

@@ -34,6 +34,8 @@ import bisq.settings.SettingsService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
 import java.util.Optional;
@@ -50,6 +52,7 @@ public class MuSigOfferbookController implements Controller {
     private final BannedUserService bannedUserService;
     private final FavouriteMarketsService favouriteMarketsService;
     private Pin offersPin;
+    private Subscription selectedMarketItemPin;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
         muSigService = serviceProvider.getMuSigService();
@@ -114,6 +117,12 @@ public class MuSigOfferbookController implements Controller {
                 });
             }
         });
+
+        selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarketItem -> {
+            if (selectedMarketItem != null) {
+                updateMuSigOfferListItemsPredicate();
+            }
+        });
     }
 
     @Override
@@ -122,6 +131,8 @@ public class MuSigOfferbookController implements Controller {
         model.getMuSigOfferListItems().forEach(MuSigOfferListItem::dispose);
         model.getMuSigOfferListItems().clear();
         model.getMuSigOfferIds().clear();
+
+        selectedMarketItemPin.unsubscribe();
     }
 
     void onSelectMarketItem(MarketItem marketItem) {
@@ -129,6 +140,7 @@ public class MuSigOfferbookController implements Controller {
             model.getSelectedMarketItem().set(null);
             maybeSelectFirst();
         } else {
+            model.getSelectedMarketItem().set(marketItem);
             Market market = marketItem.getMarket();
             settingsService.setSelectedMarket(market);
             settingsService.setCookie(getSelectedMarketCookieKey(), market.getMarketCodes());
@@ -168,5 +180,11 @@ public class MuSigOfferbookController implements Controller {
     private boolean isExpectedMarket(Market market) {
         // TODO: Here we need to use de base market selection instead.
         return market.isBtcFiatMarket() && market.getBaseCurrencyCode().equals("BTC");
+    }
+
+    private void updateMuSigOfferListItemsPredicate() {
+        model.getFilteredMuSigOfferListItems().setPredicate(null);
+        model.getFilteredMuSigOfferListItems().setPredicate(item ->
+            model.getSelectedMarketItem().get().getMarket().equals(item.getMarket()));
     }
 }
