@@ -17,145 +17,232 @@
 
 package bisq.network.tor.process.control_port;
 
+import bisq.common.threading.ExecutorFactory;
 import bisq.common.threading.ThreadName;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.TimeoutException;
 
 @Slf4j
 public class ControlPortFilePoller {
     private final AtomicBoolean isRunning = new AtomicBoolean();
     private final CompletableFuture<Integer> portCompletableFuture = new CompletableFuture<>();
     private final Path controlPortFilePath;
-    private static final int MAX_CONSECUTIVE_READ_FAILURES_CONST = 10;
+
+    private static final int MAX_CONSECUTIVE_READ_FAILURES = 10;
+    private static final int MAX_ATTEMPTS = 300;
+    private static final int SETTLE_DELAY_MS = 50;
+    private static final int POLLING_INTERVAL_MS = 100;
+
+    private ScheduledExecutorService executorService;
+    private int attempts = 0;
+    private Optional<Integer> lastParsedPort = Optional.empty();
+    private int consecutiveReadFailures = 0;
 
     public ControlPortFilePoller(Path controlPortFilePath) {
         this.controlPortFilePath = controlPortFilePath;
     }
 
     public CompletableFuture<Integer> parsePort() {
-        boolean isSuccess = isRunning.compareAndSet(false, true);
-        if (isSuccess) {
-            startPoller();
+        if (isRunning.compareAndSet(false, true)) {
+            submitInitialPollingTask();
         }
         return portCompletableFuture;
     }
 
-    private boolean checkConsecutiveFailuresAndCompleteExceptionally(int currentAttemptCount, int failures) {
-        if (failures >= ControlPortFilePoller.MAX_CONSECUTIVE_READ_FAILURES_CONST) {
-            log.error("ControlPortFilePoller failed to parse/stabilize port after {} consecutive read failures (total attempts: {}). Giving up for file: {}",
-                    failures, currentAttemptCount, controlPortFilePath);
-            portCompletableFuture.completeExceptionally(
-                    new ControlPortFileParseFailureException("Failed to parse/stabilize port file '" + controlPortFilePath + "' after "
-                            + failures + " consecutive read failures."));
-            return true;
+    private void submitInitialPollingTask() {
+        this.executorService = ExecutorFactory.newSingleThreadScheduledExecutor("ControlPortFilePollerThread");
+        this.attempts = 0;
+        this.lastParsedPort = Optional.empty();
+        this.consecutiveReadFailures = 0;
+
+        log.debug("Starting control port file poller for: {}. Max attempts: {}, Settle delay: {}ms, Poll interval: {}ms",
+                controlPortFilePath, MAX_ATTEMPTS, SETTLE_DELAY_MS, POLLING_INTERVAL_MS);
+
+        // Schedule the first poll cycle to run immediately on the executor thread
+        if (canContinuePolling()) {
+            executorService.submit(this::executePollCycle);
         }
-        log.trace("Read failure for file {} on attempt {}. Consecutive failures: {}/{}.",
-                controlPortFilePath, currentAttemptCount, failures, ControlPortFilePoller.MAX_CONSECUTIVE_READ_FAILURES_CONST);
-        return false;
     }
 
-    private void startPoller() {
-        Thread thread = new Thread(() -> {
-            ThreadName.setName("ControlPortFilePoller.startPoller");
-            try {
-                int attemptLimit = 300; // e.g., try for up to 30 seconds (300 * 100ms interval)
-                int attempts = 0;
-                Optional<Integer> lastParsedPort = Optional.empty();
-                int consecutiveReadFailures = 0;
-                final int SETTLE_DELAY_MS = 50;
-                final int POLLING_INTERVAL_MS = 100;
+    private void executePollCycle() {
+        if (!canContinuePolling()) return;
 
-                log.debug("Starting control port file poller for: {}. Timeout: {}s. Max consecutive read failures: {}",
-                        controlPortFilePath, attemptLimit * POLLING_INTERVAL_MS / 1000, MAX_CONSECUTIVE_READ_FAILURES_CONST);
+        this.attempts++;
+        try {
+            ThreadName.setName("ControlPortFilePoller.pollCycle-" + this.attempts);
+            log.trace("Executing poll cycle attempt {} for {}", this.attempts, controlPortFilePath);
 
-                while (attempts < attemptLimit) {
-                    attempts++;
-                    Optional<Integer> optionalPort = parsePortFromFile();
-                    boolean stablePortConfirmedThisIteration = false;
-
-                    if (optionalPort.isPresent()) {
-                        int currentPort = optionalPort.get();
-                        
-                        if (lastParsedPort.isEmpty() || lastParsedPort.get() != currentPort) {
-                            log.debug("Poller parsed port {} from {} (attempt {}). Waiting {}ms to check for stability.",
-                                    currentPort, controlPortFilePath, attempts, SETTLE_DELAY_MS);
-                            Thread.sleep(SETTLE_DELAY_MS);
-                            Optional<Integer> finalCheckOptionalPort = parsePortFromFile();
-
-                            if (finalCheckOptionalPort.isPresent() && finalCheckOptionalPort.get() == currentPort) {
-                                log.info("ControlPortFilePoller confirmed stable port: {} from file {}", currentPort, controlPortFilePath);
-                                portCompletableFuture.complete(currentPort);
-                                stablePortConfirmedThisIteration = true;
-                            } else if (finalCheckOptionalPort.isPresent()) {
-                                log.warn(
-                                        "Control port file {} changed rapidly after initial parse ({} -> {}). Re-polling.",
-                                        controlPortFilePath, currentPort, finalCheckOptionalPort.get());
-                                lastParsedPort = finalCheckOptionalPort;
-                            } else {
-                                log.warn("Control port file {} became unparseable after initial parse (was {}). Re-polling.",
-                                         controlPortFilePath, currentPort);
-                                lastParsedPort = Optional.empty();
-                            }
-                        } else {
-                            log.info("ControlPortFilePoller confirmed stable port (same as last): {} from file {}", currentPort, controlPortFilePath);
-                            portCompletableFuture.complete(currentPort);
-                            stablePortConfirmedThisIteration = true;
-                        }
-
-                        if (stablePortConfirmedThisIteration) {
-                            break;
-                        } else {
-                            // Initial parse was OK, but stability check failed (unparseable or changed and not completing)
-                            // This path is taken if !stablePortConfirmedThisIteration after optionalPort.isPresent() was true.
-                            // This ensures that if an initial parse resets the counter, but the stability check fails,
-                            // it's still counted as a failure for this polling cycle's attempt to get a stable port.
-                            consecutiveReadFailures++;
-                            if (checkConsecutiveFailuresAndCompleteExceptionally(attempts, consecutiveReadFailures)) {
-                                break;
-                            }
-                        }
-                    } else { // parsePortFromFile returned empty (initial parse failed)
-                        consecutiveReadFailures++;
-                        log.trace("Control port file {} not found or not ready, attempt {}. Consecutive failures: {}/{}.",
-                                controlPortFilePath, attempts, consecutiveReadFailures, MAX_CONSECUTIVE_READ_FAILURES_CONST);
-                        if (checkConsecutiveFailuresAndCompleteExceptionally(attempts, consecutiveReadFailures)) {
-                            break;
-                        }
-                        lastParsedPort = Optional.empty();
-                    }
-
-                    if (portCompletableFuture.isDone()) {
-                        break;
-                    }
-                    
-                    Thread.sleep(POLLING_INTERVAL_MS);
-                }
-
-                if (!portCompletableFuture.isDone()) {
-                    log.error("ControlPortFilePoller timed out for file {} after {} attempts ({} seconds).",
-                            controlPortFilePath, attempts, attemptLimit * POLLING_INTERVAL_MS / 1000);
-                    portCompletableFuture.completeExceptionally(
-                            new TimeoutException("ControlPortFilePoller timed out for file '" + controlPortFilePath + "' after "
-                                    + (attemptLimit * POLLING_INTERVAL_MS / 1000) + " seconds."));
-                }
-
-            } catch (InterruptedException e) {
-                log.warn("ControlPortFilePoller interrupted.", e);
-                portCompletableFuture.completeExceptionally(e);
-                Thread.currentThread().interrupt();
-            } catch (Exception e) { // Catch unexpected errors during polling
-                log.error("ControlPortFilePoller encountered an unexpected error.", e);
-                portCompletableFuture.completeExceptionally(e);
+            if (this.attempts > MAX_ATTEMPTS) { // Check if current attempt exceeds max (e.g. if MAX_ATTEMPTS = 0, or after last attempt)
+                handleTimeout();
+                return;
             }
-        }, "ControlPortFilePollerThread");
 
-        thread.setDaemon(true); // Ensure poller thread doesn't prevent JVM shutdown
-        thread.start();
+            Optional<Integer> optionalPort = parsePortFromFile();
+
+            if (optionalPort.isPresent()) {
+                int currentPort = optionalPort.get();
+                if (this.lastParsedPort.isEmpty() || this.lastParsedPort.get() != currentPort) {
+                    log.debug("Poller parsed new/changed port {} from {} (attempt {}). Scheduling stability check in {}ms.",
+                            currentPort, controlPortFilePath, this.attempts, SETTLE_DELAY_MS);
+                    if (canContinuePolling()) {
+                        executorService.schedule(() -> performStabilityCheck(currentPort, this.attempts),
+                                SETTLE_DELAY_MS, TimeUnit.MILLISECONDS);
+                    }
+                    // Stability check will handle next steps, so return from this cycle execution.
+                    return;
+                } else {
+                    // Port is present and same as last: confirm stable.
+                    log.info("ControlPortFilePoller confirmed stable port (same as last): {} from file {} (attempt {})",
+                            currentPort, controlPortFilePath, this.attempts);
+                    completeSuccessfully(currentPort);
+                    // Polling stops.
+                    return;
+                }
+            } else { // Initial parsePortFromFile returned empty
+                handleReadFailure(this.attempts, "initial parse");
+                if (portCompletableFuture.isDone()) return; // Stopped by max consecutive failures
+                scheduleNextRegularPollCycle(); // Continue polling
+            }
+        } catch (Exception e) {
+            handleUnexpectedException("pollCycle attempt " + this.attempts, e);
+        }
+    }
+
+    private void performStabilityCheck(int initialPort, int originatingAttemptNum) {
+        if (!canContinuePolling()) return;
+
+        try {
+            ThreadName.setName("ControlPortFilePoller.stabilityCheck-" + originatingAttemptNum);
+            log.trace("Performing stability check for port {} (from attempt {}) for file {}",
+                    initialPort, originatingAttemptNum, controlPortFilePath);
+
+            Optional<Integer> finalCheckOptionalPort = parsePortFromFile();
+
+            if (finalCheckOptionalPort.isPresent() && finalCheckOptionalPort.get() == initialPort) {
+                log.info("ControlPortFilePoller confirmed stable port {} post-check (from attempt {}) for file {}",
+                        initialPort, originatingAttemptNum, controlPortFilePath);
+                completeSuccessfully(initialPort);
+                // Polling stops.
+            } else {
+                // Not stable (changed or became unparseable)
+                String failureContext = "stability check (originally attempt " + originatingAttemptNum + ")";
+                if (finalCheckOptionalPort.isPresent()) {
+                    log.warn("Control port file {} changed (was {}, now {}) during {}. Re-polling.",
+                            controlPortFilePath, initialPort, finalCheckOptionalPort.get(), failureContext);
+                    this.lastParsedPort = finalCheckOptionalPort;
+                } else {
+                    log.warn("Control port file {} became unparseable (was {}) during {}. Re-polling.",
+                            controlPortFilePath, initialPort, failureContext);
+                    this.lastParsedPort = Optional.empty();
+                }
+                handleReadFailure(originatingAttemptNum, failureContext);
+                if (portCompletableFuture.isDone()) return; // Stopped by max consecutive failures
+                scheduleNextRegularPollCycle(); // Continue polling
+            }
+        } catch (Exception e) {
+            handleUnexpectedException("stabilityCheck (from attempt " + originatingAttemptNum + ")", e);
+        }
+    }
+
+    private void scheduleNextRegularPollCycle() {
+        if (!canContinuePolling()) return; // Double check before scheduling
+
+        if (this.attempts < MAX_ATTEMPTS) {
+            log.trace("Scheduling next poll cycle for {} (current attempts: {}).", controlPortFilePath, this.attempts);
+            executorService.schedule(this::executePollCycle, POLLING_INTERVAL_MS, TimeUnit.MILLISECONDS);
+        } else {
+            // Max attempts reached, ensure timeout is handled if not already.
+            log.debug("Max attempts ({}) reached for {}, not scheduling further poll cycles.", MAX_ATTEMPTS, controlPortFilePath);
+            handleTimeout();
+        }
+    }
+
+    private void completeSuccessfully(int port) {
+        if (!portCompletableFuture.isDone()) {
+            portCompletableFuture.complete(port);
+        }
+        this.consecutiveReadFailures = 0; // Reset counter
+    }
+
+    private void handleReadFailure(int attemptContext, String phase) {
+        this.consecutiveReadFailures++;
+        checkConsecutiveFailuresAndCompleteExceptionally(attemptContext, this.consecutiveReadFailures, phase);
+    }
+
+    private void checkConsecutiveFailuresAndCompleteExceptionally(int currentAttemptNum,
+                                                                  int failures,
+                                                                  String phase) {
+        if (failures >= MAX_CONSECUTIVE_READ_FAILURES) {
+            log.error("ControlPortFilePoller for {} failed after {} consecutive read failures (during {}, attempt {}). Giving up.",
+                    controlPortFilePath, failures, phase, currentAttemptNum);
+            if (!portCompletableFuture.isDone()) {
+                portCompletableFuture.completeExceptionally(
+                        new ControlPortFileParseFailureException("Failed to parse/stabilize port file '" + controlPortFilePath
+                                + "' after " + failures + " consecutive read failures (phase: " + phase + ", attempt: " + currentAttemptNum + ")."));
+            }
+            // No return value needed, side effect is completing the future.
+        } else {
+            // Log trace only if we are not completing exceptionally due to max failures.
+            log.trace("Read failure for file {} (phase: {}, attempt: {}). Consecutive failures: {}/{}.",
+                    controlPortFilePath, phase, currentAttemptNum, failures, MAX_CONSECUTIVE_READ_FAILURES);
+        }
+    }
+
+    private void handleTimeout() {
+        if (!portCompletableFuture.isDone()) {
+            log.error("ControlPortFilePoller timed out for file {} after {} attempts.",
+                    controlPortFilePath, this.attempts);
+            portCompletableFuture.completeExceptionally(
+                    new TimeoutException("ControlPortFilePoller timed out for file '" + controlPortFilePath + "' after "
+                            + this.attempts + " attempts."));
+        }
+    }
+
+    private void handleUnexpectedException(String context, Exception e) {
+        log.error("ControlPortFilePoller for {} encountered an unexpected error during {}.", controlPortFilePath, context, e);
+        if (!portCompletableFuture.isDone()) {
+            portCompletableFuture.completeExceptionally(e);
+        }
+    }
+
+    private boolean canContinuePolling() {
+        if (Thread.currentThread().isInterrupted()) {
+            log.warn("Polling for {} interrupted.", controlPortFilePath);
+            if (!portCompletableFuture.isDone())
+                portCompletableFuture.completeExceptionally(new InterruptedException("Polling was interrupted."));
+            return false;
+        }
+        if (executorService == null || executorService.isShutdown()) {
+            log.warn("Polling for {} cannot continue: executor service not available or shutdown.", controlPortFilePath);
+            if (!portCompletableFuture.isDone())
+                portCompletableFuture.completeExceptionally(new CancellationException("Executor service unavailable."));
+            return false;
+        }
+        if (portCompletableFuture.isDone()) {
+            log.trace("Polling for {} stopped: future already completed.", controlPortFilePath);
+            return false;
+        }
+        return true;
+    }
+
+    public void shutdown() {
+        log.info("Attempting to shutdown ControlPortFilePoller for {}", controlPortFilePath);
+        isRunning.set(false); // Prevent new polling sessions from starting if parsePort() is called again.
+
+        ScheduledExecutorService serviceToShutdown = this.executorService;
+        if (serviceToShutdown != null) {
+            ExecutorFactory.shutdownAndAwaitTermination(serviceToShutdown, 200, TimeUnit.MILLISECONDS);
+            this.executorService = null;
+        }
+
+        if (!portCompletableFuture.isDone()) {
+            log.warn("ControlPortFilePoller for {} was shut down before external completion.", controlPortFilePath);
+            portCompletableFuture.completeExceptionally(new CancellationException("ControlPortFilePoller for " + controlPortFilePath + " was shut down by external request."));
+        }
     }
 
     private Optional<Integer> parsePortFromFile() {
@@ -164,16 +251,12 @@ public class ControlPortFilePoller {
                 log.trace("Control port file does not exist yet: {}", controlPortFilePath);
                 return Optional.empty();
             }
-
-            // ControlPortFileParser.parse might throw an exception if the file content is invalid
             int controlPort = ControlPortFileParser.parse(controlPortFilePath);
             return Optional.of(controlPort);
-        } catch (Exception e) { // Catching parsing exceptions (e.g., NumberFormatException, IOException from parser)
+        } catch (Exception e) {
             log.warn("Failed to parse control port from file {} due to: {}. Treating as transient error.",
                     controlPortFilePath, e.getMessage());
-            // For more detailed diagnostics, one might log the full stack trace at DEBUG level:
-            // log.debug("Full stack trace of parsing error for file: {}", controlPortFilePath, e);
-            return Optional.empty(); // Return empty on parse failure, allowing poller to retry
+            return Optional.empty();
         }
     }
 }

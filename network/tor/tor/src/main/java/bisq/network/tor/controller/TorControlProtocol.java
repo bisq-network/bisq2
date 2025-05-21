@@ -41,16 +41,27 @@ public class TorControlProtocol implements AutoCloseable {
 
     public void initialize(int port) {
         try {
-            connectToTor(port);
+            this.controlSocket = createAndConnectControlSocket(port);
+            this.outputStream = Optional.of(this.controlSocket.getOutputStream());
+            this.torControlReader.start(this.controlSocket.getInputStream());
+            log.info("TorControlProtocol initialized successfully for port {}", port);
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); // Restore interruption status
-            close(); // Attempt to clean up resources
+            Thread.currentThread().interrupt();
+            log.error("TorControlProtocol initialization for port {} was interrupted.", port, e);
+            close();
+            throw new CannotConnectWithTorException(e);
+        } catch (IOException e) {
+            log.error("TorControlProtocol failed to set up streams for port {}.", port, e);
+            close();
             throw new CannotConnectWithTorException(e);
         } catch (CannotConnectWithTorException e) {
-            // connectToTor might have already called close() if it threw this due to an internal IOException.
-            // Calling close() again is safe due to its idempotency (closeInProgress flag).
+            log.error("TorControlProtocol failed to connect to Tor control port {} (as thrown by createAndConnectControlSocket).", port, e);
             close();
-            throw e; // Re-throw the original exception from connectToTor
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected exception during TorControlProtocol initialization for port {}.", port, e);
+            close();
+            throw new CannotConnectWithTorException(e);
         }
     }
 
@@ -59,17 +70,24 @@ public class TorControlProtocol implements AutoCloseable {
         if (closeInProgress) {
             return;
         }
-        closeInProgress = true;
+        closeInProgress = true; // Stays true after close attempt
+        log.debug("Closing TorControlProtocol resources for control socket related to port (if known).");
         try {
-            controlSocket.close();
+            if (controlSocket != null && !controlSocket.isClosed()) {
+                controlSocket.close();
+                log.debug("Control socket closed.");
+            }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            log.warn("IOException while closing control socket. This may be expected if connection was problematic.", e);
         }
         try {
             torControlReader.close();
+            log.debug("TorControlReader closed.");
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            log.warn("Exception while closing TorControlReader.", e);
         }
+        outputStream = Optional.empty();
+        // closeInProgress remains true
     }
 
     public void authenticate(PasswordDigest passwordDigest) {
@@ -160,7 +178,6 @@ public class TorControlProtocol implements AutoCloseable {
         Set<String> previous = getEventTypesOfBootstrapEventListeners();
         torControlReader.addBootstrapEventListener(listener);
         String newEventType = listener.getEventType().name();
-        // If our listener has a new eventType we register for that event
         if (!previous.contains(newEventType)) {
             refreshEventRegistration();
         } else {
@@ -172,12 +189,10 @@ public class TorControlProtocol implements AutoCloseable {
         Set<String> previous = getEventTypesOfBootstrapEventListeners();
         String newEventType = listener.getEventType().name();
         if (!previous.contains(newEventType)) {
-            log.warn("Remove BootstrapEventListener but did not have eventType in listeners. " +
-                    "This could happen if removeBootstrapEventListener was called without addBootstrapEventListener before.");
+            log.warn("Remove BootstrapEventListener but did not have eventType in listeners. This could happen if removeBootstrapEventListener was called without addBootstrapEventListener before.");
         }
         torControlReader.removeBootstrapEventListener(listener);
         Set<String> current = getEventTypesOfBootstrapEventListeners();
-        // If your listener was the only listener with that eventType we unregister for that event
         if (!current.contains(newEventType)) {
             refreshEventRegistration();
         } else {
@@ -195,7 +210,6 @@ public class TorControlProtocol implements AutoCloseable {
         Set<String> previous = getEventTypesOfHsDescEventListeners();
         torControlReader.addHsDescEventListener(listener);
         String newEventType = listener.getEventType().name();
-        // If our listener has a new eventType we register for that event
         if (!previous.contains(newEventType)) {
             refreshEventRegistration();
         } else {
@@ -207,12 +221,10 @@ public class TorControlProtocol implements AutoCloseable {
         Set<String> previous = getEventTypesOfHsDescEventListeners();
         String newEventType = listener.getEventType().name();
         if (!previous.contains(newEventType) && !closeInProgress) {
-            log.warn("Remove HsDescEventListener but did not have eventType in listeners. " +
-                    "This could happen if removeHsDescEventListener was called without addHsDescEventListener before.");
+            log.warn("Remove HsDescEventListener but did not have eventType in listeners. This could happen if removeHsDescEventListener was called without addHsDescEventListener before.");
         }
         torControlReader.removeHsDescEventListener(listener);
         Set<String> current = getEventTypesOfHsDescEventListeners();
-        // If your listener was the only listener with that eventType we unregister for that event
         if (!current.contains(newEventType)) {
             refreshEventRegistration();
         } else {
@@ -250,64 +262,52 @@ public class TorControlProtocol implements AutoCloseable {
         }
     }
 
-    private void connectToTor(int port) throws InterruptedException {
+    private Socket createAndConnectControlSocket(int port) throws InterruptedException, CannotConnectWithTorException {
         int connectionAttempt = 0;
-        Exception lastConnectException = null;
+        Exception lastException = null;
 
         while (connectionAttempt < MAX_CONNECTION_ATTEMPTS) {
             Socket attemptSocket = new Socket();
             try {
                 var socketAddress = new InetSocketAddress("127.0.0.1", port);
-                log.debug("Attempting to connect to Tor control port {}/{} on attempt {}/{}",
-                        socketAddress.getAddress(), socketAddress.getPort(), connectionAttempt + 1, MAX_CONNECTION_ATTEMPTS);
+                log.debug("Attempting to connect to Tor control port {} ({}/{})", socketAddress, connectionAttempt + 1, MAX_CONNECTION_ATTEMPTS);
                 attemptSocket.connect(socketAddress);
-
-                this.controlSocket = attemptSocket;
-                setupStreams();
-                log.info("Successfully connected to Tor control port {} after {} attempts", port, connectionAttempt + 1);
-                return;
+                log.info("Successfully connected control socket to Tor port {} after {} attempts", port, connectionAttempt + 1);
+                return attemptSocket;
             } catch (ConnectException e) {
-                lastConnectException = e;
+                lastException = e;
+                log.warn("ConnectException on attempt {} to Tor control port {}: {}. Closing attemptSocket.",
+                        connectionAttempt + 1, port, e.getMessage());
                 try {
                     attemptSocket.close();
                 } catch (IOException closeEx) {
-                    log.warn("Failed to close unconnected socket after ConnectException on port {}: {}", port, closeEx.getMessage());
+                    log.warn("Failed to close attemptSocket after ConnectException on port {}: {}", port, closeEx.getMessage(), closeEx);
                 }
             } catch (IOException e) {
+                lastException = e;
+                log.warn("IOException on attempt {} to Tor control port {}: {}. Closing attemptSocket.",
+                        connectionAttempt + 1, port, e.getMessage());
                 try {
                     attemptSocket.close();
                 } catch (IOException closeEx) {
-                    log.warn("Failed to close socket after IOException on port {}: {}", port, closeEx.getMessage());
+                    log.warn("Failed to close attemptSocket after IOException on port {}: {}", port, closeEx.getMessage(), closeEx);
                 }
-                if (this.controlSocket == attemptSocket) { // Indicates setupStreams failed for this attemptSocket
-                    this.close();
-                }
-                // This type of IOException is more severe than a simple ConnectException for retrying, so propagate up.
-                throw new CannotConnectWithTorException(e);
             }
-            
+
             connectionAttempt++;
             if (connectionAttempt < MAX_CONNECTION_ATTEMPTS) {
-                log.debug("Connection attempt {}/{} to Tor control port {} failed. Retrying in 200ms...",
-                        connectionAttempt, MAX_CONNECTION_ATTEMPTS, port);
-                Thread.sleep(200); // Wait before retrying
+                log.debug("Connection attempt to Tor control port {} failed. Retrying in 200ms...", port);
+                Thread.sleep(200);
             }
         }
 
         String errorMessage = "Failed to connect to Tor control port " + port + " after " + MAX_CONNECTION_ATTEMPTS + " attempts.";
-        throw new CannotConnectWithTorException(new IOException(errorMessage, lastConnectException));
-    }
-
-    private void setupStreams() throws IOException {
-        if (controlSocket == null || !controlSocket.isConnected()) {
-            throw new IllegalStateException("Cannot setup streams on a null or disconnected socket.");
-        }
-        this.outputStream = Optional.of(controlSocket.getOutputStream());
-        this.torControlReader.start(controlSocket.getInputStream());
+        IOException wrapperException = new IOException(errorMessage, lastException);
+        log.error(errorMessage, wrapperException);
+        throw new CannotConnectWithTorException(wrapperException);
     }
 
     private void sendCommand(String command) {
-        // Check if outputStream is present before sending command
         if (outputStream.isEmpty()) {
             throw new IllegalStateException("TorControlProtocol output stream not initialized. Cannot send command.");
         }
@@ -319,10 +319,10 @@ public class TorControlProtocol implements AutoCloseable {
                 commandToLog = commandToLog.substring(0, commandToLog.length() - 2);
             }
             log.info("Send Tor control command: {}", commandToLog);
-            @SuppressWarnings("resource") OutputStream outputStream = this.outputStream.orElseThrow();
+            @SuppressWarnings("resource") OutputStream os = this.outputStream.orElseThrow();
             byte[] commandBytes = command.getBytes(StandardCharsets.US_ASCII);
-            outputStream.write(commandBytes);
-            outputStream.flush();
+            os.write(commandBytes);
+            os.flush();
         } catch (IOException e) {
             throw new CannotSendCommandToTorException(e);
         }
