@@ -50,6 +50,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
+import java.util.Optional;
 
 @Slf4j
 public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, MuSigOfferbookController> {
@@ -63,7 +64,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     private VBox marketListVBox;
     private Label marketListTitle;
     private BisqTableView<MarketChannelItem> marketListView;
-    private Subscription selectedMarketChannelItemPin;
+    private Subscription selectedMarketChannelItemPin, marketListViewSelectionPin;
 
     public MuSigOfferbookView(MuSigOfferbookModel model, MuSigOfferbookController controller) {
         super(new VBox(), model, controller);
@@ -97,11 +98,21 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         muSigOfferListView.sort();
 
         marketListView.initialize();
+
+        selectedMarketChannelItemPin = EasyBind.subscribe(model.getSelectedMarketChannelItem(), this::selectedMarketChannelItemChanged);
+        marketListViewSelectionPin = EasyBind.subscribe(marketListView.getSelectionModel().selectedItemProperty(), item -> {
+            if (item != null) {
+                controller.onSelectMarketChannelItem(item);
+            }
+        });
     }
 
     @Override
     protected void onViewDetached() {
         muSigOfferListView.dispose();
+
+        selectedMarketChannelItemPin.unsubscribe();
+        marketListViewSelectionPin.unsubscribe();
     }
 
     private void configMuSigOfferListView() {
@@ -351,5 +362,15 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         return numOffers > 1
                 ? Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.many", numOffers, quoteCurrencyName)
                 : Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.one", numOffers, quoteCurrencyName);
+    }
+
+    private void selectedMarketChannelItemChanged(MarketChannelItem selectedItem) {
+        marketListView.getSelectionModel().clearSelection();
+        marketListView.getSelectionModel().select(selectedItem);
+//        favouritesTableView.getSelectionModel().clearSelection();
+//        favouritesTableView.getSelectionModel().select(selectedItem);
+
+//        StackPane marketsImage = MarketImageComposition.getMarketIcons(selectedItem.getMarket(), Optional.empty());
+//        channelHeaderIcon.setGraphic(marketsImage);
     }
 }

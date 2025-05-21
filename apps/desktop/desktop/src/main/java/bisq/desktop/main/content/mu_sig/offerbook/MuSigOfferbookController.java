@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.mu_sig.offerbook;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
@@ -27,6 +28,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.identity.IdentityService;
 import bisq.mu_sig.MuSigService;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.settings.CookieKey;
 import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
 import bisq.user.banned.BannedUserService;
@@ -73,6 +75,8 @@ public class MuSigOfferbookController implements Controller {
                 .toList();
         model.getMarketChannelItems().setAll(marketChannelItems);
 
+        applyInitialSelectedMarket();
+
         offersPin = muSigService.getObservableOffers().addObserver(new CollectionObserver<>() {
             @Override
             public void add(MuSigOffer muSigOffer) {
@@ -118,5 +122,51 @@ public class MuSigOfferbookController implements Controller {
         model.getMuSigOfferListItems().forEach(MuSigOfferListItem::dispose);
         model.getMuSigOfferListItems().clear();
         model.getMuSigOfferIds().clear();
+    }
+
+    void onSelectMarketChannelItem(MarketChannelItem marketChannelItem) {
+        if (marketChannelItem == null) {
+            model.getSelectedMarketChannelItem().set(null);
+            maybeSelectFirst();
+        } else {
+            Market market = marketChannelItem.getMarket();
+            settingsService.setSelectedMarket(market);
+            settingsService.setCookie(getSelectedMarketCookieKey(), market.getMarketCodes());
+        }
+    }
+
+    private void maybeSelectFirst() {
+        MarketChannelItem firstMarketItem = getFirstMarketItem();
+        if (firstMarketItem != null) {
+            model.getSelectedMarketChannelItem().set(firstMarketItem);
+        }
+    }
+
+    private MarketChannelItem getFirstMarketItem() {
+        return !model.getSortedMarketChannelItems().isEmpty() ? model.getSortedMarketChannelItems().get(0) : null;
+    }
+
+    private CookieKey getSelectedMarketCookieKey() {
+        // TODO: Update this according to selected base market
+        return CookieKey.MU_SIG_OFFERBOOK_SELECTED_BTC_MARKET;
+    }
+
+    private void applyInitialSelectedMarket() {
+        Optional<Market> selectedMarket = settingsService.getCookie().asString(getSelectedMarketCookieKey())
+                .flatMap(MarketRepository::findAnyMarketByMarketCodes)
+                .filter(this::isExpectedMarket);
+
+        selectedMarket.flatMap(market -> model.getMarketChannelItems().stream()
+                .filter(item -> item.getMarket().equals(market))
+                .findAny())
+                .ifPresentOrElse(
+                        item -> model.getSelectedMarketChannelItem().set(item),
+                        () -> model.getSelectedMarketChannelItem().set(getFirstMarketItem())
+                );
+    }
+
+    private boolean isExpectedMarket(Market market) {
+        // TODO: Here we need to use de base market selection instead.
+        return market.isBtcFiatMarket() && market.getBaseCurrencyCode().equals("BTC");
     }
 }
