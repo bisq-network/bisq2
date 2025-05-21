@@ -70,8 +70,8 @@ public class TorControlProtocol implements AutoCloseable {
         if (closeInProgress) {
             return;
         }
-        closeInProgress = true; // Stays true after close attempt
-        log.debug("Closing TorControlProtocol resources for control socket related to port (if known).");
+        closeInProgress = true;
+        log.debug("Closing TorControlProtocol resources.");
         try {
             if (controlSocket != null && !controlSocket.isClosed()) {
                 controlSocket.close();
@@ -87,7 +87,7 @@ public class TorControlProtocol implements AutoCloseable {
             log.warn("Exception while closing TorControlReader.", e);
         }
         outputStream = Optional.empty();
-        // closeInProgress remains true
+        closeInProgress = false;
     }
 
     public void authenticate(PasswordDigest passwordDigest) {
@@ -269,6 +269,11 @@ public class TorControlProtocol implements AutoCloseable {
         while (connectionAttempt < MAX_CONNECTION_ATTEMPTS) {
             Socket attemptSocket = new Socket();
             try {
+                // The Tor Control Port communication is typically unencrypted. 
+                // This is considered safe because the connection is made to 127.0.0.1 (localhost),
+                // ensuring that the communication does not leave the local machine and is not 
+                // exposed to external networks. Authentication (via cookie or password) 
+                // is handled by the Tor control protocol itself after connection.
                 var socketAddress = new InetSocketAddress("127.0.0.1", port);
                 log.debug("Attempting to connect to Tor control port {} ({}/{})", socketAddress, connectionAttempt + 1, MAX_CONNECTION_ATTEMPTS);
                 attemptSocket.connect(socketAddress);
