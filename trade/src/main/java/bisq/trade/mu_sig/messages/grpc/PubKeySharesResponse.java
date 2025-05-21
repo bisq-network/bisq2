@@ -19,11 +19,11 @@ package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.Arrays;
+
 @Getter
-@EqualsAndHashCode
 public final class PubKeySharesResponse implements Proto {
     private final byte[] buyerOutputPubKeyShare;
     private final byte[] sellerOutputPubKeyShare;
@@ -54,5 +54,22 @@ public final class PubKeySharesResponse implements Proto {
         return new PubKeySharesResponse(proto.getBuyerOutputPubKeyShare().toByteArray(),
                 proto.getSellerOutputPubKeyShare().toByteArray(),
                 proto.getCurrentBlockHeight());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof PubKeySharesResponse that)) return false;
+
+        return currentBlockHeight == that.currentBlockHeight &&
+                Arrays.equals(buyerOutputPubKeyShare, that.buyerOutputPubKeyShare) &&
+                Arrays.equals(sellerOutputPubKeyShare, that.sellerOutputPubKeyShare);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Arrays.hashCode(buyerOutputPubKeyShare);
+        result = 31 * result + Arrays.hashCode(sellerOutputPubKeyShare);
+        result = 31 * result + currentBlockHeight;
+        return result;
     }
 }

@@ -69,5 +69,4 @@ public final class SwapTxSignature implements Proto {
         result = 31 * result + Arrays.hashCode(peerOutputPrvKeyShare);
         return result;
     }
-
 }

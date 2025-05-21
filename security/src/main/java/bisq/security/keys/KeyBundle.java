@@ -1,17 +1,16 @@
 package bisq.security.keys;
 
 import bisq.common.proto.PersistableProto;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 import java.security.KeyPair;
+import java.util.Arrays;
+import java.util.Objects;
 
 @ToString
 @Getter
-@EqualsAndHashCode
 public class KeyBundle implements PersistableProto {
-    @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private final KeyPair keyPair;
     private final TorKeyPair torKeyPair;
@@ -52,5 +51,24 @@ public class KeyBundle implements PersistableProto {
                 KeyPairProtoUtil.fromProto(proto.getKeyPair()),
                 TorKeyPair.fromProto(proto.getTorKeyPair())/*,
                 I2pKeyPair.fromProto(proto.getI2PKeyPair())*/);
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (!(o instanceof KeyBundle keyBundle)) return false;
+
+        return Objects.equals(torKeyPair, keyBundle.torKeyPair) &&
+                Objects.equals(keyId, keyBundle.keyId) &&
+                Arrays.equals(encodedPrivateKey, keyBundle.encodedPrivateKey) &&
+                Arrays.equals(encodedPublicKey, keyBundle.encodedPublicKey);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(torKeyPair);
+        result = 31 * result + Objects.hashCode(keyId);
+        result = 31 * result + Arrays.hashCode(encodedPrivateKey);
+        result = 31 * result + Arrays.hashCode(encodedPublicKey);
+        return result;
     }
 }

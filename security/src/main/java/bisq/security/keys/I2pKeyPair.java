@@ -3,15 +3,15 @@ package bisq.security.keys;
 import bisq.common.proto.PersistableProto;
 import bisq.security.protobuf.I2PKeyPair;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+
+import java.util.Objects;
 
 public class I2pKeyPair implements PersistableProto {
     @ToString.Exclude
     private final byte[] privateKey;
     private final byte[] publicKey;
-    @EqualsAndHashCode.Include
     @Getter
     private final String destination;
 
@@ -42,5 +42,17 @@ public class I2pKeyPair implements PersistableProto {
         return new I2pKeyPair(proto.getPrivateKey().toByteArray(),
                 proto.getPublicKey().toByteArray(),
                 proto.getDestination());
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (!(o instanceof I2pKeyPair that)) return false;
+
+        return Objects.equals(destination, that.destination);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(destination);
     }
 }

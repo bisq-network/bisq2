@@ -19,11 +19,11 @@ package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.Arrays;
+
 @Getter
-@EqualsAndHashCode
 public final class DepositPsbt implements Proto {
     private final byte[] depositPsbt;
 
@@ -44,5 +44,17 @@ public final class DepositPsbt implements Proto {
 
     public static DepositPsbt fromProto(bisq.trade.protobuf.DepositPsbt proto) {
         return new DepositPsbt(proto.getDepositPsbt().toByteArray());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof DepositPsbt that)) return false;
+
+        return Arrays.equals(depositPsbt, that.depositPsbt);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(depositPsbt);
     }
 }

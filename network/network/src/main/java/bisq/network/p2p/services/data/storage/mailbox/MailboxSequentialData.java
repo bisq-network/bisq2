@@ -22,15 +22,15 @@ import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
 
 @Getter
-@EqualsAndHashCode
 public final class MailboxSequentialData implements NetworkProto {
     private final MailboxData mailboxData;
     private final byte[] senderPublicKeyHash;
@@ -135,7 +135,8 @@ public final class MailboxSequentialData implements NetworkProto {
     }
 
     public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > Math.min(MailboxData.MAX_TLL, mailboxData.getMetaData().getTtl());
+        return (System.currentTimeMillis() - created) >
+                Math.min(MailboxData.MAX_TLL, mailboxData.getMetaData().getTtl());
     }
 
     @Override
@@ -149,5 +150,30 @@ public final class MailboxSequentialData implements NetworkProto {
                 ", receiversPubKey=" + Hex.encode(receiversPubKey.getEncoded()) +
                 ", mailboxData=" + mailboxData +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof MailboxSequentialData that)) return false;
+
+        return created == that.created &&
+                sequenceNumber == that.sequenceNumber &&
+                Objects.equals(mailboxData, that.mailboxData) &&
+                Arrays.equals(senderPublicKeyHash, that.senderPublicKeyHash) &&
+                Arrays.equals(receiversPublicKeyHash, that.receiversPublicKeyHash) &&
+                Arrays.equals(receiversPubKeyBytes, that.receiversPubKeyBytes) &&
+                Objects.equals(receiversPubKey, that.receiversPubKey);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(mailboxData);
+        result = 31 * result + Arrays.hashCode(senderPublicKeyHash);
+        result = 31 * result + Arrays.hashCode(receiversPublicKeyHash);
+        result = 31 * result + Arrays.hashCode(receiversPubKeyBytes);
+        result = 31 * result + Long.hashCode(created);
+        result = 31 * result + sequenceNumber;
+        result = 31 * result + Objects.hashCode(receiversPubKey);
+        return result;
     }
 }

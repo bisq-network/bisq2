@@ -21,14 +21,12 @@ import bisq.common.encoding.Hex;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 
 @Getter
-@EqualsAndHashCode
 public final class HashSetFilterEntry implements NetworkProto, Comparable<HashSetFilterEntry> {
     private final byte[] hash;
     private final int sequenceNumber;
@@ -72,5 +70,19 @@ public final class HashSetFilterEntry implements NetworkProto, Comparable<HashSe
                 "hash (as hex)=" + Hex.encode(hash) +
                 ", sequenceNumber=" + sequenceNumber +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof HashSetFilterEntry that)) return false;
+
+        return sequenceNumber == that.sequenceNumber && Arrays.equals(hash, that.hash);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Arrays.hashCode(hash);
+        result = 31 * result + sequenceNumber;
+        return result;
     }
 }

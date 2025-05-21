@@ -19,11 +19,12 @@ package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 @Getter
-@EqualsAndHashCode
 public final class SwapTxSignatureRequest implements Proto {
     private final String tradeId;
     private final byte[] swapTxInputPeersPartialSignature;
@@ -47,5 +48,20 @@ public final class SwapTxSignatureRequest implements Proto {
 
     public static SwapTxSignatureRequest fromProto(bisq.trade.protobuf.SwapTxSignatureRequest proto) {
         return new SwapTxSignatureRequest(proto.getTradeId(), proto.getSwapTxInputPeersPartialSignature().toByteArray());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof SwapTxSignatureRequest that)) return false;
+
+        return Objects.equals(tradeId, that.tradeId) &&
+                Arrays.equals(swapTxInputPeersPartialSignature, that.swapTxInputPeersPartialSignature);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(tradeId);
+        result = 31 * result + Arrays.hashCode(swapTxInputPeersPartialSignature);
+        return result;
     }
 }

@@ -19,11 +19,11 @@ package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.Arrays;
+
 @Getter
-@EqualsAndHashCode
 public final class CloseTradeResponse implements Proto {
     private final byte[] peerOutputPrvKeyShare;
 
@@ -44,5 +44,17 @@ public final class CloseTradeResponse implements Proto {
 
     public static CloseTradeResponse fromProto(bisq.trade.protobuf.CloseTradeResponse proto) {
         return new CloseTradeResponse(proto.getPeerOutputPrvKeyShare().toByteArray());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof CloseTradeResponse that)) return false;
+
+        return Arrays.equals(peerOutputPrvKeyShare, that.peerOutputPrvKeyShare);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(peerOutputPrvKeyShare);
     }
 }
