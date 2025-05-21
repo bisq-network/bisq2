@@ -35,7 +35,6 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.formatters.TimeFormatter;
-import bisq.settings.DontShowAgainKey;
 import bisq.settings.DontShowAgainService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
@@ -52,6 +51,8 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+
+import static bisq.settings.DontShowAgainKey.CONFIRM_CLOSE_BISQ_EASY_TRADE;
 
 @Slf4j
 public abstract class State4<C extends State4.Controller<?, ?>> extends BaseState {
@@ -119,13 +120,12 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
         }
 
         protected void onCloseCompletedTrade() {
-            DontShowAgainKey key = DontShowAgainKey.CONFIRM_CLOSE_BISQ_EASY_TRADE;
-            if (dontShowAgainService.showAgain(key)) {
+            if (dontShowAgainService.showAgain(CONFIRM_CLOSE_BISQ_EASY_TRADE)) {
                 new Popup().feedback(Res.get("bisqEasy.openTrades.closeTrade.warning.completed"))
                         .actionButtonText(Res.get("bisqEasy.openTrades.confirmCloseTrade"))
                         .onAction(this::doCloseCompletedTrade)
                         .closeButtonText(Res.get("action.cancel"))
-                        .dontShowAgainId(key)
+                        .dontShowAgainId(CONFIRM_CLOSE_BISQ_EASY_TRADE)
                         .show();
             } else {
                 doCloseCompletedTrade();

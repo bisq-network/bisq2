@@ -21,6 +21,18 @@ import bisq.common.application.Service;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Service for managing "don't show again" preferences for popups and warnings.
+ * 
+ * This service supports two types of keys:
+ * 1. Enum-based keys (preferred): For static, well-known popups that are part of the core UI.
+ *    These are defined in {@link DontShowAgainKey} and should be used whenever possible.
+ * 
+ * 2. String-based keys (for dynamic cases): For dynamically generated popups where the key
+ *    needs to incorporate runtime information (e.g., a trade ID). These should only be used
+ *    when the key cannot be known at compile time.
+ *    Example: "errorMessage_" + tradeId
+ */
 public class DontShowAgainService implements Service {
     private final SettingsService settingsService;
 

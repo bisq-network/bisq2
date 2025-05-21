@@ -56,6 +56,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static bisq.settings.DontShowAgainKey.SEND_MSG_OFFER_ONLY_WARN;
+
 public class ChatMessageContainerController implements bisq.desktop.common.view.Controller {
     private final ChatMessageContainerModel model;
     @Getter
@@ -277,14 +279,13 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         }
 
         if (chatChannel instanceof BisqEasyOfferbookChannel) {
-            String dontShowAgainId = "sendMsgOfferOnlyWarn";
             boolean hasShowOnlyOffersFilter = settingsService.getBisqEasyOfferbookMessageTypeFilter().get() == ChatMessageType.OFFER;
             if (hasShowOnlyOffersFilter) {
                 new Popup().information(Res.get("chat.message.send.offerOnly.warn"))
                         .actionButtonText(Res.get("confirmation.yes"))
                         .onAction(() -> settingsService.setBisqEasyOfferbookMessageTypeFilter(ChatMessageType.ALL))
                         .closeButtonText(Res.get("confirmation.no"))
-                        .dontShowAgainId(dontShowAgainId)
+                        .dontShowAgainId(SEND_MSG_OFFER_ONLY_WARN)
                         .show();
             }
             chatService.getBisqEasyOfferbookChannelService().publishChatMessage(text, citation, (BisqEasyOfferbookChannel) chatChannel, userIdentity);
