@@ -816,6 +816,29 @@
 /* ------------------------------------------------------------------------------------ */
 /* Icons */
 /* ------------------------------------------------------------------------------------ */
+#icon-notification-mention-grey {
+    -fx-image: url("/images/icons/icon-notification-mention-grey.png");
+}
+
+#icon-notification-mention-white {
+    -fx-image: url("/images/icons/icon-notification-mention-white.png");
+}
+
+#icon-notification-off-grey {
+    -fx-image: url("/images/icons/icon-notification-off-grey.png");
+}
+
+#icon-notification-off-white {
+    -fx-image: url("/images/icons/icon-notification-off-white.png");
+}
+
+#icon-notification-all-grey {
+    -fx-image: url("/images/icons/icon-notification-all-grey.png");
+}
+
+#icon-notification-all-white {
+    -fx-image: url("/images/icons/icon-notification-all-white.png");
+}
 
 #icon-bell-grey {
     -fx-image: url("/images/icons/icon-bell-grey.png");

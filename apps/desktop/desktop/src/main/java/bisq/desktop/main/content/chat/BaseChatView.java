@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.chat;
 
 import bisq.chat.notifications.ChatChannelNotificationType;
+import bisq.common.observable.ReadOnlyObservable;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.controls.DropdownBisqMenuItem;
@@ -25,6 +26,7 @@ import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownTitleMenuItem;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.i18n.Res;
+import bisq.settings.ChatNotificationType;
 import javafx.css.PseudoClass;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -51,7 +53,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected final Pane channelSidebar, chatMessagesComponent;
     protected final SearchBox searchBox = new SearchBox();
     protected final DropdownMenu ellipsisMenu = new DropdownMenu("ellipsis-v-grey", "ellipsis-v-white", true);
-    protected final DropdownMenu notificationsSettingsMenu = new DropdownMenu("icon-bell-grey", "icon-bell-white", true);
+    protected final DropdownMenu notificationsSettingsMenu = new DropdownMenu("icon-notification-all-grey", "icon-notification-all-white", true);
     protected DropdownBisqMenuItem helpButton, infoButton;
     private NotificationSettingMenuItem globalDefault, all, mention, off;
     protected Subscription channelIconPin, selectedNotificationSettingPin;
@@ -124,6 +126,11 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
         selectedNotificationSettingPin = EasyBind.subscribe(model.getSelectedNotificationSetting(),
                 this::applySelectedNotificationSetting);
+
+        // Apply initial state of the icon when view is attached
+        if (model.getSelectedNotificationSetting().get() != null) {
+            applySelectedNotificationSetting(model.getSelectedNotificationSetting().get());
+        }
     }
 
     @Override
@@ -182,11 +189,34 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         notificationsSettingsMenu.setTooltip(Res.get("chat.notificationsSettingsMenu.tooltip"));
     }
 
+    private IconIdPair getIconIdsForNotificationType(ChatChannelNotificationType type) {
+        switch (type) {
+            case ALL:
+                return new IconIdPair("icon-notification-all-grey", "icon-notification-all-white");
+            case MENTION:
+                return new IconIdPair("icon-notification-mention-grey", "icon-notification-mention-white");
+            case OFF:
+                return new IconIdPair("icon-notification-off-grey", "icon-notification-off-white");
+            case GLOBAL_DEFAULT:
+            default:
+                ReadOnlyObservable<ChatNotificationType> globalDefault = controller.serviceProvider.getSettingsService().getChatNotificationType();
+                return switch (globalDefault.get()) {
+                    case ChatNotificationType.ALL -> getIconIdsForNotificationType(ChatChannelNotificationType.ALL);
+                    case ChatNotificationType.OFF -> getIconIdsForNotificationType(ChatChannelNotificationType.OFF);
+                    case ChatNotificationType.MENTION ->
+                            getIconIdsForNotificationType(ChatChannelNotificationType.MENTION);
+                };
+        }
+    }
+
     private void applySelectedNotificationSetting(ChatChannelNotificationType type) {
         globalDefault.updateSelection(type == globalDefault.getType());
         all.updateSelection(type == all.getType());
         mention.updateSelection(type == mention.getType());
         off.updateSelection(type == off.getType());
+
+        IconIdPair icons = getIconIdsForNotificationType(type);
+        notificationsSettingsMenu.setIcons(icons.defaultId, icons.activeId);
     }
 
     @Getter
@@ -195,7 +225,10 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
         private final ChatChannelNotificationType type;
 
-        private NotificationSettingMenuItem(String defaultIconId, String activeIconId, String text, ChatChannelNotificationType type) {
+        private NotificationSettingMenuItem(String defaultIconId,
+                                            String activeIconId,
+                                            String text,
+                                            ChatChannelNotificationType type) {
             super(defaultIconId, activeIconId, text);
 
             this.type = type;
@@ -213,6 +246,16 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
         void updateSelection(boolean isSelected) {
             getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
+        }
+    }
+
+    private static class IconIdPair {
+        final String defaultId;
+        final String activeId;
+
+        IconIdPair(String defaultId, String activeId) {
+            this.defaultId = defaultId;
+            this.activeId = activeId;
         }
     }
 }
