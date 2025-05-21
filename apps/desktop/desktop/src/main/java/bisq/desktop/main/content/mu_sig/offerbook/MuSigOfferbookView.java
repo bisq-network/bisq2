@@ -50,7 +50,6 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
-import java.util.Optional;
 
 @Slf4j
 public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, MuSigOfferbookController> {
@@ -63,8 +62,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     private final HBox titleHBox = new HBox(10);
     private VBox marketListVBox;
     private Label marketListTitle;
-    private BisqTableView<MarketChannelItem> marketListView;
-    private Subscription selectedMarketChannelItemPin, marketListViewSelectionPin;
+    private BisqTableView<MarketItem> marketListView;
+    private Subscription selectedMarketItemPin, marketListViewSelectionPin;
 
     public MuSigOfferbookView(MuSigOfferbookModel model, MuSigOfferbookController controller) {
         super(new VBox(), model, controller);
@@ -99,10 +98,10 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
         marketListView.initialize();
 
-        selectedMarketChannelItemPin = EasyBind.subscribe(model.getSelectedMarketChannelItem(), this::selectedMarketChannelItemChanged);
+        selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), this::selectedMarketItemChanged);
         marketListViewSelectionPin = EasyBind.subscribe(marketListView.getSelectionModel().selectedItemProperty(), item -> {
             if (item != null) {
-                controller.onSelectMarketChannelItem(item);
+                controller.onSelectMarketItem(item);
             }
         });
     }
@@ -111,7 +110,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     protected void onViewDetached() {
         muSigOfferListView.dispose();
 
-        selectedMarketChannelItemPin.unsubscribe();
+        selectedMarketItemPin.unsubscribe();
         marketListViewSelectionPin.unsubscribe();
     }
 
@@ -205,7 +204,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 //        favouritesTableView.setFixedCellSize(LIST_CELL_HEIGHT);
 //        configMarketsTableView(favouritesTableView);
 
-        marketListView = new BisqTableView<>(model.getSortedMarketChannelItems(), false);
+        marketListView = new BisqTableView<>(model.getSortedMarketItems(), false);
         marketListView.getStyleClass().addAll("market-selection-list", "markets-list");
         marketListView.allowVerticalScrollbar();
         marketListView.hideHorizontalScrollbar();
@@ -224,14 +223,14 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 //        HBox.setMargin(marketListVBox, new Insets(1, 0, 0, 0));
     }
 
-    private void configMarketsTableView(BisqTableView<MarketChannelItem> tableView) {
-        BisqTableColumn<MarketChannelItem> marketLogoTableColumn = new BisqTableColumn.Builder<MarketChannelItem>()
+    private void configMarketsTableView(BisqTableView<MarketItem> tableView) {
+        BisqTableColumn<MarketItem> marketLogoTableColumn = new BisqTableColumn.Builder<MarketItem>()
                 .fixWidth(55)
                 .setCellFactory(getMarketLogoCellFactory())
                 .isSortable(false)
                 .build();
 
-        BisqTableColumn<MarketChannelItem> marketLabelTableColumn = new BisqTableColumn.Builder<MarketChannelItem>()
+        BisqTableColumn<MarketItem> marketLabelTableColumn = new BisqTableColumn.Builder<MarketItem>()
                 .minWidth(100)
                 .left()
                 .setCellFactory(getMarketLabelCellFactory(false))
@@ -242,8 +241,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         tableView.getColumns().add(marketLabelTableColumn);
     }
 
-    private static Callback<TableColumn<MarketChannelItem, MarketChannelItem>,
-            TableCell<MarketChannelItem, MarketChannelItem>> getMarketLogoCellFactory() {
+    private static Callback<TableColumn<MarketItem, MarketItem>,
+            TableCell<MarketItem, MarketItem>> getMarketLogoCellFactory() {
         return column -> new TableCell<>() {
             private final Badge numMessagesBadge = new Badge(Pos.CENTER);
             private Subscription selectedPin;
@@ -255,7 +254,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
             }
 
             @Override
-            protected void updateItem(MarketChannelItem item, boolean empty) {
+            protected void updateItem(MarketItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -264,12 +263,12 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                     Node marketLogo = MarketImageComposition.createMarketLogo(item.getMarket().getQuoteCurrencyCode());
                     marketLogo.setCache(true);
                     marketLogo.setCacheHint(CacheHint.SPEED);
-                    marketLogo.setEffect(MarketChannelItem.DIMMED);
+                    marketLogo.setEffect(MarketItem.DIMMED);
 
-                    TableRow<MarketChannelItem> tableRow = getTableRow();
+                    TableRow<MarketItem> tableRow = getTableRow();
                     if (tableRow != null) {
                         selectedPin = EasyBind.subscribe(tableRow.selectedProperty(), isSelectedMarket ->
-                                marketLogo.setEffect(isSelectedMarket ? MarketChannelItem.SELECTED : MarketChannelItem.DIMMED));
+                                marketLogo.setEffect(isSelectedMarket ? MarketItem.SELECTED : MarketItem.DIMMED));
                     }
 
                     StackPane pane = new StackPane(marketLogo, numMessagesBadge);
@@ -288,8 +287,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         };
     }
 
-    private static Callback<TableColumn<MarketChannelItem, MarketChannelItem>,
-            TableCell<MarketChannelItem, MarketChannelItem>> getMarketLabelCellFactory(boolean isFavouritesTableView) {
+    private static Callback<TableColumn<MarketItem, MarketItem>,
+            TableCell<MarketItem, MarketItem>> getMarketLabelCellFactory(boolean isFavouritesTableView) {
         return column -> new TableCell<>() {
             private final Label marketName = new Label();
             private final Label marketCode = new Label();
@@ -325,7 +324,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
             }
 
             @Override
-            protected void updateItem(MarketChannelItem item, boolean empty) {
+            protected void updateItem(MarketItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -364,7 +363,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 : Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.one", numOffers, quoteCurrencyName);
     }
 
-    private void selectedMarketChannelItemChanged(MarketChannelItem selectedItem) {
+    private void selectedMarketItemChanged(MarketItem selectedItem) {
         marketListView.getSelectionModel().clearSelection();
         marketListView.getSelectionModel().select(selectedItem);
 //        favouritesTableView.getSelectionModel().clearSelection();

@@ -66,14 +66,14 @@ public class MuSigOfferbookController implements Controller {
 
     @Override
     public void onActivate() {
-        List<MarketChannelItem> marketChannelItems = MarketRepository.getAllFiatMarkets().stream()
-                .map(market -> new MarketChannelItem(market,
+        List<MarketItem> marketItems = MarketRepository.getAllFiatMarkets().stream()
+                .map(market -> new MarketItem(market,
                         favouriteMarketsService,
                         marketPriceService,
                         userProfileService,
                         muSigService))
                 .toList();
-        model.getMarketChannelItems().setAll(marketChannelItems);
+        model.getMarketItems().setAll(marketItems);
 
         applyInitialSelectedMarket();
 
@@ -124,26 +124,26 @@ public class MuSigOfferbookController implements Controller {
         model.getMuSigOfferIds().clear();
     }
 
-    void onSelectMarketChannelItem(MarketChannelItem marketChannelItem) {
-        if (marketChannelItem == null) {
-            model.getSelectedMarketChannelItem().set(null);
+    void onSelectMarketItem(MarketItem marketItem) {
+        if (marketItem == null) {
+            model.getSelectedMarketItem().set(null);
             maybeSelectFirst();
         } else {
-            Market market = marketChannelItem.getMarket();
+            Market market = marketItem.getMarket();
             settingsService.setSelectedMarket(market);
             settingsService.setCookie(getSelectedMarketCookieKey(), market.getMarketCodes());
         }
     }
 
     private void maybeSelectFirst() {
-        MarketChannelItem firstMarketItem = getFirstMarketItem();
+        MarketItem firstMarketItem = getFirstMarketItem();
         if (firstMarketItem != null) {
-            model.getSelectedMarketChannelItem().set(firstMarketItem);
+            model.getSelectedMarketItem().set(firstMarketItem);
         }
     }
 
-    private MarketChannelItem getFirstMarketItem() {
-        return !model.getSortedMarketChannelItems().isEmpty() ? model.getSortedMarketChannelItems().get(0) : null;
+    private MarketItem getFirstMarketItem() {
+        return !model.getSortedMarketItems().isEmpty() ? model.getSortedMarketItems().get(0) : null;
     }
 
     private CookieKey getSelectedMarketCookieKey() {
@@ -156,12 +156,12 @@ public class MuSigOfferbookController implements Controller {
                 .flatMap(MarketRepository::findAnyMarketByMarketCodes)
                 .filter(this::isExpectedMarket);
 
-        selectedMarket.flatMap(market -> model.getMarketChannelItems().stream()
+        selectedMarket.flatMap(market -> model.getMarketItems().stream()
                 .filter(item -> item.getMarket().equals(market))
                 .findAny())
                 .ifPresentOrElse(
-                        item -> model.getSelectedMarketChannelItem().set(item),
-                        () -> model.getSelectedMarketChannelItem().set(getFirstMarketItem())
+                        item -> model.getSelectedMarketItem().set(item),
+                        () -> model.getSelectedMarketItem().set(getFirstMarketItem())
                 );
     }
 

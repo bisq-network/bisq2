@@ -38,9 +38,9 @@ public class MuSigOfferbookModel implements Model {
     private final FilteredList<MuSigOfferListItem> filteredMuSigOfferListItems = new FilteredList<>(muSigOfferListItems);
     private final SortedList<MuSigOfferListItem> sortedMuSigOfferListItems = new SortedList<>(filteredMuSigOfferListItems);
 
-    private final ObservableList<MarketChannelItem> marketChannelItems = FXCollections.observableArrayList();
-    private final FilteredList<MarketChannelItem> filteredMarketChannelItems = new FilteredList<>(marketChannelItems);
-    private final SortedList<MarketChannelItem> sortedMarketChannelItems = new SortedList<>(filteredMarketChannelItems);
-    private final FilteredList<MarketChannelItem> favouriteMarketChannelItems = new FilteredList<>(marketChannelItems);
-    private final ObjectProperty<MarketChannelItem> selectedMarketChannelItem = new SimpleObjectProperty<>();
+    private final ObservableList<MarketItem> marketItems = FXCollections.observableArrayList();
+    private final FilteredList<MarketItem> filteredMarketItems = new FilteredList<>(marketItems);
+    private final SortedList<MarketItem> sortedMarketItems = new SortedList<>(filteredMarketItems);
+    private final FilteredList<MarketItem> favouriteMarketItems = new FilteredList<>(marketItems);
+    private final ObjectProperty<MarketItem> selectedMarketItem = new SimpleObjectProperty<>();
 }
