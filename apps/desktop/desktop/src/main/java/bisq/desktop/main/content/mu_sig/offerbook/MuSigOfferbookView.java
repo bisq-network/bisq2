@@ -123,25 +123,20 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     }
 
     private void configMuSigOfferListView() {
-//        richTableView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
-//                .title(Res.get("muSig.offerbook.table.header.intent"))
-//                .setCellFactory(getActionButtonCellFactory())
-//                .fixWidth(130)
-//                .build());
-
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
-                .title("Amount to send") // TODO: FIXME
+                .titleProperty(model.getBaseCodeTitle())
                 .comparator(Comparator.comparing(MuSigOfferListItem::getBaseAmountAsString))
                 .valueSupplier(MuSigOfferListItem::getBaseAmountAsString)
                 .build());
 
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
-                .title("Amount to receive") // TODO: FIXME
+                .titleProperty(model.getQuoteCodeTitle())
                 .comparator(Comparator.comparing(MuSigOfferListItem::getQuoteAmountAsString))
                 .valueSupplier(MuSigOfferListItem::getQuoteAmountAsString)
                 .build());
 
         BisqTableColumn<MuSigOfferListItem> priceColumn = new BisqTableColumn.Builder<MuSigOfferListItem>()
+                .titleProperty(model.getPriceTitle())
                 .left()
                 .comparator(Comparator.comparing(MuSigOfferListItem::getPrice))
                 .valueSupplier(MuSigOfferListItem::getPrice)
@@ -159,7 +154,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
 
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
-                .title("Peer profile") // TODO: FIXME
+                .title(Res.get("muSig.offerbook.table.header.peerProfile"))
                 .comparator(Comparator.comparing(MuSigOfferListItem::getMaker))
                 .valueSupplier(MuSigOfferListItem::getMaker)
                 .build());
@@ -169,6 +164,12 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 .comparator(Comparator.comparing(MuSigOfferListItem::getDeposit))
                 .valueSupplier(MuSigOfferListItem::getDeposit)
                 .build());
+
+//        muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+//                .title(Res.get("muSig.offerbook.table.header.intent"))
+//                .setCellFactory(getActionButtonCellFactory())
+//                .fixWidth(130)
+//                .build());
     }
 
     private void createAndconfigMarketListView() {

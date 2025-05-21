@@ -123,7 +123,7 @@ public class MuSigOfferbookController implements Controller {
         selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarketItem -> {
             if (selectedMarketItem != null) {
                 updateMuSigOfferListItemsPredicate();
-                updateMarketTitle(selectedMarketItem);
+                updateMarketData(selectedMarketItem);
             }
         });
     }
@@ -191,16 +191,19 @@ public class MuSigOfferbookController implements Controller {
             model.getSelectedMarketItem().get().getMarket().equals(item.getMarket()));
     }
 
-    private void updateMarketTitle(MarketItem selectedMarketItem) {
+    private void updateMarketData(MarketItem selectedMarketItem) {
         if (selectedMarketItem != null) {
-            model.getMarketTitle().set(Res.get("muSig.offerbook.marketHeader.title", selectedMarketItem.getMarket().getMarketDisplayName()));
-            model.getMarketDescription().set(selectedMarketItem.getMarket().getMarketCodes());
             Market selectedMarket = selectedMarketItem.getMarket();
             if (selectedMarket != null) {
+                model.getMarketTitle().set(Res.get("muSig.offerbook.marketHeader.title", selectedMarket.getMarketDisplayName()));
+                model.getMarketDescription().set(selectedMarket.getMarketCodes());
                 marketPriceService
                         .findMarketPrice(selectedMarket)
                         .ifPresent(marketPrice ->
                                 model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true)));
+                model.getBaseCodeTitle().set(selectedMarket.getBaseCurrencyCode());
+                model.getQuoteCodeTitle().set(selectedMarket.getQuoteCurrencyCode());
+                model.getPriceTitle().set(Res.get("muSig.offerbook.table.header.price", selectedMarket.getMarketCodes()).toUpperCase());
             }
         } else {
             model.getMarketTitle().set("");

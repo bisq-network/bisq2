@@ -39,6 +39,10 @@ public class MuSigOfferbookModel implements Model {
     private final StringProperty marketDescription = new SimpleStringProperty("");
     private final StringProperty marketPrice = new SimpleStringProperty("");
 
+    private final StringProperty baseCodeTitle = new SimpleStringProperty("");
+    private final StringProperty quoteCodeTitle = new SimpleStringProperty("");
+    private final StringProperty priceTitle = new SimpleStringProperty("");
+
     private final Set<String> muSigOfferIds = new HashSet<>();
     private final ObservableList<MuSigOfferListItem> muSigOfferListItems = FXCollections.observableArrayList();
     private final FilteredList<MuSigOfferListItem> filteredMuSigOfferListItems = new FilteredList<>(muSigOfferListItems);
