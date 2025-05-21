@@ -18,7 +18,7 @@ class AchTransferAccountPayloadTest {
             .setId("id")
             .setPaymentMethodName("paymentMethodName")
             .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
-                    .setCountryCode("countryCode")
+                    .setCountryCode("US")
                     .setBankAccountPayload(BankAccountPayload.newBuilder()
                             .setHolderName("holderName")
                             .setAccountNr("accountNr")
@@ -34,7 +34,7 @@ class AchTransferAccountPayloadTest {
             .setId("id")
             .setPaymentMethodName("paymentMethodName")
             .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
-                    .setCountryCode("countryCode")
+                    .setCountryCode("US")
                     .setBankAccountPayload(BankAccountPayload.newBuilder()
                             .setHolderName("holderName")
                             .setAchTransferAccountPayload(AchTransferAccountPayload.newBuilder())))
@@ -42,13 +42,13 @@ class AchTransferAccountPayloadTest {
 
     private static final bisq.account.accounts.AchTransferAccountPayload PAYLOAD =
             new bisq.account.accounts.AchTransferAccountPayload(
-                    "id", "paymentMethodName", "countryCode",
+                    "id", "paymentMethodName", "US",
                     Optional.of("holderName"), Optional.of("bankName"), Optional.of("branchId"),
                     Optional.of("accountNr"), Optional.of("accountType"), Optional.of("holderAddress")
             );
     private static final bisq.account.accounts.AchTransferAccountPayload PAYLOAD_OPTIONALS_NOT_SET =
             new bisq.account.accounts.AchTransferAccountPayload(
-                    "id", "paymentMethodName", "countryCode",
+                    "id", "paymentMethodName", "US",
                     Optional.of("holderName"), null, null, null, null, null
             );
 

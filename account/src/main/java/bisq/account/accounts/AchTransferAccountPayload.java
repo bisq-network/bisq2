@@ -1,5 +1,6 @@
 package bisq.account.accounts;
 
+import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -7,7 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-import static bisq.common.util.OptionalUtils.*;
+import static bisq.common.util.OptionalUtils.normalize;
+import static bisq.common.util.OptionalUtils.toOptional;
 
 @Slf4j
 @ToString
@@ -39,6 +41,14 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
                 null,
                 null);
         this.holderAddress = normalize(holderAddress);
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
+        holderAddress.ifPresent(holderAddress -> NetworkDataValidation.validateRequiredText(holderAddress, 100));
     }
 
     @Override
