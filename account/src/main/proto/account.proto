@@ -103,6 +103,8 @@ message CountryBasedAccountPayload {
     AmazonGiftCardAccountPayload amazonGiftCardAccountPayload = 14;
     UpiAccountPayload upiAccountPayload = 15;
     BizumAccountPayload bizumAccountPayload = 16;
+    SepaInstantAccountPayload sepaInstantAccountPayload = 17;
+    WiseAccountPayload wiseAccountPayload = 18;
   }
 }
 message SepaAccountPayload {
@@ -110,6 +112,19 @@ message SepaAccountPayload {
   string iban = 2;
   string bic = 3;
 
+}
+
+message SepaInstantAccountPayload {
+  string holderName = 1;
+  string iban = 2;
+  string bic = 3;
+  repeated string acceptedCountryCodes = 5;
+}
+
+message WiseAccountPayload {
+  string email = 1;
+  string holderName = 2;
+  string beneficiaryAddress = 3;
 }
 
 message F2FAccountPayload {
@@ -125,6 +140,13 @@ message AchTransferAccountPayload {
 message NationalBankAccountPayload {
 }
 
+message SameBankAccountPayload {
+}
+
+message DomesticWireTransferAccountPayload {
+  string holder_address = 1;
+}
+
 message BankAccountPayload {
   string holder_name = 1;
   string bank_name = 2;
@@ -138,6 +160,8 @@ message BankAccountPayload {
     AchTransferAccountPayload achTransferAccountPayload = 13;
     NationalBankAccountPayload nationalBankAccountPayload = 14;
     CashDepositAccountPayload cashDepositAccountPayload = 15;
+    SameBankAccountPayload sameBankAccountPayload = 16;
+    DomesticWireTransferAccountPayload domesticWireTransferAccountPayload = 17;
   }
 }
 
@@ -239,9 +263,17 @@ message CountryBasedAccount {
     AmazonGiftCardAccount amazonGiftCardAccount = 24;
     UpiAccount upiAccount = 25;
     BizumAccount bizumAccount = 26;
+    SepaInstantAccount sepaInstantAccount = 27;
+    WiseAccount wiseAccount = 28;
   }
 }
 message SepaAccount {
+}
+
+message SepaInstantAccount {
+}
+
+message WiseAccount {
 }
 
 message F2FAccount {
@@ -252,10 +284,18 @@ message BankAccount {
     AchTransferAccount achTransferAccount = 1;
     NationalBankAccount nationalBankAccount = 2;
     CashDepositAccount cashDepositAccount = 3;
+    SameBankAccount sameBankAccount = 4;
+    DomesticWireTransferAccount domesticWireTransferAccount = 5;
   }
 }
 
 message AchTransferAccount {
+}
+
+message SameBankAccount {
+}
+
+message DomesticWireTransferAccount {
 }
 
 message ZelleAccount {

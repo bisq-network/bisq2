@@ -6,7 +6,6 @@ import bisq.http_api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
 import bisq.http_api.rest_api.domain.offers.OfferbookRestApi;
 import bisq.http_api.rest_api.domain.payment_accounts.PaymentAccountsRestApi;
-import bisq.http_api.rest_api.domain.reputation.ReputationRestApi;
 import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
 import bisq.http_api.rest_api.domain.trades.TradeRestApi;
 import bisq.http_api.rest_api.domain.user_identity.UserIdentityRestApi;
@@ -24,8 +23,7 @@ public class WebSocketRestApiResourceConfig extends RestApiResourceConfig {
                                           MarketPriceRestApi marketPriceRestApi,
                                           SettingsRestApi settingsRestApi,
                                           ExplorerRestApi explorerRestApi,
-                                          PaymentAccountsRestApi paymentAccountsRestApi,
-                                          ReputationRestApi reputationRestApi) {
-        super(swaggerBaseUrl, offerbookRestApi, tradeRestApi, tradeChatMessagesRestApi, userIdentityRestApi, marketPriceRestApi, settingsRestApi, explorerRestApi, paymentAccountsRestApi, reputationRestApi);
+                                          PaymentAccountsRestApi paymentAccountsRestApi) {
+        super(swaggerBaseUrl, offerbookRestApi, tradeRestApi, tradeChatMessagesRestApi, userIdentityRestApi, marketPriceRestApi, settingsRestApi, explorerRestApi, paymentAccountsRestApi);
     }
 }

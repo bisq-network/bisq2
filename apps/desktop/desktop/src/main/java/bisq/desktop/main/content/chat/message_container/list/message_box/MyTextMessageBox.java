@@ -20,12 +20,15 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
+import bisq.common.util.StringUtils;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.i18n.Res;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -34,21 +37,25 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 public final class MyTextMessageBox extends BubbleMessageBox {
     private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
     private MessageDeliveryStatusBox messageDeliveryStatusBox;
 
+    private final Subscription setAsEditingPin;
     private BisqMenuItem editAction, deleteAction;
     private BisqTextArea editInputField;
     private Button saveEditButton, cancelEditButton;
     private HBox editButtonsHBox;
 
+    private final javafx.event.EventHandler<KeyEvent> editInputFieldKeyPressedFilter;
+
     public MyTextMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
                             ChatMessagesListController controller) {
         super(item, list, controller);
-
 
         quotedMessageVBox.setId("chat-message-quote-box-my-msg");
         setUpEditFunctionality();
@@ -66,11 +73,21 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
         messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
 
-
         activeReactionsDisplayHBox.getStyleClass().add("my-text-message-box-active-reactions");
         editInputField.maxWidthProperty().bind(message.widthProperty());
         messageHBox.getChildren().setAll(Spacer.fillHBox(), activeReactionsDisplayHBox, messageBgHBox);
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, actionsHBox);
+
+        editInputFieldKeyPressedFilter = createEditInputFieldKeyPressedFilter(item, controller);
+
+        setAsEditingPin = EasyBind.subscribe(item.getSetAsEditing(), setAsEditing -> {
+            if (setAsEditing) {
+                UIThread.runOnNextRenderFrame(() -> {
+                    onEditMessage();
+                    item.getSetAsEditing().set(false);
+                });
+            }
+        });
     }
 
     @Override
@@ -100,9 +117,40 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         HBox.setMargin(deleteAction, ACTION_ITEMS_MARGIN);
     }
 
+    private EventHandler<KeyEvent> createEditInputFieldKeyPressedFilter(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+                                                                        ChatMessagesListController controller) {
+        return keyEvent -> {
+            if (keyEvent.getCode() == KeyCode.ENTER) {
+                keyEvent.consume(); // Good practice
+                if (keyEvent.isShiftDown()) {
+                    int caretPos = editInputField.getCaretPosition();
+                    String currentText = editInputField.getText();
+                    String newText = currentText.substring(0, caretPos) + System.lineSeparator() + currentText.substring(caretPos);
+                    editInputField.setText(newText);
+                    editInputField.positionCaret(caretPos + 1);
+                } else if (!editInputField.getText().trim().isEmpty()) { // trim() here is good
+                    controller.onSaveEditedMessageUsingEnterKeyShortcut(item.getChatMessage(), editInputField.getText().trim());
+                    onCloseEditMessage(); // This will remove the filter
+                }
+            } else if (keyEvent.getCode() == KeyCode.ESCAPE) {
+                keyEvent.consume();
+                onCloseEditMessage();
+            } else if (keyEvent.getCode() == KeyCode.UP) {
+                String normalizedText = StringUtils.normalizeLineBreaks(editInputField.getText());
+                // If no line break is found from the start to the caret position, it means we are in the first line, so we should move to the start
+                if (normalizedText.indexOf(System.lineSeparator(), 0, editInputField.getCaretPosition()) == -1) {
+                    // Only consume event in this case, otherwise allow falling back to default behavior
+                    keyEvent.consume();
+                    editInputField.positionCaret(0);
+                }
+            }
+        };
+    }
+
     private void setUpEditFunctionality() {
         // edit
         editInputField = new BisqTextArea();
+        editInputField.getStyleClass().addAll("text-fill-white", "normal-text", "font-default");
         editInputField.setId("chat-messages-edit-text-area");
         editInputField.setMinWidth(150);
         editInputField.setVisible(false);
@@ -167,22 +215,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         editButtonsHBox.setManaged(true);
         message.setVisible(false);
         message.setManaged(false);
-
-        editInputField.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
-            if (keyEvent.getCode() == KeyCode.ENTER) {
-                keyEvent.consume();
-                if (keyEvent.isShiftDown()) {
-                    int caretPos = editInputField.getCaretPosition();
-                    String currentText = editInputField.getText();
-                    String newText = currentText.substring(0, caretPos) + System.lineSeparator() + currentText.substring(caretPos);
-                    editInputField.setText(newText);
-                    editInputField.positionCaret(caretPos + 1); // Move caret after the newline
-                } else if (!editInputField.getText().isEmpty()) {
-                    controller.onSaveEditedMessage(item.getChatMessage(), editInputField.getText().trim());
-                    onCloseEditMessage();
-                }
-            }
-        });
+        editInputField.addEventFilter(KeyEvent.KEY_PRESSED, editInputFieldKeyPressedFilter);
     }
 
     private void onCloseEditMessage() {
@@ -192,7 +225,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         editButtonsHBox.setManaged(false);
         message.setVisible(true);
         message.setManaged(true);
-        editInputField.setOnKeyPressed(null);
+        editInputField.removeEventFilter(KeyEvent.KEY_PRESSED, editInputFieldKeyPressedFilter);
     }
 
     @Override
@@ -210,10 +243,11 @@ public final class MyTextMessageBox extends BubbleMessageBox {
 
         userName.setOnMouseClicked(null);
         userProfileIcon.setOnMouseClicked(null);
-
-        editInputField.setOnKeyPressed(null);
         userProfileIcon.dispose();
 
         messageDeliveryStatusBox.dispose();
+        editInputField.removeEventFilter(KeyEvent.KEY_PRESSED, editInputFieldKeyPressedFilter);
+
+        setAsEditingPin.unsubscribe();
     }
 }

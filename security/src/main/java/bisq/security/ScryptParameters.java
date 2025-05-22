@@ -19,14 +19,14 @@ package bisq.security;
 
 import bisq.common.proto.PersistableProto;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
+
 @Slf4j
 @Getter
-@EqualsAndHashCode
 @ToString
 public class ScryptParameters implements PersistableProto {
     public static final int KEY_LENGTH = 32; // 256 bits.
@@ -87,5 +87,26 @@ public class ScryptParameters implements PersistableProto {
                 proto.getBlockSize(),
                 proto.getParallelization(),
                 proto.getKeyLength());
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (!(o instanceof ScryptParameters that)) return false;
+
+        return cost == that.cost &&
+                blockSize == that.blockSize &&
+                parallelization == that.parallelization &&
+                keyLength == that.keyLength &&
+                Arrays.equals(salt, that.salt);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Arrays.hashCode(salt);
+        result = 31 * result + cost;
+        result = 31 * result + blockSize;
+        result = 31 * result + parallelization;
+        result = 31 * result + keyLength;
+        return result;
     }
 }

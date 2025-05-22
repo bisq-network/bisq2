@@ -19,12 +19,13 @@ package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 @Getter
-@EqualsAndHashCode
-public class NonceSharesRequest implements Proto {
+public final class NonceSharesRequest implements Proto {
     private final String tradeId;
     private final byte[] buyerOutputPeersPubKeyShare;
     private final byte[] sellerOutputPeersPubKeyShare;
@@ -35,13 +36,13 @@ public class NonceSharesRequest implements Proto {
     private final long sellersSecurityDeposit;
 
     public NonceSharesRequest(String tradeId,
-            byte[] buyerOutputPeersPubKeyShare,
-            byte[] sellerOutputPeersPubKeyShare,
-            long depositTxFeeRate,
-            long preparedTxFeeRate,
-            long tradeAmount,
-            long buyersSecurityDeposit,
-            long sellersSecurityDeposit) {
+                              byte[] buyerOutputPeersPubKeyShare,
+                              byte[] sellerOutputPeersPubKeyShare,
+                              long depositTxFeeRate,
+                              long preparedTxFeeRate,
+                              long tradeAmount,
+                              long buyersSecurityDeposit,
+                              long sellersSecurityDeposit) {
         this.tradeId = tradeId;
         this.buyerOutputPeersPubKeyShare = buyerOutputPeersPubKeyShare;
         this.sellerOutputPeersPubKeyShare = sellerOutputPeersPubKeyShare;
@@ -79,5 +80,32 @@ public class NonceSharesRequest implements Proto {
                 proto.getTradeAmount(),
                 proto.getBuyersSecurityDeposit(),
                 proto.getSellersSecurityDeposit());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof NonceSharesRequest that)) return false;
+
+        return depositTxFeeRate == that.depositTxFeeRate &&
+                preparedTxFeeRate == that.preparedTxFeeRate &&
+                tradeAmount == that.tradeAmount &&
+                buyersSecurityDeposit == that.buyersSecurityDeposit &&
+                sellersSecurityDeposit == that.sellersSecurityDeposit &&
+                Objects.equals(tradeId, that.tradeId) &&
+                Arrays.equals(buyerOutputPeersPubKeyShare, that.buyerOutputPeersPubKeyShare) &&
+                Arrays.equals(sellerOutputPeersPubKeyShare, that.sellerOutputPeersPubKeyShare);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(tradeId);
+        result = 31 * result + Arrays.hashCode(buyerOutputPeersPubKeyShare);
+        result = 31 * result + Arrays.hashCode(sellerOutputPeersPubKeyShare);
+        result = 31 * result + Long.hashCode(depositTxFeeRate);
+        result = 31 * result + Long.hashCode(preparedTxFeeRate);
+        result = 31 * result + Long.hashCode(tradeAmount);
+        result = 31 * result + Long.hashCode(buyersSecurityDeposit);
+        result = 31 * result + Long.hashCode(sellersSecurityDeposit);
+        return result;
     }
 }

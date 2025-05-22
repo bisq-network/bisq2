@@ -171,7 +171,7 @@ public class BuyerState1a extends BaseState {
             String key = "bisqEasy.tradeState.info.buyer.phase1a.tradeLogMessage." + btcRailName;
             String bitcoinPaymentData = model.getBitcoinPaymentData().get();
             sendTradeLogMessage(Res.encode(key, model.getChannel().getMyUserIdentity().getUserName(), bitcoinPaymentData));
-            bisqEasyTradeService.buyerSendBitcoinPaymentData(model.getBisqEasyTrade(), bitcoinPaymentData);
+            bisqEasyTradeService.buyerSendBitcoinPaymentData(model.getTrade(), bitcoinPaymentData);
         }
 
         void onOpenWalletGuide() {
@@ -281,7 +281,7 @@ public class BuyerState1a extends BaseState {
         }
 
         private BitcoinPaymentRail getPaymentRail() {
-            return model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
+            return model.getTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
         }
     }
 

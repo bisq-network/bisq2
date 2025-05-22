@@ -23,7 +23,7 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-public class PubKeySharesRequest implements Proto {
+public final class PubKeySharesRequest implements Proto {
     private final String tradeId;
     private final Role myRole;
 

@@ -18,13 +18,30 @@
 package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
+import bisq.trade.mu_sig.messages.network.vo.NonceShares;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 @Getter
-@EqualsAndHashCode
-public class NonceSharesMessage implements Proto {
+public final class NonceSharesMessage implements Proto {
+    public static NonceSharesMessage from(NonceShares nonceShares) {
+        return new NonceSharesMessage(
+                nonceShares.getWarningTxFeeBumpAddress(),
+                nonceShares.getRedirectTxFeeBumpAddress(),
+                nonceShares.getHalfDepositPsbt(),
+                nonceShares.getSwapTxInputNonceShare(),
+                nonceShares.getBuyersWarningTxBuyerInputNonceShare(),
+                nonceShares.getBuyersWarningTxSellerInputNonceShare(),
+                nonceShares.getSellersWarningTxBuyerInputNonceShare(),
+                nonceShares.getSellersWarningTxSellerInputNonceShare(),
+                nonceShares.getBuyersRedirectTxInputNonceShare(),
+                nonceShares.getSellersRedirectTxInputNonceShare()
+        );
+    }
+
     private final String warningTxFeeBumpAddress;
     private final String redirectTxFeeBumpAddress;
     private final byte[] halfDepositPsbt;
@@ -36,16 +53,16 @@ public class NonceSharesMessage implements Proto {
     private final byte[] buyersRedirectTxInputNonceShare;
     private final byte[] sellersRedirectTxInputNonceShare;
 
-    public NonceSharesMessage(String warningTxFeeBumpAddress,
-            String redirectTxFeeBumpAddress,
-            byte[] halfDepositPsbt,
-            byte[] swapTxInputNonceShare,
-            byte[] buyersWarningTxBuyerInputNonceShare,
-            byte[] buyersWarningTxSellerInputNonceShare,
-            byte[] sellersWarningTxBuyerInputNonceShare,
-            byte[] sellersWarningTxSellerInputNonceShare,
-            byte[] buyersRedirectTxInputNonceShare,
-            byte[] sellersRedirectTxInputNonceShare) {
+    private NonceSharesMessage(String warningTxFeeBumpAddress,
+                               String redirectTxFeeBumpAddress,
+                               byte[] halfDepositPsbt,
+                               byte[] swapTxInputNonceShare,
+                               byte[] buyersWarningTxBuyerInputNonceShare,
+                               byte[] buyersWarningTxSellerInputNonceShare,
+                               byte[] sellersWarningTxBuyerInputNonceShare,
+                               byte[] sellersWarningTxSellerInputNonceShare,
+                               byte[] buyersRedirectTxInputNonceShare,
+                               byte[] sellersRedirectTxInputNonceShare) {
         this.warningTxFeeBumpAddress = warningTxFeeBumpAddress;
         this.redirectTxFeeBumpAddress = redirectTxFeeBumpAddress;
         this.halfDepositPsbt = halfDepositPsbt;
@@ -89,5 +106,36 @@ public class NonceSharesMessage implements Proto {
                 proto.getSellersWarningTxSellerInputNonceShare().toByteArray(),
                 proto.getBuyersRedirectTxInputNonceShare().toByteArray(),
                 proto.getSellersRedirectTxInputNonceShare().toByteArray());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof NonceSharesMessage that)) return false;
+
+        return Objects.equals(warningTxFeeBumpAddress, that.warningTxFeeBumpAddress) &&
+                Objects.equals(redirectTxFeeBumpAddress, that.redirectTxFeeBumpAddress) &&
+                Arrays.equals(halfDepositPsbt, that.halfDepositPsbt) &&
+                Arrays.equals(swapTxInputNonceShare, that.swapTxInputNonceShare) &&
+                Arrays.equals(buyersWarningTxBuyerInputNonceShare, that.buyersWarningTxBuyerInputNonceShare) &&
+                Arrays.equals(buyersWarningTxSellerInputNonceShare, that.buyersWarningTxSellerInputNonceShare) &&
+                Arrays.equals(sellersWarningTxBuyerInputNonceShare, that.sellersWarningTxBuyerInputNonceShare) &&
+                Arrays.equals(sellersWarningTxSellerInputNonceShare, that.sellersWarningTxSellerInputNonceShare) &&
+                Arrays.equals(buyersRedirectTxInputNonceShare, that.buyersRedirectTxInputNonceShare) &&
+                Arrays.equals(sellersRedirectTxInputNonceShare, that.sellersRedirectTxInputNonceShare);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(warningTxFeeBumpAddress);
+        result = 31 * result + Objects.hashCode(redirectTxFeeBumpAddress);
+        result = 31 * result + Arrays.hashCode(halfDepositPsbt);
+        result = 31 * result + Arrays.hashCode(swapTxInputNonceShare);
+        result = 31 * result + Arrays.hashCode(buyersWarningTxBuyerInputNonceShare);
+        result = 31 * result + Arrays.hashCode(buyersWarningTxSellerInputNonceShare);
+        result = 31 * result + Arrays.hashCode(sellersWarningTxBuyerInputNonceShare);
+        result = 31 * result + Arrays.hashCode(sellersWarningTxSellerInputNonceShare);
+        result = 31 * result + Arrays.hashCode(buyersRedirectTxInputNonceShare);
+        result = 31 * result + Arrays.hashCode(sellersRedirectTxInputNonceShare);
+        return result;
     }
 }

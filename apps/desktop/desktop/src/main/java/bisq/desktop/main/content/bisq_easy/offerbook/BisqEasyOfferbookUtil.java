@@ -53,7 +53,8 @@ public class BisqEasyOfferbookUtil {
     static final List<Market> majorMarkets = MarketRepository.getMajorFiatMarkets();
 
     static Comparator<MarketChannelItem> sortByNumOffers() {
-        return (lhs, rhs) -> Integer.compare(rhs.getNumOffers().get(), lhs.getNumOffers().get());
+        return Comparator.<MarketChannelItem>comparingInt(o -> o.getNumOffers().get()).reversed()
+                .thenComparing(o -> o.getMarket().toString());
     }
 
     static Comparator<MarketChannelItem> sortByMajorMarkets() {

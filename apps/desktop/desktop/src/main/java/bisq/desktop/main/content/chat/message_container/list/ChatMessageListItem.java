@@ -110,6 +110,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
     private final BooleanProperty showHighlighted = new SimpleBooleanProperty();
+    private final BooleanProperty setAsEditing = new SimpleBooleanProperty();
 
     // Delivery status
     private final Set<Pin> mapPins = new HashSet<>();

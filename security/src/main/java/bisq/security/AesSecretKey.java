@@ -17,14 +17,12 @@
 
 package bisq.security;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import javax.crypto.SecretKey;
 import java.util.Arrays;
 
 @Getter
-@EqualsAndHashCode
 public class AesSecretKey implements SecretKey {
     public static AesSecretKey getClone(AesSecretKey key) {
         return new AesSecretKey(Arrays.copyOf(key.getEncoded(), key.getEncoded().length));
@@ -56,5 +54,17 @@ public class AesSecretKey implements SecretKey {
         /*return "AESSecretKey{" +
                 "\r\n     encoded=" + Hex.encode(encoded) +
                 "\r\n}";*/
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (!(o instanceof AesSecretKey that)) return false;
+
+        return Arrays.equals(encoded, that.encoded);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(encoded);
     }
 }

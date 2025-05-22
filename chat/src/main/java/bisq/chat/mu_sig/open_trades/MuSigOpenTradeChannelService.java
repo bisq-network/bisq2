@@ -301,24 +301,11 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
 
     @Override
     protected Optional<MuSigOpenTradeChannel> createNewChannelFromReceivedMessage(MuSigOpenTradeMessage message) {
-        if (message.getMuSigOffer().isPresent()) {
-            return userIdentityService.findUserIdentity(message.getReceiverUserProfileId())
-                    .map(myUserIdentity -> traderCreatesChannel(message.getTradeId(),
-                            myUserIdentity,
-                            message.getSenderUserProfile(),
-                            message.getMediator()));
-        } else {
-            // It could be that taker sends quickly a message after take offer, and we receive them
-            // out of order. In that case the seconds message (which arrived first) would get dropped.
-            // This is a very unlikely case, so we ignore it.
-            // It also happens if we left a trade channel and receive a message again.
-            // We ignore that and do not re-open the channel.
-            log.warn("We received the first message for a new channel without an offer. " +
-                    "We add that message to pendingMessages for re-processing when we receive the next message. " +
-                    "Message={}", message);
-            pendingMessages.add(message);
-            return Optional.empty();
-        }
+        return userIdentityService.findUserIdentity(message.getReceiverUserProfileId())
+                .map(myUserIdentity -> traderCreatesChannel(message.getTradeId(),
+                        myUserIdentity,
+                        message.getSenderUserProfile(),
+                        message.getMediator()));
     }
 
     private boolean allowSendLeaveMessage(MuSigOpenTradeChannel channel, UserProfile userProfile) {

@@ -18,22 +18,32 @@
 package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
+import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.Arrays;
+
 @Getter
-@EqualsAndHashCode
-public class PartialSignaturesMessage implements Proto {
+public final class PartialSignaturesMessage implements Proto {
+    public static PartialSignaturesMessage from(PartialSignatures peersPartialSignatures) {
+        return new PartialSignaturesMessage(
+                peersPartialSignatures.getPeersWarningTxBuyerInputPartialSignature(),
+                peersPartialSignatures.getPeersWarningTxSellerInputPartialSignature(),
+                peersPartialSignatures.getPeersRedirectTxInputPartialSignature(),
+                peersPartialSignatures.getSwapTxInputPartialSignature()
+        );
+    }
+
     private final byte[] peersWarningTxBuyerInputPartialSignature;
     private final byte[] peersWarningTxSellerInputPartialSignature;
     private final byte[] peersRedirectTxInputPartialSignature;
     private final byte[] swapTxInputPartialSignature;
 
     public PartialSignaturesMessage(byte[] peersWarningTxBuyerInputPartialSignature,
-            byte[] peersWarningTxSellerInputPartialSignature,
-            byte[] peersRedirectTxInputPartialSignature,
-            byte[] swapTxInputPartialSignature) {
+                                    byte[] peersWarningTxSellerInputPartialSignature,
+                                    byte[] peersRedirectTxInputPartialSignature,
+                                    byte[] swapTxInputPartialSignature) {
         this.peersWarningTxBuyerInputPartialSignature = peersWarningTxBuyerInputPartialSignature;
         this.peersWarningTxSellerInputPartialSignature = peersWarningTxSellerInputPartialSignature;
         this.peersRedirectTxInputPartialSignature = peersRedirectTxInputPartialSignature;
@@ -59,5 +69,24 @@ public class PartialSignaturesMessage implements Proto {
                 proto.getPeersWarningTxSellerInputPartialSignature().toByteArray(),
                 proto.getPeersRedirectTxInputPartialSignature().toByteArray(),
                 proto.getSwapTxInputPartialSignature().toByteArray());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof PartialSignaturesMessage that)) return false;
+
+        return Arrays.equals(peersWarningTxBuyerInputPartialSignature, that.peersWarningTxBuyerInputPartialSignature) &&
+                Arrays.equals(peersWarningTxSellerInputPartialSignature, that.peersWarningTxSellerInputPartialSignature) &&
+                Arrays.equals(peersRedirectTxInputPartialSignature, that.peersRedirectTxInputPartialSignature) &&
+                Arrays.equals(swapTxInputPartialSignature, that.swapTxInputPartialSignature);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Arrays.hashCode(peersWarningTxBuyerInputPartialSignature);
+        result = 31 * result + Arrays.hashCode(peersWarningTxSellerInputPartialSignature);
+        result = 31 * result + Arrays.hashCode(peersRedirectTxInputPartialSignature);
+        result = 31 * result + Arrays.hashCode(swapTxInputPartialSignature);
+        return result;
     }
 }

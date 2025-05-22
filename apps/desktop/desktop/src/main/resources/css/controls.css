@@ -20,7 +20,6 @@
     -fx-font-family: "IBM Plex Sans";
     -fx-padding: 5 32 5 32;
     -fx-cursor: hand;
-    -fx-label-padding: 0 -15 0 -15;
 }
 
 .button:hover {

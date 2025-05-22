@@ -25,7 +25,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class MuSigBuyersCooperativeCloseTimeoutEvent extends MuSigTradeEvent {
+public final class MuSigBuyersCooperativeCloseTimeoutEvent extends MuSigTradeEvent {
 
     public MuSigBuyersCooperativeCloseTimeoutEvent() {
     }

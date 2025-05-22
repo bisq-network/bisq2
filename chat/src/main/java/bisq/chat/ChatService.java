@@ -28,6 +28,7 @@ import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.common.CommonPublicChatChannelService;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeSelectionService;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.chat.priv.PrivateChatChannelService;
@@ -116,6 +117,10 @@ public class ChatService implements Service {
                 userService);
         chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
                 new BisqEasyOpenTradeSelectionService(persistenceService, bisqEasyOpenTradeChannelService,
+                        userIdentityService));
+
+        chatChannelSelectionServices.put(ChatChannelDomain.MU_SIG_OPEN_TRADES,
+                new MuSigOpenTradeSelectionService(persistenceService, muSigOpenTradeChannelService,
                         userIdentityService));
 
         // DISCUSSION
@@ -240,6 +245,9 @@ public class ChatService implements Service {
             case BISQ_EASY_OPEN_TRADES -> {
                 return getBisqEasyOpenTradesSelectionService();
             }
+            case MU_SIG_OPEN_TRADES -> {
+                return getMuSigOpenTradesSelectionService();
+            }
         }
         return chatChannelSelectionServices.get(chatChannelDomain);
     }
@@ -250,6 +258,10 @@ public class ChatService implements Service {
 
     public BisqEasyOpenTradeSelectionService getBisqEasyOpenTradesSelectionService() {
         return (BisqEasyOpenTradeSelectionService) getChatChannelSelectionServices().get(ChatChannelDomain.BISQ_EASY_OPEN_TRADES);
+    }
+
+    public MuSigOpenTradeSelectionService getMuSigOpenTradesSelectionService() {
+        return (MuSigOpenTradeSelectionService) getChatChannelSelectionServices().get(ChatChannelDomain.MU_SIG_OPEN_TRADES);
     }
 
     private void addToCommonPublicChatChannelServices(ChatChannelDomain chatChannelDomain,

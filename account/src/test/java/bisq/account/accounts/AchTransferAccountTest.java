@@ -6,7 +6,8 @@ import bisq.account.protobuf.BankAccount;
 import bisq.account.protobuf.BankAccountPayload;
 import bisq.account.protobuf.CountryBasedAccount;
 import bisq.account.protobuf.CountryBasedAccountPayload;
-import bisq.account.protobuf.*;
+import bisq.account.protobuf.FiatPaymentMethod;
+import bisq.account.protobuf.PaymentMethod;
 import bisq.common.protobuf.Country;
 import bisq.common.protobuf.Region;
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,7 @@ class AchTransferAccountTest {
                     .setId("id")
                     .setPaymentMethodName("ACH_TRANSFER")
                     .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
-                            .setCountryCode("countryCode")
+                            .setCountryCode("US")
                             .setBankAccountPayload(BankAccountPayload.newBuilder()
                                     .setBankName("bankName")
                                     .setAchTransferAccountPayload(
@@ -37,7 +38,7 @@ class AchTransferAccountTest {
             )
             .setCountryBasedAccount(CountryBasedAccount.newBuilder()
                     .setCountry(Country.newBuilder()
-                            .setCode("countryCode")
+                            .setCode("US")
                             .setName("countryName")
                             .setRegion(Region.newBuilder()
                                     .setCode("regionCode")
@@ -49,10 +50,10 @@ class AchTransferAccountTest {
     private static final AchTransferAccount ACCOUNT = new AchTransferAccount(
             "accountName",
             new AchTransferAccountPayload("id", "ACH_TRANSFER",
-                    "countryCode", null, Optional.of("bankName"),
+                    "US", null, Optional.of("bankName"),
                     null, null, null, null),
             new bisq.common.locale.Country(
-                    "countryCode",
+                    "US",
                     "countryName",
                     new bisq.common.locale.Region("regionCode", "regionName")));
 

@@ -47,6 +47,8 @@ import java.text.DecimalFormat;
 @Slf4j
 public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, TradeWizardPriceController> {
     private static final String SELECTED_PRICE_MODEL_STYLE_CLASS = "selected-model";
+    private static final String PRICE_SLIDER_BUYER_STYLE_CLASS = "price-slider-buyer";
+    private static final String PRICE_SLIDER_SELLER_STYLE_CLASS = "price-slider-seller";
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("00");
 
     private final PriceInputBox percentageInput;
@@ -55,7 +57,6 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     private final PriceInput priceInput;
     private final Button percentagePrice, fixedPrice, closeOverlayButton;
     private final Label warningIcon, feedbackSentence, minSliderValue, maxSliderValue;
-    private final HBox feedbackBox;
     private final Slider slider;
     private final Hyperlink showLearnWhyButton;
     private Subscription percentageFocussedPin, useFixPricePin;
@@ -101,7 +102,6 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         slider = new Slider();
         slider.setMin(model.getSliderMin());
         slider.setMax(model.getSliderMax());
-        slider.getStyleClass().add("price-slider");
 
         minSliderValue = new Label();
         minSliderValue.getStyleClass().add("range-value");
@@ -128,7 +128,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         showLearnWhyButton.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
         showLearnWhyButton.setMinWidth(Hyperlink.USE_PREF_SIZE);
 
-        feedbackBox = new HBox(2.5, warningIcon, feedbackSentence, showLearnWhyButton);
+        HBox feedbackBox = new HBox(2.5, warningIcon, feedbackSentence, showLearnWhyButton);
         feedbackBox.setAlignment(Pos.CENTER);
 
         // Overlay
@@ -151,9 +151,10 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         feedbackSentence.textProperty().bind(model.getFeedbackSentence());
         warningIcon.visibleProperty().bind(model.getShouldShowWarningIcon());
         warningIcon.managedProperty().bind(model.getShouldShowWarningIcon());
-        feedbackBox.visibleProperty().bind(model.getShouldShowFeedback());
-        feedbackBox.managedProperty().bind(model.getShouldShowFeedback());
+        showLearnWhyButton.visibleProperty().bind(model.getShouldShowLearnWhyButton());
+        showLearnWhyButton.managedProperty().bind(model.getShouldShowLearnWhyButton());
         slider.valueProperty().bindBidirectional(model.getPriceSliderValue());
+        slider.getStyleClass().add(model.getDirection().isSell() ? PRICE_SLIDER_SELLER_STYLE_CLASS : PRICE_SLIDER_BUYER_STYLE_CLASS);
         model.getSliderFocus().bind(slider.focusedProperty());
 
         percentageFocussedPin = EasyBind.subscribe(percentageInput.textInputFocusedProperty(), controller::onPercentageFocussed);
@@ -181,11 +182,12 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         percentageInput.conversionPriceTextProperty().unbind();
         percentageInput.dispose();
         feedbackSentence.textProperty().unbind();
-        feedbackBox.visibleProperty().unbind();
-        feedbackBox.managedProperty().unbind();
+        showLearnWhyButton.visibleProperty().unbind();
+        showLearnWhyButton.managedProperty().unbind();
         warningIcon.visibleProperty().unbind();
         warningIcon.managedProperty().unbind();
         slider.valueProperty().unbindBidirectional(model.getPriceSliderValue());
+        slider.getStyleClass().removeAll(PRICE_SLIDER_BUYER_STYLE_CLASS, PRICE_SLIDER_SELLER_STYLE_CLASS);
         model.getSliderFocus().unbind();
 
         percentageFocussedPin.unsubscribe();

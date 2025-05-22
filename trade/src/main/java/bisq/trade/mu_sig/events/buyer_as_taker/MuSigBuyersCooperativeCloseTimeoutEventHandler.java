@@ -17,27 +17,24 @@
 
 package bisq.trade.mu_sig.events.buyer_as_taker;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
-import bisq.trade.protobuf.CloseTradeRequest;
-import bisq.trade.protobuf.MusigGrpc;
+import bisq.trade.mu_sig.handler.MuSigTradeEventHandler;
 import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
-import bisq.trade.protocol.events.TradeEventHandler;
+import bisq.trade.protobuf.CloseTradeRequest;
 import com.google.protobuf.ByteString;
 
-public class MuSigBuyersCooperativeCloseTimeoutEventHandler extends TradeEventHandler<MuSigTrade> {
+public final class MuSigBuyersCooperativeCloseTimeoutEventHandler extends MuSigTradeEventHandler<MuSigTrade, MuSigBuyersCooperativeCloseTimeoutEvent> {
+    private CloseTradeResponse myCloseTradeResponse;
 
     public MuSigBuyersCooperativeCloseTimeoutEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        serviceProvider.getMuSigTradeService().stopCooperativeCloseTimeout(trade);
-
-        MuSigTradeParty buyerAsTake = trade.getTaker();
+    public void process(MuSigBuyersCooperativeCloseTimeoutEvent event) {
+        muSigTradeService.stopCooperativeCloseTimeout(trade);
 
         // ClosureType.UNCOOPERATIVE
         // Buyer never got Message F from seller -- picks up Swap Tx from bitcoin network instead.
@@ -45,13 +42,23 @@ public class MuSigBuyersCooperativeCloseTimeoutEventHandler extends TradeEventHa
         // TODO get swap tx from bitcoin network
         //ByteString swapTx = swapTxSignatureResponse.getSwapTx();
         byte[] swapTx = new byte[]{};
-        MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
-        CloseTradeResponse buyersCloseTradeResponse = CloseTradeResponse.fromProto(stub.closeTrade(CloseTradeRequest.newBuilder()
+        CloseTradeRequest closeTradeRequest = CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setSwapTx(ByteString.copyFrom(swapTx))
-                .build()));
+                .build();
+        myCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(closeTradeRequest));
     }
 
-    private void commitToModel() {
+    @Override
+    protected void commit() {
+        MuSigTradeParty mySelf = trade.getMaker();
+
+        mySelf.setMyCloseTradeResponse(myCloseTradeResponse);
+    }
+
+    @Override
+    protected void sendLogMessage() {
+        sendLogMessage("Buyer did not receive peers swapTxSignature and the timeout got triggered.\n" +
+                "Buyer created his closeTradeResponse and force-close the trade.");
     }
 }

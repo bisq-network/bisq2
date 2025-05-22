@@ -23,7 +23,7 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-public class ReceiverAddressAndAmount implements Proto {
+public final class ReceiverAddressAndAmount implements Proto {
     private final String address;
     private final long amount;
 

@@ -20,8 +20,9 @@ package bisq.security;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.PersistableProto;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
+
+import java.util.Arrays;
 
 /**
  * <p>An instance of EncryptedData is a holder for an initialization vector and encrypted bytes.</p>
@@ -30,7 +31,6 @@ import lombok.Getter;
  * private key bytes were encrypted. You need these for decryption.</p>
  */
 @Getter
-@EqualsAndHashCode
 public final class EncryptedData implements PersistableProto {
     private final byte[] iv;
     private final byte[] cipherText;
@@ -62,5 +62,19 @@ public final class EncryptedData implements PersistableProto {
                 "\r\n     iv=" + Hex.encode(iv) +
                 ",\r\n     cipherText=" + Hex.encode(cipherText) +
                 "\r\n}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof EncryptedData that)) return false;
+
+        return Arrays.equals(iv, that.iv) && Arrays.equals(cipherText, that.cipherText);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Arrays.hashCode(iv);
+        result = 31 * result + Arrays.hashCode(cipherText);
+        return result;
     }
 }

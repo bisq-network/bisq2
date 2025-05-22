@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 @Getter
 @EqualsAndHashCode
-public class PartialSignaturesRequest implements Proto {
+public final class PartialSignaturesRequest implements Proto {
     private final String tradeId;
     private final NonceSharesMessage peersNonceShares;
     private final List<ReceiverAddressAndAmount> receivers;

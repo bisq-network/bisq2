@@ -17,36 +17,45 @@
 
 package bisq.trade.mu_sig.events.seller_as_maker;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
+import bisq.trade.mu_sig.handler.MuSigTradeEventHandler;
+import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
 import bisq.trade.protobuf.CloseTradeRequest;
-import bisq.trade.protobuf.CloseTradeResponse;
-import bisq.trade.protobuf.MusigGrpc;
-import bisq.trade.protocol.events.TradeEventHandler;
 
-public class MuSigSellersCooperativeCloseTimeoutEventHandler extends TradeEventHandler<MuSigTrade> {
+public final class MuSigSellersCooperativeCloseTimeoutEventHandler extends MuSigTradeEventHandler<MuSigTrade, MuSigSellersCooperativeCloseTimeoutEvent> {
+    private CloseTradeResponse myCloseTradeResponse;
 
     public MuSigSellersCooperativeCloseTimeoutEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        serviceProvider.getMuSigTradeService().stopCooperativeCloseTimeout(trade);
+    public void process(MuSigSellersCooperativeCloseTimeoutEvent event) {
+        muSigTradeService.stopCooperativeCloseTimeout(trade);
 
         MuSigTradeParty buyerAsTake = trade.getTaker();
 
         // ClosureType.UNCOOPERATIVE
         // *** SELLER FORCE-CLOSES TRADE ***
-         MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
         //TODO isn't here the swap Tx needed to pass?
-        CloseTradeResponse sellersCloseTradeResponse = stub.closeTrade(CloseTradeRequest.newBuilder()
+        CloseTradeRequest closeTradeRequest = CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
-                .build());
+                .build();
+        myCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(closeTradeRequest));
     }
 
-    private void commitToModel() {
+    @Override
+    protected void commit() {
+        MuSigTradeParty mySelf = trade.getMaker();
+
+        mySelf.setMyCloseTradeResponse(myCloseTradeResponse);
+    }
+
+    @Override
+    protected void sendLogMessage() {
+        sendLogMessage("Seller did not receive peers closeTradeResponse and the timeout got triggered.\n" +
+                "Seller created his closeTradeResponse and force-close the trade.");
     }
 }

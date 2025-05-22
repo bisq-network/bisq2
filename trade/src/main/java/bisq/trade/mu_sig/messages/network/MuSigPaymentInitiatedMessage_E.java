@@ -28,8 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class MuSigPaymentInitiatedMessage_E extends MuSigTradeMessage {
-    public final static int MAX_LENGTH = 1000;
-
     public MuSigPaymentInitiatedMessage_E(String id,
                                           String tradeId,
                                           String protocolVersion,

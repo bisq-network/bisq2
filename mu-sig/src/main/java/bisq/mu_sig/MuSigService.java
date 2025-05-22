@@ -26,6 +26,7 @@ import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.chat.ChatService;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
+import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.common.application.DevMode;
 import bisq.common.application.LifecycleService;
 import bisq.common.currency.Market;
@@ -90,6 +91,7 @@ public class MuSigService extends LifecycleService {
     private final ContractService contractService;
     private final UserService userService;
     private final ChatService chatService;
+    private final LeavePrivateChatManager leavePrivateChatManager;
     private final SettingsService settingsService;
     private final SupportService supportService;
     private final SystemNotificationService systemNotificationService;
@@ -134,6 +136,7 @@ public class MuSigService extends LifecycleService {
         this.contractService = contractService;
         this.userService = userService;
         this.chatService = chatService;
+        leavePrivateChatManager = chatService.getLeavePrivateChatManager();
         this.settingsService = settingsService;
         this.supportService = supportService;
         this.systemNotificationService = systemNotificationService;
@@ -198,16 +201,8 @@ public class MuSigService extends LifecycleService {
 
 
     /* --------------------------------------------------------------------- */
-    // API
+    // Offer API
     /* --------------------------------------------------------------------- */
-
-    public Set<MuSigOffer> getOffers() {
-        return muSigOfferService.getMuSigOfferbookService().getOffers();
-    }
-
-    public ReadOnlyObservableSet<MuSigOffer> getObservableOffers() {
-        return muSigOfferService.getMuSigOfferbookService().getObservableOffers();
-    }
 
     public MuSigOffer createAndGetMuSigOffer(Direction direction,
                                              Market market,
@@ -244,6 +239,10 @@ public class MuSigService extends LifecycleService {
         muSigOfferService.republishMyOffers();
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Trade API
+    /* --------------------------------------------------------------------- */
 
     public MuSigProtocol createProtocol(UserIdentity takerIdentity,
                                         MuSigOffer muSigOffer,
@@ -337,6 +336,25 @@ public class MuSigService extends LifecycleService {
         muSigTradeService.takeOffer(muSigTrade);
     }
 
+    public void closeTrade(MuSigTrade muSigTrade, MuSigOpenTradeChannel channel) {
+        checkArgument(isActivated());
+        muSigTradeService.closeTrade(muSigTrade);
+        leavePrivateChatManager.leaveChannel(channel);
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Misc
+    /* --------------------------------------------------------------------- */
+
+    public Set<MuSigOffer> getOffers() {
+        return muSigOfferService.getMuSigOfferbookService().getOffers();
+    }
+
+    public ReadOnlyObservableSet<MuSigOffer> getObservableOffers() {
+        return muSigOfferService.getMuSigOfferbookService().getObservableOffers();
+    }
+
     public void validateUserProfile(String userProfileId) throws UserProfileBannedException, RateLimitExceededException {
         if (bannedUserService.isUserProfileBanned(userProfileId)) {
             throw new UserProfileBannedException(userProfileId);
@@ -345,6 +363,11 @@ public class MuSigService extends LifecycleService {
         if (bannedUserService.isRateLimitExceeding(userProfileId)) {
             throw new RateLimitExceededException(userProfileId);
         }
+    }
+
+    public boolean isAccountDataBanned(String sellersAccountData) {
+        // TODO: Implement account data validation logic to check against banned payment information
+        return false;
     }
 
     //todo

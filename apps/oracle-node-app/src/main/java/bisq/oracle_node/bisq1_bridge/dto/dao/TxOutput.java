@@ -17,11 +17,19 @@
 
 package bisq.oracle_node.bisq1_bridge.dto.dao;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.Objects;
 
-@Data
+@Getter
+@Setter
+@RequiredArgsConstructor
+@ToString
 public final class TxOutput {
     private int index;
     private long value;
@@ -44,4 +52,37 @@ public final class TxOutput {
     // The unlockBlockHeight is stored in the first output of the UNLOCK tx.
     private int unlockBlockHeight;
     private TxOutputKey key;
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof TxOutput txOutput)) return false;
+
+        return index == txOutput.index &&
+                value == txOutput.value &&
+                blockHeight == txOutput.blockHeight &&
+                lockTime == txOutput.lockTime &&
+                unlockBlockHeight == txOutput.unlockBlockHeight &&
+                Objects.equals(txId, txOutput.txId) &&
+                Objects.equals(pubKeyScript, txOutput.pubKeyScript) &&
+                Objects.equals(address, txOutput.address) &&
+                Arrays.equals(opReturnData, txOutput.opReturnData) &&
+                txOutputType == txOutput.txOutputType &&
+                Objects.equals(key, txOutput.key);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = index;
+        result = 31 * result + Long.hashCode(value);
+        result = 31 * result + Objects.hashCode(txId);
+        result = 31 * result + Objects.hashCode(pubKeyScript);
+        result = 31 * result + Objects.hashCode(address);
+        result = 31 * result + Arrays.hashCode(opReturnData);
+        result = 31 * result + blockHeight;
+        result = 31 * result + Objects.hashCode(txOutputType);
+        result = 31 * result + lockTime;
+        result = 31 * result + unlockBlockHeight;
+        result = 31 * result + Objects.hashCode(key);
+        return result;
+    }
 }

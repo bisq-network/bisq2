@@ -102,7 +102,7 @@ public class BisqEasySellerAsMakerProtocol extends BisqEasyProtocol {
                 .then()
                 .from(SELLER_RECEIVED_FIAT_SENT_CONFIRMATION)
                 .on(BisqEasyConfirmFiatReceiptEvent.class)
-                .run(BisqEasyConfirmFiatReceivedEventHandler.class)
+                .run(BisqEasyConfirmFiatReceiptEventHandler.class)
                 .to(SELLER_CONFIRMED_FIAT_RECEIPT)
                 .then()
                 .from(SELLER_CONFIRMED_FIAT_RECEIPT)

@@ -18,13 +18,16 @@
 syntax = "proto3";
 
 package trade;
-option java_package = "bisq.trade.protobuf";
-option java_multiple_files = true;
 
-import "offer.proto";
-import "network_identity.proto";
+import "common.proto";
 import "contract.proto";
 import "identity.proto";
+import "network_identity.proto";
+import "offer.proto";
+import "rpc.proto";
+
+option java_package = "bisq.trade.protobuf";
+option java_multiple_files = true;
 
 message TradeParty {
   network.identity.NetworkId networkId = 1;
@@ -42,6 +45,14 @@ enum TradeRole{
   TRADEROLE_SELLER_AS_TAKER = 3;
   TRADEROLE_SELLER_AS_MAKER = 4;
 }
+
+enum TradeLifecycleState {
+  TRADELIFECYCLESTATE_UNSPECIFIED = 0;
+  TRADELIFECYCLESTATE_ACTIVE = 1;
+  TRADELIFECYCLESTATE_HISTORICAL = 2;
+  TRADELIFECYCLESTATE_FAILED = 3;
+}
+
 message Trade {
   string state = 1;
   string id = 2;
@@ -54,6 +65,7 @@ message Trade {
   optional string errorStackTrace = 9;
   optional string peersErrorMessage = 10;
   optional string peersErrorStackTrace = 11;
+  TradeLifecycleState lifecycleState = 12;
 
   oneof message {
     BisqEasyTrade bisqEasyTrade = 30;
@@ -137,67 +149,14 @@ message BisqEasyReportErrorMessage {
 
 
 // MuSig
-message MuSigTradeParty {
-}
 
-message MuSigTrade {
-  optional contract.Role interruptTradeInitiator = 1;
-  optional sint64 tradeCompletedDate = 2;
-}
-
-message MuSigTradeStore {
-  map<string, Trade> tradeById = 1;
-}
-
-// MuSig GRPC
-
-service Musig {
-  rpc InitTrade (PubKeySharesRequest) returns (PubKeySharesResponse);
-
-  rpc GetNonceShares (NonceSharesRequest) returns (NonceSharesMessage);
-
-  rpc GetPartialSignatures (PartialSignaturesRequest) returns (PartialSignaturesMessage);
-
-  rpc SignDepositTx (DepositTxSignatureRequest) returns (DepositPsbt);
-
-  rpc PublishDepositTx (PublishDepositTxRequest) returns (stream TxConfirmationStatus);
-
-  rpc SignSwapTx (SwapTxSignatureRequest) returns (SwapTxSignatureResponse);
-
-  rpc CloseTrade (CloseTradeRequest) returns (CloseTradeResponse);
-}
-
-//TODO same as TradeRole
-enum Role {
-  SELLER_AS_MAKER = 0;
-  SELLER_AS_TAKER = 1;
-  BUYER_AS_MAKER = 2;
-  BUYER_AS_TAKER = 3;
-}
-
-message PubKeySharesRequest {
-  string tradeId = 1;
-  Role myRole = 2;
-}
-
-message PubKeySharesResponse {
+// Value objects for network messages (based on grpc messages)
+message PubKeyShares {
   bytes buyerOutputPubKeyShare = 1;
   bytes sellerOutputPubKeyShare = 2;
-  uint32 currentBlockHeight = 3;
 }
 
-message NonceSharesRequest {
-  string tradeId = 1;
-  bytes buyerOutputPeersPubKeyShare = 2;
-  bytes sellerOutputPeersPubKeyShare = 3;
-  uint64 depositTxFeeRate = 4;       // sats per kwu
-  uint64 preparedTxFeeRate = 5;      // sats per kwu
-  uint64 tradeAmount = 6;            // sats
-  uint64 buyersSecurityDeposit = 7;  // sats
-  uint64 sellersSecurityDeposit = 8; // sats
-}
-
-message NonceSharesMessage {
+message NonceShares {
   string warningTxFeeBumpAddress = 1;
   string redirectTxFeeBumpAddress = 2;
   bytes halfDepositPsbt = 3;
@@ -210,68 +169,47 @@ message NonceSharesMessage {
   bytes sellersRedirectTxInputNonceShare = 10;
 }
 
-message ReceiverAddressAndAmount {
-  string address = 1;
-  uint64 amount = 2; // sats
-}
-
-message PartialSignaturesRequest {
-  string tradeId = 1;
-  NonceSharesMessage peersNonceShares = 2;
-  repeated ReceiverAddressAndAmount receivers = 3;
-}
-
-message PartialSignaturesMessage {
+message PartialSignatures {
   bytes peersWarningTxBuyerInputPartialSignature = 1;
   bytes peersWarningTxSellerInputPartialSignature = 2;
   bytes peersRedirectTxInputPartialSignature = 3;
   optional bytes swapTxInputPartialSignature = 4;
 }
 
-message DepositTxSignatureRequest {
-  string tradeId = 1;
-  PartialSignaturesMessage peersPartialSignatures = 2;
-}
 
-message DepositPsbt {
-  bytes depositPsbt = 1;
-}
-
-message PublishDepositTxRequest {
-  string tradeId = 1;
-  DepositPsbt depositPsbt = 2;
-}
-
-message TxConfirmationStatus {
-  bytes tx = 1;
-  uint32 currentBlockHeight = 2;
-  uint32 numConfirmations = 3;
-}
-
-message SwapTxSignatureRequest {
-  string tradeId = 1;
-  bytes swapTxInputPeersPartialSignature = 2;
-}
-
-message SwapTxSignatureResponse {
+message SwapTxSignature {
   bytes swapTx = 1;
   bytes peerOutputPrvKeyShare = 2;
 }
 
-message CloseTradeRequest {
-  string tradeId = 1;
-  optional bytes myOutputPeersPrvKeyShare = 2;
-  optional bytes swapTx = 3;
+// Trade domain
+message MuSigTradeParty {
+  optional musigrpc.PubKeySharesResponse myPubKeySharesResponse = 1;
+  optional PubKeyShares peersPubKeyShares = 2;
+  optional musigrpc.NonceSharesMessage myNonceSharesMessage = 3;
+  optional  NonceShares peersNonceShares = 4;
+  optional musigrpc.PartialSignaturesMessage myPartialSignaturesMessage = 5;
+  optional PartialSignatures peersPartialSignatures = 6;
+  optional musigrpc.DepositPsbt myDepositPsbt = 7;
+  optional musigrpc.SwapTxSignatureResponse mySwapTxSignatureResponse = 9;
+  optional SwapTxSignature peersSwapTxSignature = 10;
+  optional musigrpc.CloseTradeResponse myCloseTradeResponse = 11;
+  optional common.ByteArray peersOutputPrvKeyShare = 12;
 }
 
-message CloseTradeResponse {
-  bytes peerOutputPrvKeyShare = 1;
+message MuSigTrade {
+  optional string depositTxId = 1;
+  optional string paymentAccountData = 2;
+  optional sint64 tradeCompletedDate = 3;
+}
+
+message MuSigTradeStore {
+  map<string, Trade> tradeById = 1;
 }
 
 // MuSig network messages
 message MuSigTradeMessage {
   oneof message {
-    MuSigTakeOfferRequest muSigTakeOfferRequest = 19;
     MuSigSetupTradeMessage_A muSigSetupTradeMessage_A = 20;
     MuSigSetupTradeMessage_B muSigSetupTradeMessage_B = 21;
     MuSigSetupTradeMessage_C muSigSetupTradeMessage_C = 22;
@@ -285,27 +223,23 @@ message MuSigTradeMessage {
 message MuSigSetupTradeMessage_A {
   contract.Contract contract = 1;
   contract.ContractSignatureData contractSignatureData = 2;
-  PubKeySharesResponse pubKeySharesResponse = 3;
-}
-message MuSigTakeOfferRequest {
-  contract.Contract contract = 1;
-  contract.ContractSignatureData contractSignatureData = 2;
+  PubKeyShares pubKeyShares = 3;
 }
 
 message MuSigSetupTradeMessage_B {
   contract.Contract contract = 1;
   contract.ContractSignatureData contractSignatureData = 2;
-  PubKeySharesResponse pubKeySharesResponse = 3;
-  NonceSharesMessage nonceSharesMessage = 4;
+  PubKeyShares pubKeyShares = 3;
+  NonceShares nonceShares = 4;
 }
 
 message MuSigSetupTradeMessage_C {
-  NonceSharesMessage nonceSharesMessage = 1;
-  PartialSignaturesMessage partialSignaturesMessage = 2;
+  NonceShares nonceShares = 1;
+  PartialSignatures partialSignatures = 2;
 }
 
 message MuSigSetupTradeMessage_D {
-  PartialSignaturesMessage partialSignaturesMessage = 1;
+  PartialSignatures partialSignatures = 1;
 }
 
 message MuSigPaymentInitiatedMessage_E {
@@ -313,9 +247,9 @@ message MuSigPaymentInitiatedMessage_E {
 }
 
 message MuSigPaymentReceivedMessage_F {
-  SwapTxSignatureResponse swapTxSignatureResponse = 1;
+  SwapTxSignature swapTxSignature = 1;
 }
 
 message MuSigCooperativeClosureMessage_G {
-  CloseTradeResponse closeTradeResponse = 1;
+  common.ByteArray peerOutputPrvKeyShare = 1;
 }

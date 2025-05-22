@@ -25,7 +25,6 @@ import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,10 +32,10 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
-@EqualsAndHashCode
 @Getter
 public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
@@ -63,8 +62,8 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     private final PublicKey senderPublicKey;
 
     private AddMailboxRequest(MailboxSequentialData mailboxSequentialData,
-                             byte[] signature,
-                             PublicKey senderPublicKey) {
+                              byte[] signature,
+                              PublicKey senderPublicKey) {
         this(mailboxSequentialData, signature, senderPublicKey.getEncoded(), senderPublicKey);
     }
 
@@ -187,5 +186,24 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
                 ", senderPublicKeyBytes=" + Hex.encode(senderPublicKeyBytes) +
                 ", senderPublicKey=" + Hex.encode(senderPublicKey.getEncoded()) +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof AddMailboxRequest that)) return false;
+
+        return Objects.equals(mailboxSequentialData, that.mailboxSequentialData) &&
+                Arrays.equals(signature, that.signature) &&
+                Arrays.equals(senderPublicKeyBytes, that.senderPublicKeyBytes) &&
+                Objects.equals(senderPublicKey, that.senderPublicKey);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(mailboxSequentialData);
+        result = 31 * result + Arrays.hashCode(signature);
+        result = 31 * result + Arrays.hashCode(senderPublicKeyBytes);
+        result = 31 * result + Objects.hashCode(senderPublicKey);
+        return result;
     }
 }

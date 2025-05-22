@@ -48,6 +48,20 @@ import static bisq.presentation.parser.PercentageParser.parse;
 
 @Slf4j
 public class TradeWizardPriceController implements Controller {
+    // Price feedback thresholds for buyers
+    private static final double BUYER_VERY_LOW_THRESHOLD = -0.05;
+    private static final double BUYER_LOW_THRESHOLD = 0.0;
+    private static final double BUYER_MODERATE_THRESHOLD = 0.05;
+    private static final double BUYER_GOOD_THRESHOLD = 0.15;
+    // Price feedback thresholds for sellers
+    private static final double SELLER_VERY_GOOD_THRESHOLD = 0.0;
+    private static final double SELLER_GOOD_THRESHOLD = 0.10;
+    private static final double SELLER_MODERATE_THRESHOLD = 0.25;
+    private static final double SELLER_LOW_THRESHOLD = 0.35;
+    // Warning thresholds
+    private static final double BUYER_WARNING_THRESHOLD = 0.05;
+    private static final double SELLER_WARNING_THRESHOLD = 0.10;
+
     private final TradeWizardPriceModel model;
     @Getter
     private final TradeWizardPriceView view;
@@ -154,7 +168,7 @@ public class TradeWizardPriceController implements Controller {
         String marketCodes = model.getMarket().getMarketCodes();
         priceInput.setDescription(Res.get("bisqEasy.price.tradePrice.inputBoxText", marketCodes));
 
-        model.getShouldShowFeedback().set(model.getDirection().isBuy());
+        model.getShouldShowLearnWhyButton().set(model.getDirection().isBuy());
 
         applyPriceSpec();
     }
@@ -370,31 +384,50 @@ public class TradeWizardPriceController implements Controller {
         // 0.001 BTC - 0.01 BTC             2-10%
         Optional<Double> percentage = PriceUtil.findPercentFromMarketPrice(marketPriceService, priceSpec, model.getMarket());
         if (percentage.isPresent()) {
-            double percentageValue = percentage.get();
-            String feedbackSentence;
-            if (percentageValue < -0.05) {
-                feedbackSentence = getFeedbackSentence(Res.get("bisqEasy.price.feedback.sentence.veryLow"));
-            } else if (percentageValue < 0d) {
-                feedbackSentence = getFeedbackSentence(Res.get("bisqEasy.price.feedback.sentence.low"));
-            } else if (percentageValue < 0.05) {
-                feedbackSentence = getFeedbackSentence(Res.get("bisqEasy.price.feedback.sentence.some"));
-            } else if (percentageValue < 0.15) {
-                feedbackSentence = getFeedbackSentence(Res.get("bisqEasy.price.feedback.sentence.good"));
+            if (model.getDirection().isBuy()) {
+                updateFeedbackForBuyer(percentage.get());
             } else {
-                feedbackSentence = getFeedbackSentence(Res.get("bisqEasy.price.feedback.sentence.veryGood"));
+                updateFeedbackForSeller(percentage.get());
             }
-
-            model.getShouldShowWarningIcon().set(percentageValue < 0.05);
-            model.getFeedbackSentence().set(feedbackSentence);
         } else {
             model.getFeedbackSentence().set(null);
         }
     }
 
-    private String getFeedbackSentence(String adjective) {
-        return model.getDirection().isBuy()
-                ? Res.get("bisqEasy.price.feedback.buyOffer.sentence", adjective)
-                : Res.get("bisqEasy.price.feedback.sellOffer.sentence", adjective);
+    private void updateFeedbackForBuyer(double percentageValue) {
+        String buyFeedbackText = "bisqEasy.price.feedback.buyOffer.sentence";
+        String feedbackSentence;
+        if (percentageValue < BUYER_VERY_LOW_THRESHOLD) {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.veryLow"));
+        } else if (percentageValue < BUYER_LOW_THRESHOLD) {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.low"));
+        } else if (percentageValue < BUYER_MODERATE_THRESHOLD) {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.some"));
+        } else if (percentageValue < BUYER_GOOD_THRESHOLD) {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.good"));
+        } else {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.veryGood"));
+        }
+        model.getShouldShowWarningIcon().set(percentageValue < BUYER_WARNING_THRESHOLD);
+        model.getFeedbackSentence().set(feedbackSentence);
+    }
+
+    private void updateFeedbackForSeller(double percentageValue) {
+        String buyFeedbackText = "bisqEasy.price.feedback.sellOffer.sentence";
+        String feedbackSentence;
+        if (percentageValue < SELLER_VERY_GOOD_THRESHOLD) {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.veryGood"));
+        } else if (percentageValue < SELLER_GOOD_THRESHOLD) {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.good"));
+        } else if (percentageValue < SELLER_MODERATE_THRESHOLD) {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.some"));
+        } else if (percentageValue < SELLER_LOW_THRESHOLD) {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.low"));
+        } else {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.veryLow"));
+        }
+        model.getShouldShowWarningIcon().set(percentageValue >= SELLER_WARNING_THRESHOLD);
+        model.getFeedbackSentence().set(feedbackSentence);
     }
 
     private void applyPriceFromCookie(String price) {

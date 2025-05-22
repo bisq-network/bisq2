@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.events.buyer_as_taker;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.mu_sig.MuSigContract;
@@ -25,10 +24,11 @@ import bisq.i18n.Res;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
-import bisq.trade.mu_sig.handler.MuSigSendTradeMessageHandler;
+import bisq.trade.mu_sig.MuSigTradeParty;
+import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
-import bisq.trade.protobuf.MusigGrpc;
+import bisq.trade.mu_sig.messages.network.vo.PubKeyShares;
 import bisq.trade.protobuf.PubKeySharesRequest;
 import bisq.trade.protobuf.Role;
 import bisq.user.profile.UserProfile;
@@ -37,61 +37,67 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class MuSigTakeOfferEventHandler extends MuSigSendTradeMessageHandler<MuSigTrade> {
+public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade, MuSigTakeOfferEvent> {
+    private PubKeySharesResponse myPubKeySharesResponse;
+    private ContractSignatureData myContractSignatureData;
+    private MuSigContract contract;
 
     public MuSigTakeOfferEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
+    public void process(MuSigTakeOfferEvent event) {
         try {
-            MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
-            bisq.trade.protobuf.PubKeySharesResponse proto = stub.initTrade(PubKeySharesRequest.newBuilder()
+            bisq.trade.protobuf.PubKeySharesResponse proto = musigBlockingStub.initTrade(PubKeySharesRequest.newBuilder()
                     .setTradeId(trade.getId())
                     .setMyRole(Role.BUYER_AS_TAKER)
                     .build());
-            PubKeySharesResponse buyerPubKeySharesResponse = PubKeySharesResponse.fromProto(proto);
+            myPubKeySharesResponse = PubKeySharesResponse.fromProto(proto);
 
-            MuSigContract contract = trade.getContract();
-
-            ContractSignatureData contractSignatureData = serviceProvider.getContractService().signContract(contract,
+            contract = trade.getContract();
+            myContractSignatureData = serviceProvider.getContractService().signContract(contract,
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
-            commitToModel(contractSignatureData, buyerPubKeySharesResponse);
-
-            sendMessage(new MuSigSetupTradeMessage_A(StringUtils.createUid(),
-                    trade.getId(),
-                    trade.getProtocolVersion(),
-                    trade.getMyIdentity().getNetworkId(),
-                    trade.getPeer().getNetworkId(),
-                    contract,
-                    contractSignatureData,
-                    buyerPubKeySharesResponse));
-
-            String takerId = trade.getTaker().getNetworkId().getId();
-            MuSigOffer offer = trade.getOffer();
-            Optional<UserProfile> takerUserProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(takerId);
-
-            String makerId = offer.getMakersUserProfileId();
-            Optional<UserProfile> makerUserProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(makerId);
-            try {
-                sendTradeLogMessage(Res.encode("muSig.protocol.logMessage.takeOffer",
-                        takerUserProfile.orElseThrow().getUserName(),
-                        makerUserProfile.orElseThrow().getUserName(),
-                        offer.getShortId()));
-            } catch (Exception e) {
-                log.error("sendTradeLogMessage failed", e);
-            }
-
         } catch (Exception e) {
             log.error("{}.handle() failed", getClass().getSimpleName(), e);
             throw new RuntimeException(e);
         }
     }
 
-    private void commitToModel(ContractSignatureData contractSignatureData,
-                               PubKeySharesResponse buyerPubKeySharesResponse) {
-        trade.getTaker().getContractSignatureData().set(contractSignatureData);
-        trade.getTaker().setPubKeySharesResponse(buyerPubKeySharesResponse);
+    @Override
+    protected void commit() {
+        MuSigTradeParty mySelf = trade.getTaker();
+        mySelf.getContractSignatureData().set(myContractSignatureData);
+        mySelf.setMyPubKeySharesResponse(myPubKeySharesResponse);
+    }
+
+    @Override
+    protected void sendMessage() {
+        PubKeyShares pubKeyShares = PubKeyShares.from(myPubKeySharesResponse);
+
+        send(new MuSigSetupTradeMessage_A(StringUtils.createUid(),
+                trade.getId(),
+                trade.getProtocolVersion(),
+                trade.getMyIdentity().getNetworkId(),
+                trade.getPeer().getNetworkId(),
+                contract,
+                myContractSignatureData,
+                pubKeyShares));
+    }
+
+    @Override
+    protected void sendLogMessage() {
+        String takerId = trade.getTaker().getNetworkId().getId();
+        MuSigOffer offer = trade.getOffer();
+        Optional<UserProfile> takerUserProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(takerId);
+        String makerId = offer.getMakersUserProfileId();
+        Optional<UserProfile> makerUserProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(makerId);
+        sendLogMessage(Res.encode("muSig.protocol.logMessage.takeOffer",
+                takerUserProfile.orElseThrow().getUserName(),
+                makerUserProfile.orElseThrow().getUserName(),
+                offer.getShortId()));
+
+        sendLogMessage("Buyer created his pubKeyShares.\n" +
+                "Buyer sent his pubKeyShares to seller.");
     }
 }

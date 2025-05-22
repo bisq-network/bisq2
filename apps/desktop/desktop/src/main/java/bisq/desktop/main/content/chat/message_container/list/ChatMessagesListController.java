@@ -19,10 +19,14 @@ package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.bisq_easy.BisqEasyOfferbookMessageService;
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.chat.*;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelSelectionService;
+import bisq.chat.ChatMessage;
+import bisq.chat.ChatMessageType;
+import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.BisqEasyOfferMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
@@ -31,13 +35,19 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.common.CommonPublicChatChannelService;
 import bisq.chat.common.CommonPublicChatMessage;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeMessage;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.chat.priv.PrivateChatChannel;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatMessage;
-import bisq.chat.reactions.*;
+import bisq.chat.reactions.BisqEasyOfferbookMessageReaction;
+import bisq.chat.reactions.ChatMessageReaction;
+import bisq.chat.reactions.CommonPublicChatMessageReaction;
+import bisq.chat.reactions.PrivateChatMessageReaction;
+import bisq.chat.reactions.Reaction;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.observable.Pin;
@@ -52,6 +62,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
@@ -76,12 +87,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static bisq.chat.ChatMessageType.TAKE_BISQ_EASY_OFFER;
+import static bisq.settings.DontShowAgainKey.OFFER_ALREADY_TAKEN_WARN;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -93,6 +111,7 @@ public class ChatMessagesListController implements Controller {
     private final SettingsService settingsService;
     private final Consumer<UserProfile> mentionUserHandler;
     private final Consumer<ChatMessage> replyHandler;
+    private final Runnable requestFocusInputTextFieldHandler;
     private final Consumer<ChatMessage> showChatUserDetailsHandler;
     private final ChatMessagesListModel model;
     @Getter
@@ -116,6 +135,7 @@ public class ChatMessagesListController implements Controller {
                                       Consumer<UserProfile> mentionUserHandler,
                                       Consumer<ChatMessage> showChatUserDetailsHandler,
                                       Consumer<ChatMessage> replyHandler,
+                                      Runnable requestFocusInputTextFieldHandler,
                                       ChatChannelDomain chatChannelDomain) {
         chatService = serviceProvider.getChatService();
         chatNotificationService = chatService.getChatNotificationService();
@@ -136,6 +156,7 @@ public class ChatMessagesListController implements Controller {
         this.mentionUserHandler = mentionUserHandler;
         this.showChatUserDetailsHandler = showChatUserDetailsHandler;
         this.replyHandler = replyHandler;
+        this.requestFocusInputTextFieldHandler = requestFocusInputTextFieldHandler;
 
         model = new ChatMessagesListModel(userIdentityService, chatChannelDomain);
         view = new ChatMessagesListView(model, this);
@@ -226,6 +247,8 @@ public class ChatMessagesListController implements Controller {
                 chatMessagesPin = bindChatMessages(bisqEasyOfferbookChannel);
             } else if (channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
                 chatMessagesPin = bindChatMessages(bisqEasyOpenTradeChannel);
+            } else if (channel instanceof MuSigOpenTradeChannel muSigOpenTradeChannel) {
+                chatMessagesPin = bindChatMessages(muSigOpenTradeChannel);
             } else if (channel instanceof CommonPublicChatChannel commonPublicChatChannel) {
                 chatMessagesPin = bindChatMessages(commonPublicChatChannel);
             } else if (channel instanceof TwoPartyPrivateChatChannel twoPartyPrivateChatChannel) {
@@ -293,6 +316,14 @@ public class ChatMessagesListController implements Controller {
         updatePredicate();
     }
 
+    public void editMyLastMessage() {
+        Optional<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> messageListItem = model.getChatMessages()
+                .stream()
+                .filter(ChatMessageListItem::isMyMessage)
+                .max(Comparator.comparing((ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item) -> item.getChatMessage().getDate()));
+        messageListItem.ifPresent(item -> item.getSetAsEditing().set(true));
+    }
+
 
     /* --------------------------------------------------------------------- */
     // UI - delegate to client
@@ -324,10 +355,9 @@ public class ChatMessagesListController implements Controller {
         BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().get();
         if (bisqEasyTradeService.wasOfferAlreadyTaken(bisqEasyOffer, takerNetworkId)) {
             if (new Date().after(Trade.TRADE_ID_V1_ACTIVATION_DATE)) {
-                String key = "offerAlreadyTaken.warn";
-                if (dontShowAgainService.showAgain(key)) {
+                if (dontShowAgainService.showAgain(OFFER_ALREADY_TAKEN_WARN)) {
                     new Popup().information(Res.get("chat.message.offer.offerAlreadyTaken.info"))
-                            .dontShowAgainId(key)
+                            .dontShowAgainId(OFFER_ALREADY_TAKEN_WARN)
                             .actionButtonText(Res.get("confirmation.yes"))
                             .onAction(() -> doTakeOffer(bisqEasyOfferbookMessage, userProfile, bisqEasyOffer))
                             .closeButtonText(Res.get("confirmation.no"))
@@ -462,9 +492,19 @@ public class ChatMessagesListController implements Controller {
                 .ifPresent(this::createAndSelectTwoPartyPrivateChatChannel);
     }
 
+    public void onSaveEditedMessageUsingEnterKeyShortcut(ChatMessage chatMessage, String editedText) {
+        onSaveEditedMessage(chatMessage, editedText);
+        requestFocusInputTextFieldHandler.run();
+    }
+
     public void onSaveEditedMessage(ChatMessage chatMessage, String editedText) {
         checkArgument(chatMessage instanceof PublicChatMessage);
         checkArgument(model.isMyMessage(chatMessage));
+
+        if (chatMessage.getText().isPresent() && chatMessage.getText().get().equals(editedText)) {
+            // Nothing was changed, thus no need for saving.
+            return;
+        }
 
         if (editedText.length() > ChatMessage.MAX_TEXT_LENGTH) {
             new Popup().warning(Res.get("validation.tooLong", ChatMessage.MAX_TEXT_LENGTH)).show();
@@ -566,7 +606,7 @@ public class ChatMessagesListController implements Controller {
     public void onDismissChatRulesWarning() {
         dontShowAgainService.putDontShowAgain(DONT_SHOW_CHAT_RULES_WARNING_KEY, true);
 
-         model.getSortedChatMessages().stream()
+        model.getSortedChatMessages().stream()
                 .filter(item -> item.getChatMessage().getChatMessageType() == ChatMessageType.CHAT_RULES_WARNING)
                 .findFirst()
                 .ifPresent(itemToRemove -> {
@@ -773,6 +813,11 @@ public class ChatMessagesListController implements Controller {
             BisqEasyOpenTradeChannel channel = (BisqEasyOpenTradeChannel) chatChannel;
             chatService.getBisqEasyOpenTradeChannelService()
                     .sendTextMessageReaction((BisqEasyOpenTradeMessage) chatMessage, channel, reaction, isRemoved);
+        } else if (chatMessage instanceof MuSigOpenTradeMessage) {
+            checkArgument(chatChannel instanceof MuSigOpenTradeChannel, "Channel needs to be of type MuSigOpenTradeChannel.");
+            MuSigOpenTradeChannel channel = (MuSigOpenTradeChannel) chatChannel;
+            chatService.getMuSigOpenTradeChannelService()
+                    .sendTextMessageReaction((MuSigOpenTradeMessage) chatMessage, channel, reaction, isRemoved);
         }
     }
 
@@ -793,6 +838,9 @@ public class ChatMessagesListController implements Controller {
         } else if (channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
             BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage = createChatRulesWarningMessage(bisqEasyOpenTradeChannel);
             model.getChatMessages().add(createChatMessageListItem(bisqEasyOpenTradeMessage, bisqEasyOpenTradeChannel));
+        } else if (channel instanceof MuSigOpenTradeChannel muSigOpenTradeChannel) {
+            MuSigOpenTradeMessage muSigOpenTradeMessage = createChatRulesWarningMessage(muSigOpenTradeChannel);
+            model.getChatMessages().add(createChatMessageListItem(muSigOpenTradeMessage, muSigOpenTradeChannel));
         }
     }
 
@@ -819,6 +867,26 @@ public class ChatMessagesListController implements Controller {
         UserProfile senderUserProfile = channel.getPeer();
         String text = Res.get("chat.private.chatRulesWarningMessage.text");
         return new BisqEasyOpenTradeMessage(channel.getTradeId(),
+                StringUtils.createUid(),
+                channel.getId(),
+                senderUserProfile,
+                receiverUserProfile.getId(),
+                receiverUserProfile.getNetworkId(),
+                text,
+                Optional.empty(),
+                0L,
+                false,
+                channel.getMediator(),
+                ChatMessageType.CHAT_RULES_WARNING,
+                Optional.empty(),
+                new HashSet<>());
+    }
+
+    private MuSigOpenTradeMessage createChatRulesWarningMessage(MuSigOpenTradeChannel channel) {
+        UserProfile receiverUserProfile = channel.getMyUserIdentity().getUserProfile();
+        UserProfile senderUserProfile = channel.getPeer();
+        String text = Res.get("chat.private.chatRulesWarningMessage.text");
+        return new MuSigOpenTradeMessage(channel.getTradeId(),
                 StringUtils.createUid(),
                 channel.getId(),
                 senderUserProfile,

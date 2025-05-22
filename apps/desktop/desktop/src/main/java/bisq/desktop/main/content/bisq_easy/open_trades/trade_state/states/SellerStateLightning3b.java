@@ -146,7 +146,7 @@ public class SellerStateLightning3b extends BaseState {
         private void onButtonClicked() {
             // todo should we send a system message? if so we should change the text
             //sendTradeLogMessage(Res.get("bisqEasy.tradeState.info.phase3b.tradeLogMessage", model.getChannel().getMyUserIdentity().getUserName()));
-            bisqEasyTradeService.btcConfirmed(model.getBisqEasyTrade());
+            bisqEasyTradeService.btcConfirmed(model.getTrade());
         }
 
         private String getEncodedWithNickName(BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {

@@ -18,7 +18,7 @@
 package bisq.trade.mu_sig.messages.network;
 
 import bisq.network.identity.NetworkId;
-import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
+import bisq.trade.mu_sig.messages.network.vo.SwapTxSignature;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -29,17 +29,16 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class MuSigPaymentReceivedMessage_F extends MuSigTradeMessage {
-    public final static int MAX_LENGTH = 1000;
-    private final SwapTxSignatureResponse swapTxSignatureResponse;
+    private final SwapTxSignature swapTxSignature;
 
     public MuSigPaymentReceivedMessage_F(String id,
                                          String tradeId,
                                          String protocolVersion,
                                          NetworkId sender,
                                          NetworkId receiver,
-                                         SwapTxSignatureResponse swapTxSignatureResponse) {
+                                         SwapTxSignature swapTxSignature) {
         super(id, tradeId, protocolVersion, sender, receiver);
-        this.swapTxSignatureResponse = swapTxSignatureResponse;
+        this.swapTxSignature = swapTxSignature;
 
         verify();
     }
@@ -62,7 +61,7 @@ public final class MuSigPaymentReceivedMessage_F extends MuSigTradeMessage {
 
     private bisq.trade.protobuf.MuSigPaymentReceivedMessage_F.Builder getMuSigPaymentReceivedMessage_F(boolean serializeForHash) {
         return bisq.trade.protobuf.MuSigPaymentReceivedMessage_F.newBuilder()
-                .setSwapTxSignatureResponse(swapTxSignatureResponse.toProto(serializeForHash));
+                .setSwapTxSignature(swapTxSignature.toProto(serializeForHash));
     }
 
     public static MuSigPaymentReceivedMessage_F fromProto(bisq.trade.protobuf.TradeMessage proto) {
@@ -73,7 +72,7 @@ public final class MuSigPaymentReceivedMessage_F extends MuSigTradeMessage {
                 proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
-                SwapTxSignatureResponse.fromProto(muSigMessageProto.getSwapTxSignatureResponse()));
+                SwapTxSignature.fromProto(muSigMessageProto.getSwapTxSignature()));
     }
 
     @Override

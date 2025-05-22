@@ -17,13 +17,11 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
-import bisq.common.fsm.Event;
 import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.events.TradeMessageHandler;
-import bisq.trade.protocol.handler.TradeMessageSender;
+import bisq.trade.protocol.handler.TradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
@@ -32,23 +30,15 @@ import java.util.Arrays;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class BisqEasyTakeOfferResponseHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyTakeOfferResponse> implements TradeMessageSender<BisqEasyTrade> {
+public class BisqEasyTakeOfferResponseHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyTakeOfferResponse> {
+    private ContractSignatureData makersContractSignatureData;
 
     public BisqEasyTakeOfferResponseHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyTakeOfferResponse message = (BisqEasyTakeOfferResponse) event;
-        verifyMessage(message);
-        commitToModel(message.getContractSignatureData());
-    }
-
-    @Override
-    protected void verifyMessage(BisqEasyTakeOfferResponse message) {
-        super.verifyMessage(message);
-
+    protected void verify(BisqEasyTakeOfferResponse message) {
         ContractSignatureData makersContractSignatureData = message.getContractSignatureData();
         ContractSignatureData takersContractSignatureData = trade.getTaker().getContractSignatureData().get();
         checkArgument(Arrays.equals(makersContractSignatureData.getContractHash(), takersContractSignatureData.getContractHash()),
@@ -64,7 +54,13 @@ public class BisqEasyTakeOfferResponseHandler extends TradeMessageHandler<BisqEa
         }
     }
 
-    private void commitToModel(ContractSignatureData makersContractSignatureData) {
+    @Override
+    protected void process(BisqEasyTakeOfferResponse message) {
+        makersContractSignatureData = message.getContractSignatureData();
+    }
+
+    @Override
+    protected void commit() {
         trade.getMaker().getContractSignatureData().set(makersContractSignatureData);
     }
 }

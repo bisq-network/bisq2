@@ -23,7 +23,7 @@ import bisq.desktop.main.content.mu_sig.offerbook.MuSigLevel2TabController;
 import bisq.desktop.main.content.mu_sig.offerbook.MuSigLevel2TabView;
 import bisq.desktop.main.content.mu_sig.portfolio.history.MuSigHistoryController;
 import bisq.desktop.main.content.mu_sig.portfolio.offers.MuSigOpenOffersController;
-import bisq.desktop.main.content.mu_sig.portfolio.trades.MuSigOpenTradesController;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.MuSigOpenTradesController;
 import bisq.desktop.navigation.NavigationTarget;
 import lombok.extern.slf4j.Slf4j;
 

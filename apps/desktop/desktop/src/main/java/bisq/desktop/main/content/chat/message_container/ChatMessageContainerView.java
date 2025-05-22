@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.chat.message_container;
 
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.cathash.CatHash;
@@ -54,7 +55,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
     public final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
     private final BisqTextArea inputField = new BisqTextArea();
-    private final EventHandler<KeyEvent> enterKeyPressedHandler = this::processEnterKeyPressed;
+    private final EventHandler<KeyEvent> keyPressedHandler = this::processKeyPressed;
     private final Button sendButton = new Button();
     private final Pane messagesListView;
     private final VBox emptyMessageList;
@@ -109,7 +110,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
             }
         });
 
-        inputField.addEventFilter(KEY_PRESSED, enterKeyPressedHandler);
+        inputField.addEventFilter(KEY_PRESSED, keyPressedHandler);
 
         sendButton.setOnAction(event -> {
             controller.onSendMessage(inputField.getText().trim());
@@ -148,7 +149,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
 
         myProfileCatHashImageView.setOnMouseClicked(null);
         inputField.setOnKeyPressed(null);
-        inputField.removeEventFilter(KEY_PRESSED, enterKeyPressedHandler);
+        inputField.removeEventFilter(KEY_PRESSED, keyPressedHandler);
         sendButton.setOnAction(null);
         userMentionPopup.cleanup();
     }
@@ -230,7 +231,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         userProfileSelectionRoot.disableProperty().unbind();
     }
 
-    private void processEnterKeyPressed(KeyEvent keyEvent) {
+    private void processKeyPressed(KeyEvent keyEvent) {
         if (keyEvent.getCode() == KeyCode.ENTER) {
             keyEvent.consume();
             if (keyEvent.isShiftDown()) {
@@ -240,6 +241,20 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
             } else if (!inputField.getText().isEmpty()) {
                 controller.onSendMessage(inputField.getText().trim());
                 inputField.clear();
+            }
+        } else if (keyEvent.getCode() == KeyCode.UP) {
+            if (inputField.getText().isEmpty() || inputField.getCaretPosition() == 0) {
+                // Only consume event in this case, otherwise allow falling back to default behavior
+                keyEvent.consume();
+                controller.onArrowUpKeyPressed();
+            } else {
+                String normalizedText = StringUtils.normalizeLineBreaks(inputField.getText());
+                // If no line break is found from the start to the caret position, it means we are in the first line, so we should move to the start
+                if (normalizedText.indexOf(System.lineSeparator(), 0, inputField.getCaretPosition()) == -1) {
+                    // Only consume event in this case, otherwise allow falling back to default behavior
+                    keyEvent.consume();
+                    inputField.positionCaret(0);
+                }
             }
         }
     }

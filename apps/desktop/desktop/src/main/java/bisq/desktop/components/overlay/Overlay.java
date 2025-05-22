@@ -38,6 +38,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.BusyAnimation;
 import bisq.i18n.Res;
+import bisq.settings.DontShowAgainKey;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import com.google.common.base.Throwables;
@@ -464,7 +465,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
         VBox.setVgrow(metaDataTextArea, Priority.NEVER);
         VBox.setVgrow(errorReportTextArea, Priority.ALWAYS);
-        VBox errorReportVBox = new VBox(10,  metaDataTextArea, errorReportTextArea);
+        VBox errorReportVBox = new VBox(10, metaDataTextArea, errorReportTextArea);
         content(errorReportVBox);
 
         return cast();
@@ -565,6 +566,11 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     public T dontShowAgainId(String key) {
         this.dontShowAgainId = key;
+        return cast();
+    }
+
+    public T dontShowAgainId(DontShowAgainKey key) {
+        this.dontShowAgainId = key.getKey();
         return cast();
     }
 

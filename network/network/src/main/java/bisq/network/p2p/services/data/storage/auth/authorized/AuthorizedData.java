@@ -24,12 +24,13 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -38,7 +39,6 @@ import java.util.Optional;
  * the authorizedDistributedData object, which will return a hard coded set of pubKeys.
  */
 @Slf4j
-@EqualsAndHashCode(callSuper = true)
 @Getter
 public final class AuthorizedData extends AuthenticatedData {
     private final Optional<byte[]> signature;
@@ -163,5 +163,24 @@ public final class AuthorizedData extends AuthenticatedData {
                 ",\r\n               authorizedPublicKeyBytes=" + Hex.encode(authorizedPublicKeyBytes) +
                 ",\r\n               distributedData=" + distributedData +
                 "\r\n} ";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof AuthorizedData that)) return false;
+        if (!super.equals(o)) return false;
+
+        return Objects.equals(signature, that.signature) &&
+                Arrays.equals(authorizedPublicKeyBytes, that.authorizedPublicKeyBytes) &&
+                Objects.equals(authorizedPublicKey, that.authorizedPublicKey);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + Objects.hashCode(signature);
+        result = 31 * result + Arrays.hashCode(authorizedPublicKeyBytes);
+        result = 31 * result + Objects.hashCode(authorizedPublicKey);
+        return result;
     }
 }

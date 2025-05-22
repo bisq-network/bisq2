@@ -20,7 +20,6 @@ package bisq.trade.mu_sig.messages.network;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.trade.mu_sig.messages.network.not_used_yet.MuSigTakeOfferRequest;
 import bisq.trade.protocol.messages.TradeMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -61,7 +60,6 @@ public abstract class MuSigTradeMessage extends TradeMessage {
 
     public static MuSigTradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
         return switch (proto.getMuSigTradeMessage().getMessageCase()) {
-            case MUSIGTAKEOFFERREQUEST -> MuSigTakeOfferRequest.fromProto(proto);
             case MUSIGSETUPTRADEMESSAGE_A -> MuSigSetupTradeMessage_A.fromProto(proto);
             case MUSIGSETUPTRADEMESSAGE_B -> MuSigSetupTradeMessage_B.fromProto(proto);
             case MUSIGSETUPTRADEMESSAGE_C -> MuSigSetupTradeMessage_C.fromProto(proto);

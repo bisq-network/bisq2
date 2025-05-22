@@ -22,20 +22,35 @@ import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
+import java.util.Arrays;
+import java.util.Objects;
 
 @Slf4j
 @Getter
-@EqualsAndHashCode
 public class ContractSignatureData implements NetworkProto {
     private final byte[] contractHash;
     private final byte[] signature;
     private final PublicKey publicKey;
+
+    @Override
+    public final boolean equals(Object o) {
+        if (!(o instanceof ContractSignatureData that)) return false;
+
+        return Arrays.equals(contractHash, that.contractHash) && Arrays.equals(signature, that.signature) && Objects.equals(publicKey, that.publicKey);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Arrays.hashCode(contractHash);
+        result = 31 * result + Arrays.hashCode(signature);
+        result = 31 * result + Objects.hashCode(publicKey);
+        return result;
+    }
 
     public ContractSignatureData(byte[] contractHash, byte[] signature, PublicKey publicKey) {
         this.contractHash = contractHash;

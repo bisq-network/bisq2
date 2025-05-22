@@ -19,7 +19,12 @@ package bisq.desktop.main.content.bisq_easy.open_trades;
 
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.main.content.chat.ChatModel;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -55,8 +60,11 @@ public final class BisqEasyOpenTradesModel extends ChatModel {
         chatVisible.set(false);
         tradeStateVisible.set(false);
         isAnyTradeInMediation.set(false);
+        if (chatWindow.get() != null) {
+            chatWindow.get().close();
+            chatWindow.set(null);
+        }
         chatWindowTitle.set(null);
-        chatWindow.set(null);
         selectedItem.set(null);
         listItems.forEach(OpenTradeListItem::dispose);
         listItems.clear();

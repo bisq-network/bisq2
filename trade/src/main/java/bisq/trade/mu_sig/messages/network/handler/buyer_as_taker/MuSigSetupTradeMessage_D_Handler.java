@@ -17,58 +17,69 @@
 
 package bisq.trade.mu_sig.messages.network.handler.buyer_as_taker;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
-import bisq.trade.protobuf.*;
+import bisq.trade.mu_sig.handler.MuSigTradeMessageHandler;
 import bisq.trade.mu_sig.messages.grpc.DepositPsbt;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
-import bisq.trade.protocol.events.TradeMessageHandler;
+import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
+import bisq.trade.protobuf.DepositTxSignatureRequest;
+import bisq.trade.protobuf.PublishDepositTxRequest;
+import bisq.trade.protobuf.TxConfirmationStatus;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Iterator;
 
 @Slf4j
-public class MuSigSetupTradeMessage_D_Handler extends TradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_D> {
+public final class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_D> {
+    private PartialSignatures peersPartialSignatures;
+    private DepositPsbt myDepositPsbt;
 
     public MuSigSetupTradeMessage_D_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        MuSigSetupTradeMessage_D message = (MuSigSetupTradeMessage_D) event;
-        verifyMessage(message);
-
-        PartialSignaturesMessage sellerPartialSignaturesMessage = message.getPartialSignaturesMessage();
-        MusigGrpc.MusigBlockingStub stub = serviceProvider.getMuSigTradeService().getMusigStub();
-        DepositPsbt buyerDepositPsbt = DepositPsbt.fromProto(stub.signDepositTx(DepositTxSignatureRequest.newBuilder()
-                .setTradeId(trade.getId())
-                .setPeersPartialSignatures(sellerPartialSignaturesMessage.toProto(true))
-                .build()));
-
-        // *** BUYER BROADCASTS DEPOSIT TX ***
-        Iterator<TxConfirmationStatus> depositTxConfirmationIter = stub.publishDepositTx(PublishDepositTxRequest.newBuilder()
-                .setTradeId(trade.getId())
-                .setDepositPsbt(buyerDepositPsbt.toProto(true))
-                .build());
-
-        commitToModel(buyerDepositPsbt, sellerPartialSignaturesMessage);
+    protected void verify(MuSigSetupTradeMessage_D message) {
     }
 
     @Override
-    protected void verifyMessage(MuSigSetupTradeMessage_D message) {
-        super.verifyMessage(message);
+    protected void process(MuSigSetupTradeMessage_D message) {
+        peersPartialSignatures = message.getPartialSignatures();
+
+        PartialSignaturesMessage peersPartialSignaturesMessage =  PartialSignaturesMessage.from(peersPartialSignatures);
+        DepositTxSignatureRequest depositTxSignatureRequest = DepositTxSignatureRequest.newBuilder()
+                .setTradeId(trade.getId())
+                .setPeersPartialSignatures(peersPartialSignaturesMessage.toProto(true))
+                .build();
+        myDepositPsbt = DepositPsbt.fromProto(musigBlockingStub.signDepositTx(depositTxSignatureRequest));
+
+        // *** BUYER BROADCASTS DEPOSIT TX ***
+        // Before publishing we start observing the txConfirmationStatus (avoiding code duplication to handle it
+        // here directly).
+        muSigTradeService.observeDepositTxConfirmationStatus(trade);
+
+        PublishDepositTxRequest publishDepositTxRequest = PublishDepositTxRequest.newBuilder()
+                .setTradeId(trade.getId())
+                .setDepositPsbt(myDepositPsbt.toProto(true))
+                .build();
+        Iterator<TxConfirmationStatus> depositTxConfirmationIter = musigBlockingStub.publishDepositTx(publishDepositTxRequest);
     }
 
-    private void commitToModel(DepositPsbt buyerDepositPsbt,
-                               PartialSignaturesMessage sellerPartialSignaturesMessage) {
-        MuSigTradeParty buyerAsTaker = trade.getTaker();
-        MuSigTradeParty sellerAsMaker = trade.getMaker();
+    @Override
+    protected void commit() {
+        MuSigTradeParty mySelf = trade.getTaker();
+        MuSigTradeParty peer = trade.getMaker();
 
-        buyerAsTaker.setDepositPsbt(buyerDepositPsbt);
-        sellerAsMaker.setPartialSignaturesMessage(sellerPartialSignaturesMessage);
+        mySelf.setMyDepositPsbt(myDepositPsbt);
+        peer.setPeersPartialSignatures(peersPartialSignatures);
+    }
+
+    @Override
+    protected void sendLogMessage() {
+        sendLogMessage("Seller received peers partialSignatures.\n" +
+                "Seller created his partialSignatures.");
     }
 }

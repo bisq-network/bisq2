@@ -22,18 +22,17 @@ import bisq.common.proto.NetworkProto;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.Optional;
 
 // TODO (refactor, low prio) use Optional instead of Nullable
 // Borrowed from: https://github.com/bisq-network/bisq
 @Slf4j
 @Getter
-@EqualsAndHashCode
 public final class ProofOfWork implements NetworkProto {
     // With HashCashV2 we use the 20 byte hash of the serialized message for the payload
     // instead the serialized message as in HashCash(V1)
@@ -120,5 +119,28 @@ public final class ProofOfWork implements NetworkProto {
                 "\nsolution=" + Hex.encode(solution) +
                 "\npayload=" + Hex.encode(payload) +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof ProofOfWork that)) return false;
+
+        return counter == that.counter &&
+                Double.compare(difficulty, that.difficulty) == 0 &&
+                duration == that.duration &&
+                Arrays.equals(payload, that.payload) &&
+                Arrays.equals(challenge, that.challenge) &&
+                Arrays.equals(solution, that.solution);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Arrays.hashCode(payload);
+        result = 31 * result + Long.hashCode(counter);
+        result = 31 * result + Arrays.hashCode(challenge);
+        result = 31 * result + Double.hashCode(difficulty);
+        result = 31 * result + Arrays.hashCode(solution);
+        result = 31 * result + Long.hashCode(duration);
+        return result;
     }
 }

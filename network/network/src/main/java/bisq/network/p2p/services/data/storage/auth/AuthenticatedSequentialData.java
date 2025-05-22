@@ -22,11 +22,12 @@ import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * Data which ensures that the sequence of add or remove request is maintained correctly.
@@ -34,7 +35,6 @@ import java.util.Date;
  */
 @Slf4j
 @Getter
-@EqualsAndHashCode
 public final class AuthenticatedSequentialData implements NetworkProto {
     public static AuthenticatedSequentialData from(AuthenticatedSequentialData data, int sequenceNumber) {
         return from(data, sequenceNumber, data.getCreated());
@@ -108,5 +108,24 @@ public final class AuthenticatedSequentialData implements NetworkProto {
                 ",\r\n          pubKeyHash=" + Hex.encode(pubKeyHash) +
                 ",\r\n          authenticatedData=" + authenticatedData +
                 "\r\n}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof AuthenticatedSequentialData that)) return false;
+
+        return sequenceNumber == that.sequenceNumber &&
+                created == that.created &&
+                Objects.equals(authenticatedData, that.authenticatedData) &&
+                Arrays.equals(pubKeyHash, that.pubKeyHash);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(authenticatedData);
+        result = 31 * result + sequenceNumber;
+        result = 31 * result + Long.hashCode(created);
+        result = 31 * result + Arrays.hashCode(pubKeyHash);
+        return result;
     }
 }

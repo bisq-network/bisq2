@@ -50,7 +50,7 @@ public class TradeWizardPriceModel implements Model {
     private PriceQuote lastValidPriceQuote;
     private final StringProperty feedbackSentence = new SimpleStringProperty();
     private final BooleanProperty isOverlayVisible = new SimpleBooleanProperty();
-    private final BooleanProperty shouldShowFeedback = new SimpleBooleanProperty();
+    private final BooleanProperty shouldShowLearnWhyButton = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowWarningIcon = new SimpleBooleanProperty();
     @Setter
     private boolean isFocused;
@@ -69,7 +69,7 @@ public class TradeWizardPriceModel implements Model {
         lastValidPriceQuote = null;
         feedbackSentence.set(null);
         isOverlayVisible.set(false);
-        shouldShowFeedback.set(false);
+        shouldShowLearnWhyButton.set(false);
         isFocused = false;
         priceSliderValue.set(0d);
         sliderFocus.set(false);

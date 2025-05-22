@@ -100,6 +100,8 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     // Set at protocol creation and not updated later, thus no need to be observable
     private final Observable<String> protocolVersion = new Observable<>();
 
+    private final Observable<TradeLifecycleState> lifecycleState = new Observable<>();
+
     public Trade(C contract,
                  State state,
                  boolean isBuyer,
@@ -107,14 +109,16 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                  Identity myIdentity,
                  T offer,
                  P taker,
-                 P maker) {
+                 P maker,
+                 TradeLifecycleState lifecycleState) {
         this(contract,
                 state,
                 createId(offer.getId(), taker.getNetworkId().getId(), contract.getTakeOfferDate()),
                 createRole(isBuyer, isTaker),
                 myIdentity,
                 taker,
-                maker);
+                maker,
+                lifecycleState);
     }
 
     protected Trade(C contract,
@@ -123,7 +127,8 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                     TradeRole tradeRole,
                     Identity myIdentity,
                     P taker,
-                    P maker) {
+                    P maker,
+                    TradeLifecycleState lifecycleState) {
         super(state);
 
         this.contract = contract;
@@ -132,6 +137,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         this.myIdentity = myIdentity;
         this.taker = taker;
         this.maker = maker;
+        this.setLifecycleState(lifecycleState);
     }
 
     protected bisq.trade.protobuf.Trade.Builder getTradeBuilder(boolean serializeForHash) {
@@ -142,7 +148,8 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                 .setMyIdentity(myIdentity.toProto(serializeForHash))
                 .setTaker(taker.toProto(serializeForHash))
                 .setMaker(maker.toProto(serializeForHash))
-                .setState(getState().name());
+                .setState(getState().name())
+                .setLifecycleState(getLifecycleState().toProtoEnum());
         Optional.ofNullable(getErrorMessage()).ifPresent(builder::setErrorMessage);
         Optional.ofNullable(getErrorStackTrace()).ifPresent(builder::setErrorStackTrace);
         Optional.ofNullable(getPeersErrorMessage()).ifPresent(builder::setPeersErrorMessage);
@@ -209,6 +216,17 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         return this.protocolVersion.get();
     }
 
+    public void setLifecycleState(TradeLifecycleState lifecycleState) {
+        this.lifecycleState.set(lifecycleState);
+    }
+
+    public TradeLifecycleState getLifecycleState() {
+        return this.lifecycleState.get();
+    }
+
+    public ReadOnlyObservable<TradeLifecycleState> lifecycleState() {
+        return lifecycleState;
+    }
 
     /* --------------------------------------------------------------------- */
     // Delegates

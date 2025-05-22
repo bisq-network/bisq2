@@ -17,11 +17,16 @@
 
 package bisq.desktop.main.content.chat.message_container;
 
-import bisq.desktop.navigation.NavigationTarget;
-import bisq.chat.*;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelSelectionService;
+import bisq.chat.ChatMessage;
+import bisq.chat.ChatService;
+import bisq.chat.Citation;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.common.CommonPublicChatChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Pin;
@@ -34,6 +39,7 @@ import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.settings.ChatMessageType;
 import bisq.settings.SettingsService;
@@ -49,6 +55,8 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static bisq.settings.DontShowAgainKey.SEND_MSG_OFFER_ONLY_WARN;
 
 public class ChatMessageContainerController implements bisq.desktop.common.view.Controller {
     private final ChatMessageContainerModel model;
@@ -81,6 +89,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
                 this::mentionUserHandler,
                 this::showChatUserDetailsHandler,
                 this::replyHandler,
+                this::requestFocusInputTextFieldHandler,
                 chatChannelDomain);
 
         model = new ChatMessageContainerModel(chatChannelDomain);
@@ -158,6 +167,11 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         }
     }
 
+    private void requestFocusInputTextFieldHandler() {
+        model.getFocusInputTextField().set(null);
+        model.getFocusInputTextField().set(true);
+    }
+
     private void showChatUserDetailsHandler(ChatMessage chatMessage) {
         userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
                 .ifPresent(openProfileCardHandler);
@@ -197,6 +211,10 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         }
 
         doSendMessage(text);
+    }
+
+    void onArrowUpKeyPressed() {
+        chatMessagesListController.editMyLastMessage();
     }
 
     void onUserProfileSelected(UserProfile user) {
@@ -261,20 +279,28 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         }
 
         if (chatChannel instanceof BisqEasyOfferbookChannel) {
-            String dontShowAgainId = "sendMsgOfferOnlyWarn";
             boolean hasShowOnlyOffersFilter = settingsService.getBisqEasyOfferbookMessageTypeFilter().get() == ChatMessageType.OFFER;
             if (hasShowOnlyOffersFilter) {
                 new Popup().information(Res.get("chat.message.send.offerOnly.warn"))
                         .actionButtonText(Res.get("confirmation.yes"))
                         .onAction(() -> settingsService.setBisqEasyOfferbookMessageTypeFilter(ChatMessageType.ALL))
                         .closeButtonText(Res.get("confirmation.no"))
-                        .dontShowAgainId(dontShowAgainId)
+                        .dontShowAgainId(SEND_MSG_OFFER_ONLY_WARN)
                         .show();
             }
             chatService.getBisqEasyOfferbookChannelService().publishChatMessage(text, citation, (BisqEasyOfferbookChannel) chatChannel, userIdentity);
         } else if (chatChannel instanceof BisqEasyOpenTradeChannel) {
             if (settingsService.getTradeRulesConfirmed().get() || ((BisqEasyOpenTradeChannel) chatChannel).isMediator()) {
                 chatService.getBisqEasyOpenTradeChannelService().sendTextMessage(text, citation, (BisqEasyOpenTradeChannel) chatChannel);
+            } else {
+                new Popup().information(Res.get("bisqEasy.tradeGuide.notConfirmed.warn"))
+                        .actionButtonText(Res.get("bisqEasy.tradeGuide.open"))
+                        .onAction(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE))
+                        .show();
+            }
+        } else if (chatChannel instanceof MuSigOpenTradeChannel) {
+            if (settingsService.getTradeRulesConfirmed().get() || ((MuSigOpenTradeChannel) chatChannel).isMediator()) {
+                chatService.getMuSigOpenTradeChannelService().sendTextMessage(text, citation, (MuSigOpenTradeChannel) chatChannel);
             } else {
                 new Popup().information(Res.get("bisqEasy.tradeGuide.notConfirmed.warn"))
                         .actionButtonText(Res.get("bisqEasy.tradeGuide.open"))
