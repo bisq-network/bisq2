@@ -143,11 +143,9 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
         // --- handle Ctrl+F shortcut ---
         searchShortcutHandler = event -> {
-            if (searchShortcut.match(event)) {
-                if (!searchBox.isDisabled()) {
-                    searchBox.requestFieldFocus();
-                    event.consume();
-                }
+            if (searchShortcut.match(event) && !searchBox.isDisabled()) {
+                searchBox.requestFieldFocus();
+                event.consume();
             }
         };
         root.addEventFilter(KeyEvent.KEY_PRESSED, searchShortcutHandler);
