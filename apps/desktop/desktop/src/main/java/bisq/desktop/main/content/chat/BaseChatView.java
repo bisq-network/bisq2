@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.chat;
 
 import bisq.chat.notifications.ChatChannelNotificationType;
+import bisq.common.data.Pair;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationView;
@@ -189,14 +190,14 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         notificationsSettingsMenu.setTooltip(Res.get("chat.notificationsSettingsMenu.tooltip"));
     }
 
-    private IconIdPair getIconIdsForNotificationType(ChatChannelNotificationType type) {
+    private Pair<String, String> getIconIdsForNotificationType(ChatChannelNotificationType type) {
         switch (type) {
             case ALL:
-                return new IconIdPair("icon-notification-all-grey", "icon-notification-all-white");
+                return new Pair<>("icon-notification-all-grey", "icon-notification-all-white");
             case MENTION:
-                return new IconIdPair("icon-notification-mention-grey", "icon-notification-mention-white");
+                return new Pair<>("icon-notification-mention-grey", "icon-notification-mention-white");
             case OFF:
-                return new IconIdPair("icon-notification-off-grey", "icon-notification-off-white");
+                return new Pair<>("icon-notification-off-grey", "icon-notification-off-white");
             case GLOBAL_DEFAULT:
             default:
                 ReadOnlyObservable<ChatNotificationType> globalDefault = controller.serviceProvider.getSettingsService().getChatNotificationType();
@@ -215,8 +216,8 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         mention.updateSelection(type == mention.getType());
         off.updateSelection(type == off.getType());
 
-        IconIdPair icons = getIconIdsForNotificationType(type);
-        notificationsSettingsMenu.setIcons(icons.defaultId, icons.activeId);
+        Pair<String, String> icons = getIconIdsForNotificationType(type);
+        notificationsSettingsMenu.setIcons(icons.getFirst(), icons.getSecond());
     }
 
     @Getter
@@ -246,16 +247,6 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
         void updateSelection(boolean isSelected) {
             getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
-        }
-    }
-
-    private static class IconIdPair {
-        final String defaultId;
-        final String activeId;
-
-        IconIdPair(String defaultId, String activeId) {
-            this.defaultId = defaultId;
-            this.activeId = activeId;
         }
     }
 }
