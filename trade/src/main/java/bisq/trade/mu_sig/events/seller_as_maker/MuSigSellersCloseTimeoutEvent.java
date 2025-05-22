@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.events.buyer_as_taker;
+package bisq.trade.mu_sig.events.seller_as_maker;
 
 import bisq.trade.mu_sig.events.MuSigTradeEvent;
 import lombok.EqualsAndHashCode;
@@ -25,8 +25,8 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public final class MuSigBuyersCooperativeCloseTimeoutEvent extends MuSigTradeEvent {
+public final class MuSigSellersCloseTimeoutEvent extends MuSigTradeEvent {
 
-    public MuSigBuyersCooperativeCloseTimeoutEvent() {
+    public MuSigSellersCloseTimeoutEvent() {
     }
 }

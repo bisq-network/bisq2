@@ -24,16 +24,16 @@ import bisq.trade.mu_sig.handler.MuSigTradeEventHandler;
 import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
 import bisq.trade.protobuf.CloseTradeRequest;
 
-public final class MuSigSellersCooperativeCloseTimeoutEventHandler extends MuSigTradeEventHandler<MuSigTrade, MuSigSellersCooperativeCloseTimeoutEvent> {
+public final class MuSigSellersCloseTimeoutEventHandler extends MuSigTradeEventHandler<MuSigTrade, MuSigSellersCloseTimeoutEvent> {
     private CloseTradeResponse myCloseTradeResponse;
 
-    public MuSigSellersCooperativeCloseTimeoutEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
+    public MuSigSellersCloseTimeoutEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void process(MuSigSellersCooperativeCloseTimeoutEvent event) {
-        muSigTradeService.stopCooperativeCloseTimeout(trade);
+    public void process(MuSigSellersCloseTimeoutEvent event) {
+        muSigTradeService.stopCloseTimeout(trade);
 
         MuSigTradeParty buyerAsTake = trade.getTaker();
 
@@ -55,7 +55,7 @@ public final class MuSigSellersCooperativeCloseTimeoutEventHandler extends MuSig
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Seller did not receive peers closeTradeResponse and the timeout got triggered.\n" +
-                "Seller created his closeTradeResponse and force-close the trade.");
+        sendLogMessage("Seller did not received peersOutputPrvKeyShare and the timeout got triggered.\n" +
+                "Seller force-closed the trade.");
     }
 }

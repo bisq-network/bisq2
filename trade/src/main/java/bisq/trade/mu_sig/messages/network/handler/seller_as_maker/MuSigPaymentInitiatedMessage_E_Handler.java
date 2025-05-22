@@ -43,6 +43,6 @@ public final class MuSigPaymentInitiatedMessage_E_Handler extends MuSigTradeMess
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Seller initiated payment");
+        sendLogMessage("Seller received the message that the buyer has initiated the payment");
     }
 }

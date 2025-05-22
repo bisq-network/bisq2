@@ -45,7 +45,7 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
     protected void process(MuSigCooperativeClosureMessage_G message) {
         peersOutputPrvKeyShare = message.getPeerOutputPrvKeyShare();
 
-        muSigTradeService.stopCooperativeCloseTimeout(trade);
+        muSigTradeService.stopCloseTimeout(trade);
 
         // ClosureType.COOPERATIVE
         // *** SELLER CLOSES TRADE ***
@@ -67,7 +67,7 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Seller received peers closeTradeResponse.\n" +
-                "Seller created his closeTradeResponse.");
+        sendLogMessage("Seller received peersOutputPrvKeyShare.\n" +
+                "Seller closed trade.");
     }
 }

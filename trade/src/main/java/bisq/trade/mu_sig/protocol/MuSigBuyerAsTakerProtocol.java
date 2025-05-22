@@ -24,8 +24,8 @@ import bisq.trade.mu_sig.events.MuSigFsmErrorEventHandler;
 import bisq.trade.mu_sig.events.MuSigReportErrorMessageHandler;
 import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEvent;
 import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEventHandler;
-import bisq.trade.mu_sig.events.buyer_as_taker.MuSigBuyersCooperativeCloseTimeoutEvent;
-import bisq.trade.mu_sig.events.buyer_as_taker.MuSigBuyersCooperativeCloseTimeoutEventHandler;
+import bisq.trade.mu_sig.events.buyer_as_taker.MuSigBuyersCloseTimeoutEvent;
+import bisq.trade.mu_sig.events.buyer_as_taker.MuSigBuyersCloseTimeoutEventHandler;
 import bisq.trade.mu_sig.events.buyer_as_taker.MuSigPaymentInitiatedEvent;
 import bisq.trade.mu_sig.events.buyer_as_taker.MuSigPaymentInitiatedEventHandler;
 import bisq.trade.mu_sig.events.buyer_as_taker.MuSigTakeOfferEvent;
@@ -112,8 +112,8 @@ public final class MuSigBuyerAsTakerProtocol extends MuSigProtocol {
 
                         path("Uncooperative closure")
                                 .from(BUYER_AS_TAKER_INITIATED_PAYMENT)
-                                .on(MuSigBuyersCooperativeCloseTimeoutEvent.class)
-                                .run(MuSigBuyersCooperativeCloseTimeoutEventHandler.class)
+                                .on(MuSigBuyersCloseTimeoutEvent.class)
+                                .run(MuSigBuyersCloseTimeoutEventHandler.class)
                                 .to(BUYER_AS_TAKER_FORCE_CLOSED_TRADE)
                 );
     }

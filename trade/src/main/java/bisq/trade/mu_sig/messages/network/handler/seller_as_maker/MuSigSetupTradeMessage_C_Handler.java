@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_C> {
     private NonceShares peersNonceShares;
-    private PartialSignaturesMessage myPartialSignatures;
+    private PartialSignaturesMessage myPartialSignaturesMessage;
     private PartialSignatures peersPartialSignatures;
     private DepositPsbt myDepositPsbt;
 
@@ -67,7 +67,7 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
                 .setPeersNonceShares(peersNonceSharesMessage.toProto(true))
                 .addAllReceivers(mockReceivers())
                 .build();
-        myPartialSignatures = PartialSignaturesMessage.fromProto(musigBlockingStub.getPartialSignatures(partialSignaturesRequest));
+        myPartialSignaturesMessage = PartialSignaturesMessage.fromProto(musigBlockingStub.getPartialSignatures(partialSignaturesRequest));
 
         PartialSignaturesMessage peersPartialSignaturesMessage =  PartialSignaturesMessage.from(peersPartialSignatures);
 
@@ -109,7 +109,7 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
         MuSigTradeParty peer = trade.getTaker();
         MuSigTradeParty mySelf = trade.getMaker();
 
-        mySelf.setMyPartialSignaturesMessage(myPartialSignatures);
+        mySelf.setMyPartialSignaturesMessage(myPartialSignaturesMessage);
         mySelf.setMyDepositPsbt(myDepositPsbt);
 
         peer.setPeersNonceShares(peersNonceShares);
@@ -118,7 +118,7 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void sendMessage() {
-        PartialSignatures partialSignatures =  PartialSignatures.from(myPartialSignatures);
+        PartialSignatures partialSignatures =  PartialSignatures.from(myPartialSignaturesMessage);
 
         send(new MuSigSetupTradeMessage_D(StringUtils.createUid(),
                 trade.getId(),
@@ -131,8 +131,9 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
     @Override
     protected void sendLogMessage() {
         sendLogMessage("Seller received peers nonceShares and partialSignatures.\n" +
-                "Seller created his nonceShares and partialSignatures.\n " +
-                "Seller sent his nonceShares and his partialSignatures to buyer.");
+                "Seller created his partialSignatures and depositPsbt.\n" +
+                "Seller sent his partialSignatures to buyer.\n" +
+                "Seller start listening for deposit tx confirmation (expecting that buyer will publish deposit tx once received our messsage)");
     }
 
     private static List<ReceiverAddressAndAmount> mockReceivers() {

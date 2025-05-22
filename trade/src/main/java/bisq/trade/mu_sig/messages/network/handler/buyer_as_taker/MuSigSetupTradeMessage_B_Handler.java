@@ -44,9 +44,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_B> {
     private ContractSignatureData peersContractSignatureData;
-    private NonceSharesMessage myNonceShares;
+    private NonceSharesMessage myNonceSharesMessage;
     private PubKeyShares peersPubKeyShares;
-    private PartialSignaturesMessage myPartialSignatures;
+    private PartialSignaturesMessage myPartialSignaturesMessage;
     private NonceShares peersNonceShares;
 
     public MuSigSetupTradeMessage_B_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
@@ -77,7 +77,7 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
                 .setBuyersSecurityDeposit(30_000)
                 .setSellersSecurityDeposit(30_000)
                 .build();
-        myNonceShares = NonceSharesMessage.fromProto(musigBlockingStub.getNonceShares(nonceSharesRequest));
+        myNonceSharesMessage = NonceSharesMessage.fromProto(musigBlockingStub.getNonceShares(nonceSharesRequest));
 
         NonceSharesMessage peersNonceSharesMessage =  NonceSharesMessage.from(peersNonceShares);
 
@@ -86,9 +86,7 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
                 .setPeersNonceShares(peersNonceSharesMessage.toProto(true))
                 .addAllReceivers(mockReceivers())
                 .build();
-        myPartialSignatures = PartialSignaturesMessage.fromProto(musigBlockingStub.getPartialSignatures(partialSignaturesRequest));
-
-
+        myPartialSignaturesMessage = PartialSignaturesMessage.fromProto(musigBlockingStub.getPartialSignatures(partialSignaturesRequest));
     }
 
     @Override
@@ -96,20 +94,20 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
         MuSigTradeParty mySelf = trade.getTaker();
         MuSigTradeParty peer = trade.getMaker();
 
-        mySelf.setMyNonceSharesMessage(myNonceShares);
-        mySelf.setMyPartialSignaturesMessage(myPartialSignatures);
+        mySelf.setMyNonceSharesMessage(myNonceSharesMessage);
+        mySelf.setMyPartialSignaturesMessage(myPartialSignaturesMessage);
 
         peer.getContractSignatureData().set(peersContractSignatureData);
-        peer.setPeersPubKeySharesResponse(peersPubKeyShares);
+        peer.setPeersPubKeyShares(peersPubKeyShares);
         peer.setPeersNonceShares(peersNonceShares);
     }
 
     @Override
     protected void sendMessage() {
-        NonceShares nonceShares = NonceShares.from(myNonceShares);
+        NonceShares nonceShares = NonceShares.from(myNonceSharesMessage);
 
         // TODO redacting swapTxInputPartialSignature fails at MuSigPaymentReceiptConfirmedEventHandler
-        PartialSignatures partialSignatures =  PartialSignatures.from(myPartialSignatures);
+        PartialSignatures partialSignatures =  PartialSignatures.from(myPartialSignaturesMessage);
 
         send(new MuSigSetupTradeMessage_C(StringUtils.createUid(),
                 trade.getId(),
@@ -122,8 +120,8 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Buyer received peers pubKeyShares.\n" +
-                "Buyer created his nonceShares and partialSignatures.\n " +
+        sendLogMessage("Buyer received peers pubKeyShares and nonceShares.\n" +
+                "Buyer created his nonceShares and partialSignatures.\n" +
                 "Buyer sent his nonceShares and his partialSignatures to seller.");
     }
 

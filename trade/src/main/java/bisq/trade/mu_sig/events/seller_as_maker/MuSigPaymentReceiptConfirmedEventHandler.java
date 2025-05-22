@@ -28,7 +28,9 @@ import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
 import bisq.trade.mu_sig.messages.network.vo.SwapTxSignature;
 import bisq.trade.protobuf.SwapTxSignatureRequest;
 import com.google.protobuf.ByteString;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade, MuSigPaymentReceiptConfirmedEvent> {
     private SwapTxSignatureResponse mySwapTxSignatureResponse;
 
@@ -48,8 +50,7 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
                 .setSwapTxInputPeersPartialSignature(ByteString.copyFrom(peersPartialSignatures.getSwapTxInputPartialSignature()))
                 .build()));
 
-        //ClosureType.COOPERATIVE
-        muSigTradeService.startCooperativeCloseTimeout(trade, new MuSigSellersCooperativeCloseTimeoutEvent());
+        muSigTradeService.startCloseTimeout(trade, new MuSigSellersCloseTimeoutEvent());
     }
 
     @Override
@@ -60,18 +61,29 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
 
     @Override
     protected void sendMessage() {
-        SwapTxSignature peersSwapTxSignature = SwapTxSignature.from(mySwapTxSignatureResponse);
+        SwapTxSignature swapTxSignature = SwapTxSignature.from(mySwapTxSignatureResponse);
+
+        // TODO simulate storage of swapTx in blockchain
+      /*  byte[] swapTx = mySwapTxSignatureResponse.getSwapTx();
+        Path path = PlatformUtils.getUserDataDir().resolve("swapTx_" + trade.getId());
+        try {
+            FileUtils.write(path.toString(), swapTx);
+        } catch (IOException e) {
+            log.error("");
+            throw new RuntimeException(e);
+        }*/
+
         send(new MuSigPaymentReceivedMessage_F(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
-                peersSwapTxSignature));
+                swapTxSignature));
     }
 
     @Override
     protected void sendLogMessage() {
-
+        sendLogMessage("Seller confirmed payment receipt.\n" +
+                "Seller sends swapTxSignature to buyer.");
     }
-
 }

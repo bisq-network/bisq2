@@ -48,7 +48,7 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
     protected void process(MuSigPaymentReceivedMessage_F message) {
         peersSwapTxSignature = message.getSwapTxSignature();
 
-        muSigTradeService.stopCooperativeCloseTimeout(trade);
+        muSigTradeService.stopCloseTimeout(trade);
 
         // ClosureType.COOPERATIVE
         // *** BUYER CLOSES TRADE ***
@@ -81,7 +81,9 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Buyer confirmed to have received the payment and closed the trade..\n" +
-                "Buyer sent his closeTradeResponse to the seller.");
+        sendLogMessage("Buyer received the message that the seller has confirmed payment receipt.\n" +
+                "The message contained peersSwapTxSignature which includes the peerOutputPrvKeyShare.\n" +
+                "Buyer closed the trade.\n" +
+                "Buyer sent peerOutputPrvKeyShare to the seller.");
     }
 }
