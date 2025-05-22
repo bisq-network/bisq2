@@ -54,6 +54,6 @@ public final class MuSigReportErrorMessageHandler extends MuSigTradeMessageHandl
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Error occurred");
+        sendLogMessage("We received an error report from our peer");
     }
 }

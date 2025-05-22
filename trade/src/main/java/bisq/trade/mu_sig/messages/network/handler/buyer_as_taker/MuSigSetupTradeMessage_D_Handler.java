@@ -79,7 +79,8 @@ public final class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Seller received peers partialSignatures.\n" +
-                "Seller created his partialSignatures.");
+        sendLogMessage("Buyer received peers partialSignatures.\n" +
+                "Buyer created depositPsbt.\n" +
+                "Buyer published deposit tx and start listening for blockchain confirmation.");
     }
 }

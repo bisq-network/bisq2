@@ -39,6 +39,10 @@ public final class MuSigDepositTxConfirmedEventHandler extends MuSigTradeEventHa
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Deposit transaction confirmed");
+        if (trade.isBuyer()) {
+            sendLogMessage("Buyer saw deposit transaction confirmed");
+        } else {
+            sendLogMessage("Seller saw deposit transaction confirmed");
+        }
     }
 }

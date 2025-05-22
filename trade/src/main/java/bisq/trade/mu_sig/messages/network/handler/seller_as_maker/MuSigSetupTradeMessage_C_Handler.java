@@ -131,8 +131,9 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
     @Override
     protected void sendLogMessage() {
         sendLogMessage("Seller received peers nonceShares and partialSignatures.\n" +
-                "Seller created his nonceShares and partialSignatures.\n " +
-                "Seller sent his nonceShares and his partialSignatures to buyer.");
+                "Seller created his partialSignatures and depositPsbt.\n" +
+                "Seller sent his partialSignatures to buyer.\n" +
+                "Seller start listening for deposit tx confirmation (expecting that buyer will publish deposit tx once received our messsage)");
     }
 
     private static List<ReceiverAddressAndAmount> mockReceivers() {
