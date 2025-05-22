@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.portfolio;
 
-import bisq.desktop.main.content.mu_sig.offerbook.MuSigLevel2TabModel;
+import bisq.desktop.main.content.mu_sig.old_offerbook.MuSigLevel2TabModel;
 import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

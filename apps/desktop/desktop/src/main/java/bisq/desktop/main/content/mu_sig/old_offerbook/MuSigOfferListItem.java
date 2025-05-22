@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offerbook;
+package bisq.desktop.main.content.mu_sig.old_offerbook;
 
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -65,8 +65,6 @@ public class MuSigOfferListItem {
     private final String paymentMethod;
     private final String deposit;
     private final String maker;
-    private final Market market;
-    private final String takeOfferButtonText;
 
     private double priceSpecAsPercent = 0;
     private String formattedPercentagePrice = Res.get("data.na");
@@ -89,12 +87,10 @@ public class MuSigOfferListItem {
         AmountSpec amountSpec = offer.getAmountSpec();
         PriceSpec priceSpec = offer.getPriceSpec();
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
-        market = offer.getMarket();
+        Market market = offer.getMarket();
         baseAmountAsString = OfferAmountFormatter.formatBaseAmount(marketPriceService, offer, false);
         quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, false);
-        takeOfferButtonText = offer.getDirection().isBuy()
-                ? Res.get("muSig.offerbook.table.cell.intent.sell")
-                : Res.get("muSig.offerbook.table.cell.intent.buy");
+
 
         // ImageUtil.getImageViewById(fiatPaymentMethod.getName());
         paymentMethodTooltip = Joiner.on(", ")

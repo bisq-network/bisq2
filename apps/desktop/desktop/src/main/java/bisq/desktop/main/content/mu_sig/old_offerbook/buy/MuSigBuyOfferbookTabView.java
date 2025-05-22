@@ -15,17 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offerbook.sell;
+package bisq.desktop.main.content.mu_sig.old_offerbook.buy;
 
 import bisq.desktop.common.Styles;
-import bisq.desktop.main.content.mu_sig.offerbook.MuSigLevel2TabView;
+import bisq.desktop.main.content.mu_sig.old_offerbook.MuSigLevel2TabView;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MuSigSellOfferbookTabView extends MuSigLevel2TabView<MuSigSellOfferbookTabModel, MuSigSellOfferbookTabController> {
-    public MuSigSellOfferbookTabView(MuSigSellOfferbookTabModel model, MuSigSellOfferbookTabController controller) {
+public class MuSigBuyOfferbookTabView extends MuSigLevel2TabView<MuSigBuyOfferbookTabModel, MuSigBuyOfferbookTabController> {
+    public MuSigBuyOfferbookTabView(MuSigBuyOfferbookTabModel model, MuSigBuyOfferbookTabController controller) {
         super(model, controller);
     }
 
@@ -33,13 +33,13 @@ public class MuSigSellOfferbookTabView extends MuSigLevel2TabView<MuSigSellOffer
     protected void addTabs() {
         Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-green", "bisq-text-grey-9");
         addTab(Res.get("muSig.offerbook.btc"),
-                NavigationTarget.MU_SIG_OFFERBOOK_SELL_BTC,
+                NavigationTarget.MU_SIG_OFFERBOOK_BUY_BTC,
                 styles);
         addTab(Res.get("muSig.offerbook.xmr"),
-                NavigationTarget.MU_SIG_OFFERBOOK_SELL_XMR,
+                NavigationTarget.MU_SIG_OFFERBOOK_BUY_XMR,
                 styles);
         addTab(Res.get("muSig.offerbook.other"),
-                NavigationTarget.MU_SIG_OFFERBOOK_SELL_OTHER,
+                NavigationTarget.MU_SIG_OFFERBOOK_BUY_OTHER,
                 styles);
     }
 }

@@ -17,9 +17,14 @@
 
 package bisq.desktop.main.content.mu_sig;
 
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.View;
 import bisq.desktop.main.content.ContentTabView;
+import bisq.desktop.main.content.mu_sig.offerbook.MuSigOfferbookView;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
+import javafx.scene.Parent;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -28,9 +33,15 @@ public class MuSigView extends ContentTabView<MuSigModel, MuSigController> {
         super(model, controller);
 
         // addTab(Res.get("muSig.dashboard"), NavigationTarget.MU_SIG_ONBOARDING);
+        addTab(Res.get("muSig.offerbook"), NavigationTarget.MU_SIG_OFFERBOOK);
         addTab(Res.get("muSig.market"), NavigationTarget.MU_SIG_MARKET);
         addTab(Res.get("muSig.offerbook.buy"), NavigationTarget.MU_SIG_OFFERBOOK_BUY);
         addTab(Res.get("muSig.offerbook.sell"), NavigationTarget.MU_SIG_OFFERBOOK_SELL);
         addTab(Res.get("muSig.portfolio"), NavigationTarget.MU_SIG_PORTFOLIO);
+    }
+
+    @Override
+    protected boolean useFitToHeight(View<? extends Parent, ? extends Model, ? extends Controller> childView) {
+        return childView instanceof MuSigOfferbookView;
     }
 }

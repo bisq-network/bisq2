@@ -15,51 +15,51 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offerbook.btc;
+package bisq.desktop.main.content.mu_sig.old_offerbook.crypto_btc.other;
 
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.main.content.mu_sig.offerbook.MuSigOfferbookController;
+import bisq.desktop.main.content.mu_sig.old_offerbook.crypto_btc.MuSigOfferbookCryptoBtcController;
 import bisq.offer.Direction;
 import bisq.settings.CookieKey;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MuSigOfferbookBtcController extends MuSigOfferbookController<MuSigOfferbookBtcModel, MuSigOfferbookBtcView> {
-    public MuSigOfferbookBtcController(ServiceProvider serviceProvider, Direction direction) {
+public class MuSigOfferbookOtherController extends MuSigOfferbookCryptoBtcController<MuSigOfferbookOtherModel, MuSigOfferbookOtherView> {
+    public MuSigOfferbookOtherController(ServiceProvider serviceProvider, Direction direction) {
         super(serviceProvider, direction);
     }
 
     @Override
-    protected MuSigOfferbookBtcView createAndGetView() {
-        return new MuSigOfferbookBtcView(model, this);
+    protected MuSigOfferbookOtherView createAndGetView() {
+        return new MuSigOfferbookOtherView(model, this);
     }
 
     @Override
-    protected MuSigOfferbookBtcModel createAndGetModel(Direction direction) {
-        return new MuSigOfferbookBtcModel(direction);
+    protected MuSigOfferbookOtherModel createAndGetModel(Direction direction) {
+        return new MuSigOfferbookOtherModel(direction);
     }
 
     @Override
     public void onActivate() {
-        model.getMarkets().setAll(MarketRepository.getAllFiatMarkets());
+        model.getMarkets().setAll(MarketRepository.getAllNonXMRCryptoCurrencyMarkets());
 
         super.onActivate();
     }
 
     @Override
     protected Market getDefaultMarket() {
-        return MarketRepository.getDefaultBtcFiatMarket();
+        return MarketRepository.getDefaultCryptoBtcMarket();
     }
 
     @Override
     protected boolean isExpectedMarket(Market market) {
-        return market.isBtcFiatMarket() && market.getBaseCurrencyCode().equals("BTC");
+        return market.isCrypto() && !market.isXmr();
     }
 
     @Override
     protected CookieKey getSelectedMarketCookieKey() {
-        return CookieKey.MU_SIG_OFFERBOOK_SELECTED_BTC_MARKET;
+        return CookieKey.MU_SIG_OFFERBOOK_SELECTED_OTHER_MARKET;
     }
 }

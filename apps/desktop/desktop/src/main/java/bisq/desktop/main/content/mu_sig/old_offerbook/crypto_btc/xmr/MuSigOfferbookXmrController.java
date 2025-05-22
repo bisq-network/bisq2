@@ -15,12 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offerbook.crypto_btc.xmr;
+package bisq.desktop.main.content.mu_sig.old_offerbook.crypto_btc.xmr;
 
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.main.content.mu_sig.offerbook.crypto_btc.MuSigOfferbookCryptoBtcController;
+import bisq.desktop.main.content.mu_sig.old_offerbook.crypto_btc.MuSigOfferbookCryptoBtcController;
 import bisq.offer.Direction;
 import bisq.settings.CookieKey;
 import lombok.extern.slf4j.Slf4j;

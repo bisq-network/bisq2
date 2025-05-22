@@ -15,21 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.offerbook;
+package bisq.desktop.main.content.mu_sig.offerbook;
 
-import bisq.bisq_easy.BisqEasyOfferbookMessageService;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
-import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
+import bisq.mu_sig.MuSigService;
 import bisq.settings.FavouriteMarketsService;
 import bisq.user.profile.UserProfileService;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.effect.ColorAdjust;
 import lombok.EqualsAndHashCode;
@@ -39,69 +37,73 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Getter
-public class MarketChannelItem {
+public class MarketItem {
     public static final ColorAdjust DIMMED = new ColorAdjust(0, -0.2, -0.4, -0.1);
     public static final ColorAdjust SELECTED = new ColorAdjust(0, 0, -0.1, 0);
     @SuppressWarnings("UnnecessaryUnicodeEscape")
     public static final String ASTERISK_SYMBOL = "\u002A"; // Unicode for "＊"
 
     @EqualsAndHashCode.Include
-    private final BisqEasyOfferbookChannel channel;
+    private final Market market;
 
     private final FavouriteMarketsService favouriteMarketsService;
-    private final ChatNotificationService chatNotificationService;
-    private final Market market;
     private final MarketPriceService marketPriceService;
     private final UserProfileService userProfileService;
-    private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
-    private final SimpleIntegerProperty numOffers = new SimpleIntegerProperty(0);
+    private final MuSigService muSigService;
+    private final SimpleLongProperty numOffers = new SimpleLongProperty(0);
     private final SimpleBooleanProperty isFavourite = new SimpleBooleanProperty(false);
     private final SimpleStringProperty numMarketNotifications = new SimpleStringProperty();
-    private Pin channelPin;
+    private Pin offersPin;
 
-    MarketChannelItem(BisqEasyOfferbookChannel channel,
-                      FavouriteMarketsService favouriteMarketsService,
-                      ChatNotificationService chatNotificationService,
-                      MarketPriceService marketPriceService,
-                      UserProfileService userProfileService,
-                      BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService) {
-        this.channel = channel;
-
+    MarketItem(Market market,
+               FavouriteMarketsService favouriteMarketsService,
+               MarketPriceService marketPriceService,
+               UserProfileService userProfileService,
+               MuSigService muSigService) {
+        this.market = market;
         this.favouriteMarketsService = favouriteMarketsService;
-        this.chatNotificationService = chatNotificationService;
-        market = channel.getMarket();
         this.marketPriceService = marketPriceService;
         this.userProfileService = userProfileService;
-        this.bisqEasyOfferbookMessageService = bisqEasyOfferbookMessageService;
+        this.muSigService = muSigService;
 
-        refreshNotifications();
+//        refreshNotifications();
         initialize();
     }
 
     private void initialize() {
-        channelPin = channel.getChatMessages().addObserver(this::updateNumOffers);
+        offersPin = muSigService.getObservableOffers().addObserver(this::updateNumOffers);
     }
 
     public void dispose() {
-        channelPin.unbind();
+        offersPin.unbind();
     }
 
-    void refreshNotifications() {
-        long numNotifications = chatNotificationService.getNumNotifications(channel);
-        String value = "";
-        if (numNotifications > 9) {
-            // We don't have enough space for 2-digit numbers, so we show an asterix. Standard asterix would not be
-            // centered, thus we use the `full width asterisk` taken from https://www.piliapp.com/symbol/asterisk/
-            value = ASTERISK_SYMBOL;
-        } else if (numNotifications > 0) {
-            value = String.valueOf(numNotifications);
-        }
-        numMarketNotifications.set(value);
-    }
+//    void refreshNotifications() {
+//        long numNotifications = chatNotificationService.getNumNotifications(channel);
+//        String value = "";
+//        if (numNotifications > 9) {
+//            // We don't have enough space for 2-digit numbers, so we show an asterix. Standard asterix would not be
+//            // centered, thus we use the `full width asterisk` taken from https://www.piliapp.com/symbol/asterisk/
+//            value = ASTERISK_SYMBOL;
+//        } else if (numNotifications > 0) {
+//            value = String.valueOf(numNotifications);
+//        }
+//        numMarketNotifications.set(value);
+//    }
 
     private void updateNumOffers() {
         UIThread.run(() -> {
-            int numOffers = (int) bisqEasyOfferbookMessageService.getOffers(channel).count();
+            long numOffers = muSigService.getOffers().stream()
+                    .filter(offer -> {
+                        Market offerMarket = offer.getMarket();
+
+                        // TODO: Needs to be dynamic according to base market
+                        // for now we just assume Btc.
+                        boolean isBaseMarket = offerMarket.isBtcFiatMarket() && offerMarket.getBaseCurrencyCode().equals("BTC");
+                        boolean isQuoteMarket = offerMarket.getQuoteCurrencyCode().equals(market.getQuoteCurrencyCode());
+                        return isBaseMarket && isQuoteMarket;
+                    })
+                    .count();
             getNumOffers().set(numOffers);
         });
     }

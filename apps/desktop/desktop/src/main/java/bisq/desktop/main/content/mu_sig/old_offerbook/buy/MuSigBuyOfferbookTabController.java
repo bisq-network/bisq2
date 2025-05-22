@@ -15,15 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offerbook.buy;
+package bisq.desktop.main.content.mu_sig.old_offerbook.buy;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.mu_sig.offerbook.MuSigLevel2TabController;
-import bisq.desktop.main.content.mu_sig.offerbook.MuSigLevel2TabView;
-import bisq.desktop.main.content.mu_sig.offerbook.btc.MuSigOfferbookBtcController;
-import bisq.desktop.main.content.mu_sig.offerbook.crypto_btc.other.MuSigOfferbookOtherController;
-import bisq.desktop.main.content.mu_sig.offerbook.crypto_btc.xmr.MuSigOfferbookXmrController;
+import bisq.desktop.main.content.mu_sig.old_offerbook.MuSigLevel2TabController;
+import bisq.desktop.main.content.mu_sig.old_offerbook.MuSigLevel2TabView;
+import bisq.desktop.main.content.mu_sig.old_offerbook.btc.MuSigOfferbookBtcController;
+import bisq.desktop.main.content.mu_sig.old_offerbook.crypto_btc.other.MuSigOfferbookOtherController;
+import bisq.desktop.main.content.mu_sig.old_offerbook.crypto_btc.xmr.MuSigOfferbookXmrController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.offer.Direction;
 import lombok.extern.slf4j.Slf4j;
