@@ -126,7 +126,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
     private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin;
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
     private final Set<MuSigTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
-    private final Map<String, Scheduler> cooperativeCloseTimeoutSchedulerByTradeId = new ConcurrentHashMap<>();
+    private final Map<String, Scheduler> closeTimeoutSchedulerByTradeId = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<Void>> observeDepositTxConfirmationStatusFutureByTradeId = new ConcurrentHashMap<>();
 
     public MuSigTradeService(Config config, ServiceProvider serviceProvider) {
@@ -226,8 +226,8 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
 
         networkService.removeConfidentialMessageListener(this);
 
-        cooperativeCloseTimeoutSchedulerByTradeId.values().forEach(Scheduler::stop);
-        cooperativeCloseTimeoutSchedulerByTradeId.clear();
+        closeTimeoutSchedulerByTradeId.values().forEach(Scheduler::stop);
+        closeTimeoutSchedulerByTradeId.clear();
 
         tradeProtocolById.clear();
         pendingMessages.clear();
@@ -431,18 +431,18 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         observeDepositTxConfirmationStatusFutureByTradeId.put(tradeId, future);
     }
 
-    public void startCooperativeCloseTimeout(MuSigTrade trade, MuSigTradeEvent event) {
-        stopCooperativeCloseTimeout(trade);
-        cooperativeCloseTimeoutSchedulerByTradeId.computeIfAbsent(trade.getId(), key ->
+    public void startCloseTimeout(MuSigTrade trade, MuSigTradeEvent event) {
+        stopCloseTimeout(trade);
+        closeTimeoutSchedulerByTradeId.computeIfAbsent(trade.getId(), key ->
                 Scheduler.run(() ->
                                 handleMuSigTradeEvent(trade, event))
                         .after(24, TimeUnit.HOURS));
     }
 
-    public void stopCooperativeCloseTimeout(MuSigTrade trade) {
+    public void stopCloseTimeout(MuSigTrade trade) {
         String tradeId = trade.getId();
-        if (cooperativeCloseTimeoutSchedulerByTradeId.containsKey(tradeId)) {
-            cooperativeCloseTimeoutSchedulerByTradeId.get(tradeId).stop();
+        if (closeTimeoutSchedulerByTradeId.containsKey(tradeId)) {
+            closeTimeoutSchedulerByTradeId.get(tradeId).stop();
         }
     }
 

@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_C> {
     private NonceShares peersNonceShares;
-    private PartialSignaturesMessage myPartialSignatures;
+    private PartialSignaturesMessage myPartialSignaturesMessage;
     private PartialSignatures peersPartialSignatures;
     private DepositPsbt myDepositPsbt;
 
@@ -67,7 +67,7 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
                 .setPeersNonceShares(peersNonceSharesMessage.toProto(true))
                 .addAllReceivers(mockReceivers())
                 .build();
-        myPartialSignatures = PartialSignaturesMessage.fromProto(musigBlockingStub.getPartialSignatures(partialSignaturesRequest));
+        myPartialSignaturesMessage = PartialSignaturesMessage.fromProto(musigBlockingStub.getPartialSignatures(partialSignaturesRequest));
 
         PartialSignaturesMessage peersPartialSignaturesMessage =  PartialSignaturesMessage.from(peersPartialSignatures);
 
@@ -109,7 +109,7 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
         MuSigTradeParty peer = trade.getTaker();
         MuSigTradeParty mySelf = trade.getMaker();
 
-        mySelf.setMyPartialSignaturesMessage(myPartialSignatures);
+        mySelf.setMyPartialSignaturesMessage(myPartialSignaturesMessage);
         mySelf.setMyDepositPsbt(myDepositPsbt);
 
         peer.setPeersNonceShares(peersNonceShares);
@@ -118,7 +118,7 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void sendMessage() {
-        PartialSignatures partialSignatures =  PartialSignatures.from(myPartialSignatures);
+        PartialSignatures partialSignatures =  PartialSignatures.from(myPartialSignaturesMessage);
 
         send(new MuSigSetupTradeMessage_D(StringUtils.createUid(),
                 trade.getId(),

@@ -43,7 +43,7 @@ import java.security.GeneralSecurityException;
 public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_A> {
     private PubKeySharesResponse myPubKeySharesResponse;
     private PubKeyShares peersPubKeyShares;
-    private NonceSharesMessage myNonceShares;
+    private NonceSharesMessage myNonceSharesMessage;
     private ContractSignatureData takersContractSignatureData;
     private ContractSignatureData myContractSignatureData;
 
@@ -87,7 +87,7 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
                 .setBuyersSecurityDeposit(30_000)
                 .setSellersSecurityDeposit(30_000)
                 .build();
-        myNonceShares = NonceSharesMessage.fromProto(musigBlockingStub.getNonceShares(nonceSharesRequest));
+        myNonceSharesMessage = NonceSharesMessage.fromProto(musigBlockingStub.getNonceShares(nonceSharesRequest));
     }
 
     @Override
@@ -98,15 +98,15 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
         peer.getContractSignatureData().set(takersContractSignatureData);
         mySelf.getContractSignatureData().set(myContractSignatureData);
 
-        peer.setPeersPubKeySharesResponse(peersPubKeyShares);
+        peer.setPeersPubKeyShares(peersPubKeyShares);
         mySelf.setMyPubKeySharesResponse(myPubKeySharesResponse);
-        mySelf.setMyNonceSharesMessage(myNonceShares);
+        mySelf.setMyNonceSharesMessage(myNonceSharesMessage);
     }
 
     @Override
     protected void sendMessage() {
         PubKeyShares pubKeyShares = PubKeyShares.from(myPubKeySharesResponse);
-        NonceShares nonceShares = NonceShares.from(myNonceShares);
+        NonceShares nonceShares = NonceShares.from(myNonceSharesMessage);
 
         send(new MuSigSetupTradeMessage_B(StringUtils.createUid(),
                 trade.getId(),

@@ -144,7 +144,7 @@ public final class MuSigTradeParty extends TradeParty {
         this.myPubKeySharesResponse = Optional.of(myPubKeySharesResponse);
     }
 
-    public void setPeersPubKeySharesResponse(PubKeyShares peersPubKeyShares) {
+    public void setPeersPubKeyShares(PubKeyShares peersPubKeyShares) {
         this.peersPubKeyShares = Optional.of(peersPubKeyShares);
     }
 

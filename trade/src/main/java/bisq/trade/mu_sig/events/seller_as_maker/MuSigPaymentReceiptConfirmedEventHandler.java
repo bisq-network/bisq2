@@ -48,8 +48,7 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
                 .setSwapTxInputPeersPartialSignature(ByteString.copyFrom(peersPartialSignatures.getSwapTxInputPartialSignature()))
                 .build()));
 
-        //ClosureType.COOPERATIVE
-        muSigTradeService.startCooperativeCloseTimeout(trade, new MuSigSellersCooperativeCloseTimeoutEvent());
+        muSigTradeService.startCloseTimeout(trade, new MuSigSellersCloseTimeoutEvent());
     }
 
     @Override
@@ -73,5 +72,4 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
     protected void sendLogMessage() {
 
     }
-
 }

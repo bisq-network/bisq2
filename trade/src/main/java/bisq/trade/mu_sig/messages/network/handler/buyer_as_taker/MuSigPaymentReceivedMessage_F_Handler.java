@@ -48,7 +48,7 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
     protected void process(MuSigPaymentReceivedMessage_F message) {
         peersSwapTxSignature = message.getSwapTxSignature();
 
-        muSigTradeService.stopCooperativeCloseTimeout(trade);
+        muSigTradeService.stopCloseTimeout(trade);
 
         // ClosureType.COOPERATIVE
         // *** BUYER CLOSES TRADE ***
