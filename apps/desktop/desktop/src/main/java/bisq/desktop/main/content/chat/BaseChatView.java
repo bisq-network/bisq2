@@ -29,9 +29,14 @@ import bisq.desktop.components.controls.SearchBox;
 import bisq.i18n.Res;
 import bisq.settings.ChatNotificationType;
 import javafx.css.PseudoClass;
+import javafx.event.EventHandler;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -58,6 +63,9 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected DropdownBisqMenuItem helpButton, infoButton;
     private NotificationSettingMenuItem globalDefault, all, mention, off;
     protected Subscription channelIconPin, selectedNotificationSettingPin;
+
+    private final KeyCodeCombination searchShortcut = new KeyCodeCombination(KeyCode.F, KeyCombination.CONTROL_DOWN);
+    private EventHandler<KeyEvent> searchShortcutHandler;
 
     public BaseChatView(BaseChatModel model,
                         BaseChatController<?, ?> controller,
@@ -132,6 +140,17 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         if (model.getSelectedNotificationSetting().get() != null) {
             applySelectedNotificationSetting(model.getSelectedNotificationSetting().get());
         }
+
+        // --- handle Ctrl+F shortcut ---
+        searchShortcutHandler = event -> {
+            if (searchShortcut.match(event)) {
+                if (!searchBox.isDisabled()) {
+                    searchBox.requestFieldFocus();
+                    event.consume();
+                }
+            }
+        };
+        root.addEventFilter(KeyEvent.KEY_PRESSED, searchShortcutHandler);
     }
 
     @Override
@@ -165,6 +184,11 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
         channelIconPin.unsubscribe();
         selectedNotificationSettingPin.unsubscribe();
+
+        if (searchShortcutHandler != null) {
+            root.removeEventFilter(KeyEvent.KEY_PRESSED, searchShortcutHandler);
+            searchShortcutHandler = null;
+        }
     }
 
     private void setUpEllipsisMenu() {
