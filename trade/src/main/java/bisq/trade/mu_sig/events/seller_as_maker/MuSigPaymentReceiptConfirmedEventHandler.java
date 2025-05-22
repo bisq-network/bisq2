@@ -28,7 +28,9 @@ import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
 import bisq.trade.mu_sig.messages.network.vo.SwapTxSignature;
 import bisq.trade.protobuf.SwapTxSignatureRequest;
 import com.google.protobuf.ByteString;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade, MuSigPaymentReceiptConfirmedEvent> {
     private SwapTxSignatureResponse mySwapTxSignatureResponse;
 
@@ -60,6 +62,17 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
     @Override
     protected void sendMessage() {
         SwapTxSignature swapTxSignature = SwapTxSignature.from(mySwapTxSignatureResponse);
+
+        // TODO simulate storage of swapTx in blockchain
+      /*  byte[] swapTx = mySwapTxSignatureResponse.getSwapTx();
+        Path path = PlatformUtils.getUserDataDir().resolve("swapTx_" + trade.getId());
+        try {
+            FileUtils.write(path.toString(), swapTx);
+        } catch (IOException e) {
+            log.error("");
+            throw new RuntimeException(e);
+        }*/
+
         send(new MuSigPaymentReceivedMessage_F(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
@@ -70,6 +83,7 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
 
     @Override
     protected void sendLogMessage() {
-
+        sendLogMessage("Seller confirmed payment receipt.\n" +
+                "Seller sends swapTxSignature to buyer.");
     }
 }
