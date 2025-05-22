@@ -45,7 +45,7 @@ import java.util.Collection;
 public class DropdownMenu extends HBox {
     public static final Double INITIAL_WIDTH = 24.0;
 
-    private final ImageView defaultIcon, activeIcon;
+    private ImageView defaultIcon, activeIcon;
     @Getter
     private final BooleanProperty isMenuShowing = new SimpleBooleanProperty(false);
     private final ContextMenu contextMenu = new ContextMenu();
@@ -111,6 +111,20 @@ public class DropdownMenu extends HBox {
         };
 
         attachListeners();
+    }
+
+    public void setIcons(String newDefaultIconId, String newActiveIconId) {
+        ImageView newDefault = ImageUtil.getImageViewById(newDefaultIconId);
+        ImageView newActive = ImageUtil.getImageViewById(newActiveIconId);
+
+        this.defaultIcon = newDefault;
+        this.activeIcon = newActive;
+
+        if (isMenuShowing.get() || isHover()) {
+            updateIcon(this.activeIcon);
+        } else {
+            updateIcon(this.defaultIcon);
+        }
     }
 
     public void setLabelAsContent(String text) {
@@ -183,7 +197,7 @@ public class DropdownMenu extends HBox {
         });
         contextMenu.setOnHidden(e -> {
             getStyleClass().remove("dropdown-menu-active");
-            updateIcon(defaultIcon);
+            updateIcon(isHover() ? activeIcon : defaultIcon);
             isMenuShowing.setValue(false);
         });
 
@@ -203,11 +217,18 @@ public class DropdownMenu extends HBox {
     }
 
     private void updateIcon(ImageView newIcon) {
-        if (buttonIcon != newIcon) {
-            getChildren().remove(buttonIcon);
-            buttonIcon = newIcon;
-            getChildren().add(buttonIcon);
+        if (this.buttonIcon == newIcon) {
+            return;
         }
+
+        int currentIndex = getChildren().indexOf(this.buttonIcon);
+        if (currentIndex != -1) {
+            getChildren().set(currentIndex, newIcon);
+        } else {
+            if (this.buttonIcon != null) getChildren().remove(this.buttonIcon);
+            getChildren().add(newIcon);
+        }
+        this.buttonIcon = newIcon;
     }
 
     private PopupWindow.AnchorLocation getAnchorLocation() {
