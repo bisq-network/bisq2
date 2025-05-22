@@ -26,6 +26,7 @@ import javafx.scene.Cursor;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 
@@ -92,6 +93,12 @@ public class SelectableLabel extends StackPane {
 
         isSwapped = true;
         label.boundsInParentProperty().removeListener(labelBoundsListener);
+
+        // Required to set give size instead of taking available size from parent.
+        // Default would be Double.MAX_VALUE, which allows to grow to max. size of parent.
+        textArea.setMaxWidth(Region.USE_PREF_SIZE);
+        textArea.setMaxHeight(Region.USE_PREF_SIZE);
+
         textArea.setPrefWidth(label.getWidth());
         textArea.setPrefHeight(label.getHeight());
         getChildren().remove(label);
