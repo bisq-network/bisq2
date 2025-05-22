@@ -19,6 +19,7 @@ package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
 import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
+import bisq.trade.mu_sig.messages.network.vo.RedactedPartialSignatures;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 
@@ -32,6 +33,15 @@ public final class PartialSignaturesMessage implements Proto {
                 peersPartialSignatures.getPeersWarningTxSellerInputPartialSignature(),
                 peersPartialSignatures.getPeersRedirectTxInputPartialSignature(),
                 peersPartialSignatures.getSwapTxInputPartialSignature()
+        );
+    }
+
+    public static PartialSignaturesMessage from(RedactedPartialSignatures peersPartialSignatures) {
+        return new PartialSignaturesMessage(
+                peersPartialSignatures.getPeersWarningTxBuyerInputPartialSignature(),
+                peersPartialSignatures.getPeersWarningTxSellerInputPartialSignature(),
+                peersPartialSignatures.getPeersRedirectTxInputPartialSignature(),
+                new byte[]{}
         );
     }
 
@@ -52,11 +62,19 @@ public final class PartialSignaturesMessage implements Proto {
 
     @Override
     public bisq.trade.protobuf.PartialSignaturesMessage.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.protobuf.PartialSignaturesMessage.newBuilder()
+        bisq.trade.protobuf.PartialSignaturesMessage.Builder builder = bisq.trade.protobuf.PartialSignaturesMessage.newBuilder()
                 .setPeersWarningTxBuyerInputPartialSignature(ByteString.copyFrom(peersWarningTxBuyerInputPartialSignature))
                 .setPeersWarningTxSellerInputPartialSignature(ByteString.copyFrom(peersWarningTxSellerInputPartialSignature))
                 .setPeersRedirectTxInputPartialSignature(ByteString.copyFrom(peersRedirectTxInputPartialSignature))
                 .setSwapTxInputPartialSignature(ByteString.copyFrom(swapTxInputPartialSignature));
+
+        // TODO  @stejbac: if swapTxInputPartialSignature is empty byte array,
+        //       passing that to setPeersPartialSignatures results in a backend error as it seems the backend expects
+        //       ByteString.EMPTY. With clearSwapTxInputPartialSignature we get ByteString.EMPTY.
+        if (swapTxInputPartialSignature.length == 0) {
+            builder.clearSwapTxInputPartialSignature();
+        }
+        return builder;
     }
 
     @Override

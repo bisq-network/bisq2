@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network;
 
 import bisq.network.identity.NetworkId;
+import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,12 +29,16 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class MuSigPaymentInitiatedMessage_E extends MuSigTradeMessage {
+    private final byte[] swapTxInputPartialSignature;
+
     public MuSigPaymentInitiatedMessage_E(String id,
                                           String tradeId,
                                           String protocolVersion,
                                           NetworkId sender,
-                                          NetworkId receiver) {
+                                          NetworkId receiver,
+                                          byte[] swapTxInputPartialSignature) {
         super(id, tradeId, protocolVersion, sender, receiver);
+        this.swapTxInputPartialSignature = swapTxInputPartialSignature;
 
         verify();
     }
@@ -55,7 +60,8 @@ public final class MuSigPaymentInitiatedMessage_E extends MuSigTradeMessage {
     }
 
     private bisq.trade.protobuf.MuSigPaymentInitiatedMessage_E.Builder getMuSigPaymentInitiatedMessage_E(boolean serializeForHash) {
-        return bisq.trade.protobuf.MuSigPaymentInitiatedMessage_E.newBuilder();
+        return bisq.trade.protobuf.MuSigPaymentInitiatedMessage_E.newBuilder()
+                .setSwapTxInputPartialSignature(ByteString.copyFrom(swapTxInputPartialSignature));
     }
 
     public static MuSigPaymentInitiatedMessage_E fromProto(bisq.trade.protobuf.TradeMessage proto) {
@@ -65,7 +71,8 @@ public final class MuSigPaymentInitiatedMessage_E extends MuSigTradeMessage {
                 proto.getTradeId(),
                 proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()));
+                NetworkId.fromProto(proto.getReceiver()),
+                muSigMessageProto.getSwapTxInputPartialSignature().toByteArray());
     }
 
     @Override

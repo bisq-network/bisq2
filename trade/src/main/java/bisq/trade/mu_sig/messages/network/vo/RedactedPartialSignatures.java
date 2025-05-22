@@ -25,71 +25,53 @@ import lombok.Getter;
 import java.util.Arrays;
 
 @Getter
-public final class PartialSignatures implements Proto {
-    public static PartialSignatures from(PartialSignaturesMessage partialSignaturesMessage) {
-        return new PartialSignatures(
+public final class RedactedPartialSignatures implements Proto {
+    public static RedactedPartialSignatures from(PartialSignaturesMessage partialSignaturesMessage) {
+        return new RedactedPartialSignatures(
                 partialSignaturesMessage.getPeersWarningTxBuyerInputPartialSignature().clone(),
                 partialSignaturesMessage.getPeersWarningTxSellerInputPartialSignature().clone(),
-                partialSignaturesMessage.getPeersRedirectTxInputPartialSignature().clone(),
-                partialSignaturesMessage.getSwapTxInputPartialSignature().clone()
-        );
-    }
-
-    public static PartialSignatures from(RedactedPartialSignatures partialSignatures,
-                                         byte[] swapTxInputPartialSignature) {
-        return new PartialSignatures(
-                partialSignatures.getPeersWarningTxBuyerInputPartialSignature().clone(),
-                partialSignatures.getPeersWarningTxSellerInputPartialSignature().clone(),
-                partialSignatures.getPeersRedirectTxInputPartialSignature().clone(),
-                swapTxInputPartialSignature.clone()
+                partialSignaturesMessage.getPeersRedirectTxInputPartialSignature().clone()
         );
     }
 
     private final byte[] peersWarningTxBuyerInputPartialSignature;
     private final byte[] peersWarningTxSellerInputPartialSignature;
     private final byte[] peersRedirectTxInputPartialSignature;
-    // todo swapTxInputPartialSignature can be empty byte array (redacted), consider to make optional or make 2 classes
-    private final byte[] swapTxInputPartialSignature;
 
-    private PartialSignatures(byte[] peersWarningTxBuyerInputPartialSignature,
-                              byte[] peersWarningTxSellerInputPartialSignature,
-                              byte[] peersRedirectTxInputPartialSignature,
-                              byte[] swapTxInputPartialSignature) {
+    private RedactedPartialSignatures(byte[] peersWarningTxBuyerInputPartialSignature,
+                                      byte[] peersWarningTxSellerInputPartialSignature,
+                                      byte[] peersRedirectTxInputPartialSignature) {
         this.peersWarningTxBuyerInputPartialSignature = peersWarningTxBuyerInputPartialSignature;
         this.peersWarningTxSellerInputPartialSignature = peersWarningTxSellerInputPartialSignature;
         this.peersRedirectTxInputPartialSignature = peersRedirectTxInputPartialSignature;
-        this.swapTxInputPartialSignature = swapTxInputPartialSignature;
     }
 
     @Override
-    public bisq.trade.protobuf.PartialSignatures.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.protobuf.PartialSignatures.newBuilder()
+    public bisq.trade.protobuf.RedactedPartialSignatures.Builder getBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.RedactedPartialSignatures.newBuilder()
                 .setPeersWarningTxBuyerInputPartialSignature(ByteString.copyFrom(peersWarningTxBuyerInputPartialSignature))
                 .setPeersWarningTxSellerInputPartialSignature(ByteString.copyFrom(peersWarningTxSellerInputPartialSignature))
-                .setPeersRedirectTxInputPartialSignature(ByteString.copyFrom(peersRedirectTxInputPartialSignature))
-                .setSwapTxInputPartialSignature(ByteString.copyFrom(swapTxInputPartialSignature));
+                .setPeersRedirectTxInputPartialSignature(ByteString.copyFrom(peersRedirectTxInputPartialSignature));
     }
 
     @Override
-    public bisq.trade.protobuf.PartialSignatures toProto(boolean serializeForHash) {
+    public bisq.trade.protobuf.RedactedPartialSignatures toProto(boolean serializeForHash) {
         return getBuilder(serializeForHash).build();
     }
 
-    public static PartialSignatures fromProto(bisq.trade.protobuf.PartialSignatures proto) {
-        return new PartialSignatures(proto.getPeersWarningTxBuyerInputPartialSignature().toByteArray(),
+    public static RedactedPartialSignatures fromProto(bisq.trade.protobuf.RedactedPartialSignatures proto) {
+        return new RedactedPartialSignatures(proto.getPeersWarningTxBuyerInputPartialSignature().toByteArray(),
                 proto.getPeersWarningTxSellerInputPartialSignature().toByteArray(),
-                proto.getPeersRedirectTxInputPartialSignature().toByteArray(),
-                proto.getSwapTxInputPartialSignature().toByteArray());
+                proto.getPeersRedirectTxInputPartialSignature().toByteArray());
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof PartialSignatures that)) return false;
+        if (!(o instanceof RedactedPartialSignatures that)) return false;
 
         return Arrays.equals(peersWarningTxBuyerInputPartialSignature, that.peersWarningTxBuyerInputPartialSignature) &&
                 Arrays.equals(peersWarningTxSellerInputPartialSignature, that.peersWarningTxSellerInputPartialSignature) &&
-                Arrays.equals(peersRedirectTxInputPartialSignature, that.peersRedirectTxInputPartialSignature) &&
-                Arrays.equals(swapTxInputPartialSignature, that.swapTxInputPartialSignature);
+                Arrays.equals(peersRedirectTxInputPartialSignature, that.peersRedirectTxInputPartialSignature);
     }
 
     @Override
@@ -97,7 +79,6 @@ public final class PartialSignatures implements Proto {
         int result = Arrays.hashCode(peersWarningTxBuyerInputPartialSignature);
         result = 31 * result + Arrays.hashCode(peersWarningTxSellerInputPartialSignature);
         result = 31 * result + Arrays.hashCode(peersRedirectTxInputPartialSignature);
-        result = 31 * result + Arrays.hashCode(swapTxInputPartialSignature);
         return result;
     }
 }

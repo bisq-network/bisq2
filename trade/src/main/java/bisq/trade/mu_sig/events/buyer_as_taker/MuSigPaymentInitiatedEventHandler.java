@@ -22,6 +22,7 @@ import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
+import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
 
 public final class MuSigPaymentInitiatedEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade, MuSigPaymentInitiatedEvent> {
     public MuSigPaymentInitiatedEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
@@ -39,11 +40,14 @@ public final class MuSigPaymentInitiatedEventHandler extends MuSigTradeEventHand
 
     @Override
     protected void sendMessage() {
+        PartialSignatures partialSignatures = PartialSignatures.from(trade.getMyself().getMyPartialSignaturesMessage().orElseThrow());
+        byte[] swapTxInputPartialSignature = partialSignatures.getSwapTxInputPartialSignature();
         send(new MuSigPaymentInitiatedMessage_E(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
-                trade.getPeer().getNetworkId()));
+                trade.getPeer().getNetworkId(),
+                swapTxInputPartialSignature));
     }
 
     @Override

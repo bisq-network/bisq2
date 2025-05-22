@@ -30,6 +30,7 @@ import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_C;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
 import bisq.trade.mu_sig.messages.network.vo.NonceShares;
 import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
+import bisq.trade.mu_sig.messages.network.vo.RedactedPartialSignatures;
 import bisq.trade.protobuf.DepositTxSignatureRequest;
 import bisq.trade.protobuf.PartialSignaturesRequest;
 import bisq.trade.protobuf.ReceiverAddressAndAmount;
@@ -43,7 +44,7 @@ import java.util.stream.Collectors;
 public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_C> {
     private NonceShares peersNonceShares;
     private PartialSignaturesMessage myPartialSignaturesMessage;
-    private PartialSignatures peersPartialSignatures;
+    private RedactedPartialSignatures peersRedactedPartialSignatures;
     private DepositPsbt myDepositPsbt;
 
     public MuSigSetupTradeMessage_C_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
@@ -57,10 +58,9 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
     @Override
     protected void process(MuSigSetupTradeMessage_C message) {
         peersNonceShares = message.getNonceShares();
-        peersPartialSignatures = message.getPartialSignatures();
+        peersRedactedPartialSignatures = message.getRedactedPartialSignatures();
 
-
-        NonceSharesMessage peersNonceSharesMessage =  NonceSharesMessage.from(peersNonceShares);
+        NonceSharesMessage peersNonceSharesMessage = NonceSharesMessage.from(peersNonceShares);
 
         PartialSignaturesRequest partialSignaturesRequest = PartialSignaturesRequest.newBuilder()
                 .setTradeId(trade.getId())
@@ -69,20 +69,12 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
                 .build();
         myPartialSignaturesMessage = PartialSignaturesMessage.fromProto(musigBlockingStub.getPartialSignatures(partialSignaturesRequest));
 
-        PartialSignaturesMessage peersPartialSignaturesMessage =  PartialSignaturesMessage.from(peersPartialSignatures);
-
-        // TODO
-        //       @stejbac: redacting would make sense at senders side, but then it fails at MuSigPaymentReceiptConfirmedEventHandler.
-        //       if swapTxInputPartialSignature is empty byte array (redacted by the peer),
-        //       passing that to setPeersPartialSignatures results in a backend error.
-        //       Currently redaction is done on the sellers side, with clearSwapTxInputPartialSignature which results in
-        //       ByteString.EMPTY.
-        var signaturesProto = peersPartialSignaturesMessage.toProto(true)
-                .toBuilder()
-                .clearSwapTxInputPartialSignature();
+        // swapTxInputPartialSignature is not set in peersRedactedPartialSignatures, thus the
+        // PartialSignaturesMessage has a cleared swapTxInputPartialSignature field.
+        PartialSignaturesMessage peersredactedPartialSignaturesMessage = PartialSignaturesMessage.from(peersRedactedPartialSignatures);
         DepositTxSignatureRequest depositTxSignatureRequest = DepositTxSignatureRequest.newBuilder()
                 .setTradeId(trade.getId())
-                .setPeersPartialSignatures(signaturesProto)
+                .setPeersPartialSignatures(peersredactedPartialSignaturesMessage.toProto(true))
                 .build();
         myDepositPsbt = DepositPsbt.fromProto(musigBlockingStub.signDepositTx(depositTxSignatureRequest));
 
@@ -113,12 +105,12 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
         mySelf.setMyDepositPsbt(myDepositPsbt);
 
         peer.setPeersNonceShares(peersNonceShares);
-        peer.setPeersPartialSignatures(peersPartialSignatures);
+        peer.setPeersRedactedPartialSignatures(peersRedactedPartialSignatures);
     }
 
     @Override
     protected void sendMessage() {
-        PartialSignatures partialSignatures =  PartialSignatures.from(myPartialSignaturesMessage);
+        PartialSignatures partialSignatures = PartialSignatures.from(myPartialSignaturesMessage);
 
         send(new MuSigSetupTradeMessage_D(StringUtils.createUid(),
                 trade.getId(),
