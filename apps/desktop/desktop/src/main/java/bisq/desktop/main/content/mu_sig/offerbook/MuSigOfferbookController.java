@@ -41,6 +41,7 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class MuSigOfferbookController implements Controller {
     @Getter
@@ -77,7 +78,7 @@ public class MuSigOfferbookController implements Controller {
                         marketPriceService,
                         userProfileService,
                         muSigService))
-                .toList();
+                .collect(Collectors.toList());
         model.getMarketItems().setAll(marketItems);
 
         applyInitialSelectedMarket();
@@ -199,8 +200,9 @@ public class MuSigOfferbookController implements Controller {
                 model.getMarketDescription().set(selectedMarket.getMarketCodes());
                 marketPriceService
                         .findMarketPrice(selectedMarket)
-                        .ifPresent(marketPrice ->
-                                model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true)));
+                        .ifPresentOrElse(
+                                marketPrice -> model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true)),
+                                () -> model.getMarketPrice().set(""));
                 model.getBaseCodeTitle().set(selectedMarket.getBaseCurrencyCode());
                 model.getQuoteCodeTitle().set(selectedMarket.getQuoteCurrencyCode());
                 model.getPriceTitle().set(Res.get("muSig.offerbook.table.header.price", selectedMarket.getMarketCodes()).toUpperCase());
