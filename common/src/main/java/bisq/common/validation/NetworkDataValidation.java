@@ -173,4 +173,12 @@ public class NetworkDataValidation {
         checkArgument(bic.matches("[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?"),
                 "Invalid BIC/SWIFT format. Must follow pattern of institution code (4 letters) + country code (2 letters) + location code (2 alphanumeric) + optional branch code (3 alphanumeric). bic=" + bic);
     }
+
+    public static void validateEmail(String email) {
+        checkArgument(!StringUtils.isEmpty(email), "Email must not be empty");
+        checkArgument(email.length() <= 100, "Email must not be longer than 100 characters. email=" + email);
+
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+        checkArgument(email.matches(emailRegex), "Invalid email format. email: " + email);
+    }
 }

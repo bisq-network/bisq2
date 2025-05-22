@@ -1,5 +1,6 @@
 package bisq.account.accounts;
 
+import bisq.account.protobuf.AccountPayload;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -87,11 +88,13 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
         return builder;
     }
 
-    public static BankAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static BankAccountPayload fromProto(AccountPayload proto) {
         return switch (proto.getCountryBasedAccountPayload().getBankAccountPayload().getMessageCase()) {
             case ACHTRANSFERACCOUNTPAYLOAD -> AchTransferAccountPayload.fromProto(proto);
             case NATIONALBANKACCOUNTPAYLOAD -> NationalBankAccountPayload.fromProto(proto);
             case CASHDEPOSITACCOUNTPAYLOAD -> CashDepositAccountPayload.fromProto(proto);
+            case SAMEBANKACCOUNTPAYLOAD -> SameBankAccountPayload.fromProto(proto);
+            case DOMESTICWIRETRANSFERACCOUNTPAYLOAD -> DomesticWireTransferAccountPayload.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

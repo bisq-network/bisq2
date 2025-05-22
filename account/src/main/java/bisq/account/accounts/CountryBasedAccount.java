@@ -45,6 +45,7 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, 
             case BANKACCOUNT -> BankAccount.fromProto(proto);
             case SEPAACCOUNT -> SepaAccount.fromProto(proto);
             case SEPAINSTANTACCOUNT -> SepaInstantAccount.fromProto(proto);
+            case WISEACCOUNT -> WiseAccount.fromProto(proto);
             case F2FACCOUNT -> F2FAccount.fromProto(proto);
             case PIXACCOUNT -> PixAccount.fromProto(proto);
             case STRIKEACCOUNT -> StrikeAccount.fromProto(proto);
