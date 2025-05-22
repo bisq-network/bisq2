@@ -55,7 +55,7 @@ public final class MuSigSellersCloseTimeoutEventHandler extends MuSigTradeEventH
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Seller did not receive peers closeTradeResponse and the timeout got triggered.\n" +
-                "Seller created his closeTradeResponse and force-close the trade.");
+        sendLogMessage("Seller did not received peersOutputPrvKeyShare and the timeout got triggered.\n" +
+                "Seller force-closed the trade.");
     }
 }

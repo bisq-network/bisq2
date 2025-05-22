@@ -59,13 +59,13 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
 
     @Override
     protected void sendMessage() {
-        SwapTxSignature peersSwapTxSignature = SwapTxSignature.from(mySwapTxSignatureResponse);
+        SwapTxSignature swapTxSignature = SwapTxSignature.from(mySwapTxSignatureResponse);
         send(new MuSigPaymentReceivedMessage_F(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
-                peersSwapTxSignature));
+                swapTxSignature));
     }
 
     @Override

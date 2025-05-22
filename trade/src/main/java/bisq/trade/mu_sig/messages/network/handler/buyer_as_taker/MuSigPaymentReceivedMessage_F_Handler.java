@@ -71,7 +71,7 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
     @Override
     protected void sendMessage() {
         byte[] peerOutputPrvKeyShare = myCloseTradeResponse.getPeerOutputPrvKeyShare().clone();
-        send(new MuSigCooperativeClosureMessage_G(StringUtils.createUid(),
+       send(new MuSigCooperativeClosureMessage_G(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
@@ -81,7 +81,8 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Buyer confirmed to have received the payment and closed the trade..\n" +
-                "Buyer sent his closeTradeResponse to the seller.");
+        sendLogMessage("Buyer received the message that the seller has confirmed payment receipt.\n" +
+                "The message contained peersSwapTxSignature which includes the peerOutputPrvKeyShare allowing him to close the trade.\n" +
+                "Buyer sent peerOutputPrvKeyShare to the seller.");
     }
 }
