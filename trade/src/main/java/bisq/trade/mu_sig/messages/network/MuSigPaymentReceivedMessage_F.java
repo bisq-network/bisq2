@@ -18,7 +18,7 @@
 package bisq.trade.mu_sig.messages.network;
 
 import bisq.network.identity.NetworkId;
-import bisq.trade.mu_sig.messages.network.vo.SwapTxSignature;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.SwapTxSignature;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

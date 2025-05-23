@@ -26,7 +26,7 @@ import bisq.trade.mu_sig.handler.MuSigTradeMessageHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
 import bisq.trade.mu_sig.messages.network.MuSigCooperativeClosureMessage_G;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentReceivedMessage_F;
-import bisq.trade.mu_sig.messages.network.vo.SwapTxSignature;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.SwapTxSignature;
 import bisq.trade.protobuf.CloseTradeRequest;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;

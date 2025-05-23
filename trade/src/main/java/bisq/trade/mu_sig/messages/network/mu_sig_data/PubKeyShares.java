@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.network.vo;
+package bisq.trade.mu_sig.messages.network.mu_sig_data;
 
 import bisq.common.proto.Proto;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
