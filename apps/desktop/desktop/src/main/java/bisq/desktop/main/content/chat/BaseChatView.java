@@ -64,8 +64,8 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     private NotificationSettingMenuItem globalDefault, all, mention, off;
     protected Subscription channelIconPin, selectedNotificationSettingPin;
 
-    private final KeyCodeCombination searchShortcut = new KeyCodeCombination(KeyCode.F, KeyCombination.CONTROL_DOWN);
-    private EventHandler<KeyEvent> searchShortcutHandler;
+    private final KeyCodeCombination searchShortcut = new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN);
+    private final EventHandler<KeyEvent> searchShortcutHandler;
 
     public BaseChatView(BaseChatModel model,
                         BaseChatController<?, ?> controller,
@@ -86,6 +86,13 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
         root.setFitToWidth(true);
         root.setFitToHeight(true);
+
+        searchShortcutHandler = event -> {
+            if (searchShortcut.match(event) && !searchBox.isDisabled()) {
+                searchBox.requestFieldFocus();
+                event.consume();
+            }
+        };
     }
 
     protected abstract void configTitleHBox();
@@ -141,13 +148,6 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
             applySelectedNotificationSetting(model.getSelectedNotificationSetting().get());
         }
 
-        // --- handle Ctrl+F shortcut ---
-        searchShortcutHandler = event -> {
-            if (searchShortcut.match(event) && !searchBox.isDisabled()) {
-                searchBox.requestFieldFocus();
-                event.consume();
-            }
-        };
         root.addEventFilter(KeyEvent.KEY_PRESSED, searchShortcutHandler);
     }
 
@@ -185,7 +185,6 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
         if (searchShortcutHandler != null) {
             root.removeEventFilter(KeyEvent.KEY_PRESSED, searchShortcutHandler);
-            searchShortcutHandler = null;
         }
     }
 
