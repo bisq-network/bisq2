@@ -17,7 +17,6 @@
 
 package bisq.contract.mu_sig;
 
-import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.contract.Party;
 import bisq.contract.Role;
@@ -103,8 +102,6 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
     @Override
     public void verify() {
         super.verify();
-        checkArgument(BitcoinPaymentRail.MAIN_CHAIN.equals(baseSidePaymentMethodSpec.getPaymentMethod().getPaymentRail()),
-                "BitcoinPaymentRail from baseSidePaymentMethodSpec must be MAIN_CHAIN");
     }
 
     @Override
