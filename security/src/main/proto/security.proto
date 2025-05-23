@@ -50,7 +50,7 @@ message TorKeyPair {
 }
 message I2PKeyPair {
   bytes privateKey = 1;
-  bytes publicKey = 2;
+  bytes signingPrivateKey = 2;
   string destination = 3;
 }
 message KeyBundle {
