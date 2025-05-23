@@ -31,6 +31,7 @@ import net.i2p.data.Destination;
 import net.i2p.data.PrivateKey;
 import net.i2p.data.SigningPrivateKey;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -54,15 +55,15 @@ public class I2PKeyPair implements PersistableProto<I2PKeyPair> {
 
     @Override
     public bisq.security.protobuf.I2PKeyPair toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return getBuilder(serializeForHash).build();
     }
 
     @Override
     public bisq.security.protobuf.I2PKeyPair.Builder getBuilder(boolean serializeForHash) {
         return bisq.security.protobuf.I2PKeyPair.newBuilder()
-                .setPrivateKey(ByteString.copyFrom(privateKey.getData()))
-                .setSigningPrivateKey(ByteString.copyFrom(signingPrivateKey.getData()))
-                .setDestination(destination.toString());
+                .setPrivateKey(ByteString.copyFrom(privateKey.toByteArray()))
+                .setSigningPrivateKey(ByteString.copyFrom(signingPrivateKey.toByteArray()))
+                .setDestination(ByteString.copyFrom(destination.toByteArray()));
     }
 
     public static I2PKeyPair fromProto(bisq.security.protobuf.I2PKeyPair proto) {
@@ -80,23 +81,24 @@ public class I2PKeyPair implements PersistableProto<I2PKeyPair> {
         }
         SigningPrivateKey signPriv = new SigningPrivateKey(SigType.EdDSA_SHA512_Ed25519, sigData);
 
-        int signPubLen = signPriv.toPublic().getData().length; // e.g. 32 for Ed25519
+        int signPubLen = signPriv.toPublic().getData().length;
 
         int totalLen = encPubLen + signPubLen;
         if (totalLen > 384) {
             throw new IllegalArgumentException(
                     "Public keys exceed 384 bytes: " + totalLen);
         }
-        int paddingLength = 384 - totalLen;
-        SecureRandom rng = new SecureRandom();
-        byte[] pad = new byte[paddingLength];
-        rng.nextBytes(pad);
 
-        Destination dest = new Destination();
-        dest.setPublicKey(priv.toPublic());
-        dest.setSigningPublicKey(signPriv.toPublic());
-        dest.setCertificate(Certificate.NULL_CERT);
-        dest.setPadding(pad);
+        byte[] destBytes = proto.getDestination().toByteArray();
+        if (destBytes.length == 0) {
+            throw new IllegalArgumentException("Missing destination bytes");
+        }
+        Destination dest;
+        try (ByteArrayInputStream in = new ByteArrayInputStream(destBytes)) {
+            dest = Destination.create(in);
+        } catch (DataFormatException | IOException e) {
+            throw new IllegalStateException("Failed to deserialize I2P Destination", e);
+        }
         return new I2PKeyPair(priv, signPriv, dest);
     }
 
