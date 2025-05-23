@@ -17,7 +17,7 @@
 
 package bisq.trade.mu_sig.messages.network.mu_sig_data;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -26,7 +26,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 @Getter
-public final class NonceShares implements Proto {
+public final class NonceShares implements NetworkProto {
     public static NonceShares from(NonceSharesMessage nonceSharesMessage) {
         return new NonceShares(
                 nonceSharesMessage.getWarningTxFeeBumpAddress(),
@@ -73,6 +73,13 @@ public final class NonceShares implements Proto {
         this.sellersWarningTxSellerInputNonceShare = sellersWarningTxSellerInputNonceShare;
         this.buyersRedirectTxInputNonceShare = buyersRedirectTxInputNonceShare;
         this.sellersRedirectTxInputNonceShare = sellersRedirectTxInputNonceShare;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        // TODO
     }
 
     @Override

@@ -17,7 +17,7 @@
 
 package bisq.trade.mu_sig.messages.network.mu_sig_data;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -25,7 +25,7 @@ import lombok.Getter;
 import java.util.Arrays;
 
 @Getter
-public final class PubKeyShares implements Proto {
+public final class PubKeyShares implements NetworkProto {
     public static PubKeyShares from(PubKeySharesResponse pubKeySharesResponse) {
         return new PubKeyShares(pubKeySharesResponse.getBuyerOutputPubKeyShare().clone(),
                 pubKeySharesResponse.getSellerOutputPubKeyShare().clone());
@@ -35,9 +35,16 @@ public final class PubKeyShares implements Proto {
     private final byte[] sellerOutputPubKeyShare;
 
     private PubKeyShares(byte[] buyerOutputPubKeyShare,
-                        byte[] sellerOutputPubKeyShare) {
+                         byte[] sellerOutputPubKeyShare) {
         this.buyerOutputPubKeyShare = buyerOutputPubKeyShare;
         this.sellerOutputPubKeyShare = sellerOutputPubKeyShare;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        // TODO
     }
 
     @Override

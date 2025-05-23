@@ -17,7 +17,7 @@
 
 package bisq.trade.mu_sig.messages.network.mu_sig_data;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -28,7 +28,7 @@ import java.util.Optional;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
-public final class PartialSignatures implements Proto {
+public final class PartialSignatures implements NetworkProto {
     public static PartialSignatures from(PartialSignaturesMessage partialSignaturesMessage) {
         Optional<byte[]> swapTxInputPartialSignature = partialSignaturesMessage.getSwapTxInputPartialSignature();
         checkArgument(swapTxInputPartialSignature.isPresent(),
@@ -64,6 +64,13 @@ public final class PartialSignatures implements Proto {
         this.peersWarningTxSellerInputPartialSignature = peersWarningTxSellerInputPartialSignature;
         this.peersRedirectTxInputPartialSignature = peersRedirectTxInputPartialSignature;
         this.swapTxInputPartialSignature = swapTxInputPartialSignature;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        // TODO
     }
 
     @Override
