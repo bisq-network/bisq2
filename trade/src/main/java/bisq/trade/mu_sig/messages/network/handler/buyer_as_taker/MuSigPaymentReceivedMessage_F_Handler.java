@@ -61,8 +61,8 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
 
     @Override
     protected void commit() {
-        MuSigTradeParty mySelf = trade.getTaker();
-        MuSigTradeParty peer = trade.getMaker();
+        MuSigTradeParty mySelf = trade.getMyself();
+        MuSigTradeParty peer = trade.getPeer();
 
         mySelf.setMyCloseTradeResponse(myCloseTradeResponse);
         peer.setPeersSwapTxSignature(peersSwapTxSignature);

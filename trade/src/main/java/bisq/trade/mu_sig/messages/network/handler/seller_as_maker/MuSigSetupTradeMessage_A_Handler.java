@@ -124,8 +124,8 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void commit() {
-        MuSigTradeParty peer = trade.getPeer();
         MuSigTradeParty mySelf = trade.getMyself();
+        MuSigTradeParty peer = trade.getPeer();
 
         peer.getContractSignatureData().set(peersContractSignatureData);
         mySelf.getContractSignatureData().set(myContractSignatureData);

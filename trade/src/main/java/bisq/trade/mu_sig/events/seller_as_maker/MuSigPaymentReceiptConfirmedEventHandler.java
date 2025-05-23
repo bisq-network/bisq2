@@ -53,8 +53,7 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
 
     @Override
     protected void commit() {
-        MuSigTradeParty mySelf = trade.getMaker();
-        mySelf.setMySwapTxSignatureResponse(mySwapTxSignatureResponse);
+        trade.getMyself().setMySwapTxSignatureResponse(mySwapTxSignatureResponse);
     }
 
     @Override

@@ -19,7 +19,6 @@ package bisq.trade.mu_sig.events.buyer_as_taker;
 
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
-import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.handler.MuSigTradeEventHandler;
 import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -60,9 +59,7 @@ public final class MuSigBuyersCloseTimeoutEventHandler extends MuSigTradeEventHa
 
     @Override
     protected void commit() {
-        MuSigTradeParty mySelf = trade.getMaker();
-
-        mySelf.setMyCloseTradeResponse(myCloseTradeResponse);
+        trade.getMyself().setMyCloseTradeResponse(myCloseTradeResponse);
     }
 
     @Override

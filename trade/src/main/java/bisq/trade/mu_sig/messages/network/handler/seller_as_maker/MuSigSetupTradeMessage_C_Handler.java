@@ -98,8 +98,8 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void commit() {
-        MuSigTradeParty peer = trade.getTaker();
-        MuSigTradeParty mySelf = trade.getMaker();
+        MuSigTradeParty mySelf = trade.getMyself();
+        MuSigTradeParty peer = trade.getPeer();
 
         mySelf.setMyPartialSignaturesMessage(myPartialSignaturesMessage);
         mySelf.setMyDepositPsbt(myDepositPsbt);
