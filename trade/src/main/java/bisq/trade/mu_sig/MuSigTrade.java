@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig;
 
+import bisq.common.currency.Market;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.ProtobufUtils;
@@ -202,4 +203,7 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
         this.tradeCompletedDate = Optional.of(tradeCompletedDate);
     }
 
+    public Market getMarket() {
+        return getOffer().getMarket();
+    }
 }

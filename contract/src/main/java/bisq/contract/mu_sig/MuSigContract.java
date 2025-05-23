@@ -153,5 +153,4 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                 PriceSpec.fromProto(muSigContractProto.getPriceSpec()),
                 muSigContractProto.getMarketPrice());
     }
-
 }
