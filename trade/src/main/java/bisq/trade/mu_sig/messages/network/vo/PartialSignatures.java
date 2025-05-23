@@ -23,15 +23,21 @@ import com.google.protobuf.ByteString;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
 public final class PartialSignatures implements Proto {
     public static PartialSignatures from(PartialSignaturesMessage partialSignaturesMessage) {
+        Optional<byte[]> swapTxInputPartialSignature = partialSignaturesMessage.getSwapTxInputPartialSignature();
+        checkArgument(swapTxInputPartialSignature.isPresent(),
+                "swapTxInputPartialSignature must not be empty when creating PartialSignatures from PartialSignaturesMessage");
         return new PartialSignatures(
                 partialSignaturesMessage.getPeersWarningTxBuyerInputPartialSignature().clone(),
                 partialSignaturesMessage.getPeersWarningTxSellerInputPartialSignature().clone(),
                 partialSignaturesMessage.getPeersRedirectTxInputPartialSignature().clone(),
-                partialSignaturesMessage.getSwapTxInputPartialSignature().clone()
+                swapTxInputPartialSignature.get().clone()
         );
     }
 
@@ -48,7 +54,6 @@ public final class PartialSignatures implements Proto {
     private final byte[] peersWarningTxBuyerInputPartialSignature;
     private final byte[] peersWarningTxSellerInputPartialSignature;
     private final byte[] peersRedirectTxInputPartialSignature;
-    // todo swapTxInputPartialSignature can be empty byte array (redacted), consider to make optional or make 2 classes
     private final byte[] swapTxInputPartialSignature;
 
     private PartialSignatures(byte[] peersWarningTxBuyerInputPartialSignature,

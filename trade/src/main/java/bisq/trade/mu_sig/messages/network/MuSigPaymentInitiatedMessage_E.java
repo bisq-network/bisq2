@@ -19,15 +19,15 @@ package bisq.trade.mu_sig.messages.network;
 
 import bisq.network.identity.NetworkId;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
+
 @Slf4j
 @ToString(callSuper = true)
 @Getter
-@EqualsAndHashCode(callSuper = true)
 public final class MuSigPaymentInitiatedMessage_E extends MuSigTradeMessage {
     private final byte[] swapTxInputPartialSignature;
 
@@ -78,5 +78,20 @@ public final class MuSigPaymentInitiatedMessage_E extends MuSigTradeMessage {
     @Override
     public double getCostFactor() {
         return getCostFactor(0.1, 0.3);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof MuSigPaymentInitiatedMessage_E that)) return false;
+        if (!super.equals(o)) return false;
+
+        return Arrays.equals(swapTxInputPartialSignature, that.swapTxInputPartialSignature);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + Arrays.hashCode(swapTxInputPartialSignature);
+        return result;
     }
 }

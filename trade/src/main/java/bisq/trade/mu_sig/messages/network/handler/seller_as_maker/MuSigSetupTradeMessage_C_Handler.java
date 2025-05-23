@@ -71,10 +71,10 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
 
         // swapTxInputPartialSignature is not set in peersRedactedPartialSignatures, thus the
         // PartialSignaturesMessage has a cleared swapTxInputPartialSignature field.
-        PartialSignaturesMessage peersredactedPartialSignaturesMessage = PartialSignaturesMessage.from(peersRedactedPartialSignatures);
+        PartialSignaturesMessage peersRedactedPartialSignaturesMessage = PartialSignaturesMessage.from(peersRedactedPartialSignatures);
         DepositTxSignatureRequest depositTxSignatureRequest = DepositTxSignatureRequest.newBuilder()
                 .setTradeId(trade.getId())
-                .setPeersPartialSignatures(peersredactedPartialSignaturesMessage.toProto(true))
+                .setPeersPartialSignatures(peersRedactedPartialSignaturesMessage.toProto(true))
                 .build();
         myDepositPsbt = DepositPsbt.fromProto(musigBlockingStub.signDepositTx(depositTxSignatureRequest));
 
