@@ -19,7 +19,6 @@ package bisq.desktop.main.content.chat;
 
 import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.common.data.Pair;
-import bisq.common.observable.ReadOnlyObservable;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.controls.DropdownBisqMenuItem;
@@ -28,7 +27,6 @@ import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.components.controls.DropdownTitleMenuItem;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.i18n.Res;
-import bisq.settings.ChatNotificationType;
 import javafx.css.PseudoClass;
 import javafx.event.EventHandler;
 import javafx.scene.control.Label;
@@ -203,16 +201,16 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
     private void setupNotificationsSettingMenu() {
         DropdownTitleMenuItem title = new DropdownTitleMenuItem(Res.get("chat.notificationsSettingsMenu.title"));
-        globalDefault = createAndGetNotificationSettingMenuItem(ChatChannelNotificationType.GLOBAL_DEFAULT,
-                Res.get("chat.notificationsSettingsMenu.globalDefault"));
         all = createAndGetNotificationSettingMenuItem(ChatChannelNotificationType.ALL,
                 Res.get("chat.notificationsSettingsMenu.all"));
         mention = createAndGetNotificationSettingMenuItem(ChatChannelNotificationType.MENTION,
                 Res.get("chat.notificationsSettingsMenu.mention"));
         off = createAndGetNotificationSettingMenuItem(ChatChannelNotificationType.OFF,
                 Res.get("chat.notificationsSettingsMenu.off"));
+        globalDefault = createAndGetNotificationSettingMenuItem(ChatChannelNotificationType.GLOBAL_DEFAULT,
+                Res.get("chat.notificationsSettingsMenu.globalDefault"));
         notificationsSettingsMenu.getStyleClass().add("notifications-settings-menu");
-        notificationsSettingsMenu.addMenuItems(title, globalDefault, all, mention, off);
+        notificationsSettingsMenu.addMenuItems(title, all, mention, off, globalDefault);
         notificationsSettingsMenu.setTooltip(Res.get("chat.notificationsSettingsMenu.tooltip"));
     }
 
@@ -228,15 +226,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
             case ALL -> new Pair<>("icon-notification-all-grey", "icon-notification-all-white");
             case MENTION -> new Pair<>("icon-notification-mention-grey", "icon-notification-mention-white");
             case OFF -> new Pair<>("icon-notification-off-grey", "icon-notification-off-white");
-            default -> {
-                ReadOnlyObservable<ChatNotificationType> globalDefault = controller.serviceProvider.getSettingsService().getChatNotificationType();
-                yield switch (globalDefault.get()) {
-                    case ChatNotificationType.ALL -> getIconIdsForNotificationType(ChatChannelNotificationType.ALL);
-                    case ChatNotificationType.OFF -> getIconIdsForNotificationType(ChatChannelNotificationType.OFF);
-                    case ChatNotificationType.MENTION ->
-                            getIconIdsForNotificationType(ChatChannelNotificationType.MENTION);
-                };
-            }
+            case GLOBAL_DEFAULT -> new Pair<>("icon-notification-default-grey", "icon-notification-default-white");
         };
     }
 
