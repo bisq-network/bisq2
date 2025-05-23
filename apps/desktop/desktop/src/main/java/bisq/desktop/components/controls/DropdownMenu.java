@@ -44,6 +44,7 @@ import java.util.Collection;
 
 public class DropdownMenu extends HBox {
     public static final Double INITIAL_WIDTH = 24.0;
+    private static final double ICON_ONLY_FIT_SIZE = 20.0;
 
     private ImageView defaultIcon, activeIcon;
     @Getter
@@ -58,6 +59,7 @@ public class DropdownMenu extends HBox {
     @Setter
     private boolean openToTheRight = false;
     private Double prefWidth = null;
+    private final boolean isUseIconOnly;
 
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Window> windowListener;
@@ -67,12 +69,9 @@ public class DropdownMenu extends HBox {
     private final ChangeListener<Scene> sceneListener;
 
     public DropdownMenu(String defaultIconId, String activeIconId, boolean useIconOnly) {
-        defaultIcon = ImageUtil.getImageViewById(defaultIconId);
-        activeIcon = ImageUtil.getImageViewById(activeIconId);
-
-        buttonIcon = defaultIcon;
-
-        getChildren().addAll(hBox, buttonIcon);
+        this.isUseIconOnly = useIconOnly;
+        setIcons(defaultIconId, activeIconId);
+        getChildren().add(hBox);
         hBox.getStyleClass().add("dropdown-menu-content-hbox");
         hBox.setAlignment(Pos.BASELINE_LEFT);
 
@@ -116,6 +115,15 @@ public class DropdownMenu extends HBox {
     public void setIcons(String newDefaultIconId, String newActiveIconId) {
         ImageView newDefault = ImageUtil.getImageViewById(newDefaultIconId);
         ImageView newActive = ImageUtil.getImageViewById(newActiveIconId);
+
+        if (isUseIconOnly) {
+            newDefault.setFitWidth(ICON_ONLY_FIT_SIZE);
+            newDefault.setFitHeight(ICON_ONLY_FIT_SIZE);
+            newActive.setFitWidth(ICON_ONLY_FIT_SIZE);
+            newActive.setFitHeight(ICON_ONLY_FIT_SIZE);
+            newDefault.setPreserveRatio(true);
+            newActive.setPreserveRatio(true);
+        }
 
         this.defaultIcon = newDefault;
         this.activeIcon = newActive;
