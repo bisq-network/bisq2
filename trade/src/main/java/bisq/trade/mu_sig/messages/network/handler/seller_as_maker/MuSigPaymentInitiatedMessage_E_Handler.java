@@ -19,12 +19,17 @@ package bisq.trade.mu_sig.messages.network.handler.seller_as_maker;
 
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.handler.MuSigTradeMessageHandler;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
+import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
+import bisq.trade.mu_sig.messages.network.vo.RedactedPartialSignatures;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class MuSigPaymentInitiatedMessage_E_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigPaymentInitiatedMessage_E> {
+    private byte[] peersSwapTxInputPartialSignature;
+
     public MuSigPaymentInitiatedMessage_E_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
@@ -35,10 +40,16 @@ public final class MuSigPaymentInitiatedMessage_E_Handler extends MuSigTradeMess
 
     @Override
     protected void process(MuSigPaymentInitiatedMessage_E message) {
+        peersSwapTxInputPartialSignature = message.getSwapTxInputPartialSignature();
     }
 
     @Override
     protected void commit() {
+        MuSigTradeParty peer = trade.getPeer();
+        // Now we reconstruct the un-redacted PartialSignatures
+        RedactedPartialSignatures redactedPartialSignatures = peer.getPeersRedactedPartialSignatures().orElseThrow();
+        PartialSignatures peersPartialSignatures = PartialSignatures.from(redactedPartialSignatures, peersSwapTxInputPartialSignature);
+        peer.setPeersPartialSignatures(peersPartialSignatures);
     }
 
     @Override

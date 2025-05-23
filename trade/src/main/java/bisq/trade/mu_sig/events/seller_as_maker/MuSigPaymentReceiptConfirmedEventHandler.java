@@ -41,12 +41,10 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
     @Override
     public void process(MuSigPaymentReceiptConfirmedEvent event) {
         MuSigTradeParty peer = trade.getTaker();
-        // We got that from an earlier message
         PartialSignatures peersPartialSignatures = peer.getPeersPartialSignatures().orElseThrow();
 
         mySwapTxSignatureResponse = SwapTxSignatureResponse.fromProto(musigBlockingStub.signSwapTx(SwapTxSignatureRequest.newBuilder()
                 .setTradeId(trade.getId())
-                // NOW send the redacted buyer's swapTxInputPartialSignature:
                 .setSwapTxInputPeersPartialSignature(ByteString.copyFrom(peersPartialSignatures.getSwapTxInputPartialSignature()))
                 .build()));
 

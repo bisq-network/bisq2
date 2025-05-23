@@ -18,22 +18,27 @@
 package bisq.trade.mu_sig.messages.network;
 
 import bisq.network.identity.NetworkId;
-import lombok.EqualsAndHashCode;
+import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
+
 @Slf4j
 @ToString(callSuper = true)
 @Getter
-@EqualsAndHashCode(callSuper = true)
 public final class MuSigPaymentInitiatedMessage_E extends MuSigTradeMessage {
+    private final byte[] swapTxInputPartialSignature;
+
     public MuSigPaymentInitiatedMessage_E(String id,
                                           String tradeId,
                                           String protocolVersion,
                                           NetworkId sender,
-                                          NetworkId receiver) {
+                                          NetworkId receiver,
+                                          byte[] swapTxInputPartialSignature) {
         super(id, tradeId, protocolVersion, sender, receiver);
+        this.swapTxInputPartialSignature = swapTxInputPartialSignature;
 
         verify();
     }
@@ -55,7 +60,8 @@ public final class MuSigPaymentInitiatedMessage_E extends MuSigTradeMessage {
     }
 
     private bisq.trade.protobuf.MuSigPaymentInitiatedMessage_E.Builder getMuSigPaymentInitiatedMessage_E(boolean serializeForHash) {
-        return bisq.trade.protobuf.MuSigPaymentInitiatedMessage_E.newBuilder();
+        return bisq.trade.protobuf.MuSigPaymentInitiatedMessage_E.newBuilder()
+                .setSwapTxInputPartialSignature(ByteString.copyFrom(swapTxInputPartialSignature));
     }
 
     public static MuSigPaymentInitiatedMessage_E fromProto(bisq.trade.protobuf.TradeMessage proto) {
@@ -65,11 +71,27 @@ public final class MuSigPaymentInitiatedMessage_E extends MuSigTradeMessage {
                 proto.getTradeId(),
                 proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()));
+                NetworkId.fromProto(proto.getReceiver()),
+                muSigMessageProto.getSwapTxInputPartialSignature().toByteArray());
     }
 
     @Override
     public double getCostFactor() {
         return getCostFactor(0.1, 0.3);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof MuSigPaymentInitiatedMessage_E that)) return false;
+        if (!super.equals(o)) return false;
+
+        return Arrays.equals(swapTxInputPartialSignature, that.swapTxInputPartialSignature);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + Arrays.hashCode(swapTxInputPartialSignature);
+        return result;
     }
 }

@@ -29,8 +29,8 @@ import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_B;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_C;
 import bisq.trade.mu_sig.messages.network.vo.NonceShares;
-import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
 import bisq.trade.mu_sig.messages.network.vo.PubKeyShares;
+import bisq.trade.mu_sig.messages.network.vo.RedactedPartialSignatures;
 import bisq.trade.protobuf.NonceSharesRequest;
 import bisq.trade.protobuf.PartialSignaturesRequest;
 import bisq.trade.protobuf.ReceiverAddressAndAmount;
@@ -105,17 +105,16 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
     @Override
     protected void sendMessage() {
         NonceShares nonceShares = NonceShares.from(myNonceSharesMessage);
-
-        // TODO redacting swapTxInputPartialSignature fails at MuSigPaymentReceiptConfirmedEventHandler
-        PartialSignatures partialSignatures =  PartialSignatures.from(myPartialSignaturesMessage);
-
+        // We do not expose swapTxInputPartialSignature at that stage to the peer, thus we use RedactedPartialSignatures
+        // Later once we initiate the payment we send the swapTxInputPartialSignature
+        RedactedPartialSignatures redactedPartialSignatures = RedactedPartialSignatures.from(myPartialSignaturesMessage);
         send(new MuSigSetupTradeMessage_C(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyself().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 nonceShares,
-                partialSignatures));
+                redactedPartialSignatures));
     }
 
     @Override

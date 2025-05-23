@@ -176,6 +176,12 @@ message PartialSignatures {
   optional bytes swapTxInputPartialSignature = 4;
 }
 
+message RedactedPartialSignatures {
+  bytes peersWarningTxBuyerInputPartialSignature = 1;
+  bytes peersWarningTxSellerInputPartialSignature = 2;
+  bytes peersRedirectTxInputPartialSignature = 3;
+}
+
 
 message SwapTxSignature {
   bytes swapTx = 1;
@@ -190,7 +196,8 @@ message MuSigTradeParty {
   optional  NonceShares peersNonceShares = 4;
   optional musigrpc.PartialSignaturesMessage myPartialSignaturesMessage = 5;
   optional PartialSignatures peersPartialSignatures = 6;
-  optional musigrpc.DepositPsbt myDepositPsbt = 7;
+  optional RedactedPartialSignatures peersRedactedPartialSignatures = 7;
+  optional musigrpc.DepositPsbt myDepositPsbt = 8;
   optional musigrpc.SwapTxSignatureResponse mySwapTxSignatureResponse = 9;
   optional SwapTxSignature peersSwapTxSignature = 10;
   optional musigrpc.CloseTradeResponse myCloseTradeResponse = 11;
@@ -235,7 +242,7 @@ message MuSigSetupTradeMessage_B {
 
 message MuSigSetupTradeMessage_C {
   NonceShares nonceShares = 1;
-  PartialSignatures partialSignatures = 2;
+  RedactedPartialSignatures redactedPartialSignatures = 2;
 }
 
 message MuSigSetupTradeMessage_D {
@@ -243,7 +250,7 @@ message MuSigSetupTradeMessage_D {
 }
 
 message MuSigPaymentInitiatedMessage_E {
-  // no additional fields; all data inherited from base class
+  bytes swapTxInputPartialSignature = 1;
 }
 
 message MuSigPaymentReceivedMessage_F {
