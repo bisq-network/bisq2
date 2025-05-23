@@ -327,6 +327,14 @@
     -fx-padding: 18 8 8 8 !important;
 }
 
+.notifications-settings-menu-label-default {
+    -fx-text-fill: -fx-mid-text-color !important;
+}
+
+.notifications-settings-menu-label-active {
+    -fx-text-fill: -fx-light-text-color !important;
+}
+
 
 /*******************************************************************************
  * Header                                                                      *

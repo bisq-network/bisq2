@@ -618,10 +618,6 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
             this.paymentMethod = Optional.ofNullable(paymentMethod);
             getStyleClass().add("dropdown-menu-item");
             updateSelection(false);
-            initialize();
-        }
-
-        public void initialize() {
         }
 
         public void dispose() {
