@@ -24,8 +24,8 @@ import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentReceivedMessage_F;
-import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
-import bisq.trade.mu_sig.messages.network.vo.SwapTxSignature;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.SwapTxSignature;
 import bisq.trade.protobuf.SwapTxSignatureRequest;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
@@ -53,8 +53,7 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
 
     @Override
     protected void commit() {
-        MuSigTradeParty mySelf = trade.getMaker();
-        mySelf.setMySwapTxSignatureResponse(mySwapTxSignatureResponse);
+        trade.getMyself().setMySwapTxSignatureResponse(mySwapTxSignatureResponse);
     }
 
     @Override

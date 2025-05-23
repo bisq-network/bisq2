@@ -24,7 +24,7 @@ import bisq.trade.mu_sig.handler.MuSigTradeMessageHandler;
 import bisq.trade.mu_sig.messages.grpc.DepositPsbt;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
-import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
 import bisq.trade.protobuf.DepositTxSignatureRequest;
 import bisq.trade.protobuf.PublishDepositTxRequest;
 import bisq.trade.protobuf.TxConfirmationStatus;
@@ -70,8 +70,8 @@ public final class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void commit() {
-        MuSigTradeParty mySelf = trade.getTaker();
-        MuSigTradeParty peer = trade.getMaker();
+        MuSigTradeParty mySelf = trade.getMyself();
+        MuSigTradeParty peer = trade.getPeer();
 
         mySelf.setMyDepositPsbt(myDepositPsbt);
         peer.setPeersPartialSignatures(peersPartialSignatures);

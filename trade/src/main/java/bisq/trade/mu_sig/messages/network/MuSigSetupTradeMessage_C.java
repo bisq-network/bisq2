@@ -18,8 +18,8 @@
 package bisq.trade.mu_sig.messages.network;
 
 import bisq.network.identity.NetworkId;
-import bisq.trade.mu_sig.messages.network.vo.NonceShares;
-import bisq.trade.mu_sig.messages.network.vo.RedactedPartialSignatures;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.NonceShares;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.RedactedPartialSignatures;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

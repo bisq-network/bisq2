@@ -19,8 +19,8 @@ package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
 import bisq.common.util.OptionalUtils;
-import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
-import bisq.trade.mu_sig.messages.network.vo.RedactedPartialSignatures;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.RedactedPartialSignatures;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 

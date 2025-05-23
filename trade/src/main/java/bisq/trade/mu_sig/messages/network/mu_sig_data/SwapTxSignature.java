@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.network.vo;
+package bisq.trade.mu_sig.messages.network.mu_sig_data;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -25,7 +25,7 @@ import lombok.Getter;
 import java.util.Arrays;
 
 @Getter
-public final class SwapTxSignature implements Proto {
+public final class SwapTxSignature implements NetworkProto {
     public static SwapTxSignature from(SwapTxSignatureResponse swapTxSignatureResponse) {
         return new SwapTxSignature(swapTxSignatureResponse.getSwapTx(),
                 swapTxSignatureResponse.getPeerOutputPrvKeyShare());
@@ -37,6 +37,13 @@ public final class SwapTxSignature implements Proto {
     private SwapTxSignature(byte[] swapTx, byte[] peerOutputPrvKeyShare) {
         this.swapTx = swapTx;
         this.peerOutputPrvKeyShare = peerOutputPrvKeyShare;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        // TODO
     }
 
     @Override

@@ -58,8 +58,8 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
 
     @Override
     protected void commit() {
-        MuSigTradeParty peer = trade.getTaker();
-        MuSigTradeParty mySelf = trade.getMaker();
+        MuSigTradeParty mySelf = trade.getMyself();
+        MuSigTradeParty peer = trade.getPeer();
 
         mySelf.setMyCloseTradeResponse(myCloseTradeResponse);
         peer.setPeersOutputPrvKeyShare(peersOutputPrvKeyShare);

@@ -17,6 +17,8 @@
 
 package bisq.trade.mu_sig.messages.network.handler.seller_as_maker;
 
+import bisq.common.currency.Market;
+import bisq.common.encoding.Hex;
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
@@ -24,13 +26,15 @@ import bisq.contract.mu_sig.MuSigContract;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
+import bisq.trade.mu_sig.MusSigFeeRateProvider;
 import bisq.trade.mu_sig.handler.MuSigTradeMessageHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_B;
-import bisq.trade.mu_sig.messages.network.vo.NonceShares;
-import bisq.trade.mu_sig.messages.network.vo.PubKeyShares;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.NonceShares;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.PubKeyShares;
+import bisq.trade.mu_sig.protocol.MuSigProtocolException;
 import bisq.trade.protobuf.NonceSharesRequest;
 import bisq.trade.protobuf.PubKeySharesRequest;
 import bisq.trade.protobuf.Role;
@@ -38,13 +42,16 @@ import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_A> {
     private PubKeySharesResponse myPubKeySharesResponse;
     private PubKeyShares peersPubKeyShares;
     private NonceSharesMessage myNonceSharesMessage;
-    private ContractSignatureData takersContractSignatureData;
+    private ContractSignatureData peersContractSignatureData;
     private ContractSignatureData myContractSignatureData;
 
     public MuSigSetupTradeMessage_A_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
@@ -53,18 +60,25 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void verify(MuSigSetupTradeMessage_A message) {
-        MuSigContract takersContract = message.getContract();
-        takersContractSignatureData = message.getContractSignatureData();
+        MuSigContract peersContract = message.getContract();
+        peersContractSignatureData = message.getContractSignatureData();
         ContractService contractService = serviceProvider.getContractService();
+        MuSigContract myContract = trade.getContract();
+        checkArgument(peersContract.equals(myContract),
+                "Peer's contract is not the same as my contract.\n" +
+                        "peersContract=" + peersContract + "\n" +
+                        "myContract=" + myContract);
         try {
-            MuSigContract makersContract = trade.getContract();
-            myContractSignatureData = contractService.signContract(makersContract,
+            myContractSignatureData = contractService.signContract(myContract,
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
-
-            // TODO verify both contracts are the same, and verify peers signature
         } catch (GeneralSecurityException e) {
-            throw new RuntimeException(e);
+            log.error("Signing contract failed", e);
+            throw new MuSigProtocolException(e);
         }
+        checkArgument(Arrays.equals(peersContractSignatureData.getContractHash(), myContractSignatureData.getContractHash()),
+                "Peer's contractHash at contract signature data is not the same as the contractHash at my contract signature data.\n" +
+                        "peersContractSignatureData.contractHash=" + Hex.encode(peersContractSignatureData.getContractHash()) + "\n" +
+                        "myContractSignatureData.contractHash=" + Hex.encode(myContractSignatureData.getContractHash()));
     }
 
     @Override
@@ -77,25 +91,43 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
                 .build();
         myPubKeySharesResponse = PubKeySharesResponse.fromProto(musigBlockingStub.initTrade(pubKeySharesRequest));
 
+
+        Market market = trade.getMarket();
+        long tradeAmount;
+        if (market.getBaseCurrencyCode().equals("BTC")) {
+            tradeAmount = trade.getContract().getBaseSideAmount();
+        } else if (market.getQuoteCurrencyCode().equals("BTC")) {
+            tradeAmount = trade.getContract().getQuoteSideAmount();
+        } else {
+            throw new UnsupportedOperationException("The extended protocol version without Bitcoin on any market leg is not yet supported");
+        }
+
+        long depositTxFeeRate = MusSigFeeRateProvider.getDepositTxFeeRate();
+        long preparedTxFeeRate = MusSigFeeRateProvider.getPreparedTxFeeRate();
+
+        // TODO get from CollateralOptions
+        long buyerSecurityDeposit = 30_000;
+        long sellersSecurityDeposit = 30_000;
+
         NonceSharesRequest nonceSharesRequest = NonceSharesRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setBuyerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getBuyerOutputPubKeyShare()))
                 .setSellerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getSellerOutputPubKeyShare()))
-                .setDepositTxFeeRate(50_000)  // 12.5 sats per vbyte
-                .setPreparedTxFeeRate(40_000) // 10.0 sats per vbyte
-                .setTradeAmount(200_000)
-                .setBuyersSecurityDeposit(30_000)
-                .setSellersSecurityDeposit(30_000)
+                .setDepositTxFeeRate(depositTxFeeRate)
+                .setPreparedTxFeeRate(preparedTxFeeRate)
+                .setTradeAmount(tradeAmount)
+                .setBuyersSecurityDeposit(buyerSecurityDeposit)
+                .setSellersSecurityDeposit(sellersSecurityDeposit)
                 .build();
         myNonceSharesMessage = NonceSharesMessage.fromProto(musigBlockingStub.getNonceShares(nonceSharesRequest));
     }
 
     @Override
     protected void commit() {
-        MuSigTradeParty peer = trade.getTaker();
-        MuSigTradeParty mySelf = trade.getMaker();
+        MuSigTradeParty mySelf = trade.getMyself();
+        MuSigTradeParty peer = trade.getPeer();
 
-        peer.getContractSignatureData().set(takersContractSignatureData);
+        peer.getContractSignatureData().set(peersContractSignatureData);
         mySelf.getContractSignatureData().set(myContractSignatureData);
 
         peer.setPeersPubKeyShares(peersPubKeyShares);

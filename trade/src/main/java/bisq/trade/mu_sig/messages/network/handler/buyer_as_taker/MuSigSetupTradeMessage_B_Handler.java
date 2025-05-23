@@ -28,9 +28,9 @@ import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_B;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_C;
-import bisq.trade.mu_sig.messages.network.vo.NonceShares;
-import bisq.trade.mu_sig.messages.network.vo.PubKeyShares;
-import bisq.trade.mu_sig.messages.network.vo.RedactedPartialSignatures;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.NonceShares;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.PubKeyShares;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.RedactedPartialSignatures;
 import bisq.trade.protobuf.NonceSharesRequest;
 import bisq.trade.protobuf.PartialSignaturesRequest;
 import bisq.trade.protobuf.ReceiverAddressAndAmount;
@@ -91,8 +91,8 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void commit() {
-        MuSigTradeParty mySelf = trade.getTaker();
-        MuSigTradeParty peer = trade.getMaker();
+        MuSigTradeParty mySelf = trade.getMyself();
+        MuSigTradeParty peer = trade.getPeer();
 
         mySelf.setMyNonceSharesMessage(myNonceSharesMessage);
         mySelf.setMyPartialSignaturesMessage(myPartialSignaturesMessage);

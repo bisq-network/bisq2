@@ -22,8 +22,8 @@ import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.handler.MuSigTradeMessageHandler;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
-import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
-import bisq.trade.mu_sig.messages.network.vo.RedactedPartialSignatures;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.RedactedPartialSignatures;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

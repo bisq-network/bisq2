@@ -28,12 +28,14 @@ import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
-import bisq.trade.mu_sig.messages.network.vo.PubKeyShares;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.PubKeyShares;
+import bisq.trade.mu_sig.protocol.MuSigProtocolException;
 import bisq.trade.protobuf.PubKeySharesRequest;
 import bisq.trade.protobuf.Role;
 import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.GeneralSecurityException;
 import java.util.Optional;
 
 @Slf4j
@@ -58,15 +60,15 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
             contract = trade.getContract();
             myContractSignatureData = serviceProvider.getContractService().signContract(contract,
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
-        } catch (Exception e) {
-            log.error("{}.handle() failed", getClass().getSimpleName(), e);
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException e) {
+            log.error("Signing contract failed", e);
+            throw new MuSigProtocolException(e);
         }
     }
 
     @Override
     protected void commit() {
-        MuSigTradeParty mySelf = trade.getTaker();
+        MuSigTradeParty mySelf = trade.getMyself();
         mySelf.getContractSignatureData().set(myContractSignatureData);
         mySelf.setMyPubKeySharesResponse(myPubKeySharesResponse);
     }
@@ -74,7 +76,6 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
     @Override
     protected void sendMessage() {
         PubKeyShares pubKeyShares = PubKeyShares.from(myPubKeySharesResponse);
-
         send(new MuSigSetupTradeMessage_A(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),

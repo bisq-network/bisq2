@@ -22,7 +22,7 @@ import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
-import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
 
 public final class MuSigPaymentInitiatedEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade, MuSigPaymentInitiatedEvent> {
     public MuSigPaymentInitiatedEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
