@@ -50,14 +50,14 @@ message TorKeyPair {
 }
 message I2PKeyPair {
   bytes privateKey = 1;
-  bytes publicKey = 2;
-  string destination = 3;
+  bytes signingPrivateKey = 2;
+  bytes destination = 3;
 }
 message KeyBundle {
   string keyId = 1;
   KeyPair keyPair = 2;
   TorKeyPair torKeyPair = 3;
-  /*I2PKeyPair i2PKeyPair = 4;*/
+  I2PKeyPair i2PKeyPair = 4;
 }
 message KeyBundleStore {
   string secretUid = 1;
