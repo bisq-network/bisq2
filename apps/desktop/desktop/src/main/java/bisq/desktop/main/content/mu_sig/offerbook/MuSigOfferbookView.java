@@ -61,23 +61,21 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     private static final double MARKET_LIST_WIDTH = 210;
     private static final double SIDE_PADDING = 40;
 
-    private final RichTableView<MuSigOfferListItem> muSigOfferListView;
     private final HBox titleHBox = new HBox(10);
     private HBox appliedFiltersSection;
     private VBox marketListVBox;
     private Label marketListTitle, marketHeaderIcon, marketTitle, marketDescription, marketPrice;
+    private RichTableView<MuSigOfferListItem> muSigOfferListView;
     private BisqTableView<MarketItem> marketListView;
+    private Button createOfferButton;
     private Subscription selectedMarketItemPin, marketListViewSelectionPin;
 
     public MuSigOfferbookView(MuSigOfferbookModel model, MuSigOfferbookController controller) {
         super(new VBox(), model, controller);
 
-        muSigOfferListView = new RichTableView<>(model.getSortedMuSigOfferListItems());
-        muSigOfferListView.getFooterVBox().setVisible(false);
-        muSigOfferListView.getFooterVBox().setManaged(false);
-        configMuSigOfferListView();
-        createAndconfigMarketListView();
         configTitleHBox();
+        crateAndConfigMuSigOfferListView();
+        createAndConfigMarketListView();
 
         HBox subheader = new HBox(/*marketSelectorSearchBox, Spacer.fillHBox(), sortAndFilterMarketsMenu*/);
         subheader.setAlignment(Pos.CENTER);
@@ -117,6 +115,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 controller.onSelectMarketItem(item);
             }
         });
+
+        createOfferButton.setOnAction(e -> controller.onCreateOffer());
     }
 
     @Override
@@ -129,6 +129,15 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
         selectedMarketItemPin.unsubscribe();
         marketListViewSelectionPin.unsubscribe();
+
+        createOfferButton.setOnAction(null);
+    }
+
+    private void crateAndConfigMuSigOfferListView() {
+        muSigOfferListView = new RichTableView<>(model.getSortedMuSigOfferListItems());
+        muSigOfferListView.getFooterVBox().setVisible(false);
+        muSigOfferListView.getFooterVBox().setManaged(false);
+        configMuSigOfferListView();
     }
 
     private void configMuSigOfferListView() {
@@ -180,7 +189,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 .build());
     }
 
-    private void createAndconfigMarketListView() {
+    private void createAndConfigMarketListView() {
         marketListTitle = new Label(Res.get("bisqEasy.offerbook.markets"));
         marketListTitle.setGraphicTextGap(10);
         HBox.setHgrow(marketListTitle, Priority.ALWAYS);
@@ -228,7 +237,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         marketListView.hideHorizontalScrollbar();
         marketListView.setFixedCellSize(LIST_CELL_HEIGHT);
         marketListView.setPlaceholder(new Label());
-        configMarketsTableView(marketListView);
+        configMarketListView(marketListView);
         VBox.setVgrow(marketListView, Priority.ALWAYS);
 
         marketListVBox = new VBox(header, Layout.hLine(), subheader, appliedFiltersSection, /*favouritesTableView,*/
@@ -240,7 +249,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         marketListVBox.getStyleClass().add("chat-container");
     }
 
-    private void configMarketsTableView(BisqTableView<MarketItem> tableView) {
+    private void configMarketListView(BisqTableView<MarketItem> tableView) {
         BisqTableColumn<MarketItem> marketLogoTableColumn = new BisqTableColumn.Builder<MarketItem>()
                 .fixWidth(55)
                 .setCellFactory(getMarketLogoCellFactory())
@@ -466,11 +475,17 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         HBox headerTitle = new HBox(10, marketHeaderIcon, titleAndDescription);
         headerTitle.setAlignment(Pos.CENTER_LEFT);
 
-//        createOfferButton = createAndGetCreateOfferButton();
-//        createOfferButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
+        createOfferButton = createAndGetCreateOfferButton();
+        createOfferButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
 
         HBox.setHgrow(headerTitle, Priority.ALWAYS);
-        titleHBox.getChildren().setAll(headerTitle/*, createOfferButton, ellipsisMenu, notificationsSettingsMenu*/);
+        titleHBox.getChildren().setAll(headerTitle, createOfferButton);
+    }
+
+    private Button createAndGetCreateOfferButton() {
+        Button createOfferButton = new Button(Res.get("offer.createOffer"));
+        createOfferButton.getStyleClass().addAll("create-offer-button", "normal-text");
+        return createOfferButton;
     }
 
     private void updateAppliedFiltersSectionStyles(boolean shouldShowAppliedFilters) {

@@ -131,14 +131,13 @@ public class MuSigCreateOfferReviewController implements Controller {
         model.setMarket(market);
     }
 
-    public void setDataForCreateOffer(List<FiatPaymentMethod> fiatPaymentMethods,
+    public void setDataForCreateOffer(Direction direction,
+                                      Market market,
+                                      List<FiatPaymentMethod> fiatPaymentMethods,
                                       AmountSpec amountSpec,
                                       PriceSpec priceSpec) {
         checkArgument(!fiatPaymentMethods.isEmpty(), "fiatPaymentMethods must not be empty");
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        Direction direction = model.getDirection();
-        Market market = model.getMarket();
-
         List<OfferOption> offerOptions = List.of();
         MuSigOffer offer = muSigService.createAndGetMuSigOffer(direction,
                 market,
@@ -318,12 +317,7 @@ public class MuSigCreateOfferReviewController implements Controller {
     }
 
     void onShowOfferbook() {
-        if (model.getDirection().isBuy()) {
-            // My buy offer appears on the sell offerbook
-            closeAndNavigateToHandler.accept(NavigationTarget.MU_SIG_OFFERBOOK_SELL);
-        } else {
-            closeAndNavigateToHandler.accept(NavigationTarget.MU_SIG_OFFERBOOK_BUY);
-        }
+        closeAndNavigateToHandler.accept(NavigationTarget.MU_SIG_OFFERBOOK);
     }
 
     void onSelectFiatPaymentMethod(FiatPaymentMethod paymentMethod) {

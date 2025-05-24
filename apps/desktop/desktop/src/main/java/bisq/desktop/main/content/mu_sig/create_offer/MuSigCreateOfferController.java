@@ -27,12 +27,12 @@ import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.mu_sig.create_offer.amount_and_price.MuSigCreateOfferAmountAndPriceController;
+import bisq.desktop.main.content.mu_sig.create_offer.direction_and_market.MuSigCreateOfferDirectionAndMarketController;
 import bisq.desktop.main.content.mu_sig.create_offer.payment_methods.MuSigCreateOfferPaymentMethodsController;
 import bisq.desktop.main.content.mu_sig.create_offer.review.MuSigCreateOfferReviewController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
-import bisq.offer.Direction;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
@@ -53,11 +53,9 @@ public class MuSigCreateOfferController extends NavigationController implements 
     @EqualsAndHashCode
     @ToString
     public static class InitData {
-        private final Direction direction;
         private final Market market;
 
-        public InitData(Direction direction, Market market) {
-            this.direction = direction;
+        public InitData(Market market) {
             this.market = market;
         }
     }
@@ -68,12 +66,13 @@ public class MuSigCreateOfferController extends NavigationController implements 
     private final MuSigCreateOfferModel model;
     @Getter
     private final MuSigCreateOfferView view;
+    private final MuSigCreateOfferDirectionAndMarketController muSigCreateOfferDirectionAndMarketController;
     private final MuSigCreateOfferAmountAndPriceController muSigCreateOfferAmountAndPriceController;
     private final MuSigCreateOfferPaymentMethodsController muSigCreateOfferPaymentMethodsController;
     private final MuSigCreateOfferReviewController muSigCreateOfferReviewController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
     private final ListChangeListener<NationalCurrencyPaymentMethod<?>> paymentMethodsListener;
-    private Subscription priceSpecPin;
+    private Subscription directionPin, marketPin, priceSpecPin;
 
     public MuSigCreateOfferController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MU_SIG_CREATE_OFFER);
@@ -84,6 +83,10 @@ public class MuSigCreateOfferController extends NavigationController implements 
         model = new MuSigCreateOfferModel();
         view = new MuSigCreateOfferView(model, this);
 
+        muSigCreateOfferDirectionAndMarketController = new MuSigCreateOfferDirectionAndMarketController(serviceProvider,
+                this::onNext,
+                this::setMainButtonsVisibleState,
+                this::closeAndNavigateTo);
         muSigCreateOfferAmountAndPriceController = new MuSigCreateOfferAmountAndPriceController(serviceProvider,
                 view.getRoot(),
                 this::setMainButtonsVisibleState,
@@ -101,14 +104,8 @@ public class MuSigCreateOfferController extends NavigationController implements 
 
     @Override
     public void initWithData(InitData data) {
-        Direction direction = data.getDirection();
-        muSigCreateOfferAmountAndPriceController.setDirection(direction);
-        muSigCreateOfferPaymentMethodsController.setDirection(direction);
-        muSigCreateOfferReviewController.setDirection(direction);
         Market market = data.getMarket();
-        muSigCreateOfferPaymentMethodsController.setMarket(market);
-        muSigCreateOfferAmountAndPriceController.setMarket(market);
-        muSigCreateOfferReviewController.setMarket(market);
+        muSigCreateOfferDirectionAndMarketController.setMarket(market);
     }
 
     @Override
@@ -117,16 +114,25 @@ public class MuSigCreateOfferController extends NavigationController implements 
         overlayController.setEnterKeyHandler(null);
         overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
-
         model.getNextButtonDisabled().set(false);
         model.getChildTargets().clear();
         model.getChildTargets().addAll(List.of(
+                NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET,
                 NavigationTarget.MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE,
                 NavigationTarget.MU_SIG_CREATE_OFFER_PAYMENT_METHODS,
                 NavigationTarget.MU_SIG_CREATE_OFFER_REVIEW_OFFER
         ));
-        model.getSelectedChildTarget().set(NavigationTarget.MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE);
+        model.getSelectedChildTarget().set(NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET);
 
+        directionPin = EasyBind.subscribe(muSigCreateOfferDirectionAndMarketController.getDirection(), direction -> {
+            muSigCreateOfferAmountAndPriceController.setDirection(direction);
+            muSigCreateOfferPaymentMethodsController.setDirection(direction);
+        });
+        marketPin = EasyBind.subscribe(muSigCreateOfferDirectionAndMarketController.getMarket(), market -> {
+            muSigCreateOfferPaymentMethodsController.setMarket(market);
+            muSigCreateOfferAmountAndPriceController.setMarket(market);
+            updateNextButtonDisabledState();
+        });
         priceSpecPin = EasyBind.subscribe(muSigCreateOfferAmountAndPriceController.getPriceSpec(),
                 muSigCreateOfferAmountAndPriceController::updateQuoteSideAmountSpecWithPriceSpec);
         handlePaymentMethodsUpdate();
@@ -138,6 +144,8 @@ public class MuSigCreateOfferController extends NavigationController implements 
         overlayController.setUseEscapeKeyHandler(true);
         overlayController.getApplicationRoot().removeEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
+        directionPin.unsubscribe();
+        marketPin.unsubscribe();
         priceSpecPin.unsubscribe();
         muSigCreateOfferPaymentMethodsController.getPaymentMethods().removeListener(paymentMethodsListener);
     }
@@ -146,6 +154,8 @@ public class MuSigCreateOfferController extends NavigationController implements 
     protected void onStartProcessNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
         if (navigationTarget == NavigationTarget.MU_SIG_CREATE_OFFER_REVIEW_OFFER) {
             muSigCreateOfferReviewController.setDataForCreateOffer(
+                    muSigCreateOfferDirectionAndMarketController.getDirection().get(),
+                    muSigCreateOfferDirectionAndMarketController.getMarket().get(),
                     muSigCreateOfferPaymentMethodsController.getPaymentMethods(),
                     muSigCreateOfferAmountAndPriceController.getQuoteSideAmountSpec().get(),
                     muSigCreateOfferAmountAndPriceController.getPriceSpec().get()
@@ -160,13 +170,14 @@ public class MuSigCreateOfferController extends NavigationController implements 
     protected void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
         model.getCloseButtonVisible().set(true);
         model.getBackButtonText().set(Res.get("action.back"));
-        model.getBackButtonVisible().set(navigationTarget != NavigationTarget.MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE);
+        model.getBackButtonVisible().set(navigationTarget != NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET);
     }
 
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
+            case MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET -> Optional.of(muSigCreateOfferDirectionAndMarketController);
             case MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE -> Optional.of(muSigCreateOfferAmountAndPriceController);
             case MU_SIG_CREATE_OFFER_PAYMENT_METHODS -> Optional.of(muSigCreateOfferPaymentMethodsController);
             case MU_SIG_CREATE_OFFER_REVIEW_OFFER -> Optional.of(muSigCreateOfferReviewController);
@@ -220,6 +231,9 @@ public class MuSigCreateOfferController extends NavigationController implements 
     }
 
     private boolean validate(boolean calledFromNext) {
+        if (model.getSelectedChildTarget().get() == NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET) {
+            return muSigCreateOfferDirectionAndMarketController.validate();
+        }
         if (model.getSelectedChildTarget().get() == NavigationTarget.MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE) {
             return muSigCreateOfferAmountAndPriceController.validate();
         }
@@ -242,6 +256,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
     private void reset() {
         resetSelectedChildTarget();
 
+        muSigCreateOfferDirectionAndMarketController.reset();
         muSigCreateOfferAmountAndPriceController.reset();
         muSigCreateOfferPaymentMethodsController.reset();
         muSigCreateOfferReviewController.reset();
@@ -267,7 +282,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
     }
 
     private void setMainButtonsVisibleState(boolean value) {
-        model.getBackButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE);
+        model.getBackButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET);
         model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.MU_SIG_CREATE_OFFER_REVIEW_OFFER);
         model.getCloseButtonVisible().set(value);
     }

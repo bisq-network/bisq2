@@ -25,6 +25,9 @@ import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.mu_sig.MuSigService;
@@ -149,6 +152,11 @@ public class MuSigOfferbookController implements Controller {
             settingsService.setSelectedMarket(market);
             settingsService.setCookie(getSelectedMarketCookieKey(), market.getMarketCodes());
         }
+    }
+
+    void onCreateOffer() {
+        Market market = model.getSelectedMarketItem().get().getMarket();
+        Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER, new MuSigCreateOfferController.InitData(market));
     }
 
     private void maybeSelectFirst() {
