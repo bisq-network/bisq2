@@ -57,4 +57,9 @@ public abstract class MuSigTradeMessageHandlerAsMessageSender<T extends MuSigTra
                 .map(channel ->
                         openTradeChannelService.sendTradeLogMessage(encoded, channel));
     }
+
+    @Override
+    protected void persist() {
+        muSigTradeService.persist();
+    }
 }

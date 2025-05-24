@@ -42,6 +42,7 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
             verify(message);
             process(message);
             commit();
+            persist();
         } else {
             throw new IllegalArgumentException("Event must be a subclass of TradeMessage in " + getClass().getSimpleName());
         }
@@ -52,6 +53,9 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
     protected abstract void process(M message);
 
     protected abstract void commit();
+
+    protected void persist() {
+    }
 
     private void verifyInternal(M message) {
         checkArgument(message.getTradeId().equals(trade.getId()),
