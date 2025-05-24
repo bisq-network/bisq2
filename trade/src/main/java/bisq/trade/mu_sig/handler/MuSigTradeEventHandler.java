@@ -32,14 +32,14 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public abstract class MuSigTradeEventHandler<T extends MuSigTrade, E extends Event> extends TradeEventHandler<T, E> {
-    protected final MuSigTradeService muSigTradeService;
-    protected final MusigGrpc.MusigBlockingStub musigBlockingStub;
+    protected final MuSigTradeService tradeService;
+    protected final MusigGrpc.MusigBlockingStub blockingStub;
 
     protected MuSigTradeEventHandler(ServiceProvider serviceProvider, T trade) {
         super(serviceProvider, trade);
 
-        muSigTradeService = serviceProvider.getMuSigTradeService();
-        musigBlockingStub = muSigTradeService.getMusigBlockingStub();
+        tradeService = serviceProvider.getMuSigTradeService();
+        blockingStub = tradeService.getMusigBlockingStub();
     }
 
     public final void handle(Event event) {
@@ -59,6 +59,6 @@ public abstract class MuSigTradeEventHandler<T extends MuSigTrade, E extends Eve
 
     @Override
     protected void persist() {
-        muSigTradeService.persist();
+        tradeService.persist();
     }
 }
