@@ -120,14 +120,19 @@ public abstract class Fsm<M extends FsmModel> {
                 // In case of an exception we fire the FsmErrorEvent to trigger an error state.
                 // We apply that only if the event which triggered the exception was not the FsmErrorEvent itself
                 // to avoid potential recursive calls if the error handling code causes a follow-up exception.
-                if (!(fsmException.getEvent() instanceof FsmErrorEvent)) {
+                if (!(event instanceof FsmErrorEvent)) {
+                    persist();
                     handle(new FsmErrorEvent(fsmException));
                 }
-                // We throw the exception and leave further error handling to the concrete Fsm implementation.
+                // We throw the exception to allow specific error handling to the implementation class.
                 throw fsmException;
+            } finally {
+                persist();
             }
         }
     }
+
+    protected abstract void persist();
 
     public TransitionBuilder<M> addTransition() {
         return new TransitionBuilder<>(this);

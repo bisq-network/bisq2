@@ -50,16 +50,14 @@ public abstract class MuSigProtocol extends TradeProtocol<MuSigTrade> {
         try {
             super.handle(event);
         } catch (FsmException fsmException) {
-            // We swallow the exception as we handle exceptions as an error state.
+            // We ignore the exception as we handle FsmExceptions in the base class as an error state.
             // The client need to listen for that state for error handling.
-            // In case we get the error from the network message throwing the exception to the caller
-            // (network layer) would not make sense. As we do not want to distinguish at the client if the error came
-            // from a message or from a user event we prefer to use the same mechanism for both sources and
-            // therefor do not throw an exception either.
-        } finally {
-            // We persist after the handle call to persist the state change. We call that in finally to ensure that exceptional cases are covered as well.
-            getServiceProvider().getMuSigTradeService().persist();
         }
+    }
+
+    @Override
+    protected void persist() {
+        getServiceProvider().getMuSigTradeService().persist();
     }
 
     public MuSigTrade getTrade() {

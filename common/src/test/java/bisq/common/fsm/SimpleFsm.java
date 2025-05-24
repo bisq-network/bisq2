@@ -33,4 +33,9 @@ public class SimpleFsm<M extends FsmModel> extends Fsm<M> {
             // We swallow the exception
         }
     }
+
+    @Override
+    protected void persist() {
+        // Ignore for test
+    }
 }
