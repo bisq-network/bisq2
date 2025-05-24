@@ -19,15 +19,14 @@ package bisq.desktop.main.content.chat;
 
 import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.common.data.Pair;
-import bisq.common.observable.ReadOnlyObservable;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.components.controls.DropdownMenu;
+import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.components.controls.DropdownTitleMenuItem;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.i18n.Res;
-import bisq.settings.ChatNotificationType;
 import javafx.css.PseudoClass;
 import javafx.event.EventHandler;
 import javafx.scene.control.Label;
@@ -62,7 +61,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected final DropdownMenu notificationsSettingsMenu = new DropdownMenu("icon-notification-all-grey", "icon-notification-all-white", true);
     protected DropdownBisqMenuItem helpButton, infoButton;
     private NotificationSettingMenuItem globalDefault, all, mention, off;
-    protected Subscription channelIconPin, selectedNotificationSettingPin;
+    protected Subscription channelIconPin, selectedNotificationSettingPin, notificationsSettingsMenuIsShowingPin;
 
     private final KeyCodeCombination searchShortcut = new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN);
     private final EventHandler<KeyEvent> searchShortcutHandler;
@@ -143,6 +142,9 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         selectedNotificationSettingPin = EasyBind.subscribe(model.getSelectedNotificationSetting(),
                 this::applySelectedNotificationSetting);
 
+        notificationsSettingsMenuIsShowingPin = EasyBind.subscribe(notificationsSettingsMenu.getIsMenuShowing(),
+                this::updateMenuItemsStyle);
+
         // Apply initial state of the icon when view is attached
         if (model.getSelectedNotificationSetting().get() != null) {
             applySelectedNotificationSetting(model.getSelectedNotificationSetting().get());
@@ -182,6 +184,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
         channelIconPin.unsubscribe();
         selectedNotificationSettingPin.unsubscribe();
+        notificationsSettingsMenuIsShowingPin.unsubscribe();
 
         if (searchShortcutHandler != null) {
             root.removeEventFilter(KeyEvent.KEY_PRESSED, searchShortcutHandler);
@@ -198,37 +201,33 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
     private void setupNotificationsSettingMenu() {
         DropdownTitleMenuItem title = new DropdownTitleMenuItem(Res.get("chat.notificationsSettingsMenu.title"));
-        globalDefault = new NotificationSettingMenuItem("check-white", "check-white",
-                Res.get("chat.notificationsSettingsMenu.globalDefault"), ChatChannelNotificationType.GLOBAL_DEFAULT);
-        all = new NotificationSettingMenuItem("check-white", "check-white",
-                Res.get("chat.notificationsSettingsMenu.all"), ChatChannelNotificationType.ALL);
-        mention = new NotificationSettingMenuItem("check-white", "check-white",
-                Res.get("chat.notificationsSettingsMenu.mention"), ChatChannelNotificationType.MENTION);
-        off = new NotificationSettingMenuItem("check-white", "check-white",
-                Res.get("chat.notificationsSettingsMenu.off"), ChatChannelNotificationType.OFF);
+        all = createAndGetNotificationSettingMenuItem(ChatChannelNotificationType.ALL,
+                Res.get("chat.notificationsSettingsMenu.all"));
+        mention = createAndGetNotificationSettingMenuItem(ChatChannelNotificationType.MENTION,
+                Res.get("chat.notificationsSettingsMenu.mention"));
+        off = createAndGetNotificationSettingMenuItem(ChatChannelNotificationType.OFF,
+                Res.get("chat.notificationsSettingsMenu.off"));
+        globalDefault = createAndGetNotificationSettingMenuItem(ChatChannelNotificationType.GLOBAL_DEFAULT,
+                Res.get("chat.notificationsSettingsMenu.globalDefault"));
         notificationsSettingsMenu.getStyleClass().add("notifications-settings-menu");
-        notificationsSettingsMenu.addMenuItems(title, globalDefault, all, mention, off);
+        notificationsSettingsMenu.addMenuItems(title, all, mention, off, globalDefault);
         notificationsSettingsMenu.setTooltip(Res.get("chat.notificationsSettingsMenu.tooltip"));
     }
 
+    private NotificationSettingMenuItem createAndGetNotificationSettingMenuItem(ChatChannelNotificationType type, String text) {
+        ImageView defaultIcon = ImageUtil.getImageViewById(getIconIdsForNotificationType(type).getFirst());
+        ImageView activeIcon = ImageUtil.getImageViewById(getIconIdsForNotificationType(type).getSecond());
+        Label label = new Label(text);
+        return new NotificationSettingMenuItem(type, label, defaultIcon, activeIcon);
+    }
+
     private Pair<String, String> getIconIdsForNotificationType(ChatChannelNotificationType type) {
-        switch (type) {
-            case ALL:
-                return new Pair<>("icon-notification-all-grey", "icon-notification-all-white");
-            case MENTION:
-                return new Pair<>("icon-notification-mention-grey", "icon-notification-mention-white");
-            case OFF:
-                return new Pair<>("icon-notification-off-grey", "icon-notification-off-white");
-            case GLOBAL_DEFAULT:
-            default:
-                ReadOnlyObservable<ChatNotificationType> globalDefault = controller.serviceProvider.getSettingsService().getChatNotificationType();
-                return switch (globalDefault.get()) {
-                    case ChatNotificationType.ALL -> getIconIdsForNotificationType(ChatChannelNotificationType.ALL);
-                    case ChatNotificationType.OFF -> getIconIdsForNotificationType(ChatChannelNotificationType.OFF);
-                    case ChatNotificationType.MENTION ->
-                            getIconIdsForNotificationType(ChatChannelNotificationType.MENTION);
-                };
-        }
+        return switch (type) {
+            case ALL -> new Pair<>("icon-notification-all-grey", "icon-notification-all-white");
+            case MENTION -> new Pair<>("icon-notification-mention-grey", "icon-notification-mention-white");
+            case OFF -> new Pair<>("icon-notification-off-grey", "icon-notification-off-white");
+            case GLOBAL_DEFAULT -> new Pair<>("icon-notification-default-grey", "icon-notification-default-white");
+        };
     }
 
     private void applySelectedNotificationSetting(ChatChannelNotificationType type) {
@@ -241,33 +240,96 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         notificationsSettingsMenu.setIcons(icons.getFirst(), icons.getSecond());
     }
 
+    private void updateMenuItemsStyle(boolean isMenuShowing) {
+        if (isMenuShowing) {
+            if (globalDefault.isSelected()) {
+                globalDefault.showAsActive();
+            } else if (all.isSelected()) {
+                all.showAsActive();
+            } else if (mention.isSelected()) {
+                mention.showAsActive();
+            } else if (off.isSelected()) {
+                off.showAsActive();
+            }
+        } else {
+            globalDefault.resetStyle();
+            all.resetStyle();
+            mention.resetStyle();
+            off.resetStyle();
+        }
+    }
+
     @Getter
-    private static final class NotificationSettingMenuItem extends DropdownBisqMenuItem {
+    private static final class NotificationSettingMenuItem extends DropdownMenuItem {
         private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
+        private static final String NOTIFICATIONS_SETTINGS_MENU_LABEL_ACTIVE_STYLE = "notifications-settings-menu-label-active";
+        private static final String NOTIFICATIONS_SETTINGS_MENU_LABEL_DEFAULT_STYLE = "notifications-settings-menu-label-default";
 
         private final ChatChannelNotificationType type;
+        private final ImageView defaultIcon, activeIcon;
+        private final Label displayLabel;
 
-        private NotificationSettingMenuItem(String defaultIconId,
-                                            String activeIconId,
-                                            String text,
-                                            ChatChannelNotificationType type) {
-            super(defaultIconId, activeIconId, text);
+        private NotificationSettingMenuItem(ChatChannelNotificationType type, Label displayLabel,
+                                            ImageView defaultIcon, ImageView activeIcon) {
+            super("check-white", "check-white", displayLabel);
 
             this.type = type;
+            this.defaultIcon = defaultIcon;
+            this.activeIcon = activeIcon;
+            this.displayLabel = displayLabel;
+
             getStyleClass().add("dropdown-menu-item");
             updateSelection(false);
             initialize();
         }
 
-        public void initialize() {
+        private void initialize() {
+            displayLabel.setGraphicTextGap(10);
+            resetStyle();
+
+            getContent().setOnMouseClicked(e -> showAsActive());
+            getContent().setOnMouseEntered(e -> showAsActive());
+            getContent().setOnMouseExited(e -> showAsDefault());
         }
 
         public void dispose() {
             setOnAction(null);
+            getContent().setOnMouseClicked(null);
+            getContent().setOnMouseEntered(null);
+            getContent().setOnMouseExited(null);
         }
 
         void updateSelection(boolean isSelected) {
             getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
+        }
+
+        boolean isSelected() {
+            return getContent().getPseudoClassStates().contains(SELECTED_PSEUDO_CLASS);
+        }
+
+        void resetStyle() {
+            displayLabel.setGraphic(defaultIcon);
+            resetNotificationSettingsMenuLabelStyle();
+            displayLabel.getStyleClass().add(NOTIFICATIONS_SETTINGS_MENU_LABEL_DEFAULT_STYLE);
+        }
+
+        private void showAsActive() {
+            displayLabel.setGraphic(activeIcon);
+            resetNotificationSettingsMenuLabelStyle();
+            displayLabel.getStyleClass().add(NOTIFICATIONS_SETTINGS_MENU_LABEL_ACTIVE_STYLE);
+        }
+
+        private void showAsDefault() {
+            if (isSelected()) {
+                showAsActive();
+                return;
+            }
+            resetStyle();
+        }
+
+        private void resetNotificationSettingsMenuLabelStyle() {
+            displayLabel.getStyleClass().remove(NOTIFICATIONS_SETTINGS_MENU_LABEL_DEFAULT_STYLE);
+            displayLabel.getStyleClass().remove(NOTIFICATIONS_SETTINGS_MENU_LABEL_ACTIVE_STYLE);
         }
     }
 }
