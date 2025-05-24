@@ -36,7 +36,7 @@ public abstract class MuSigProtocol extends TradeProtocol<MuSigTrade> {
     }
 
     @Override
-    protected EventHandler newEventHandlerFromClass(Class<? extends EventHandler> handlerClass) {
+    protected <E extends Event> EventHandler<E> newEventHandlerFromClass(Class<? extends EventHandler<E>> handlerClass) {
         try {
             return handlerClass.getDeclaredConstructor(ServiceProvider.class, MuSigTrade.class).newInstance(serviceProvider, model);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException |

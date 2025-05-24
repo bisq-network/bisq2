@@ -60,7 +60,7 @@ public abstract class Fsm<M extends FsmModel> {
 
     abstract protected void configTransitions();
 
-    public void handle(Event event) {
+    public <E extends Event> void handle(E event) {
         synchronized (this) {
             try {
                 checkNotNull(event, "event must not be null");
@@ -80,9 +80,10 @@ public abstract class Fsm<M extends FsmModel> {
                     checkArgument(targetState.getOrdinal() > currentState.getOrdinal(),
                             "The target state ordinal must be higher than the current state ordinal. " +
                                     "currentState=%s, targetState=%s", currentState, targetState);
-                    Optional<Class<? extends EventHandler>> eventHandlerClass = transition.get().getEventHandlerClass();
+                    Optional<Class<? extends EventHandler<? extends Event>>> eventHandlerClass = transition.get().getEventHandlerClass();
                     if (eventHandlerClass.isPresent()) {
-                        EventHandler eventHandler = newEventHandlerFromClass(eventHandlerClass.get());
+                        @SuppressWarnings("unchecked")
+                        EventHandler<E> eventHandler = newEventHandlerFromClass((Class<? extends EventHandler<E>>) eventHandlerClass.get());
                         String eventHandlerName = eventHandler.getClass().getSimpleName();
                         log.info("Handle {} at {}", event.getClass().getSimpleName(), eventHandlerName);
                         eventHandler.handle(event);
@@ -155,7 +156,7 @@ public abstract class Fsm<M extends FsmModel> {
         return new TransitionBuilder<>(this);
     }
 
-    abstract protected EventHandler newEventHandlerFromClass(Class<? extends EventHandler> handlerClass)
+    abstract protected <E extends Event> EventHandler<E> newEventHandlerFromClass(Class<? extends EventHandler<E>> handlerClass)
             throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException;
 
     private Set<Map.Entry<Pair<State, Class<? extends Event>>, Transition>> findTransitionMapEntriesForEvent(Class<? extends Event> eventClass) {
@@ -224,7 +225,7 @@ public abstract class Fsm<M extends FsmModel> {
             return this;
         }
 
-        public TransitionBuilder<M> run(Class<? extends EventHandler> eventHandlerClass) {
+        public TransitionBuilder<M> run(Class<? extends EventHandler<? extends Event>> eventHandlerClass) {
             if (eventHandlerClass == null) {
                 throw new FsmConfigException("eventHandlerClass must not be null");
             }

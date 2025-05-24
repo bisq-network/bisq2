@@ -34,7 +34,7 @@ public abstract class BisqEasyProtocol extends TradeProtocol<BisqEasyTrade> {
     }
 
     @Override
-    protected EventHandler newEventHandlerFromClass(Class<? extends EventHandler> handlerClass) {
+    protected <E extends Event> EventHandler<E> newEventHandlerFromClass(Class<? extends EventHandler<E>> handlerClass) {
         try {
             return handlerClass.getDeclaredConstructor(ServiceProvider.class, BisqEasyTrade.class).newInstance(serviceProvider, model);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
