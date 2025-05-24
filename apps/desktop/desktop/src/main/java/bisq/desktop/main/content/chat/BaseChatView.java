@@ -29,9 +29,14 @@ import bisq.desktop.components.controls.SearchBox;
 import bisq.i18n.Res;
 import bisq.settings.ChatNotificationType;
 import javafx.css.PseudoClass;
+import javafx.event.EventHandler;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -59,6 +64,9 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     private NotificationSettingMenuItem globalDefault, all, mention, off;
     protected Subscription channelIconPin, selectedNotificationSettingPin;
 
+    private final KeyCodeCombination searchShortcut = new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN);
+    private final EventHandler<KeyEvent> searchShortcutHandler;
+
     public BaseChatView(BaseChatModel model,
                         BaseChatController<?, ?> controller,
                         Pane chatMessagesComponent,
@@ -78,6 +86,13 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
         root.setFitToWidth(true);
         root.setFitToHeight(true);
+
+        searchShortcutHandler = event -> {
+            if (searchShortcut.match(event) && !searchBox.isDisabled()) {
+                searchBox.requestFieldFocus();
+                event.consume();
+            }
+        };
     }
 
     protected abstract void configTitleHBox();
@@ -132,6 +147,8 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         if (model.getSelectedNotificationSetting().get() != null) {
             applySelectedNotificationSetting(model.getSelectedNotificationSetting().get());
         }
+
+        root.addEventFilter(KeyEvent.KEY_PRESSED, searchShortcutHandler);
     }
 
     @Override
@@ -165,6 +182,10 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
         channelIconPin.unsubscribe();
         selectedNotificationSettingPin.unsubscribe();
+
+        if (searchShortcutHandler != null) {
+            root.removeEventFilter(KeyEvent.KEY_PRESSED, searchShortcutHandler);
+        }
     }
 
     private void setUpEllipsisMenu() {
