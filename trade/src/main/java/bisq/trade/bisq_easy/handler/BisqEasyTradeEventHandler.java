@@ -17,17 +17,12 @@
 
 package bisq.trade.bisq_easy.handler;
 
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.fsm.Event;
-import bisq.network.SendMessageResult;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.protocol.handler.TradeEventHandler;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public abstract class BisqEasyTradeEventHandler<T extends BisqEasyTrade, E extends Event> extends TradeEventHandler<T, E> {
@@ -41,16 +36,5 @@ public abstract class BisqEasyTradeEventHandler<T extends BisqEasyTrade, E exten
 
     public final void handle(Event event) {
         super.handle(event);
-
-        //sendLogMessage();
-    }
-
-   // protected abstract void sendLogMessage();
-
-    protected Optional<CompletableFuture<SendMessageResult>> sendLogMessage(String encoded) {
-        BisqEasyOpenTradeChannelService openTradeChannelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
-        return openTradeChannelService.findChannelByTradeId(trade.getId())
-                .map(channel ->
-                        openTradeChannelService.sendTradeLogMessage(encoded, channel));
     }
 }
