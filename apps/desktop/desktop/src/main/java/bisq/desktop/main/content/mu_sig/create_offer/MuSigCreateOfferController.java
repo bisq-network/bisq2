@@ -104,6 +104,8 @@ public class MuSigCreateOfferController extends NavigationController implements 
 
     @Override
     public void initWithData(InitData data) {
+        Market market = data.getMarket();
+        muSigCreateOfferDirectionAndMarketController.setMarket(market);
     }
 
     @Override

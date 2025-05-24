@@ -298,12 +298,6 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
                 .valueSupplier(ListItem::getNumOffers)
                 .comparator(Comparator.comparing(ListItem::getNumOffersAsInteger))
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("bisqEasy.tradeWizard.market.columns.numPeers"))
-                .minWidth(120)
-                .valueSupplier(ListItem::getNumUsers)
-                .comparator(Comparator.comparing(ListItem::getNumUsersAsInteger))
-                .build());
     }
 
     private Callback<TableColumn<ListItem, ListItem>,
@@ -348,25 +342,20 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         @EqualsAndHashCode.Include
         private final Market market;
         @EqualsAndHashCode.Include
-        private final int numOffersAsInteger;
-        @EqualsAndHashCode.Include
-        private final int numUsersAsInteger;
+        private final long numOffersAsInteger;
 
         private final String quoteCurrencyDisplayName;
         private final String numOffers;
-        private final String numUsers;
 
         // TODO: move to cell
         private final Node marketLogo;
 
-        ListItem(Market market, int numOffersAsInteger, int numUsersAsInteger) {
+        ListItem(Market market, long numOffersAsInteger) {
             this.market = market;
             this.numOffersAsInteger = numOffersAsInteger;
-            this.numUsersAsInteger = numUsersAsInteger;
 
             this.numOffers = String.valueOf(numOffersAsInteger);
             quoteCurrencyDisplayName = new FiatCurrency(market.getQuoteCurrencyCode()).getCodeAndDisplayName();
-            this.numUsers = String.valueOf(numUsersAsInteger);
             marketLogo = MarketImageComposition.createMarketLogo(market.getQuoteCurrencyCode());
             marketLogo.setCache(true);
             marketLogo.setCacheHint(CacheHint.SPEED);

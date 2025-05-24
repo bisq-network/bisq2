@@ -17,30 +17,22 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.direction_and_market;
 
-import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.chat.ChatMessage;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookSelectionService;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.navigation.NavigationTarget;
+import bisq.mu_sig.MuSigService;
 import bisq.offer.Direction;
 import bisq.user.identity.UserIdentityService;
-import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -51,12 +43,10 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
     private final MuSigCreateOfferDirectionAndMarketView view;
     private final Runnable onNextHandler;
     private final Consumer<Boolean> navigationButtonsVisibleHandler;
-    private final ReputationService reputationService;
     private final Consumer<NavigationTarget> closeAndNavigateToHandler;
     private final UserIdentityService userIdentityService;
     private final MarketPriceService marketPriceService;
-    private final BisqEasyOfferbookSelectionService bisqEasyOfferbookSelectionService;
-    private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
+    private final MuSigService muSigService;
     private Subscription searchTextPin;
 
     public MuSigCreateOfferDirectionAndMarketController(ServiceProvider serviceProvider,
@@ -65,18 +55,19 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
                                                         Consumer<NavigationTarget> closeAndNavigateToHandler) {
         this.onNextHandler = onNextHandler;
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
-        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        reputationService = serviceProvider.getUserService().getReputationService();
-        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
-        bisqEasyOfferbookSelectionService = serviceProvider.getChatService().getBisqEasyOfferbookChannelSelectionService();
-        bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
         this.closeAndNavigateToHandler = closeAndNavigateToHandler;
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
+        muSigService = serviceProvider.getMuSigService();
 
         model = new MuSigCreateOfferDirectionAndMarketModel();
         view = new MuSigCreateOfferDirectionAndMarketView(model, this);
         setDirection(Direction.BUY);
-        setIsAllowedToCreateOffer();
         applyShowReputationInfo();
+    }
+
+    public void setMarket(Market market) {
+        model.getSelectedMarket().set(market);
     }
 
     public ReadOnlyObjectProperty<Direction> getDirection() {
@@ -94,36 +85,25 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
     @Override
     public void onActivate() {
         setDirection(Direction.BUY);
-        setIsAllowedToCreateOffer();
         applyShowReputationInfo();
 
         model.getSearchText().set("");
-        if (model.getSelectedMarket().get() == null) {
-            // Use selected public channel or if private channel is selected we use any of the public channels for
-            // setting the default market
-            Optional.ofNullable(bisqEasyOfferbookSelectionService.getSelectedChannel().get())
-                    .filter(channel -> channel instanceof BisqEasyOfferbookChannel)
-                    .map(channel -> (BisqEasyOfferbookChannel) channel)
-                    .map(BisqEasyOfferbookChannel::getMarket)
-                    .ifPresent(market -> model.getSelectedMarket().set(market));
-        }
 
         model.getListItems().setAll(MarketRepository.getAllFiatMarkets().stream()
-                .filter(market -> marketPriceService.getMarketPriceByCurrencyMap().containsKey(market))
+                //.filter(market -> marketPriceService.getMarketPriceByCurrencyMap().containsKey(market))
                 .map(market -> {
-                    Set<BisqEasyOfferbookMessage> allMessages = bisqEasyOfferbookChannelService.getChannels().stream()
-                            .filter(channel -> channel.getMarket().equals(market))
-                            .flatMap(channel -> channel.getChatMessages().stream())
-                            .collect(Collectors.toSet());
-                    int numOffersInChannel = (int) allMessages.stream()
-                            .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
-                            .distinct()
+                    long numOffersInMarket = muSigService.getOffers().stream()
+                            .filter(offer -> {
+                                Market offerMarket = offer.getMarket();
+
+                                // TODO: Needs to be dynamic according to base market
+                                // for now we just assume Btc.
+                                boolean isBaseMarket = offerMarket.isBtcFiatMarket() && offerMarket.getBaseCurrencyCode().equals("BTC");
+                                boolean isQuoteMarket = offerMarket.getQuoteCurrencyCode().equals(market.getQuoteCurrencyCode());
+                                return isBaseMarket && isQuoteMarket;
+                            })
                             .count();
-                    int numUsersInChannel = (int) allMessages.stream()
-                            .map(ChatMessage::getAuthorUserProfileId)
-                            .distinct()
-                            .count();
-                    MuSigCreateOfferDirectionAndMarketView.ListItem item = new MuSigCreateOfferDirectionAndMarketView.ListItem(market, numOffersInChannel, numUsersInChannel);
+                    MuSigCreateOfferDirectionAndMarketView.ListItem item = new MuSigCreateOfferDirectionAndMarketView.ListItem(market, numOffersInMarket);
                     if (market.equals(model.getSelectedMarket().get())) {
                         model.getSelectedMarketListItem().set(item);
                     }
@@ -186,17 +166,11 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         }
         model.getSelectedMarketListItem().set(item);
         model.getSelectedMarket().set(item.getMarket());
-        bisqEasyOfferbookChannelService.findChannel(item.getMarket())
-                .ifPresent(bisqEasyOfferbookSelectionService::selectChannel);
+        // TODO: Update market in offerbook
     }
 
     private void setDirection(Direction direction) {
         model.getDirection().set(direction);
-    }
-
-    private void setIsAllowedToCreateOffer() {
-        model.setAllowedToCreateSellOffer(BisqEasyTradeAmountLimits.isAllowedToCreateSellOffer(
-                reputationService, userIdentityService.getSelectedUserIdentity().getUserProfile()));
     }
 
     private void applyShowReputationInfo() {
