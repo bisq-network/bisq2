@@ -51,7 +51,7 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
     @Override
     public void process(MuSigTakeOfferEvent event) {
         try {
-            bisq.trade.protobuf.PubKeySharesResponse proto = musigBlockingStub.initTrade(PubKeySharesRequest.newBuilder()
+            bisq.trade.protobuf.PubKeySharesResponse proto = blockingStub.initTrade(PubKeySharesRequest.newBuilder()
                     .setTradeId(trade.getId())
                     .setMyRole(Role.BUYER_AS_TAKER)
                     .build());

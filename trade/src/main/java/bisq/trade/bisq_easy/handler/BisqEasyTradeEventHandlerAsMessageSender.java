@@ -15,30 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.bisq_easy.protocol.messages;
+package bisq.trade.bisq_easy.handler;
 
-import bisq.contract.Role;
+import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandler;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
+import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyRejectTradeMessageHandler extends BisqEasyTradeMessageHandler<BisqEasyTrade, BisqEasyRejectTradeMessage> {
-    public BisqEasyRejectTradeMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
-        super(serviceProvider, model);
+public abstract class BisqEasyTradeEventHandlerAsMessageSender<T extends BisqEasyTrade, E extends Event> extends TradeEventHandlerAsMessageSender<T, E> {
+    protected final BisqEasyTradeService tradeService;
+
+    protected BisqEasyTradeEventHandlerAsMessageSender(ServiceProvider serviceProvider, T trade) {
+        super(serviceProvider, trade);
+
+        tradeService = serviceProvider.getBisqEasyTradeService();
     }
 
-    @Override
-    protected void verify(BisqEasyRejectTradeMessage message) {
-    }
-
-    @Override
-    protected void process(BisqEasyRejectTradeMessage message) {
-    }
-
-    @Override
-    protected void commit() {
-        trade.getInterruptTradeInitiator().set(trade.isTaker() ? Role.MAKER : Role.TAKER);
+    public final void handle(E event) {
+        super.handle(event);
     }
 }

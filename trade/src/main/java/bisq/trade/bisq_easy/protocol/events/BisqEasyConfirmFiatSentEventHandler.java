@@ -20,10 +20,10 @@ package bisq.trade.bisq_easy.protocol.events;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeEventHandlerAsMessageSender;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmFiatSentMessage;
-import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
-public class BisqEasyConfirmFiatSentEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyConfirmFiatSentEvent> {
+public class BisqEasyConfirmFiatSentEventHandler extends BisqEasyTradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyConfirmFiatSentEvent> {
     public BisqEasyConfirmFiatSentEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }

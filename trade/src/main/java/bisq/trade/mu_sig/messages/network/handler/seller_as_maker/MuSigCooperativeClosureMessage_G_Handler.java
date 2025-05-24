@@ -45,7 +45,7 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
     protected void process(MuSigCooperativeClosureMessage_G message) {
         peersOutputPrvKeyShare = message.getPeerOutputPrvKeyShare();
 
-        muSigTradeService.stopCloseTimeout(trade);
+        tradeService.stopCloseTimeout(trade);
 
         // ClosureType.COOPERATIVE
         // *** SELLER CLOSES TRADE ***
@@ -53,7 +53,7 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
                 .setTradeId(trade.getId())
                 .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(peersOutputPrvKeyShare.getBytes()))
                 .build();
-        myCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(closeTradeRequest));
+        myCloseTradeResponse = CloseTradeResponse.fromProto(blockingStub.closeTrade(closeTradeRequest));
     }
 
     @Override

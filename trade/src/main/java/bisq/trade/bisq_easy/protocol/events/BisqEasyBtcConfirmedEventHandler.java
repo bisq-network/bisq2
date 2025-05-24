@@ -19,11 +19,11 @@ package bisq.trade.bisq_easy.protocol.events;
 
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.handler.TradeEventHandler;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeEventHandler;
 
 import java.util.Optional;
 
-public class BisqEasyBtcConfirmedEventHandler extends TradeEventHandler<BisqEasyTrade, BisqEasyBtcConfirmedEvent> {
+public class BisqEasyBtcConfirmedEventHandler extends BisqEasyTradeEventHandler<BisqEasyTrade, BisqEasyBtcConfirmedEvent> {
     public BisqEasyBtcConfirmedEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }

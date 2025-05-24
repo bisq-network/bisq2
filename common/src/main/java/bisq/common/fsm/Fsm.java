@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
+
 package bisq.common.fsm;
 
 import bisq.common.data.Pair;
@@ -21,7 +22,11 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -55,7 +60,7 @@ public abstract class Fsm<M extends FsmModel> {
 
     abstract protected void configTransitions();
 
-    public void handle(Event event) {
+    public <E extends Event> void handle(E event) {
         synchronized (this) {
             try {
                 checkNotNull(event, "event must not be null");
@@ -75,9 +80,10 @@ public abstract class Fsm<M extends FsmModel> {
                     checkArgument(targetState.getOrdinal() > currentState.getOrdinal(),
                             "The target state ordinal must be higher than the current state ordinal. " +
                                     "currentState=%s, targetState=%s", currentState, targetState);
-                    Optional<Class<? extends EventHandler>> eventHandlerClass = transition.get().getEventHandlerClass();
+                    Optional<Class<? extends EventHandler<? extends Event>>> eventHandlerClass = transition.get().getEventHandlerClass();
                     if (eventHandlerClass.isPresent()) {
-                        EventHandler eventHandler = newEventHandlerFromClass(eventHandlerClass.get());
+                        @SuppressWarnings("unchecked")
+                        EventHandler<E> eventHandler = newEventHandlerFromClass((Class<? extends EventHandler<E>>) eventHandlerClass.get());
                         String eventHandlerName = eventHandler.getClass().getSimpleName();
                         log.info("Handle {} at {}", event.getClass().getSimpleName(), eventHandlerName);
                         eventHandler.handle(event);
@@ -115,14 +121,19 @@ public abstract class Fsm<M extends FsmModel> {
                 // In case of an exception we fire the FsmErrorEvent to trigger an error state.
                 // We apply that only if the event which triggered the exception was not the FsmErrorEvent itself
                 // to avoid potential recursive calls if the error handling code causes a follow-up exception.
-                if (!(fsmException.getEvent() instanceof FsmErrorEvent)) {
+                if (!(event instanceof FsmErrorEvent)) {
+                    persist();
                     handle(new FsmErrorEvent(fsmException));
                 }
-                // We throw the exception and leave further error handling to the concrete Fsm implementation.
+                // We throw the exception to allow specific error handling to the implementation class.
                 throw fsmException;
+            } finally {
+                persist();
             }
         }
     }
+
+    protected abstract void persist();
 
     public TransitionBuilder<M> addTransition() {
         return new TransitionBuilder<>(this);
@@ -145,7 +156,7 @@ public abstract class Fsm<M extends FsmModel> {
         return new TransitionBuilder<>(this);
     }
 
-    abstract protected EventHandler newEventHandlerFromClass(Class<? extends EventHandler> handlerClass)
+    abstract protected <E extends Event> EventHandler<E> newEventHandlerFromClass(Class<? extends EventHandler<E>> handlerClass)
             throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException;
 
     private Set<Map.Entry<Pair<State, Class<? extends Event>>, Transition>> findTransitionMapEntriesForEvent(Class<? extends Event> eventClass) {
@@ -214,7 +225,7 @@ public abstract class Fsm<M extends FsmModel> {
             return this;
         }
 
-        public TransitionBuilder<M> run(Class<? extends EventHandler> eventHandlerClass) {
+        public TransitionBuilder<M> run(Class<? extends EventHandler<? extends Event>> eventHandlerClass) {
             if (eventHandlerClass == null) {
                 throw new FsmConfigException("eventHandlerClass must not be null");
             }

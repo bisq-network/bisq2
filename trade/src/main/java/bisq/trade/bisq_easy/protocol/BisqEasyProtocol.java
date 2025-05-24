@@ -34,7 +34,7 @@ public abstract class BisqEasyProtocol extends TradeProtocol<BisqEasyTrade> {
     }
 
     @Override
-    protected EventHandler newEventHandlerFromClass(Class<? extends EventHandler> handlerClass) {
+    protected <E extends Event> EventHandler<E> newEventHandlerFromClass(Class<? extends EventHandler<E>> handlerClass) {
         try {
             return handlerClass.getDeclaredConstructor(ServiceProvider.class, BisqEasyTrade.class).newInstance(serviceProvider, model);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
@@ -48,12 +48,17 @@ public abstract class BisqEasyProtocol extends TradeProtocol<BisqEasyTrade> {
         try {
             super.handle(event);
         } catch (FsmException fsmException) {
-            // We swallow the exception as we handle exceptions as an error state.
+            // We ignore the exception as we handle FsmExceptions in the base class as an error state.
             // The client need to listen for that state for error handling.
-            // In case we get the error from the network message throwing the exception to the caller
-            // (network layer) would not make sense. As we do not want to distinguish at the client if the error came
-            // from a message or from a user event we prefer to use the same mechanism for both sources and
-            // therefor do not throw an exception either.
         }
+    }
+
+    @Override
+    protected void persist() {
+        getServiceProvider().getBisqEasyTradeService().persist();
+    }
+
+    public BisqEasyTrade getTrade() {
+        return getModel();
     }
 }

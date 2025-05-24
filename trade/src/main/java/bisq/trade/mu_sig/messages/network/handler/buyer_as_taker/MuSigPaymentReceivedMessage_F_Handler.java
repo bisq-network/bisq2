@@ -48,7 +48,7 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
     protected void process(MuSigPaymentReceivedMessage_F message) {
         peersSwapTxSignature = message.getSwapTxSignature();
 
-        muSigTradeService.stopCloseTimeout(trade);
+        tradeService.stopCloseTimeout(trade);
 
         // ClosureType.COOPERATIVE
         // *** BUYER CLOSES TRADE ***
@@ -56,7 +56,7 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
                 .setTradeId(trade.getId())
                 .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(peersSwapTxSignature.getPeerOutputPrvKeyShare()))
                 .build();
-        myCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(closeTradeRequest));
+        myCloseTradeResponse = CloseTradeResponse.fromProto(blockingStub.closeTrade(closeTradeRequest));
     }
 
     @Override

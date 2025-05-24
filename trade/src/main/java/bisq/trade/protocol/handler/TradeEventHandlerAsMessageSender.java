@@ -32,7 +32,8 @@ public abstract class TradeEventHandlerAsMessageSender<T extends Trade<?, ?, ?>,
         super(serviceProvider, trade);
     }
 
-    public void handle(Event event) {
+    @Override
+    public void handle(E event) {
         super.handle(event);
 
         sendMessage();

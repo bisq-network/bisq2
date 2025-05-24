@@ -19,7 +19,6 @@ package bisq.trade.mu_sig.messages.network;
 
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -29,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public final class MuSigReportErrorMessage extends BisqEasyTradeMessage {
+public final class MuSigReportErrorMessage extends MuSigTradeMessage {
     public static final int MAX_LENGTH_ERROR_MESSAGE = 500;
     public static final int MAX_LENGTH_STACKTRACE = 2000;
 
@@ -59,32 +58,32 @@ public final class MuSigReportErrorMessage extends BisqEasyTradeMessage {
     }
 
     @Override
-    protected bisq.trade.protobuf.BisqEasyTradeMessage.Builder getBisqEasyTradeMessageBuilder(boolean serializeForHash) {
-        return bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
-                .setBisqEasyReportErrorMessage(toBisqEasyReportErrorMessageProto(serializeForHash));
+    protected bisq.trade.protobuf.MuSigTradeMessage.Builder getMuSigTradeMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.MuSigTradeMessage.newBuilder()
+                .setMuSigReportErrorMessage(toMuSigReportErrorMessageProto(serializeForHash));
     }
 
-    private bisq.trade.protobuf.BisqEasyReportErrorMessage toBisqEasyReportErrorMessageProto(boolean serializeForHash) {
-        bisq.trade.protobuf.BisqEasyReportErrorMessage.Builder builder = getBisqEasyReportErrorMessageBuilder(serializeForHash);
+    private bisq.trade.protobuf.MuSigReportErrorMessage toMuSigReportErrorMessageProto(boolean serializeForHash) {
+        bisq.trade.protobuf.MuSigReportErrorMessage.Builder builder = getMuSigReportErrorMessageBuilder(serializeForHash);
         return resolveBuilder(builder, serializeForHash).build();
     }
 
-    private bisq.trade.protobuf.BisqEasyReportErrorMessage.Builder getBisqEasyReportErrorMessageBuilder(boolean serializeForHash) {
-        return bisq.trade.protobuf.BisqEasyReportErrorMessage.newBuilder()
+    private bisq.trade.protobuf.MuSigReportErrorMessage.Builder getMuSigReportErrorMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.MuSigReportErrorMessage.newBuilder()
                 .setErrorMessage(errorMessage)
                 .setStackTrace(stackTrace);
     }
 
     public static MuSigReportErrorMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        var bisqEasyReportErrorMessage = proto.getBisqEasyTradeMessage().getBisqEasyReportErrorMessage();
+        var muSigReportErrorMessage = proto.getMuSigTradeMessage().getMuSigReportErrorMessage();
         return new MuSigReportErrorMessage(
                 proto.getId(),
                 proto.getTradeId(),
                 proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
-                bisqEasyReportErrorMessage.getErrorMessage(),
-                bisqEasyReportErrorMessage.getStackTrace());
+                muSigReportErrorMessage.getErrorMessage(),
+                muSigReportErrorMessage.getStackTrace());
     }
 
     @Override

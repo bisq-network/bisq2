@@ -322,127 +322,23 @@ public class MuSigTradeStateController implements Controller {
             case SELLER_AS_MAKER_FORCE_CLOSED_TRADE -> {
                 model.getStateInfoVBox().set(new SellerState4(serviceProvider, trade, channel).getView().getRoot());
             }
-        }
-       /* switch (state) {
-            case INIT:
-                break;
-            case TAKER_SENT_TAKE_OFFER_REQUEST:
-
-                // Seller
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS_:
-            case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-                // Buyer
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-            case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_:
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-                if (isSeller) {
-                    model.getStateInfoVBox().set(new SellerState1(serviceProvider, trade, channel).getView().getRoot());
-                } else {
-                    model.getStateInfoVBox().set(new BuyerState1a(serviceProvider, trade, channel).getView().getRoot());
-                }
-                break;
-
-            // Seller
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS_:
-            case TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-                model.getStateInfoVBox().set(new SellerState2a(serviceProvider, trade, channel).getView().getRoot());
-                break;
-            case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
-                model.getStateInfoVBox().set(new SellerState2b(serviceProvider, trade, channel).getView().getRoot());
-                break;
-            case SELLER_CONFIRMED_FIAT_RECEIPT:
-                model.getStateInfoVBox().set(new SellerState3a(serviceProvider, trade, channel).getView().getRoot());
-                break;
-            case SELLER_SENT_BTC_SENT_CONFIRMATION:
-                if (isMainChain) {
-                    model.getStateInfoVBox().set(new SellerStateMainChain3b(serviceProvider, trade, channel).getView().getRoot());
-                } else {
-                    model.getStateInfoVBox().set(new SellerStateLightning3b(serviceProvider, trade, channel).getView().getRoot());
-                }
-                break;
-
-            // Buyer
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA_:
-            case TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-                model.getStateInfoVBox().set(new BuyerState1b(serviceProvider, trade, channel).getView().getRoot());
-                break;
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-                model.getStateInfoVBox().set(new BuyerState2a(serviceProvider, trade, channel).getView().getRoot());
-                break;
-            case BUYER_SENT_FIAT_SENT_CONFIRMATION:
-                model.getStateInfoVBox().set(new BuyerState2b(serviceProvider, trade, channel).getView().getRoot());
-                break;
-            case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION:
-                model.getStateInfoVBox().set(new BuyerState3a(serviceProvider, trade, channel).getView().getRoot());
-                break;
-            case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
-                if (isMainChain) {
-                    model.getStateInfoVBox().set(new BuyerStateMainChain3b(serviceProvider, trade, channel).getView().getRoot());
-                } else {
-                    model.getStateInfoVBox().set(new BuyerStateLightning3b(serviceProvider, trade, channel).getView().getRoot());
-                }
-                break;
-
-            case BTC_CONFIRMED:
-                model.getInterruptTradeButtonVisible().set(false);
-                model.getIsTradeCompleted().set(true);
-                if (isSeller) {
-                    model.getStateInfoVBox().set(new SellerState4(serviceProvider, trade, channel).getView().getRoot());
-                } else {
-                    model.getStateInfoVBox().set(new BuyerState4(serviceProvider, trade, channel).getView().getRoot());
-                }
-                break;
-
-            case REJECTED:
-            case PEER_REJECTED:
-                model.getPhaseAndInfoVisible().set(false);
-                model.getInterruptedTradeInfo().set(true);
-                model.getInterruptTradeButtonVisible().set(false);
-                applyTradeInterruptedInfo(trade, false);
-                break;
-
-            case CANCELLED:
-            case PEER_CANCELLED:
-                model.getPhaseAndInfoVisible().set(false);
-                model.getInterruptedTradeInfo().set(true);
-                model.getInterruptTradeButtonVisible().set(false);
-                applyTradeInterruptedInfo(trade, true);
-                break;
-
-            case FAILED:
+            case FAILED -> {
                 model.getPhaseAndInfoVisible().set(false);
                 model.getError().set(true);
-                model.getInterruptTradeButtonVisible().set(false);
                 model.getShowReportToMediatorButton().set(false);
-                model.getErrorMessage().set(Res.get("muSig.openTrades.failed",
+                model.getErrorMessage().set(Res.get("bisqEasy.openTrades.failed",
                         model.getTrade().get().getErrorMessage()));
-                break;
-            case FAILED_AT_PEER:
+            }
+            case FAILED_AT_PEER -> {
                 model.getPhaseAndInfoVisible().set(false);
-                model.getInterruptTradeButtonVisible().set(false);
                 model.getShowReportToMediatorButton().set(false);
                 model.getError().set(true);
-                model.getErrorMessage().set(Res.get("muSig.openTrades.failedAtPeer",
+                model.getErrorMessage().set(Res.get("bisqEasy.openTrades.failedAtPeer",
                         model.getTrade().get().getPeersErrorMessage()));
-                break;
+            }
 
-            default:
-                log.error("State {} not handled", state.name());
-        }*/
+            default -> log.error("State {} not handled", state.name());
+        }
     }
 
     private void removeChannelRelatedBindings() {

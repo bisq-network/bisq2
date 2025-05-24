@@ -20,10 +20,10 @@ package bisq.trade.bisq_easy.protocol.events;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeEventHandlerAsMessageSender;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
-import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
-public class BisqEasyAccountDataEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyAccountDataEvent> {
+public class BisqEasyAccountDataEventHandler extends BisqEasyTradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyAccountDataEvent> {
     private String paymentAccountData;
 
     public BisqEasyAccountDataEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {

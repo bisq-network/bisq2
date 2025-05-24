@@ -54,18 +54,18 @@ public final class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHan
                 .setTradeId(trade.getId())
                 .setPeersPartialSignatures(peersPartialSignaturesMessage.toProto(true))
                 .build();
-        myDepositPsbt = DepositPsbt.fromProto(musigBlockingStub.signDepositTx(depositTxSignatureRequest));
+        myDepositPsbt = DepositPsbt.fromProto(blockingStub.signDepositTx(depositTxSignatureRequest));
 
         // *** BUYER BROADCASTS DEPOSIT TX ***
         // Before publishing we start observing the txConfirmationStatus (avoiding code duplication to handle it
         // here directly).
-        muSigTradeService.observeDepositTxConfirmationStatus(trade);
+        tradeService.observeDepositTxConfirmationStatus(trade);
 
         PublishDepositTxRequest publishDepositTxRequest = PublishDepositTxRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setDepositPsbt(myDepositPsbt.toProto(true))
                 .build();
-        Iterator<TxConfirmationStatus> depositTxConfirmationIter = musigBlockingStub.publishDepositTx(publishDepositTxRequest);
+        Iterator<TxConfirmationStatus> depositTxConfirmationIter = blockingStub.publishDepositTx(publishDepositTxRequest);
     }
 
     @Override

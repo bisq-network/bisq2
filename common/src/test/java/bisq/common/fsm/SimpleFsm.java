@@ -20,7 +20,7 @@ public class SimpleFsm<M extends FsmModel> extends Fsm<M> {
     }
 
     @Override
-    protected EventHandler newEventHandlerFromClass(Class<? extends EventHandler> handlerClass)
+    protected <E extends Event> EventHandler<E> newEventHandlerFromClass(Class<? extends EventHandler<E>> handlerClass)
             throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         return handlerClass.getDeclaredConstructor().newInstance();
     }
@@ -32,5 +32,10 @@ public class SimpleFsm<M extends FsmModel> extends Fsm<M> {
         } catch (FsmException fsmException) {
             // We swallow the exception
         }
+    }
+
+    @Override
+    protected void persist() {
+        // Ignore for test
     }
 }

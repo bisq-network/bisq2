@@ -43,12 +43,12 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
         MuSigTradeParty peer = trade.getTaker();
         PartialSignatures peersPartialSignatures = peer.getPeersPartialSignatures().orElseThrow();
 
-        mySwapTxSignatureResponse = SwapTxSignatureResponse.fromProto(musigBlockingStub.signSwapTx(SwapTxSignatureRequest.newBuilder()
+        mySwapTxSignatureResponse = SwapTxSignatureResponse.fromProto(blockingStub.signSwapTx(SwapTxSignatureRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setSwapTxInputPeersPartialSignature(ByteString.copyFrom(peersPartialSignatures.getSwapTxInputPartialSignature()))
                 .build()));
 
-        muSigTradeService.startCloseTimeout(trade, new MuSigSellersCloseTimeoutEvent());
+        tradeService.startCloseTimeout(trade, new MuSigSellersCloseTimeoutEvent());
     }
 
     @Override
@@ -67,7 +67,7 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
             FileUtils.write(path.toString(), swapTx);
         } catch (IOException e) {
             log.error("");
-            throw new RuntimeException(e);
+            throw new MuSigProtocolException(e);
         }*/
 
         send(new MuSigPaymentReceivedMessage_F(StringUtils.createUid(),

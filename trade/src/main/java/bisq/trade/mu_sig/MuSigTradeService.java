@@ -267,41 +267,33 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
     private void handleMuSigTakeOfferMessage(MuSigSetupTradeMessage_A message) {
         MuSigContract muSigContract = message.getContract();
         MuSigProtocol protocol = createProtocol(muSigContract, message.getSender(), message.getReceiver());
+        handleMuSigTradeMessage(message, protocol);
+    }
 
+    private void handleMuSigTradeMessage(MuSigTradeMessage message) {
+        String tradeId = message.getTradeId();
+        findProtocol(tradeId).ifPresentOrElse(protocol -> handleMuSigTradeMessage(message, protocol),
+                () -> {
+                    log.info("Protocol with tradeId {} not found. We add the message to pendingMessages for " +
+                            "re-processing when the next message arrives. message={}", tradeId, message);
+                    pendingMessages.add(message);
+                });
+    }
+
+    private void handleMuSigTradeMessage(MuSigTradeMessage message, MuSigProtocol protocol) {
         CompletableFuture.runAsync(() -> {
             protocol.handle(message);
-            persist();
+
+            if (pendingMessages.contains(message)) {
+                log.info("We remove message {} from pendingMessages.", message);
+                pendingMessages.remove(message);
+            }
 
             if (!pendingMessages.isEmpty()) {
                 log.info("We have pendingMessages. We try to re-process them now.");
                 pendingMessages.forEach(this::handleMuSigTradeMessage);
             }
         });
-    }
-
-    private void handleMuSigTradeMessage(MuSigTradeMessage message) {
-        String tradeId = message.getTradeId();
-        findProtocol(tradeId).ifPresentOrElse(protocol -> {
-                    CompletableFuture.runAsync(() -> {
-                        protocol.handle(message);
-                        persist();
-
-                        if (pendingMessages.contains(message)) {
-                            log.info("We remove message {} from pendingMessages.", message);
-                            pendingMessages.remove(message);
-                        }
-
-                        if (!pendingMessages.isEmpty()) {
-                            log.info("We have pendingMessages. We try to re-process them now.");
-                            pendingMessages.forEach(this::handleMuSigTradeMessage);
-                        }
-                    });
-                },
-                () -> {
-                    log.info("Protocol with tradeId {} not found. We add the message to pendingMessages for " +
-                            "re-processing when the next message arrives. message={}", tradeId, message);
-                    pendingMessages.add(message);
-                });
     }
 
 
@@ -342,10 +334,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         verifyMinVersionForTrading();
         String tradeId = trade.getId();
         findProtocol(tradeId).ifPresentOrElse(protocol -> {
-                    CompletableFuture.runAsync(() -> {
-                        protocol.handle(event);
-                        persist();
-                    });
+                    CompletableFuture.runAsync(() -> protocol.handle(event));
                 },
                 () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
     }

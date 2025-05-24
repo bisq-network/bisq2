@@ -32,17 +32,17 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public abstract class MuSigTradeEventHandlerAsMessageSender<T extends MuSigTrade, E extends Event> extends TradeEventHandlerAsMessageSender<T, E> {
-    protected final MuSigTradeService muSigTradeService;
-    protected final MusigGrpc.MusigBlockingStub musigBlockingStub;
+    protected final MuSigTradeService tradeService;
+    protected final MusigGrpc.MusigBlockingStub blockingStub;
 
     protected MuSigTradeEventHandlerAsMessageSender(ServiceProvider serviceProvider, T trade) {
         super(serviceProvider, trade);
 
-        muSigTradeService = serviceProvider.getMuSigTradeService();
-        musigBlockingStub = muSigTradeService.getMusigBlockingStub();
+        tradeService = serviceProvider.getMuSigTradeService();
+        blockingStub = tradeService.getMusigBlockingStub();
     }
 
-    public final void handle(Event event) {
+    public final void handle(E event) {
         super.handle(event);
 
         sendLogMessage();

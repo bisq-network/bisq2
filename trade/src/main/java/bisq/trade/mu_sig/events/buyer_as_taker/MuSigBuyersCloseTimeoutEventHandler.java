@@ -33,7 +33,7 @@ public final class MuSigBuyersCloseTimeoutEventHandler extends MuSigTradeEventHa
 
     @Override
     public void process(MuSigBuyersCloseTimeoutEvent event) {
-        muSigTradeService.stopCloseTimeout(trade);
+        tradeService.stopCloseTimeout(trade);
 
         // ClosureType.UNCOOPERATIVE
         // Buyer never got Message F from seller -- picks up Swap Tx from bitcoin network instead.
@@ -50,10 +50,10 @@ public final class MuSigBuyersCloseTimeoutEventHandler extends MuSigTradeEventHa
                     .setTradeId(trade.getId())
                     .setSwapTx(ByteString.copyFrom(swapTx))
                     .build();
-            myCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(closeTradeRequest));
+            myCloseTradeResponse = CloseTradeResponse.fromProto(blockingStub.closeTrade(closeTradeRequest));
         } catch (IOException e) {
             log.error("");
-            throw new RuntimeException(e);
+            throw new MuSigProtocolException(e);
         }*/
     }
 

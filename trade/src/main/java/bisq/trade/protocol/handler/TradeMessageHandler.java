@@ -17,7 +17,6 @@
 
 package bisq.trade.protocol.handler;
 
-import bisq.common.fsm.Event;
 import bisq.common.fsm.EventHandler;
 import bisq.network.identity.NetworkId;
 import bisq.trade.ServiceProvider;
@@ -26,7 +25,7 @@ import bisq.trade.protocol.messages.TradeMessage;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends TradeMessage> implements EventHandler {
+public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends TradeMessage> implements EventHandler<M> {
     protected final ServiceProvider serviceProvider;
     protected final T trade;
 
@@ -35,16 +34,11 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
         this.trade = trade;
     }
 
-    public void handle(Event event) {
-        if (event instanceof TradeMessage tradeMessage) {
-            M message = unsafeCast(tradeMessage);
-            verifyInternal(message);
-            verify(message);
-            process(message);
-            commit();
-        } else {
-            throw new IllegalArgumentException("Event must be a subclass of TradeMessage in " + getClass().getSimpleName());
-        }
+    public void handle(M message) {
+        verifyInternal(message);
+        verify(message);
+        process(message);
+        commit();
     }
 
     protected abstract void verify(M message);
@@ -61,14 +55,5 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
                 "Message sender networkID not matching the peers networkId from the trade data");
         // We verify if the sender of the message is banned at the message handler in the service class.
         // As the message handler is optional we prefer to block banned messages at the level instead of handling it here.
-    }
-
-    @SuppressWarnings("unchecked")
-    private M unsafeCast(TradeMessage tradeMessage) {
-        try {
-            return (M) tradeMessage;
-        } catch (Exception e) {
-            throw new ClassCastException("Could not cast tradeMessage to generic TradeMessage type in " + getClass().getSimpleName() + ". " + e.getMessage());
-        }
     }
 }

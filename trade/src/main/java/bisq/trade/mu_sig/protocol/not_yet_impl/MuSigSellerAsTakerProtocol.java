@@ -17,10 +17,17 @@
 
 package bisq.trade.mu_sig.protocol.not_yet_impl;
 
+import bisq.common.fsm.FsmErrorEvent;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.events.MuSigFsmErrorEventHandler;
+import bisq.trade.mu_sig.events.MuSigReportErrorMessageHandler;
+import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
 import bisq.trade.mu_sig.protocol.MuSigProtocol;
 import lombok.extern.slf4j.Slf4j;
+
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.FAILED;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.FAILED_AT_PEER;
 
 @Slf4j
 public final class MuSigSellerAsTakerProtocol extends MuSigProtocol {
@@ -28,6 +35,19 @@ public final class MuSigSellerAsTakerProtocol extends MuSigProtocol {
     public MuSigSellerAsTakerProtocol(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
         log.error("MuSigSellerAsTakerProtocol not implemented yet");
+    }
+
+    @Override
+    protected void configErrorHandling() {
+        fromAny()
+                .on(FsmErrorEvent.class)
+                .run(MuSigFsmErrorEventHandler.class)
+                .to(FAILED);
+
+        fromAny()
+                .on(MuSigReportErrorMessage.class)
+                .run(MuSigReportErrorMessageHandler.class)
+                .to(FAILED_AT_PEER);
     }
 
     public void configTransitions() {

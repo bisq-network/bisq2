@@ -67,6 +67,7 @@ public abstract class MuSigTradeMessage extends TradeMessage {
             case MUSIGPAYMENTINITIATEDMESSAGE_E -> MuSigPaymentInitiatedMessage_E.fromProto(proto);
             case MUSIGPAYMENTRECEIVEDMESSAGE_F -> MuSigPaymentReceivedMessage_F.fromProto(proto);
             case MUSIGCOOPERATIVECLOSUREMESSAGE_G -> MuSigCooperativeClosureMessage_G.fromProto(proto);
+            case MUSIGREPORTERRORMESSAGE -> MuSigReportErrorMessage.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
+
 package bisq.common.fsm;
 
 import lombok.EqualsAndHashCode;
@@ -28,9 +29,7 @@ import java.util.Set;
 
 @Slf4j
 @ToString
-
 @Getter
-
 @EqualsAndHashCode
 public class Transition {
     private final Set<State> sourceStates = new HashSet<>();
@@ -39,7 +38,7 @@ public class Transition {
     @Setter
     private Class<? extends Event> eventClass;
     @Setter
-    private Optional<Class<? extends EventHandler>> eventHandlerClass = Optional.empty();
+    private Optional<Class<? extends EventHandler<? extends Event>>> eventHandlerClass = Optional.empty();
 
     boolean isValid() {
         return !sourceStates.isEmpty() &&

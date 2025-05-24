@@ -67,7 +67,7 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
                 .setPeersNonceShares(peersNonceSharesMessage.toProto(true))
                 .addAllReceivers(mockReceivers())
                 .build();
-        myPartialSignaturesMessage = PartialSignaturesMessage.fromProto(musigBlockingStub.getPartialSignatures(partialSignaturesRequest));
+        myPartialSignaturesMessage = PartialSignaturesMessage.fromProto(blockingStub.getPartialSignatures(partialSignaturesRequest));
 
         // swapTxInputPartialSignature is not set in peersRedactedPartialSignatures, thus the
         // PartialSignaturesMessage has a cleared swapTxInputPartialSignature field.
@@ -76,11 +76,11 @@ public final class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHan
                 .setTradeId(trade.getId())
                 .setPeersPartialSignatures(peersRedactedPartialSignaturesMessage.toProto(true))
                 .build();
-        myDepositPsbt = DepositPsbt.fromProto(musigBlockingStub.signDepositTx(depositTxSignatureRequest));
+        myDepositPsbt = DepositPsbt.fromProto(blockingStub.signDepositTx(depositTxSignatureRequest));
 
         // We observe the txConfirmationStatus to get informed once the deposit tx is confirmed (gets published by the
         // buyer when they receive the MuSigSetupTradeMessage_D).
-        muSigTradeService.observeDepositTxConfirmationStatus(trade);
+        tradeService.observeDepositTxConfirmationStatus(trade);
 
         // Maybe remove makers offer
         if (serviceProvider.getSettingsService().getCloseMyOfferWhenTaken().get()) {

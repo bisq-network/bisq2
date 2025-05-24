@@ -31,7 +31,7 @@ public final class MuSigPaymentInitiatedEventHandler extends MuSigTradeEventHand
 
     @Override
     public void process(MuSigPaymentInitiatedEvent event) {
-        muSigTradeService.startCloseTimeout(trade, new MuSigBuyersCloseTimeoutEvent());
+        tradeService.startCloseTimeout(trade, new MuSigBuyersCloseTimeoutEvent());
     }
 
     @Override

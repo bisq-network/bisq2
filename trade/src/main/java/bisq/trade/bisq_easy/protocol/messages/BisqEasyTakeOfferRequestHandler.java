@@ -33,7 +33,7 @@ import bisq.offer.price.PriceUtil;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
-import bisq.trade.protocol.handler.TradeMessageHandlerAsMessageSender;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandlerAsMessageSender;
 import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,7 +46,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandlerAsMessageSender<BisqEasyTrade, BisqEasyTakeOfferRequest> {
+public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandlerAsMessageSender<BisqEasyTrade, BisqEasyTakeOfferRequest> {
     private ContractSignatureData takersContractSignatureData;
     private ContractSignatureData makersContractSignatureData;
 

@@ -33,7 +33,7 @@ public final class MuSigSellersCloseTimeoutEventHandler extends MuSigTradeEventH
 
     @Override
     public void process(MuSigSellersCloseTimeoutEvent event) {
-        muSigTradeService.stopCloseTimeout(trade);
+        tradeService.stopCloseTimeout(trade);
 
         MuSigTradeParty buyerAsTake = trade.getTaker();
 
@@ -43,7 +43,7 @@ public final class MuSigSellersCloseTimeoutEventHandler extends MuSigTradeEventH
         CloseTradeRequest closeTradeRequest = CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .build();
-        myCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(closeTradeRequest));
+        myCloseTradeResponse = CloseTradeResponse.fromProto(blockingStub.closeTrade(closeTradeRequest));
     }
 
     @Override

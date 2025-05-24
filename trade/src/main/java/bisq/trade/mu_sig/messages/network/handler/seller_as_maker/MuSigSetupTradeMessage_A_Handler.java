@@ -89,7 +89,7 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
                 .setTradeId(trade.getId())
                 .setMyRole(Role.SELLER_AS_MAKER)
                 .build();
-        myPubKeySharesResponse = PubKeySharesResponse.fromProto(musigBlockingStub.initTrade(pubKeySharesRequest));
+        myPubKeySharesResponse = PubKeySharesResponse.fromProto(blockingStub.initTrade(pubKeySharesRequest));
 
 
         Market market = trade.getMarket();
@@ -119,7 +119,7 @@ public final class MuSigSetupTradeMessage_A_Handler extends MuSigTradeMessageHan
                 .setBuyersSecurityDeposit(buyerSecurityDeposit)
                 .setSellersSecurityDeposit(sellersSecurityDeposit)
                 .build();
-        myNonceSharesMessage = NonceSharesMessage.fromProto(musigBlockingStub.getNonceShares(nonceSharesRequest));
+        myNonceSharesMessage = NonceSharesMessage.fromProto(blockingStub.getNonceShares(nonceSharesRequest));
     }
 
     @Override

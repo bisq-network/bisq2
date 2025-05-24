@@ -77,7 +77,7 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
                 .setBuyersSecurityDeposit(30_000)
                 .setSellersSecurityDeposit(30_000)
                 .build();
-        myNonceSharesMessage = NonceSharesMessage.fromProto(musigBlockingStub.getNonceShares(nonceSharesRequest));
+        myNonceSharesMessage = NonceSharesMessage.fromProto(blockingStub.getNonceShares(nonceSharesRequest));
 
         NonceSharesMessage peersNonceSharesMessage =  NonceSharesMessage.from(peersNonceShares);
 
@@ -86,7 +86,7 @@ public final class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHan
                 .setPeersNonceShares(peersNonceSharesMessage.toProto(true))
                 .addAllReceivers(mockReceivers())
                 .build();
-        myPartialSignaturesMessage = PartialSignaturesMessage.fromProto(musigBlockingStub.getPartialSignatures(partialSignaturesRequest));
+        myPartialSignaturesMessage = PartialSignaturesMessage.fromProto(blockingStub.getPartialSignatures(partialSignaturesRequest));
     }
 
     @Override

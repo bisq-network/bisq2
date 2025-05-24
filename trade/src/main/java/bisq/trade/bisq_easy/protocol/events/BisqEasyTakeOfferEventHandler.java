@@ -21,12 +21,12 @@ import bisq.common.util.StringUtils;
 import bisq.contract.ContractSignatureData;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeEventHandlerAsMessageSender;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
-import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
 import java.security.GeneralSecurityException;
 
-public class BisqEasyTakeOfferEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyTakeOfferEvent> {
+public class BisqEasyTakeOfferEventHandler extends BisqEasyTradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyTakeOfferEvent> {
 
     private ContractSignatureData contractSignatureData;
 

@@ -17,13 +17,17 @@
 
 package bisq.trade.mu_sig.protocol;
 
+import bisq.common.fsm.Event;
 import bisq.common.fsm.EventHandler;
+import bisq.common.fsm.FsmException;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.protocol.TradeProtocol;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
 
+@Slf4j
 public abstract class MuSigProtocol extends TradeProtocol<MuSigTrade> {
     public static final String VERSION = "1.0.0";
 
@@ -32,17 +36,28 @@ public abstract class MuSigProtocol extends TradeProtocol<MuSigTrade> {
     }
 
     @Override
-    protected EventHandler newEventHandlerFromClass(Class<? extends EventHandler> handlerClass) {
+    protected <E extends Event> EventHandler<E> newEventHandlerFromClass(Class<? extends EventHandler<E>> handlerClass) {
         try {
             return handlerClass.getDeclaredConstructor(ServiceProvider.class, MuSigTrade.class).newInstance(serviceProvider, model);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
                  NoSuchMethodException e) {
-            throw new RuntimeException(e);
+            throw new MuSigProtocolException(e);
         }
     }
 
     @Override
-    protected void configErrorHandling() {
+    public void handle(Event event) {
+        try {
+            super.handle(event);
+        } catch (FsmException fsmException) {
+            // We ignore the exception as we handle FsmExceptions in the base class as an error state.
+            // The client need to listen for that state for error handling.
+        }
+    }
+
+    @Override
+    protected void persist() {
+        getServiceProvider().getMuSigTradeService().persist();
     }
 
     public MuSigTrade getTrade() {

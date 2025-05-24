@@ -18,7 +18,6 @@
 package bisq.trade.mu_sig.handler;
 
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
-import bisq.common.fsm.Event;
 import bisq.network.SendMessageResult;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -33,18 +32,18 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public abstract class MuSigTradeMessageHandlerAsMessageSender<T extends MuSigTrade, M extends TradeMessage> extends TradeMessageHandlerAsMessageSender<T, M> {
-    protected final MuSigTradeService muSigTradeService;
-    protected final MusigGrpc.MusigBlockingStub musigBlockingStub;
+    protected final MuSigTradeService tradeService;
+    protected final MusigGrpc.MusigBlockingStub blockingStub;
 
     protected MuSigTradeMessageHandlerAsMessageSender(ServiceProvider serviceProvider, T trade) {
         super(serviceProvider, trade);
 
-        muSigTradeService = serviceProvider.getMuSigTradeService();
-        musigBlockingStub = muSigTradeService.getMusigBlockingStub();
+        tradeService = serviceProvider.getMuSigTradeService();
+        blockingStub = tradeService.getMusigBlockingStub();
     }
 
-    public final void handle(Event event) {
-        super.handle(event);
+    public final void handle(M message) {
+        super.handle(message);
 
         sendLogMessage();
     }
