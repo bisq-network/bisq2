@@ -22,8 +22,8 @@ import bisq.common.fsm.FsmException;
 import bisq.common.util.ExceptionUtil;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeEventHandlerAsMessageSender;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage;
-import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.common.util.StringUtils.createUid;
@@ -32,7 +32,7 @@ import static bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage.
 import static bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage.MAX_LENGTH_STACKTRACE;
 
 @Slf4j
-public class BisqEasyFsmErrorEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, FsmErrorEvent> {
+public class BisqEasyFsmErrorEventHandler extends BisqEasyTradeEventHandlerAsMessageSender<BisqEasyTrade, FsmErrorEvent> {
     private String errorMessage;
     private String errorStackTrace;
 

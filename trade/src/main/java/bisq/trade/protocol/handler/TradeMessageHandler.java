@@ -54,8 +54,7 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
 
     protected abstract void commit();
 
-    protected void persist() {
-    }
+    protected abstract void persist();
 
     private void verifyInternal(M message) {
         checkArgument(message.getTradeId().equals(trade.getId()),

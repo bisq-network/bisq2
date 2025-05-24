@@ -20,10 +20,10 @@ package bisq.trade.bisq_easy.protocol.events;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeEventHandlerAsMessageSender;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmFiatReceiptMessage;
-import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
-public class BisqEasyConfirmFiatReceiptEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyConfirmFiatReceiptEvent> {
+public class BisqEasyConfirmFiatReceiptEventHandler extends BisqEasyTradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyConfirmFiatReceiptEvent> {
     public BisqEasyConfirmFiatReceiptEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
@@ -34,6 +34,11 @@ public class BisqEasyConfirmFiatReceiptEventHandler extends TradeEventHandlerAsM
 
     @Override
     protected void commit() {
+    }
+
+    @Override
+    protected void persist() {
+        // Do nothing as nothing was committed
     }
 
     @Override

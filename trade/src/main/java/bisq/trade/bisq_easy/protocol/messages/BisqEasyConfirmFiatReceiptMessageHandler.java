@@ -19,11 +19,11 @@ package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.handler.TradeMessageHandler;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyConfirmFiatReceiptMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyConfirmFiatReceiptMessage> {
+public class BisqEasyConfirmFiatReceiptMessageHandler extends BisqEasyTradeMessageHandler<BisqEasyTrade, BisqEasyConfirmFiatReceiptMessage> {
     public BisqEasyConfirmFiatReceiptMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
@@ -38,5 +38,10 @@ public class BisqEasyConfirmFiatReceiptMessageHandler extends TradeMessageHandle
 
     @Override
     protected void commit() {
+    }
+
+    @Override
+    protected void persist() {
+        // Do nothing as nothing was committed
     }
 }
