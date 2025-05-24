@@ -34,14 +34,11 @@ public abstract class TradeEventHandler<T extends Trade<?, ?, ?>, E extends Even
     public void handle(Event event) {
         process(unsafeCast(event));
         commit();
-        persist();
     }
 
     protected abstract void process(E event);
 
     protected abstract void commit();
-
-    protected abstract void persist();
 
     @SuppressWarnings("unchecked")
     private E unsafeCast(Event event) {

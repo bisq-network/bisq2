@@ -54,6 +54,13 @@ public abstract class BisqEasyProtocol extends TradeProtocol<BisqEasyTrade> {
             // (network layer) would not make sense. As we do not want to distinguish at the client if the error came
             // from a message or from a user event we prefer to use the same mechanism for both sources and
             // therefor do not throw an exception either.
+        } finally {
+            // We persist after the handle call to persist the state change. We call that in finally to ensure that exceptional cases are covered as well.
+            getServiceProvider().getMuSigTradeService().persist();
         }
+    }
+
+    public BisqEasyTrade getTrade() {
+        return getModel();
     }
 }

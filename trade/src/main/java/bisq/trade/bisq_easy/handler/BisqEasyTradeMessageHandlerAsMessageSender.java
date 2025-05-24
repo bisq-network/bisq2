@@ -54,9 +54,4 @@ public abstract class BisqEasyTradeMessageHandlerAsMessageSender<T extends BisqE
                 .map(channel ->
                         openTradeChannelService.sendTradeLogMessage(encoded, channel));
     }
-
-    @Override
-    protected void persist() {
-        tradeService.persist();
-    }
 }

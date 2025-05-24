@@ -37,11 +37,6 @@ public class BisqEasyConfirmFiatSentEventHandler extends BisqEasyTradeEventHandl
     }
 
     @Override
-    protected void persist() {
-        // Do nothing as nothing was committed
-    }
-
-    @Override
     protected void sendMessage() {
         send(new BisqEasyConfirmFiatSentMessage(StringUtils.createUid(),
                 trade.getId(),

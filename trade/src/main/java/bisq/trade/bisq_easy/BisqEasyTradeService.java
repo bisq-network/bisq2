@@ -288,7 +288,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
         checkArgument(!tradeExists(bisqEasyTrade.getId()), "A trade with that ID exists already");
         persistableStore.addTrade(bisqEasyTrade);
-
+        persist();
         return createAndAddTradeProtocol(bisqEasyTrade);
     }
 
@@ -395,6 +395,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         checkArgument(findProtocol(tradeId).isEmpty(), "We received the BisqEasyTakeOfferRequest for an already existing protocol");
         checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
         persistableStore.addTrade(bisqEasyTrade);
+        persist();
         return createAndAddTradeProtocol(bisqEasyTrade);
     }
 

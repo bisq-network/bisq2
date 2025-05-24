@@ -17,13 +17,17 @@
 
 package bisq.trade.mu_sig.protocol;
 
+import bisq.common.fsm.Event;
 import bisq.common.fsm.EventHandler;
+import bisq.common.fsm.FsmException;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.protocol.TradeProtocol;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
 
+@Slf4j
 public abstract class MuSigProtocol extends TradeProtocol<MuSigTrade> {
     public static final String VERSION = "1.0.0";
 
@@ -37,12 +41,25 @@ public abstract class MuSigProtocol extends TradeProtocol<MuSigTrade> {
             return handlerClass.getDeclaredConstructor(ServiceProvider.class, MuSigTrade.class).newInstance(serviceProvider, model);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
                  NoSuchMethodException e) {
-            throw new RuntimeException(e);
+            throw new MuSigProtocolException(e);
         }
     }
 
     @Override
-    protected void configErrorHandling() {
+    public void handle(Event event) {
+        try {
+            super.handle(event);
+        } catch (FsmException fsmException) {
+            // We swallow the exception as we handle exceptions as an error state.
+            // The client need to listen for that state for error handling.
+            // In case we get the error from the network message throwing the exception to the caller
+            // (network layer) would not make sense. As we do not want to distinguish at the client if the error came
+            // from a message or from a user event we prefer to use the same mechanism for both sources and
+            // therefor do not throw an exception either.
+        } finally {
+            // We persist after the handle call to persist the state change. We call that in finally to ensure that exceptional cases are covered as well.
+            getServiceProvider().getMuSigTradeService().persist();
+        }
     }
 
     public MuSigTrade getTrade() {

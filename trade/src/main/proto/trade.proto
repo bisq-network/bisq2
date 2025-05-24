@@ -224,7 +224,13 @@ message MuSigTradeMessage {
     MuSigPaymentInitiatedMessage_E muSigPaymentInitiatedMessage_E = 24;
     MuSigPaymentReceivedMessage_F muSigPaymentReceivedMessage_F = 25;
     MuSigCooperativeClosureMessage_G muSigCooperativeClosureMessage_G = 26;
+    MuSigReportErrorMessage muSigReportErrorMessage = 27;
   }
+}
+
+message MuSigReportErrorMessage {
+  string errorMessage = 1;
+  string stackTrace = 2;
 }
 
 message MuSigSetupTradeMessage_A {

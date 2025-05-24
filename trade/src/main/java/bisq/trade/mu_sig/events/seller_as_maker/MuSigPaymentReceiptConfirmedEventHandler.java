@@ -67,7 +67,7 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
             FileUtils.write(path.toString(), swapTx);
         } catch (IOException e) {
             log.error("");
-            throw new RuntimeException(e);
+            throw new MuSigProtocolException(e);
         }*/
 
         send(new MuSigPaymentReceivedMessage_F(StringUtils.createUid(),

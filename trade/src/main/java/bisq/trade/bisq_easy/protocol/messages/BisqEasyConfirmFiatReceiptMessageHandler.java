@@ -39,9 +39,4 @@ public class BisqEasyConfirmFiatReceiptMessageHandler extends BisqEasyTradeMessa
     @Override
     protected void commit() {
     }
-
-    @Override
-    protected void persist() {
-        // Do nothing as nothing was committed
-    }
 }
