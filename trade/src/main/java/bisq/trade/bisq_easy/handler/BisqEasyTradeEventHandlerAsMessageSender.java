@@ -34,7 +34,7 @@ public abstract class BisqEasyTradeEventHandlerAsMessageSender<T extends BisqEas
         tradeService = serviceProvider.getBisqEasyTradeService();
     }
 
-    public final void handle(Event event) {
+    public final void handle(E event) {
         super.handle(event);
     }
 }

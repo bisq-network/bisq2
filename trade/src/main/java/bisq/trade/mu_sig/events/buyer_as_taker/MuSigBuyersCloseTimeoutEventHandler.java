@@ -50,7 +50,7 @@ public final class MuSigBuyersCloseTimeoutEventHandler extends MuSigTradeEventHa
                     .setTradeId(trade.getId())
                     .setSwapTx(ByteString.copyFrom(swapTx))
                     .build();
-            myCloseTradeResponse = CloseTradeResponse.fromProto(musigBlockingStub.closeTrade(closeTradeRequest));
+            myCloseTradeResponse = CloseTradeResponse.fromProto(blockingStub.closeTrade(closeTradeRequest));
         } catch (IOException e) {
             log.error("");
             throw new MuSigProtocolException(e);

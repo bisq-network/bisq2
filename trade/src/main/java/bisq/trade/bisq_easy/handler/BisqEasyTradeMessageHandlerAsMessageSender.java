@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy.handler;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -35,7 +34,7 @@ public abstract class BisqEasyTradeMessageHandlerAsMessageSender<T extends BisqE
         tradeService = serviceProvider.getBisqEasyTradeService();
     }
 
-    public final void handle(Event event) {
-        super.handle(event);
+    public final void handle(M message) {
+        super.handle(message);
     }
 }

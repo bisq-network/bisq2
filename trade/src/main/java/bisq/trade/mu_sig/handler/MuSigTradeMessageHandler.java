@@ -18,7 +18,6 @@
 package bisq.trade.mu_sig.handler;
 
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
-import bisq.common.fsm.Event;
 import bisq.network.SendMessageResult;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -43,8 +42,8 @@ public abstract class MuSigTradeMessageHandler<T extends MuSigTrade, M extends T
         blockingStub = tradeService.getMusigBlockingStub();
     }
 
-    public final void handle(Event event) {
-        super.handle(event);
+    public final void handle(M message) {
+        super.handle(message);
 
         sendLogMessage();
     }

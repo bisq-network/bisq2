@@ -81,6 +81,8 @@ import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+//TODO Consider to use async calls at handle (CompletableFuture.runAsync(()...)
+
 @Slf4j
 @Getter
 public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStore>, Service, ConfidentialMessageService.Listener {

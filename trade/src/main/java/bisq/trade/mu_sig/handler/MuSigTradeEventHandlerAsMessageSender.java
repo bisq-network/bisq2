@@ -42,7 +42,7 @@ public abstract class MuSigTradeEventHandlerAsMessageSender<T extends MuSigTrade
         blockingStub = tradeService.getMusigBlockingStub();
     }
 
-    public final void handle(Event event) {
+    public final void handle(E event) {
         super.handle(event);
 
         sendLogMessage();
