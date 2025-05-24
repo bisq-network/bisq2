@@ -67,6 +67,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     private Label marketListTitle, marketHeaderIcon, marketTitle, marketDescription, marketPrice;
     private RichTableView<MuSigOfferListItem> muSigOfferListView;
     private BisqTableView<MarketItem> marketListView;
+    private Button createOfferButton;
     private Subscription selectedMarketItemPin, marketListViewSelectionPin;
 
     public MuSigOfferbookView(MuSigOfferbookModel model, MuSigOfferbookController controller) {
@@ -114,6 +115,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 controller.onSelectMarketItem(item);
             }
         });
+
+        createOfferButton.setOnAction(e -> controller.onCreateOffer());
     }
 
     @Override
@@ -126,6 +129,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
         selectedMarketItemPin.unsubscribe();
         marketListViewSelectionPin.unsubscribe();
+
+        createOfferButton.setOnAction(null);
     }
 
     private void crateAndConfigMuSigOfferListView() {
@@ -470,11 +475,17 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         HBox headerTitle = new HBox(10, marketHeaderIcon, titleAndDescription);
         headerTitle.setAlignment(Pos.CENTER_LEFT);
 
-//        createOfferButton = createAndGetCreateOfferButton();
-//        createOfferButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
+        createOfferButton = createAndGetCreateOfferButton();
+        createOfferButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
 
         HBox.setHgrow(headerTitle, Priority.ALWAYS);
-        titleHBox.getChildren().setAll(headerTitle/*, createOfferButton, ellipsisMenu, notificationsSettingsMenu*/);
+        titleHBox.getChildren().setAll(headerTitle, createOfferButton);
+    }
+
+    private Button createAndGetCreateOfferButton() {
+        Button createOfferButton = new Button(Res.get("offer.createOffer"));
+        createOfferButton.getStyleClass().addAll("create-offer-button", "normal-text");
+        return createOfferButton;
     }
 
     private void updateAppliedFiltersSectionStyles(boolean shouldShowAppliedFilters) {

@@ -55,7 +55,7 @@ public class MuSigCreateOfferModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE;
+        return NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET;
     }
 
     public void reset() {
