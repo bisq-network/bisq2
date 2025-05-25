@@ -46,6 +46,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 public class MuSigOfferbookController implements Controller {
     @Getter
     private final MuSigOfferbookView view;
@@ -155,8 +157,9 @@ public class MuSigOfferbookController implements Controller {
     }
 
     void onCreateOffer() {
-        Market market = model.getSelectedMarketItem().get().getMarket();
-        Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER, new MuSigCreateOfferController.InitData(market));
+        MarketItem marketItem = model.getSelectedMarketItem().get();
+        checkArgument(marketItem != null, "No selected market item");
+        Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER, new MuSigCreateOfferController.InitData(marketItem.getMarket()));
     }
 
     private void maybeSelectFirst() {
