@@ -63,7 +63,7 @@ public class MuSigOfferbookController implements Controller {
     private final IdentityService identityService;
     private final BannedUserService bannedUserService;
     private final FavouriteMarketsService favouriteMarketsService;
-    private Pin offersPin;
+    private Pin offersPin, selectedMarketPin;
     private Subscription selectedMarketItemPin;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
@@ -134,6 +134,15 @@ public class MuSigOfferbookController implements Controller {
             if (selectedMarketItem != null) {
                 updateFilteredMuSigOfferListItemsPredicate();
                 updateMarketData(selectedMarketItem);
+                muSigService.getMuSigSelectedMarket().set(selectedMarketItem.getMarket());
+            }
+        });
+        selectedMarketPin = muSigService.getMuSigSelectedMarket().addObserver(market -> {
+            if (market != null) {
+                model.getMarketItems().stream()
+                        .filter(item -> item.getMarket().equals(market))
+                        .findAny()
+                        .ifPresent(item -> model.getSelectedMarketItem().set(item));
             }
         });
     }
@@ -146,6 +155,7 @@ public class MuSigOfferbookController implements Controller {
         model.getMuSigOfferIds().clear();
 
         selectedMarketItemPin.unsubscribe();
+        selectedMarketPin.unbind();
     }
 
     void onSelectMarketItem(MarketItem marketItem) {

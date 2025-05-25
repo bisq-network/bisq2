@@ -166,7 +166,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         }
         model.getSelectedMarketListItem().set(item);
         model.getSelectedMarket().set(item.getMarket());
-        // TODO: Update market in offerbook
+        muSigService.getMuSigSelectedMarket().set(item.getMarket());
     }
 
     private void setDirection(Direction direction) {
