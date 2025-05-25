@@ -33,6 +33,7 @@ import bisq.network.p2p.services.peer_group.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peer_group.keep_alive.KeepAliveService;
 import bisq.network.tor.TorTransportConfig;
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigException;
 import lombok.Getter;
 
 import java.nio.file.Path;
@@ -78,6 +79,15 @@ public final class NetworkServiceConfig {
         Map<TransportType, Integer> defaultPortByTransportType = createDefaultPortByTransportType(config);
         Map<TransportType, TransportConfig> configByTransportType = createConfigByTransportType(config, baseDir);
 
+        Optional<String> clearPublicAddress = Optional.empty();
+        try {
+            clearPublicAddress = Optional.of(config.getString("clearPublicAddress"));
+         } catch (ConfigException.Missing e) {
+            System.out.println("No clearPublicAddress configured, using default behavior");
+        } catch (ConfigException e) {
+            System.out.println("Invalid clearPublicAddress configuration: " + e.getMessage());
+        }
+
         return new NetworkServiceConfig(baseDir.toAbsolutePath().toString(),
                 config.getInt("version"),
                 supportedTransportTypes,
@@ -89,7 +99,8 @@ public final class NetworkServiceConfig {
                 peerGroupServiceConfigByTransport,
                 defaultPortByTransportType,
                 seedAddressesByTransport,
-                Optional.empty());
+                Optional.empty(),
+                clearPublicAddress);
     }
 
     private static Map<TransportType, Integer> createDefaultPortByTransportType(Config config) {
@@ -177,6 +188,7 @@ public final class NetworkServiceConfig {
     private final Map<TransportType, Integer> defaultPortByTransportType;
     private final Map<TransportType, Set<Address>> seedAddressesByTransport;
     private final Optional<String> socks5ProxyAddress;
+    private final Optional<String> publicAddress;
 
     public NetworkServiceConfig(String baseDir,
                                 int version,
@@ -189,7 +201,8 @@ public final class NetworkServiceConfig {
                                 Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport,
                                 Map<TransportType, Integer> defaultPortByTransportType,
                                 Map<TransportType, Set<Address>> seedAddressesByTransport,
-                                Optional<String> socks5ProxyAddress) {
+                                Optional<String> socks5ProxyAddress,
+                                Optional<String> publicAddress) {
         this.baseDir = baseDir;
         this.version = version;
         this.supportedTransportTypes = supportedTransportTypes;
@@ -202,6 +215,7 @@ public final class NetworkServiceConfig {
         this.defaultPortByTransportType = filterMap(supportedTransportTypes, defaultPortByTransportType);
         this.seedAddressesByTransport = filterMap(supportedTransportTypes, seedAddressesByTransport);
         this.socks5ProxyAddress = socks5ProxyAddress;
+        this.publicAddress = publicAddress;
     }
 
     // In case our config contains not supported transport types we remove them
@@ -210,5 +224,9 @@ public final class NetworkServiceConfig {
         return map.entrySet().stream()
                 .filter(e -> supportedTransportTypes.contains(e.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    public Optional<String> getPublicAddress() {
+        return publicAddress;
     }
 }

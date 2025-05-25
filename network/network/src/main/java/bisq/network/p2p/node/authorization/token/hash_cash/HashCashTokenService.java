@@ -76,6 +76,11 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
                                 String connectionId,
                                 String myAddress) {
 
+        if (!(authorizationToken instanceof HashCashToken)) {
+            log.warn("Token is not a HashCashToken");
+            return false;
+        }
+
         HashCashToken hashCashToken = (HashCashToken) authorizationToken;
         ProofOfWork proofOfWork = hashCashToken.getProofOfWork();
         int messageCounter = hashCashToken.getMessageCounter();
@@ -97,6 +102,7 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
         // Verify payload
         byte[] payload = getPayload(message);
         byte[] proofOfWorkPayload = proofOfWork.getPayload();
+
         if (!Arrays.equals(payload, proofOfWorkPayload)) {
             // We try again with ignoring ExcludeForHash annotations by using the serialize() method.
             byte[] payloadWithoutUsingExcludeForHash = message.serialize();
@@ -119,6 +125,15 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
                 return false;
             }
         }
+
+
+        byte[] expectedChallenge = getChallenge(myAddress, messageCounter);
+        byte[] actualChallenge = proofOfWork.getChallenge();
+
+        log.debug("Challenge verification: myAddress='{}', messageCounter={}, expectedChallenge={}, actualChallenge={}",
+                myAddress, messageCounter,
+                Hex.encode(expectedChallenge),
+                Hex.encode(actualChallenge));
 
         // Verify challenge
         if (!Arrays.equals(getChallenge(myAddress, messageCounter), proofOfWork.getChallenge())) {
@@ -221,8 +236,19 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
     }
 
     private byte[] getChallenge(String peerAddress, int messageCounter) {
-        return DigestUtil.sha256(ByteArrayUtils.concat(peerAddress.getBytes(Charsets.UTF_8),
-                BigInteger.valueOf(messageCounter).toByteArray()));
+        byte[] addressBytes = peerAddress.getBytes(Charsets.UTF_8);
+        byte[] counterBytes = BigInteger.valueOf(messageCounter).toByteArray();
+        byte[] combined = ByteArrayUtils.concat(addressBytes, counterBytes);
+        byte[] challenge = DigestUtil.sha256(combined);
+        
+        log.debug("Challenge calculation: peerAddress={}, messageCounter={}, addressBytes={}, counterBytes={}, combined={}, challenge={}",
+                peerAddress, messageCounter, 
+                Hex.encode(addressBytes), 
+                Hex.encode(counterBytes),
+                Hex.encode(combined),
+                Hex.encode(challenge));
+            
+        return challenge;
     }
 
     private double calculateDifficulty(EnvelopePayloadMessage message, NetworkLoad networkLoad) {
