@@ -164,7 +164,7 @@ public abstract class MuSigOfferbookController<M extends MuSigOfferbookModel, V 
     }
 
     void onCreateOffer() {
-        Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER, new MuSigCreateOfferController.InitData(model.getDirection(), model.getSelectedMarket().get()));
+        Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER, new MuSigCreateOfferController.InitData(model.getSelectedMarket().get()));
     }
 
     void onTakeOffer(MuSigOffer offer) {

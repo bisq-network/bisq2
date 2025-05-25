@@ -25,6 +25,9 @@ import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.mu_sig.MuSigService;
@@ -42,6 +45,8 @@ import org.fxmisc.easybind.Subscription;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 public class MuSigOfferbookController implements Controller {
     @Getter
@@ -149,6 +154,12 @@ public class MuSigOfferbookController implements Controller {
             settingsService.setSelectedMarket(market);
             settingsService.setCookie(getSelectedMarketCookieKey(), market.getMarketCodes());
         }
+    }
+
+    void onCreateOffer() {
+        MarketItem marketItem = model.getSelectedMarketItem().get();
+        checkArgument(marketItem != null, "No selected market item");
+        Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER, new MuSigCreateOfferController.InitData(marketItem.getMarket()));
     }
 
     private void maybeSelectFirst() {
