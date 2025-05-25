@@ -103,26 +103,42 @@ public class Node implements Connection.Handler {
 
     @Getter
     @ToString
-    public static final class Config {
+    public static class Config {
         private final TransportType transportType;
         private final Set<TransportType> supportedTransportTypes;
         private final Set<Feature> features;
         private final TransportConfig transportConfig;
-        private final int defaultNodeSocketTimeout; // in ms
-        private final int userNodeSocketTimeout; // in ms
-        private final int devModeDelayInMs;
-        private final int sendMessageThrottleTime;
-        private final int receiveMessageThrottleTime;
+        private final int defaultNodeSocketTimeout;
+        private final int userNodeSocketTimeout;
+        private final long devModeDelayInMs;
+        private final long sendMessageThrottleTime;
+        private final long receiveMessageThrottleTime;
+        private final Optional<String> publicAddress;
 
         public Config(TransportType transportType,
-                      Set<TransportType> supportedTransportTypes,
-                      Set<Feature> features,
-                      TransportConfig transportConfig,
-                      int defaultNodeSocketTimeout,
-                      int userNodeSocketTimeout,
-                      int devModeDelayInMs,
-                      int sendMessageThrottleTime,
-                      int receiveMessageThrottleTime) {
+                     Set<TransportType> supportedTransportTypes,
+                     Set<Feature> features,
+                     TransportConfig transportConfig,
+                     int defaultNodeSocketTimeout,
+                     int userNodeSocketTimeout,
+                     long devModeDelayInMs,
+                     long sendMessageThrottleTime,
+                     long receiveMessageThrottleTime) {
+            this(transportType, supportedTransportTypes, features, transportConfig,
+                 defaultNodeSocketTimeout, userNodeSocketTimeout, devModeDelayInMs,
+                 sendMessageThrottleTime, receiveMessageThrottleTime, Optional.empty());
+        }
+
+        public Config(TransportType transportType,
+                     Set<TransportType> supportedTransportTypes,
+                     Set<Feature> features,
+                     TransportConfig transportConfig,
+                     int defaultNodeSocketTimeout,
+                     int userNodeSocketTimeout,
+                     long devModeDelayInMs,
+                     long sendMessageThrottleTime,
+                     long receiveMessageThrottleTime,
+                     Optional<String> publicAddress) {
             this.transportType = transportType;
             this.supportedTransportTypes = supportedTransportTypes;
             this.features = features;
@@ -132,6 +148,11 @@ public class Node implements Connection.Handler {
             this.devModeDelayInMs = devModeDelayInMs;
             this.sendMessageThrottleTime = sendMessageThrottleTime;
             this.receiveMessageThrottleTime = receiveMessageThrottleTime;
+            this.publicAddress = publicAddress;
+        }
+
+        public Optional<String> getPublicAddress() {
+            return publicAddress;
         }
     }
 
@@ -168,6 +189,7 @@ public class Node implements Connection.Handler {
     public final NetworkLoadSnapshot networkLoadSnapshot;
     private final Config config;
     private Optional<CountDownLatch> startingStateLatch = Optional.empty();
+    private final Optional<String> publicAddress;
 
     public Node(NetworkId networkId,
                 boolean isDefaultNode,
@@ -176,7 +198,8 @@ public class Node implements Connection.Handler {
                 KeyBundleService keyBundleService,
                 TransportService transportService,
                 NetworkLoadSnapshot networkLoadSnapshot,
-                AuthorizationService authorizationService) {
+                AuthorizationService authorizationService,
+                Optional<String> publicAddress) {
         this.networkId = networkId;
         keyBundle = keyBundleService.getOrCreateKeyBundle(networkId.getKeyId());
         this.isDefaultNode = isDefaultNode;
@@ -185,11 +208,12 @@ public class Node implements Connection.Handler {
         supportedTransportTypes = config.getSupportedTransportTypes();
         features = config.getFeatures();
         socketTimeout = isDefaultNode ? config.getDefaultNodeSocketTimeout() : config.getUserNodeSocketTimeout();
-        devModeDelayInMs = config.getDevModeDelayInMs();
+        devModeDelayInMs = Math.toIntExact(config.getDevModeDelayInMs());
         this.banList = banList;
         this.transportService = transportService;
         this.authorizationService = authorizationService;
         this.networkLoadSnapshot = networkLoadSnapshot;
+        this.publicAddress = publicAddress;
     }
 
 
@@ -243,7 +267,25 @@ public class Node implements Connection.Handler {
 
     private void createServerAndListen() {
         ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, keyBundle);
-        myCapability = Optional.of(Capability.myCapability(serverSocketResult.getAddress(), new ArrayList<>(supportedTransportTypes), new ArrayList<>(features)));
+        
+        // Modify the server address if we have a public address configured
+        Address serverAddress;
+        if (publicAddress.isPresent()) {
+            String[] parts = publicAddress.get().split(":");
+            String host = parts[0];
+            int port = parts.length > 1 ? Integer.parseInt(parts[1]) : serverSocketResult.getAddress().getPort();
+            serverAddress = new Address(host, port);
+            log.info("Using configured public address for server: {}", serverAddress);
+        } else {
+            serverAddress = serverSocketResult.getAddress();
+            log.info("Using default server address: {}", serverAddress);
+        }
+        
+        // Create capability with the (potentially modified) server address
+        myCapability = Optional.of(Capability.myCapability(serverAddress, 
+                                                         new ArrayList<>(supportedTransportTypes), 
+                                                         new ArrayList<>(features)));
+        
         server = Optional.of(new Server(serverSocketResult,
                 socket -> onClientSocket(socket, serverSocketResult, myCapability.get()),
                 exception -> {
@@ -726,6 +768,20 @@ public class Node implements Connection.Handler {
     }
 
     public Optional<Address> findMyAddress() {
+        if (publicAddress.isPresent() && server.isPresent()) {
+            // If we have a public address configured, use it with the server's port
+            String[] parts = publicAddress.get().split(":");
+            String host = parts[0];
+            int port;
+            if (parts.length > 1) {
+                port = Integer.parseInt(parts[1]);
+            } else {
+                port = server.get().getAddress().getPort();
+            }
+            TransportType transportType = server.get().getAddress().getTransportType();
+            return Optional.of(new Address(host, port));
+        }
+        // Fall back to the server's address if no public address is configured
         return server.map(Server::getAddress);
     }
 

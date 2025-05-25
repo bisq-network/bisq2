@@ -77,7 +77,18 @@ public class NodesById implements Node.Listener {
     /* --------------------------------------------------------------------- */
 
     public Node createAndConfigNode(NetworkId networkId, boolean isDefaultNode) {
-        Node node = new Node(networkId, isDefaultNode, nodeConfig, banList, keyBundleService, transportService, networkLoadSnapshot, authorizationService);
+        // Get the nullable clearnet public address from the node config
+        Optional<String> publicAddress = nodeConfig.getPublicAddress();
+        Node node = new Node(networkId, 
+                            isDefaultNode, 
+                            nodeConfig, 
+                            banList, 
+                            keyBundleService, 
+                            transportService, 
+                            networkLoadSnapshot, 
+                            authorizationService,
+                            publicAddress);
+        
         map.put(networkId, node);
         node.addListener(this);
         listeners.forEach(listener -> {

@@ -151,7 +151,16 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
 
         seedAddressesByTransportFromConfig = config.getSeedAddressesByTransport();
-        serviceNodesByTransport = new ServiceNodesByTransport(config.getConfigByTransportType(),
+
+        Optional<String> publicAddress = config.getPublicAddress();
+        if (publicAddress.isEmpty()) {
+            log.error("CLEAR: No Public Address Configured");
+        } else {
+            log.info("Using configured public address: {}", publicAddress.get());
+        }
+
+        serviceNodesByTransport = new ServiceNodesByTransport(
+                config.getConfigByTransportType(),
                 config.getServiceNodeConfig(),
                 config.getPeerGroupServiceConfigByTransport(),
                 seedAddressesByTransportFromConfig,
@@ -166,7 +175,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 dataService,
                 messageDeliveryStatusService,
                 resendMessageService,
-                memoryReportService);
+                memoryReportService,
+                publicAddress);  // Pass the public address
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.CACHE, persistableStore);
     }
 

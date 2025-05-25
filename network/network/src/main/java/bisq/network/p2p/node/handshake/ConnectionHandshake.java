@@ -232,6 +232,7 @@ public final class ConnectionHandshake {
                     peerAddress.getFullAddress(),
                     0,
                     peersFeatures);
+            log.debug("Client creating token with peer address: {}", peerAddress.getFullAddress());
             NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
             long ts = System.currentTimeMillis();
             networkEnvelopeSocket.send(requestNetworkEnvelope);
@@ -320,8 +321,12 @@ public final class ConnectionHandshake {
                     NetworkLoad.INITIAL_NETWORK_LOAD,
                     StringUtils.createUid(),
                     myAddress.getFullAddress());
+            log.debug("Server verifying token with my address: {}", myAddress.getFullAddress());
             if (!isAuthorized) {
-                throw new ConnectionException(AUTHORIZATION_FAILED, "Authorization of inbound connection request failed. AuthorizationToken=" + requestNetworkEnvelope.getAuthorizationToken());
+                log.warn("Authorization failed. Server address: {}, Client capability address: {}", 
+                        myAddress.getFullAddress(), request.getCapability().getAddress().getFullAddress());
+                throw new ConnectionException(AUTHORIZATION_FAILED,
+                        "Authorization of inbound connection request failed. AuthorizationToken=" + requestNetworkEnvelope.getAuthorizationToken());
             }
 
             if (!OnionAddressValidation.verify(myAddress, peerAddress, request.getSignatureDate(), request.getAddressOwnershipProof())) {

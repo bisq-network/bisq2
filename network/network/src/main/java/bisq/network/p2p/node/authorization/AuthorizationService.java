@@ -114,6 +114,9 @@ public class AuthorizationService {
             log.warn("Not supported authorizationTokenType {}", authorizationTokenType);
             return false;
         }
+        
+        log.debug("Verifying authorization with my address: {}", myAddress);
+        
         return supportedServices.get(authorizationTokenType).isAuthorized(message,
                 authorizationToken,
                 currentNetworkLoad,

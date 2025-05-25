@@ -89,7 +89,8 @@ public class ServiceNodesByTransport {
                                    Optional<DataService> dataService,
                                    Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
                                    Optional<ResendMessageService> resendMessageService,
-                                   MemoryReportService memoryReportService) {
+                                   MemoryReportService memoryReportService,
+                                   Optional<String> publicAddress) {
         this.supportedTransportTypes = supportedTransportTypes;
 
         authorizationService = new AuthorizationService(authorizationServiceConfig,
@@ -107,7 +108,8 @@ public class ServiceNodesByTransport {
                     transportConfig.getUserNodeSocketTimeout(),
                     transportConfig.getDevModeDelayInMs(),
                     transportConfig.getSendMessageThrottleTime(),
-                    transportConfig.getReceiveMessageThrottleTime());
+                    transportConfig.getReceiveMessageThrottleTime(),
+                    publicAddress);  // Pass the public address
             Set<Address> seedAddresses = seedAddressesByTransport.get(transportType);
             checkNotNull(seedAddresses, "Seed nodes must be setup for %s", transportType);
             PeerGroupManager.Config peerGroupServiceConfig = peerGroupServiceConfigByTransport.get(transportType);
