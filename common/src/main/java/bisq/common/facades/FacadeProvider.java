@@ -17,6 +17,8 @@
 
 package bisq.common.facades;
 
+import bisq.common.network.AndroidDeviceLocalhostFacade;
+import bisq.common.network.AndroidEmulatorLocalhostFacade;
 import bisq.common.network.DefaultLocalhostFacade;
 import bisq.common.network.LocalhostFacade;
 
@@ -29,7 +31,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class FacadeProvider {
     private static JdkFacade jdkFacade;
     private static GuavaFacade guavaFacade;
-    private static LocalhostFacade localhostFacade = new DefaultLocalhostFacade();
+    private static LocalhostFacade localhostFacade;
+    private static boolean isAndroidEmulator = false;
+    private static boolean isAndroidDevice = false;
 
     public static void setJdkFacade(JdkFacade jdkFacade) {
         FacadeProvider.jdkFacade = jdkFacade;
@@ -49,8 +53,25 @@ public class FacadeProvider {
         return guavaFacade;
     }
 
+    public static void setIsAndroidEmulator(boolean value) {
+        isAndroidEmulator = value;
+    }
+    
+    public static void setIsAndroidDevice(boolean value) {
+        isAndroidDevice = value;
+    }
+
     public static LocalhostFacade getLocalhostFacade() {
-        return localhostFacade;
+        if (localhostFacade == null) {
+            if (isAndroidEmulator) {
+                localhostFacade = new AndroidEmulatorLocalhostFacade();
+            } else if (isAndroidDevice) {
+                localhostFacade = new AndroidDeviceLocalhostFacade();
+            } else {
+                localhostFacade = new DefaultLocalhostFacade();
+            }
+        }
+        return checkNotNull(localhostFacade, "localhostFacade must not be null");
     }
 
     public static void setLocalhostFacade(LocalhostFacade localhostFacade) {
