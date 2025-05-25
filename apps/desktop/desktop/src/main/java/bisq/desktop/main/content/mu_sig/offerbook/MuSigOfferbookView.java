@@ -29,6 +29,7 @@ import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
+import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.CacheHint;
@@ -349,7 +350,10 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    numOffers.setText(getFormattedOfferNumber(item.getNumOffers().get()));
+                    numOffers.textProperty().bind(Bindings.createStringBinding(
+                            () -> getFormattedOfferNumber(item.getNumOffers().get()),
+                            item.getNumOffers()
+                    ));
                     String quoteCurrencyDisplayName = StringUtils.capitalize(item.getMarket().getQuoteCurrencyDisplayName());
                     marketDetailsTooltip.setText(getFormattedTooltip(item.getNumOffers().get(), quoteCurrencyDisplayName));
                     marketName.setText(quoteCurrencyDisplayName);
@@ -359,6 +363,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 } else {
                     favouritesLabel.setOnMouseClicked(null);
                     setGraphic(null);
+                    numOffers.textProperty().unbind();
                 }
             }
         };

@@ -132,7 +132,7 @@ public class MuSigOfferbookController implements Controller {
 
         selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarketItem -> {
             if (selectedMarketItem != null) {
-                updateMuSigOfferListItemsPredicate();
+                updateFilteredMuSigOfferListItemsPredicate();
                 updateMarketData(selectedMarketItem);
             }
         });
@@ -227,7 +227,7 @@ public class MuSigOfferbookController implements Controller {
         return market.isBtcFiatMarket() && market.getBaseCurrencyCode().equals("BTC");
     }
 
-    private void updateMuSigOfferListItemsPredicate() {
+    private void updateFilteredMuSigOfferListItemsPredicate() {
         model.getFilteredMuSigOfferListItems().setPredicate(null);
         model.getFilteredMuSigOfferListItems().setPredicate(item ->
             model.getSelectedMarketItem().get().getMarket().equals(item.getMarket()));
