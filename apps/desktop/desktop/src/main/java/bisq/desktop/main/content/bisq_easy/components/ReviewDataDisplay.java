@@ -188,7 +188,7 @@ public class ReviewDataDisplay {
                 if (isSendBtc) {
                     amountHBox.getChildren().add(toSendBitcoinAmountDisplay);
                     amountHBox.setAlignment(Pos.CENTER_LEFT);
-                    VBox.setMargin(toSend.getSecond(), new Insets(-7, 0, 0, 0));
+                    VBox.setMargin(toSend.getSecond(), new Insets(-2, 0, 0, 0));
                 } else {
                     amountHBox.getChildren().addAll(
                             toSend.getFirst().getSecond(),
@@ -205,7 +205,7 @@ public class ReviewDataDisplay {
                 if (isReceiveBtc) {
                     amountHBox.getChildren().add(toReceiveBitcoinAmountDisplay);
                     amountHBox.setAlignment(Pos.CENTER_LEFT);
-                    VBox.setMargin(toReceive.getSecond(), new Insets(-7, 0, 0, 0));
+                    VBox.setMargin(toReceive.getSecond(), new Insets(-2, 0, 0, 0));
                 } else {
                     amountHBox.getChildren().addAll(
                             toReceive.getFirst().getSecond(),
@@ -261,8 +261,11 @@ public class ReviewDataDisplay {
         }
 
         private void configureBitcoinAmountDisplay(BitcoinAmountDisplay bitcoinAmountDisplay) {
-            bitcoinAmountDisplay.applyMediumCompactConfig();
-            bitcoinAmountDisplay.setPadding(new Insets(-6, 0, 0, 0));
+            bitcoinAmountDisplay.getIntegerPart().getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
+            bitcoinAmountDisplay.getLeadingZeros().getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
+            bitcoinAmountDisplay.getSignificantDigits().getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
+            bitcoinAmountDisplay.getBtcCode().getStyleClass().add("bisq-easy-trade-wizard-review-header-code");
+            bitcoinAmountDisplay.setPadding(new Insets(0, 0, 0, 0));
 
             bitcoinAmountDisplay.setTextAlignment(TextAlignment.LEFT);
             bitcoinAmountDisplay.setAlignment(Pos.CENTER_LEFT);
