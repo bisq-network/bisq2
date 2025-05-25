@@ -236,6 +236,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         marketListVBox = new VBox(header, Layout.hLine(), subheader, appliedFiltersSection, /*favouritesTableView,*/
                 marketListView);
         VBox.setVgrow(marketListView, Priority.ALWAYS);
+        VBox.setVgrow(marketListVBox, Priority.ALWAYS);
         marketListVBox.setMaxWidth(MARKET_LIST_WIDTH);
         marketListVBox.setPrefWidth(MARKET_LIST_WIDTH);
         marketListVBox.setMinWidth(MARKET_LIST_WIDTH);
@@ -489,9 +490,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
         VBox.setMargin(subheader, new Insets(0, 0, 5, 0));
         offersVBox.getChildren().addAll(headerHBox, Layout.hLine(), subheader, muSigOfferListView);
-        VBox.setVgrow(muSigOfferListView, Priority.ALWAYS);
-        VBox.setVgrow(marketListVBox, Priority.ALWAYS);
         offersVBox.getStyleClass().add("bisq-easy-container");
+        VBox.setVgrow(muSigOfferListView, Priority.ALWAYS);
         HBox.setHgrow(offersVBox, Priority.ALWAYS);
         VBox.setVgrow(offersVBox, Priority.ALWAYS);
     }
