@@ -417,7 +417,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                         } else {
                             takeOfferButton.getStyleClass().add("sell-button");
                         }
-//                        takeOfferButton.setOnAction(e -> controller.onTakeOffer(item.getOffer()));
+                        takeOfferButton.setOnAction(e -> controller.onTakeOffer(item.getOffer()));
                     }
                     setGraphic(takeOfferButton);
                 } else {

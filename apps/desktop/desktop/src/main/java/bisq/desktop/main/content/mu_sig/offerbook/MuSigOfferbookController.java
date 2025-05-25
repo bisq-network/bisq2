@@ -27,6 +27,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferController;
+import bisq.desktop.main.content.mu_sig.take_offer.MuSigTakeOfferController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
@@ -160,6 +161,10 @@ public class MuSigOfferbookController implements Controller {
         MarketItem marketItem = model.getSelectedMarketItem().get();
         checkArgument(marketItem != null, "No selected market item");
         Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER, new MuSigCreateOfferController.InitData(marketItem.getMarket()));
+    }
+
+    void onTakeOffer(MuSigOffer offer) {
+        Navigation.navigateTo(NavigationTarget.MU_SIG_TAKE_OFFER, new MuSigTakeOfferController.InitData(offer));
     }
 
     private void maybeSelectFirst() {
