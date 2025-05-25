@@ -54,6 +54,9 @@ public class FacadeProvider {
     }
 
     public static void setIsAndroidEmulator(boolean value) {
+        if (value) {
+            isAndroidDevice = true;
+        }
         isAndroidEmulator = value;
     }
     
@@ -61,7 +64,7 @@ public class FacadeProvider {
         isAndroidDevice = value;
     }
 
-    public static LocalhostFacade getLocalhostFacade() {
+    public static synchronized LocalhostFacade getLocalhostFacade() {
         if (localhostFacade == null) {
             if (isAndroidEmulator) {
                 localhostFacade = new AndroidEmulatorLocalhostFacade();

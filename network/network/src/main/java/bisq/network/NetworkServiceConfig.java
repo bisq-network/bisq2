@@ -33,6 +33,7 @@ import bisq.network.p2p.services.peer_group.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peer_group.keep_alive.KeepAliveService;
 import bisq.network.tor.TorTransportConfig;
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigException;
 import lombok.Getter;
 
 import java.nio.file.Path;
@@ -81,8 +82,10 @@ public final class NetworkServiceConfig {
         Optional<String> clearPublicAddress = Optional.empty();
         try {
             clearPublicAddress = Optional.of(config.getString("clearPublicAddress"));
-        } catch (Exception e) {
-            // do nth
+         } catch (ConfigException.Missing e) {
+            System.out.println("No clearPublicAddress configured, using default behavior");
+        } catch (ConfigException e) {
+            System.out.println("Invalid clearPublicAddress configuration: " + e.getMessage());
         }
 
         return new NetworkServiceConfig(baseDir.toAbsolutePath().toString(),
