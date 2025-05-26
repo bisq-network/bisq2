@@ -63,7 +63,7 @@ public class MuSigOfferbookController implements Controller {
     private final IdentityService identityService;
     private final BannedUserService bannedUserService;
     private final FavouriteMarketsService favouriteMarketsService;
-    private Pin offersPin;
+    private Pin offersPin, selectedMarketPin;
     private Subscription selectedMarketItemPin;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
@@ -132,8 +132,17 @@ public class MuSigOfferbookController implements Controller {
 
         selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarketItem -> {
             if (selectedMarketItem != null) {
-                updateMuSigOfferListItemsPredicate();
+                updateFilteredMuSigOfferListItemsPredicate();
                 updateMarketData(selectedMarketItem);
+                muSigService.getMuSigSelectedMarket().set(selectedMarketItem.getMarket());
+            }
+        });
+        selectedMarketPin = muSigService.getMuSigSelectedMarket().addObserver(market -> {
+            if (market != null) {
+                model.getMarketItems().stream()
+                        .filter(item -> item.getMarket().equals(market))
+                        .findAny()
+                        .ifPresent(item -> model.getSelectedMarketItem().set(item));
             }
         });
     }
@@ -146,6 +155,7 @@ public class MuSigOfferbookController implements Controller {
         model.getMuSigOfferIds().clear();
 
         selectedMarketItemPin.unsubscribe();
+        selectedMarketPin.unbind();
     }
 
     void onSelectMarketItem(MarketItem marketItem) {
@@ -227,7 +237,7 @@ public class MuSigOfferbookController implements Controller {
         return market.isBtcFiatMarket() && market.getBaseCurrencyCode().equals("BTC");
     }
 
-    private void updateMuSigOfferListItemsPredicate() {
+    private void updateFilteredMuSigOfferListItemsPredicate() {
         model.getFilteredMuSigOfferListItems().setPredicate(null);
         model.getFilteredMuSigOfferListItems().setPredicate(item ->
             model.getSelectedMarketItem().get().getMarket().equals(item.getMarket()));
