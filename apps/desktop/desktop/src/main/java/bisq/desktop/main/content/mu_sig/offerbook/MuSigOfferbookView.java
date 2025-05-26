@@ -24,6 +24,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.RichTableView;
@@ -73,6 +74,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     private VBox marketListVBox;
     private Label marketListTitle, marketHeaderIcon, marketTitle, marketDescription, marketPrice;
     private Button createOfferButton;
+    private SearchBox marketsSearchBox;
     private Subscription selectedMarketItemPin, marketListViewSelectionPin, favouritesListViewNeedsHeightUpdatePin,
             favouritesListViewSelectionPin;
 
@@ -126,6 +128,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
         updateAppliedFiltersSectionStyles(false);
 
+        marketsSearchBox.textProperty().bindBidirectional(model.getMarketsSearchBoxText());
         marketTitle.textProperty().bind(model.getMarketTitle());
         marketDescription.textProperty().bind(model.getMarketDescription());
         marketPrice.textProperty().bind(model.getMarketPrice());
@@ -162,6 +165,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         favouritesListView.dispose();
         marketListView.dispose();
 
+        marketsSearchBox.textProperty().unbindBidirectional(model.getMarketsSearchBoxText());
         marketTitle.textProperty().unbind();
         marketDescription.textProperty().unbind();
         marketPrice.textProperty().unbind();
@@ -239,10 +243,10 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         header.setPadding(new Insets(4, 12, 0, 13));
         header.getStyleClass().add("chat-header-title");
 
-//        marketSelectorSearchBox = new SearchBox();
-//        marketSelectorSearchBox.getStyleClass().add("offerbook-search-box");
+        marketsSearchBox = new SearchBox();
+        marketsSearchBox.getStyleClass().add("offerbook-search-box");
 //        sortAndFilterMarketsMenu = createAndGetSortAndFilterMarketsMenu();
-        HBox subheader = new HBox(/*marketSelectorSearchBox, Spacer.fillHBox(), sortAndFilterMarketsMenu*/);
+        HBox subheader = new HBox(marketsSearchBox, Spacer.fillHBox()/*, sortAndFilterMarketsMenu*/);
         subheader.setAlignment(Pos.CENTER);
         subheader.getStyleClass().add("market-selection-subheader");
 //
@@ -516,9 +520,14 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     }
 
     private void setupOffersVBox() {
-        HBox subheader = new HBox(/*marketSelectorSearchBox, Spacer.fillHBox(), sortAndFilterMarketsMenu*/);
+//        searchBox.getStyleClass().add("offerbook-search-box");
+        HBox subheaderContent = new HBox(/*30, searchBox, Spacer.fillHBox(), messageTypeFilterMenu*/);
+        subheaderContent.getStyleClass().add("offerbook-subheader-content");
+        HBox.setHgrow(subheaderContent, Priority.ALWAYS);
+
+        HBox subheader = new HBox(subheaderContent);
+        subheader.getStyleClass().add("offerbook-subheader");
         subheader.setAlignment(Pos.CENTER);
-        subheader.getStyleClass().add("market-selection-subheader");
 
         VBox.setMargin(subheader, new Insets(0, 0, 5, 0));
         offersVBox.getChildren().addAll(headerHBox, Layout.hLine(), subheader, muSigOfferListView);

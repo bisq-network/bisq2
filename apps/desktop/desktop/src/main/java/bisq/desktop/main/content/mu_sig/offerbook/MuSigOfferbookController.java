@@ -67,7 +67,7 @@ public class MuSigOfferbookController implements Controller {
     private final Predicate<MarketItem> marketItemsPredicate;
     private final Predicate<MarketItem> favouriteMarketItemsPredicate;
     private Pin offersPin, selectedMarketPin, favouriteMarketsPin;
-    private Subscription selectedMarketItemPin;
+    private Subscription selectedMarketItemPin, marketsSearchBoxTextPin;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
         muSigService = serviceProvider.getMuSigService();
@@ -83,7 +83,7 @@ public class MuSigOfferbookController implements Controller {
 
         marketItemsPredicate = item ->
                 model.getMarketFilterPredicate().test(item) &&
-//                        model.getMarketSearchTextPredicate().test(item) &&
+                        model.getMarketSearchTextPredicate().test(item) &&
 //                        model.getMarketPricePredicate().test(item) &&
                         !item.getIsFavourite().get();
         favouriteMarketItemsPredicate = item -> item.getIsFavourite().get();
@@ -101,6 +101,8 @@ public class MuSigOfferbookController implements Controller {
         model.getMarketItems().setAll(marketItems);
 
         applyInitialSelectedMarket();
+
+        model.getMarketsSearchBoxText().set("");
 
         offersPin = muSigService.getObservableOffers().addObserver(new CollectionObserver<>() {
             @Override
@@ -140,13 +142,6 @@ public class MuSigOfferbookController implements Controller {
             }
         });
 
-        selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarketItem -> {
-            if (selectedMarketItem != null) {
-                updateFilteredMuSigOfferListItemsPredicate();
-                updateMarketData(selectedMarketItem);
-                muSigService.getMuSigSelectedMarket().set(selectedMarketItem.getMarket());
-            }
-        });
         selectedMarketPin = muSigService.getMuSigSelectedMarket().addObserver(market -> {
             if (market != null) {
                 model.getMarketItems().stream()
@@ -187,21 +182,44 @@ public class MuSigOfferbookController implements Controller {
             }
         });
 
+        selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarketItem -> {
+            if (selectedMarketItem != null) {
+                updateFilteredMuSigOfferListItemsPredicate();
+                updateMarketData(selectedMarketItem);
+                muSigService.getMuSigSelectedMarket().set(selectedMarketItem.getMarket());
+            }
+        });
+
+        marketsSearchBoxTextPin = EasyBind.subscribe(model.getMarketsSearchBoxText(), searchText -> {
+            if (searchText == null || searchText.trim().isEmpty()) {
+                model.setMarketSearchTextPredicate(item -> true);
+            } else {
+                String search = searchText.trim().toLowerCase();
+                model.setMarketSearchTextPredicate(item ->
+                        item != null &&
+                                (item.getMarket().getQuoteCurrencyCode().toLowerCase().contains(search) ||
+                                        item.getMarket().getQuoteCurrencyDisplayName().toLowerCase().contains(search))
+                );
+            }
+            updateFilteredMarketItems();
+        });
+
         updateFilteredMarketItems();
         updateFavouriteMarketItems();
     }
 
     @Override
     public void onDeactivate() {
-        offersPin.unbind();
-        favouriteMarketsPin.unbind();
-
         model.getMuSigOfferListItems().forEach(MuSigOfferListItem::dispose);
         model.getMuSigOfferListItems().clear();
         model.getMuSigOfferIds().clear();
 
-        selectedMarketItemPin.unsubscribe();
+        offersPin.unbind();
         selectedMarketPin.unbind();
+        favouriteMarketsPin.unbind();
+
+        selectedMarketItemPin.unsubscribe();
+        marketsSearchBoxTextPin.unsubscribe();
     }
 
     void onSelectMarketItem(MarketItem marketItem) {
