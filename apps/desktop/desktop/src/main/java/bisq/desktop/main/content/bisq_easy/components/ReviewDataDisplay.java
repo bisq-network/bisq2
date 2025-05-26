@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.components;
 
 import bisq.common.currency.TradeCurrency;
+import bisq.common.data.Pair;
 import bisq.common.data.Triple;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BitcoinAmountDisplay;
@@ -182,39 +183,54 @@ public class ReviewDataDisplay {
             toReceiveBitcoinAmountDisplay.getBtcAmount().bind(model.getToReceiveAmount());
 
 
-            isSendBtcPin = EasyBind.subscribe(model.getIsSendBtc(), isSendBtc -> {
-                HBox amountHBox = toSend.getSecond();
-                amountHBox.getChildren().clear();
+            isSendBtcPin = EasyBind.subscribe(
+                    EasyBind.combine(model.getIsSendBtc(), model.getIsRangeAmount(), Pair::new
+                    ),
+                    combinedValues -> {
+                        boolean isSendBtc = combinedValues.getFirst();
+                        boolean isRangeAmount = combinedValues.getSecond();
 
-                if (isSendBtc && !model.getIsRangeAmount().get()) {
-                    amountHBox.getChildren().add(toSendBitcoinAmountDisplay);
-                    amountHBox.setAlignment(Pos.CENTER_LEFT);
-                    VBox.setMargin(toSend.getSecond(), new Insets(-7, 0, 0, 0));
-                } else {
-                    amountHBox.getChildren().addAll(
-                            toSend.getFirst().getSecond(),
-                            toSend.getFirst().getThird()
-                    );
-                    amountHBox.setAlignment(Pos.BASELINE_LEFT);
-                }
-            });
+                        HBox amountHBox = toSend.getSecond();
+                        amountHBox.getChildren().clear();
 
-            isReceiveBtcPin = EasyBind.subscribe(model.getIsReceiveBtc(), isReceiveBtc -> {
-                HBox amountHBox = toReceive.getSecond();
-                amountHBox.getChildren().clear();
+                        if (isSendBtc && !isRangeAmount) {
+                            amountHBox.getChildren().add(toSendBitcoinAmountDisplay);
+                            amountHBox.setAlignment(Pos.CENTER_LEFT);
+                            VBox.setMargin(toSend.getSecond(), new Insets(-7, 0, 0, 0));
+                        } else {
+                            amountHBox.getChildren().addAll(
+                                    toSend.getFirst().getSecond(),
+                                    toSend.getFirst().getThird()
+                            );
+                            amountHBox.setAlignment(Pos.BASELINE_LEFT);
+                        }
+                    }
+            );
 
-                if (isReceiveBtc && !model.getIsRangeAmount().get()) {
-                    amountHBox.getChildren().add(toReceiveBitcoinAmountDisplay);
-                    amountHBox.setAlignment(Pos.CENTER_LEFT);
-                    VBox.setMargin(toReceive.getSecond(), new Insets(-7, 0, 0, 0));
-                } else {
-                    amountHBox.getChildren().addAll(
-                            toReceive.getFirst().getSecond(),
-                            toReceive.getFirst().getThird()
-                    );
-                    amountHBox.setAlignment(Pos.BASELINE_LEFT);
-                }
-            });
+            isReceiveBtcPin = EasyBind.subscribe(
+                    EasyBind.combine(model.getIsReceiveBtc(), model.getIsRangeAmount(), Pair::new
+                    ),
+                    combinedValues -> {
+                        boolean isReceiveBtc = combinedValues.getFirst();
+                        boolean isRangeAmount = combinedValues.getSecond();
+
+                        HBox amountHBox = toReceive.getSecond();
+                        amountHBox.getChildren().clear();
+
+                        if (isReceiveBtc && !isRangeAmount) {
+                            amountHBox.getChildren().add(toReceiveBitcoinAmountDisplay);
+                            amountHBox.setAlignment(Pos.CENTER_LEFT);
+                            VBox.setMargin(toReceive.getSecond(), new Insets(-7, 0, 0, 0));
+                        } else {
+                            amountHBox.getChildren().addAll(
+                                    toReceive.getFirst().getSecond(),
+                                    toReceive.getFirst().getThird()
+                            );
+                            amountHBox.setAlignment(Pos.BASELINE_LEFT);
+                            VBox.setMargin(toReceive.getSecond(), new Insets(0, 0, 0, 0));
+                        }
+                    });
+
 
             isRangeAmountPin = EasyBind.subscribe(model.getIsRangeAmount(), isRangeAmount -> {
                 VBox toSendVBox = toSend.getThird();
