@@ -407,7 +407,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                         //  If using grey-transparent-outlined-button we have a white label. Quick fix is to use opacity with a while style...
                         takeOfferButton.getStyleClass().add("white-transparent-outlined-button");
                         takeOfferButton.setOpacity(0.5);
-//                        takeOfferButton.setOnAction(e -> controller.onRemoveOffer(item.getOffer()));
+                        takeOfferButton.setOnAction(e -> controller.onRemoveOffer(item.getOffer()));
                     } else {
                         takeOfferButton.setText(item.getTakeOfferButtonText());
                         takeOfferButton.setOpacity(1);
@@ -417,7 +417,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                         } else {
                             takeOfferButton.getStyleClass().add("sell-button");
                         }
-//                        takeOfferButton.setOnAction(e -> controller.onTakeOffer(item.getOffer()));
+                        takeOfferButton.setOnAction(e -> controller.onTakeOffer(item.getOffer()));
                     }
                     setGraphic(takeOfferButton);
                 } else {

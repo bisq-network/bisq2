@@ -26,7 +26,9 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferController;
+import bisq.desktop.main.content.mu_sig.take_offer.MuSigTakeOfferController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
@@ -37,6 +39,8 @@ import bisq.settings.CookieKey;
 import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
 import bisq.user.banned.BannedUserService;
+import bisq.user.banned.RateLimitExceededException;
+import bisq.user.banned.UserProfileBannedException;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import org.fxmisc.easybind.EasyBind;
@@ -160,6 +164,32 @@ public class MuSigOfferbookController implements Controller {
         MarketItem marketItem = model.getSelectedMarketItem().get();
         checkArgument(marketItem != null, "No selected market item");
         Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER, new MuSigCreateOfferController.InitData(marketItem.getMarket()));
+    }
+
+    void onTakeOffer(MuSigOffer offer) {
+        Navigation.navigateTo(NavigationTarget.MU_SIG_TAKE_OFFER, new MuSigTakeOfferController.InitData(offer));
+    }
+
+    void onRemoveOffer(MuSigOffer muSigOffer) {
+        new Popup().warning(Res.get("muSig.offerbook.removeOffer.confirmation"))
+                .actionButtonText(Res.get("confirmation.yes"))
+                .onAction(() -> doRemoveOffer(muSigOffer))
+                .closeButtonText(Res.get("confirmation.no"))
+                .show();
+    }
+
+    private void doRemoveOffer(MuSigOffer muSigOffer) {
+        try {
+            muSigService.removeOffer(muSigOffer);
+        } catch (UserProfileBannedException e) {
+            UIThread.run(() -> {
+                // We do not inform banned users about being banned
+            });
+        } catch (RateLimitExceededException e) {
+            UIThread.run(() -> {
+                new Popup().warning(Res.get("muSig.offerbook.rateLimitsExceeded.removeOffer.warning")).show();
+            });
+        }
     }
 
     private void maybeSelectFirst() {
