@@ -17,25 +17,16 @@
 
 package bisq.common.network;
 
-import lombok.extern.slf4j.Slf4j;
+import com.google.common.annotations.VisibleForTesting;
 
-@Slf4j
-public class AndroidEmulatorLocalhostFacade implements LocalhostFacade {
-    @Override
-    public Address toMyLocalhost(int port) {
-        log.info("The android app is running in the emulator. We convert our localhost " +
-                "address to `10.0.2.15`");
-        return new Address("10.0.2.15", port);
+public class DefaultClearNetLocalAddressFacade implements ClearNetLocalAddressFacade {
+    @VisibleForTesting
+    public static Address toLocalHostAddress(int port) {
+        return new Address("127.0.0.1", port);
     }
 
     @Override
-    public Address toPeersLocalhost(Address address) {
-        if (address.isLocalhost()) {
-            log.info("The android app is running in the emulator. We convert the target localhost " +
-                    "address `127.0.0.1` to `10.0.2.2`");
-            return new Address("10.0.2.2", address.getPort());
-        } else {
-            return address;
-        }
+    public Address toMyLocalAddress(int port) {
+        return toLocalHostAddress(port);
     }
 }

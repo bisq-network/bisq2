@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 
-import static bisq.common.facades.FacadeProvider.getLocalhostFacade;
+import static bisq.common.facades.FacadeProvider.getClearNetLocalAddressFacade;
 
 
 @Slf4j
@@ -125,7 +125,7 @@ public class ClearNetTransportService implements TransportService {
         maybeSimulateDelay();
         try {
             ServerSocket serverSocket = new ServerSocket(port);
-            Address address = getLocalhostFacade().toMyLocalhost(port);
+            Address address = getClearNetLocalAddressFacade().toMyLocalAddress(port);
             log.debug("ServerSocket created at port {}", port);
             initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
             return new ServerSocketResult(serverSocket, address);
@@ -137,7 +137,7 @@ public class ClearNetTransportService implements TransportService {
 
     @Override
     public Socket getSocket(Address address) throws IOException {
-        address = getLocalhostFacade().toPeersLocalhost(address);
+        address = getClearNetLocalAddressFacade().toPeersLocalAddress(address);
 
         log.debug("Create new Socket to {}", address);
         maybeSimulateDelay();

@@ -19,7 +19,7 @@ package bisq.network.p2p;
 
 import bisq.common.application.ApplicationVersion;
 import bisq.common.file.FileUtils;
-import bisq.common.network.DefaultLocalhostFacade;
+import bisq.common.network.DefaultClearNetLocalAddressFacade;
 import bisq.common.util.NetworkUtils;
 import bisq.common.network.Address;
 import bisq.common.network.TransportType;
@@ -71,7 +71,7 @@ public class InboundConnectionsManagerTests {
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.configureBlocking(false);
 
-        Address myAddress = DefaultLocalhostFacade.toLocalHostAddress(NetworkUtils.findFreeSystemPort());
+        Address myAddress = DefaultClearNetLocalAddressFacade.toLocalHostAddress(NetworkUtils.findFreeSystemPort());
         InetSocketAddress socketAddress = new InetSocketAddress(
                 InetAddress.getLocalHost(),
                 myAddress.getPort()
@@ -129,7 +129,7 @@ public class InboundConnectionsManagerTests {
             socketChannel.connect(socketAddress);
 
             InetSocketAddress localSocketAddress = (InetSocketAddress) socketChannel.getLocalAddress();
-            Address peerAddress = DefaultLocalhostFacade.toLocalHostAddress(localSocketAddress.getPort());
+            Address peerAddress = DefaultClearNetLocalAddressFacade.toLocalHostAddress(localSocketAddress.getPort());
 
             bisq.network.protobuf.NetworkEnvelope poWRequest = createPoWRequest(myAddress, peerAddress);
             byte[] requestInBytes = poWRequest.toByteArray();
@@ -160,7 +160,7 @@ public class InboundConnectionsManagerTests {
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.configureBlocking(false);
 
-        Address myAddress = DefaultLocalhostFacade.toLocalHostAddress(NetworkUtils.findFreeSystemPort());
+        Address myAddress = DefaultClearNetLocalAddressFacade.toLocalHostAddress(NetworkUtils.findFreeSystemPort());
         InetSocketAddress socketAddress = new InetSocketAddress(
                 InetAddress.getLocalHost(),
                 myAddress.getPort()
@@ -218,7 +218,7 @@ public class InboundConnectionsManagerTests {
             socketChannel.connect(socketAddress);
 
             InetSocketAddress localSocketAddress = (InetSocketAddress) socketChannel.getLocalAddress();
-            Address peerAddress = DefaultLocalhostFacade.toLocalHostAddress(localSocketAddress.getPort());
+            Address peerAddress = DefaultClearNetLocalAddressFacade.toLocalHostAddress(localSocketAddress.getPort());
 
             bisq.network.protobuf.NetworkEnvelope invalidPoWRequest = createPoWRequest(peerAddress, myAddress);
 

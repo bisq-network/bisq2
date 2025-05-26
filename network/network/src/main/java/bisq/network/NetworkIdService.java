@@ -168,7 +168,7 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
         return switch (transportType) {
             case TOR -> new Address(keyBundle.getTorKeyPair().getOnionAddress(), port);
             case I2P -> throw new RuntimeException("I2P not unsupported yet");
-            case CLEAR -> FacadeProvider.getLocalhostFacade().toMyLocalhost(port);
+            case CLEAR -> FacadeProvider.getClearNetLocalAddressFacade().toMyLocalAddress(port);
         };
     }
 

@@ -18,7 +18,7 @@
 package bisq.network.p2p.node.handshake;
 
 import bisq.common.network.Address;
-import bisq.common.network.DefaultLocalhostFacade;
+import bisq.common.network.DefaultClearNetLocalAddressFacade;
 import bisq.security.keys.TorKeyGeneration;
 import bisq.security.keys.TorKeyPair;
 import org.junit.jupiter.api.Test;
@@ -34,15 +34,15 @@ public class OnionAddressValidationVerifyTests {
 
     @Test
     void testVerifyNonOnionAddresses() {
-        Address myAddress = DefaultLocalhostFacade.toLocalHostAddress(1234);
-        Address peerAddress = DefaultLocalhostFacade.toLocalHostAddress(4321);
+        Address myAddress = DefaultClearNetLocalAddressFacade.toLocalHostAddress(1234);
+        Address peerAddress = DefaultClearNetLocalAddressFacade.toLocalHostAddress(4321);
         boolean isValid = OnionAddressValidation.verify(myAddress, peerAddress, signatureDate, Optional.empty());
         assertThat(isValid).isTrue();
     }
 
     @Test
     void testVerifyMyNonOnionAddress() {
-        Address myAddress = DefaultLocalhostFacade.toLocalHostAddress(1234);
+        Address myAddress = DefaultClearNetLocalAddressFacade.toLocalHostAddress(1234);
         Address peerAddress = new Address(peerTorKeyPair.getOnionAddress(), 8888);
         boolean isValid = OnionAddressValidation.verify(myAddress, peerAddress, signatureDate, Optional.empty());
         assertThat(isValid).isTrue();
@@ -51,7 +51,7 @@ public class OnionAddressValidationVerifyTests {
     @Test
     void testVerifyPeerNonOnionAddress() {
         Address myAddress = new Address(myTorKeyPair.getOnionAddress(), 8888);
-        Address peerAddress = DefaultLocalhostFacade.toLocalHostAddress(4321);
+        Address peerAddress = DefaultClearNetLocalAddressFacade.toLocalHostAddress(4321);
         boolean isValid = OnionAddressValidation.verify(myAddress, peerAddress, signatureDate, Optional.empty());
         assertThat(isValid).isTrue();
     }

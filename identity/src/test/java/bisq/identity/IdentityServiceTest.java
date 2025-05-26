@@ -17,7 +17,7 @@
 
 package bisq.identity;
 
-import bisq.common.network.DefaultLocalhostFacade;
+import bisq.common.network.DefaultClearNetLocalAddressFacade;
 import bisq.network.NetworkService;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.TransportType;
@@ -160,7 +160,7 @@ public class IdentityServiceTest {
     @Test
     void findInvalidIdentityByNetworkId() {
         AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap(
-                Map.of(TransportType.CLEAR, DefaultLocalhostFacade.toLocalHostAddress(1234)));
+                Map.of(TransportType.CLEAR, DefaultClearNetLocalAddressFacade.toLocalHostAddress(1234)));
 
         String keyId = keyBundleService.getKeyIdFromTag("myTag2");
         KeyPair keyPair = keyBundleService.getOrCreateKeyBundle(keyId).getKeyPair();
@@ -192,7 +192,7 @@ public class IdentityServiceTest {
     @Test
     void findInvalidRetiredIdentity() {
         AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap(
-                Map.of(TransportType.CLEAR, DefaultLocalhostFacade.toLocalHostAddress(1234)));
+                Map.of(TransportType.CLEAR, DefaultClearNetLocalAddressFacade.toLocalHostAddress(1234)));
         String keyId = keyBundleService.getKeyIdFromTag("myTag3");
         KeyPair keyPair = keyBundleService.getOrCreateKeyBundle(keyId).getKeyPair();
         var pubKey = new PubKey(keyPair.getPublic(), keyId);

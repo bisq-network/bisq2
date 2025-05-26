@@ -8,15 +8,15 @@ import java.net.NetworkInterface;
 import java.util.Optional;
 
 @Slf4j
-public class AndroidLANFacade implements LocalhostFacade {
+public class ClearNetLANLocalAddressFacade implements ClearNetLocalAddressFacade {
     @Setter
     private Optional<NetworkInterface> preferredNetworkInterface;
 
-    public AndroidLANFacade() {
+    public ClearNetLANLocalAddressFacade() {
         this.preferredNetworkInterface = Optional.empty();
     }
 
-    public AndroidLANFacade(NetworkInterface preferredNetworkInterface) {
+    public ClearNetLANLocalAddressFacade(NetworkInterface preferredNetworkInterface) {
         this.preferredNetworkInterface = Optional.of(preferredNetworkInterface);
     }
 
@@ -25,7 +25,7 @@ public class AndroidLANFacade implements LocalhostFacade {
      * If no preferredNetworkInterface is set, we return the IPv4 LAN address of the first network interface.
      */
     @Override
-    public Address toMyLocalhost(int port) {
+    public Address toMyLocalAddress(int port) {
         Optional<String> hosts = NetworkUtils.findLANHostAddress(preferredNetworkInterface);
         if (hosts.isEmpty()) {
             log.warn("We did not find any LAN IP address. We use 127.0.0.1 as fallback.");
