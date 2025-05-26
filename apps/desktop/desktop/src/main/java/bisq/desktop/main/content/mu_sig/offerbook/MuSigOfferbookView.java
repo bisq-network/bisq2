@@ -62,6 +62,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     private static final double LIST_CELL_HEIGHT = 53;
     private static final double MARKET_LIST_WIDTH = 210;
     private static final double SIDE_PADDING = 40;
+    private static final double FAVOURITES_TABLE_PADDING = 21;
 
     private final RichTableView<MuSigOfferListItem> muSigOfferListView;
     private final BisqTableView<MarketItem> marketListView, favouritesListView;
@@ -72,7 +73,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     private VBox marketListVBox;
     private Label marketListTitle, marketHeaderIcon, marketTitle, marketDescription, marketPrice;
     private Button createOfferButton;
-    private Subscription selectedMarketItemPin, marketListViewSelectionPin, favouritesListViewHeightChangedPin,
+    private Subscription selectedMarketItemPin, marketListViewSelectionPin, favouritesListViewNeedsHeightUpdatePin,
             favouritesListViewSelectionPin;
 
     public MuSigOfferbookView(MuSigOfferbookModel model, MuSigOfferbookController controller) {
@@ -144,10 +145,9 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         });
         model.getFavouriteMarketItems().addListener(favouriteItemsChangeListener);
 
-        favouritesListViewHeightChangedPin = EasyBind.subscribe(model.getFavouritesListViewHeightChanged(), heightChanged -> {
-            if (heightChanged) {
-                double padding = 21;
-                double tableViewHeight = (model.getFavouriteMarketItems().size() * LIST_CELL_HEIGHT) + padding;
+        favouritesListViewNeedsHeightUpdatePin = EasyBind.subscribe(model.getFavouritesListViewNeedsHeightUpdate(), needsUpdate -> {
+            if (needsUpdate) {
+                double tableViewHeight = (model.getFavouriteMarketItems().size() * LIST_CELL_HEIGHT) + FAVOURITES_TABLE_PADDING;
                 updateFavouritesTableViewHeight(tableViewHeight);
             }
         });
@@ -171,7 +171,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         selectedMarketItemPin.unsubscribe();
         marketListViewSelectionPin.unsubscribe();
         favouritesListViewSelectionPin.unsubscribe();
-        favouritesListViewHeightChangedPin.unsubscribe();
+        favouritesListViewNeedsHeightUpdatePin.unsubscribe();
 
         createOfferButton.setOnAction(null);
 
@@ -539,5 +539,6 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         favouritesListView.setMinHeight(height);
         favouritesListView.setPrefHeight(height);
         favouritesListView.setMaxHeight(height);
+        model.getFavouritesListViewNeedsHeightUpdate().set(false);
     }
 }

@@ -323,13 +323,13 @@ public class MuSigOfferbookController implements Controller {
         // Thus, we trigger a change of the predicate to force a refresh.
         model.getFavouriteMarketItems().setPredicate(null);
         model.getFavouriteMarketItems().setPredicate(favouriteMarketItemsPredicate);
-        model.getFavouritesListViewHeightChanged().set(false);
-        model.getFavouritesListViewHeightChanged().set(true);
+        model.getFavouritesListViewNeedsHeightUpdate().set(false);
+        model.getFavouritesListViewNeedsHeightUpdate().set(true);
     }
 
     private Optional<MarketItem> findMarketItem(Market market) {
         return model.getMarketItems().stream()
                 .filter(e -> e.getMarket().equals(market))
-                .findFirst();
+                .findAny();
     }
 }

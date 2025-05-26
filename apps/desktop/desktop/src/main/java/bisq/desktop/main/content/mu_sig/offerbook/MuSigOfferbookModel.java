@@ -60,7 +60,7 @@ public class MuSigOfferbookModel implements Model {
     private final ObjectProperty<MarketItem> selectedMarketItem = new SimpleObjectProperty<>();
 
     @Setter
-    private BooleanProperty favouritesListViewHeightChanged = new SimpleBooleanProperty();
+    private BooleanProperty favouritesListViewNeedsHeightUpdate = new SimpleBooleanProperty();
     @Setter
     private Predicate<MarketItem> marketFilterPredicate = marketItem -> true;
 }
