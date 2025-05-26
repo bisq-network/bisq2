@@ -21,12 +21,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AndroidEmulatorLocalhostFacade implements LocalhostFacade {
+    @Override
     public Address toMyLocalhost(int port) {
         log.info("The android app is running in the emulator. We convert our localhost " +
                 "address to `10.0.2.15`");
         return new Address("10.0.2.15", port);
     }
 
+    @Override
     public Address toPeersLocalhost(Address address) {
         if (address.isLocalhost()) {
             log.info("The android app is running in the emulator. We convert the target localhost " +
