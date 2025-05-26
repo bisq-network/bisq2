@@ -17,11 +17,20 @@
 
 package bisq.common.util;
 
+import bisq.common.data.Pair;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -64,5 +73,66 @@ public class NetworkUtils {
             // Could not connect
             return false;
         }
+    }
+
+    public static List<NetworkInterface> findNetworkInterfaces() {
+        return getNetworkInterfaceHostAddressPairs().stream()
+                .map(Pair::getFirst)
+                .distinct()
+                .toList();
+    }
+
+    public static List<Pair<NetworkInterface, String>> getNetworkInterfaceHostAddressPairs() {
+        List<Pair<NetworkInterface, String>> networkInterfaceHostAddressPairs = new ArrayList<>();
+        try {
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface networkInterface = interfaces.nextElement();
+
+                // Ignore down, loopback and virtual interfaces
+                if (!networkInterface.isUp() || networkInterface.isLoopback() || networkInterface.isVirtual()) {
+                    continue;
+                }
+
+                Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
+                while (addresses.hasMoreElements()) {
+                    InetAddress inetAddress = addresses.nextElement();
+                    // isSiteLocalAddress ensures that we return only LAN addresses (10.x.x.x, 192.168.x.x, 172.16.x.x–172.31.x.x)
+                    if (inetAddress instanceof Inet4Address && inetAddress.isSiteLocalAddress()) {
+                        // return Optional.of(inetAddress.getHostAddress());
+                        networkInterfaceHostAddressPairs.add(new Pair<>(networkInterface, inetAddress.getHostAddress()));
+                    }
+                }
+            }
+        } catch (SocketException socketException) {
+            log.error("Could not access network interfaces", socketException);
+        }
+
+        if (networkInterfaceHostAddressPairs.isEmpty()) {
+            // Not expected but possible (machine is not connected to any Ethernet, Wi-Fi, or VPN,
+            // sandboxes or restricted environments like Android emulator, Docker,...)
+            log.warn("No IPv4 LAN addresses found");
+        }
+
+        return networkInterfaceHostAddressPairs;
+    }
+
+    public static Optional<String> findLANHostAddress(Optional<NetworkInterface> preferredNetworkInterface) {
+        List<Pair<NetworkInterface, String>> networkInterfaceHostAddressPairs = getNetworkInterfaceHostAddressPairs();
+        if (preferredNetworkInterface.isPresent()) {
+            Optional<String> preferred = networkInterfaceHostAddressPairs.stream()
+                    .filter(pair ->
+                            pair.getFirst().equals(preferredNetworkInterface.get()))
+                    .map(Pair::getSecond)
+                    .findFirst();
+            if (preferred.isPresent()) {
+                return preferred;
+            } else {
+                log.warn("No networkInterface found which matches the preferredNetworkInterface. We return all LAN addresses.");
+            }
+        }
+        return networkInterfaceHostAddressPairs.stream()
+                .map(Pair::getSecond)
+                .findFirst();
     }
 }
