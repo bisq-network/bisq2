@@ -252,6 +252,11 @@ public class MuSigOfferbookController implements Controller {
                 .show();
     }
 
+    void onSortMarkets(MarketSortType marketSortType) {
+        model.getSelectedMarketSortType().set(marketSortType);
+        model.getSortedMarketItems().setComparator(marketSortType.getComparator());
+    }
+
     private void doRemoveOffer(MuSigOffer muSigOffer) {
         try {
             muSigService.removeOffer(muSigOffer);
