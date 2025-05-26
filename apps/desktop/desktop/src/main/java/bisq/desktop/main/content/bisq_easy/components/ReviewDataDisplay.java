@@ -96,6 +96,7 @@ public class ReviewDataDisplay {
     public void setBitcoinPaymentMethod(String value) {
         controller.model.getBitcoinPaymentMethod().set(value);
     }
+
     public void setFiatPaymentMethod(String value) {
         controller.model.getFiatPaymentMethod().set(value);
     }
@@ -185,7 +186,7 @@ public class ReviewDataDisplay {
                 HBox amountHBox = toSend.getSecond();
                 amountHBox.getChildren().clear();
 
-                if (isSendBtc) {
+                if (isSendBtc && !model.getIsRangeAmount().get()) {
                     amountHBox.getChildren().add(toSendBitcoinAmountDisplay);
                     amountHBox.setAlignment(Pos.CENTER_LEFT);
                     VBox.setMargin(toSend.getSecond(), new Insets(-7, 0, 0, 0));
@@ -202,7 +203,7 @@ public class ReviewDataDisplay {
                 HBox amountHBox = toReceive.getSecond();
                 amountHBox.getChildren().clear();
 
-                if (isReceiveBtc) {
+                if (isReceiveBtc && !model.getIsRangeAmount().get()) {
                     amountHBox.getChildren().add(toReceiveBitcoinAmountDisplay);
                     amountHBox.setAlignment(Pos.CENTER_LEFT);
                     VBox.setMargin(toReceive.getSecond(), new Insets(-7, 0, 0, 0));
