@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Predicate;
 
 @Slf4j
 @Getter
@@ -60,4 +61,6 @@ public class MuSigOfferbookModel implements Model {
 
     @Setter
     private BooleanProperty favouritesListViewHeightChanged = new SimpleBooleanProperty();
+    @Setter
+    private Predicate<MarketItem> marketFilterPredicate = marketItem -> true;
 }

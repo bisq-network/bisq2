@@ -30,6 +30,7 @@ import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import javafx.beans.binding.Bindings;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.CacheHint;
@@ -66,11 +67,13 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     private final BisqTableView<MarketItem> marketListView, favouritesListView;
     private final HBox headerHBox;
     private final VBox offersVBox;
+    private final ListChangeListener<MarketItem> favouriteItemsChangeListener;
     private HBox appliedFiltersSection;
     private VBox marketListVBox;
     private Label marketListTitle, marketHeaderIcon, marketTitle, marketDescription, marketPrice;
     private Button createOfferButton;
-    private Subscription selectedMarketItemPin, marketListViewSelectionPin, favouritesListViewHeightChangedPin;
+    private Subscription selectedMarketItemPin, marketListViewSelectionPin, favouritesListViewHeightChangedPin,
+            favouritesListViewSelectionPin;
 
     public MuSigOfferbookView(MuSigOfferbookModel model, MuSigOfferbookController controller) {
         super(new VBox(), model, controller);
@@ -107,6 +110,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
         root.getChildren().add(marketsAndOfferTableHBox);
         root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
+
+        favouriteItemsChangeListener = change -> selectedMarketItemChanged(model.getSelectedMarketItem().get());
     }
 
     @Override
@@ -123,6 +128,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         marketTitle.textProperty().bind(model.getMarketTitle());
         marketDescription.textProperty().bind(model.getMarketDescription());
         marketPrice.textProperty().bind(model.getMarketPrice());
+        favouritesListView.visibleProperty().bind(Bindings.isNotEmpty(model.getFavouriteMarketItems()));
+        favouritesListView.managedProperty().bind(Bindings.isNotEmpty(model.getFavouriteMarketItems()));
 
         selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), this::selectedMarketItemChanged);
         marketListViewSelectionPin = EasyBind.subscribe(marketListView.getSelectionModel().selectedItemProperty(), item -> {
@@ -130,6 +137,13 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 controller.onSelectMarketItem(item);
             }
         });
+        favouritesListViewSelectionPin = EasyBind.subscribe(favouritesListView.getSelectionModel().selectedItemProperty(), item -> {
+            if (item != null) {
+                controller.onSelectMarketItem(item);
+            }
+        });
+        model.getFavouriteMarketItems().addListener(favouriteItemsChangeListener);
+
         favouritesListViewHeightChangedPin = EasyBind.subscribe(model.getFavouritesListViewHeightChanged(), heightChanged -> {
             if (heightChanged) {
                 double padding = 21;
@@ -151,12 +165,17 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         marketTitle.textProperty().unbind();
         marketDescription.textProperty().unbind();
         marketPrice.textProperty().unbind();
+        favouritesListView.visibleProperty().unbind();
+        favouritesListView.managedProperty().unbind();
 
         selectedMarketItemPin.unsubscribe();
         marketListViewSelectionPin.unsubscribe();
+        favouritesListViewSelectionPin.unsubscribe();
         favouritesListViewHeightChangedPin.unsubscribe();
 
         createOfferButton.setOnAction(null);
+
+        model.getFavouriteMarketItems().removeListener(favouriteItemsChangeListener);
     }
 
     private void configMuSigOfferListView() {

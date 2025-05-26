@@ -64,7 +64,7 @@ public class MuSigOfferbookController implements Controller {
     private final IdentityService identityService;
     private final BannedUserService bannedUserService;
     private final FavouriteMarketsService favouriteMarketsService;
-//    private final Predicate<MarketItem> marketItemsPredicate;
+    private final Predicate<MarketItem> marketItemsPredicate;
     private final Predicate<MarketItem> favouriteMarketItemsPredicate;
     private Pin offersPin, selectedMarketPin, favouriteMarketsPin;
     private Subscription selectedMarketItemPin;
@@ -81,11 +81,11 @@ public class MuSigOfferbookController implements Controller {
         model = new MuSigOfferbookModel();
         view = new MuSigOfferbookView(model, this);
 
-//        marketItemsPredicate = item ->
-//                model.getMarketFilterPredicate().test(item) &&
+        marketItemsPredicate = item ->
+                model.getMarketFilterPredicate().test(item) &&
 //                        model.getMarketSearchTextPredicate().test(item) &&
 //                        model.getMarketPricePredicate().test(item) &&
-//                        !item.getIsFavourite().get();
+                        !item.getIsFavourite().get();
         favouriteMarketItemsPredicate = item -> item.getIsFavourite().get();
     }
 
@@ -189,7 +189,6 @@ public class MuSigOfferbookController implements Controller {
 
         updateFilteredMarketItems();
         updateFavouriteMarketItems();
-        maybeSelectFirst();
     }
 
     @Override
@@ -314,8 +313,8 @@ public class MuSigOfferbookController implements Controller {
     }
 
     private void updateFilteredMarketItems() {
-//        model.getFilteredMarketItems().setPredicate(null);
-//        model.getFilteredMarketItems().setPredicate(marketItemsPredicate);
+        model.getFilteredMarketItems().setPredicate(null);
+        model.getFilteredMarketItems().setPredicate(marketItemsPredicate);
     }
 
     private void updateFavouriteMarketItems() {
