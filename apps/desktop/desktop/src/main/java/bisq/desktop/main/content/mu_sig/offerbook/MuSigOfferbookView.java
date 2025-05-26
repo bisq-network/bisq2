@@ -63,14 +63,14 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     private static final double SIDE_PADDING = 40;
 
     private final RichTableView<MuSigOfferListItem> muSigOfferListView;
-    private final BisqTableView<MarketItem> marketListView;
+    private final BisqTableView<MarketItem> marketListView, favouritesListView;
     private final HBox headerHBox;
     private final VBox offersVBox;
     private HBox appliedFiltersSection;
     private VBox marketListVBox;
     private Label marketListTitle, marketHeaderIcon, marketTitle, marketDescription, marketPrice;
     private Button createOfferButton;
-    private Subscription selectedMarketItemPin, marketListViewSelectionPin;
+    private Subscription selectedMarketItemPin, marketListViewSelectionPin, favouritesListViewHeightChangedPin;
 
     public MuSigOfferbookView(MuSigOfferbookModel model, MuSigOfferbookController controller) {
         super(new VBox(), model, controller);
@@ -89,6 +89,12 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         marketListView.setFixedCellSize(LIST_CELL_HEIGHT);
         marketListView.setPlaceholder(new Label());
         configMarketListView(marketListView);
+        favouritesListView = new BisqTableView<>(model.getFavouriteMarketItems());
+        favouritesListView.getStyleClass().addAll("market-selection-list", "favourites-list");
+        favouritesListView.hideVerticalScrollbar();
+        favouritesListView.hideHorizontalScrollbar();
+        favouritesListView.setFixedCellSize(LIST_CELL_HEIGHT);
+        configMarketListView(favouritesListView);
         setupMarketsColumn();
 
         headerHBox = new HBox(10);
@@ -109,6 +115,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         muSigOfferListView.resetSearch();
         muSigOfferListView.sort();
 
+        favouritesListView.initialize();
         marketListView.initialize();
 
         updateAppliedFiltersSectionStyles(false);
@@ -123,6 +130,13 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 controller.onSelectMarketItem(item);
             }
         });
+        favouritesListViewHeightChangedPin = EasyBind.subscribe(model.getFavouritesListViewHeightChanged(), heightChanged -> {
+            if (heightChanged) {
+                double padding = 21;
+                double tableViewHeight = (model.getFavouriteMarketItems().size() * LIST_CELL_HEIGHT) + padding;
+                updateFavouritesTableViewHeight(tableViewHeight);
+            }
+        });
 
         createOfferButton.setOnAction(e -> controller.onCreateOffer());
     }
@@ -131,12 +145,16 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     protected void onViewDetached() {
         muSigOfferListView.dispose();
 
+        favouritesListView.dispose();
+        marketListView.dispose();
+
         marketTitle.textProperty().unbind();
         marketDescription.textProperty().unbind();
         marketPrice.textProperty().unbind();
 
         selectedMarketItemPin.unsubscribe();
         marketListViewSelectionPin.unsubscribe();
+        favouritesListViewHeightChangedPin.unsubscribe();
 
         createOfferButton.setOnAction(null);
     }
@@ -224,18 +242,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         appliedFiltersSection = new HBox(/*withOffersDisplayHint, onlyFavouritesDisplayHint*/);
         appliedFiltersSection.setAlignment(Pos.CENTER_RIGHT);
         HBox.setHgrow(appliedFiltersSection, Priority.ALWAYS);
-//
-//        favouritesTableView = new BisqTableView<>(getModel().getFavouriteMarketChannelItems());
-//        favouritesTableView.getStyleClass().addAll("market-selection-list", "favourites-list");
-//        favouritesTableView.hideVerticalScrollbar();
-//        favouritesTableView.hideHorizontalScrollbar();
-//        favouritesTableView.setFixedCellSize(LIST_CELL_HEIGHT);
-//        configMarketsTableView(favouritesTableView);
 
-
-
-        marketListVBox = new VBox(header, Layout.hLine(), subheader, appliedFiltersSection, /*favouritesTableView,*/
-                marketListView);
+        marketListVBox = new VBox(header, Layout.hLine(), subheader, appliedFiltersSection, favouritesListView, marketListView);
         VBox.setVgrow(marketListView, Priority.ALWAYS);
         VBox.setVgrow(marketListVBox, Priority.ALWAYS);
         marketListVBox.setMaxWidth(MARKET_LIST_WIDTH);
@@ -255,7 +263,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         BisqTableColumn<MarketItem> marketLabelTableColumn = new BisqTableColumn.Builder<MarketItem>()
                 .minWidth(100)
                 .left()
-                .setCellFactory(getMarketLabelCellFactory(false))
+                .setCellFactory(getMarketLabelCellFactory(tableView.equals(favouritesListView)))
                 .build();
 
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
@@ -443,8 +451,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     private void selectedMarketItemChanged(MarketItem selectedItem) {
         marketListView.getSelectionModel().clearSelection();
         marketListView.getSelectionModel().select(selectedItem);
-//        favouritesTableView.getSelectionModel().clearSelection();
-//        favouritesTableView.getSelectionModel().select(selectedItem);
+        favouritesListView.getSelectionModel().clearSelection();
+        favouritesListView.getSelectionModel().select(selectedItem);
 
         if (selectedItem != null) {
             Node baseMarketImage = MarketImageComposition.createMarketLogo(model.getMarketIconId().get());
@@ -506,5 +514,11 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         appliedFiltersSection.getStyleClass().add(shouldShowAppliedFilters
                 ? "market-selection-show-applied-filters"
                 : "market-selection-no-filters");
+    }
+
+    private void updateFavouritesTableViewHeight(double height) {
+        favouritesListView.setMinHeight(height);
+        favouritesListView.setPrefHeight(height);
+        favouritesListView.setMaxHeight(height);
     }
 }
