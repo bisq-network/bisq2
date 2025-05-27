@@ -22,6 +22,7 @@ import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
+import bisq.common.proto.ProtobufUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -42,7 +43,6 @@ import bisq.user.banned.BannedUserService;
 import bisq.user.banned.RateLimitExceededException;
 import bisq.user.banned.UserProfileBannedException;
 import bisq.user.profile.UserProfileService;
-import javafx.collections.ListChangeListener;
 import lombok.Getter;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -68,7 +68,7 @@ public class MuSigOfferbookController implements Controller {
     private final Predicate<MarketItem> marketItemsPredicate;
     private final Predicate<MarketItem> favouriteMarketItemsPredicate;
     private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin;
-    private Subscription selectedMarketItemPin, marketsSearchBoxTextPin;
+    private Subscription selectedMarketItemPin, marketsSearchBoxTextPin, selectedMarketFilterPin, selectedMarketSortTypePin;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
         muSigService = serviceProvider.getMuSigService();
@@ -215,6 +215,29 @@ public class MuSigOfferbookController implements Controller {
             updateFilteredMarketItems();
         });
 
+        MarketFilter persistedMarketsFilter = settingsService.getCookie().asString(CookieKey.MU_SIG_MARKETS_FILTER).map(name ->
+                ProtobufUtils.enumFromProto(MarketFilter.class, name, MarketFilter.ALL)).orElse(MarketFilter.ALL);
+        model.getSelectedMarketsFilter().set(persistedMarketsFilter);
+        selectedMarketFilterPin = EasyBind.subscribe(model.getSelectedMarketsFilter(), filter -> {
+            if (filter != null) {
+                model.setMarketFilterPredicate(MarketFilterPredicate.getPredicate(filter));
+                settingsService.setCookie(CookieKey.MU_SIG_MARKETS_FILTER, model.getSelectedMarketsFilter().get().name());
+                updateFilteredMarketItems();
+            }
+            model.getShouldShowAppliedFilters().set(filter == MarketFilter.WITH_OFFERS || filter == MarketFilter.FAVOURITES);
+        });
+
+        MarketSortType persistedMarketSortType = settingsService.getCookie().asString(CookieKey.MU_SIG_MARKET_SORT_TYPE).map(name ->
+                        ProtobufUtils.enumFromProto(MarketSortType.class, name, MarketSortType.NUM_OFFERS))
+                .orElse(MarketSortType.NUM_OFFERS);
+        model.getSelectedMarketSortType().set(persistedMarketSortType);
+        selectedMarketSortTypePin = EasyBind.subscribe(model.getSelectedMarketSortType(), marketSortType -> {
+            if (marketSortType != null) {
+                settingsService.setCookie(CookieKey.MU_SIG_MARKET_SORT_TYPE, marketSortType.name());
+            }
+        });
+        model.getSortedMarketItems().setComparator(model.getSelectedMarketSortType().get().getComparator());
+
         updateFilteredMarketItems();
         updateFavouriteMarketItems();
     }
@@ -232,6 +255,8 @@ public class MuSigOfferbookController implements Controller {
 
         selectedMarketItemPin.unsubscribe();
         marketsSearchBoxTextPin.unsubscribe();
+        selectedMarketFilterPin.unsubscribe();
+        selectedMarketSortTypePin.unsubscribe();
     }
 
     void onSelectMarketItem(MarketItem marketItem) {
