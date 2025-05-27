@@ -113,7 +113,7 @@ public class SettingsRestApi extends RestApiBase {
             } else if (request.maxTradePriceDeviation() != null) {
                 settingsService.setMaxTradePriceDeviation(request.maxTradePriceDeviation());
             } else if (request.selectedMarket() != null) {
-                settingsService.setSelectedMarket(DtoMappings.MarketMapping.toBisq2Model(request.selectedMarket()));
+                settingsService.setMuSigSelectedMarket(DtoMappings.MarketMapping.toBisq2Model(request.selectedMarket()));
             } else if (request.numDaysAfterRedactingTradeData() != null) {
                 settingsService.setNumDaysAfterRedactingTradeData(request.numDaysAfterRedactingTradeData());
             } else if (request.useAnimations() != null) {

@@ -101,7 +101,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         pins.add(getCloseMyOfferWhenTaken().addObserver(value -> persist()));
         pins.add(getConsumedAlertIds().addObserver(this::persist));
         pins.add(getSupportedLanguageCodes().addObserver(this::persist));
-        pins.add(getSelectedMarket().addObserver(value -> persist()));
+        pins.add(getMuSigSelectedMarket().addObserver(value -> persist()));
         pins.add(getTradeRulesConfirmed().addObserver(value -> persist()));
         pins.add(getLanguageCode().addObserver(value -> persist()));
         pins.add(getDifficultyAdjustmentFactor().addObserver(value -> persist()));
@@ -171,8 +171,8 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     // Getters for Observable
     /* --------------------------------------------------------------------- */
 
-    public ReadOnlyObservable<Market> getSelectedMarket() {
-        return persistableStore.selectedMarket;
+    public ReadOnlyObservable<Market> getMuSigSelectedMarket() {
+        return persistableStore.muSigSelectedMarket;
     }
 
     public ReadOnlyObservable<Boolean> getUseAnimations() {
@@ -268,9 +268,9 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     // Setters
     /* --------------------------------------------------------------------- */
 
-    public void setSelectedMarket(Market market) {
+    public void setMuSigSelectedMarket(Market market) {
         if (market != null) {
-            persistableStore.selectedMarket.set(market);
+            persistableStore.muSigSelectedMarket.set(market);
         }
     }
 

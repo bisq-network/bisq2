@@ -26,6 +26,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.mu_sig.MuSigService;
 import bisq.offer.Direction;
+import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentityService;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
@@ -47,6 +48,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
     private final UserIdentityService userIdentityService;
     private final MarketPriceService marketPriceService;
     private final MuSigService muSigService;
+    private final SettingsService settingsService;
     private Subscription searchTextPin;
 
     public MuSigCreateOfferDirectionAndMarketController(ServiceProvider serviceProvider,
@@ -59,6 +61,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         muSigService = serviceProvider.getMuSigService();
+        settingsService = serviceProvider.getSettingsService();
 
         model = new MuSigCreateOfferDirectionAndMarketModel();
         view = new MuSigCreateOfferDirectionAndMarketView(model, this);
@@ -166,7 +169,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         }
         model.getSelectedMarketListItem().set(item);
         model.getSelectedMarket().set(item.getMarket());
-        muSigService.getMuSigSelectedMarket().set(item.getMarket());
+        settingsService.setMuSigSelectedMarket(item.getMarket());
     }
 
     private void setDirection(Direction direction) {

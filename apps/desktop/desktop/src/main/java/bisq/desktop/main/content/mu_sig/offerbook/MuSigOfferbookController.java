@@ -142,7 +142,7 @@ public class MuSigOfferbookController implements Controller {
             }
         });
 
-        selectedMarketPin = muSigService.getMuSigSelectedMarket().addObserver(market -> {
+        selectedMarketPin = settingsService.getMuSigSelectedMarket().addObserver(market -> {
             if (market != null) {
                 model.getMarketItems().stream()
                         .filter(item -> item.getMarket().equals(market))
@@ -186,7 +186,7 @@ public class MuSigOfferbookController implements Controller {
             if (selectedMarketItem != null) {
                 updateFilteredMuSigOfferListItemsPredicate();
                 updateMarketData(selectedMarketItem);
-                muSigService.getMuSigSelectedMarket().set(selectedMarketItem.getMarket());
+                settingsService.setMuSigSelectedMarket(selectedMarketItem.getMarket());
             }
         });
 
@@ -229,7 +229,7 @@ public class MuSigOfferbookController implements Controller {
         } else {
             model.getSelectedMarketItem().set(marketItem);
             Market market = marketItem.getMarket();
-            settingsService.setSelectedMarket(market);
+            settingsService.setMuSigSelectedMarket(market);
             settingsService.setCookie(getSelectedMarketCookieKey(), market.getMarketCodes());
         }
     }

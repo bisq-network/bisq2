@@ -108,8 +108,6 @@ public class MuSigService extends LifecycleService {
     private final MuSigTradeService muSigTradeService;
     private final MuSigOpenTradeChannelService muSigOpenTradeChannelService;
     private final UserProfileService userProfileService;
-    @Getter
-    private final Observable<Market> muSigSelectedMarket = new Observable<>(null);
     private Pin muSigActivatedPin;
 
     public MuSigService(PersistenceService persistenceService,
