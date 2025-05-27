@@ -53,7 +53,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
     final Cookie cookie;
     final Map<String, Boolean> dontShowAgainMap = new ConcurrentHashMap<>();
     final Observable<Boolean> useAnimations = new Observable<>();
-    final Observable<Market> muSigSelectedMarket = new Observable<>();
+    final Observable<Market> selectedMuSigMarket = new Observable<>();
     @Deprecated(since = "2.1.1")
     private final Observable<Long> minRequiredReputationScore = new Observable<>();
     @Deprecated(since = "2.1.2")
@@ -116,7 +116,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
     SettingsStore(Cookie cookie,
                   Map<String, Boolean> dontShowAgainMap,
                   boolean useAnimations,
-                  Market muSigSelectedMarket,
+                  Market selectedMuSigMarket,
                   long requiredTotalReputationScore,
                   boolean offersOnly,
                   boolean tradeRulesConfirmed,
@@ -144,7 +144,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
-        this.muSigSelectedMarket.set(muSigSelectedMarket);
+        this.selectedMuSigMarket.set(selectedMuSigMarket);
         this.minRequiredReputationScore.set(requiredTotalReputationScore);
         this.offersOnly.set(offersOnly);
         this.tradeRulesConfirmed.set(tradeRulesConfirmed);
@@ -177,7 +177,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setCookie(cookie.toProto(serializeForHash))
                 .putAllDontShowAgainMap(dontShowAgainMap)
                 .setUseAnimations(useAnimations.get())
-                .setMuSigSelectedMarket(muSigSelectedMarket.get().toProto(serializeForHash))
+                .setSelectedMuSigMarket(selectedMuSigMarket.get().toProto(serializeForHash))
                 .setMinRequiredReputationScore(minRequiredReputationScore.get())
                 .setOffersOnly(offersOnly.get())
                 .setTradeRulesConfirmed(tradeRulesConfirmed.get())
@@ -231,7 +231,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getDontShowAgainMapMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
                 proto.getUseAnimations(),
-                Market.fromProto(proto.getMuSigSelectedMarket()),
+                Market.fromProto(proto.getSelectedMuSigMarket()),
                 proto.getMinRequiredReputationScore(),
                 proto.getOffersOnly(),
                 proto.getTradeRulesConfirmed(),
@@ -275,7 +275,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
         return new SettingsStore(cookie,
                 new HashMap<>(dontShowAgainMap),
                 useAnimations.get(),
-                muSigSelectedMarket.get(),
+                selectedMuSigMarket.get(),
                 minRequiredReputationScore.get(),
                 offersOnly.get(),
                 tradeRulesConfirmed.get(),
@@ -308,7 +308,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
             cookie.putAll(persisted.cookie.getMap());
             dontShowAgainMap.putAll(persisted.dontShowAgainMap);
             useAnimations.set(persisted.useAnimations.get());
-            muSigSelectedMarket.set(persisted.muSigSelectedMarket.get());
+            selectedMuSigMarket.set(persisted.selectedMuSigMarket.get());
             minRequiredReputationScore.set(persisted.minRequiredReputationScore.get());
             offersOnly.set(persisted.offersOnly.get());
             tradeRulesConfirmed.set(persisted.tradeRulesConfirmed.get());

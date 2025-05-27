@@ -22,7 +22,7 @@ import lombok.Getter;
 import java.util.function.Predicate;
 
 @Getter
-public class MarketFilterPredicate {
+public class MarketFilterPredicateProvider {
     public static Predicate<MarketItem> getPredicate(MarketFilter marketFilter) {
         return switch (marketFilter) {
             case ALL -> item -> true;

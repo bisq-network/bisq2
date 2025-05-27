@@ -39,10 +39,6 @@ import java.util.function.Predicate;
 @Slf4j
 @Getter
 public class MuSigOfferbookModel implements Model {
-    @Setter
-    private Predicate<MarketItem> marketItemsPredicate;
-    private final Predicate<MarketItem> favouriteMarketItemsPredicate;
-
     private final StringProperty marketTitle = new SimpleStringProperty("");
     private final StringProperty marketDescription = new SimpleStringProperty("");
     private final StringProperty marketPrice = new SimpleStringProperty("");
@@ -67,17 +63,18 @@ public class MuSigOfferbookModel implements Model {
     private final ObjectProperty<MarketSortType> selectedMarketSortType = new SimpleObjectProperty<>(MarketSortType.NUM_OFFERS);
     private final BooleanProperty shouldShowAppliedFilters = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowFavouritesListView = new SimpleBooleanProperty();
+    private final BooleanProperty favouritesListViewNeedsHeightUpdate = new SimpleBooleanProperty();
 
-    @Setter
-    private BooleanProperty favouritesListViewNeedsHeightUpdate = new SimpleBooleanProperty();
+    private final Predicate<MarketItem> marketItemsPredicate = item ->
+            getMarketFilterPredicate().test(item) &&
+                    getMarketSearchTextPredicate().test(item) &&
+                    getMarketPricePredicate().test(item) &&
+                    !item.getIsFavourite().get();
+    private final Predicate<MarketItem> favouriteMarketItemsPredicate = item -> item.getIsFavourite().get();;
     @Setter
     private Predicate<MarketItem> marketFilterPredicate = marketItem -> true;
     @Setter
     private Predicate<MarketItem> marketSearchTextPredicate = marketItem -> true;
     @Setter
     private Predicate<MarketItem> marketPricePredicate = marketItem -> true;
-
-    public MuSigOfferbookModel(Predicate<MarketItem> favouriteMarketItemsPredicate) {
-        this.favouriteMarketItemsPredicate = favouriteMarketItemsPredicate;
-    }
 }
