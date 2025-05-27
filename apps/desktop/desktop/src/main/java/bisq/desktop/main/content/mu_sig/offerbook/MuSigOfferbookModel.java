@@ -68,4 +68,6 @@ public class MuSigOfferbookModel implements Model {
     private Predicate<MarketItem> marketFilterPredicate = marketItem -> true;
     @Setter
     private Predicate<MarketItem> marketSearchTextPredicate = marketItem -> true;
+    @Setter
+    private Predicate<MarketItem> marketPricePredicate = marketItem -> true;
 }

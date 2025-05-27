@@ -42,6 +42,7 @@ import bisq.user.banned.BannedUserService;
 import bisq.user.banned.RateLimitExceededException;
 import bisq.user.banned.UserProfileBannedException;
 import bisq.user.profile.UserProfileService;
+import javafx.collections.ListChangeListener;
 import lombok.Getter;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -66,7 +67,7 @@ public class MuSigOfferbookController implements Controller {
     private final FavouriteMarketsService favouriteMarketsService;
     private final Predicate<MarketItem> marketItemsPredicate;
     private final Predicate<MarketItem> favouriteMarketItemsPredicate;
-    private Pin offersPin, selectedMarketPin, favouriteMarketsPin;
+    private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin;
     private Subscription selectedMarketItemPin, marketsSearchBoxTextPin;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
@@ -84,7 +85,7 @@ public class MuSigOfferbookController implements Controller {
         marketItemsPredicate = item ->
                 model.getMarketFilterPredicate().test(item) &&
                         model.getMarketSearchTextPredicate().test(item) &&
-//                        model.getMarketPricePredicate().test(item) &&
+                        model.getMarketPricePredicate().test(item) &&
                         !item.getIsFavourite().get();
         favouriteMarketItemsPredicate = item -> item.getIsFavourite().get();
     }
@@ -182,11 +183,21 @@ public class MuSigOfferbookController implements Controller {
             }
         });
 
+        marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
+                UIThread.run(() -> {
+                    model.setMarketPricePredicate(item -> marketPriceService.getMarketPriceByCurrencyMap().isEmpty() ||
+                            marketPriceService.getMarketPriceByCurrencyMap().containsKey(item.getMarket()));
+                    updateFilteredMarketItems();
+                }));
+
         selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarketItem -> {
             if (selectedMarketItem != null) {
-                updateFilteredMuSigOfferListItemsPredicate();
-                updateMarketData(selectedMarketItem);
-                settingsService.setMuSigSelectedMarket(selectedMarketItem.getMarket());
+                UIThread.run(() -> {
+                    updateFilteredMuSigOfferListItemsPredicate();
+                    updateMarketData(selectedMarketItem);
+                    updateMarketPrice(selectedMarketItem);
+                    settingsService.setMuSigSelectedMarket(selectedMarketItem.getMarket());
+                });
             }
         });
 
@@ -217,6 +228,7 @@ public class MuSigOfferbookController implements Controller {
         offersPin.unbind();
         selectedMarketPin.unbind();
         favouriteMarketsPin.unbind();
+        marketPriceByCurrencyMapPin.unbind();
 
         selectedMarketItemPin.unsubscribe();
         marketsSearchBoxTextPin.unsubscribe();
@@ -354,5 +366,15 @@ public class MuSigOfferbookController implements Controller {
         return model.getMarketItems().stream()
                 .filter(e -> e.getMarket().equals(market))
                 .findAny();
+    }
+
+    private void updateMarketPrice(MarketItem marketItem) {
+        Market selectedMarket = marketItem.getMarket();
+        if (selectedMarket != null) {
+            marketPriceService
+                    .findMarketPrice(selectedMarket)
+                    .ifPresent(marketPrice ->
+                            model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true)));
+        }
     }
 }
