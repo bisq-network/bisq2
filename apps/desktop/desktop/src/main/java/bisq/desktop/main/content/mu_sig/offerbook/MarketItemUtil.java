@@ -34,7 +34,13 @@ public class MarketItemUtil {
     static Comparator<MarketItem> sortByMajorMarkets() {
         return (lhs, rhs) -> {
             int index1 = majorMarkets.indexOf(lhs.getMarket());
+            if (index1 == -1) {
+                index1 = Integer.MAX_VALUE;
+            }
             int index2 = majorMarkets.indexOf(rhs.getMarket());
+            if (index2 == -1) {
+                index2 = Integer.MAX_VALUE;
+            }
             return Integer.compare(index1, index2);
         };
     }
