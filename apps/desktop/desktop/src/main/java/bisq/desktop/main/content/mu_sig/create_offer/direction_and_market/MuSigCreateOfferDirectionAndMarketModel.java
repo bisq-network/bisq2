@@ -35,8 +35,9 @@ import lombok.Setter;
 
 @Getter
 public class MuSigCreateOfferDirectionAndMarketModel implements Model {
+    // TODO to be removed
     @Setter
-    private boolean isAllowedToCreateSellOffer;
+    private boolean isAllowedToCreateSellOffer = true;
 
     private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>(Direction.BUY);
     private final BooleanProperty showReputationInfo = new SimpleBooleanProperty();
@@ -49,7 +50,7 @@ public class MuSigCreateOfferDirectionAndMarketModel implements Model {
     private final SortedList<MuSigCreateOfferDirectionAndMarketView.ListItem> sortedList = new SortedList<>(filteredList);
 
     void reset() {
-        isAllowedToCreateSellOffer = false;
+        isAllowedToCreateSellOffer = true;
         direction.set(Direction.BUY);
         showReputationInfo.set(false);
         buyButtonDisabled.set(false);
