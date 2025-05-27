@@ -21,14 +21,18 @@ import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.handler.MuSigTradeMessageHandler;
+import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.RedactedPartialSignatures;
+import bisq.trade.protobuf.SwapTxSignatureRequest;
+import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class MuSigPaymentInitiatedMessage_E_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigPaymentInitiatedMessage_E> {
     private byte[] peersSwapTxInputPartialSignature;
+    private SwapTxSignatureResponse mySwapTxSignatureResponse;
 
     public MuSigPaymentInitiatedMessage_E_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -41,11 +45,23 @@ public final class MuSigPaymentInitiatedMessage_E_Handler extends MuSigTradeMess
     @Override
     protected void process(MuSigPaymentInitiatedMessage_E message) {
         peersSwapTxInputPartialSignature = message.getSwapTxInputPartialSignature();
+
+        // Seller computes Swap Tx signature immediately upon receipt of peersSwapTxInputPartialSignature, instead of waiting until the
+        // end of the trade, to make sure that there's no problem with it and let trade fail otherwise.
+        bisq.trade.protobuf.SwapTxSignatureResponse swapTxSignatureResponse = blockingStub.signSwapTx(SwapTxSignatureRequest.newBuilder()
+                .setTradeId(trade.getId())
+                .setSwapTxInputPeersPartialSignature(ByteString.copyFrom(peersSwapTxInputPartialSignature))
+                .build());
+        mySwapTxSignatureResponse = SwapTxSignatureResponse.fromProto(swapTxSignatureResponse);
     }
 
     @Override
     protected void commit() {
+        MuSigTradeParty myself = trade.getMyself();
         MuSigTradeParty peer = trade.getPeer();
+
+        myself.setMySwapTxSignatureResponse(mySwapTxSignatureResponse);
+
         // Now we reconstruct the un-redacted PartialSignatures
         RedactedPartialSignatures redactedPartialSignatures = peer.getPeersRedactedPartialSignatures().orElseThrow();
         PartialSignatures peersPartialSignatures = PartialSignatures.from(redactedPartialSignatures, peersSwapTxInputPartialSignature);
