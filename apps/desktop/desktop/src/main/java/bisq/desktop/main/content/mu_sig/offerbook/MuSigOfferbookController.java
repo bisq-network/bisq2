@@ -48,6 +48,7 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -63,7 +64,9 @@ public class MuSigOfferbookController implements Controller {
     private final IdentityService identityService;
     private final BannedUserService bannedUserService;
     private final FavouriteMarketsService favouriteMarketsService;
-    private Pin offersPin, selectedMarketPin;
+    private final Predicate<MarketItem> marketItemsPredicate;
+    private final Predicate<MarketItem> favouriteMarketItemsPredicate;
+    private Pin offersPin, selectedMarketPin, favouriteMarketsPin;
     private Subscription selectedMarketItemPin;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
@@ -77,6 +80,13 @@ public class MuSigOfferbookController implements Controller {
 
         model = new MuSigOfferbookModel();
         view = new MuSigOfferbookView(model, this);
+
+        marketItemsPredicate = item ->
+                model.getMarketFilterPredicate().test(item) &&
+//                        model.getMarketSearchTextPredicate().test(item) &&
+//                        model.getMarketPricePredicate().test(item) &&
+                        !item.getIsFavourite().get();
+        favouriteMarketItemsPredicate = item -> item.getIsFavourite().get();
     }
 
     @Override
@@ -145,11 +155,47 @@ public class MuSigOfferbookController implements Controller {
                         .ifPresent(item -> model.getSelectedMarketItem().set(item));
             }
         });
+
+        favouriteMarketsPin = settingsService.getFavouriteMarkets().addObserver(new CollectionObserver<>() {
+            @Override
+            public void add(Market market) {
+                UIThread.run(() -> {
+                    findMarketItem(market).ifPresent(item -> item.getIsFavourite().set(true));
+                    updateFilteredMarketItems();
+                    updateFavouriteMarketItems();
+                });
+            }
+
+            @Override
+            public void remove(Object element) {
+                if (element instanceof Market market) {
+                    UIThread.run(() -> {
+                        findMarketItem(market).ifPresent(item -> item.getIsFavourite().set(false));
+                        updateFilteredMarketItems();
+                        updateFavouriteMarketItems();
+                    });
+                }
+            }
+
+            @Override
+            public void clear() {
+                UIThread.run(() -> {
+                    model.getMarketItems().forEach(item -> item.getIsFavourite().set(false));
+                    updateFilteredMarketItems();
+                    updateFavouriteMarketItems();
+                });
+            }
+        });
+
+        updateFilteredMarketItems();
+        updateFavouriteMarketItems();
     }
 
     @Override
     public void onDeactivate() {
         offersPin.unbind();
+        favouriteMarketsPin.unbind();
+
         model.getMuSigOfferListItems().forEach(MuSigOfferListItem::dispose);
         model.getMuSigOfferListItems().clear();
         model.getMuSigOfferIds().clear();
@@ -264,5 +310,26 @@ public class MuSigOfferbookController implements Controller {
             model.getMarketDescription().set("");
             model.getMarketPrice().set("");
         }
+    }
+
+    private void updateFilteredMarketItems() {
+        model.getFilteredMarketItems().setPredicate(null);
+        model.getFilteredMarketItems().setPredicate(marketItemsPredicate);
+    }
+
+    private void updateFavouriteMarketItems() {
+        // FilteredList has no API for refreshing/invalidating so that the tableView gets updated.
+        // Calling refresh on the tableView also did not refresh the collection.
+        // Thus, we trigger a change of the predicate to force a refresh.
+        model.getFavouriteMarketItems().setPredicate(null);
+        model.getFavouriteMarketItems().setPredicate(favouriteMarketItemsPredicate);
+        model.getFavouritesListViewNeedsHeightUpdate().set(false);
+        model.getFavouritesListViewNeedsHeightUpdate().set(true);
+    }
+
+    private Optional<MarketItem> findMarketItem(Market market) {
+        return model.getMarketItems().stream()
+                .filter(e -> e.getMarket().equals(market))
+                .findAny();
     }
 }
