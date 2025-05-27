@@ -144,8 +144,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         marketTitle.textProperty().bind(model.getMarketTitle());
         marketDescription.textProperty().bind(model.getMarketDescription());
         marketPrice.textProperty().bind(model.getMarketPrice());
-        favouritesListView.visibleProperty().bind(Bindings.isNotEmpty(model.getFavouriteMarketItems()));
-        favouritesListView.managedProperty().bind(Bindings.isNotEmpty(model.getFavouriteMarketItems()));
+        favouritesListView.visibleProperty().bind(model.getShouldShowFavouritesListView());
+        favouritesListView.managedProperty().bind(model.getShouldShowFavouritesListView());
         withOffersDisplayHint.visibleProperty().bind(model.getSelectedMarketsFilter().isEqualTo(MarketFilter.WITH_OFFERS));
         withOffersDisplayHint.managedProperty().bind(model.getSelectedMarketsFilter().isEqualTo(MarketFilter.WITH_OFFERS));
         onlyFavouritesDisplayHint.visibleProperty().bind(model.getSelectedMarketsFilter().isEqualTo(MarketFilter.FAVOURITES));

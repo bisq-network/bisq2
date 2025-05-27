@@ -43,13 +43,13 @@ import bisq.user.banned.BannedUserService;
 import bisq.user.banned.RateLimitExceededException;
 import bisq.user.banned.UserProfileBannedException;
 import bisq.user.profile.UserProfileService;
+import com.google.common.base.Predicate;
 import lombok.Getter;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -65,8 +65,6 @@ public class MuSigOfferbookController implements Controller {
     private final IdentityService identityService;
     private final BannedUserService bannedUserService;
     private final FavouriteMarketsService favouriteMarketsService;
-    private final Predicate<MarketItem> marketItemsPredicate;
-    private final Predicate<MarketItem> favouriteMarketItemsPredicate;
     private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin;
     private Subscription selectedMarketItemPin, marketsSearchBoxTextPin, selectedMarketFilterPin, selectedMarketSortTypePin;
 
@@ -79,15 +77,16 @@ public class MuSigOfferbookController implements Controller {
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         favouriteMarketsService = serviceProvider.getFavouriteMarketsService();
 
-        model = new MuSigOfferbookModel();
+        Predicate<MarketItem> favouriteMarketItemsPredicate = item -> item.getIsFavourite().get();
+        model = new MuSigOfferbookModel(favouriteMarketItemsPredicate);
         view = new MuSigOfferbookView(model, this);
 
-        marketItemsPredicate = item ->
+        Predicate<MarketItem> marketItemsPredicate = item ->
                 model.getMarketFilterPredicate().test(item) &&
                         model.getMarketSearchTextPredicate().test(item) &&
                         model.getMarketPricePredicate().test(item) &&
                         !item.getIsFavourite().get();
-        favouriteMarketItemsPredicate = item -> item.getIsFavourite().get();
+        model.setMarketFilterPredicate(marketItemsPredicate);
     }
 
     @Override
@@ -374,7 +373,7 @@ public class MuSigOfferbookController implements Controller {
 
     private void updateFilteredMarketItems() {
         model.getFilteredMarketItems().setPredicate(null);
-        model.getFilteredMarketItems().setPredicate(marketItemsPredicate);
+        model.getFilteredMarketItems().setPredicate(model.getMarketItemsPredicate());
     }
 
     private void updateFavouriteMarketItems() {
@@ -382,9 +381,10 @@ public class MuSigOfferbookController implements Controller {
         // Calling refresh on the tableView also did not refresh the collection.
         // Thus, we trigger a change of the predicate to force a refresh.
         model.getFavouriteMarketItems().setPredicate(null);
-        model.getFavouriteMarketItems().setPredicate(favouriteMarketItemsPredicate);
+        model.getFavouriteMarketItems().setPredicate(model.getFavouriteMarketItemsPredicate());
         model.getFavouritesListViewNeedsHeightUpdate().set(false);
         model.getFavouritesListViewNeedsHeightUpdate().set(true);
+        model.getShouldShowFavouritesListView().set(!model.getFavouriteMarketItems().isEmpty());
     }
 
     private Optional<MarketItem> findMarketItem(Market market) {

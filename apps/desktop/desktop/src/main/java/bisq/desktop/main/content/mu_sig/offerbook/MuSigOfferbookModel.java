@@ -39,6 +39,10 @@ import java.util.function.Predicate;
 @Slf4j
 @Getter
 public class MuSigOfferbookModel implements Model {
+    @Setter
+    private Predicate<MarketItem> marketItemsPredicate;
+    private final Predicate<MarketItem> favouriteMarketItemsPredicate;
+
     private final StringProperty marketTitle = new SimpleStringProperty("");
     private final StringProperty marketDescription = new SimpleStringProperty("");
     private final StringProperty marketPrice = new SimpleStringProperty("");
@@ -62,6 +66,7 @@ public class MuSigOfferbookModel implements Model {
     private final ObjectProperty<MarketFilter> selectedMarketsFilter = new SimpleObjectProperty<>();
     private final ObjectProperty<MarketSortType> selectedMarketSortType = new SimpleObjectProperty<>(MarketSortType.NUM_OFFERS);
     private final BooleanProperty shouldShowAppliedFilters = new SimpleBooleanProperty();
+    private final BooleanProperty shouldShowFavouritesListView = new SimpleBooleanProperty();
 
     @Setter
     private BooleanProperty favouritesListViewNeedsHeightUpdate = new SimpleBooleanProperty();
@@ -71,4 +76,8 @@ public class MuSigOfferbookModel implements Model {
     private Predicate<MarketItem> marketSearchTextPredicate = marketItem -> true;
     @Setter
     private Predicate<MarketItem> marketPricePredicate = marketItem -> true;
+
+    public MuSigOfferbookModel(Predicate<MarketItem> favouriteMarketItemsPredicate) {
+        this.favouriteMarketItemsPredicate = favouriteMarketItemsPredicate;
+    }
 }
