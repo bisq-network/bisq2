@@ -302,10 +302,10 @@ public class TakeOfferReviewController implements Controller {
         reviewDataDisplay.setDirection(Res.get("bisqEasy.tradeWizard.review.direction",
                 Res.get(takersDirection.isSell() ? "offer.sell" : "offer.buy").toUpperCase()));
         reviewDataDisplay.setToSendAmountDescription(toSendAmountDescription.toUpperCase());
-        reviewDataDisplay.setToSendAmount(toSendAmount);
+        reviewDataDisplay.setToSendMaxOrFixedAmount(toSendAmount);
         reviewDataDisplay.setToSendCode(toSendCode);
         reviewDataDisplay.setToReceiveAmountDescription(toReceiveAmountDescription.toUpperCase());
-        reviewDataDisplay.setToReceiveAmount(toReceiveAmount);
+        reviewDataDisplay.setToReceiveMaxOrFixedAmount(toReceiveAmount);
         reviewDataDisplay.setToReceiveCode(toReceiveCode);
         reviewDataDisplay.setFiatPaymentMethodDescription(Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription.fiat").toUpperCase());
         reviewDataDisplay.setBitcoinPaymentMethod(model.getBitcoinPaymentMethod());

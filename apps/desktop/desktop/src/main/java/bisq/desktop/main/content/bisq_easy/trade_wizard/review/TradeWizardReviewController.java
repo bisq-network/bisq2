@@ -281,12 +281,9 @@ public class TradeWizardReviewController implements Controller {
         applyPriceDetails(model.getPriceSpec(), market);
 
         model.setRangeAmount(amountSpec instanceof RangeAmountSpec);
-        Monetary currentToSendMinAmount = null;
-        Monetary currentToSendMaxAmount = null;
-        Monetary currentToReceiveMinAmount = null;
-        Monetary currentToReceiveMaxAmount = null;
-
-        String toSendAmountDescription, toSendAmount, toSendCode, toReceiveAmountDescription, toReceiveAmount, toReceiveCode;
+        String currentToSendMinAmount = null, currentToReceiveMinAmount = null,
+                currentToReceiveMaxOrFixedAmount, currentToSendMaxOrFixedAmount,
+                toSendAmountDescription, toSendCode, toReceiveAmountDescription, toReceiveCode;
         if (model.isRangeAmount()) {
             Monetary minBaseSideAmount = OfferAmountUtil.findBaseSideMinAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             model.setMinBaseSideAmount(minBaseSideAmount);
@@ -303,24 +300,20 @@ public class TradeWizardReviewController implements Controller {
             String formattedMaxQuoteAmount = AmountFormatter.formatQuoteAmount(maxQuoteSideAmount);
             String formattedMaxBaseAmount = AmountFormatter.formatBaseAmount(maxBaseSideAmount);
             if (isCreateOfferMode && direction.isSell()) {
-                currentToSendMinAmount = minBaseSideAmount;
-                currentToSendMaxAmount = maxBaseSideAmount;
-                currentToReceiveMinAmount = minQuoteSideAmount;
-                currentToReceiveMaxAmount = maxQuoteSideAmount;
+                currentToSendMinAmount = formattedMinBaseAmount;
+                currentToSendMaxOrFixedAmount = formattedMaxBaseAmount;
+                currentToReceiveMinAmount = formattedMinQuoteAmount;
+                currentToReceiveMaxOrFixedAmount = formattedMaxQuoteAmount;
 
-                toSendAmount = formattedMinBaseAmount + " " + DASH_SYMBOL + " " + formattedMaxBaseAmount;
                 toSendCode = maxBaseSideAmount.getCode();
-                toReceiveAmount = formattedMinQuoteAmount + " " + DASH_SYMBOL + " " + formattedMaxQuoteAmount;
                 toReceiveCode = maxQuoteSideAmount.getCode();
             } else {
-                currentToSendMinAmount = minQuoteSideAmount;
-                currentToSendMaxAmount = maxQuoteSideAmount;
-                currentToReceiveMinAmount = minBaseSideAmount;
-                currentToReceiveMaxAmount = maxBaseSideAmount;
+                currentToSendMinAmount = formattedMinQuoteAmount;
+                currentToSendMaxOrFixedAmount = formattedMaxQuoteAmount;
+                currentToReceiveMinAmount = formattedMinBaseAmount;
+                currentToReceiveMaxOrFixedAmount = formattedMaxBaseAmount;
 
-                toSendAmount = formattedMinQuoteAmount + " " + DASH_SYMBOL + " " + formattedMaxQuoteAmount;
                 toSendCode = maxQuoteSideAmount.getCode();
-                toReceiveAmount = formattedMinBaseAmount + " " + DASH_SYMBOL + " " + formattedMaxBaseAmount;
                 toReceiveCode = maxBaseSideAmount.getCode();
             }
         } else {
@@ -333,14 +326,14 @@ public class TradeWizardReviewController implements Controller {
             String formattedQuoteAmount = AmountFormatter.formatQuoteAmount(fixQuoteSideAmount);
 
             if (isCreateOfferMode && direction.isSell()) {
-                toSendAmount = formattedBaseAmount;
+                currentToSendMaxOrFixedAmount = formattedBaseAmount;
                 toSendCode = fixBaseSideAmount.getCode();
-                toReceiveAmount = formattedQuoteAmount;
+                currentToReceiveMaxOrFixedAmount = formattedQuoteAmount;
                 toReceiveCode = fixQuoteSideAmount.getCode();
             } else {
-                toSendAmount = formattedQuoteAmount;
+                currentToSendMaxOrFixedAmount = formattedQuoteAmount;
                 toSendCode = fixQuoteSideAmount.getCode();
-                toReceiveAmount = formattedBaseAmount;
+                currentToReceiveMaxOrFixedAmount = formattedBaseAmount;
                 toReceiveCode = fixBaseSideAmount.getCode();
             }
         }
@@ -398,16 +391,14 @@ public class TradeWizardReviewController implements Controller {
         applyHeaderFiatPaymentMethod();
 
         reviewDataDisplay.setToSendMinAmount(currentToSendMinAmount);
-        reviewDataDisplay.setToSendMaxAmount(currentToSendMaxAmount);
+        reviewDataDisplay.setToSendMaxOrFixedAmount(currentToSendMaxOrFixedAmount);
         reviewDataDisplay.setToReceiveMinAmount(currentToReceiveMinAmount);
-        reviewDataDisplay.setToReceiveMaxAmount(currentToReceiveMaxAmount);
+        reviewDataDisplay.setToReceiveMaxOrFixedAmount(currentToReceiveMaxOrFixedAmount);
         reviewDataDisplay.setRangeAmount(model.isRangeAmount());
         reviewDataDisplay.setDirection(Res.get("bisqEasy.tradeWizard.review.direction", Res.get(direction.isSell() ? "offer.sell" : "offer.buy").toUpperCase()));
         reviewDataDisplay.setToSendAmountDescription(toSendAmountDescription.toUpperCase());
-        reviewDataDisplay.setToSendAmount(toSendAmount);
         reviewDataDisplay.setToSendCode(toSendCode);
         reviewDataDisplay.setToReceiveAmountDescription(toReceiveAmountDescription.toUpperCase());
-        reviewDataDisplay.setToReceiveAmount(toReceiveAmount);
         reviewDataDisplay.setToReceiveCode(toReceiveCode);
         reviewDataDisplay.setBitcoinPaymentMethodDescription(model.getBitcoinPaymentMethodDescription().toUpperCase());
         reviewDataDisplay.setFiatPaymentMethodDescription(model.getFiatPaymentMethodDescription().toUpperCase());
