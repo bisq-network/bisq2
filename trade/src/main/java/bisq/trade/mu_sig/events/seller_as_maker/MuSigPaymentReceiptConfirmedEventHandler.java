@@ -20,44 +20,30 @@ package bisq.trade.mu_sig.events.seller_as_maker;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
-import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentReceivedMessage_F;
-import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.SwapTxSignature;
-import bisq.trade.protobuf.SwapTxSignatureRequest;
-import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade, MuSigPaymentReceiptConfirmedEvent> {
-    private SwapTxSignatureResponse mySwapTxSignatureResponse;
-
     public MuSigPaymentReceiptConfirmedEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
     public void process(MuSigPaymentReceiptConfirmedEvent event) {
-        MuSigTradeParty peer = trade.getTaker();
-        PartialSignatures peersPartialSignatures = peer.getPeersPartialSignatures().orElseThrow();
-
-        mySwapTxSignatureResponse = SwapTxSignatureResponse.fromProto(blockingStub.signSwapTx(SwapTxSignatureRequest.newBuilder()
-                .setTradeId(trade.getId())
-                .setSwapTxInputPeersPartialSignature(ByteString.copyFrom(peersPartialSignatures.getSwapTxInputPartialSignature()))
-                .build()));
-
         tradeService.startCloseTimeout(trade, new MuSigSellersCloseTimeoutEvent());
     }
 
     @Override
     protected void commit() {
-        trade.getMyself().setMySwapTxSignatureResponse(mySwapTxSignatureResponse);
     }
 
     @Override
     protected void sendMessage() {
+        SwapTxSignatureResponse mySwapTxSignatureResponse = trade.getMyself().getMySwapTxSignatureResponse().orElseThrow();
         SwapTxSignature swapTxSignature = SwapTxSignature.from(mySwapTxSignatureResponse);
 
         // TODO simulate storage of swapTx in blockchain
