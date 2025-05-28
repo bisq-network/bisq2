@@ -37,4 +37,5 @@ dependencies {
     implementation(libs.typesafe.config)
     implementation(libs.bundles.rest.api.libs)
     implementation(libs.bundles.websocket.libs)
+    implementation(libs.bundles.i2p)
 }

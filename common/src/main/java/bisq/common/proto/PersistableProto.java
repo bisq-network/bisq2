@@ -20,5 +20,5 @@ package bisq.common.proto;
 /**
  * Interface Proto implementations which are used for persisted data.
  */
-public interface PersistableProto extends Proto {
+public interface PersistableProto<T> extends Proto {
 }

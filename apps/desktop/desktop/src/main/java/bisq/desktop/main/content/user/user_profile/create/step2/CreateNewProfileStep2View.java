@@ -33,6 +33,8 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.GeneralSecurityException;
+
 @Slf4j
 public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2Model, CreateNewProfileStep2Controller> {
     private final ImageView catHashImageView;
@@ -140,7 +142,13 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         feedbackLabel.managedProperty().bind(model.getCreateProfileProgress().lessThan(0));
         feedbackLabel.visibleProperty().bind(model.getCreateProfileProgress().lessThan(0));
 
-        saveButton.setOnAction((event) -> controller.onSave());
+        saveButton.setOnAction((event) -> {
+            try {
+                controller.onSave();
+            } catch (GeneralSecurityException e) {
+                throw new RuntimeException(e);
+            }
+        });
         cancelButton.setOnAction((event) -> controller.onCancel());
     }
 

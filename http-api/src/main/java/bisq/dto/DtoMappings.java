@@ -84,6 +84,7 @@ import bisq.dto.offer.price.spec.FixPriceSpecDto;
 import bisq.dto.offer.price.spec.FloatPriceSpecDto;
 import bisq.dto.offer.price.spec.MarketPriceSpecDto;
 import bisq.dto.offer.price.spec.PriceSpecDto;
+import bisq.dto.security.keys.I2PKeyPairDto;
 import bisq.dto.security.keys.KeyBundleDto;
 import bisq.dto.security.keys.KeyPairDto;
 import bisq.dto.security.keys.PrivateKeyDto;
@@ -122,10 +123,7 @@ import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.security.DigestUtil;
-import bisq.security.keys.KeyBundle;
-import bisq.security.keys.KeyGeneration;
-import bisq.security.keys.PubKey;
-import bisq.security.keys.TorKeyPair;
+import bisq.security.keys.*;
 import bisq.security.pow.ProofOfWork;
 import bisq.settings.SettingsService;
 import bisq.trade.TradeRole;
@@ -135,7 +133,12 @@ import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
+import net.i2p.data.DataFormatException;
+import net.i2p.data.Destination;
+import net.i2p.data.SigningPrivateKey;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -1047,21 +1050,53 @@ public class DtoMappings {
         }
     }
 
+    public class I2PKeyPairMapping {
+
+        public static I2PKeyPairDto fromBisq2Model(I2PKeyPair model) {
+            if (model == null) {
+                return null;
+            }
+            I2PKeyPairDto dto = new I2PKeyPairDto();
+            String encKeyB64 = model.getPrivateKey().toBase64();
+            String sigKeyB64 = model.getSigningPrivateKey().toBase64();
+            byte[] destBytes = model.getDestination().toByteArray();
+            String destB64 = Base64.getEncoder().encodeToString(destBytes);
+            dto.setPrivateKey(encKeyB64);
+            dto.setSigningPrivateKey(sigKeyB64);
+            dto.setDestination(destB64);
+            return dto;
+        }
+
+        public static I2PKeyPair toBisq2Model(I2PKeyPairDto dto) {
+            try {
+                var privKey = new net.i2p.data.PrivateKey(dto.getPrivateKey());
+
+                SigningPrivateKey signKey = new SigningPrivateKey(dto.getSigningPrivateKey());
+                byte[] destBytes = Base64.getDecoder().decode(dto.getDestination());
+                Destination dest = Destination.create(new ByteArrayInputStream(destBytes));
+                return new I2PKeyPair(privKey, signKey, dest);
+            } catch (DataFormatException | IOException e) {
+                throw new IllegalStateException("Failed to deserialize I2P Destination", e);
+            }
+        }
+    }
+
 
     public static class KeyBundleMapping {
         public static KeyBundle toBisq2Model(KeyBundleDto value) {
             return new KeyBundle(
                     value.keyId(),
                     KeyPairMapping.toBisq2Model(value.keyPair()),
-                    TorKeyPairMapping.toBisq2Model(value.torKeyPair())
-            );
+                    TorKeyPairMapping.toBisq2Model(value.torKeyPair()),
+                    I2PKeyPairMapping.toBisq2Model(value.i2pKeyPair()));
         }
 
         public static KeyBundleDto fromBisq2Model(KeyBundle value) {
             return new KeyBundleDto(
                     value.getKeyId(),
                     KeyPairMapping.fromBisq2Model(value.getKeyPair()),
-                    TorKeyPairMapping.fromBisq2Model(value.getTorKeyPair())
+                    TorKeyPairMapping.fromBisq2Model(value.getTorKeyPair()),
+                            I2PKeyPairMapping.fromBisq2Model(value.getI2PKeyPair())
             );
         }
     }
