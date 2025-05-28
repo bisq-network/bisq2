@@ -19,9 +19,6 @@ package bisq.desktop.main.content.mu_sig.create_offer.direction_and_market;
 
 import bisq.common.currency.FiatCurrency;
 import bisq.common.currency.Market;
-import bisq.desktop.common.Icons;
-import bisq.desktop.common.ManagedDuration;
-import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -30,11 +27,9 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -50,7 +45,6 @@ import javafx.scene.effect.ColorAdjust;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.PopupWindow;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
@@ -65,14 +59,12 @@ import java.util.Comparator;
 public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSigCreateOfferDirectionAndMarketModel,
         MuSigCreateOfferDirectionAndMarketController> {
     private final Button buyButton, sellButton;
-    private final VBox reputationInfo, content;
     private final BisqTableView<ListItem> tableView;
     private final SearchBox searchBox;
     private final Label currencyLabel;
     private final BisqPopup marketSelectionPopup;
     private final HBox currencyLabelBox;
-    private Subscription directionSubscription, showReputationInfoPin, marketPin, marketSelectionPin;
-    private Button backToBuyButton, gainReputationButton;
+    private Subscription directionSubscription, marketPin, marketSelectionPin;
 
     public MuSigCreateOfferDirectionAndMarketView(MuSigCreateOfferDirectionAndMarketModel model,
                                                   MuSigCreateOfferDirectionAndMarketController controller) {
@@ -122,15 +114,11 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         HBox directionBox = new HBox(25, buyButton, sellButton);
         directionBox.setAlignment(Pos.BASELINE_CENTER);
 
-        content = new VBox(80);
+        VBox content = new VBox(80);
         content.setAlignment(Pos.CENTER);
         content.getChildren().addAll(Spacer.fillVBox(), headlineHBox, directionBox, Spacer.fillVBox());
 
-        reputationInfo = new VBox(20);
-        setupReputationInfo();
-
-        StackPane.setMargin(reputationInfo, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
-        root.getChildren().addAll(content, reputationInfo);
+        root.getChildren().addAll(content);
         root.setAlignment(Pos.CENTER);
         root.getStyleClass().add("bisq-easy-trade-wizard-direction-step");
     }
@@ -158,8 +146,6 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         buyButton.disableProperty().bind(model.getBuyButtonDisabled());
         buyButton.setOnAction(evt -> controller.onSelectDirection(Direction.BUY));
         sellButton.setOnAction(evt -> controller.onSelectDirection(Direction.SELL));
-        gainReputationButton.setOnAction(evt -> controller.onBuildReputation());
-        backToBuyButton.setOnAction(evt -> controller.onCloseReputationInfo());
 
         directionSubscription = EasyBind.subscribe(model.getDirection(), direction -> {
             if (direction != null) {
@@ -167,22 +153,6 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
                 sellButton.setDefaultButton(direction == Direction.SELL);
             }
         });
-
-        showReputationInfoPin = EasyBind.subscribe(model.getShowReputationInfo(),
-                showReputationInfo -> {
-                    if (showReputationInfo) {
-                        reputationInfo.setVisible(true);
-                        reputationInfo.setOpacity(1);
-                        Transitions.blurStrong(content, 0);
-                        Transitions.slideInTop(reputationInfo, 450);
-                    } else {
-                        Transitions.removeEffect(content);
-                        if (reputationInfo.isVisible()) {
-                            Transitions.fadeOut(reputationInfo, ManagedDuration.getHalfOfDefaultDurationMillis(),
-                                    () -> reputationInfo.setVisible(false));
-                        }
-                    }
-                });
 
         marketPin = EasyBind.subscribe(model.getSelectedMarket(), selectedMarket -> {
             if (selectedMarket != null) {
@@ -206,18 +176,12 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         tableView.setOnMouseClicked(null);
         currencyLabel.setOnMouseClicked(null);
 
-        if (model.getShowReputationInfo().get()) {
-            Transitions.removeEffect(content);
-        }
         buyButton.disableProperty().unbind();
 
         buyButton.setOnAction(null);
         sellButton.setOnAction(null);
-        gainReputationButton.setOnAction(null);
-        backToBuyButton.setOnAction(null);
 
         directionSubscription.unsubscribe();
-        showReputationInfoPin.unsubscribe();
         marketPin.unsubscribe();
         marketSelectionPin.unsubscribe();
     }
@@ -230,59 +194,6 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         button.setMinWidth(width);
         button.setMinHeight(112);
         return button;
-    }
-
-    private void setupReputationInfo() {
-        double width = 700;
-        VBox contentBox = new VBox(20);
-        contentBox.setAlignment(Pos.TOP_CENTER);
-        contentBox.getStyleClass().setAll("trade-wizard-feedback-bg");
-        contentBox.setPadding(new Insets(30));
-        contentBox.setMaxWidth(width);
-
-        // We don't use setManaged as the transition would not work as expected if set to false
-        reputationInfo.setVisible(false);
-        reputationInfo.setAlignment(Pos.TOP_CENTER);
-        Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.headline"));
-        headlineLabel.getStyleClass().add("bisq-text-headline-2");
-        headlineLabel.setTextAlignment(TextAlignment.CENTER);
-        headlineLabel.setAlignment(Pos.CENTER);
-        headlineLabel.setMaxWidth(width - 60);
-
-        Label warningIcon = new Label();
-        Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, warningIcon, "1.7em");
-        warningIcon.getStyleClass().add("text-fill-light-dimmed");
-
-        HBox headlineBox = new HBox(15, warningIcon, headlineLabel);
-        headlineBox.setAlignment(Pos.CENTER);
-
-        Label subtitleLabel1 = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle1"));
-        subtitleLabel1.setMaxWidth(width - 60);
-        subtitleLabel1.getStyleClass().addAll("bisq-text-21", "wrap-text");
-
-        Label subtitleLabel2 = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle2"));
-        subtitleLabel2.setMaxWidth(width - 60);
-        subtitleLabel2.getStyleClass().addAll("bisq-text-21", "wrap-text");
-
-        Label subtitleLabel3 = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle3"));
-        subtitleLabel3.setMaxWidth(width - 60);
-        subtitleLabel3.getStyleClass().addAll("bisq-text-21", "wrap-text");
-
-        backToBuyButton = new Button(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.backToBuy"));
-        gainReputationButton = new Button(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.gainReputation"));
-        gainReputationButton.setDefaultButton(true);
-
-        HBox buttons = new HBox(7, backToBuyButton, gainReputationButton);
-        buttons.setAlignment(Pos.CENTER);
-
-        VBox.setMargin(headlineBox, new Insets(20, 0, 20, 0));
-        VBox.setMargin(buttons, new Insets(30, 0, 0, 0));
-        contentBox.getChildren().addAll(headlineBox,
-                subtitleLabel1,
-                subtitleLabel2,
-                subtitleLabel3,
-                buttons);
-        reputationInfo.getChildren().addAll(contentBox, Spacer.fillVBox());
     }
 
     private void configTableView() {

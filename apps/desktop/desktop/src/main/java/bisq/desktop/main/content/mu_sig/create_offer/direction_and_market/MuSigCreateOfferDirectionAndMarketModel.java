@@ -31,16 +31,10 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 public class MuSigCreateOfferDirectionAndMarketModel implements Model {
-    // TODO to be removed
-    @Setter
-    private boolean isAllowedToCreateSellOffer = true;
-
     private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>(Direction.BUY);
-    private final BooleanProperty showReputationInfo = new SimpleBooleanProperty();
     private final BooleanProperty buyButtonDisabled = new SimpleBooleanProperty();
     private final ObjectProperty<MuSigCreateOfferDirectionAndMarketView.ListItem> selectedMarketListItem = new SimpleObjectProperty<>();
     private final StringProperty searchText = new SimpleStringProperty();
@@ -50,9 +44,7 @@ public class MuSigCreateOfferDirectionAndMarketModel implements Model {
     private final SortedList<MuSigCreateOfferDirectionAndMarketView.ListItem> sortedList = new SortedList<>(filteredList);
 
     void reset() {
-        isAllowedToCreateSellOffer = true;
         direction.set(Direction.BUY);
-        showReputationInfo.set(false);
         buyButtonDisabled.set(false);
         selectedMarketListItem.set(null);
         searchText.set(null);

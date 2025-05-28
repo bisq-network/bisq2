@@ -85,7 +85,6 @@ public class MuSigCreateOfferController extends NavigationController implements 
 
         muSigCreateOfferDirectionAndMarketController = new MuSigCreateOfferDirectionAndMarketController(serviceProvider,
                 this::onNext,
-                this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo);
         muSigCreateOfferAmountAndPriceController = new MuSigCreateOfferAmountAndPriceController(serviceProvider,
                 view.getRoot(),
@@ -231,9 +230,6 @@ public class MuSigCreateOfferController extends NavigationController implements 
     }
 
     private boolean validate(boolean calledFromNext) {
-        if (model.getSelectedChildTarget().get() == NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET) {
-            return muSigCreateOfferDirectionAndMarketController.validate();
-        }
         if (model.getSelectedChildTarget().get() == NavigationTarget.MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE) {
             return muSigCreateOfferAmountAndPriceController.validate();
         }

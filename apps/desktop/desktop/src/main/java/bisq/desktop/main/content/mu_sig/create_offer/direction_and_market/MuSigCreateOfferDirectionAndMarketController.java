@@ -21,13 +21,11 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.mu_sig.MuSigService;
 import bisq.offer.Direction;
 import bisq.settings.SettingsService;
-import bisq.user.identity.UserIdentityService;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -43,9 +41,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
     @Getter
     private final MuSigCreateOfferDirectionAndMarketView view;
     private final Runnable onNextHandler;
-    private final Consumer<Boolean> navigationButtonsVisibleHandler;
     private final Consumer<NavigationTarget> closeAndNavigateToHandler;
-    private final UserIdentityService userIdentityService;
     private final MarketPriceService marketPriceService;
     private final MuSigService muSigService;
     private final SettingsService settingsService;
@@ -53,12 +49,9 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
 
     public MuSigCreateOfferDirectionAndMarketController(ServiceProvider serviceProvider,
                                                         Runnable onNextHandler,
-                                                        Consumer<Boolean> navigationButtonsVisibleHandler,
                                                         Consumer<NavigationTarget> closeAndNavigateToHandler) {
         this.onNextHandler = onNextHandler;
-        this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         this.closeAndNavigateToHandler = closeAndNavigateToHandler;
-        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         muSigService = serviceProvider.getMuSigService();
         settingsService = serviceProvider.getSettingsService();
@@ -66,7 +59,6 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         model = new MuSigCreateOfferDirectionAndMarketModel();
         view = new MuSigCreateOfferDirectionAndMarketView(model, this);
         setDirection(Direction.BUY);
-        applyShowReputationInfo();
     }
 
     public void setMarket(Market market) {
@@ -88,7 +80,6 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
     @Override
     public void onActivate() {
         setDirection(Direction.BUY);
-        applyShowReputationInfo();
 
         model.getSearchText().set("");
 
@@ -134,30 +125,9 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         searchTextPin.unsubscribe();
     }
 
-    public boolean validate() {
-        if (model.getDirection().get() == Direction.SELL && !model.isAllowedToCreateSellOffer()) {
-            showReputationInfoOverlay();
-            return false;
-        }
-
-        return true;
-    }
-
     void onSelectDirection(Direction direction) {
         setDirection(direction);
-        applyShowReputationInfo();
-        if (!model.getShowReputationInfo().get()) {
-            onNextHandler.run();
-        }
-    }
-
-    void onCloseReputationInfo() {
-        setDirection(Direction.BUY);
-        applyShowReputationInfo();
-    }
-
-    void onBuildReputation() {
-        closeAndNavigateToHandler.accept(NavigationTarget.BUILD_REPUTATION);
+        onNextHandler.run();
     }
 
     void onMarketListItemClicked(MuSigCreateOfferDirectionAndMarketView.ListItem item) {
@@ -174,30 +144,5 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
 
     private void setDirection(Direction direction) {
         model.getDirection().set(direction);
-    }
-
-    private void applyShowReputationInfo() {
-        if (model.getDirection().get() == Direction.BUY) {
-            model.getShowReputationInfo().set(false);
-            navigationButtonsVisibleHandler.accept(true);
-            return;
-        }
-
-        // Sell offer
-        if (!model.isAllowedToCreateSellOffer()) {
-            showReputationInfoOverlay();
-        } else {
-            view.getRoot().setOnKeyPressed(null);
-        }
-    }
-
-    private void showReputationInfoOverlay() {
-        navigationButtonsVisibleHandler.accept(false);
-        model.getShowReputationInfo().set(true);
-        view.getRoot().setOnKeyPressed(keyEvent -> {
-            KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
-            });
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseReputationInfo);
-        });
     }
 }
