@@ -18,12 +18,17 @@
 package bisq.desktop.main.content.bisq_easy.components;
 
 import bisq.common.currency.TradeCurrency;
+import bisq.common.data.Pair;
 import bisq.common.data.Triple;
+import bisq.common.monetary.Monetary;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.AmountFormatter;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
@@ -96,6 +101,23 @@ public class ReviewDataDisplay {
     public void setBitcoinPaymentMethod(String value) {
         controller.model.getBitcoinPaymentMethod().set(value);
     }
+
+    public void setToSendMinAmount(Monetary value) {
+        controller.model.getToSendMinAmount().set(value);
+    }
+
+    public void setToSendMaxAmount(Monetary value) {
+        controller.model.getToSendMaxAmount().set(value);
+    }
+
+    public void setToReceiveMinAmount(Monetary value) {
+        controller.model.getToReceiveMinAmount().set(value);
+    }
+
+    public void setToReceiveMaxAmount(Monetary value) {
+        controller.model.getToReceiveMaxAmount().set(value);
+    }
+
     public void setFiatPaymentMethod(String value) {
         controller.model.getFiatPaymentMethod().set(value);
     }
@@ -135,6 +157,10 @@ public class ReviewDataDisplay {
         private final StringProperty fiatPaymentMethod = new SimpleStringProperty();
         private final BooleanProperty isSendBtc = new SimpleBooleanProperty(false);
         private final BooleanProperty isReceiveBtc = new SimpleBooleanProperty(false);
+        private final ObjectProperty<Monetary> toSendMinAmount = new SimpleObjectProperty<>();
+        private final ObjectProperty<Monetary> toSendMaxAmount = new SimpleObjectProperty<>();
+        private final ObjectProperty<Monetary> toReceiveMinAmount = new SimpleObjectProperty<>();
+        private final ObjectProperty<Monetary> toReceiveMaxAmount = new SimpleObjectProperty<>();
     }
 
     private static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
@@ -149,6 +175,13 @@ public class ReviewDataDisplay {
         private final VBox rangeAmountVBox = new VBox(0);
         private Subscription isRangeAmountPin, isSendBtcPin, isReceiveBtcPin;
 
+        private final BitcoinAmountDisplay toSendBitcoinMinAmountDisplay = new BitcoinAmountDisplay("0", false);
+        private final BitcoinAmountDisplay toSendBitcoinMaxAmountDisplay = new BitcoinAmountDisplay("0", false);
+        private static final String DASH_SYMBOL = "\u2013"; // Unicode for "–"
+        private final Label dashLabel = new Label(DASH_SYMBOL);
+        private final BitcoinAmountDisplay toReceiveBitcoinMinAmountDisplay = new BitcoinAmountDisplay("0", false);
+        private final BitcoinAmountDisplay toReceiveBitcoinMaxAmountDisplay = new BitcoinAmountDisplay("0", false);
+
         private View(Model model, Controller controller) {
             super(new HBox(), model, controller);
 
@@ -156,8 +189,15 @@ public class ReviewDataDisplay {
             root.setMaxHeight(HEIGHT);
             root.setAlignment(Pos.TOP_LEFT);
 
+            dashLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
+            dashLabel.setAlignment(Pos.CENTER);
+
             configureBitcoinAmountDisplay(toSendBitcoinAmountDisplay);
             configureBitcoinAmountDisplay(toReceiveBitcoinAmountDisplay);
+            configureBitcoinAmountDisplay(toSendBitcoinMinAmountDisplay);
+            configureBitcoinAmountDisplay(toSendBitcoinMaxAmountDisplay);
+            configureBitcoinAmountDisplay(toReceiveBitcoinMinAmountDisplay);
+            configureBitcoinAmountDisplay(toReceiveBitcoinMaxAmountDisplay);
 
             direction = getElements(Res.get("bisqEasy.tradeState.header.direction"));
             toSend = getAmountElements();
@@ -180,40 +220,87 @@ public class ReviewDataDisplay {
             toSendBitcoinAmountDisplay.getBtcAmount().bind(model.getToSendAmount());
             toReceiveBitcoinAmountDisplay.getBtcAmount().bind(model.getToReceiveAmount());
 
-
-            isSendBtcPin = EasyBind.subscribe(model.getIsSendBtc(), isSendBtc -> {
-                HBox amountHBox = toSend.getSecond();
-                amountHBox.getChildren().clear();
-
-                if (isSendBtc) {
-                    amountHBox.getChildren().add(toSendBitcoinAmountDisplay);
-                    amountHBox.setAlignment(Pos.CENTER_LEFT);
-                    VBox.setMargin(toSend.getSecond(), new Insets(-7, 0, 0, 0));
-                } else {
-                    amountHBox.getChildren().addAll(
-                            toSend.getFirst().getSecond(),
-                            toSend.getFirst().getThird()
-                    );
-                    amountHBox.setAlignment(Pos.BASELINE_LEFT);
-                }
+            EasyBind.subscribe(model.getToSendMinAmount(), monetary -> {
+                toSendBitcoinMinAmountDisplay.setBtcAmount(monetary != null ? AmountFormatter.formatBaseAmount(monetary) : "");
+            });
+            EasyBind.subscribe(model.getToSendMaxAmount(), monetary -> {
+                toSendBitcoinMaxAmountDisplay.setBtcAmount(monetary != null ? AmountFormatter.formatBaseAmount(monetary) : "");
+            });
+            EasyBind.subscribe(model.getToReceiveMinAmount(), monetary -> {
+                toReceiveBitcoinMinAmountDisplay.setBtcAmount(monetary != null ? AmountFormatter.formatBaseAmount(monetary) : "");
+            });
+            EasyBind.subscribe(model.getToReceiveMaxAmount(), monetary -> {
+                toReceiveBitcoinMaxAmountDisplay.setBtcAmount(monetary != null ? AmountFormatter.formatBaseAmount(monetary) : "");
             });
 
-            isReceiveBtcPin = EasyBind.subscribe(model.getIsReceiveBtc(), isReceiveBtc -> {
-                HBox amountHBox = toReceive.getSecond();
-                amountHBox.getChildren().clear();
+            isSendBtcPin = EasyBind.subscribe(
+                    EasyBind.combine(model.getIsSendBtc(), model.getIsRangeAmount(), Pair::new
+                    ),
+                    combinedValues -> {
+                        boolean isSendBtc = combinedValues.getFirst();
+                        boolean isRangeAmount = combinedValues.getSecond();
 
-                if (isReceiveBtc) {
-                    amountHBox.getChildren().add(toReceiveBitcoinAmountDisplay);
-                    amountHBox.setAlignment(Pos.CENTER_LEFT);
-                    VBox.setMargin(toReceive.getSecond(), new Insets(-7, 0, 0, 0));
-                } else {
-                    amountHBox.getChildren().addAll(
-                            toReceive.getFirst().getSecond(),
-                            toReceive.getFirst().getThird()
-                    );
-                    amountHBox.setAlignment(Pos.BASELINE_LEFT);
-                }
-            });
+                        HBox amountHBox = toSend.getSecond();
+                        amountHBox.getChildren().clear();
+
+                        if (isSendBtc) {
+                            if (isRangeAmount) {
+                                amountHBox.getChildren().addAll(
+                                        toSendBitcoinMinAmountDisplay,
+                                        dashLabel,
+                                        toSendBitcoinMaxAmountDisplay,
+                                        toSend.getFirst().getThird()
+                                );
+                            } else {
+                                amountHBox.getChildren().add(toSendBitcoinAmountDisplay);
+                            }
+                            amountHBox.setAlignment(Pos.CENTER_LEFT);
+                            VBox.setMargin(toSend.getSecond(), new Insets(-11, 0, 0, 0));
+                        } else {
+                            amountHBox.getChildren().addAll(
+                                    toSend.getFirst().getSecond(),
+                                    toSend.getFirst().getThird()
+                            );
+                            amountHBox.setAlignment(Pos.BASELINE_LEFT);
+                            VBox.setMargin(toSend.getSecond(), new Insets(0, 0, 0, 0));
+                        }
+                    }
+            );
+
+            isReceiveBtcPin = EasyBind.subscribe(
+                    EasyBind.combine(model.getIsReceiveBtc(), model.getIsRangeAmount(), Pair::new
+                    ),
+                    combinedValues -> {
+                        boolean isReceiveBtc = combinedValues.getFirst();
+                        boolean isRangeAmount = combinedValues.getSecond();
+
+                        HBox amountHBox = toReceive.getSecond();
+                        amountHBox.getChildren().clear();
+
+                        if (isReceiveBtc) {
+                            if (isRangeAmount) {
+                                amountHBox.getChildren().addAll(
+                                        toReceiveBitcoinMinAmountDisplay,
+                                        dashLabel,
+                                        toReceiveBitcoinMaxAmountDisplay,
+                                        toReceive.getFirst().getThird()
+                                );
+                            } else {
+                                amountHBox.getChildren().add(toReceiveBitcoinAmountDisplay);
+                            }
+                            amountHBox.setAlignment(Pos.CENTER_LEFT);
+                            VBox.setMargin(toReceive.getSecond(), new Insets(-11, 0, 0, 0));
+                        } else {
+                            amountHBox.getChildren().addAll(
+                                    toReceive.getFirst().getSecond(),
+                                    toReceive.getFirst().getThird()
+                            );
+                            amountHBox.setAlignment(Pos.BASELINE_LEFT);
+                            VBox.setMargin(toReceive.getSecond(), new Insets(0, 0, 0, 0));
+                        }
+                    }
+            );
+
 
             isRangeAmountPin = EasyBind.subscribe(model.getIsRangeAmount(), isRangeAmount -> {
                 VBox toSendVBox = toSend.getThird();
@@ -258,12 +345,15 @@ public class ReviewDataDisplay {
             isRangeAmountPin.unsubscribe();
             isSendBtcPin.unsubscribe();
             isReceiveBtcPin.unsubscribe();
+
+            toSendBitcoinMinAmountDisplay.getBtcAmount().unbind();
+            toSendBitcoinMaxAmountDisplay.getBtcAmount().unbind();
+            toReceiveBitcoinMinAmountDisplay.getBtcAmount().unbind();
+            toReceiveBitcoinMaxAmountDisplay.getBtcAmount().unbind();
         }
 
         private void configureBitcoinAmountDisplay(BitcoinAmountDisplay bitcoinAmountDisplay) {
             bitcoinAmountDisplay.applyMediumCompactConfig();
-            bitcoinAmountDisplay.setPadding(new Insets(-6, 0, 0, 0));
-
             bitcoinAmountDisplay.setTextAlignment(TextAlignment.LEFT);
             bitcoinAmountDisplay.setAlignment(Pos.CENTER_LEFT);
         }
