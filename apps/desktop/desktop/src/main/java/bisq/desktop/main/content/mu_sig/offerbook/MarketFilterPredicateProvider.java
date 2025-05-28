@@ -15,22 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.rest_api.domain.settings;
+package bisq.desktop.main.content.mu_sig.offerbook;
 
-import bisq.dto.common.currency.MarketDto;
+import lombok.Getter;
 
-import javax.annotation.Nullable;
-import java.util.Set;
+import java.util.function.Predicate;
 
-public record SettingsChangeRequest(
-        @Nullable Boolean isTacAccepted,
-        @Nullable Boolean tradeRulesConfirmed,
-        @Nullable Boolean closeMyOfferWhenTaken,
-        @Nullable String languageCode,
-        @Nullable Set<String> supportedLanguageCodes,
-        @Nullable Double maxTradePriceDeviation,
-        @Nullable MarketDto selectedMuSigMarket,
-        @Nullable Integer numDaysAfterRedactingTradeData,
-        @Nullable Boolean useAnimations
-) {
+@Getter
+public class MarketFilterPredicateProvider {
+    public static Predicate<MarketItem> getPredicate(MarketFilter marketFilter) {
+        return switch (marketFilter) {
+            case ALL -> item -> true;
+            case FAVOURITES -> item -> item.getIsFavourite().get();
+            case WITH_OFFERS -> item -> item.getNumOffers().get() > 0;
+        };
+    }
 }

@@ -187,7 +187,7 @@ public abstract class MuSigOfferbookController<M extends MuSigOfferbookModel, V 
 
 
     void onSelectMarket(Market market) {
-        settingsService.setSelectedMarket(market);
+        settingsService.setSelectedMuSigMarket(market);
         settingsService.setCookie(getSelectedMarketCookieKey(), market.getMarketCodes());
     }
 

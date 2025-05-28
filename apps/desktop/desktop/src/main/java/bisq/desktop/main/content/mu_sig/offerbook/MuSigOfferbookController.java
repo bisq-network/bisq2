@@ -22,6 +22,7 @@ import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
+import bisq.common.proto.ProtobufUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -48,7 +49,6 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -64,10 +64,8 @@ public class MuSigOfferbookController implements Controller {
     private final IdentityService identityService;
     private final BannedUserService bannedUserService;
     private final FavouriteMarketsService favouriteMarketsService;
-    private final Predicate<MarketItem> marketItemsPredicate;
-    private final Predicate<MarketItem> favouriteMarketItemsPredicate;
-    private Pin offersPin, selectedMarketPin, favouriteMarketsPin;
-    private Subscription selectedMarketItemPin;
+    private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin;
+    private Subscription selectedMarketItemPin, marketsSearchBoxTextPin, selectedMarketFilterPin, selectedMarketSortTypePin;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
         muSigService = serviceProvider.getMuSigService();
@@ -80,13 +78,6 @@ public class MuSigOfferbookController implements Controller {
 
         model = new MuSigOfferbookModel();
         view = new MuSigOfferbookView(model, this);
-
-        marketItemsPredicate = item ->
-                model.getMarketFilterPredicate().test(item) &&
-//                        model.getMarketSearchTextPredicate().test(item) &&
-//                        model.getMarketPricePredicate().test(item) &&
-                        !item.getIsFavourite().get();
-        favouriteMarketItemsPredicate = item -> item.getIsFavourite().get();
     }
 
     @Override
@@ -100,17 +91,16 @@ public class MuSigOfferbookController implements Controller {
                 .collect(Collectors.toList());
         model.getMarketItems().setAll(marketItems);
 
-        applyInitialSelectedMarket();
+        model.getMarketsSearchBoxText().set("");
 
         offersPin = muSigService.getObservableOffers().addObserver(new CollectionObserver<>() {
             @Override
             public void add(MuSigOffer muSigOffer) {
                 UIThread.run(() -> {
                     String offerId = muSigOffer.getId();
-                    if (/*isExpectedMarket(muSigOffer.getMarket()) && */!model.getMuSigOfferIds().contains(offerId)) {
+                    if (!model.getMuSigOfferIds().contains(offerId)) {
                         model.getMuSigOfferListItems().add(new MuSigOfferListItem(muSigOffer, marketPriceService, userProfileService, identityService));
                         model.getMuSigOfferIds().add(offerId);
-                        //updatePredicate();
                     }
                 });
             }
@@ -140,19 +130,13 @@ public class MuSigOfferbookController implements Controller {
             }
         });
 
-        selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarketItem -> {
-            if (selectedMarketItem != null) {
-                updateFilteredMuSigOfferListItemsPredicate();
-                updateMarketData(selectedMarketItem);
-                muSigService.getMuSigSelectedMarket().set(selectedMarketItem.getMarket());
-            }
-        });
-        selectedMarketPin = muSigService.getMuSigSelectedMarket().addObserver(market -> {
+        selectedMarketPin = settingsService.getSelectedMuSigMarket().addObserver(market -> {
             if (market != null) {
-                model.getMarketItems().stream()
-                        .filter(item -> item.getMarket().equals(market))
-                        .findAny()
-                        .ifPresent(item -> model.getSelectedMarketItem().set(item));
+                UIThread.run(() ->
+                        model.getMarketItems().stream()
+                                .filter(item -> item.getMarket().equals(market))
+                                .findAny()
+                                .ifPresent(item -> model.getSelectedMarketItem().set(item)));
             }
         });
 
@@ -187,21 +171,80 @@ public class MuSigOfferbookController implements Controller {
             }
         });
 
+        marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
+                UIThread.run(() -> {
+                    model.setMarketPricePredicate(item -> marketPriceService.getMarketPriceByCurrencyMap().isEmpty() ||
+                            marketPriceService.getMarketPriceByCurrencyMap().containsKey(item.getMarket()));
+                    updateFilteredMarketItems();
+                }));
+
+        selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarketItem -> {
+            if (selectedMarketItem != null) {
+                UIThread.run(() -> {
+                    updateFilteredMuSigOfferListItemsPredicate();
+                    updateMarketData(selectedMarketItem);
+                    updateMarketPrice(selectedMarketItem);
+                    settingsService.setSelectedMuSigMarket(selectedMarketItem.getMarket());
+                });
+            }
+        });
+
+        marketsSearchBoxTextPin = EasyBind.subscribe(model.getMarketsSearchBoxText(), searchText -> {
+            if (searchText == null || searchText.trim().isEmpty()) {
+                model.setMarketSearchTextPredicate(item -> true);
+            } else {
+                String search = searchText.trim().toLowerCase();
+                model.setMarketSearchTextPredicate(item ->
+                        item != null &&
+                                (item.getMarket().getQuoteCurrencyCode().toLowerCase().contains(search) ||
+                                        item.getMarket().getQuoteCurrencyDisplayName().toLowerCase().contains(search))
+                );
+            }
+            updateFilteredMarketItems();
+        });
+
+        MarketFilter persistedMarketsFilter = settingsService.getCookie().asString(CookieKey.MU_SIG_MARKETS_FILTER).map(name ->
+                ProtobufUtils.enumFromProto(MarketFilter.class, name, MarketFilter.ALL)).orElse(MarketFilter.ALL);
+        model.getSelectedMarketsFilter().set(persistedMarketsFilter);
+        selectedMarketFilterPin = EasyBind.subscribe(model.getSelectedMarketsFilter(), filter -> {
+            if (filter != null) {
+                model.setMarketFilterPredicate(MarketFilterPredicateProvider.getPredicate(filter));
+                settingsService.setCookie(CookieKey.MU_SIG_MARKETS_FILTER, model.getSelectedMarketsFilter().get().name());
+                updateFilteredMarketItems();
+            }
+            model.getShouldShowAppliedFilters().set(filter == MarketFilter.WITH_OFFERS || filter == MarketFilter.FAVOURITES);
+        });
+
+        MarketSortType persistedMarketSortType = settingsService.getCookie().asString(CookieKey.MU_SIG_MARKET_SORT_TYPE)
+                .map(name -> ProtobufUtils.enumFromProto(MarketSortType.class, name, MarketSortType.NUM_OFFERS))
+                .orElse(MarketSortType.NUM_OFFERS);
+        model.getSelectedMarketSortType().set(persistedMarketSortType);
+        selectedMarketSortTypePin = EasyBind.subscribe(model.getSelectedMarketSortType(), marketSortType -> {
+            if (marketSortType != null) {
+                settingsService.setCookie(CookieKey.MU_SIG_MARKET_SORT_TYPE, marketSortType.name());
+            }
+        });
+        model.getSortedMarketItems().setComparator(model.getSelectedMarketSortType().get().getComparator());
+
         updateFilteredMarketItems();
         updateFavouriteMarketItems();
     }
 
     @Override
     public void onDeactivate() {
-        offersPin.unbind();
-        favouriteMarketsPin.unbind();
-
         model.getMuSigOfferListItems().forEach(MuSigOfferListItem::dispose);
         model.getMuSigOfferListItems().clear();
         model.getMuSigOfferIds().clear();
 
-        selectedMarketItemPin.unsubscribe();
+        offersPin.unbind();
         selectedMarketPin.unbind();
+        favouriteMarketsPin.unbind();
+        marketPriceByCurrencyMapPin.unbind();
+
+        selectedMarketItemPin.unsubscribe();
+        marketsSearchBoxTextPin.unsubscribe();
+        selectedMarketFilterPin.unsubscribe();
+        selectedMarketSortTypePin.unsubscribe();
     }
 
     void onSelectMarketItem(MarketItem marketItem) {
@@ -210,9 +253,6 @@ public class MuSigOfferbookController implements Controller {
             maybeSelectFirst();
         } else {
             model.getSelectedMarketItem().set(marketItem);
-            Market market = marketItem.getMarket();
-            settingsService.setSelectedMarket(market);
-            settingsService.setCookie(getSelectedMarketCookieKey(), market.getMarketCodes());
         }
     }
 
@@ -232,6 +272,11 @@ public class MuSigOfferbookController implements Controller {
                 .onAction(() -> doRemoveOffer(muSigOffer))
                 .closeButtonText(Res.get("confirmation.no"))
                 .show();
+    }
+
+    void onSortMarkets(MarketSortType marketSortType) {
+        model.getSelectedMarketSortType().set(marketSortType);
+        model.getSortedMarketItems().setComparator(marketSortType.getComparator());
     }
 
     private void doRemoveOffer(MuSigOffer muSigOffer) {
@@ -257,30 +302,6 @@ public class MuSigOfferbookController implements Controller {
 
     private MarketItem getFirstMarketItem() {
         return !model.getSortedMarketItems().isEmpty() ? model.getSortedMarketItems().get(0) : null;
-    }
-
-    private CookieKey getSelectedMarketCookieKey() {
-        // TODO: Update this according to selected base market
-        return CookieKey.MU_SIG_OFFERBOOK_SELECTED_BTC_MARKET;
-    }
-
-    private void applyInitialSelectedMarket() {
-        Optional<Market> selectedMarket = settingsService.getCookie().asString(getSelectedMarketCookieKey())
-                .flatMap(MarketRepository::findAnyMarketByMarketCodes)
-                .filter(this::isExpectedMarket);
-
-        selectedMarket.flatMap(market -> model.getMarketItems().stream()
-                .filter(item -> item.getMarket().equals(market))
-                .findAny())
-                .ifPresentOrElse(
-                        item -> model.getSelectedMarketItem().set(item),
-                        () -> model.getSelectedMarketItem().set(getFirstMarketItem())
-                );
-    }
-
-    private boolean isExpectedMarket(Market market) {
-        // TODO: Here we need to use de base market selection instead.
-        return market.isBtcFiatMarket() && market.getBaseCurrencyCode().equals("BTC");
     }
 
     private void updateFilteredMuSigOfferListItemsPredicate() {
@@ -314,7 +335,7 @@ public class MuSigOfferbookController implements Controller {
 
     private void updateFilteredMarketItems() {
         model.getFilteredMarketItems().setPredicate(null);
-        model.getFilteredMarketItems().setPredicate(marketItemsPredicate);
+        model.getFilteredMarketItems().setPredicate(model.getMarketItemsPredicate());
     }
 
     private void updateFavouriteMarketItems() {
@@ -322,14 +343,25 @@ public class MuSigOfferbookController implements Controller {
         // Calling refresh on the tableView also did not refresh the collection.
         // Thus, we trigger a change of the predicate to force a refresh.
         model.getFavouriteMarketItems().setPredicate(null);
-        model.getFavouriteMarketItems().setPredicate(favouriteMarketItemsPredicate);
+        model.getFavouriteMarketItems().setPredicate(model.getFavouriteMarketItemsPredicate());
         model.getFavouritesListViewNeedsHeightUpdate().set(false);
         model.getFavouritesListViewNeedsHeightUpdate().set(true);
+        model.getShouldShowFavouritesListView().set(!model.getFavouriteMarketItems().isEmpty());
     }
 
     private Optional<MarketItem> findMarketItem(Market market) {
         return model.getMarketItems().stream()
                 .filter(e -> e.getMarket().equals(market))
                 .findAny();
+    }
+
+    private void updateMarketPrice(MarketItem marketItem) {
+        Market selectedMarket = marketItem.getMarket();
+        if (selectedMarket != null) {
+            marketPriceService
+                    .findMarketPrice(selectedMarket)
+                    .ifPresent(marketPrice ->
+                            model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true)));
+        }
     }
 }

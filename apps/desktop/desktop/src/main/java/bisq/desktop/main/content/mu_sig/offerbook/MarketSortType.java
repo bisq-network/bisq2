@@ -15,22 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.rest_api.domain.settings;
+package bisq.desktop.main.content.mu_sig.offerbook;
 
-import bisq.dto.common.currency.MarketDto;
+import lombok.Getter;
 
-import javax.annotation.Nullable;
-import java.util.Set;
+import java.util.Comparator;
 
-public record SettingsChangeRequest(
-        @Nullable Boolean isTacAccepted,
-        @Nullable Boolean tradeRulesConfirmed,
-        @Nullable Boolean closeMyOfferWhenTaken,
-        @Nullable String languageCode,
-        @Nullable Set<String> supportedLanguageCodes,
-        @Nullable Double maxTradePriceDeviation,
-        @Nullable MarketDto selectedMuSigMarket,
-        @Nullable Integer numDaysAfterRedactingTradeData,
-        @Nullable Boolean useAnimations
-) {
+@Getter
+enum MarketSortType {
+    NUM_OFFERS(MarketItemUtil.sortByNumOffers()),
+    ASC(MarketItemUtil.sortByMarketNameAsc()),
+    DESC(MarketItemUtil.sortByMarketNameDesc());
+
+    private final Comparator<MarketItem> comparator;
+
+    MarketSortType(Comparator<MarketItem> comparator) {
+        this.comparator = comparator;
+    }
 }
