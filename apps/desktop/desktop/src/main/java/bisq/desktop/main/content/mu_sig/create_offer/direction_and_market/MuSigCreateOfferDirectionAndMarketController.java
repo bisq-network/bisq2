@@ -84,7 +84,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         model.getSearchText().set("");
 
         model.getListItems().setAll(MarketRepository.getAllFiatMarkets().stream()
-                //.filter(market -> marketPriceService.getMarketPriceByCurrencyMap().containsKey(market))
+                .filter(market -> marketPriceService.getMarketPriceByCurrencyMap().containsKey(market))
                 .map(market -> {
                     long numOffersInMarket = muSigService.getOffers().stream()
                             .filter(offer -> {
