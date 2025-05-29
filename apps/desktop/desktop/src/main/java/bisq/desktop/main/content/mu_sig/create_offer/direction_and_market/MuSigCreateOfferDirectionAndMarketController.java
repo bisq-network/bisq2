@@ -131,11 +131,8 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
     }
 
     void onMarketListItemClicked(MuSigCreateOfferDirectionAndMarketView.ListItem item) {
-        if (item == null) {
+        if (item == null || item.equals(model.getSelectedMarketListItem().get())) {
             return;
-        }
-        if (item.equals(model.getSelectedMarketListItem().get())) {
-            onNextHandler.run();
         }
         model.getSelectedMarketListItem().set(item);
         model.getSelectedMarket().set(item.getMarket());

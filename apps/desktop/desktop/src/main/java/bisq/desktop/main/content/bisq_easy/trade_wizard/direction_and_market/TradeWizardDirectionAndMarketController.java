@@ -178,11 +178,8 @@ public class TradeWizardDirectionAndMarketController implements Controller {
     }
 
     void onMarketListItemClicked(TradeWizardDirectionAndMarketView.ListItem item) {
-        if (item == null) {
+        if (item == null || item.equals(model.getSelectedMarketListItem().get())) {
             return;
-        }
-        if (item.equals(model.getSelectedMarketListItem().get())) {
-            onNextHandler.run();
         }
         model.getSelectedMarketListItem().set(item);
         model.getSelectedMarket().set(item.getMarket());
