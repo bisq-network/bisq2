@@ -19,18 +19,19 @@ package bisq.desktop.main.content.mu_sig.create_offer.amount_and_price.amount;
 
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Icons;
-import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.bisq_easy.components.amount_selection.AmountSelectionController;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
@@ -49,7 +50,8 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
     private final VBox overlay;
     private final Button learnHowToBuildReputation, closeOverlayButton, fixedAmount, rangeAmount;
     private final HBox amountLimitInfoHBox;
-    private Subscription isRangeAmountEnabledPin;
+    private final EventHandler<KeyEvent> keyPressedHandlerWhileOverlayIsVisible;
+    private Subscription isRangeAmountEnabledPin, isOverlayVisible;
 
     public MuSigCreateOfferAmountView(MuSigCreateOfferAmountModel model,
                                       MuSigCreateOfferAmountController controller,
@@ -106,6 +108,7 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
         linkToWiki.getStyleClass().add("text-fill-green");
         overlay = createOverlay(amountLimitInfoOverlayInfo, closeOverlayButton,
                 linkToWikiText, linkToWiki, learnHowToBuildReputation);
+        keyPressedHandlerWhileOverlayIsVisible = controller::onKeyPressedWhileShowingOverlay;
 
         root.getChildren().addAll(amountModelsBox, amountBox, amountLimitInfoHBox);
         root.setAlignment(Pos.TOP_CENTER);
@@ -139,10 +142,18 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
             amountSelectionController.setIsRangeAmountEnabled(isRangeAmountEnabled);
         });
 
-        learnMore.setOnAction(e -> showOverlay());
+        isOverlayVisible = EasyBind.subscribe(model.getIsOverlayVisible(), isOverlayVisible -> {
+            if (isOverlayVisible) {
+                root.setOnKeyPressed(keyPressedHandlerWhileOverlayIsVisible);
+            } else {
+                root.setOnKeyPressed(null);
+            }
+        });
+
+        learnMore.setOnAction(e -> controller.onShowOverlay());
         linkToWiki.setOnAction(e -> controller.onOpenWiki(linkToWiki.getText()));
         learnHowToBuildReputation.setOnAction(e -> controller.onLearnHowToBuildReputation());
-        closeOverlayButton.setOnAction(e -> closeOverlay());
+        closeOverlayButton.setOnAction(e -> controller.onCloseOverlay());
         fixedAmount.setOnAction(e -> controller.useFixedAmount());
         rangeAmount.setOnAction(e -> controller.useRangeAmount());
     }
@@ -161,6 +172,7 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
         warningIcon.managedProperty().unbind();
 
         isRangeAmountEnabledPin.unsubscribe();
+        isOverlayVisible.unsubscribe();
 
         learnMore.setOnAction(null);
         linkToWiki.setOnAction(null);
@@ -207,19 +219,5 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
         VBox vBox = new VBox(content, Spacer.fillVBox());
         vBox.setMaxWidth(700);
         return vBox;
-    }
-
-    private void showOverlay() {
-        root.setOnKeyPressed(keyEvent -> {
-            KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
-            });
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::closeOverlay);
-        });
-        controller.onShowOverlay();
-    }
-
-    private void closeOverlay() {
-        root.setOnKeyPressed(null);
-        controller.onCloseOverlay();
     }
 }

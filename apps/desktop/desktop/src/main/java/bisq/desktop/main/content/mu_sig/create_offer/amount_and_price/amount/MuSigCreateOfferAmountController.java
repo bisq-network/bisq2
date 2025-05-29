@@ -29,6 +29,7 @@ import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.components.amount_selection.AmountSelectionController;
@@ -56,6 +57,7 @@ import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -277,14 +279,22 @@ public class MuSigCreateOfferAmountController implements Controller {
         model.getIsOverlayVisible().set(false);
     }
 
+    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
+    }
+
     void onShowOverlay() {
-        navigationButtonsVisibleHandler.accept(false);
-        model.getIsOverlayVisible().set(true);
+        if (!model.getIsOverlayVisible().get()) {
+            navigationButtonsVisibleHandler.accept(false);
+            model.getIsOverlayVisible().set(true);
+        }
     }
 
     void onCloseOverlay() {
-        navigationButtonsVisibleHandler.accept(true);
-        model.getIsOverlayVisible().set(false);
+        if (model.getIsOverlayVisible().get()) {
+            navigationButtonsVisibleHandler.accept(true);
+            model.getIsOverlayVisible().set(false);
+        }
     }
 
     void onLearnHowToBuildReputation() {
