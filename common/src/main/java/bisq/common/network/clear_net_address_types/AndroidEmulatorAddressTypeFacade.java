@@ -15,12 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.network;
+package bisq.common.network.clear_net_address_types;
 
+import bisq.common.network.Address;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ClearNetAndroidEmulatorLocalAddressFacade implements ClearNetLocalAddressFacade {
+public class AndroidEmulatorAddressTypeFacade implements ClearNetAddressTypeFacade {
     @Override
     public Address toMyLocalAddress(int port) {
         log.info("The android app is running in the emulator. We convert our localhost " +

@@ -1,5 +1,6 @@
-package bisq.common.network;
+package bisq.common.network.clear_net_address_types;
 
+import bisq.common.network.Address;
 import bisq.common.util.NetworkUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -7,14 +8,14 @@ import java.net.NetworkInterface;
 import java.util.Optional;
 
 @Slf4j
-public class ClearNetLANLocalAddressFacade implements ClearNetLocalAddressFacade {
+public class LANAddressTypeFacade implements ClearNetAddressTypeFacade {
     private volatile Optional<NetworkInterface> preferredNetworkInterface;
 
-    public ClearNetLANLocalAddressFacade() {
+    public LANAddressTypeFacade() {
         this.preferredNetworkInterface = Optional.empty();
     }
 
-    public ClearNetLANLocalAddressFacade(NetworkInterface preferredNetworkInterface) {
+    public LANAddressTypeFacade(NetworkInterface preferredNetworkInterface) {
         this.preferredNetworkInterface = Optional.of(preferredNetworkInterface);
     }
 
