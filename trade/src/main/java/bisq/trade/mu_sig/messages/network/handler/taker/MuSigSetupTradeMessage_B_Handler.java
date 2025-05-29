@@ -107,12 +107,15 @@ public abstract class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessage
                 nonceShares,
                 getPartialSignatures()));
     }
-    protected  abstract PartialSignatures getPartialSignatures();
+
+    protected abstract PartialSignatures getPartialSignatures();
+
     @Override
     protected void sendLogMessage() {
         String role = trade.isBuyer() ? "Taker (as buyer)" : "Taker (as seller)";
+        String peerRole = trade.isBuyer() ? "seller" : "buyer";
         sendLogMessage(role + " received peers pubKeyShares and nonceShares.\n" +
                 role + " created his nonceShares and partialSignatures.\n" +
-                role + " sent his nonceShares and his partialSignatures to seller.");
+                role + " sent his nonceShares and his partialSignatures to " + peerRole + ".");
     }
 }
