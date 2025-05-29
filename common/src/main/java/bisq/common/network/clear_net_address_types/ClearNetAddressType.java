@@ -15,17 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.network;
+package bisq.common.network.clear_net_address_types;
 
-import com.google.common.annotations.VisibleForTesting;
-
-public class DefaultLocalhostFacade implements LocalhostFacade {
-    @VisibleForTesting
-    public static Address toLocalHostAddress(int port) {
-        return new Address("127.0.0.1", port);
-    }
-
-    public Address toMyLocalhost(int port) {
-        return toLocalHostAddress(port);
-    }
+public enum ClearNetAddressType {
+    LOCAL_HOST,
+    ANDROID_EMULATOR,
+    LAN
 }
