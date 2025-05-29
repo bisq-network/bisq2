@@ -83,9 +83,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
         model = new MuSigCreateOfferModel();
         view = new MuSigCreateOfferView(model, this);
 
-        muSigCreateOfferDirectionAndMarketController = new MuSigCreateOfferDirectionAndMarketController(serviceProvider,
-                this::onNext,
-                this::closeAndNavigateTo);
+        muSigCreateOfferDirectionAndMarketController = new MuSigCreateOfferDirectionAndMarketController(serviceProvider, this::onNext);
         muSigCreateOfferAmountAndPriceController = new MuSigCreateOfferAmountAndPriceController(serviceProvider,
                 view.getRoot(),
                 this::setMainButtonsVisibleState,

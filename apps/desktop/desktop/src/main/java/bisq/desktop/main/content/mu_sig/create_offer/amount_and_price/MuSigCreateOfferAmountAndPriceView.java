@@ -81,6 +81,10 @@ public class MuSigCreateOfferAmountAndPriceView extends View<VBox, MuSigCreateOf
                     Transitions.fadeOut(amountOverlay, ManagedDuration.getHalfOfDefaultDurationMillis(),
                             () -> amountOverlay.setVisible(false));
                 }
+                // Return the focus to the wizard
+                if (root.getParent() != null) {
+                    root.getParent().requestFocus();
+                }
             }
         });
 
@@ -95,6 +99,10 @@ public class MuSigCreateOfferAmountAndPriceView extends View<VBox, MuSigCreateOf
                 if (priceOverlay.isVisible()) {
                     Transitions.fadeOut(priceOverlay, ManagedDuration.getHalfOfDefaultDurationMillis(),
                             () -> priceOverlay.setVisible(false));
+                }
+                // Return the focus to the wizard
+                if (root.getParent() != null) {
+                    root.getParent().requestFocus();
                 }
             }
         });
