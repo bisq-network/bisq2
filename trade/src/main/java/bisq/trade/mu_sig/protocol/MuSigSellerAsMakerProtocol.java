@@ -24,7 +24,7 @@ import bisq.trade.mu_sig.events.MuSigFsmErrorEventHandler;
 import bisq.trade.mu_sig.events.MuSigReportErrorMessageHandler;
 import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEvent;
 import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEventHandler;
-import bisq.trade.mu_sig.events.seller_as_maker.MuSigPaymentReceiptConfirmedEvent;
+import bisq.trade.mu_sig.events.seller.MuSigPaymentReceiptConfirmedEvent;
 import bisq.trade.mu_sig.events.seller.MuSigPaymentReceiptConfirmedEventHandler;
 import bisq.trade.mu_sig.events.seller.MuSigSellersCloseTradeTimeoutEvent;
 import bisq.trade.mu_sig.events.seller.MuSigSellersCloseTradeTimeoutEventHandler;
@@ -35,7 +35,7 @@ import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_C;
 import bisq.trade.mu_sig.messages.network.handler.maker.MuSigSetupTradeMessage_A_Handler;
 import bisq.trade.mu_sig.messages.network.handler.seller.MuSigCooperativeClosureMessage_G_Handler;
-import bisq.trade.mu_sig.messages.network.handler.seller_as_maker.MuSigPaymentInitiatedMessage_E_Handler;
+import bisq.trade.mu_sig.messages.network.handler.seller.MuSigPaymentInitiatedMessage_E_Handler;
 import bisq.trade.mu_sig.messages.network.handler.seller_as_maker.MuSigSetupTradeMessage_C_Handler;
 
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.DEPOSIT_TX_CONFIRMED;

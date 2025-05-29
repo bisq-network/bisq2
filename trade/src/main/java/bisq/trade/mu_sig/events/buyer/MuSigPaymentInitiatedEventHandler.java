@@ -20,7 +20,6 @@ package bisq.trade.mu_sig.events.buyer;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
-import bisq.trade.mu_sig.events.buyer_as_taker.MuSigPaymentInitiatedEvent;
 import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;

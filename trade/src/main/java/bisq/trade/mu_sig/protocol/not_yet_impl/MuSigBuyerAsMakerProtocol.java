@@ -27,7 +27,7 @@ import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEventHandler;
 import bisq.trade.mu_sig.events.buyer.MuSigPaymentInitiatedEventHandler;
 import bisq.trade.mu_sig.events.buyer.MuSigBuyersCloseTradeTimeoutEvent;
 import bisq.trade.mu_sig.events.buyer.MuSigBuyersCloseTradeTimeoutEventHandler;
-import bisq.trade.mu_sig.events.buyer_as_taker.MuSigPaymentInitiatedEvent;
+import bisq.trade.mu_sig.events.buyer.MuSigPaymentInitiatedEvent;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentReceivedMessage_F;
 import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;

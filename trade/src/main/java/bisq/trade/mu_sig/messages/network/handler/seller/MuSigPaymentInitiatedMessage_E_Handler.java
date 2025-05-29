@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.network.handler.seller_as_maker;
+package bisq.trade.mu_sig.messages.network.handler.seller;
 
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -30,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class MuSigPaymentInitiatedMessage_E_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigPaymentInitiatedMessage_E> {
-    private byte[] peersSwapTxInputPartialSignature;
     private SwapTxSignatureResponse mySwapTxSignatureResponse;
     private PartialSignatures peersUnRedactedPartialSignatures;
 
@@ -44,7 +43,7 @@ public final class MuSigPaymentInitiatedMessage_E_Handler extends MuSigTradeMess
 
     @Override
     protected void process(MuSigPaymentInitiatedMessage_E message) {
-        peersSwapTxInputPartialSignature = message.getSwapTxInputPartialSignature();
+        byte[] peersSwapTxInputPartialSignature = message.getSwapTxInputPartialSignature();
 
         // Seller computes Swap Tx signature immediately upon receipt of peersSwapTxInputPartialSignature, instead of waiting until the
         // end of the trade, to make sure that there's no problem with it and let trade fail otherwise.

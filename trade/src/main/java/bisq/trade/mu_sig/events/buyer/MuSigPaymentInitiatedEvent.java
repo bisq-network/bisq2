@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.events.buyer_as_taker;
+package bisq.trade.mu_sig.events.buyer;
 
 import bisq.trade.mu_sig.events.MuSigTradeEvent;
 import lombok.EqualsAndHashCode;
