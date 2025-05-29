@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.network.handler.buyer_as_taker;
+package bisq.trade.mu_sig.messages.network.handler.buyer;
 
 import bisq.common.data.ByteArray;
 import bisq.common.util.StringUtils;
@@ -48,7 +48,7 @@ public final class MuSigPaymentReceivedMessage_F_Handler extends MuSigTradeMessa
     protected void process(MuSigPaymentReceivedMessage_F message) {
         peersSwapTxSignature = message.getSwapTxSignature();
 
-        tradeService.stopCloseTimeout(trade);
+        tradeService.stopCloseTradeTimeout(trade);
 
         // ClosureType.COOPERATIVE
         // *** BUYER CLOSES TRADE ***

@@ -42,7 +42,7 @@ public abstract class MuSigTradeMessageHandler<T extends MuSigTrade, M extends T
         blockingStub = tradeService.getMusigBlockingStub();
     }
 
-    public final void handle(M message) {
+    public void handle(M message) {
         super.handle(message);
 
         sendLogMessage();

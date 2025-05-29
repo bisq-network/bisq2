@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.network.handler.seller_as_maker;
+package bisq.trade.mu_sig.messages.network.handler.seller;
 
 import bisq.common.data.ByteArray;
 import bisq.trade.ServiceProvider;
@@ -45,7 +45,7 @@ public final class MuSigCooperativeClosureMessage_G_Handler extends MuSigTradeMe
     protected void process(MuSigCooperativeClosureMessage_G message) {
         peersOutputPrvKeyShare = message.getPeerOutputPrvKeyShare();
 
-        tradeService.stopCloseTimeout(trade);
+        tradeService.stopCloseTradeTimeout(trade);
 
         // ClosureType.COOPERATIVE
         // *** SELLER CLOSES TRADE ***

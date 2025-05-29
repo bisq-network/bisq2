@@ -55,18 +55,18 @@ import java.util.Optional;
 import static bisq.settings.DontShowAgainKey.CONFIRM_CLOSE_MU_SIG_TRADE;
 
 @Slf4j
-public abstract class State4<C extends State4.Controller<?, ?>> extends BaseState {
-    protected final C controller;
+public class State4TradeClosed extends BaseState {
+    protected final Controller controller;
 
-    public State4(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
-        controller = getController(serviceProvider, trade, channel);
+    public State4TradeClosed(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
+        controller = new Controller(serviceProvider, trade, channel);
     }
 
-    protected abstract C getController(ServiceProvider serviceProvider,
-                                       MuSigTrade trade,
-                                       MuSigOpenTradeChannel channel);
+    public VBox getRoot() {
+        return controller.getView().getRoot();
+    }
 
-    protected static abstract class Controller<M extends Model, V extends View<?, ?>> extends BaseState.Controller<M, V> {
+    protected static class Controller extends BaseState.Controller<Model, View> {
         private final ReputationService reputationService;
         protected final ExplorerService explorerService;
         private final DontShowAgainService dontShowAgainService;
@@ -79,6 +79,16 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
             explorerService = serviceProvider.getBondedRolesService().getExplorerService();
             reputationService = serviceProvider.getUserService().getReputationService();
             dontShowAgainService = serviceProvider.getDontShowAgainService();
+        }
+
+        @Override
+        protected Model createModel(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            return new Model(trade, channel);
+        }
+
+        @Override
+        protected View createView() {
+            return new View(model, this);
         }
 
         @Override
@@ -183,12 +193,12 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
         }
     }
 
-    public static abstract class View<M extends Model, C extends Controller<?, ?>> extends BaseState.View<M, C> {
+    public static class View extends BaseState.View<Model, Controller> {
         private final UserProfileDisplay peerProfileDisplay;
         protected final Button closeTradeButton, exportButton, detailsButton;
         protected final MuSigTradeCompletedTable muSigTradeCompletedTable;
 
-        protected View(M model, C controller) {
+        protected View(Model model, Controller controller) {
             super(model, controller);
 
             muSigTradeCompletedTable = new MuSigTradeCompletedTable();

@@ -39,17 +39,17 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuyerState2aSendQuoteSideAsset extends BaseState {
+public class State2BuyerSendPayment extends BaseState {
     private final Controller controller;
 
-    public BuyerState2aSendQuoteSideAsset(ServiceProvider serviceProvider,
-                                          MuSigTrade trade,
-                                          MuSigOpenTradeChannel channel) {
+    public State2BuyerSendPayment(ServiceProvider serviceProvider,
+                                  MuSigTrade trade,
+                                  MuSigOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, trade, channel);
     }
 
-    public View getView() {
-        return controller.getView();
+    public VBox getRoot() {
+        return controller.getView().getRoot();
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {

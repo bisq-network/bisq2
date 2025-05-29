@@ -60,20 +60,20 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public abstract class WaitForDepositConfirmation<C extends WaitForDepositConfirmation.Controller<?, ?>> extends BaseState {
-    protected final C controller;
+public class State1bWaitForDepositTxConfirmation extends BaseState {
+    private final Controller controller;
 
-    protected WaitForDepositConfirmation(ServiceProvider serviceProvider,
-                                         MuSigTrade trade,
-                                         MuSigOpenTradeChannel channel) {
-        controller = getController(serviceProvider, trade, channel);
+    public State1bWaitForDepositTxConfirmation(ServiceProvider serviceProvider,
+                                               MuSigTrade trade,
+                                               MuSigOpenTradeChannel channel) {
+        controller = new Controller(serviceProvider, trade, channel);
     }
 
-    protected abstract C getController(ServiceProvider serviceProvider,
-                                       MuSigTrade trade,
-                                       MuSigOpenTradeChannel channel);
+    public VBox getRoot() {
+        return controller.getView().getRoot();
+    }
 
-    protected static abstract class Controller<M extends Model, V extends View<?, ?>> extends BaseState.Controller<M, V> {
+    private static class Controller extends BaseState.Controller<Model, View> {
         private final static Map<String, Tx> CONFIRMED_TX_CACHE = new HashMap<>();
 
         private final ExplorerService explorerService;
@@ -82,12 +82,22 @@ public abstract class WaitForDepositConfirmation<C extends WaitForDepositConfirm
         @Nullable
         private CompletableFuture<Tx> requestFuture;
 
-        protected Controller(ServiceProvider serviceProvider,
-                             MuSigTrade trade,
-                             MuSigOpenTradeChannel channel) {
+        private Controller(ServiceProvider serviceProvider,
+                           MuSigTrade trade,
+                           MuSigOpenTradeChannel channel) {
             super(serviceProvider, trade, channel);
 
             explorerService = serviceProvider.getBondedRolesService().getExplorerService();
+        }
+
+        @Override
+        protected Model createModel(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+            return new Model(trade, channel);
+        }
+
+        @Override
+        protected View createView() {
+            return new View(model, this);
         }
 
         @Override
@@ -191,7 +201,7 @@ public abstract class WaitForDepositConfirmation<C extends WaitForDepositConfirm
     }
 
     @Getter
-    protected abstract static class Model extends BaseState.Model {
+    private static class Model extends BaseState.Model {
         enum ConfirmationState {
             REQUEST_STARTED,
             IN_MEMPOOL,
@@ -200,7 +210,7 @@ public abstract class WaitForDepositConfirmation<C extends WaitForDepositConfirm
         }
 
         @Setter
-        protected String txId;
+        private String txId;
         @Setter
         private long txOutputValueForAddress;
         @Setter
@@ -211,38 +221,38 @@ public abstract class WaitForDepositConfirmation<C extends WaitForDepositConfirm
         private final BooleanProperty isConfirmed = new SimpleBooleanProperty();
         private final ObjectProperty<ConfirmationState> confirmationState = new SimpleObjectProperty<>();
 
-        protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+        private Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
-            role = this instanceof BuyerState1WaitForDepositConfirmation.Model ? "buyer" : "seller";
+            role = trade.isBuyer() ? "buyer" : "seller";
         }
     }
 
-    public static abstract class View<M extends Model, C extends Controller<?, ?>> extends BaseState.View<M, C> {
+    public static class View extends BaseState.View<Model, Controller> {
         private final Button button;
         private final MaterialTextField txId;
         private final WaitingAnimation waitingAnimation;
         private Subscription confirmationStatePin;
 
-        protected View(M model, C controller) {
+        private View(Model model, Controller controller) {
             super(model, controller);
 
             String role = model.getRole();
-            WrappingText headline = MuSigFormUtils.getHeadline(Res.get("muSig.tradeState.info.phase1.headline"));
-            WrappingText info = MuSigFormUtils.getInfo(Res.get("muSig.tradeState.info.phase1.info."+role, model.getQuoteCode()));
+            WrappingText headline = MuSigFormUtils.getHeadline(Res.get("muSig.tradeState.info.phase1b.headline"));
+            WrappingText info = MuSigFormUtils.getInfo(Res.get("muSig.tradeState.info.phase1.info." + role, model.getQuoteCode()));
             waitingAnimation = new WaitingAnimation(WaitingState.BITCOIN_CONFIRMATION);
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
 
-            txId = MuSigFormUtils.getTextField(Res.get("muSig.tradeState.info.phase1.txId"), "", false);
+            txId = MuSigFormUtils.getTextField(Res.get("muSig.tradeState.info.phase1b.txId"), "", false);
             txId.setHelpText(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.explorerLookup"));
-            txId.setPromptText(Res.get("muSig.tradeState.info.phase1.txId.prompt"));
+            txId.setPromptText(Res.get("muSig.tradeState.info.phase1b.txId.prompt"));
             txId.setIcon(AwesomeIcon.EXTERNAL_LINK);
-            txId.setIconTooltip(Res.get("muSig.tradeState.info.phase1.txId.tooltip"));
+            txId.setIconTooltip(Res.get("muSig.tradeState.info.phase1b.txId.tooltip"));
             txId.setValidator(new BitcoinTransactionValidator());
             txId.filterMouseEventOnNonEditableText();
 
             button = new Button();
             VBox.setMargin(txId, new Insets(10, 0, 5, 0));
-          //  VBox.setMargin(button, new Insets(5, 0, 5, 0));
+            //  VBox.setMargin(button, new Insets(5, 0, 5, 0));
 
             root.getChildren().addAll(waitingInfo, txId, button);
         }

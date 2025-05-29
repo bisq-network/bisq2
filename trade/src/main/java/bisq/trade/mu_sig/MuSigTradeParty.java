@@ -29,7 +29,6 @@ import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.NonceShares;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PubKeyShares;
-import bisq.trade.mu_sig.messages.network.mu_sig_data.RedactedPartialSignatures;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.SwapTxSignature;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -47,7 +46,6 @@ public final class MuSigTradeParty extends TradeParty {
     private Optional<NonceShares> peersNonceShares = Optional.empty();
     private Optional<PartialSignaturesMessage> myPartialSignaturesMessage = Optional.empty();
     private Optional<PartialSignatures> peersPartialSignatures = Optional.empty();
-    private Optional<RedactedPartialSignatures> peersRedactedPartialSignatures = Optional.empty();
     private Optional<DepositPsbt> myDepositPsbt = Optional.empty();
     private Optional<SwapTxSignatureResponse> mySwapTxSignatureResponse = Optional.empty();
     private Optional<SwapTxSignature> peersSwapTxSignature = Optional.empty();
@@ -65,7 +63,6 @@ public final class MuSigTradeParty extends TradeParty {
                            Optional<NonceShares> peersNonceShares,
                            Optional<PartialSignaturesMessage> myPartialSignaturesMessage,
                            Optional<PartialSignatures> peersPartialSignatures,
-                           Optional<RedactedPartialSignatures> peersRedactedPartialSignatures,
                            Optional<DepositPsbt> myDepositPsbt,
                            Optional<SwapTxSignatureResponse> mySwapTxSignatureResponse,
                            Optional<SwapTxSignature> peersSwapTxSignature,
@@ -79,7 +76,6 @@ public final class MuSigTradeParty extends TradeParty {
         this.peersNonceShares = peersNonceShares;
         this.myPartialSignaturesMessage = myPartialSignaturesMessage;
         this.peersPartialSignatures = peersPartialSignatures;
-        this.peersRedactedPartialSignatures = peersRedactedPartialSignatures;
         this.myDepositPsbt = myDepositPsbt;
         this.mySwapTxSignatureResponse = mySwapTxSignatureResponse;
         this.peersSwapTxSignature = peersSwapTxSignature;
@@ -96,7 +92,6 @@ public final class MuSigTradeParty extends TradeParty {
         peersNonceShares.ifPresent(e -> builder.setPeersNonceShares(e.toProto(serializeForHash)));
         myPartialSignaturesMessage.ifPresent(e -> builder.setMyPartialSignaturesMessage(e.toProto(serializeForHash)));
         peersPartialSignatures.ifPresent(e -> builder.setPeersPartialSignatures(e.toProto(serializeForHash)));
-        peersRedactedPartialSignatures.ifPresent(e -> builder.setPeersRedactedPartialSignatures(e.toProto(serializeForHash)));
         myDepositPsbt.ifPresent(e -> builder.setMyDepositPsbt(e.toProto(serializeForHash)));
         mySwapTxSignatureResponse.ifPresent(e -> builder.setMySwapTxSignatureResponse(e.toProto(serializeForHash)));
         peersSwapTxSignature.ifPresent(e -> builder.setPeersSwapTxSignature(e.toProto(serializeForHash)));
@@ -126,9 +121,6 @@ public final class MuSigTradeParty extends TradeParty {
                         : Optional.empty(),
                 muSigTradePartyProto.hasPeersPartialSignatures()
                         ? Optional.of(PartialSignatures.fromProto(muSigTradePartyProto.getPeersPartialSignatures()))
-                        : Optional.empty(),
-                muSigTradePartyProto.hasPeersRedactedPartialSignatures()
-                        ? Optional.of(RedactedPartialSignatures.fromProto(muSigTradePartyProto.getPeersRedactedPartialSignatures()))
                         : Optional.empty(),
                 muSigTradePartyProto.hasMyDepositPsbt()
                         ? Optional.of(DepositPsbt.fromProto(muSigTradePartyProto.getMyDepositPsbt()))
@@ -170,10 +162,6 @@ public final class MuSigTradeParty extends TradeParty {
 
     public void setPeersPartialSignatures(PartialSignatures peersPartialSignatures) {
         this.peersPartialSignatures = Optional.of(peersPartialSignatures);
-    }
-
-    public void setPeersRedactedPartialSignatures(RedactedPartialSignatures peersRedactedPartialSignatures) {
-        this.peersRedactedPartialSignatures = Optional.of(peersRedactedPartialSignatures);
     }
 
     public void setMyDepositPsbt(DepositPsbt myDepositPsbt) {

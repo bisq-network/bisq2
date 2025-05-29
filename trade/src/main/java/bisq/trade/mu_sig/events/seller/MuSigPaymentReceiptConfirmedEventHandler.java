@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.events.seller_as_maker;
+package bisq.trade.mu_sig.events.seller;
 
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.events.seller_as_maker.MuSigPaymentReceiptConfirmedEvent;
 import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentReceivedMessage_F;
@@ -34,7 +35,7 @@ public final class MuSigPaymentReceiptConfirmedEventHandler extends MuSigTradeEv
 
     @Override
     public void process(MuSigPaymentReceiptConfirmedEvent event) {
-        tradeService.startCloseTimeout(trade, new MuSigSellersCloseTimeoutEvent());
+        tradeService.startCloseTradeTimeout(trade, new MuSigSellersCloseTradeTimeoutEvent());
     }
 
     @Override

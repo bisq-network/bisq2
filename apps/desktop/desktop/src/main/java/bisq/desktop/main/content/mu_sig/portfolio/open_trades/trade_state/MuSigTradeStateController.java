@@ -20,7 +20,6 @@ package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state;
 import bisq.chat.ChatService;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
-import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.HashMapObserver;
@@ -32,15 +31,14 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_details.MuSigTradeDetailsController;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState1WaitForDepositConfirmation;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState2aSendQuoteSideAsset;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState3WaitForSellersQuoteSideAssetReceipt;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.BuyerState4;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState1WaitForDepositConfirmation;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState2aWaitForQuoteSideAsset;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState3aConfirmQuoteSideAssetReceipt;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState3bWaitForTradeClose;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.SellerState4;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State2BuyerSendPayment;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State3BuyerWaitForSellersPaymentReceiptConfirmation;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State2SellerWaitForPayment;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State3aSellerConfirmPaymentReceipt;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State3bSellerWaitForBuyerToCloseTrade;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State1aSetupDepositTx;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State1bWaitForDepositTxConfirmation;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State4TradeClosed;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.mu_sig.MuSigService;
@@ -77,7 +75,6 @@ public class MuSigTradeStateController implements Controller {
     private final MuSigOpenTradeChannelService openTradeChannelService;
     private final MediationRequestService mediationRequestService;
     private final DontShowAgainService dontShowAgainService;
-    private final LeavePrivateChatManager leavePrivateChatManager;
     private final Optional<ResendMessageService> resendMessageService;
     private Pin tradeStatePin, errorMessagePin, peersErrorMessagePin, isInMediationPin,
             requestMediationDeliveryStatusPin, messageDeliveryStatusByMessageIdPin;
@@ -90,7 +87,6 @@ public class MuSigTradeStateController implements Controller {
         muSigService = serviceProvider.getMuSigService();
         ChatService chatService = serviceProvider.getChatService();
         openTradeChannelService = chatService.getMuSigOpenTradeChannelService();
-        leavePrivateChatManager = chatService.getLeavePrivateChatManager();
         mediationRequestService = serviceProvider.getSupportService().getMediationRequestService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
         resendMessageService = serviceProvider.getNetworkService().getResendMessageService();
@@ -99,7 +95,7 @@ public class MuSigTradeStateController implements Controller {
         muSigTradeDataHeader = new MuSigTradeDataHeader(serviceProvider, Res.get("bisqEasy.tradeState.header.peer").toUpperCase());
         model = new MuSigTradeStateModel();
         view = new MuSigTradeStateView(model, this,
-                muSigTradePhaseBox.getView().getRoot(),
+                muSigTradePhaseBox.getRoot(),
                 muSigTradeDataHeader.getRoot());
     }
 
@@ -271,56 +267,47 @@ public class MuSigTradeStateController implements Controller {
         model.getPhaseAndInfoVisible().set(true);
         model.getError().set(false);
         model.getIsTradeCompleted().set(state.isFinalState());
-
+        log.error("### state {}", state);
         switch (state) {
             case INIT -> {
             }
 
             // Deposit tx setup phase
-            case BUYER_AS_TAKER_INITIALIZED_TRADE,
-                 BUYER_AS_TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES -> {
-            }
-            case BUYER_AS_TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX -> {
-                model.getStateInfoVBox().set(new BuyerState1WaitForDepositConfirmation(serviceProvider, trade, channel).getView().getRoot());
-            }
-            case SELLER_AS_MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES,
-                 SELLER_AS_MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX -> {
-                model.getStateInfoVBox().set(new SellerState1WaitForDepositConfirmation(serviceProvider, trade, channel).getView().getRoot());
+            case TAKER_INITIALIZED_TRADE,
+                 MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES,
+                 TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES -> {
+                model.getStateInfoVBox().set(new State1aSetupDepositTx(serviceProvider, trade, channel).getRoot());
             }
 
+            // Deposit tx published
+            case MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX,
+                 TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX -> {
+                model.getStateInfoVBox().set(new State1bWaitForDepositTxConfirmation(serviceProvider, trade, channel).getRoot());
+            }
             // Deposit tx confirmed, settlement phase starts
             case DEPOSIT_TX_CONFIRMED -> {
                 if (isSeller) {
-                    model.getStateInfoVBox().set(new SellerState2aWaitForQuoteSideAsset(serviceProvider, trade, channel).getView().getRoot());
+                    model.getStateInfoVBox().set(new State2SellerWaitForPayment(serviceProvider, trade, channel).getRoot());
                 } else {
-                    model.getStateInfoVBox().set(new BuyerState2aSendQuoteSideAsset(serviceProvider, trade, channel).getView().getRoot());
+                    model.getStateInfoVBox().set(new State2BuyerSendPayment(serviceProvider, trade, channel).getRoot());
                 }
             }
 
-            case BUYER_AS_TAKER_INITIATED_PAYMENT -> {
-                model.getStateInfoVBox().set(new BuyerState3WaitForSellersQuoteSideAssetReceipt(serviceProvider, trade, channel).getView().getRoot());
+            case BUYER_INITIATED_PAYMENT -> {
+                model.getStateInfoVBox().set(new State3BuyerWaitForSellersPaymentReceiptConfirmation(serviceProvider, trade, channel).getRoot());
             }
-            case SELLER_AS_MAKER_RECEIVED_INITIATED_PAYMENT_MESSAGE -> {
-                model.getStateInfoVBox().set(new SellerState3aConfirmQuoteSideAssetReceipt(serviceProvider, trade, channel).getView().getRoot());
+            case SELLER_RECEIVED_INITIATED_PAYMENT_MESSAGE -> {
+                model.getStateInfoVBox().set(new State3aSellerConfirmPaymentReceipt(serviceProvider, trade, channel).getRoot());
             }
-            case SELLER_AS_MAKER_CONFIRMED_PAYMENT_RECEIPT -> {
-                model.getStateInfoVBox().set(new SellerState3bWaitForTradeClose(serviceProvider, trade, channel).getView().getRoot());
-            }
-
-            // Cooperative path
-            case BUYER_AS_TAKER_CLOSED_TRADE -> {
-                model.getStateInfoVBox().set(new BuyerState4(serviceProvider, trade, channel).getView().getRoot());
-            }
-            case SELLER_AS_MAKER_CLOSED_TRADE -> {
-                model.getStateInfoVBox().set(new SellerState4(serviceProvider, trade, channel).getView().getRoot());
+            case SELLER_CONFIRMED_PAYMENT_RECEIPT -> {
+                model.getStateInfoVBox().set(new State3bSellerWaitForBuyerToCloseTrade(serviceProvider, trade, channel).getRoot());
             }
 
-            // Uncooperative path
-            case BUYER_AS_TAKER_FORCE_CLOSED_TRADE -> {
-                model.getStateInfoVBox().set(new BuyerState4(serviceProvider, trade, channel).getView().getRoot());
-            }
-            case SELLER_AS_MAKER_FORCE_CLOSED_TRADE -> {
-                model.getStateInfoVBox().set(new SellerState4(serviceProvider, trade, channel).getView().getRoot());
+            case BUYER_CLOSED_TRADE,
+                 SELLER_CLOSED_TRADE,
+                 BUYER_FORCE_CLOSED_TRADE,
+                 SELLER_FORCE_CLOSED_TRADE -> {
+                model.getStateInfoVBox().set(new State4TradeClosed(serviceProvider, trade, channel).getRoot());
             }
             case FAILED -> {
                 model.getPhaseAndInfoVisible().set(false);

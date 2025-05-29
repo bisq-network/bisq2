@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network.mu_sig_data;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.util.OptionalUtils;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -29,37 +30,40 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
 public final class PartialSignatures implements NetworkProto {
-    public static PartialSignatures from(PartialSignaturesMessage partialSignaturesMessage) {
-        Optional<byte[]> swapTxInputPartialSignature = partialSignaturesMessage.getSwapTxInputPartialSignature();
-        checkArgument(swapTxInputPartialSignature.isPresent(),
-                "swapTxInputPartialSignature must not be empty when creating PartialSignatures from PartialSignaturesMessage");
+    public static PartialSignatures from(PartialSignaturesMessage partialSignaturesMessage,
+                                         boolean redactSwapTxInputPartialSignature) {
+        Optional<byte[]> swapTxInputPartialSignature = redactSwapTxInputPartialSignature
+                ? Optional.empty()
+                : partialSignaturesMessage.getSwapTxInputPartialSignature().map(byte[]::clone);
         return new PartialSignatures(
                 partialSignaturesMessage.getPeersWarningTxBuyerInputPartialSignature().clone(),
                 partialSignaturesMessage.getPeersWarningTxSellerInputPartialSignature().clone(),
                 partialSignaturesMessage.getPeersRedirectTxInputPartialSignature().clone(),
-                swapTxInputPartialSignature.get().clone()
+                swapTxInputPartialSignature
         );
     }
 
-    public static PartialSignatures from(RedactedPartialSignatures partialSignatures,
-                                         byte[] swapTxInputPartialSignature) {
+    public static PartialSignatures toUnRedacted(PartialSignatures redactedPartialSignatures,
+                                                 byte[] swapTxInputPartialSignature) {
+        checkArgument(redactedPartialSignatures.getSwapTxInputPartialSignature().isEmpty(),
+                "The PartialSignaturesMessage for the fromRedacted method call is expected to have an empty (redacted) swapTxInputPartialSignature.");
         return new PartialSignatures(
-                partialSignatures.getPeersWarningTxBuyerInputPartialSignature().clone(),
-                partialSignatures.getPeersWarningTxSellerInputPartialSignature().clone(),
-                partialSignatures.getPeersRedirectTxInputPartialSignature().clone(),
-                swapTxInputPartialSignature.clone()
+                redactedPartialSignatures.getPeersWarningTxBuyerInputPartialSignature().clone(),
+                redactedPartialSignatures.getPeersWarningTxSellerInputPartialSignature().clone(),
+                redactedPartialSignatures.getPeersRedirectTxInputPartialSignature().clone(),
+                Optional.of(swapTxInputPartialSignature.clone())
         );
     }
 
     private final byte[] peersWarningTxBuyerInputPartialSignature;
     private final byte[] peersWarningTxSellerInputPartialSignature;
     private final byte[] peersRedirectTxInputPartialSignature;
-    private final byte[] swapTxInputPartialSignature;
+    private final Optional<byte[]> swapTxInputPartialSignature;
 
     private PartialSignatures(byte[] peersWarningTxBuyerInputPartialSignature,
                               byte[] peersWarningTxSellerInputPartialSignature,
                               byte[] peersRedirectTxInputPartialSignature,
-                              byte[] swapTxInputPartialSignature) {
+                              Optional<byte[]> swapTxInputPartialSignature) {
         this.peersWarningTxBuyerInputPartialSignature = peersWarningTxBuyerInputPartialSignature;
         this.peersWarningTxSellerInputPartialSignature = peersWarningTxSellerInputPartialSignature;
         this.peersRedirectTxInputPartialSignature = peersRedirectTxInputPartialSignature;
@@ -75,11 +79,12 @@ public final class PartialSignatures implements NetworkProto {
 
     @Override
     public bisq.trade.protobuf.PartialSignatures.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.protobuf.PartialSignatures.newBuilder()
+        bisq.trade.protobuf.PartialSignatures.Builder builder = bisq.trade.protobuf.PartialSignatures.newBuilder()
                 .setPeersWarningTxBuyerInputPartialSignature(ByteString.copyFrom(peersWarningTxBuyerInputPartialSignature))
                 .setPeersWarningTxSellerInputPartialSignature(ByteString.copyFrom(peersWarningTxSellerInputPartialSignature))
-                .setPeersRedirectTxInputPartialSignature(ByteString.copyFrom(peersRedirectTxInputPartialSignature))
-                .setSwapTxInputPartialSignature(ByteString.copyFrom(swapTxInputPartialSignature));
+                .setPeersRedirectTxInputPartialSignature(ByteString.copyFrom(peersRedirectTxInputPartialSignature));
+        swapTxInputPartialSignature.ifPresent(e -> builder.setSwapTxInputPartialSignature(ByteString.copyFrom(e)));
+        return builder;
     }
 
     @Override
@@ -91,7 +96,9 @@ public final class PartialSignatures implements NetworkProto {
         return new PartialSignatures(proto.getPeersWarningTxBuyerInputPartialSignature().toByteArray(),
                 proto.getPeersWarningTxSellerInputPartialSignature().toByteArray(),
                 proto.getPeersRedirectTxInputPartialSignature().toByteArray(),
-                proto.getSwapTxInputPartialSignature().toByteArray());
+                proto.hasSwapTxInputPartialSignature()
+                        ? Optional.of(proto.getSwapTxInputPartialSignature().toByteArray())
+                        : Optional.empty());
     }
 
     @Override
@@ -101,7 +108,7 @@ public final class PartialSignatures implements NetworkProto {
         return Arrays.equals(peersWarningTxBuyerInputPartialSignature, that.peersWarningTxBuyerInputPartialSignature) &&
                 Arrays.equals(peersWarningTxSellerInputPartialSignature, that.peersWarningTxSellerInputPartialSignature) &&
                 Arrays.equals(peersRedirectTxInputPartialSignature, that.peersRedirectTxInputPartialSignature) &&
-                Arrays.equals(swapTxInputPartialSignature, that.swapTxInputPartialSignature);
+                OptionalUtils.optionalByteArrayEquals(swapTxInputPartialSignature, that.swapTxInputPartialSignature);
     }
 
     @Override
@@ -109,7 +116,7 @@ public final class PartialSignatures implements NetworkProto {
         int result = Arrays.hashCode(peersWarningTxBuyerInputPartialSignature);
         result = 31 * result + Arrays.hashCode(peersWarningTxSellerInputPartialSignature);
         result = 31 * result + Arrays.hashCode(peersRedirectTxInputPartialSignature);
-        result = 31 * result + Arrays.hashCode(swapTxInputPartialSignature);
+        result = 31 * result + swapTxInputPartialSignature.map(Arrays::hashCode).orElse(0);
         return result;
     }
 }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.events.buyer_as_taker;
+package bisq.trade.mu_sig.events.taker;
 
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractSignatureData;
@@ -51,9 +51,10 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
     @Override
     public void process(MuSigTakeOfferEvent event) {
         try {
+            Role role = trade.isBuyer() ? Role.BUYER_AS_TAKER : Role.SELLER_AS_TAKER;
             bisq.trade.protobuf.PubKeySharesResponse proto = blockingStub.initTrade(PubKeySharesRequest.newBuilder()
                     .setTradeId(trade.getId())
-                    .setMyRole(Role.BUYER_AS_TAKER)
+                    .setMyRole(role)
                     .build());
             myPubKeySharesResponse = PubKeySharesResponse.fromProto(proto);
 
@@ -98,7 +99,8 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
                 makerUserProfile.orElseThrow().getUserName(),
                 offer.getShortId()));
 
-        sendLogMessage("Buyer created his pubKeyShares.\n" +
-                "Buyer sent his pubKeyShares to seller.");
+        String role = trade.isBuyer() ? "Taker (as buyer)" : "Taker (as seller)";
+        sendLogMessage(role + " created his pubKeyShares.\n" +
+                role + " sent his pubKeyShares to maker.");
     }
 }

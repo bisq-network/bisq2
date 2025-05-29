@@ -49,7 +49,7 @@ import bisq.trade.Trade;
 import bisq.trade.mu_sig.events.MuSigTradeEvent;
 import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEvent;
 import bisq.trade.mu_sig.events.buyer_as_taker.MuSigPaymentInitiatedEvent;
-import bisq.trade.mu_sig.events.buyer_as_taker.MuSigTakeOfferEvent;
+import bisq.trade.mu_sig.events.taker.MuSigTakeOfferEvent;
 import bisq.trade.mu_sig.events.seller_as_maker.MuSigPaymentReceiptConfirmedEvent;
 import bisq.trade.mu_sig.grpc.MusigGrpcClient;
 import bisq.trade.mu_sig.messages.grpc.DepositPsbt;
@@ -126,7 +126,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
     private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin;
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
     private final Set<MuSigTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
-    private final Map<String, Scheduler> closeTimeoutSchedulerByTradeId = new ConcurrentHashMap<>();
+    private final Map<String, Scheduler> closeTradeTimeoutSchedulerByTradeId = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<Void>> observeDepositTxConfirmationStatusFutureByTradeId = new ConcurrentHashMap<>();
 
     public MuSigTradeService(Config config, ServiceProvider serviceProvider) {
@@ -226,8 +226,8 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
 
         networkService.removeConfidentialMessageListener(this);
 
-        closeTimeoutSchedulerByTradeId.values().forEach(Scheduler::stop);
-        closeTimeoutSchedulerByTradeId.clear();
+        closeTradeTimeoutSchedulerByTradeId.values().forEach(Scheduler::stop);
+        closeTradeTimeoutSchedulerByTradeId.clear();
 
         tradeProtocolById.clear();
         pendingMessages.clear();
@@ -420,18 +420,18 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         observeDepositTxConfirmationStatusFutureByTradeId.put(tradeId, future);
     }
 
-    public void startCloseTimeout(MuSigTrade trade, MuSigTradeEvent event) {
-        stopCloseTimeout(trade);
-        closeTimeoutSchedulerByTradeId.computeIfAbsent(trade.getId(), key ->
+    public void startCloseTradeTimeout(MuSigTrade trade, MuSigTradeEvent event) {
+        stopCloseTradeTimeout(trade);
+        closeTradeTimeoutSchedulerByTradeId.computeIfAbsent(trade.getId(), key ->
                 Scheduler.run(() ->
                                 handleMuSigTradeEvent(trade, event))
                         .after(24, TimeUnit.HOURS));
     }
 
-    public void stopCloseTimeout(MuSigTrade trade) {
+    public void stopCloseTradeTimeout(MuSigTrade trade) {
         String tradeId = trade.getId();
-        if (closeTimeoutSchedulerByTradeId.containsKey(tradeId)) {
-            closeTimeoutSchedulerByTradeId.get(tradeId).stop();
+        if (closeTradeTimeoutSchedulerByTradeId.containsKey(tradeId)) {
+            closeTradeTimeoutSchedulerByTradeId.get(tradeId).stop();
         }
     }
 

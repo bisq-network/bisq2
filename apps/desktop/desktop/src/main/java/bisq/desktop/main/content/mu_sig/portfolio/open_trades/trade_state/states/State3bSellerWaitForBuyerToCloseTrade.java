@@ -25,19 +25,20 @@ import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.i18n.Res;
 import bisq.trade.mu_sig.MuSigTrade;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SellerState2aWaitForQuoteSideAsset extends BaseState {
+public class State3bSellerWaitForBuyerToCloseTrade extends BaseState {
     private final Controller controller;
 
-    public SellerState2aWaitForQuoteSideAsset(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
+    public State3bSellerWaitForBuyerToCloseTrade(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, trade, channel);
     }
 
-    public View getView() {
-        return controller.getView();
+    public VBox getRoot() {
+        return controller.getView().getRoot();
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
@@ -91,8 +92,8 @@ public class SellerState2aWaitForQuoteSideAsset extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
-            headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2a.waitForPayment.headline", model.getQuoteCode()));
-            info.setText(Res.get("bisqEasy.tradeState.info.seller.phase2a.waitForPayment.info", model.getFormattedQuoteAmount()));
+            headline.setText(Res.get("muSig.tradeState.info.seller.phase3b.waitForTradeClose.headline", model.getQuoteCode()));
+            info.setText(Res.get("muSig.tradeState.info.seller.phase3b.waitForTradeClose.info", model.getFormattedQuoteAmount()));
             waitingAnimation.play();
         }
 

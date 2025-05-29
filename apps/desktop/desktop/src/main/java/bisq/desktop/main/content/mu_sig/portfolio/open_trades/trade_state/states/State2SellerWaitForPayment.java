@@ -25,19 +25,20 @@ import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.i18n.Res;
 import bisq.trade.mu_sig.MuSigTrade;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SellerState3bWaitForTradeClose extends BaseState {
+public class State2SellerWaitForPayment extends BaseState {
     private final Controller controller;
 
-    public SellerState3bWaitForTradeClose(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
+    public State2SellerWaitForPayment(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, trade, channel);
     }
 
-    public View getView() {
-        return controller.getView();
+    public VBox getRoot() {
+        return controller.getView().getRoot();
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {

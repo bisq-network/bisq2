@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.events.buyer_as_taker;
+package bisq.trade.mu_sig.events.buyer;
 
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -24,16 +24,16 @@ import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class MuSigBuyersCloseTimeoutEventHandler extends MuSigTradeEventHandler<MuSigTrade, MuSigBuyersCloseTimeoutEvent> {
+public final class MuSigBuyersCloseTradeTimeoutEventHandler extends MuSigTradeEventHandler<MuSigTrade, MuSigBuyersCloseTradeTimeoutEvent> {
     private CloseTradeResponse myCloseTradeResponse;
 
-    public MuSigBuyersCloseTimeoutEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
+    public MuSigBuyersCloseTradeTimeoutEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void process(MuSigBuyersCloseTimeoutEvent event) {
-        tradeService.stopCloseTimeout(trade);
+    public void process(MuSigBuyersCloseTradeTimeoutEvent event) {
+        tradeService.stopCloseTradeTimeout(trade);
 
         // ClosureType.UNCOOPERATIVE
         // Buyer never got Message F from seller -- picks up Swap Tx from bitcoin network instead.

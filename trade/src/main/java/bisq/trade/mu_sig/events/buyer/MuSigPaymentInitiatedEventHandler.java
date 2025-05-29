@@ -15,23 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.events.buyer_as_taker;
+package bisq.trade.mu_sig.events.buyer;
 
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.events.buyer_as_taker.MuSigPaymentInitiatedEvent;
 import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
+import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
 
-public final class MuSigPaymentInitiatedEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade, MuSigPaymentInitiatedEvent> {
+public class MuSigPaymentInitiatedEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade, MuSigPaymentInitiatedEvent> {
     public MuSigPaymentInitiatedEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
     public void process(MuSigPaymentInitiatedEvent event) {
-        tradeService.startCloseTimeout(trade, new MuSigBuyersCloseTimeoutEvent());
+        tradeService.startCloseTradeTimeout(trade, new MuSigBuyersCloseTradeTimeoutEvent());
     }
 
     @Override
@@ -40,8 +42,10 @@ public final class MuSigPaymentInitiatedEventHandler extends MuSigTradeEventHand
 
     @Override
     protected void sendMessage() {
-        PartialSignatures partialSignatures = PartialSignatures.from(trade.getMyself().getMyPartialSignaturesMessage().orElseThrow());
-        byte[] swapTxInputPartialSignature = partialSignatures.getSwapTxInputPartialSignature();
+        // Now we send the previously withheld swapTxInputPartialSignature to the seller
+        PartialSignaturesMessage partialSignaturesMessage = trade.getMyself().getMyPartialSignaturesMessage().orElseThrow();
+        PartialSignatures partialSignatures = PartialSignatures.from(partialSignaturesMessage, false);
+        byte[] swapTxInputPartialSignature = partialSignatures.getSwapTxInputPartialSignature().orElseThrow();
         send(new MuSigPaymentInitiatedMessage_E(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),

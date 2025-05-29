@@ -20,24 +20,24 @@ package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.state
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.WrappingText;
-import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
-import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.i18n.Res;
 import bisq.trade.mu_sig.MuSigTrade;
-import javafx.scene.layout.HBox;
+import javafx.geometry.Insets;
+import javafx.scene.control.Button;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuyerState3WaitForSellersQuoteSideAssetReceipt extends BaseState {
+public class State3aSellerConfirmPaymentReceipt extends BaseState {
     private final Controller controller;
 
-    public BuyerState3WaitForSellersQuoteSideAssetReceipt(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
+    public State3aSellerConfirmPaymentReceipt(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, trade, channel);
     }
 
-    public View getView() {
-        return controller.getView();
+    public VBox getRoot() {
+        return controller.getView().getRoot();
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
@@ -64,6 +64,12 @@ public class BuyerState3WaitForSellersQuoteSideAssetReceipt extends BaseState {
         public void onDeactivate() {
             super.onDeactivate();
         }
+
+        private void onPaymentReceiptConfirmed() {
+            sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase2b.tradeLogMessage",
+                    model.getChannel().getMyUserIdentity().getUserName(), model.getFormattedQuoteAmount()));
+            muSigTradeService.paymentReceiptConfirmed(model.getTrade());
+        }
     }
 
     @Getter
@@ -74,35 +80,34 @@ public class BuyerState3WaitForSellersQuoteSideAssetReceipt extends BaseState {
     }
 
     public static class View extends BaseState.View<Model, Controller> {
-        private final WrappingText headline, info;
-        private final WaitingAnimation waitingAnimation;
+        private final WrappingText headline;
+        private final Button confirmPaymentReceiptButton;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            waitingAnimation = new WaitingAnimation(WaitingState.FIAT_PAYMENT_CONFIRMATION);
             headline = MuSigFormUtils.getHeadline();
-            info = MuSigFormUtils.getInfo();
-            HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
-            root.getChildren().add(waitingInfo);
+            WrappingText info = MuSigFormUtils.getInfo(Res.get("bisqEasy.tradeState.info.seller.phase2b.info"));
+            confirmPaymentReceiptButton = new Button();
+            confirmPaymentReceiptButton.setDefaultButton(true);
+            VBox.setMargin(confirmPaymentReceiptButton, new Insets(5, 0, 10, 0));
+            root.getChildren().addAll(headline, info, confirmPaymentReceiptButton);
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
 
-            headline.setText(Res.get("muSig.tradeState.info.buyer.phase3.headline"));
-            String name = model.getTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail().name();
-            String bitcoinPaymentData = Res.get("bisqEasy.tradeState.bitcoinPaymentData." + name);
-            info.setText(Res.get("muSig.tradeState.info.buyer.phase3.info", model.getFormattedQuoteAmount()));
-            waitingAnimation.play();
+            headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.headline", model.getFormattedQuoteAmount(), model.getTrade().getShortId()));
+            confirmPaymentReceiptButton.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.fiatReceivedButton", model.getFormattedQuoteAmount()));
+            confirmPaymentReceiptButton.setOnAction(e -> controller.onPaymentReceiptConfirmed());
         }
 
         @Override
         protected void onViewDetached() {
             super.onViewDetached();
 
-            waitingAnimation.stop();
+            confirmPaymentReceiptButton.setOnAction(null);
         }
     }
 }

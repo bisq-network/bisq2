@@ -20,28 +20,33 @@ package bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.state
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.WrappingText;
+import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
+import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.i18n.Res;
 import bisq.trade.mu_sig.MuSigTrade;
-import javafx.geometry.Insets;
-import javafx.scene.control.Button;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SellerState3aConfirmQuoteSideAssetReceipt extends BaseState {
+public class State1aSetupDepositTx extends BaseState {
     private final Controller controller;
 
-    public SellerState3aConfirmQuoteSideAssetReceipt(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
+    public State1aSetupDepositTx(ServiceProvider serviceProvider,
+                                 MuSigTrade trade,
+                                 MuSigOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, trade, channel);
     }
 
-    public View getView() {
-        return controller.getView();
+    public VBox getRoot() {
+        return controller.getView().getRoot();
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
-        private Controller(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
+        private Controller(ServiceProvider serviceProvider,
+                           MuSigTrade trade,
+                           MuSigOpenTradeChannel channel) {
             super(serviceProvider, trade, channel);
         }
 
@@ -64,50 +69,41 @@ public class SellerState3aConfirmQuoteSideAssetReceipt extends BaseState {
         public void onDeactivate() {
             super.onDeactivate();
         }
-
-        private void onPaymentReceiptConfirmed() {
-            sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase2b.tradeLogMessage",
-                    model.getChannel().getMyUserIdentity().getUserName(), model.getFormattedQuoteAmount()));
-            muSigTradeService.paymentReceiptConfirmed(model.getTrade());
-        }
     }
 
     @Getter
     private static class Model extends BaseState.Model {
-        protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
+        private Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
         }
     }
 
     public static class View extends BaseState.View<Model, Controller> {
-        private final WrappingText headline;
-        private final Button confirmPaymentReceiptButton;
+        private final WaitingAnimation waitingAnimation;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            headline = MuSigFormUtils.getHeadline();
-            WrappingText info = MuSigFormUtils.getInfo(Res.get("bisqEasy.tradeState.info.seller.phase2b.info"));
-            confirmPaymentReceiptButton = new Button();
-            confirmPaymentReceiptButton.setDefaultButton(true);
-            VBox.setMargin(confirmPaymentReceiptButton, new Insets(5, 0, 10, 0));
-            root.getChildren().addAll(headline, info, confirmPaymentReceiptButton);
+            WrappingText headline = MuSigFormUtils.getHeadline(Res.get("muSig.tradeState.info.phase1a.headline"));
+            WrappingText info = MuSigFormUtils.getInfo(Res.get("muSig.tradeState.info.phase1a.info"));
+            waitingAnimation = new WaitingAnimation(WaitingState.BITCOIN_CONFIRMATION);
+            HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
+
+            root.getChildren().addAll(waitingInfo);
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
 
-            headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.headline", model.getFormattedQuoteAmount(), model.getTrade().getShortId()));
-            confirmPaymentReceiptButton.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.fiatReceivedButton", model.getFormattedQuoteAmount()));
-            confirmPaymentReceiptButton.setOnAction(e -> controller.onPaymentReceiptConfirmed());
+            waitingAnimation.play();
         }
 
         @Override
         protected void onViewDetached() {
             super.onViewDetached();
 
-            confirmPaymentReceiptButton.setOnAction(null);
+            waitingAnimation.stop();
         }
     }
 }

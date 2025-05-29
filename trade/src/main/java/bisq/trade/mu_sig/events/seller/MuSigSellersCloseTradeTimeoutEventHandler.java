@@ -15,31 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.events.seller_as_maker;
+package bisq.trade.mu_sig.events.seller;
 
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
-import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.handler.MuSigTradeEventHandler;
 import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
 import bisq.trade.protobuf.CloseTradeRequest;
 
-public final class MuSigSellersCloseTimeoutEventHandler extends MuSigTradeEventHandler<MuSigTrade, MuSigSellersCloseTimeoutEvent> {
+public final class MuSigSellersCloseTradeTimeoutEventHandler extends MuSigTradeEventHandler<MuSigTrade, MuSigSellersCloseTradeTimeoutEvent> {
     private CloseTradeResponse myCloseTradeResponse;
 
-    public MuSigSellersCloseTimeoutEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
+    public MuSigSellersCloseTradeTimeoutEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void process(MuSigSellersCloseTimeoutEvent event) {
-        tradeService.stopCloseTimeout(trade);
-
-        MuSigTradeParty buyerAsTake = trade.getTaker();
+    public void process(MuSigSellersCloseTradeTimeoutEvent event) {
+        tradeService.stopCloseTradeTimeout(trade);
 
         // ClosureType.UNCOOPERATIVE
         // *** SELLER FORCE-CLOSES TRADE ***
-        //TODO isn't here the swap Tx needed to pass?
         CloseTradeRequest closeTradeRequest = CloseTradeRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .build();
