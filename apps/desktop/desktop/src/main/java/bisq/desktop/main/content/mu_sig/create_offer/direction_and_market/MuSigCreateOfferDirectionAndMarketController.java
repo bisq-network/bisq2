@@ -22,7 +22,6 @@ import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.mu_sig.MuSigService;
 import bisq.offer.Direction;
 import bisq.settings.SettingsService;
@@ -32,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -41,17 +39,14 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
     @Getter
     private final MuSigCreateOfferDirectionAndMarketView view;
     private final Runnable onNextHandler;
-    private final Consumer<NavigationTarget> closeAndNavigateToHandler;
     private final MarketPriceService marketPriceService;
     private final MuSigService muSigService;
     private final SettingsService settingsService;
     private Subscription searchTextPin;
 
     public MuSigCreateOfferDirectionAndMarketController(ServiceProvider serviceProvider,
-                                                        Runnable onNextHandler,
-                                                        Consumer<NavigationTarget> closeAndNavigateToHandler) {
+                                                        Runnable onNextHandler) {
         this.onNextHandler = onNextHandler;
-        this.closeAndNavigateToHandler = closeAndNavigateToHandler;
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         muSigService = serviceProvider.getMuSigService();
         settingsService = serviceProvider.getSettingsService();
