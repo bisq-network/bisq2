@@ -60,6 +60,7 @@ import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -297,25 +298,27 @@ public class TradeWizardAmountController implements Controller {
         minAmountCompBaseSideAmountPin.unsubscribe();
         minAmountCompQuoteSideAmountPin.unsubscribe();
         priceTooltipPin.unsubscribe();
-        view.getRoot().setOnKeyPressed(null);
+
         navigationButtonsVisibleHandler.accept(true);
         model.getIsOverlayVisible().set(false);
+    }
+
+    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
     }
 
     void onShowOverlay() {
-        navigationButtonsVisibleHandler.accept(false);
-        model.getIsOverlayVisible().set(true);
-        view.getRoot().setOnKeyPressed(keyEvent -> {
-            KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
-            });
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
-        });
+        if (!model.getIsOverlayVisible().get()) {
+            navigationButtonsVisibleHandler.accept(false);
+            model.getIsOverlayVisible().set(true);
+        }
     }
 
     void onCloseOverlay() {
-        view.getRoot().setOnKeyPressed(null);
-        navigationButtonsVisibleHandler.accept(true);
-        model.getIsOverlayVisible().set(false);
+        if (model.getIsOverlayVisible().get()) {
+            navigationButtonsVisibleHandler.accept(true);
+            model.getIsOverlayVisible().set(false);
+        }
     }
 
     void onLearnHowToBuildReputation() {
