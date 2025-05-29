@@ -21,7 +21,6 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
@@ -174,7 +173,6 @@ public class MuSigCreateOfferPriceController implements Controller {
         priceSliderValuePin.unsubscribe();
         percentagePin.unsubscribe();
 
-        view.getRoot().setOnKeyPressed(null);
         navigationButtonsVisibleHandler.accept(true);
         model.getIsOverlayVisible().set(false);
     }
@@ -262,17 +260,11 @@ public class MuSigCreateOfferPriceController implements Controller {
     void onShowOverlay() {
         navigationButtonsVisibleHandler.accept(false);
         model.getIsOverlayVisible().set(true);
-        view.getRoot().setOnKeyPressed(keyEvent -> {
-            KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
-            });
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
-        });
     }
 
     void onCloseOverlay() {
         navigationButtonsVisibleHandler.accept(true);
         model.getIsOverlayVisible().set(false);
-        view.getRoot().setOnKeyPressed(null);
     }
 
     private void applyPriceSpec() {

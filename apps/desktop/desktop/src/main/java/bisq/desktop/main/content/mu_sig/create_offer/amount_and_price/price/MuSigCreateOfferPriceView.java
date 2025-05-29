@@ -19,6 +19,7 @@ package bisq.desktop.main.content.mu_sig.create_offer.amount_and_price.price;
 
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.threading.UIScheduler;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.UnorderedList;
@@ -163,8 +164,8 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
 
         percentagePrice.setOnAction(e -> controller.usePercentagePrice());
         fixedPrice.setOnAction(e -> controller.useFixedPrice());
-        showLearnWhyButton.setOnAction(e -> controller.onShowOverlay());
-        closeOverlayButton.setOnAction(e -> controller.onCloseOverlay());
+        showLearnWhyButton.setOnAction(e -> showOverlay());
+        closeOverlayButton.setOnAction(e -> closeOverlay());
 
         // Needed to trigger focusOut event on amount components
         // We handle all parents mouse events.
@@ -195,6 +196,8 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
         fixedPrice.setOnAction(null);
         showLearnWhyButton.setOnAction(null);
         closeOverlayButton.setOnAction(null);
+
+        root.setOnKeyPressed(null);
 
         Parent node = root;
         while (node.getParent() != null) {
@@ -247,5 +250,19 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
         VBox vBox = new VBox(content, Spacer.fillVBox());
         content.setMaxWidth(700);
         return vBox;
+    }
+
+    private void showOverlay() {
+        root.setOnKeyPressed(keyEvent -> {
+            KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+            });
+            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::closeOverlay);
+        });
+        controller.onShowOverlay();
+    }
+
+    private void closeOverlay() {
+        root.setOnKeyPressed(null);
+        controller.onCloseOverlay();
     }
 }

@@ -116,7 +116,6 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
 
     @Override
     public void onDeactivate() {
-        view.getRoot().setOnKeyPressed(null);
         searchTextPin.unsubscribe();
     }
 

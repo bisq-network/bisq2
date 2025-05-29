@@ -19,6 +19,7 @@ package bisq.desktop.main.content.mu_sig.create_offer.amount_and_price.amount;
 
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Icons;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -47,7 +48,7 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
     @Getter
     private final VBox overlay;
     private final Button learnHowToBuildReputation, closeOverlayButton, fixedAmount, rangeAmount;
-    private final HBox amountModelsBox, amountLimitInfoHBox;
+    private final HBox amountLimitInfoHBox;
     private Subscription isRangeAmountEnabledPin;
 
     public MuSigCreateOfferAmountView(MuSigCreateOfferAmountModel model,
@@ -93,7 +94,7 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
         rangeAmountBox.getStyleClass().add("model-selection-item-box");
         rangeAmountBox.setAlignment(Pos.CENTER_LEFT);
 
-        amountModelsBox = new HBox(30, fixedAmountBox, separator, rangeAmountBox);
+        HBox amountModelsBox = new HBox(30, fixedAmountBox, separator, rangeAmountBox);
         amountModelsBox.getStyleClass().addAll("selection-models", "bisq-text-3");
 
         amountLimitInfoOverlayInfo = new Label();
@@ -138,10 +139,10 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
             amountSelectionController.setIsRangeAmountEnabled(isRangeAmountEnabled);
         });
 
-        learnMore.setOnAction(e -> controller.onShowOverlay());
+        learnMore.setOnAction(e -> showOverlay());
         linkToWiki.setOnAction(e -> controller.onOpenWiki(linkToWiki.getText()));
         learnHowToBuildReputation.setOnAction(e -> controller.onLearnHowToBuildReputation());
-        closeOverlayButton.setOnAction(e -> controller.onCloseOverlay());
+        closeOverlayButton.setOnAction(e -> closeOverlay());
         fixedAmount.setOnAction(e -> controller.useFixedAmount());
         rangeAmount.setOnAction(e -> controller.useRangeAmount());
     }
@@ -167,6 +168,8 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
         learnHowToBuildReputation.setOnAction(null);
         fixedAmount.setOnAction(null);
         rangeAmount.setOnAction(null);
+
+        root.setOnKeyPressed(null);
     }
 
     private static VBox createOverlay(Label amountLimitInfo,
@@ -204,5 +207,19 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
         VBox vBox = new VBox(content, Spacer.fillVBox());
         vBox.setMaxWidth(700);
         return vBox;
+    }
+
+    private void showOverlay() {
+        root.setOnKeyPressed(keyEvent -> {
+            KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+            });
+            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::closeOverlay);
+        });
+        controller.onShowOverlay();
+    }
+
+    private void closeOverlay() {
+        root.setOnKeyPressed(null);
+        controller.onCloseOverlay();
     }
 }

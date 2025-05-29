@@ -29,7 +29,6 @@ import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.components.amount_selection.AmountSelectionController;
@@ -274,7 +273,6 @@ public class MuSigCreateOfferAmountController implements Controller {
         minAmountCompBaseSideAmountPin.unsubscribe();
         minAmountCompQuoteSideAmountPin.unsubscribe();
         priceTooltipPin.unsubscribe();
-        view.getRoot().setOnKeyPressed(null);
         navigationButtonsVisibleHandler.accept(true);
         model.getIsOverlayVisible().set(false);
     }
@@ -282,15 +280,9 @@ public class MuSigCreateOfferAmountController implements Controller {
     void onShowOverlay() {
         navigationButtonsVisibleHandler.accept(false);
         model.getIsOverlayVisible().set(true);
-        view.getRoot().setOnKeyPressed(keyEvent -> {
-            KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
-            });
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
-        });
     }
 
     void onCloseOverlay() {
-        view.getRoot().setOnKeyPressed(null);
         navigationButtonsVisibleHandler.accept(true);
         model.getIsOverlayVisible().set(false);
     }
