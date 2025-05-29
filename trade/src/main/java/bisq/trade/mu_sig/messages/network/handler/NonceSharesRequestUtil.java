@@ -24,7 +24,6 @@ import bisq.trade.mu_sig.MusSigFeeRateProvider;
 public class NonceSharesRequestUtil {
     public static long getTradeAmount(MuSigTrade trade) {
         Market market = trade.getMarket();
-        long tradeAmount;
         if (market.getBaseCurrencyCode().equals("BTC")) {
             return trade.getContract().getBaseSideAmount();
         } else if (market.getQuoteCurrencyCode().equals("BTC")) {

@@ -238,7 +238,7 @@ public class State1bWaitForDepositTxConfirmation extends BaseState {
 
             String role = model.getRole();
             WrappingText headline = MuSigFormUtils.getHeadline(Res.get("muSig.tradeState.info.phase1b.headline"));
-            WrappingText info = MuSigFormUtils.getInfo(Res.get("muSig.tradeState.info.phase1.info." + role, model.getQuoteCode()));
+            WrappingText info = MuSigFormUtils.getInfo(Res.get("muSig.tradeState.info.phase1b.info." + role, model.getQuoteCode()));
             waitingAnimation = new WaitingAnimation(WaitingState.BITCOIN_CONFIRMATION);
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
 

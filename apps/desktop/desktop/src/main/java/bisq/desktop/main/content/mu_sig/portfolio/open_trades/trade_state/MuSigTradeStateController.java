@@ -267,7 +267,6 @@ public class MuSigTradeStateController implements Controller {
         model.getPhaseAndInfoVisible().set(true);
         model.getError().set(false);
         model.getIsTradeCompleted().set(state.isFinalState());
-        log.error("### state {}", state);
         switch (state) {
             case INIT -> {
             }

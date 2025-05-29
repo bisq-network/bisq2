@@ -28,16 +28,12 @@ import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_C;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
+import bisq.trade.mu_sig.messages.network.handler.PartialSignaturesRequestUtil;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.NonceShares;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
 import bisq.trade.protobuf.DepositTxSignatureRequest;
 import bisq.trade.protobuf.PartialSignaturesRequest;
-import bisq.trade.protobuf.ReceiverAddressAndAmount;
-import com.google.common.collect.ImmutableMap;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_C> {
@@ -64,7 +60,7 @@ public abstract class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessage
         PartialSignaturesRequest partialSignaturesRequest = PartialSignaturesRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setPeersNonceShares(peersNonceSharesMessage.toProto(true))
-                .addAllReceivers(mockReceivers())
+                .addAllReceivers(PartialSignaturesRequestUtil.getBurningMenDPTReceivers())
                 .build();
         myPartialSignaturesMessage = PartialSignaturesMessage.fromProto(blockingStub.getPartialSignatures(partialSignaturesRequest));
 
@@ -126,16 +122,4 @@ public abstract class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessage
                 role + " sent his partialSignatures to buyer.\n" +
                 role + " start listening for deposit tx confirmation (expecting that buyer will publish deposit tx once received our messsage)");
     }
-
-    protected static List<ReceiverAddressAndAmount> mockReceivers() {
-        return ImmutableMap.of(
-                        "tb1pwxlp4v9v7v03nx0e7vunlc87d4936wnyqegw0fuahudypan64wys5stxh7", 200_000,
-                        "tb1qpg889v22f3gefuvwpe3963t5a00nvfmkhlgqw5", 80_000,
-                        "2N2x2bA28AsLZZEHss4SjFoyToQV5YYZsJM", 12_345
-                )
-                .entrySet().stream()
-                .map(e -> ReceiverAddressAndAmount.newBuilder().setAddress(e.getKey()).setAmount(e.getValue()).build())
-                .collect(Collectors.toList());
-    }
-
 }
