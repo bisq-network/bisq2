@@ -176,8 +176,8 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
 
         percentagePrice.setOnAction(e -> controller.usePercentagePrice());
         fixedPrice.setOnAction(e -> controller.useFixedPrice());
-        showLearnWhyButton.setOnAction(e -> showOverlay());
-        closeOverlayButton.setOnAction(e -> closeOverlay());
+        showLearnWhyButton.setOnAction(e -> controller.onShowOverlay());
+        closeOverlayButton.setOnAction(e -> controller.onCloseOverlay());
 
         // Needed to trigger focusOut event on amount components
         // We handle all parents mouse events.
@@ -263,19 +263,5 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
         VBox vBox = new VBox(content, Spacer.fillVBox());
         content.setMaxWidth(700);
         return vBox;
-    }
-
-    private void showOverlay() {
-        root.setOnKeyPressed(keyEvent -> {
-            KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
-            });
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::closeOverlay);
-        });
-        controller.onShowOverlay();
-    }
-
-    private void closeOverlay() {
-        root.setOnKeyPressed(null);
-        controller.onCloseOverlay();
     }
 }
