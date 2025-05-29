@@ -89,8 +89,11 @@ public class NetworkUtils {
             while (interfaces.hasMoreElements()) {
                 NetworkInterface networkInterface = interfaces.nextElement();
 
-                // Ignore down, loopback and virtual interfaces
-                if (!networkInterface.isUp() || networkInterface.isLoopback() || networkInterface.isVirtual()) {
+                // Ignore down, loopback, virtual and point to point interfaces
+                if (!networkInterface.isUp() ||
+                        networkInterface.isLoopback() ||
+                        networkInterface.isVirtual() ||
+                        networkInterface.isPointToPoint()) {
                     continue;
                 }
 
