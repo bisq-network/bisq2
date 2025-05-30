@@ -20,7 +20,6 @@ package bisq.trade.mu_sig.messages.grpc;
 import bisq.common.proto.Proto;
 import bisq.common.util.OptionalUtils;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
-import bisq.trade.mu_sig.messages.network.mu_sig_data.RedactedPartialSignatures;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 
@@ -34,16 +33,7 @@ public final class PartialSignaturesMessage implements Proto {
                 peersPartialSignatures.getPeersWarningTxBuyerInputPartialSignature(),
                 peersPartialSignatures.getPeersWarningTxSellerInputPartialSignature(),
                 peersPartialSignatures.getPeersRedirectTxInputPartialSignature(),
-                Optional.of(peersPartialSignatures.getSwapTxInputPartialSignature())
-        );
-    }
-
-    public static PartialSignaturesMessage from(RedactedPartialSignatures peersPartialSignatures) {
-        return new PartialSignaturesMessage(
-                peersPartialSignatures.getPeersWarningTxBuyerInputPartialSignature(),
-                peersPartialSignatures.getPeersWarningTxSellerInputPartialSignature(),
-                peersPartialSignatures.getPeersRedirectTxInputPartialSignature(),
-                Optional.empty()
+                peersPartialSignatures.getSwapTxInputPartialSignature()
         );
     }
 

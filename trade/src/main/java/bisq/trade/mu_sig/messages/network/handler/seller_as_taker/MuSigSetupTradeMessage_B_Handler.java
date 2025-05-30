@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.network.handler.buyer_as_taker;
+package bisq.trade.mu_sig.messages.network.handler.seller_as_taker;
 
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -29,8 +29,8 @@ public final class MuSigSetupTradeMessage_B_Handler extends bisq.trade.mu_sig.me
     }
 
     protected PartialSignatures getPartialSignatures() {
-        // As buyer, we do not expose swapTxInputPartialSignature at that stage to the peer, thus we redact the
-        // swapTxInputPartialSignature. Later once we initiate the payment we send the swapTxInputPartialSignature.
-        return PartialSignatures.from(myPartialSignaturesMessage, true);
+        // As seller, we send already the swapTxInputPartialSignature to the peer, thus we do not redacted the
+        // swapTxInputPartialSignature.
+        return PartialSignatures.from(myPartialSignaturesMessage, false);
     }
 }

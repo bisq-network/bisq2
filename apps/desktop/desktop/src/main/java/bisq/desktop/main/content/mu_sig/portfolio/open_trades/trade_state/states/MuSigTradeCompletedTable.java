@@ -53,8 +53,8 @@ public class MuSigTradeCompletedTable extends VBox {
     public MuSigTradeCompletedTable() {
         waitingAnimation = new WaitingAnimation(WaitingState.TRADE_COMPLETED);
 
-        WrappingText headline = MuSigFormUtils.getHeadline(Res.get("bisqEasy.tradeCompleted.title"));
-        WrappingText info = MuSigFormUtils.getInfo(Res.get("bisqEasy.tradeCompleted.info"));
+        WrappingText headline = MuSigFormUtils.getHeadline(Res.get("muSig.tradeCompleted.title"));
+        WrappingText info = MuSigFormUtils.getInfo(Res.get("muSig.tradeCompleted.info"));
 
         HBox headerHBox = createWaitingInfo(waitingAnimation, headline, info);
         headerHBox.setAlignment(Pos.CENTER);

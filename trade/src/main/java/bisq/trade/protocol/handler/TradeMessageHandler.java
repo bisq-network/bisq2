@@ -47,7 +47,7 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
 
     protected abstract void commit();
 
-    private void verifyInternal(M message) {
+    protected void verifyInternal(M message) {
         checkArgument(message.getTradeId().equals(trade.getId()),
                 "TradeId of message not matching the tradeId from the trade data");
         NetworkId sender = message.getSender();

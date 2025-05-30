@@ -24,30 +24,30 @@ import bisq.trade.mu_sig.events.MuSigFsmErrorEventHandler;
 import bisq.trade.mu_sig.events.MuSigReportErrorMessageHandler;
 import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEvent;
 import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEventHandler;
-import bisq.trade.mu_sig.events.buyer_as_taker.MuSigBuyersCloseTimeoutEvent;
-import bisq.trade.mu_sig.events.buyer_as_taker.MuSigBuyersCloseTimeoutEventHandler;
-import bisq.trade.mu_sig.events.buyer_as_taker.MuSigPaymentInitiatedEvent;
-import bisq.trade.mu_sig.events.buyer_as_taker.MuSigPaymentInitiatedEventHandler;
-import bisq.trade.mu_sig.events.buyer_as_taker.MuSigTakeOfferEvent;
-import bisq.trade.mu_sig.events.buyer_as_taker.MuSigTakeOfferEventHandler;
+import bisq.trade.mu_sig.events.buyer.MuSigPaymentInitiatedEventHandler;
+import bisq.trade.mu_sig.events.buyer.MuSigBuyersCloseTradeTimeoutEvent;
+import bisq.trade.mu_sig.events.buyer.MuSigBuyersCloseTradeTimeoutEventHandler;
+import bisq.trade.mu_sig.events.buyer.MuSigPaymentInitiatedEvent;
+import bisq.trade.mu_sig.events.taker.MuSigTakeOfferEvent;
+import bisq.trade.mu_sig.events.taker.MuSigTakeOfferEventHandler;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentReceivedMessage_F;
 import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_B;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
-import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigPaymentReceivedMessage_F_Handler;
 import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigSetupTradeMessage_B_Handler;
 import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigSetupTradeMessage_D_Handler;
+import bisq.trade.mu_sig.messages.network.handler.buyer.MuSigPaymentReceivedMessage_F_Handler;
 
-import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_CLOSED_TRADE;
-import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES;
-import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_FORCE_CLOSED_TRADE;
-import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_INITIALIZED_TRADE;
-import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_INITIATED_PAYMENT;
-import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_AS_TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_CLOSED_TRADE;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_FORCE_CLOSED_TRADE;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_INITIATED_PAYMENT;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.DEPOSIT_TX_CONFIRMED;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.FAILED;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.FAILED_AT_PEER;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.INIT;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.TAKER_INITIALIZED_TRADE;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX;
 
 
 public final class MuSigBuyerAsTakerProtocol extends MuSigProtocol {
@@ -75,21 +75,23 @@ public final class MuSigBuyerAsTakerProtocol extends MuSigProtocol {
         from(INIT)
                 .on(MuSigTakeOfferEvent.class)
                 .run(MuSigTakeOfferEventHandler.class)
-                .to(BUYER_AS_TAKER_INITIALIZED_TRADE)
+                .to(TAKER_INITIALIZED_TRADE)
+
                 .then()
-                .from(BUYER_AS_TAKER_INITIALIZED_TRADE)
+                .from(TAKER_INITIALIZED_TRADE)
                 .on(MuSigSetupTradeMessage_B.class)
                 .run(MuSigSetupTradeMessage_B_Handler.class)
-                .to(BUYER_AS_TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES)
+                .to(TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES)
+
                 .then()
-                .from(BUYER_AS_TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES)
+                .from(TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES)
                 .on(MuSigSetupTradeMessage_D.class)
                 .run(MuSigSetupTradeMessage_D_Handler.class)
-                .to(BUYER_AS_TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX)
+                .to(TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX)
 
                 // Deposit confirmation phase
                 .then()
-                .from(BUYER_AS_TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX)
+                .from(TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX)
                 .on(MuSigDepositTxConfirmedEvent.class)
                 .run(MuSigDepositTxConfirmedEventHandler.class)
                 .to(DEPOSIT_TX_CONFIRMED)
@@ -99,22 +101,22 @@ public final class MuSigBuyerAsTakerProtocol extends MuSigProtocol {
                 .from(DEPOSIT_TX_CONFIRMED)
                 .on(MuSigPaymentInitiatedEvent.class)
                 .run(MuSigPaymentInitiatedEventHandler.class)
-                .to(BUYER_AS_TAKER_INITIATED_PAYMENT)
+                .to(BUYER_INITIATED_PAYMENT)
 
                 // Close trade
                 .then()
                 .branch(
                         path("Cooperative closure")
-                                .from(BUYER_AS_TAKER_INITIATED_PAYMENT)
+                                .from(BUYER_INITIATED_PAYMENT)
                                 .on(MuSigPaymentReceivedMessage_F.class)
                                 .run(MuSigPaymentReceivedMessage_F_Handler.class)
-                                .to(BUYER_AS_TAKER_CLOSED_TRADE),
+                                .to(BUYER_CLOSED_TRADE),
 
                         path("Uncooperative closure")
-                                .from(BUYER_AS_TAKER_INITIATED_PAYMENT)
-                                .on(MuSigBuyersCloseTimeoutEvent.class)
-                                .run(MuSigBuyersCloseTimeoutEventHandler.class)
-                                .to(BUYER_AS_TAKER_FORCE_CLOSED_TRADE)
+                                .from(BUYER_INITIATED_PAYMENT)
+                                .on(MuSigBuyersCloseTradeTimeoutEvent.class)
+                                .run(MuSigBuyersCloseTradeTimeoutEventHandler.class)
+                                .to(BUYER_FORCE_CLOSED_TRADE)
                 );
     }
 }

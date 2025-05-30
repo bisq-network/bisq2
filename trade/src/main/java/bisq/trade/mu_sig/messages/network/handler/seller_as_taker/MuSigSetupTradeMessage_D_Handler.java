@@ -15,22 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.network.handler.buyer_as_taker;
+package bisq.trade.mu_sig.messages.network.handler.seller_as_taker;
 
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
-import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
-import lombok.extern.slf4j.Slf4j;
+import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
 
-@Slf4j
-public final class MuSigSetupTradeMessage_B_Handler extends bisq.trade.mu_sig.messages.network.handler.taker.MuSigSetupTradeMessage_B_Handler {
-    public MuSigSetupTradeMessage_B_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
+import static com.google.common.base.Preconditions.checkArgument;
+
+public class MuSigSetupTradeMessage_D_Handler extends bisq.trade.mu_sig.messages.network.handler.taker.MuSigSetupTradeMessage_D_Handler {
+    public MuSigSetupTradeMessage_D_Handler(ServiceProvider serviceProvider,
+                                            MuSigTrade model) {
         super(serviceProvider, model);
     }
 
-    protected PartialSignatures getPartialSignatures() {
-        // As buyer, we do not expose swapTxInputPartialSignature at that stage to the peer, thus we redact the
-        // swapTxInputPartialSignature. Later once we initiate the payment we send the swapTxInputPartialSignature.
-        return PartialSignatures.from(myPartialSignaturesMessage, true);
+    @Override
+    protected void verify(MuSigSetupTradeMessage_D message) {
+        super.verify(message);
+
+        checkArgument(message.getPartialSignatures().getSwapTxInputPartialSignature().isEmpty(),
+                "We are the seller and expect that the swapTxInputPartialSignature is redacted (optional is empty)");
     }
 }

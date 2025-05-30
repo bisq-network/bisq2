@@ -65,8 +65,8 @@ class MuSigTradePhaseBox {
         controller = new Controller(serviceProvider);
     }
 
-    View getView() {
-        return controller.getView();
+    VBox getRoot() {
+        return controller.getView().getRoot();
     }
 
     void setSelectedChannel(@Nullable MuSigOpenTradeChannel channel) {
@@ -133,27 +133,27 @@ class MuSigTradePhaseBox {
 
                 switch (state) {
                     case INIT,
-                         BUYER_AS_TAKER_INITIALIZED_TRADE,
-                         SELLER_AS_MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES,
-                         BUYER_AS_TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES,
-                         SELLER_AS_MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX,
-                         BUYER_AS_TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX -> {
+                         TAKER_INITIALIZED_TRADE,
+                         MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES,
+                         TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES,
+                         MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX,
+                         TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX -> {
                         model.getPhaseIndex().set(0);
                     }
                     case DEPOSIT_TX_CONFIRMED -> {
                         model.getPhaseIndex().set(1);
                     }
-                    case BUYER_AS_TAKER_INITIATED_PAYMENT -> {
+                    case BUYER_INITIATED_PAYMENT -> {
                         model.getPhaseIndex().set(2);
                     }
-                    case SELLER_AS_MAKER_RECEIVED_INITIATED_PAYMENT_MESSAGE,
-                         SELLER_AS_MAKER_CONFIRMED_PAYMENT_RECEIPT -> {
+                    case SELLER_RECEIVED_INITIATED_PAYMENT_MESSAGE,
+                         SELLER_CONFIRMED_PAYMENT_RECEIPT -> {
                         model.getPhaseIndex().set(2);
                     }
-                    case BUYER_AS_TAKER_CLOSED_TRADE,
-                         SELLER_AS_MAKER_CLOSED_TRADE,
-                         BUYER_AS_TAKER_FORCE_CLOSED_TRADE,
-                         SELLER_AS_MAKER_FORCE_CLOSED_TRADE -> {
+                    case BUYER_CLOSED_TRADE,
+                         SELLER_CLOSED_TRADE,
+                         BUYER_FORCE_CLOSED_TRADE,
+                         SELLER_FORCE_CLOSED_TRADE -> {
                         model.getPhaseIndex().set(3);
                     }
                 }

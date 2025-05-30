@@ -176,13 +176,6 @@ message PartialSignatures {
   optional bytes swapTxInputPartialSignature = 4;
 }
 
-message RedactedPartialSignatures {
-  bytes peersWarningTxBuyerInputPartialSignature = 1;
-  bytes peersWarningTxSellerInputPartialSignature = 2;
-  bytes peersRedirectTxInputPartialSignature = 3;
-}
-
-
 message SwapTxSignature {
   bytes swapTx = 1;
   bytes peerOutputPrvKeyShare = 2;
@@ -196,12 +189,11 @@ message MuSigTradeParty {
   optional  NonceShares peersNonceShares = 4;
   optional musigrpc.PartialSignaturesMessage myPartialSignaturesMessage = 5;
   optional PartialSignatures peersPartialSignatures = 6;
-  optional RedactedPartialSignatures peersRedactedPartialSignatures = 7;
-  optional musigrpc.DepositPsbt myDepositPsbt = 8;
-  optional musigrpc.SwapTxSignatureResponse mySwapTxSignatureResponse = 9;
-  optional SwapTxSignature peersSwapTxSignature = 10;
-  optional musigrpc.CloseTradeResponse myCloseTradeResponse = 11;
-  optional common.ByteArray peersOutputPrvKeyShare = 12;
+  optional musigrpc.DepositPsbt myDepositPsbt = 7;
+  optional musigrpc.SwapTxSignatureResponse mySwapTxSignatureResponse = 8;
+  optional SwapTxSignature peersSwapTxSignature = 9;
+  optional musigrpc.CloseTradeResponse myCloseTradeResponse = 10;
+  optional common.ByteArray peersOutputPrvKeyShare = 11;
 }
 
 message MuSigTrade {
@@ -248,7 +240,7 @@ message MuSigSetupTradeMessage_B {
 
 message MuSigSetupTradeMessage_C {
   NonceShares nonceShares = 1;
-  RedactedPartialSignatures redactedPartialSignatures = 2;
+  PartialSignatures partialSignatures = 2;
 }
 
 message MuSigSetupTradeMessage_D {
