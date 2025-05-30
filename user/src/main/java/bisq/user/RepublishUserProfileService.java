@@ -63,7 +63,7 @@ public class RepublishUserProfileService implements Service {
                 })
                 .host(this)
                 .runnableName("republish")
-                .after(1, TimeUnit.MINUTES);
+                .repeated(1, 30, TimeUnit.SECONDS, 3);
         return CompletableFuture.completedFuture(true);
     }
 
