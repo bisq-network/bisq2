@@ -44,7 +44,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.*;
+import static bisq.network.p2p.services.data.storage.MetaData.DEFAULT_PRIORITY;
+import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_10_000;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_15_DAYS;
 
 /**
  * Publicly shared user profile (from other peers or mine).

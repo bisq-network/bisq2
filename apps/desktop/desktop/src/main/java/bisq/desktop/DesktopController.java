@@ -57,7 +57,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 
@@ -143,8 +142,8 @@ public class DesktopController extends NavigationController {
         EasyBind.subscribe(viewRoot.getScene().getWindow().focusedProperty(), chatNotificationService::setApplicationFocussed);
 
         // Prune user profile icons
-        Map<String, UserProfile> userProfileById = serviceProvider.getUserService().getUserProfileService().getUserProfileById();
-        CatHash.pruneOutdatedProfileIcons(new HashSet<>(userProfileById.values()));
+        Map<String, UserProfile> userProfileById = serviceProvider.getUserService().getUserProfileService().getUserProfileById().getUnmodifiableMap();
+        CatHash.pruneOutdatedProfileIcons(userProfileById.values());
     }
 
     private void setInitialScreenSize() {

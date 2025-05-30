@@ -24,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,7 +43,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @param <V> the type of values
  */
 @EqualsAndHashCode
-public class ObservableHashMap<K, V> implements Map<K, V> {
+public class ObservableHashMap<K, V> implements Map<K, V>, ReadOnlyObservableMap<K, V> {
     @Getter
     private final Map<K, V> map = new ConcurrentHashMap<>();
 
@@ -54,6 +55,11 @@ public class ObservableHashMap<K, V> implements Map<K, V> {
 
     private ObservableHashMap(Map<K, V> map) {
         putAll(map);
+    }
+
+    @Override
+    public Map<K, V> getUnmodifiableMap() {
+        return Collections.unmodifiableMap(map);
     }
 
     public Pin addObserver(HashMapObserver<K, V> observer) {
