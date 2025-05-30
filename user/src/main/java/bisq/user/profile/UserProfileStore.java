@@ -18,7 +18,6 @@
 package bisq.user.profile;
 
 import bisq.common.observable.collection.ObservableSet;
-import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
@@ -38,22 +37,20 @@ import java.util.stream.Collectors;
 /**
  * Persists my user profiles and the selected user profile.
  */
-@Getter(AccessLevel.PACKAGE)
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
 final class UserProfileStore implements PersistableStore<UserProfileStore> {
+    @Getter(AccessLevel.PACKAGE)
     private final Map<String, Set<String>> nymsByNickName = new ConcurrentHashMap<>();
+    @Getter(AccessLevel.PACKAGE)
     private final ObservableSet<String> ignoredUserProfileIds = new ObservableSet<>();
-    private final ObservableHashMap<String, UserProfile> userProfileById = new ObservableHashMap<>();
     private final Object lock = new Object();
 
     private UserProfileStore(Map<String, Set<String>> nymsByNickName,
-                             Set<String> ignoredUserProfileIds,
-                             Map<String, UserProfile> userProfileById) {
+                             Set<String> ignoredUserProfileIds) {
         this.nymsByNickName.putAll(nymsByNickName);
         this.ignoredUserProfileIds.clear();
         this.ignoredUserProfileIds.addAll(ignoredUserProfileIds);
-        this.userProfileById.putAll(userProfileById);
     }
 
     @Override
@@ -66,9 +63,7 @@ final class UserProfileStore implements PersistableStore<UserProfileStore> {
                                     entry -> bisq.user.protobuf.NymList.newBuilder()
                                             .addAllNyms(entry.getValue()).build())))
                     .addAllIgnoredUserProfileIds(ignoredUserProfileIds)
-                    .putAllUserProfileById(userProfileById.entrySet().stream()
-                            .collect(Collectors.toMap(Map.Entry::getKey,
-                                    entry -> entry.getValue().toProto(serializeForHash))));
+                    .clearUserProfileById(); // We kept the protobuf field for backward compatibility, but we clear the field.
         }
         return protoBuilder;
     }
@@ -83,10 +78,7 @@ final class UserProfileStore implements PersistableStore<UserProfileStore> {
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         entry -> new HashSet<>(entry.getValue().getNymsList())));
         Set<String> ignoredUserProfileIds = new HashSet<>(proto.getIgnoredUserProfileIdsList());
-        Map<String, UserProfile> userProfileById = proto.getUserProfileByIdMap().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> UserProfile.fromProto(entry.getValue())));
-        return new UserProfileStore(nymsByNickName, ignoredUserProfileIds, userProfileById);
+        return new UserProfileStore(nymsByNickName, ignoredUserProfileIds);
     }
 
     @Override
@@ -104,7 +96,7 @@ final class UserProfileStore implements PersistableStore<UserProfileStore> {
     public UserProfileStore getClone() {
         UserProfileStore userProfileStore;
         synchronized (lock) {
-            userProfileStore = new UserProfileStore(new HashMap<>(nymsByNickName), new HashSet<>(ignoredUserProfileIds), new HashMap<>(userProfileById));
+            userProfileStore = new UserProfileStore(new HashMap<>(nymsByNickName), new HashSet<>(ignoredUserProfileIds));
         }
         return userProfileStore;
     }
@@ -115,7 +107,6 @@ final class UserProfileStore implements PersistableStore<UserProfileStore> {
             nymsByNickName.putAll(persisted.getNymsByNickName());
             ignoredUserProfileIds.clear();
             ignoredUserProfileIds.addAll(persisted.getIgnoredUserProfileIds());
-            userProfileById.putAll(persisted.getUserProfileById());
         }
     }
 }
