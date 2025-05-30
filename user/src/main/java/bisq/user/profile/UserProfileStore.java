@@ -42,6 +42,10 @@ import java.util.stream.Collectors;
 final class UserProfileStore implements PersistableStore<UserProfileStore> {
     @Getter(AccessLevel.PACKAGE)
     private final Map<String, Set<String>> nymsByNickName = new ConcurrentHashMap<>();
+
+    // We do not prune the ignoredUserProfileIds when a user profile is expired/removed because
+    // in case the user profile gets added again (become active again) we want to have it
+    // remembered to be ignored.
     @Getter(AccessLevel.PACKAGE)
     private final ObservableSet<String> ignoredUserProfileIds = new ObservableSet<>();
     private final Object lock = new Object();
