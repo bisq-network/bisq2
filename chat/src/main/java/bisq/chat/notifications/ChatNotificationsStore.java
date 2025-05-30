@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
-final class ChatNotificationsStore implements PersistableStore<ChatNotificationsStore> {
+public final class ChatNotificationsStore implements PersistableStore<ChatNotificationsStore> {
     private final ObservableSet<ChatNotification> chatNotifications = new ObservableSet<>();
 
     ChatNotificationsStore(Collection<ChatNotification> chatNotifications) {
