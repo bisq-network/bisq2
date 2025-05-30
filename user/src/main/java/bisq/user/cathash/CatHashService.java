@@ -147,26 +147,45 @@ public abstract class CatHashService<T> {
         Map<String, List<File>> iconFilesByVersion = Stream.of(versionDirs)
                 .filter(File::isDirectory)
                 .filter(dir -> dir.listFiles() != null)
+                .filter(dir -> {
+                    String name = dir.getName();
+                    if (!name.startsWith("v")) {
+                        log.warn("Version directory in the cat_hash_icons directory not prefixed with 'v' {}", name);
+                        return false;
+                    }
+                    try {
+                        int version = Integer.parseInt(name.replace("v", ""));
+                        boolean contains = BucketConfig.ALL_VERSIONS.contains(version);
+                        if (!contains) {
+                            log.warn("Version string '{}' of the version directory found in the existing versions: {}",
+                                    version, BucketConfig.ALL_VERSIONS);
+                        }
+                        return contains;
+                    } catch (NumberFormatException e) {
+                        log.warn("Version postfix is not an integer in the directory: {}", name, e);
+                        return false;
+                    }
+                })
                 .collect(Collectors.toMap(File::getName,
                         dir -> Arrays.asList(Objects.requireNonNull(dir.listFiles()))));
 
         Map<Integer, List<UserProfile>> userProfilesByVersion = userProfiles.stream()
                 .collect(Collectors.groupingBy(UserProfile::getAvatarVersion));
+        CompletableFuture.runAsync(() -> {
+            iconFilesByVersion.forEach((versionDir, iconFiles) -> {
+                try {
+                    int version = Integer.parseInt(versionDir
+                            .replace("v", ""));
+                    Set<String> fromDisk = iconFiles.stream()
+                            .map(File::getName)
+                            .collect(Collectors.toSet());
+                    Set<String> fromData = Optional.of(userProfilesByVersion.get(version).stream()
+                                    .map(userProfile -> userProfile.getId() + ".raw")
+                                    .collect(Collectors.toSet()))
+                            .orElse(new HashSet<>());
+                    Set<String> toRemove = new HashSet<>(fromDisk);
+                    toRemove.removeAll(fromData);
 
-        iconFilesByVersion.forEach((versionDir, iconFiles) -> {
-            try {
-                int version = Integer.parseInt(versionDir
-                        .replace("v", ""));
-                Set<String> fromDisk = iconFiles.stream()
-                        .map(File::getName)
-                        .collect(Collectors.toSet());
-                Set<String> fromData = Optional.of(userProfilesByVersion.get(version).stream()
-                                .map(userProfile -> userProfile.getId() + ".raw")
-                                .collect(Collectors.toSet()))
-                        .orElse(new HashSet<>());
-                Set<String> toRemove = new HashSet<>(fromDisk);
-                toRemove.removeAll(fromData);
-                CompletableFuture.runAsync(() -> {
                     log.info("We remove {} outdated user profile icons (not found in the current user profile list)", toRemove.size());
                     if (toRemove.size() < 10) {
                         log.info("Removed user profile icons: {}", toRemove);
@@ -180,11 +199,12 @@ public abstract class CatHashService<T> {
                             log.error("Failed to remove file {}", file, e);
                         }
                     });
-                }, ExecutorFactory.newSingleThreadExecutor("pruneOutdatedProfileIcons"));
-            } catch (Exception e) {
-                log.error("Unexpected versionDir {}", versionDir, e);
-            }
-        });
+
+                } catch (Exception e) {
+                    log.error("Unexpected versionDir {}", versionDir, e);
+                }
+            });
+        }, ExecutorFactory.newSingleThreadExecutor("pruneOutdatedProfileIcons"));
     }
 
     public int currentAvatarsVersion() {
