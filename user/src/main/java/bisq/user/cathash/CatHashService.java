@@ -30,7 +30,14 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -160,11 +167,14 @@ public abstract class CatHashService<T> {
                 Set<String> toRemove = new HashSet<>(fromDisk);
                 toRemove.removeAll(fromData);
                 CompletableFuture.runAsync(() -> {
-                    log.info("We remove following user profile icons which are not found in the current user profile list:{}", toRemove);
+                    log.info("We remove {} outdated user profile icons (not found in the current user profile list)", toRemove.size());
+                    if (toRemove.size() < 10) {
+                        log.info("Removed user profile icons: {}", toRemove);
+                    }
                     toRemove.forEach(fileName -> {
                         File file = Paths.get(iconsDirectory.getAbsolutePath(), versionDir, fileName).toFile();
                         try {
-                            log.error("Remove {}", file);
+                            log.debug("Remove {}", file);
                             FileUtils.deleteFile(file);
                         } catch (IOException e) {
                             log.error("Failed to remove file {}", file, e);
