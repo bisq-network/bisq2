@@ -19,7 +19,7 @@ package bisq.user.profile;
 
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
-import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.network.NetworkService;
@@ -140,16 +140,16 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     }
 
     public void ignoreUserProfile(UserProfile userProfile) {
-        getIgnoredUserProfileIds().add(userProfile.getId());
+        persistableStore.addIgnoredUserProfileIds(userProfile.getId());
         persist();
     }
 
     public void undoIgnoreUserProfile(UserProfile userProfile) {
-        getIgnoredUserProfileIds().remove(userProfile.getId());
+        persistableStore.removeIgnoredUserProfileIds(userProfile.getId());
         persist();
     }
 
-    public ObservableSet<String> getIgnoredUserProfileIds() {
+    public ReadOnlyObservableSet<String> getIgnoredUserProfileIds() {
         return persistableStore.getIgnoredUserProfileIds();
     }
 

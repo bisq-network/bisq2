@@ -49,8 +49,7 @@ final class UserProfileStore implements PersistableStore<UserProfileStore> {
     private UserProfileStore(Map<String, Set<String>> nymsByNickName,
                              Set<String> ignoredUserProfileIds) {
         this.nymsByNickName.putAll(nymsByNickName);
-        this.ignoredUserProfileIds.clear();
-        this.ignoredUserProfileIds.addAll(ignoredUserProfileIds);
+        this.ignoredUserProfileIds.setAll(ignoredUserProfileIds);
     }
 
     @Override
@@ -105,8 +104,15 @@ final class UserProfileStore implements PersistableStore<UserProfileStore> {
     public void applyPersisted(UserProfileStore persisted) {
         synchronized (lock) {
             nymsByNickName.putAll(persisted.getNymsByNickName());
-            ignoredUserProfileIds.clear();
-            ignoredUserProfileIds.addAll(persisted.getIgnoredUserProfileIds());
+            ignoredUserProfileIds.setAll(persisted.getIgnoredUserProfileIds());
         }
+    }
+
+    public void addIgnoredUserProfileIds(String id) {
+        ignoredUserProfileIds.add(id);
+    }
+
+    public void removeIgnoredUserProfileIds(String id) {
+        ignoredUserProfileIds.remove(id);
     }
 }
