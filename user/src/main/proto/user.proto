@@ -83,7 +83,7 @@ message SignedWitnessStore {
 }
 
 message ProfileAgeStore {
-  repeated string profileIds = 1;
+  repeated string profileIds = 1 [deprecated = true]; // Not used anymore in v2.1.8
   sint64 lastRequested = 2;
 }
 

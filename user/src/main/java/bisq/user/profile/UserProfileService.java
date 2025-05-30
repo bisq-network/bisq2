@@ -169,7 +169,8 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     }
 
     private void processUserProfileAddedOrRefreshed(UserProfile userProfile, boolean fromBatchProcessing) {
-        Optional<UserProfile> existingUserProfile = findUserProfile(userProfile.getId());
+        String userProfileId = userProfile.getId();
+        Optional<UserProfile> existingUserProfile = findUserProfile(userProfileId);
         // ApplicationVersion is excluded in equals check, so we check manually for it.
         if (existingUserProfile.isEmpty() ||
                 !existingUserProfile.get().equals(userProfile) ||
@@ -177,11 +178,15 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
             if (verifyUserProfile(userProfile)) {
                 synchronized (persistableStore) {
                     addNymToNickNameHashMap(userProfile.getNym(), userProfile.getNickName());
-                    existingUserProfile.ifPresent(e -> userProfileById.remove(e.getId()));
-                    userProfileById.put(userProfile.getId(), userProfile);
+                    userProfileById.put(userProfileId, userProfile);
                 }
                 numUserProfiles.set(userProfileById.size());
-                persist();
+                if (!fromBatchProcessing) {
+                    // At initial batch processing we call persist at the end, to avoid many multiple persist calls
+                    persist();
+                }
+            } else {
+                log.warn("Invalid user profile {}", userProfile);
             }
         } else {
             if (userProfile.getPublishDate() > existingUserProfile.get().getPublishDate()) {
@@ -190,6 +195,8 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
                     // At initial batch processing we call persist at the end, to avoid many multiple persist calls
                     persist();
                 }
+            } else {
+                log.debug("Ignore added userProfile as we have it already and nothing has changed");
             }
         }
     }
