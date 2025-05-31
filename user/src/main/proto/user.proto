@@ -46,7 +46,7 @@ message UserIdentityStore {
   optional string selectedUserIdentityId = 2;
   optional security.EncryptedData encryptedData = 3;
   optional security.ScryptParameters scryptParameters = 4;
-  sint64 lastUserProfilePublishingDate = 5  [deprecated = true]; // Not used anymore in v2.1.0
+  sint64 lastUserProfilePublishingDate = 5 [deprecated = true]; // Not used anymore in v2.1.0
 }
 
 message NymList {
@@ -56,7 +56,7 @@ message NymList {
 message UserProfileStore {
   map<string, NymList> nymListByNickName = 1;
   repeated string ignoredUserProfileIds = 2;
-  map<string, UserProfile> userProfileById = 3;
+  map<string, UserProfile> userProfileById = 3 [deprecated = true]; // Not used anymore in v2.1.8
 }
 
 message ProofOfBurnProof {
@@ -83,7 +83,7 @@ message SignedWitnessStore {
 }
 
 message ProfileAgeStore {
-  repeated string profileIds = 1;
+  repeated string profileIds = 1 [deprecated = true]; // Not used anymore in v2.1.8
   sint64 lastRequested = 2;
 }
 
