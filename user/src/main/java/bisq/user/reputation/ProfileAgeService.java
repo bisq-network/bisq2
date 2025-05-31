@@ -194,21 +194,24 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
         }
 
         Collections.shuffle(candidates);
+
         requestTimestampFuture = CompletableFuture.runAsync(() -> {
             try {
                 AtomicBoolean hasRequested = new AtomicBoolean();
-                candidates.forEach(userIdentity -> {
-                    boolean requestSuccess = requestTimestamp(userIdentity);
-                    if (!requestSuccess) {
-                        log.warn("Requesting timestamp for {} failed", userIdentity.getUserProfile().getUserName());
-                    }
-                    hasRequested.compareAndSet(false, requestSuccess);
-                    long delay = 30_000 + new Random().nextInt(90_000);
-                    try {
-                        Thread.sleep(delay); // 30 - 120 sec delay
-                    } catch (InterruptedException ignore) {
-                    }
-                });
+                for (int i = 0; i < candidates.size(); i++) {
+                    long delay = i * (10_000 + new Random().nextLong(110_000));
+                    UserIdentity userIdentity = candidates.get(i);
+                    // We do not pass an Executor thus we the default ForkJoinPool.commonPool() is used.
+                    // The requestTimestamp() is using the NetworkService.NETWORK_IO_POOL at network call level.
+                    // At first iteration the delay is 0, thus no delay is used.
+                    CompletableFuture.delayedExecutor(delay, TimeUnit.MILLISECONDS).execute(() -> {
+                        boolean requestSuccess = requestTimestamp(userIdentity);
+                        if (!requestSuccess) {
+                            log.warn("Requesting timestamp for {} failed", userIdentity.getUserProfile().getUserName());
+                        }
+                        hasRequested.compareAndSet(false, requestSuccess);
+                    });
+                }
 
                 if (hasRequested.get()) {
                     // lastRequested is set only when we check for all user profiles. When we create a new user profile
