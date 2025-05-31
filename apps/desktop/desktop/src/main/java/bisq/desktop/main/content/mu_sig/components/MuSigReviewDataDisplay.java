@@ -151,7 +151,8 @@ public class MuSigReviewDataDisplay {
 
         private final BitcoinAmountDisplay toSendBitcoinMinAmountDisplay = new BitcoinAmountDisplay("0", false);
         private final BitcoinAmountDisplay toSendBitcoinMaxOrFixedAmountDisplay = new BitcoinAmountDisplay("0", false);
-        private final Label dashLabel = new Label(DASH_SYMBOL);
+        private final Label toSendDashLabel = new Label(DASH_SYMBOL);
+        private final Label toReceiveDashLabel = new Label(DASH_SYMBOL);
         private final BitcoinAmountDisplay toReceiveBitcoinMinAmountDisplay = new BitcoinAmountDisplay("0", false);
         private final BitcoinAmountDisplay toReceiveBitcoinMaxOrFixedAmountDisplay = new BitcoinAmountDisplay("0", false);
 
@@ -162,8 +163,10 @@ public class MuSigReviewDataDisplay {
             root.setMaxHeight(HEIGHT);
             root.setAlignment(Pos.TOP_LEFT);
 
-            dashLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
-            dashLabel.setAlignment(Pos.CENTER);
+            toSendDashLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
+            toSendDashLabel.setAlignment(Pos.CENTER);
+            toReceiveDashLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
+            toReceiveDashLabel.setAlignment(Pos.CENTER);
 
             direction = getElements(Res.get("bisqEasy.tradeState.header.direction"));
             toSend = getAmountElements();
@@ -203,17 +206,15 @@ public class MuSigReviewDataDisplay {
 
                 if (isSendBtc) {
                     if (isRangeAmount) {
-                        amountHBox.getChildren().addAll(toSendBitcoinMinAmountDisplay, dashLabel, toSendBitcoinMaxOrFixedAmountDisplay, toSend.getFirst().getThird());
+                        amountHBox.getChildren().addAll(toSendBitcoinMinAmountDisplay, toSendDashLabel, toSendBitcoinMaxOrFixedAmountDisplay, toSend.getFirst().getThird());
                     } else {
                         amountHBox.getChildren().addAll(toSendBitcoinMaxOrFixedAmountDisplay, toSend.getFirst().getThird());
                     }
                     amountHBox.setAlignment(Pos.CENTER_LEFT);
                     VBox.setMargin(amountHBox, new Insets(-15, 0, 0, 0));
-//                    HBox.setMargin(amountHBox, new Insets(-12, 0, 0, 0));
                 } else {
                     amountHBox.getChildren().addAll(toSend.getFirst().getSecond(), toSend.getFirst().getThird());
                     amountHBox.setAlignment(Pos.BASELINE_LEFT);
-//                    VBox.setMargin(toSend.getSecond(), new Insets(0, 0, 0, 0));
                 }
             });
 
@@ -226,17 +227,15 @@ public class MuSigReviewDataDisplay {
 
                 if (isReceiveBtc) {
                     if (isRangeAmount) {
-                        amountHBox.getChildren().addAll(toReceiveBitcoinMinAmountDisplay, dashLabel, toReceiveBitcoinMaxOrFixedAmountDisplay, toReceive.getFirst().getThird());
+                        amountHBox.getChildren().addAll(toReceiveBitcoinMinAmountDisplay, toReceiveDashLabel, toReceiveBitcoinMaxOrFixedAmountDisplay, toReceive.getFirst().getThird());
                     } else {
                         amountHBox.getChildren().addAll(toReceiveBitcoinMaxOrFixedAmountDisplay, toReceive.getFirst().getThird());
                     }
                     amountHBox.setAlignment(Pos.CENTER_LEFT);
                     VBox.setMargin(amountHBox, new Insets(-15, 0, 0, 0));
-//                    VBox.setMargin(toReceive.getSecond(), new Insets(-12, 0, 0, 0));
                 } else {
                     amountHBox.getChildren().addAll(toReceive.getFirst().getSecond(), toReceive.getFirst().getThird());
                     amountHBox.setAlignment(Pos.BASELINE_LEFT);
-//                    VBox.setMargin(toReceive.getSecond(), new Insets(0, 0, 0, 0));
                 }
             });
 
@@ -282,8 +281,6 @@ public class MuSigReviewDataDisplay {
 
         private void configureBitcoinAmountDisplay(BitcoinAmountDisplay bitcoinAmountDisplay) {
             bitcoinAmountDisplay.applyMediumCompactConfig();
-//            bitcoinAmountDisplay.setPadding(new Insets(-6, 0, 0, 0));
-
             bitcoinAmountDisplay.setTextAlignment(TextAlignment.LEFT);
             bitcoinAmountDisplay.setAlignment(Pos.CENTER_LEFT);
         }
