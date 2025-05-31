@@ -284,10 +284,10 @@ public class MuSigTakeOfferReviewController implements Controller {
         muSigReviewDataDisplay.setDirection(Res.get("bisqEasy.tradeWizard.review.direction",
                 Res.get(takersDirection.isSell() ? "offer.sell" : "offer.buy").toUpperCase()));
         muSigReviewDataDisplay.setToSendAmountDescription(toSendAmountDescription.toUpperCase());
-        muSigReviewDataDisplay.setToSendAmount(toSendAmount);
+        muSigReviewDataDisplay.setToSendMaxOrFixedAmount(toSendAmount);
         muSigReviewDataDisplay.setToSendCode(toSendCode);
         muSigReviewDataDisplay.setToReceiveAmountDescription(toReceiveAmountDescription.toUpperCase());
-        muSigReviewDataDisplay.setToReceiveAmount(toReceiveAmount);
+        muSigReviewDataDisplay.setToReceiveMaxOrFixedAmount(toReceiveAmount);
         muSigReviewDataDisplay.setToReceiveCode(toReceiveCode);
         muSigReviewDataDisplay.setFiatPaymentMethodDescription(Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription.fiat").toUpperCase());
         muSigReviewDataDisplay.setFiatPaymentMethod(model.getFiatPaymentMethod());
