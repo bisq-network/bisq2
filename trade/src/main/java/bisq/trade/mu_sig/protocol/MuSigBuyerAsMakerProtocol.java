@@ -52,7 +52,6 @@ public final class MuSigBuyerAsMakerProtocol extends MuSigProtocol {
 
     public MuSigBuyerAsMakerProtocol(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
-        log.error("MuSigBuyerAsMakerProtocol not implemented yet");
     }
 
     @Override
@@ -75,8 +74,8 @@ public final class MuSigBuyerAsMakerProtocol extends MuSigProtocol {
                 .on(MuSigSetupTradeMessage_A.class)
                 .run(MuSigSetupTradeMessage_A_Handler.class)
                 .to(MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES)
-                .then()
 
+                .then()
                 .from(MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES)
                 .on(MuSigSetupTradeMessage_C.class)
                 .run(MuSigSetupTradeMessage_C_Handler.class)
