@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.protocol.not_yet_impl;
+package bisq.trade.mu_sig.protocol;
 
 import bisq.common.fsm.FsmErrorEvent;
 import bisq.trade.ServiceProvider;
@@ -35,8 +35,6 @@ import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_C;
 import bisq.trade.mu_sig.messages.network.handler.buyer_as_maker.MuSigSetupTradeMessage_C_Handler;
 import bisq.trade.mu_sig.messages.network.handler.buyer.MuSigPaymentReceivedMessage_F_Handler;
 import bisq.trade.mu_sig.messages.network.handler.maker.MuSigSetupTradeMessage_A_Handler;
-import bisq.trade.mu_sig.protocol.MuSigProtocol;
-import bisq.trade.mu_sig.protocol.MuSigTradeState;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_CLOSED_TRADE;
