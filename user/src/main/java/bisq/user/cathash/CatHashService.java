@@ -179,7 +179,8 @@ public abstract class CatHashService<T> {
                     Set<String> fromDisk = iconFiles.stream()
                             .map(File::getName)
                             .collect(Collectors.toSet());
-                    Set<String> fromData = Optional.of(userProfilesByVersion.get(version).stream()
+                    Set<String> fromData = Optional.ofNullable(userProfilesByVersion.get(version))
+                            .map(profiles -> profiles.stream()
                                     .map(userProfile -> userProfile.getId() + ".raw")
                                     .collect(Collectors.toSet()))
                             .orElse(new HashSet<>());
