@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.protocol.not_yet_impl;
+package bisq.trade.mu_sig.protocol;
 
 import bisq.common.fsm.FsmErrorEvent;
 import bisq.trade.ServiceProvider;
@@ -35,8 +35,6 @@ import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_C;
 import bisq.trade.mu_sig.messages.network.handler.buyer_as_maker.MuSigSetupTradeMessage_C_Handler;
 import bisq.trade.mu_sig.messages.network.handler.buyer.MuSigPaymentReceivedMessage_F_Handler;
 import bisq.trade.mu_sig.messages.network.handler.maker.MuSigSetupTradeMessage_A_Handler;
-import bisq.trade.mu_sig.protocol.MuSigProtocol;
-import bisq.trade.mu_sig.protocol.MuSigTradeState;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_CLOSED_TRADE;
@@ -54,7 +52,6 @@ public final class MuSigBuyerAsMakerProtocol extends MuSigProtocol {
 
     public MuSigBuyerAsMakerProtocol(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
-        log.error("MuSigBuyerAsMakerProtocol not implemented yet");
     }
 
     @Override
@@ -77,8 +74,8 @@ public final class MuSigBuyerAsMakerProtocol extends MuSigProtocol {
                 .on(MuSigSetupTradeMessage_A.class)
                 .run(MuSigSetupTradeMessage_A_Handler.class)
                 .to(MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES)
-                .then()
 
+                .then()
                 .from(MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES)
                 .on(MuSigSetupTradeMessage_C.class)
                 .run(MuSigSetupTradeMessage_C_Handler.class)

@@ -162,7 +162,9 @@ public class MuSigService extends LifecycleService {
             if (muSigActivated.get()) {
                 activate();
             } else {
-                deactivate();
+                if (getState() == State.ACTIVATED || getState() == State.ACTIVATING_FAILED) {
+                    deactivate();
+                }
             }
         });
         return CompletableFuture.completedFuture(true);

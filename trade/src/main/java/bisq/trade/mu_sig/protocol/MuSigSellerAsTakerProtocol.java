@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.protocol.not_yet_impl;
+package bisq.trade.mu_sig.protocol;
 
 import bisq.common.fsm.FsmErrorEvent;
 import bisq.trade.ServiceProvider;
@@ -39,7 +39,6 @@ import bisq.trade.mu_sig.messages.network.handler.seller.MuSigCooperativeClosure
 import bisq.trade.mu_sig.messages.network.handler.seller.MuSigPaymentInitiatedMessage_E_Handler;
 import bisq.trade.mu_sig.messages.network.handler.seller_as_taker.MuSigSetupTradeMessage_B_Handler;
 import bisq.trade.mu_sig.messages.network.handler.seller_as_taker.MuSigSetupTradeMessage_D_Handler;
-import bisq.trade.mu_sig.protocol.MuSigProtocol;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.DEPOSIT_TX_CONFIRMED;
@@ -51,15 +50,14 @@ import static bisq.trade.mu_sig.protocol.MuSigTradeState.SELLER_CONFIRMED_PAYMEN
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.SELLER_FORCE_CLOSED_TRADE;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.SELLER_RECEIVED_INITIATED_PAYMENT_MESSAGE;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES;
-import static bisq.trade.mu_sig.protocol.MuSigTradeState.TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.TAKER_INITIALIZED_TRADE;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX;
 
 @Slf4j
 public final class MuSigSellerAsTakerProtocol extends MuSigProtocol {
 
     public MuSigSellerAsTakerProtocol(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
-        log.error("MuSigSellerAsTakerProtocol not implemented yet");
     }
 
     @Override
@@ -75,20 +73,21 @@ public final class MuSigSellerAsTakerProtocol extends MuSigProtocol {
                 .to(FAILED_AT_PEER);
     }
 
+    @Override
     public void configTransitions() {
         // Setup trade
         from(INIT)
                 .on(MuSigTakeOfferEvent.class)
                 .run(MuSigTakeOfferEventHandler.class)
                 .to(TAKER_INITIALIZED_TRADE)
-                .then()
 
+                .then()
                 .from(TAKER_INITIALIZED_TRADE)
                 .on(MuSigSetupTradeMessage_B.class)
                 .run(MuSigSetupTradeMessage_B_Handler.class)
                 .to(TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES)
-                .then()
 
+                .then()
                 .from(TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES)
                 .on(MuSigSetupTradeMessage_D.class)
                 .run(MuSigSetupTradeMessage_D_Handler.class)

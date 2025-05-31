@@ -40,7 +40,7 @@ public final class MuSigBuyersCloseTradeTimeoutEventHandler extends MuSigTradeEv
         // *** BUYER CLOSES TRADE ***
         // TODO get swap tx from bitcoin network
 
-        log.error("Listening for swap tx from bitcoin network is not implemented yet.");
+        log.info("Listening for swap tx from bitcoin network is not implemented yet.");
 
         //  Take from simulated storage of swapTx in blockchain
         /*  Path path = PlatformUtils.getUserDataDir().resolve("swapTx_" + trade.getId());
