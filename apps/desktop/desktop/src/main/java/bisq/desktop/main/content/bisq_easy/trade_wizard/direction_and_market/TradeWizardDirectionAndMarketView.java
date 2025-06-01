@@ -35,7 +35,6 @@ import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -48,7 +47,6 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.Tooltip;
 import javafx.scene.effect.ColorAdjust;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -73,7 +71,6 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
     private final Label currencyLabel;
     private final BisqPopup marketSelectionPopup;
     private final HBox currencyLabelBox;
-    private final EventHandler<KeyEvent> keyPressedHandlerWhileOverlayIsVisible;
     private Subscription directionSubscription, showReputationInfoPin, marketPin, marketSelectionPin;
     private Button backToBuyButton, gainReputationButton;
 
@@ -131,7 +128,6 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
 
         reputationInfo = new VBox(20);
         setupReputationInfo();
-        keyPressedHandlerWhileOverlayIsVisible = controller::onKeyPressedWhileShowingOverlay;
 
         StackPane.setMargin(reputationInfo, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
         root.getChildren().addAll(content, reputationInfo);
@@ -179,7 +175,7 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
                         reputationInfo.setOpacity(1);
                         Transitions.blurStrong(content, 0);
                         Transitions.slideInTop(reputationInfo, 450);
-                        root.setOnKeyPressed(keyPressedHandlerWhileOverlayIsVisible);
+                        root.setOnKeyPressed(controller::onKeyPressedWhileShowingOverlay);
                     } else {
                         Transitions.removeEffect(content);
                         if (reputationInfo.isVisible()) {
