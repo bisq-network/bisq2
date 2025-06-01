@@ -25,13 +25,11 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.bisq_easy.components.amount_selection.AmountSelectionController;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
@@ -50,7 +48,6 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
     private final VBox overlay;
     private final Button learnHowToBuildReputation, closeOverlayButton, fixedAmount, rangeAmount;
     private final HBox amountLimitInfoHBox;
-    private final EventHandler<KeyEvent> keyPressedHandlerWhileOverlayIsVisible;
     private Subscription isRangeAmountEnabledPin, isOverlayVisible;
 
     public MuSigCreateOfferAmountView(MuSigCreateOfferAmountModel model,
@@ -108,7 +105,6 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
         linkToWiki.getStyleClass().add("text-fill-green");
         overlay = createOverlay(amountLimitInfoOverlayInfo, closeOverlayButton,
                 linkToWikiText, linkToWiki, learnHowToBuildReputation);
-        keyPressedHandlerWhileOverlayIsVisible = controller::onKeyPressedWhileShowingOverlay;
 
         root.getChildren().addAll(amountModelsBox, amountBox, amountLimitInfoHBox);
         root.setAlignment(Pos.TOP_CENTER);
@@ -144,7 +140,7 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
 
         isOverlayVisible = EasyBind.subscribe(model.getIsOverlayVisible(), isOverlayVisible -> {
             if (isOverlayVisible) {
-                root.setOnKeyPressed(keyPressedHandlerWhileOverlayIsVisible);
+                root.setOnKeyPressed(controller::onKeyPressedWhileShowingOverlay);
             } else {
                 root.setOnKeyPressed(null);
             }

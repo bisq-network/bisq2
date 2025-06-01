@@ -28,7 +28,6 @@ import bisq.desktop.main.content.bisq_easy.components.PriceInput;
 import bisq.desktop.main.content.bisq_easy.components.PriceInputBox;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -36,7 +35,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
@@ -61,7 +59,6 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     private final Label warningIcon, feedbackSentence, minSliderValue, maxSliderValue;
     private final Slider slider;
     private final Hyperlink showLearnWhyButton;
-    private final EventHandler<KeyEvent> keyPressedHandlerWhileOverlayIsVisible;
     private Subscription percentageFocussedPin, useFixPricePin, isOverlayVisible;
 
     public TradeWizardPriceView(TradeWizardPriceModel model,
@@ -137,7 +134,6 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         // Overlay
         closeOverlayButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.closeButton"));
         overlay = createOverlay();
-        keyPressedHandlerWhileOverlayIsVisible = controller::onKeyPressedWhileShowingOverlay;
 
         VBox.setMargin(sliderBox, new Insets(22.5, 0, 0, 0));
         root.getChildren().addAll(pricingModels, fieldsBox, sliderBox, feedbackBox);
@@ -168,7 +164,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
         isOverlayVisible = EasyBind.subscribe(model.getIsOverlayVisible(), isOverlayVisible -> {
             if (isOverlayVisible) {
-                root.setOnKeyPressed(keyPressedHandlerWhileOverlayIsVisible);
+                root.setOnKeyPressed(controller::onKeyPressedWhileShowingOverlay);
             } else {
                 root.setOnKeyPressed(null);
             }

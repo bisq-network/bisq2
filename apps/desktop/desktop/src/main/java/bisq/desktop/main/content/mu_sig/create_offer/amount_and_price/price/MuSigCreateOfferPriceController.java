@@ -260,6 +260,8 @@ public class MuSigCreateOfferPriceController implements Controller {
     }
 
     void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+        });
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
     }
 

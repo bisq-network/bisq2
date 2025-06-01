@@ -188,6 +188,7 @@ public class TradeWizardDirectionAndMarketController implements Controller {
     }
 
     void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onBuildReputation);
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseReputationInfo);
     }
 
