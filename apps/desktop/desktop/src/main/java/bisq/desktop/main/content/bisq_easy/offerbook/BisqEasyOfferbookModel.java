@@ -47,6 +47,7 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     private final FilteredList<MarketChannelItem> filteredMarketChannelItems = new FilteredList<>(marketChannelItems);
     private final SortedList<MarketChannelItem> sortedMarketChannelItems = new SortedList<>(filteredMarketChannelItems);
     private final FilteredList<MarketChannelItem> favouriteMarketChannelItems = new FilteredList<>(marketChannelItems);
+    private final SortedList<MarketChannelItem> sortedFavouriteMarketChannelItems = new SortedList<>(favouriteMarketChannelItems, BisqEasyOfferbookUtil.sortByMarketNameAsc());
     private final ObjectProperty<MarketChannelItem> selectedMarketChannelItem = new SimpleObjectProperty<>();
     private final StringProperty marketSelectorSearchText = new SimpleStringProperty();
     private final ObjectProperty<BisqEasyMarketFilter> selectedMarketsFilter = new SimpleObjectProperty<>();
