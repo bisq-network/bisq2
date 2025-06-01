@@ -31,7 +31,9 @@ public class InstanceLockManager {
             lockSocket = new ServerSocket(port);
             lockSocket.setReuseAddress(false);
         } catch (IOException e) {
-            throw new IllegalStateException("Another Bisq instance is already running (port " + port + " already in use).", e);
+            String errorMessage = "Another Bisq instance is already running (port " + port + " already in use).";
+            log.error(errorMessage, e);
+            throw new IllegalStateException(errorMessage, e);
         }
     }
 
