@@ -606,13 +606,18 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
     private void setupOffersVBox() {
         allOffersToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerlistSubheader.offersToggleGroup.allOffers"));
+        allOffersToggleButton.getStyleClass().add("offerlist-toggle-button-all-offers");
         buyToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerlistSubheader.offersToggleGroup.buy"));
+        buyToggleButton.getStyleClass().add("offerlist-toggle-button-buy");
         sellToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerlistSubheader.offersToggleGroup.sell"));
+        sellToggleButton.getStyleClass().add("offerlist-toggle-button-sell");
         offerlistFiltersToggleGroup = new ToggleGroup();
         offerlistFiltersToggleGroup.getToggles().addAll(allOffersToggleButton, buyToggleButton, sellToggleButton);
         HBox toggleButtonHBox = new HBox(3, allOffersToggleButton, buyToggleButton, sellToggleButton);
+        toggleButtonHBox.getStyleClass().add("mu-sig-offerbook-offerlist-toggle-button-hbox");
+
         HBox subheaderContent = new HBox(toggleButtonHBox, Spacer.fillHBox()/*, messageTypeFilterMenu*/);
-        subheaderContent.getStyleClass().add("mu-sig-subheader-content");
+        subheaderContent.getStyleClass().add("mu-sig-offerbook-subheader-content");
         subheaderContent.setPadding(new Insets(0, 12, 0, 13));
         HBox.setHgrow(subheaderContent, Priority.ALWAYS);
 
@@ -745,10 +750,6 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
         void updateSelection(boolean isSelected) {
             getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
-        }
-
-        boolean isSelected() {
-            return getContent().getPseudoClassStates().contains(SELECTED_PSEUDO_CLASS);
         }
     }
 }
