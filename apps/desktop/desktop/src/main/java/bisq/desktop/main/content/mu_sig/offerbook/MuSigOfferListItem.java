@@ -26,6 +26,7 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
+import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
@@ -67,6 +68,7 @@ public class MuSigOfferListItem {
     private final String maker;
     private final Market market;
     private final String takeOfferButtonText;
+    private final Direction direction;
 
     private double priceSpecAsPercent = 0;
     private String formattedPercentagePrice = Res.get("data.na");
@@ -95,6 +97,7 @@ public class MuSigOfferListItem {
         takeOfferButtonText = offer.getDirection().isBuy()
                 ? Res.get("muSig.offerbook.table.cell.intent.sell")
                 : Res.get("muSig.offerbook.table.cell.intent.buy");
+        direction = offer.getDirection();
 
         // ImageUtil.getImageViewById(fiatPaymentMethod.getName());
         paymentMethodTooltip = Joiner.on(", ")

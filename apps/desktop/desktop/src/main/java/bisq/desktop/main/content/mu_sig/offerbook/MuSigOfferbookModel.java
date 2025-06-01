@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.mu_sig.offerbook;
 
 import bisq.desktop.common.view.Model;
+import bisq.offer.Direction;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -52,6 +53,17 @@ public class MuSigOfferbookModel implements Model {
     private final ObservableList<MuSigOfferListItem> muSigOfferListItems = FXCollections.observableArrayList();
     private final FilteredList<MuSigOfferListItem> filteredMuSigOfferListItems = new FilteredList<>(muSigOfferListItems);
     private final SortedList<MuSigOfferListItem> sortedMuSigOfferListItems = new SortedList<>(filteredMuSigOfferListItems);
+    private final ObjectProperty<Direction> selectedMuSigOfferlistFilter = new SimpleObjectProperty<>();
+
+    private final Predicate<MuSigOfferListItem> muSigOfferListItemsPredicate = item ->
+            getMuSigOffersFilterPredicate().test(item)
+                    && getMuSigMarketFilterPredicate().test(item);
+    private final Predicate<MuSigOfferListItem> muSigMarketFilterPredicate = item ->
+            getSelectedMarketItem().get() == null
+                    || getSelectedMarketItem().get().getMarket() == null
+                    || getSelectedMarketItem().get().getMarket().equals(item.getMarket());
+    @Setter
+    private Predicate<MuSigOfferListItem> muSigOffersFilterPredicate = item -> true;
 
     private final ObservableList<MarketItem> marketItems = FXCollections.observableArrayList();
     private final FilteredList<MarketItem> filteredMarketItems = new FilteredList<>(marketItems);
@@ -67,15 +79,15 @@ public class MuSigOfferbookModel implements Model {
     private final BooleanProperty favouritesListViewNeedsHeightUpdate = new SimpleBooleanProperty();
 
     private final Predicate<MarketItem> marketItemsPredicate = item ->
-            getMarketFilterPredicate().test(item) &&
-                    getMarketSearchTextPredicate().test(item) &&
-                    getMarketPricePredicate().test(item) &&
-                    !item.getIsFavourite().get();
+            getMarketFilterPredicate().test(item)
+                    && getMarketSearchTextPredicate().test(item)
+                    && getMarketPricePredicate().test(item)
+                    && !item.getIsFavourite().get();
     private final Predicate<MarketItem> favouriteMarketItemsPredicate = item -> item.getIsFavourite().get();;
     @Setter
-    private Predicate<MarketItem> marketFilterPredicate = marketItem -> true;
+    private Predicate<MarketItem> marketFilterPredicate = item -> true;
     @Setter
-    private Predicate<MarketItem> marketSearchTextPredicate = marketItem -> true;
+    private Predicate<MarketItem> marketSearchTextPredicate = item -> true;
     @Setter
-    private Predicate<MarketItem> marketPricePredicate = marketItem -> true;
+    private Predicate<MarketItem> marketPricePredicate = item -> true;
 }

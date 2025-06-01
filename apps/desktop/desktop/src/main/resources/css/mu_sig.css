@@ -7,12 +7,23 @@
     -fx-background-color: -bisq-dark-grey-20;
 }
 
-
 .mu-sig-open-trades-header {
     -fx-background-color: -bisq-dark-grey-20;
     -fx-max-height: 61;
     -fx-min-height: 61;
     -fx-pref-height: 61;
     -fx-alignment: center-left;
+    -fx-padding: 12.5 25 12.5 25;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Offerbook                                                                   *
+ *                                                                             *
+ ******************************************************************************/
+
+.mu-sig-subheader-content {
+    -fx-alignment: center-right;
     -fx-padding: 12.5 25 12.5 25;
 }
