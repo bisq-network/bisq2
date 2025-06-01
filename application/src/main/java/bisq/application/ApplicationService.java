@@ -30,6 +30,7 @@ import bisq.common.locale.LocaleRepository;
 import bisq.common.logging.AsciiLogo;
 import bisq.common.logging.LogSetup;
 import bisq.common.observable.Observable;
+import bisq.common.threading.ThreadName;
 import bisq.common.util.ExceptionUtil;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
@@ -42,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -135,6 +137,7 @@ public abstract class ApplicationService implements Service {
     private FileLock instanceLock;
     @Getter
     protected final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
+    private FileChannel lockFileChannel;
 
     public ApplicationService(String configFileName, String[] args, Path userDataDir) {
         com.typesafe.config.Config defaultTypesafeConfig = ConfigFactory.load(configFileName);
@@ -168,7 +171,6 @@ public abstract class ApplicationService implements Service {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        checkInstanceLock();
 
         LogSetup.setup(dataDir.resolve("bisq").toString());
         log.info(AsciiLogo.getAsciiLogo());
@@ -185,6 +187,8 @@ public abstract class ApplicationService implements Service {
             DevMode.setDevModeReputationScore(config.getDevModeReputationScore());
         }
 
+        checkInstanceLock();
+
         Locale locale = LocaleRepository.getDefaultLocale();
         CountryRepository.applyDefaultLocale(locale);
         LanguageRepository.setDefaultLanguage(locale.getLanguage());
@@ -198,18 +202,53 @@ public abstract class ApplicationService implements Service {
     }
 
     private void checkInstanceLock() {
+        // We release the instance lock with a shutdown hook to ensure it gets release in all cases.
+        // If we throw the NoFileLockException we are still in constructor call and the ApplicationService instance is
+        // not created, thus shutdown would not be called. Therefor the shutdown hook is a more reliable solution.
+        // Usually we try to avoid adding multiple shutdownHooks as the order of their execution is not
+        // defined. In that case the order from other hooks has no impact.
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            ThreadName.set(this, "releaseInstanceLock");
+            releaseInstanceLock();
+        }));
+
         // Acquire exclusive lock on file basedir/lock, throw if locks fails
         // to avoid running multiple instances using the same basedir
         File lockFilePath = config.getBaseDir()
                 .resolve("lock")
                 .toFile();
-        try (FileOutputStream fileOutputStream = new FileOutputStream(lockFilePath)) {
-            instanceLock = fileOutputStream.getChannel().tryLock();
+        try {
+            @SuppressWarnings("resource")
+            FileOutputStream fileOutputStream = new FileOutputStream(lockFilePath);
+            lockFileChannel = fileOutputStream.getChannel();
+            instanceLock = lockFileChannel.tryLock();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Acquiring lock for lock file failed.", e);
         }
         if (instanceLock == null) {
-            throw new NoFileLockException("Another instance might be running", new Throwable("Unable to acquire lock file lock"));
+            String errorMessage = "Acquiring lock for instanceLock file failed. Another instance might be running.";
+            log.error(errorMessage);
+            throw new NoFileLockException(errorMessage);
+        }
+    }
+
+    protected void releaseInstanceLock() {
+        try {
+            if (instanceLock != null) {
+                log.info("Release lock from instanceLock file.");
+                instanceLock.release();
+                instanceLock = null;
+            }
+        } catch (IOException e) {
+            log.warn("Failed to release lock from instanceLock file.", e);
+        }
+        try {
+            if (lockFileChannel != null) {
+                lockFileChannel.close();
+                lockFileChannel = null;
+            }
+        } catch (IOException e) {
+            log.warn("Failed to close the lockFileChannel.", e);
         }
     }
 
