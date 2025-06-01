@@ -57,6 +57,7 @@ public class MuSigOfferbookModel implements Model {
     private final FilteredList<MarketItem> filteredMarketItems = new FilteredList<>(marketItems);
     private final SortedList<MarketItem> sortedMarketItems = new SortedList<>(filteredMarketItems);
     private final FilteredList<MarketItem> favouriteMarketItems = new FilteredList<>(marketItems);
+    private final SortedList<MarketItem> sortedFavouriteMarketItems = new SortedList<>(favouriteMarketItems, MarketItemUtil.sortByMarketNameAsc());
     private final ObjectProperty<MarketItem> selectedMarketItem = new SimpleObjectProperty<>();
     private final StringProperty marketsSearchBoxText = new SimpleStringProperty();
     private final ObjectProperty<MarketFilter> selectedMarketsFilter = new SimpleObjectProperty<>();

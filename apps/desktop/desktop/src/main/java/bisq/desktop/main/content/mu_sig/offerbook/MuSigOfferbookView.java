@@ -107,7 +107,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         marketListView.setFixedCellSize(LIST_CELL_HEIGHT);
         marketListView.setPlaceholder(new Label());
         configMarketListView(marketListView);
-        favouritesListView = new BisqTableView<>(model.getFavouriteMarketItems());
+        favouritesListView = new BisqTableView<>(model.getSortedFavouriteMarketItems(), false);
         favouritesListView.getStyleClass().addAll("market-selection-list", "favourites-list");
         favouritesListView.hideVerticalScrollbar();
         favouritesListView.hideHorizontalScrollbar();
