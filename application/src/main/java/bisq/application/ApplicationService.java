@@ -41,9 +41,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -137,7 +135,7 @@ public abstract class ApplicationService implements Service {
     private FileLock instanceLock;
     @Getter
     protected final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
-    private FileChannel lockFileChannel;
+    private InstanceLockManager instanceLockManager;
 
     public ApplicationService(String configFileName, String[] args, Path userDataDir) {
         com.typesafe.config.Config defaultTypesafeConfig = ConfigFactory.load(configFileName);
@@ -202,6 +200,14 @@ public abstract class ApplicationService implements Service {
     }
 
     private void checkInstanceLock() {
+        // Create a quasi-unique port per data directory
+        // Dynamic/private ports: 49152 – 65535
+        int lowestPort = 49152;
+        int highestPort = 65535;
+        int port = lowestPort + Math.abs(config.getBaseDir().hashCode() % (highestPort - lowestPort));
+        instanceLockManager = new InstanceLockManager();
+        instanceLockManager.acquireLock(port);
+
         // We release the instance lock with a shutdown hook to ensure it gets release in all cases.
         // If we throw the NoFileLockException we are still in constructor call and the ApplicationService instance is
         // not created, thus shutdown would not be called. Therefor the shutdown hook is a more reliable solution.
@@ -209,47 +215,8 @@ public abstract class ApplicationService implements Service {
         // defined. In that case the order from other hooks has no impact.
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             ThreadName.set(this, "releaseInstanceLock");
-            releaseInstanceLock();
+            instanceLockManager.releaseLock();
         }));
-
-        // Acquire exclusive lock on file basedir/lock, throw if locks fails
-        // to avoid running multiple instances using the same basedir
-        File lockFilePath = config.getBaseDir()
-                .resolve("lock")
-                .toFile();
-        try {
-            @SuppressWarnings("resource")
-            FileOutputStream fileOutputStream = new FileOutputStream(lockFilePath);
-            lockFileChannel = fileOutputStream.getChannel();
-            instanceLock = lockFileChannel.tryLock();
-        } catch (Exception e) {
-            log.error("Acquiring lock for lock file failed.", e);
-        }
-        if (instanceLock == null) {
-            String errorMessage = "Acquiring lock for instanceLock file failed. Another instance might be running.";
-            log.error(errorMessage);
-            throw new NoFileLockException(errorMessage);
-        }
-    }
-
-    protected void releaseInstanceLock() {
-        try {
-            if (instanceLock != null) {
-                log.info("Release lock from instanceLock file.");
-                instanceLock.release();
-                instanceLock = null;
-            }
-        } catch (IOException e) {
-            log.warn("Failed to release lock from instanceLock file.", e);
-        }
-        try {
-            if (lockFileChannel != null) {
-                lockFileChannel.close();
-                lockFileChannel = null;
-            }
-        } catch (IOException e) {
-            log.warn("Failed to close the lockFileChannel.", e);
-        }
     }
 
     public CompletableFuture<Void> pruneAllBackups() {
