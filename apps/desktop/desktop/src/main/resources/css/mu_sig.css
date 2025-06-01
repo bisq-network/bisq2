@@ -23,7 +23,53 @@
  *                                                                             *
  ******************************************************************************/
 
-.mu-sig-subheader-content {
+.mu-sig-offerbook-subheader-content {
     -fx-alignment: center-right;
-    -fx-padding: 12.5 25 12.5 25;
+    -fx-padding: 0 25 0 25;
+}
+
+.mu-sig-offerbook-offerlist-toggle-button-hbox .toggle-button {
+    -fx-background-radius: 9;
+    -fx-border-radius: 9;
+    -fx-max-height: 18;
+    -fx-min-height: 18;
+    -fx-pref-height: 18;
+    -fx-padding: -1 12 1 12;
+    -fx-font-size: 0.96em;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-alignment: baseline-center;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-border-color: -fx-mid-text-color;
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+}
+
+.mu-sig-offerbook-offerlist-toggle-button-hbox {
+    -fx-alignment: center-right;
+}
+
+.mu-sig-offerbook-offerlist-toggle-button-hbox .toggle-button:focused,
+.mu-sig-offerbook-offerlist-toggle-button-hbox .toggle-button:selected,
+.mu-sig-offerbook-offerlist-toggle-button-hbox .toggle-button:pressed {
+    -fx-max-height: 18;
+    -fx-min-height: 18;
+    -fx-pref-height: 18;
+    -fx-padding: -1 12 1 12;
+}
+
+.mu-sig-offerbook-offerlist-toggle-button-hbox .toggle-button:selected {
+    -fx-text-fill: -fx-light-text-color !important;
+    -fx-border-color: transparent;
+}
+
+.mu-sig-offerbook-offerlist-toggle-button-hbox .offerlist-toggle-button-all-offers.toggle-button:selected {
+    -fx-background-color: -bisq2-yellow-dim-10;
+}
+
+.mu-sig-offerbook-offerlist-toggle-button-hbox .offerlist-toggle-button-buy.toggle-button:selected {
+    -fx-background-color: -bisq2-green-dim-20;
+}
+
+.mu-sig-offerbook-offerlist-toggle-button-hbox .offerlist-toggle-button-sell.toggle-button:selected {
+    -fx-background-color: -bisq2-red;
 }
