@@ -116,11 +116,17 @@ public class MuSigTakeOfferAmountView extends View<StackPane, MuSigTakeOfferAmou
                 amountLimitInfoOverlay.setOpacity(1);
                 Transitions.blurStrong(content, 0);
                 Transitions.slideInTop(amountLimitInfoOverlay, 450);
+                root.setOnKeyPressed(controller::onKeyPressedWhileShowingOverlay);
             } else {
                 Transitions.removeEffect(content);
                 if (amountLimitInfoOverlay.isVisible()) {
                     Transitions.fadeOut(amountLimitInfoOverlay, ManagedDuration.getHalfOfDefaultDurationMillis(),
                             () -> amountLimitInfoOverlay.setVisible(false));
+                }
+                root.setOnKeyPressed(null);
+                // Return the focus to the wizard
+                if (root.getParent() != null) {
+                    root.getParent().requestFocus();
                 }
             }
         });
@@ -158,6 +164,8 @@ public class MuSigTakeOfferAmountView extends View<StackPane, MuSigTakeOfferAmou
         learnMore.setOnAction(null);
         linkToWiki.setOnAction(null);
         closeOverlayButton.setOnAction(null);
+
+        root.setOnKeyPressed(null);
     }
 
     private static VBox getAmountLimitInfoOverlay(Label amountLimitInfoOverlayInfo,

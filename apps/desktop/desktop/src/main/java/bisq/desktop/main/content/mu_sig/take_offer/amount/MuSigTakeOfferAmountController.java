@@ -36,6 +36,7 @@ import bisq.presentation.formatters.PriceFormatter;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.scene.input.KeyEvent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -119,7 +120,7 @@ public class MuSigTakeOfferAmountController implements Controller {
     public void onDeactivate() {
         baseSideAmountPin.unsubscribe();
         quoteSideAmountPin.unsubscribe();
-        view.getRoot().setOnKeyPressed(null);
+
         navigationButtonsVisibleHandler.accept(true);
         model.getIsWarningIconVisible().set(false);
         model.getIsAmountLimitInfoOverlayVisible().set(false);
@@ -130,18 +131,18 @@ public class MuSigTakeOfferAmountController implements Controller {
         amountSelectionController.setMaxOrFixedQuoteSideAmount(amountSelectionController.getRightMarkerQuoteSideValue().round(0));
     }
 
+    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+        });
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseAmountLimitInfoOverlay);
+    }
+
     void onShowAmountLimitInfoOverlay() {
         navigationButtonsVisibleHandler.accept(false);
         model.getIsAmountLimitInfoOverlayVisible().set(true);
-        view.getRoot().setOnKeyPressed(keyEvent -> {
-            KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
-            });
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseAmountLimitInfoOverlay);
-        });
     }
 
     void onCloseAmountLimitInfoOverlay() {
-        view.getRoot().setOnKeyPressed(null);
         navigationButtonsVisibleHandler.accept(true);
         model.getIsAmountLimitInfoOverlayVisible().set(false);
     }
