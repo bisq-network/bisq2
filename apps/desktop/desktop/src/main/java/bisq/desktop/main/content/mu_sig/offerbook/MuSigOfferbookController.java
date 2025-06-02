@@ -208,8 +208,8 @@ public class MuSigOfferbookController implements Controller {
             updateFilteredMarketItems();
         });
 
-        MarketFilter persistedMarketsFilter = settingsService.getCookie().asString(CookieKey.MU_SIG_MARKETS_FILTER).map(name ->
-                ProtobufUtils.enumFromProto(MarketFilter.class, name, MarketFilter.ALL)).orElse(MarketFilter.ALL);
+        MuSigFilters.MarketFilter persistedMarketsFilter = settingsService.getCookie().asString(CookieKey.MU_SIG_MARKETS_FILTER).map(name ->
+                ProtobufUtils.enumFromProto(MuSigFilters.MarketFilter.class, name, MuSigFilters.MarketFilter.ALL)).orElse(MuSigFilters.MarketFilter.ALL);
         model.getSelectedMarketsFilter().set(persistedMarketsFilter);
         selectedMarketFilterPin = EasyBind.subscribe(model.getSelectedMarketsFilter(), filter -> {
             if (filter != null) {
@@ -217,7 +217,7 @@ public class MuSigOfferbookController implements Controller {
                 settingsService.setCookie(CookieKey.MU_SIG_MARKETS_FILTER, model.getSelectedMarketsFilter().get().name());
                 updateFilteredMarketItems();
             }
-            model.getShouldShowAppliedFilters().set(filter == MarketFilter.WITH_OFFERS || filter == MarketFilter.FAVOURITES);
+            model.getShouldShowAppliedFilters().set(filter == MuSigFilters.MarketFilter.WITH_OFFERS || filter == MuSigFilters.MarketFilter.FAVOURITES);
         });
 
         MarketSortType persistedMarketSortType = settingsService.getCookie().asString(CookieKey.MU_SIG_MARKET_SORT_TYPE)

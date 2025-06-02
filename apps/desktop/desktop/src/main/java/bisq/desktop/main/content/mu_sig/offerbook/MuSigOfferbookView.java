@@ -89,7 +89,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     private SearchBox marketsSearchBox;
     private DropdownMenu sortAndFilterMarketsMenu;
     private SortAndFilterDropdownMenuItem<MarketSortType> sortByMostOffers, sortByNameAZ, sortByNameZA;
-    private SortAndFilterDropdownMenuItem<MarketFilter> filterShowAll, filterWithOffers, filterFavourites;
+    private SortAndFilterDropdownMenuItem<MuSigFilters.MarketFilter> filterShowAll, filterWithOffers, filterFavourites;
     private ToggleGroup offerFiltersToggleGroup;
     private ToggleButton allOffersToggleButton, buyToggleButton, sellToggleButton;
     private ImageView withOffersRemoveFilterDefaultIcon, withOffersRemoveFilterActiveIcon,
@@ -159,10 +159,10 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         marketPrice.textProperty().bind(model.getMarketPrice());
         favouritesListView.visibleProperty().bind(model.getShouldShowFavouritesListView());
         favouritesListView.managedProperty().bind(model.getShouldShowFavouritesListView());
-        withOffersDisplayHint.visibleProperty().bind(model.getSelectedMarketsFilter().isEqualTo(MarketFilter.WITH_OFFERS));
-        withOffersDisplayHint.managedProperty().bind(model.getSelectedMarketsFilter().isEqualTo(MarketFilter.WITH_OFFERS));
-        onlyFavouritesDisplayHint.visibleProperty().bind(model.getSelectedMarketsFilter().isEqualTo(MarketFilter.FAVOURITES));
-        onlyFavouritesDisplayHint.managedProperty().bind(model.getSelectedMarketsFilter().isEqualTo(MarketFilter.FAVOURITES));
+        withOffersDisplayHint.visibleProperty().bind(model.getSelectedMarketsFilter().isEqualTo(MuSigFilters.MarketFilter.WITH_OFFERS));
+        withOffersDisplayHint.managedProperty().bind(model.getSelectedMarketsFilter().isEqualTo(MuSigFilters.MarketFilter.WITH_OFFERS));
+        onlyFavouritesDisplayHint.visibleProperty().bind(model.getSelectedMarketsFilter().isEqualTo(MuSigFilters.MarketFilter.FAVOURITES));
+        onlyFavouritesDisplayHint.managedProperty().bind(model.getSelectedMarketsFilter().isEqualTo(MuSigFilters.MarketFilter.FAVOURITES));
 
         selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), this::selectedMarketItemChanged);
         marketListViewSelectionPin = EasyBind.subscribe(marketListView.getSelectionModel().selectedItemProperty(), item -> {
@@ -196,17 +196,17 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         sortByNameAZ.setOnAction(e -> controller.onSortMarkets(MarketSortType.ASC));
         sortByNameZA.setOnAction(e -> controller.onSortMarkets(MarketSortType.DESC));
 
-        filterWithOffers.setOnAction(e -> model.getSelectedMarketsFilter().set(MarketFilter.WITH_OFFERS));
-        filterShowAll.setOnAction(e -> model.getSelectedMarketsFilter().set(MarketFilter.ALL));
-        filterFavourites.setOnAction(e -> model.getSelectedMarketsFilter().set(MarketFilter.FAVOURITES));
+        filterWithOffers.setOnAction(e -> model.getSelectedMarketsFilter().set(MuSigFilters.MarketFilter.WITH_OFFERS));
+        filterShowAll.setOnAction(e -> model.getSelectedMarketsFilter().set(MuSigFilters.MarketFilter.ALL));
+        filterFavourites.setOnAction(e -> model.getSelectedMarketsFilter().set(MuSigFilters.MarketFilter.FAVOURITES));
 
         createOfferButton.setOnAction(e -> controller.onCreateOffer());
 
-        removeWithOffersFilter.setOnMouseClicked(e -> model.getSelectedMarketsFilter().set(MarketFilter.ALL));
+        removeWithOffersFilter.setOnMouseClicked(e -> model.getSelectedMarketsFilter().set(MuSigFilters.MarketFilter.ALL));
         withOffersDisplayHint.setOnMouseEntered(e -> removeWithOffersFilter.setGraphic(withOffersRemoveFilterActiveIcon));
         withOffersDisplayHint.setOnMouseExited(e -> removeWithOffersFilter.setGraphic(withOffersRemoveFilterDefaultIcon));
 
-        removeFavouritesFilter.setOnMouseClicked(e -> model.getSelectedMarketsFilter().set(MarketFilter.ALL));
+        removeFavouritesFilter.setOnMouseClicked(e -> model.getSelectedMarketsFilter().set(MuSigFilters.MarketFilter.ALL));
         onlyFavouritesDisplayHint.setOnMouseEntered(e -> removeFavouritesFilter.setGraphic(favouritesRemoveFilterActiveIcon));
         onlyFavouritesDisplayHint.setOnMouseExited(e -> removeFavouritesFilter.setGraphic(favouritesRemoveFilterDefaultIcon));
 
@@ -667,18 +667,18 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         DropdownTitleMenuItem filterTitle = new DropdownTitleMenuItem(
                 Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.filterTitle"));
         filterWithOffers = new SortAndFilterDropdownMenuItem<>("check-white", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.withOffers"), MarketFilter.WITH_OFFERS);
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.withOffers"), MuSigFilters.MarketFilter.WITH_OFFERS);
         filterFavourites = new SortAndFilterDropdownMenuItem<>("check-white", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.favourites"), MarketFilter.FAVOURITES);
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.favourites"), MuSigFilters.MarketFilter.FAVOURITES);
         filterShowAll = new SortAndFilterDropdownMenuItem<>("check-white", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.all"), MarketFilter.ALL);
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.all"), MuSigFilters.MarketFilter.ALL);
 
         dropdownMenu.addMenuItems(sortTitle, sortByMostOffers, sortByNameAZ, sortByNameZA, separator, filterTitle,
                 filterWithOffers, filterFavourites, filterShowAll);
         return dropdownMenu;
     }
 
-    private void updateSelectedMarketFilter(MarketFilter bisqEasyMarketFilter) {
+    private void updateSelectedMarketFilter(MuSigFilters.MarketFilter bisqEasyMarketFilter) {
         if (bisqEasyMarketFilter == null) {
             return;
         }
@@ -686,8 +686,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         //noinspection unchecked
         sortAndFilterMarketsMenu.getMenuItems().stream()
                 .filter(menuItem -> menuItem instanceof SortAndFilterDropdownMenuItem &&
-                        ((SortAndFilterDropdownMenuItem<?>) menuItem).getMenuItem() instanceof MarketFilter)
-                .map(menuItem -> (SortAndFilterDropdownMenuItem<MarketFilter>) menuItem)
+                        ((SortAndFilterDropdownMenuItem<?>) menuItem).getMenuItem() instanceof MuSigFilters.MarketFilter)
+                .map(menuItem -> (SortAndFilterDropdownMenuItem<MuSigFilters.MarketFilter>) menuItem)
                 .forEach(menuItem -> menuItem.updateSelection(bisqEasyMarketFilter == menuItem.getMenuItem()));
 
         marketListView.getSelectionModel().select(model.getSelectedMarketItem().get());
