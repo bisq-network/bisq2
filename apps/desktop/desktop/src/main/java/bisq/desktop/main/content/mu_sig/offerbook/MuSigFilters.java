@@ -21,6 +21,13 @@ import lombok.Getter;
 
 public class MuSigFilters {
     @Getter
+    public enum MarketFilter {
+        ALL,
+        FAVOURITES,
+        WITH_OFFERS
+    }
+
+    @Getter
     public enum MuSigOfferDirectionFilter {
         ALL,
         BUY,
