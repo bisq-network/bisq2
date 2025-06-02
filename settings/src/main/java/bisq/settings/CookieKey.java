@@ -53,7 +53,7 @@ public enum CookieKey {
     MU_SIG_OFFERBOOK_SELECTED_OTHER_MARKET,
     MU_SIG_MARKETS_FILTER,
     MU_SIG_MARKET_SORT_TYPE,
-    MU_SIG_OFFERLIST_FILTER;
+    MU_SIG_OFFER_DIRECTION_FILTER;
 
     @Getter
     private final boolean useSubKey;
