@@ -67,7 +67,7 @@ public class MuSigOfferbookController implements Controller {
     private final FavouriteMarketsService favouriteMarketsService;
     private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin;
     private Subscription selectedMarketItemPin, marketsSearchBoxTextPin, selectedMarketFilterPin, selectedMarketSortTypePin,
-            selectedOfferlistFilterPin;
+            selectedOfferDirectionFilterPin;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
         muSigService = serviceProvider.getMuSigService();
@@ -231,19 +231,22 @@ public class MuSigOfferbookController implements Controller {
         });
         model.getSortedMarketItems().setComparator(model.getSelectedMarketSortType().get().getComparator());
 
-        Direction persistedOfferlistFilter = settingsService.getCookie().asString(CookieKey.MU_SIG_OFFERLIST_FILTER)
-                .map(name -> ProtobufUtils.enumFromProto(Direction.class, name, null))
-                .orElse(null);
-        model.getSelectedMuSigOfferlistFilter().set(persistedOfferlistFilter);
-        selectedOfferlistFilterPin = EasyBind.subscribe(model.getSelectedMuSigOfferlistFilter(), filter -> {
-           if (filter == null) {
-               model.setMuSigOffersFilterPredicate(item -> true);
-               settingsService.setCookie(CookieKey.MU_SIG_OFFERLIST_FILTER, "all offers"); // fallback will be null
-           } else {
-               model.setMuSigOffersFilterPredicate(item -> item.getDirection() == filter);
-               settingsService.setCookie(CookieKey.MU_SIG_OFFERLIST_FILTER, filter.name());
+        MuSigFilters.MuSigOfferDirectionFilter persistedOfferDirectionFilter = settingsService.getCookie().asString(CookieKey.MU_SIG_OFFER_DIRECTION_FILTER)
+                .map(name -> ProtobufUtils.enumFromProto(MuSigFilters.MuSigOfferDirectionFilter.class, name, MuSigFilters.MuSigOfferDirectionFilter.ALL))
+                .orElse(MuSigFilters.MuSigOfferDirectionFilter.ALL);
+        model.getSelectedMuSigOfferDirectionFilter().set(persistedOfferDirectionFilter);
+        selectedOfferDirectionFilterPin = EasyBind.subscribe(model.getSelectedMuSigOfferDirectionFilter(), filter -> {
+           if (filter != null) {
+               if (filter == MuSigFilters.MuSigOfferDirectionFilter.ALL) {
+                   model.setMuSigOffersDirectionFilterPredicate(item -> true);
+               } else if (filter == MuSigFilters.MuSigOfferDirectionFilter.BUY) {
+                   model.setMuSigOffersDirectionFilterPredicate(item -> item.getDirection() == Direction.BUY);
+               } else {
+                   model.setMuSigOffersDirectionFilterPredicate(item -> item.getDirection() == Direction.SELL);
+               }
+               settingsService.setCookie(CookieKey.MU_SIG_OFFER_DIRECTION_FILTER, filter.name());
+               updateFilteredMuSigOfferListItems();
            }
-           updateFilteredMuSigOfferListItems();
         });
 
         updateFilteredMarketItems();
@@ -266,7 +269,7 @@ public class MuSigOfferbookController implements Controller {
         marketsSearchBoxTextPin.unsubscribe();
         selectedMarketFilterPin.unsubscribe();
         selectedMarketSortTypePin.unsubscribe();
-        selectedOfferlistFilterPin.unsubscribe();
+        selectedOfferDirectionFilterPin.unsubscribe();
     }
 
     void onSelectMarketItem(MarketItem marketItem) {
