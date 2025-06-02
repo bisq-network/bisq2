@@ -32,11 +32,7 @@ public class MuSigView extends ContentTabView<MuSigModel, MuSigController> {
     public MuSigView(MuSigModel model, MuSigController controller) {
         super(model, controller);
 
-        // addTab(Res.get("muSig.dashboard"), NavigationTarget.MU_SIG_ONBOARDING);
         addTab(Res.get("muSig.offerbook"), NavigationTarget.MU_SIG_OFFERBOOK);
-        addTab(Res.get("muSig.market"), NavigationTarget.MU_SIG_MARKET);
-        addTab(Res.get("muSig.offerbook.buy"), NavigationTarget.MU_SIG_OFFERBOOK_BUY);
-        addTab(Res.get("muSig.offerbook.sell"), NavigationTarget.MU_SIG_OFFERBOOK_SELL);
         addTab(Res.get("muSig.portfolio"), NavigationTarget.MU_SIG_PORTFOLIO);
     }
 

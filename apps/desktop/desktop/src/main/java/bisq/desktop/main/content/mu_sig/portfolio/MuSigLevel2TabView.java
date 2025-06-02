@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.old_offerbook;
+package bisq.desktop.main.content.mu_sig.portfolio;
 
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;

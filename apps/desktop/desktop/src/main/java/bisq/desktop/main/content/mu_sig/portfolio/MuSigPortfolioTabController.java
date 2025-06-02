@@ -19,8 +19,6 @@ package bisq.desktop.main.content.mu_sig.portfolio;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.mu_sig.old_offerbook.MuSigLevel2TabController;
-import bisq.desktop.main.content.mu_sig.old_offerbook.MuSigLevel2TabView;
 import bisq.desktop.main.content.mu_sig.portfolio.history.MuSigHistoryController;
 import bisq.desktop.main.content.mu_sig.portfolio.offers.MuSigOpenOffersController;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.MuSigOpenTradesController;

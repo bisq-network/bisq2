@@ -15,23 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.market.payment_methods;
+package bisq.desktop.main.content.mu_sig.portfolio;
 
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.TabController;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MuSigMarketByPaymentMethodController implements Controller {
+public abstract class MuSigLevel2TabController<M extends MuSigLevel2TabModel> extends TabController<M> {
     @Getter
-    private final MuSigMarketByPaymentMethodView view;
-    private final MuSigMarketByPaymentMethodModel model;
+    protected final MuSigLevel2TabView<? extends M, ? extends MuSigLevel2TabController<M>> view;
+    protected final ServiceProvider serviceProvider;
 
-    public MuSigMarketByPaymentMethodController(ServiceProvider serviceProvider) {
-        model = new MuSigMarketByPaymentMethodModel();
-        view = new MuSigMarketByPaymentMethodView(model, this);
+    public MuSigLevel2TabController(M model, NavigationTarget navigationTarget, ServiceProvider serviceProvider) {
+        super(model, navigationTarget);
+
+        this.serviceProvider = serviceProvider;
+        view = createAndGetView();
     }
+
+    protected abstract MuSigLevel2TabView<? extends M, ? extends MuSigLevel2TabController<M>> createAndGetView();
 
     @Override
     public void onActivate() {
