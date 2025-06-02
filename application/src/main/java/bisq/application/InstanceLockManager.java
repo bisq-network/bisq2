@@ -26,7 +26,13 @@ import java.net.ServerSocket;
 public class InstanceLockManager {
     private ServerSocket lockSocket;
 
-    public void acquireLock(int port) {
+    public synchronized void acquireLock(int port) {
+        if (port < 1 || port > 65535) {
+            throw new IllegalArgumentException("Port must be between 1 and 65535");
+        }
+        if (lockSocket != null) {
+            throw new IllegalStateException("Lock already acquired");
+        }
         try {
             lockSocket = new ServerSocket(port);
             lockSocket.setReuseAddress(false);
@@ -37,10 +43,11 @@ public class InstanceLockManager {
         }
     }
 
-    public void releaseLock() {
+    public synchronized void releaseLock() {
         try {
             if (lockSocket != null) {
                 lockSocket.close();
+                lockSocket = null;
             }
         } catch (IOException e) {
             log.error("Failed to close lockSocket", e);

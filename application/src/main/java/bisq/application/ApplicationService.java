@@ -89,7 +89,8 @@ public abstract class ApplicationService implements Service {
                     config.getBoolean("ignoreSigningKeyInResourcesCheck"),
                     config.getBoolean("ignoreSignatureVerification"),
                     config.getInt("memoryReportIntervalSec"),
-                    config.getBoolean("includeThreadListInMemoryReport"));
+                    config.getBoolean("includeThreadListInMemoryReport"),
+                    config.getBoolean("checkInstanceLock"));
         }
 
         private final Path baseDir;
@@ -101,6 +102,7 @@ public abstract class ApplicationService implements Service {
         private final boolean ignoreSignatureVerification;
         private final int memoryReportIntervalSec;
         private final boolean includeThreadListInMemoryReport;
+        private final boolean checkInstanceLock;
 
         public Config(Path baseDir,
                       String appName,
@@ -110,7 +112,8 @@ public abstract class ApplicationService implements Service {
                       boolean ignoreSigningKeyInResourcesCheck,
                       boolean ignoreSignatureVerification,
                       int memoryReportIntervalSec,
-                      boolean includeThreadListInMemoryReport) {
+                      boolean includeThreadListInMemoryReport,
+                      boolean checkInstanceLock) {
             this.baseDir = baseDir;
             this.appName = appName;
             this.devMode = devMode;
@@ -123,6 +126,7 @@ public abstract class ApplicationService implements Service {
             this.ignoreSignatureVerification = ignoreSignatureVerification;
             this.memoryReportIntervalSec = memoryReportIntervalSec;
             this.includeThreadListInMemoryReport = includeThreadListInMemoryReport;
+            this.checkInstanceLock = checkInstanceLock;
         }
     }
 
@@ -185,7 +189,9 @@ public abstract class ApplicationService implements Service {
             DevMode.setDevModeReputationScore(config.getDevModeReputationScore());
         }
 
-        checkInstanceLock();
+        if (config.isCheckInstanceLock()) {
+            checkInstanceLock();
+        }
 
         Locale locale = LocaleRepository.getDefaultLocale();
         CountryRepository.applyDefaultLocale(locale);
