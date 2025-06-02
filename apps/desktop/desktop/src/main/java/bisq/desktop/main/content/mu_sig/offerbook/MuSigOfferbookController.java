@@ -34,6 +34,7 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.mu_sig.MuSigService;
+import bisq.offer.Direction;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
@@ -65,7 +66,8 @@ public class MuSigOfferbookController implements Controller {
     private final BannedUserService bannedUserService;
     private final FavouriteMarketsService favouriteMarketsService;
     private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin;
-    private Subscription selectedMarketItemPin, marketsSearchBoxTextPin, selectedMarketFilterPin, selectedMarketSortTypePin;
+    private Subscription selectedMarketItemPin, marketsSearchBoxTextPin, selectedMarketFilterPin, selectedMarketSortTypePin,
+            selectedOfferDirectionFilterPin;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
         muSigService = serviceProvider.getMuSigService();
@@ -101,6 +103,7 @@ public class MuSigOfferbookController implements Controller {
                     if (!model.getMuSigOfferIds().contains(offerId)) {
                         model.getMuSigOfferListItems().add(new MuSigOfferListItem(muSigOffer, marketPriceService, userProfileService, identityService));
                         model.getMuSigOfferIds().add(offerId);
+                        updateFilteredMuSigOfferListItems();
                     }
                 });
             }
@@ -117,6 +120,7 @@ public class MuSigOfferbookController implements Controller {
                             model.getMuSigOfferListItems().remove(offer);
                             model.getMuSigOfferIds().remove(offerId);
                         });
+                        updateFilteredMuSigOfferListItems();
                     });
                 }
             }
@@ -126,6 +130,7 @@ public class MuSigOfferbookController implements Controller {
                 UIThread.run(() -> {
                     model.getMuSigOfferListItems().clear();
                     model.getMuSigOfferIds().clear();
+                    updateFilteredMuSigOfferListItems();
                 });
             }
         });
@@ -181,7 +186,7 @@ public class MuSigOfferbookController implements Controller {
         selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarketItem -> {
             if (selectedMarketItem != null) {
                 UIThread.run(() -> {
-                    updateFilteredMuSigOfferListItemsPredicate();
+                    updateFilteredMuSigOfferListItems();
                     updateMarketData(selectedMarketItem);
                     updateMarketPrice(selectedMarketItem);
                     settingsService.setSelectedMuSigMarket(selectedMarketItem.getMarket());
@@ -203,8 +208,8 @@ public class MuSigOfferbookController implements Controller {
             updateFilteredMarketItems();
         });
 
-        MarketFilter persistedMarketsFilter = settingsService.getCookie().asString(CookieKey.MU_SIG_MARKETS_FILTER).map(name ->
-                ProtobufUtils.enumFromProto(MarketFilter.class, name, MarketFilter.ALL)).orElse(MarketFilter.ALL);
+        MuSigFilters.MarketFilter persistedMarketsFilter = settingsService.getCookie().asString(CookieKey.MU_SIG_MARKETS_FILTER).map(name ->
+                ProtobufUtils.enumFromProto(MuSigFilters.MarketFilter.class, name, MuSigFilters.MarketFilter.ALL)).orElse(MuSigFilters.MarketFilter.ALL);
         model.getSelectedMarketsFilter().set(persistedMarketsFilter);
         selectedMarketFilterPin = EasyBind.subscribe(model.getSelectedMarketsFilter(), filter -> {
             if (filter != null) {
@@ -212,7 +217,7 @@ public class MuSigOfferbookController implements Controller {
                 settingsService.setCookie(CookieKey.MU_SIG_MARKETS_FILTER, model.getSelectedMarketsFilter().get().name());
                 updateFilteredMarketItems();
             }
-            model.getShouldShowAppliedFilters().set(filter == MarketFilter.WITH_OFFERS || filter == MarketFilter.FAVOURITES);
+            model.getShouldShowAppliedFilters().set(filter == MuSigFilters.MarketFilter.WITH_OFFERS || filter == MuSigFilters.MarketFilter.FAVOURITES);
         });
 
         MarketSortType persistedMarketSortType = settingsService.getCookie().asString(CookieKey.MU_SIG_MARKET_SORT_TYPE)
@@ -226,8 +231,27 @@ public class MuSigOfferbookController implements Controller {
         });
         model.getSortedMarketItems().setComparator(model.getSelectedMarketSortType().get().getComparator());
 
+        MuSigFilters.MuSigOfferDirectionFilter persistedOfferDirectionFilter = settingsService.getCookie().asString(CookieKey.MU_SIG_OFFER_DIRECTION_FILTER)
+                .map(name -> ProtobufUtils.enumFromProto(MuSigFilters.MuSigOfferDirectionFilter.class, name, MuSigFilters.MuSigOfferDirectionFilter.ALL))
+                .orElse(MuSigFilters.MuSigOfferDirectionFilter.ALL);
+        model.getSelectedMuSigOfferDirectionFilter().set(persistedOfferDirectionFilter);
+        selectedOfferDirectionFilterPin = EasyBind.subscribe(model.getSelectedMuSigOfferDirectionFilter(), filter -> {
+           if (filter != null) {
+               if (filter == MuSigFilters.MuSigOfferDirectionFilter.ALL) {
+                   model.setMuSigOffersDirectionFilterPredicate(item -> true);
+               } else if (filter == MuSigFilters.MuSigOfferDirectionFilter.BUY) {
+                   model.setMuSigOffersDirectionFilterPredicate(item -> item.getDirection() == Direction.BUY);
+               } else {
+                   model.setMuSigOffersDirectionFilterPredicate(item -> item.getDirection() == Direction.SELL);
+               }
+               settingsService.setCookie(CookieKey.MU_SIG_OFFER_DIRECTION_FILTER, filter.name());
+               updateFilteredMuSigOfferListItems();
+           }
+        });
+
         updateFilteredMarketItems();
         updateFavouriteMarketItems();
+        updateFilteredMuSigOfferListItems();
     }
 
     @Override
@@ -245,6 +269,7 @@ public class MuSigOfferbookController implements Controller {
         marketsSearchBoxTextPin.unsubscribe();
         selectedMarketFilterPin.unsubscribe();
         selectedMarketSortTypePin.unsubscribe();
+        selectedOfferDirectionFilterPin.unsubscribe();
     }
 
     void onSelectMarketItem(MarketItem marketItem) {
@@ -304,10 +329,9 @@ public class MuSigOfferbookController implements Controller {
         return !model.getSortedMarketItems().isEmpty() ? model.getSortedMarketItems().get(0) : null;
     }
 
-    private void updateFilteredMuSigOfferListItemsPredicate() {
+    private void updateFilteredMuSigOfferListItems() {
         model.getFilteredMuSigOfferListItems().setPredicate(null);
-        model.getFilteredMuSigOfferListItems().setPredicate(item ->
-            model.getSelectedMarketItem().get().getMarket().equals(item.getMarket()));
+        model.getFilteredMuSigOfferListItems().setPredicate(model.getMuSigOfferListItemsPredicate());
     }
 
     private void updateMarketData(MarketItem selectedMarketItem) {

@@ -52,6 +52,17 @@ public class MuSigOfferbookModel implements Model {
     private final ObservableList<MuSigOfferListItem> muSigOfferListItems = FXCollections.observableArrayList();
     private final FilteredList<MuSigOfferListItem> filteredMuSigOfferListItems = new FilteredList<>(muSigOfferListItems);
     private final SortedList<MuSigOfferListItem> sortedMuSigOfferListItems = new SortedList<>(filteredMuSigOfferListItems);
+    private final ObjectProperty<MuSigFilters.MuSigOfferDirectionFilter> selectedMuSigOfferDirectionFilter = new SimpleObjectProperty<>();
+
+    private final Predicate<MuSigOfferListItem> muSigOfferListItemsPredicate = item ->
+            getMuSigOffersDirectionFilterPredicate().test(item)
+                    && getMuSigMarketFilterPredicate().test(item);
+    private final Predicate<MuSigOfferListItem> muSigMarketFilterPredicate = item ->
+            getSelectedMarketItem().get() == null
+                    || getSelectedMarketItem().get().getMarket() == null
+                    || getSelectedMarketItem().get().getMarket().equals(item.getMarket());
+    @Setter
+    private Predicate<MuSigOfferListItem> muSigOffersDirectionFilterPredicate = item -> true;
 
     private final ObservableList<MarketItem> marketItems = FXCollections.observableArrayList();
     private final FilteredList<MarketItem> filteredMarketItems = new FilteredList<>(marketItems);
@@ -60,22 +71,22 @@ public class MuSigOfferbookModel implements Model {
     private final SortedList<MarketItem> sortedFavouriteMarketItems = new SortedList<>(favouriteMarketItems, MarketItemUtil.sortByMarketNameAsc());
     private final ObjectProperty<MarketItem> selectedMarketItem = new SimpleObjectProperty<>();
     private final StringProperty marketsSearchBoxText = new SimpleStringProperty();
-    private final ObjectProperty<MarketFilter> selectedMarketsFilter = new SimpleObjectProperty<>();
+    private final ObjectProperty<MuSigFilters.MarketFilter> selectedMarketsFilter = new SimpleObjectProperty<>();
     private final ObjectProperty<MarketSortType> selectedMarketSortType = new SimpleObjectProperty<>(MarketSortType.NUM_OFFERS);
     private final BooleanProperty shouldShowAppliedFilters = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowFavouritesListView = new SimpleBooleanProperty();
     private final BooleanProperty favouritesListViewNeedsHeightUpdate = new SimpleBooleanProperty();
 
     private final Predicate<MarketItem> marketItemsPredicate = item ->
-            getMarketFilterPredicate().test(item) &&
-                    getMarketSearchTextPredicate().test(item) &&
-                    getMarketPricePredicate().test(item) &&
-                    !item.getIsFavourite().get();
+            getMarketFilterPredicate().test(item)
+                    && getMarketSearchTextPredicate().test(item)
+                    && getMarketPricePredicate().test(item)
+                    && !item.getIsFavourite().get();
     private final Predicate<MarketItem> favouriteMarketItemsPredicate = item -> item.getIsFavourite().get();;
     @Setter
-    private Predicate<MarketItem> marketFilterPredicate = marketItem -> true;
+    private Predicate<MarketItem> marketFilterPredicate = item -> true;
     @Setter
-    private Predicate<MarketItem> marketSearchTextPredicate = marketItem -> true;
+    private Predicate<MarketItem> marketSearchTextPredicate = item -> true;
     @Setter
-    private Predicate<MarketItem> marketPricePredicate = marketItem -> true;
+    private Predicate<MarketItem> marketPricePredicate = item -> true;
 }
