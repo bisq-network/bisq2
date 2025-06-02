@@ -103,7 +103,7 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
             if (desktopController != null) {
                 UIThread.run(() -> desktopController.onUncaughtException(thread, throwable));
             } else {
-                log.error("primaryStageController not set yet");
+                log.error("UncaughtExceptionHandler not applied as desktopController is null");
             }
         });
     }
