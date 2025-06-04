@@ -189,9 +189,9 @@ public class TradeWizardPriceController implements Controller {
         model.getIsOverlayVisible().set(false);
     }
 
-    void onPercentageFocussed(boolean focussed) {
-        model.setFocused(focussed);
-        if (!focussed) {
+    void onPercentageFocused(boolean focused) {
+        model.setFocused(focused);
+        if (!focused) {
             try {
                 double percentage = parse(model.getPercentageInput().get());
                 String percentageAsString = PercentageFormatter.formatToPercent(percentage);

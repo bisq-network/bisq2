@@ -126,7 +126,7 @@ public class OfferbookListItem {
     private void updatePriceSpecAsPercent() {
         priceSpecAsPercent = PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer).orElseThrow();
         formattedPercentagePrice = PercentageFormatter.formatToPercentWithSignAndSymbol(priceSpecAsPercent);
-        log.error("formattedPercentagePrice "+formattedPercentagePrice);
+        log.error("formattedPercentagePrice " + formattedPercentagePrice);
         String offerPrice = OfferPriceFormatter.formatQuote(marketPriceService, bisqEasyOffer);
         priceTooltipText = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(bisqEasyOffer.getPriceSpec(), offerPrice);
     }

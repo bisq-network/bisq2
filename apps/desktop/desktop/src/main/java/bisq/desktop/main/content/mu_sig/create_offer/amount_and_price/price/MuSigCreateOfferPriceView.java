@@ -58,7 +58,10 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
     private final HBox feedbackBox;
     private final Slider slider;
     private final Hyperlink showLearnWhyButton;
-    private Subscription percentageFocussedPin, useFixPricePin, isOverlayVisible;
+    // Used to prevent the price component from requesting focus when opening the amount@price wizard step,
+    // since the focus should always start at the amount component.
+    private boolean shouldFocusInputBox = false;
+    private Subscription percentageFocusedPin, useFixPricePin, isOverlayVisible;
 
     public MuSigCreateOfferPriceView(MuSigCreateOfferPriceModel model,
                                      MuSigCreateOfferPriceController controller,
@@ -156,7 +159,7 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
         slider.valueProperty().bindBidirectional(model.getPriceSliderValue());
         model.getSliderFocus().bind(slider.focusedProperty());
 
-        percentageFocussedPin = EasyBind.subscribe(percentageInput.textInputFocusedProperty(), controller::onPercentageFocussed);
+        percentageFocusedPin = EasyBind.subscribe(percentageInput.textInputFocusedProperty(), controller::onPercentageFocused);
 
         useFixPricePin = EasyBind.subscribe(model.getUseFixPrice(), useFixPrice ->
                 UIScheduler.run(this::updateFieldsBox).after(100));
@@ -196,7 +199,7 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
         slider.valueProperty().unbindBidirectional(model.getPriceSliderValue());
         model.getSliderFocus().unbind();
 
-        percentageFocussedPin.unsubscribe();
+        percentageFocusedPin.unsubscribe();
         useFixPricePin.unsubscribe();
         isOverlayVisible.unsubscribe();
 
@@ -212,6 +215,8 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
             node.setOnMousePressed(null);
             node = node.getParent();
         }
+
+        shouldFocusInputBox = false;
     }
 
     private void updateFieldsBox() {
@@ -227,7 +232,9 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
             percentageInput.setEditable(false);
             percentageInput.resetValidation();
             priceInput.setEditable(true);
-            priceInput.requestFocusWithCursor();
+            if (shouldFocusInputBox) {
+                priceInput.requestFocusWithCursor();
+            }
         } else {
             percentagePrice.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
             priceInput.getRoot().visibleProperty().set(false);
@@ -238,7 +245,13 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
             priceInput.setEditable(false);
             priceInput.resetValidation();
             percentageInput.setEditable(true);
-            percentageInput.requestFocusWithCursor();
+            if (shouldFocusInputBox) {
+                percentageInput.requestFocusWithCursor();
+            }
+        }
+
+        if (!shouldFocusInputBox) {
+            shouldFocusInputBox = true;
         }
     }
 

@@ -59,7 +59,10 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     private final Label warningIcon, feedbackSentence, minSliderValue, maxSliderValue;
     private final Slider slider;
     private final Hyperlink showLearnWhyButton;
-    private Subscription percentageFocussedPin, useFixPricePin, isOverlayVisible;
+    // Used to prevent the price component from requesting focus when opening the amount@price wizard step,
+    // since the focus should always start at the amount component.
+    private boolean shouldFocusInputBox = false;
+    private Subscription percentageFocusedPin, useFixPricePin, isOverlayVisible;
 
     public TradeWizardPriceView(TradeWizardPriceModel model,
                                 TradeWizardPriceController controller,
@@ -157,7 +160,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         slider.getStyleClass().add(model.getDirection().isSell() ? PRICE_SLIDER_SELLER_STYLE_CLASS : PRICE_SLIDER_BUYER_STYLE_CLASS);
         model.getSliderFocus().bind(slider.focusedProperty());
 
-        percentageFocussedPin = EasyBind.subscribe(percentageInput.textInputFocusedProperty(), controller::onPercentageFocussed);
+        percentageFocusedPin = EasyBind.subscribe(percentageInput.textInputFocusedProperty(), controller::onPercentageFocused);
 
         useFixPricePin = EasyBind.subscribe(model.getUseFixPrice(), useFixPrice ->
                 UIScheduler.run(this::updateFieldsBox).after(100));
@@ -198,7 +201,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         slider.getStyleClass().removeAll(PRICE_SLIDER_BUYER_STYLE_CLASS, PRICE_SLIDER_SELLER_STYLE_CLASS);
         model.getSliderFocus().unbind();
 
-        percentageFocussedPin.unsubscribe();
+        percentageFocusedPin.unsubscribe();
         useFixPricePin.unsubscribe();
         isOverlayVisible.unsubscribe();
 
@@ -214,6 +217,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
             node.setOnMousePressed(null);
             node = node.getParent();
         }
+
+        shouldFocusInputBox = false;
     }
 
     private void updateFieldsBox() {
@@ -229,7 +234,9 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
             percentageInput.setEditable(false);
             percentageInput.resetValidation();
             priceInput.setEditable(true);
-            priceInput.requestFocusWithCursor();
+            if (shouldFocusInputBox) {
+                priceInput.requestFocusWithCursor();
+            }
         } else {
             percentagePrice.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
             priceInput.getRoot().visibleProperty().set(false);
@@ -240,7 +247,13 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
             priceInput.setEditable(false);
             priceInput.resetValidation();
             percentageInput.setEditable(true);
-            percentageInput.requestFocusWithCursor();
+            if (shouldFocusInputBox) {
+                percentageInput.requestFocusWithCursor();
+            }
+        }
+
+        if (!shouldFocusInputBox) {
+            shouldFocusInputBox = true;
         }
     }
 
