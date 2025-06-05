@@ -24,19 +24,21 @@ import bisq.trade.mu_sig.events.MuSigFsmErrorEventHandler;
 import bisq.trade.mu_sig.events.MuSigReportErrorMessageHandler;
 import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEvent;
 import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEventHandler;
-import bisq.trade.mu_sig.events.buyer.MuSigPaymentInitiatedEventHandler;
 import bisq.trade.mu_sig.events.buyer.MuSigBuyersCloseTradeTimeoutEvent;
 import bisq.trade.mu_sig.events.buyer.MuSigBuyersCloseTradeTimeoutEventHandler;
 import bisq.trade.mu_sig.events.buyer.MuSigPaymentInitiatedEvent;
+import bisq.trade.mu_sig.events.buyer.MuSigPaymentInitiatedEventHandler;
 import bisq.trade.mu_sig.events.taker.MuSigTakeOfferEvent;
 import bisq.trade.mu_sig.events.taker.MuSigTakeOfferEventHandler;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentReceivedMessage_F;
 import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
+import bisq.trade.mu_sig.messages.network.MuSigSendAccountPayloadMessage;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_B;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
+import bisq.trade.mu_sig.messages.network.handler.buyer.MuSigPaymentReceivedMessage_F_Handler;
+import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigSendAccountPayloadMessage_Handler;
 import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigSetupTradeMessage_B_Handler;
 import bisq.trade.mu_sig.messages.network.handler.buyer_as_taker.MuSigSetupTradeMessage_D_Handler;
-import bisq.trade.mu_sig.messages.network.handler.buyer.MuSigPaymentReceivedMessage_F_Handler;
 
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_CLOSED_TRADE;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.BUYER_FORCE_CLOSED_TRADE;
@@ -47,6 +49,7 @@ import static bisq.trade.mu_sig.protocol.MuSigTradeState.FAILED_AT_PEER;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.INIT;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.TAKER_INITIALIZED_TRADE;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.TAKER_RECEIVED_ACCOUNT_PAYLOAD;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX;
 
 
@@ -89,9 +92,15 @@ public final class MuSigBuyerAsTakerProtocol extends MuSigProtocol {
                 .run(MuSigSetupTradeMessage_D_Handler.class)
                 .to(TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX)
 
-                // Deposit confirmation phase
                 .then()
                 .from(TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX)
+                .on(MuSigSendAccountPayloadMessage.class)
+                .run(MuSigSendAccountPayloadMessage_Handler.class)
+                .to(TAKER_RECEIVED_ACCOUNT_PAYLOAD)
+
+                // Deposit confirmation phase
+                .then()
+                .from(TAKER_RECEIVED_ACCOUNT_PAYLOAD)
                 .on(MuSigDepositTxConfirmedEvent.class)
                 .run(MuSigDepositTxConfirmedEventHandler.class)
                 .to(DEPOSIT_TX_CONFIRMED)

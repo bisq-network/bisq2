@@ -137,7 +137,9 @@ class MuSigTradePhaseBox {
                          MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES,
                          TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES,
                          MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX,
-                         TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX -> {
+                         TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX,
+                         MAKER_RECEIVED_ACCOUNT_PAYLOAD_AND_DEPOSIT_TX,
+                         TAKER_RECEIVED_ACCOUNT_PAYLOAD-> {
                         model.getPhaseIndex().set(0);
                     }
                     case DEPOSIT_TX_CONFIRMED -> {

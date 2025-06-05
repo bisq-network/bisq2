@@ -64,6 +64,8 @@ public abstract class MuSigTradeMessage extends TradeMessage {
             case MUSIGSETUPTRADEMESSAGE_B -> MuSigSetupTradeMessage_B.fromProto(proto);
             case MUSIGSETUPTRADEMESSAGE_C -> MuSigSetupTradeMessage_C.fromProto(proto);
             case MUSIGSETUPTRADEMESSAGE_D -> MuSigSetupTradeMessage_D.fromProto(proto);
+            case MUSIGSENDACCOUNTPAYLOADANDDEPOSITTXMESSAGE ->MuSigSendAccountPayloadAndDepositTxMessage.fromProto(proto);
+            case MUSIGSENDACCOUNTPAYLOADMESSAGE -> MuSigSendAccountPayloadMessage.fromProto(proto);
             case MUSIGPAYMENTINITIATEDMESSAGE_E -> MuSigPaymentInitiatedMessage_E.fromProto(proto);
             case MUSIGPAYMENTRECEIVEDMESSAGE_F -> MuSigPaymentReceivedMessage_F.fromProto(proto);
             case MUSIGCOOPERATIVECLOSUREMESSAGE_G -> MuSigCooperativeClosureMessage_G.fromProto(proto);

@@ -15,26 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.mu_sig.messages.network.handler.buyer_as_taker;
+package bisq.trade.mu_sig.messages.network.handler.seller_as_maker;
 
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
-import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
-import bisq.trade.mu_sig.messages.network.handler.taker.BaseMuSigSetupTradeMessage_D_Handler;
+import bisq.trade.mu_sig.messages.network.MuSigSendAccountPayloadAndDepositTxMessage;
+import bisq.trade.mu_sig.messages.network.handler.maker.BaseMuSigSendAccountPayloadAndDepositTxMessage_Handler;
+import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
-public class MuSigSetupTradeMessage_D_Handler extends BaseMuSigSetupTradeMessage_D_Handler {
-    public MuSigSetupTradeMessage_D_Handler(ServiceProvider serviceProvider,
-                                            MuSigTrade model) {
+@Slf4j
+public final class MuSigSendAccountPayloadAndDepositTxMessage_Handler extends BaseMuSigSendAccountPayloadAndDepositTxMessage_Handler {
+    public MuSigSendAccountPayloadAndDepositTxMessage_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    protected void verify(MuSigSetupTradeMessage_D message) {
+    protected void verify(MuSigSendAccountPayloadAndDepositTxMessage message) {
         super.verify(message);
-
-        checkArgument(message.getPartialSignatures().getSwapTxInputPartialSignature().isPresent(),
-                "We are the buyer and expect that the swapTxInputPartialSignature is not redacted (optional is present)");
     }
 }

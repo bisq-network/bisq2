@@ -18,7 +18,6 @@
 package bisq.trade.mu_sig.messages.network.handler.maker;
 
 import bisq.common.util.StringUtils;
-import bisq.offer.mu_sig.MuSigOffer;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
@@ -71,23 +70,6 @@ public abstract class BaseMuSigSetupTradeMessage_C_Handler extends MuSigTradeMes
                 .build();
 
         myDepositPsbt = DepositPsbt.fromProto(blockingStub.signDepositTx(depositTxSignatureRequest));
-
-        // We observe the txConfirmationStatus to get informed once the deposit tx is confirmed (gets published by the
-        // buyer when they receive the MuSigSetupTradeMessage_D).
-        tradeService.observeDepositTxConfirmationStatus(trade);
-
-        // Maybe remove makers offer
-        if (serviceProvider.getSettingsService().getCloseMyOfferWhenTaken().get()) {
-            MuSigOffer offer = trade.getContract().getOffer();
-            serviceProvider.getOfferService().getMuSigOfferService().removeOffer(offer)
-                    .whenComplete((deleteChatMessageResult, throwable) -> {
-                        if (throwable == null) {
-                            log.info("Offer with ID {} removed", offer.getId());
-                        } else {
-                            log.error("We got an error when removing offer with ID {}", offer.getId(), throwable);
-                        }
-                    });
-        }
     }
 
     @Override
@@ -112,14 +94,13 @@ public abstract class BaseMuSigSetupTradeMessage_C_Handler extends MuSigTradeMes
                 getPartialSignatures()));
     }
 
-    protected  abstract PartialSignatures getPartialSignatures();
+    protected abstract PartialSignatures getPartialSignatures();
 
     @Override
     protected void sendLogMessage() {
         String role = trade.isBuyer() ? "Maker (as buyer)" : "Maker (as seller)";
         sendLogMessage(role + " received peers nonceShares and partialSignatures.\n" +
                 role + " created his partialSignatures and depositPsbt.\n" +
-                role + " sent his partialSignatures to buyer.\n" +
-                role + " start listening for deposit tx confirmation (expecting that buyer will publish deposit tx once received our messsage)");
+                role + " sent his partialSignatures to buyer.");
     }
 }

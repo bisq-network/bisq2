@@ -59,6 +59,8 @@ import bisq.trade.mu_sig.messages.network.MuSigCooperativeClosureMessage_G;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentReceivedMessage_F;
 import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
+import bisq.trade.mu_sig.messages.network.MuSigSendAccountPayloadAndDepositTxMessage;
+import bisq.trade.mu_sig.messages.network.MuSigSendAccountPayloadMessage;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_B;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_C;
@@ -144,6 +146,8 @@ public class ResolverConfig {
         NetworkStorageWhiteList.add(MuSigSetupTradeMessage_B.class);
         NetworkStorageWhiteList.add(MuSigSetupTradeMessage_C.class);
         NetworkStorageWhiteList.add(MuSigSetupTradeMessage_D.class);
+        NetworkStorageWhiteList.add(MuSigSendAccountPayloadMessage.class);
+        NetworkStorageWhiteList.add(MuSigSendAccountPayloadAndDepositTxMessage.class);
         NetworkStorageWhiteList.add(MuSigPaymentInitiatedMessage_E.class);
         NetworkStorageWhiteList.add(MuSigPaymentReceivedMessage_F.class);
         NetworkStorageWhiteList.add(MuSigCooperativeClosureMessage_G.class);

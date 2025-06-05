@@ -24,16 +24,18 @@ import bisq.trade.mu_sig.events.MuSigFsmErrorEventHandler;
 import bisq.trade.mu_sig.events.MuSigReportErrorMessageHandler;
 import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEvent;
 import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEventHandler;
-import bisq.trade.mu_sig.events.buyer.MuSigPaymentInitiatedEventHandler;
 import bisq.trade.mu_sig.events.buyer.MuSigBuyersCloseTradeTimeoutEvent;
 import bisq.trade.mu_sig.events.buyer.MuSigBuyersCloseTradeTimeoutEventHandler;
 import bisq.trade.mu_sig.events.buyer.MuSigPaymentInitiatedEvent;
+import bisq.trade.mu_sig.events.buyer.MuSigPaymentInitiatedEventHandler;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentReceivedMessage_F;
 import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
+import bisq.trade.mu_sig.messages.network.MuSigSendAccountPayloadAndDepositTxMessage;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_C;
-import bisq.trade.mu_sig.messages.network.handler.buyer_as_maker.MuSigSetupTradeMessage_C_Handler;
 import bisq.trade.mu_sig.messages.network.handler.buyer.MuSigPaymentReceivedMessage_F_Handler;
+import bisq.trade.mu_sig.messages.network.handler.buyer_as_maker.MuSigSendAccountPayloadAndDepositTxMessage_Handler;
+import bisq.trade.mu_sig.messages.network.handler.buyer_as_maker.MuSigSetupTradeMessage_C_Handler;
 import bisq.trade.mu_sig.messages.network.handler.maker.MuSigSetupTradeMessage_A_Handler;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,6 +48,7 @@ import static bisq.trade.mu_sig.protocol.MuSigTradeState.FAILED_AT_PEER;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.INIT;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.MAKER_RECEIVED_ACCOUNT_PAYLOAD_AND_DEPOSIT_TX;
 
 @Slf4j
 public final class MuSigBuyerAsMakerProtocol extends MuSigProtocol {
@@ -81,9 +84,15 @@ public final class MuSigBuyerAsMakerProtocol extends MuSigProtocol {
                 .run(MuSigSetupTradeMessage_C_Handler.class)
                 .to(MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX)
 
+                .then()
+                .from(MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX)
+                .on(MuSigSendAccountPayloadAndDepositTxMessage.class)
+                .run(MuSigSendAccountPayloadAndDepositTxMessage_Handler.class)
+                .to(MAKER_RECEIVED_ACCOUNT_PAYLOAD_AND_DEPOSIT_TX)
+
                 // Deposit confirmation phase
                 .then()
-                .from(MuSigTradeState.MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX)
+                .from(MAKER_RECEIVED_ACCOUNT_PAYLOAD_AND_DEPOSIT_TX)
                 .on(MuSigDepositTxConfirmedEvent.class)
                 .run(MuSigDepositTxConfirmedEventHandler.class)
                 .to(DEPOSIT_TX_CONFIRMED)

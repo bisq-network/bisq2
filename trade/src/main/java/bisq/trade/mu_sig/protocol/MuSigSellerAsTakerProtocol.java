@@ -33,10 +33,12 @@ import bisq.trade.mu_sig.events.taker.MuSigTakeOfferEventHandler;
 import bisq.trade.mu_sig.messages.network.MuSigCooperativeClosureMessage_G;
 import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
 import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
+import bisq.trade.mu_sig.messages.network.MuSigSendAccountPayloadMessage;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_B;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
 import bisq.trade.mu_sig.messages.network.handler.seller.MuSigCooperativeClosureMessage_G_Handler;
 import bisq.trade.mu_sig.messages.network.handler.seller.MuSigPaymentInitiatedMessage_E_Handler;
+import bisq.trade.mu_sig.messages.network.handler.seller_as_taker.MuSigSendAccountPayloadMessage_Handler;
 import bisq.trade.mu_sig.messages.network.handler.seller_as_taker.MuSigSetupTradeMessage_B_Handler;
 import bisq.trade.mu_sig.messages.network.handler.seller_as_taker.MuSigSetupTradeMessage_D_Handler;
 import lombok.extern.slf4j.Slf4j;
@@ -51,8 +53,8 @@ import static bisq.trade.mu_sig.protocol.MuSigTradeState.SELLER_FORCE_CLOSED_TRA
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.SELLER_RECEIVED_INITIATED_PAYMENT_MESSAGE;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.TAKER_INITIALIZED_TRADE;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.TAKER_RECEIVED_ACCOUNT_PAYLOAD;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX;
-
 @Slf4j
 public final class MuSigSellerAsTakerProtocol extends MuSigProtocol {
 
@@ -93,9 +95,15 @@ public final class MuSigSellerAsTakerProtocol extends MuSigProtocol {
                 .run(MuSigSetupTradeMessage_D_Handler.class)
                 .to(TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX)
 
-                // Deposit confirmation phase
                 .then()
                 .from(TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX)
+                .on(MuSigSendAccountPayloadMessage.class)
+                .run(MuSigSendAccountPayloadMessage_Handler.class)
+                .to(TAKER_RECEIVED_ACCOUNT_PAYLOAD)
+
+                // Deposit confirmation phase
+                .then()
+                .from(TAKER_RECEIVED_ACCOUNT_PAYLOAD)
                 .on(MuSigDepositTxConfirmedEvent.class)
                 .run(MuSigDepositTxConfirmedEventHandler.class)
                 .to(DEPOSIT_TX_CONFIRMED)

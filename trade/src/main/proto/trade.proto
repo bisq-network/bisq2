@@ -22,6 +22,7 @@ package trade;
 import "common.proto";
 import "contract.proto";
 import "identity.proto";
+import "account.proto";
 import "network_identity.proto";
 import "offer.proto";
 import "rpc.proto";
@@ -190,10 +191,12 @@ message MuSigTradeParty {
   optional musigrpc.PartialSignaturesMessage myPartialSignaturesMessage = 5;
   optional PartialSignatures peersPartialSignatures = 6;
   optional musigrpc.DepositPsbt myDepositPsbt = 7;
-  optional musigrpc.SwapTxSignatureResponse mySwapTxSignatureResponse = 8;
-  optional SwapTxSignature peersSwapTxSignature = 9;
-  optional musigrpc.CloseTradeResponse myCloseTradeResponse = 10;
-  optional common.ByteArray peersOutputPrvKeyShare = 11;
+  optional common.ByteArray depositTx = 8;
+  optional musigrpc.SwapTxSignatureResponse mySwapTxSignatureResponse = 9;
+  optional SwapTxSignature peersSwapTxSignature = 10;
+  optional musigrpc.CloseTradeResponse myCloseTradeResponse = 11;
+  optional common.ByteArray peersOutputPrvKeyShare = 12;
+  optional account.AccountPayload peersAccountPayload = 13;
 }
 
 message MuSigTrade {
@@ -213,10 +216,12 @@ message MuSigTradeMessage {
     MuSigSetupTradeMessage_B muSigSetupTradeMessage_B = 21;
     MuSigSetupTradeMessage_C muSigSetupTradeMessage_C = 22;
     MuSigSetupTradeMessage_D muSigSetupTradeMessage_D = 23;
-    MuSigPaymentInitiatedMessage_E muSigPaymentInitiatedMessage_E = 24;
-    MuSigPaymentReceivedMessage_F muSigPaymentReceivedMessage_F = 25;
-    MuSigCooperativeClosureMessage_G muSigCooperativeClosureMessage_G = 26;
-    MuSigReportErrorMessage muSigReportErrorMessage = 27;
+    MuSigSendAccountPayloadAndDepositTxMessage MuSigSendAccountPayloadAndDepositTxMessage = 24;
+    MuSigSendAccountPayloadMessage muSigSendAccountPayloadMessage = 25;
+    MuSigPaymentInitiatedMessage_E muSigPaymentInitiatedMessage_E = 26;
+    MuSigPaymentReceivedMessage_F muSigPaymentReceivedMessage_F = 27;
+    MuSigCooperativeClosureMessage_G muSigCooperativeClosureMessage_G = 28;
+    MuSigReportErrorMessage muSigReportErrorMessage = 29;
   }
 }
 
@@ -245,6 +250,15 @@ message MuSigSetupTradeMessage_C {
 
 message MuSigSetupTradeMessage_D {
   PartialSignatures partialSignatures = 1;
+}
+
+message MuSigSendAccountPayloadAndDepositTxMessage {
+  common.ByteArray depositTx = 1;
+  account.AccountPayload accountPayload = 2;
+}
+
+message MuSigSendAccountPayloadMessage {
+  account.AccountPayload accountPayload = 1;
 }
 
 message MuSigPaymentInitiatedMessage_E {

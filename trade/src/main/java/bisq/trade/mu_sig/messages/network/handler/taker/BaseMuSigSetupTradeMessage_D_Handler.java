@@ -17,12 +17,17 @@
 
 package bisq.trade.mu_sig.messages.network.handler.taker;
 
+import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.F2FAccountPayload;
+import bisq.common.data.ByteArray;
+import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
-import bisq.trade.mu_sig.handler.MuSigTradeMessageHandler;
+import bisq.trade.mu_sig.handler.MuSigTradeMessageHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.DepositPsbt;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
+import bisq.trade.mu_sig.messages.network.MuSigSendAccountPayloadAndDepositTxMessage;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
 import bisq.trade.protobuf.DepositTxSignatureRequest;
@@ -30,7 +35,7 @@ import bisq.trade.protobuf.PublishDepositTxRequest;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class BaseMuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_D> {
+public abstract class BaseMuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_D> {
     protected PartialSignatures peersPartialSignatures;
     protected DepositPsbt myDepositPsbt;
 
@@ -53,8 +58,6 @@ public abstract class BaseMuSigSetupTradeMessage_D_Handler extends MuSigTradeMes
                 .build();
         myDepositPsbt = DepositPsbt.fromProto(blockingStub.signDepositTx(depositTxSignatureRequest));
 
-        tradeService.observeDepositTxConfirmationStatus(trade);
-
         PublishDepositTxRequest publishDepositTxRequest = PublishDepositTxRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setDepositPsbt(myDepositPsbt.toProto(true))
@@ -72,9 +75,34 @@ public abstract class BaseMuSigSetupTradeMessage_D_Handler extends MuSigTradeMes
     }
 
     @Override
+    protected void sendMessage() {
+        // We send the deposit transaction even the maker could find it on the blockchain.
+        ByteArray depositTx = new ByteArray(myDepositPsbt.getDepositPsbt());
+        // Now we published the deposit transaction we send our payment account data.
+        // We require that both peers exchange the account data to allow verification
+        // that the buyer used the account defined in the contract to avoid fraud.
+        //todo mock
+        AccountPayload accountPayload = new F2FAccountPayload(
+                "id",
+                "paymentMethodName",
+                "countryCode",
+                "city",
+                "contact",
+                "extraInfo");
+        send(new MuSigSendAccountPayloadAndDepositTxMessage(StringUtils.createUid(),
+                trade.getId(),
+                trade.getProtocolVersion(),
+                trade.getMyself().getNetworkId(),
+                trade.getPeer().getNetworkId(),
+                depositTx,
+                accountPayload));
+    }
+
+    @Override
     protected void sendLogMessage() {
         sendLogMessage("Taker received peers partialSignatures.\n" +
                 "Taker created depositPsbt.\n" +
-                "Taker published deposit tx and start listening for blockchain confirmation.");
+                "Taker published deposit tx.\n" +
+                "Taker sends deposit tx and account payload to maker");
     }
 }
