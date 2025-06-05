@@ -29,15 +29,15 @@ import bisq.trade.mu_sig.events.seller.PaymentReceiptConfirmedEventHandler;
 import bisq.trade.mu_sig.events.seller.SellersCloseTradeTimeoutEvent;
 import bisq.trade.mu_sig.events.seller.SellersCloseTradeTimeoutEventHandler;
 import bisq.trade.mu_sig.messages.network.CooperativeClosureMessage_G;
-import bisq.trade.mu_sig.messages.network.PaymentInitiatedMessage_E;
 import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
+import bisq.trade.mu_sig.messages.network.PaymentInitiatedMessage_E;
 import bisq.trade.mu_sig.messages.network.SendAccountPayloadAndDepositTxMessage;
 import bisq.trade.mu_sig.messages.network.SetupTradeMessage_A;
 import bisq.trade.mu_sig.messages.network.SetupTradeMessage_C;
-import bisq.trade.mu_sig.messages.network.handler.buyer_as_maker.SendAccountPayloadAndDepositTxMessage_Handler;
 import bisq.trade.mu_sig.messages.network.handler.maker.SetupTradeMessage_A_Handler;
 import bisq.trade.mu_sig.messages.network.handler.seller.CooperativeClosureMessage_G_Handler;
 import bisq.trade.mu_sig.messages.network.handler.seller.PaymentInitiatedMessage_E_Handler;
+import bisq.trade.mu_sig.messages.network.handler.seller_as_maker.SendAccountPayloadAndDepositTxMessage_Handler;
 import bisq.trade.mu_sig.messages.network.handler.seller_as_maker.SetupTradeMessage_C_Handler;
 
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.DEPOSIT_TX_CONFIRMED;
