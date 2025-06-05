@@ -58,9 +58,6 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
     private final HBox feedbackBox;
     private final Slider slider;
     private final Hyperlink showLearnWhyButton;
-    // Used to prevent the price component from requesting focus when opening the amount@price wizard step,
-    // since the focus should always start at the amount component.
-    private boolean shouldFocusInputBox = false;
     private Subscription percentageFocusedPin, useFixPricePin, isOverlayVisible;
 
     public MuSigCreateOfferPriceView(MuSigCreateOfferPriceModel model,
@@ -215,8 +212,6 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
             node.setOnMousePressed(null);
             node = node.getParent();
         }
-
-        shouldFocusInputBox = false;
     }
 
     private void updateFieldsBox() {
@@ -232,7 +227,7 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
             percentageInput.setEditable(false);
             percentageInput.resetValidation();
             priceInput.setEditable(true);
-            if (shouldFocusInputBox) {
+            if (model.getShouldFocusPriceComponent()) {
                 priceInput.requestFocusWithCursor();
             }
         } else {
@@ -245,14 +240,12 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
             priceInput.setEditable(false);
             priceInput.resetValidation();
             percentageInput.setEditable(true);
-            if (shouldFocusInputBox) {
+            if (model.getShouldFocusPriceComponent()) {
                 percentageInput.requestFocusWithCursor();
             }
         }
 
-        if (!shouldFocusInputBox) {
-            shouldFocusInputBox = true;
-        }
+        controller.onPriceComponentUpdated();
     }
 
     private VBox createOverlay() {

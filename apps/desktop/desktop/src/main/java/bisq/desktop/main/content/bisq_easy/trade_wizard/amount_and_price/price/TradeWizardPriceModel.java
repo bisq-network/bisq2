@@ -39,6 +39,8 @@ public class TradeWizardPriceModel implements Model {
     private Market market = null;
     @Setter
     private Direction direction;
+    @Setter
+    private Boolean shouldFocusPriceComponent = false;
     private final DoubleProperty percentage = new SimpleDoubleProperty();
     private final StringProperty percentageInput = new SimpleStringProperty();
     private final StringProperty priceAsString = new SimpleStringProperty();
@@ -60,6 +62,7 @@ public class TradeWizardPriceModel implements Model {
     public void reset() {
         market = null;
         direction = null;
+        shouldFocusPriceComponent = false;
         percentage.set(0d);
         percentageInput.set(null);
         priceAsString.set(null);

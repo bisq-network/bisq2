@@ -177,6 +177,8 @@ public class MuSigCreateOfferPriceController implements Controller {
 
         navigationButtonsVisibleHandler.accept(true);
         model.getIsOverlayVisible().set(false);
+
+        model.setShouldFocusPriceComponent(false);
     }
 
     void onPercentageFocused(boolean focused) {
@@ -192,6 +194,12 @@ public class MuSigCreateOfferPriceController implements Controller {
             } catch (Exception e) {
                 model.getErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.numberFormatException"));
             }
+        }
+    }
+
+    void onPriceComponentUpdated() {
+        if (!model.getShouldFocusPriceComponent()) {
+            model.setShouldFocusPriceComponent(true);
         }
     }
 
