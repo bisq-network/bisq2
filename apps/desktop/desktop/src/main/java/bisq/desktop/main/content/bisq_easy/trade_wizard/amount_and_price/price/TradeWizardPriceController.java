@@ -82,7 +82,7 @@ public class TradeWizardPriceController implements Controller {
         this.owner = owner;
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         model = new TradeWizardPriceModel();
-        view = new TradeWizardPriceView(model, this, priceInput);
+        view = new TradeWizardPriceView(model, this, priceInput.getRoot());
     }
 
     public void setMarket(Market market) {
@@ -210,6 +210,15 @@ public class TradeWizardPriceController implements Controller {
     void onPriceComponentUpdated() {
         if (!model.getShouldFocusPriceComponent()) {
             model.setShouldFocusPriceComponent(true);
+        }
+    }
+
+    void onUpdatePriceSpec() {
+        if (model.getUseFixPrice().get()) {
+            boolean shouldRequestFocus = model.getShouldFocusPriceComponent();
+            priceInput.activate(shouldRequestFocus);
+        } else {
+            priceInput.deactivate();
         }
     }
 
