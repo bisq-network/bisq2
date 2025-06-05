@@ -19,11 +19,12 @@ package bisq.trade.mu_sig.messages.network.handler.seller_as_taker;
 
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.messages.network.handler.taker.BaseMuSigSetupTradeMessage_B_Handler;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class MuSigSetupTradeMessage_B_Handler extends bisq.trade.mu_sig.messages.network.handler.taker.MuSigSetupTradeMessage_B_Handler {
+public final class MuSigSetupTradeMessage_B_Handler extends BaseMuSigSetupTradeMessage_B_Handler {
     public MuSigSetupTradeMessage_B_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }

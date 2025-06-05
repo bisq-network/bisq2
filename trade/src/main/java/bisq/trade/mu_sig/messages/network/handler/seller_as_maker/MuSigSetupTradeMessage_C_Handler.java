@@ -20,13 +20,14 @@ package bisq.trade.mu_sig.messages.network.handler.seller_as_maker;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_C;
+import bisq.trade.mu_sig.messages.network.handler.maker.BaseMuSigSetupTradeMessage_C_Handler;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public final class MuSigSetupTradeMessage_C_Handler extends bisq.trade.mu_sig.messages.network.handler.maker.MuSigSetupTradeMessage_C_Handler {
+public final class MuSigSetupTradeMessage_C_Handler extends BaseMuSigSetupTradeMessage_C_Handler {
 
     public MuSigSetupTradeMessage_C_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);

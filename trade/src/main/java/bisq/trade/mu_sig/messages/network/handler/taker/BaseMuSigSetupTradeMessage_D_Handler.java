@@ -30,11 +30,11 @@ import bisq.trade.protobuf.PublishDepositTxRequest;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class MuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_D> {
+public abstract class BaseMuSigSetupTradeMessage_D_Handler extends MuSigTradeMessageHandler<MuSigTrade, MuSigSetupTradeMessage_D> {
     protected PartialSignatures peersPartialSignatures;
     protected DepositPsbt myDepositPsbt;
 
-    public MuSigSetupTradeMessage_D_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
+    public BaseMuSigSetupTradeMessage_D_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 

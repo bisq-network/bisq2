@@ -20,10 +20,11 @@ package bisq.trade.mu_sig.messages.network.handler.buyer_as_taker;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
+import bisq.trade.mu_sig.messages.network.handler.taker.BaseMuSigSetupTradeMessage_D_Handler;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class MuSigSetupTradeMessage_D_Handler extends bisq.trade.mu_sig.messages.network.handler.taker.MuSigSetupTradeMessage_D_Handler {
+public class MuSigSetupTradeMessage_D_Handler extends BaseMuSigSetupTradeMessage_D_Handler {
     public MuSigSetupTradeMessage_D_Handler(ServiceProvider serviceProvider,
                                             MuSigTrade model) {
         super(serviceProvider, model);

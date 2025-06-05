@@ -36,13 +36,13 @@ import bisq.trade.protobuf.PartialSignaturesRequest;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class MuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_C> {
+public abstract class BaseMuSigSetupTradeMessage_C_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_C> {
     protected NonceShares peersNonceShares;
     protected PartialSignaturesMessage myPartialSignaturesMessage;
     protected PartialSignatures peersPartialSignatures;
     protected DepositPsbt myDepositPsbt;
 
-    public MuSigSetupTradeMessage_C_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
+    public BaseMuSigSetupTradeMessage_C_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 

@@ -39,14 +39,14 @@ import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class MuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_B> {
+public abstract class BaseMuSigSetupTradeMessage_B_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, MuSigSetupTradeMessage_B> {
     protected ContractSignatureData peersContractSignatureData;
     protected NonceSharesMessage myNonceSharesMessage;
     protected PubKeyShares peersPubKeyShares;
     protected PartialSignaturesMessage myPartialSignaturesMessage;
     protected NonceShares peersNonceShares;
 
-    public MuSigSetupTradeMessage_B_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
+    public BaseMuSigSetupTradeMessage_B_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
