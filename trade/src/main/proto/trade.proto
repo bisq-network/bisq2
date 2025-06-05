@@ -212,15 +212,15 @@ message MuSigTradeStore {
 // MuSig network messages
 message MuSigTradeMessage {
   oneof message {
-    MuSigSetupTradeMessage_A muSigSetupTradeMessage_A = 20;
-    MuSigSetupTradeMessage_B muSigSetupTradeMessage_B = 21;
-    MuSigSetupTradeMessage_C muSigSetupTradeMessage_C = 22;
-    MuSigSetupTradeMessage_D muSigSetupTradeMessage_D = 23;
-    MuSigSendAccountPayloadAndDepositTxMessage MuSigSendAccountPayloadAndDepositTxMessage = 24;
-    MuSigSendAccountPayloadMessage muSigSendAccountPayloadMessage = 25;
-    MuSigPaymentInitiatedMessage_E muSigPaymentInitiatedMessage_E = 26;
-    MuSigPaymentReceivedMessage_F muSigPaymentReceivedMessage_F = 27;
-    MuSigCooperativeClosureMessage_G muSigCooperativeClosureMessage_G = 28;
+    SetupTradeMessage_A setupTradeMessage_A = 20;
+    SetupTradeMessage_B setupTradeMessage_B = 21;
+    SetupTradeMessage_C setupTradeMessage_C = 22;
+    SetupTradeMessage_D setupTradeMessage_D = 23;
+    SendAccountPayloadAndDepositTxMessage sendAccountPayloadAndDepositTxMessage = 24;
+    SendAccountPayloadMessage sendAccountPayloadMessage = 25;
+    PaymentInitiatedMessage_E paymentInitiatedMessage_E = 26;
+    PaymentReceivedMessage_F paymentReceivedMessage_F = 27;
+    CooperativeClosureMessage_G cooperativeClosureMessage_G = 28;
     MuSigReportErrorMessage muSigReportErrorMessage = 29;
   }
 }
@@ -230,45 +230,45 @@ message MuSigReportErrorMessage {
   string stackTrace = 2;
 }
 
-message MuSigSetupTradeMessage_A {
+message SetupTradeMessage_A {
   contract.Contract contract = 1;
   contract.ContractSignatureData contractSignatureData = 2;
   PubKeyShares pubKeyShares = 3;
 }
 
-message MuSigSetupTradeMessage_B {
+message SetupTradeMessage_B {
   contract.Contract contract = 1;
   contract.ContractSignatureData contractSignatureData = 2;
   PubKeyShares pubKeyShares = 3;
   NonceShares nonceShares = 4;
 }
 
-message MuSigSetupTradeMessage_C {
+message SetupTradeMessage_C {
   NonceShares nonceShares = 1;
   PartialSignatures partialSignatures = 2;
 }
 
-message MuSigSetupTradeMessage_D {
+message SetupTradeMessage_D {
   PartialSignatures partialSignatures = 1;
 }
 
-message MuSigSendAccountPayloadAndDepositTxMessage {
+message SendAccountPayloadAndDepositTxMessage {
   common.ByteArray depositTx = 1;
   account.AccountPayload accountPayload = 2;
 }
 
-message MuSigSendAccountPayloadMessage {
+message SendAccountPayloadMessage {
   account.AccountPayload accountPayload = 1;
 }
 
-message MuSigPaymentInitiatedMessage_E {
+message PaymentInitiatedMessage_E {
   bytes swapTxInputPartialSignature = 1;
 }
 
-message MuSigPaymentReceivedMessage_F {
+message PaymentReceivedMessage_F {
   SwapTxSignature swapTxSignature = 1;
 }
 
-message MuSigCooperativeClosureMessage_G {
+message CooperativeClosureMessage_G {
   common.ByteArray peerOutputPrvKeyShare = 1;
 }

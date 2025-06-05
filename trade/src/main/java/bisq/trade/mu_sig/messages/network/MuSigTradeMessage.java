@@ -60,15 +60,15 @@ public abstract class MuSigTradeMessage extends TradeMessage {
 
     public static MuSigTradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
         return switch (proto.getMuSigTradeMessage().getMessageCase()) {
-            case MUSIGSETUPTRADEMESSAGE_A -> MuSigSetupTradeMessage_A.fromProto(proto);
-            case MUSIGSETUPTRADEMESSAGE_B -> MuSigSetupTradeMessage_B.fromProto(proto);
-            case MUSIGSETUPTRADEMESSAGE_C -> MuSigSetupTradeMessage_C.fromProto(proto);
-            case MUSIGSETUPTRADEMESSAGE_D -> MuSigSetupTradeMessage_D.fromProto(proto);
-            case MUSIGSENDACCOUNTPAYLOADANDDEPOSITTXMESSAGE ->MuSigSendAccountPayloadAndDepositTxMessage.fromProto(proto);
-            case MUSIGSENDACCOUNTPAYLOADMESSAGE -> MuSigSendAccountPayloadMessage.fromProto(proto);
-            case MUSIGPAYMENTINITIATEDMESSAGE_E -> MuSigPaymentInitiatedMessage_E.fromProto(proto);
-            case MUSIGPAYMENTRECEIVEDMESSAGE_F -> MuSigPaymentReceivedMessage_F.fromProto(proto);
-            case MUSIGCOOPERATIVECLOSUREMESSAGE_G -> MuSigCooperativeClosureMessage_G.fromProto(proto);
+            case SETUPTRADEMESSAGE_A -> SetupTradeMessage_A.fromProto(proto);
+            case SETUPTRADEMESSAGE_B -> SetupTradeMessage_B.fromProto(proto);
+            case SETUPTRADEMESSAGE_C -> SetupTradeMessage_C.fromProto(proto);
+            case SETUPTRADEMESSAGE_D -> SetupTradeMessage_D.fromProto(proto);
+            case SENDACCOUNTPAYLOADANDDEPOSITTXMESSAGE -> SendAccountPayloadAndDepositTxMessage.fromProto(proto);
+            case SENDACCOUNTPAYLOADMESSAGE -> SendAccountPayloadMessage.fromProto(proto);
+            case PAYMENTINITIATEDMESSAGE_E -> PaymentInitiatedMessage_E.fromProto(proto);
+            case PAYMENTRECEIVEDMESSAGE_F -> PaymentReceivedMessage_F.fromProto(proto);
+            case COOPERATIVECLOSUREMESSAGE_G -> CooperativeClosureMessage_G.fromProto(proto);
             case MUSIGREPORTERRORMESSAGE -> MuSigReportErrorMessage.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };

@@ -47,14 +47,14 @@ import bisq.settings.SettingsService;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
 import bisq.trade.mu_sig.events.MuSigTradeEvent;
-import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEvent;
-import bisq.trade.mu_sig.events.buyer.MuSigPaymentInitiatedEvent;
+import bisq.trade.mu_sig.events.blockchain.DepositTxConfirmedEvent;
+import bisq.trade.mu_sig.events.buyer.PaymentInitiatedEvent;
 import bisq.trade.mu_sig.events.taker.MuSigTakeOfferEvent;
-import bisq.trade.mu_sig.events.seller.MuSigPaymentReceiptConfirmedEvent;
+import bisq.trade.mu_sig.events.seller.PaymentReceiptConfirmedEvent;
 import bisq.trade.mu_sig.grpc.MusigGrpcClient;
 import bisq.trade.mu_sig.messages.grpc.DepositPsbt;
 import bisq.trade.mu_sig.messages.grpc.TxConfirmationStatus;
-import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
+import bisq.trade.mu_sig.messages.network.SetupTradeMessage_A;
 import bisq.trade.mu_sig.messages.network.MuSigTradeMessage;
 import bisq.trade.mu_sig.protocol.MuSigBuyerAsTakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigProtocol;
@@ -251,8 +251,8 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
                 return;
             }
 
-            if (muSigTradeMessage instanceof MuSigSetupTradeMessage_A) {
-                handleMuSigTakeOfferMessage((MuSigSetupTradeMessage_A) muSigTradeMessage);
+            if (muSigTradeMessage instanceof SetupTradeMessage_A) {
+                handleMuSigTakeOfferMessage((SetupTradeMessage_A) muSigTradeMessage);
             } else {
                 handleMuSigTradeMessage(muSigTradeMessage);
             }
@@ -264,7 +264,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
     // Message event
     /* --------------------------------------------------------------------- */
 
-    private void handleMuSigTakeOfferMessage(MuSigSetupTradeMessage_A message) {
+    private void handleMuSigTakeOfferMessage(SetupTradeMessage_A message) {
         MuSigContract muSigContract = message.getContract();
         MuSigProtocol protocol = createProtocol(muSigContract, message.getSender(), message.getReceiver());
         handleMuSigTradeMessage(message, protocol);
@@ -307,15 +307,15 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
 
     // TODO just temp for dev
     public void skipWaitForConfirmation(MuSigTrade trade) {
-        handleMuSigTradeEvent(trade, new MuSigDepositTxConfirmedEvent());
+        handleMuSigTradeEvent(trade, new DepositTxConfirmedEvent());
     }
 
     public void paymentInitiated(MuSigTrade trade) {
-        handleMuSigTradeEvent(trade, new MuSigPaymentInitiatedEvent());
+        handleMuSigTradeEvent(trade, new PaymentInitiatedEvent());
     }
 
     public void paymentReceiptConfirmed(MuSigTrade trade) {
-        handleMuSigTradeEvent(trade, new MuSigPaymentReceiptConfirmedEvent());
+        handleMuSigTradeEvent(trade, new PaymentReceiptConfirmedEvent());
     }
 
     public void closeTrade(MuSigTrade trade) {
@@ -403,7 +403,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
                     TxConfirmationStatus status = TxConfirmationStatus.fromProto(proto);
                     if (status.getNumConfirmations() > 0) {
                         if (trade.isDepositTxCreatedButNotConfirmed()) {
-                            handleMuSigTradeEvent(trade, new MuSigDepositTxConfirmedEvent());
+                            handleMuSigTradeEvent(trade, new DepositTxConfirmedEvent());
                         }
                     }
                 }
