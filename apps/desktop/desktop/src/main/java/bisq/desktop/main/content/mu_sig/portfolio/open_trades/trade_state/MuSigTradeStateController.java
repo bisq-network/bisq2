@@ -31,13 +31,13 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_details.MuSigTradeDetailsController;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State2BuyerSendPayment;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State3BuyerWaitForSellersPaymentReceiptConfirmation;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State2SellerWaitForPayment;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State3aSellerConfirmPaymentReceipt;
-import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State3bSellerWaitForBuyerToCloseTrade;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State1aSetupDepositTx;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State1bWaitForDepositTxConfirmation;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State2BuyerSendPayment;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State2SellerWaitForPayment;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State3BuyerWaitForSellersPaymentReceiptConfirmation;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State3aSellerConfirmPaymentReceipt;
+import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State3bSellerWaitForBuyerToCloseTrade;
 import bisq.desktop.main.content.mu_sig.portfolio.open_trades.trade_state.states.State4TradeClosed;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
@@ -274,15 +274,18 @@ public class MuSigTradeStateController implements Controller {
             // Deposit tx setup phase
             case TAKER_INITIALIZED_TRADE,
                  MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES,
-                 TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES -> {
+                 TAKER_CREATED_NONCE_SHARES_AND_PARTIAL_SIGNATURES,
+                 MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX,
+                 TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX -> {
                 model.getStateInfoVBox().set(new State1aSetupDepositTx(serviceProvider, trade, channel).getRoot());
             }
 
-            // Deposit tx published
-            case MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX,
-                 TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX -> {
+            // Deposit tx published and account payload exchanged
+            case MAKER_RECEIVED_ACCOUNT_PAYLOAD_AND_DEPOSIT_TX,
+                 TAKER_RECEIVED_ACCOUNT_PAYLOAD -> {
                 model.getStateInfoVBox().set(new State1bWaitForDepositTxConfirmation(serviceProvider, trade, channel).getRoot());
             }
+
             // Deposit tx confirmed, settlement phase starts
             case DEPOSIT_TX_CONFIRMED -> {
                 if (isSeller) {

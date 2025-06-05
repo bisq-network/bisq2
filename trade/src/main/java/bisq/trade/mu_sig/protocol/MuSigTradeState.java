@@ -35,6 +35,8 @@ public enum MuSigTradeState implements State {
     // Deposit tx published
     MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX,
     TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX,
+    MAKER_RECEIVED_ACCOUNT_PAYLOAD_AND_DEPOSIT_TX,
+    TAKER_RECEIVED_ACCOUNT_PAYLOAD,
 
     // Deposit confirmation phase
     DEPOSIT_TX_CONFIRMED,
