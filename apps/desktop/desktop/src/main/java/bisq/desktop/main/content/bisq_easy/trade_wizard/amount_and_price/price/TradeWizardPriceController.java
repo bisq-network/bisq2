@@ -208,14 +208,14 @@ public class TradeWizardPriceController implements Controller {
     }
 
     void onPriceComponentUpdated() {
-        if (!model.getShouldFocusPriceComponent()) {
+        if (!model.isShouldFocusPriceComponent()) {
             model.setShouldFocusPriceComponent(true);
         }
     }
 
     void onUpdatePriceSpec() {
         if (model.getUseFixPrice().get()) {
-            boolean shouldRequestFocus = model.getShouldFocusPriceComponent();
+            boolean shouldRequestFocus = model.isShouldFocusPriceComponent();
             priceInput.activate(shouldRequestFocus);
         } else {
             priceInput.deactivate();

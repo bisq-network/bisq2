@@ -198,7 +198,7 @@ public class MuSigCreateOfferPriceController implements Controller {
     }
 
     void onPriceComponentUpdated() {
-        if (!model.getShouldFocusPriceComponent()) {
+        if (!model.isShouldFocusPriceComponent()) {
             model.setShouldFocusPriceComponent(true);
         }
     }

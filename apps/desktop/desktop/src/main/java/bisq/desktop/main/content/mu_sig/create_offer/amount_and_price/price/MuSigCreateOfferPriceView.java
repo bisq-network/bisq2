@@ -227,7 +227,7 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
             percentageInput.setEditable(false);
             percentageInput.resetValidation();
             priceInput.setEditable(true);
-            if (model.getShouldFocusPriceComponent()) {
+            if (model.isShouldFocusPriceComponent()) {
                 priceInput.requestFocusWithCursor();
             }
         } else {
@@ -240,7 +240,7 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
             priceInput.setEditable(false);
             priceInput.resetValidation();
             percentageInput.setEditable(true);
-            if (model.getShouldFocusPriceComponent()) {
+            if (model.isShouldFocusPriceComponent()) {
                 percentageInput.requestFocusWithCursor();
             }
         }

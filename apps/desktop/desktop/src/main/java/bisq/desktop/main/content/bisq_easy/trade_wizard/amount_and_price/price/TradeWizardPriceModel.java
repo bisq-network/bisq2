@@ -40,7 +40,7 @@ public class TradeWizardPriceModel implements Model {
     @Setter
     private Direction direction;
     @Setter
-    private Boolean shouldFocusPriceComponent = false;
+    private boolean shouldFocusPriceComponent = false;
     private final DoubleProperty percentage = new SimpleDoubleProperty();
     private final StringProperty percentageInput = new SimpleStringProperty();
     private final StringProperty priceAsString = new SimpleStringProperty();

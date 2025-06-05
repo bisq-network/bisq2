@@ -231,7 +231,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         if (model.getUseFixPrice().get()) {
             percentageInputBox.deactivate();
         } else {
-            boolean shouldRequestFocus = model.getShouldFocusPriceComponent();
+            boolean shouldRequestFocus = model.isShouldFocusPriceComponent();
             percentageInputBox.activate(shouldRequestFocus);
         }
     }
