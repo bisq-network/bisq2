@@ -203,6 +203,7 @@ public class MuSigReviewDataDisplay {
 
                 HBox amountHBox = toSend.getSecond();
                 amountHBox.getChildren().clear();
+                VBox.setMargin(amountHBox, null);
 
                 if (isSendBtc) {
                     if (isRangeAmount) {
@@ -224,6 +225,7 @@ public class MuSigReviewDataDisplay {
 
                 HBox amountHBox = toReceive.getSecond();
                 amountHBox.getChildren().clear();
+                VBox.setMargin(amountHBox, null);//reset Margin setting
 
                 if (isReceiveBtc) {
                     if (isRangeAmount) {
