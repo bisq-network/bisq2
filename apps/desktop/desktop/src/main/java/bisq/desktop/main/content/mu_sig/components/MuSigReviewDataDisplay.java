@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.mu_sig.components;
 
 import bisq.common.currency.TradeCurrency;
+import bisq.common.data.Pair;
 import bisq.common.data.Triple;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BitcoinAmountDisplay;
@@ -63,10 +64,6 @@ public class MuSigReviewDataDisplay {
         controller.model.getToSendAmountDescription().set(value);
     }
 
-    public void setToSendAmount(String value) {
-        controller.model.getToSendAmount().set(value);
-    }
-
     public void setToSendCode(String value) {
         controller.model.getToSendCode().set(value);
         controller.model.getIsSendBtc().set(TradeCurrency.isBtc(value));
@@ -76,10 +73,6 @@ public class MuSigReviewDataDisplay {
         controller.model.getToReceiveAmountDescription().set(value);
     }
 
-    public void setToReceiveAmount(String value) {
-        controller.model.getToReceiveAmount().set(value);
-    }
-
     public void setToReceiveCode(String value) {
         controller.model.getToReceiveCode().set(value);
         controller.model.getIsReceiveBtc().set(TradeCurrency.isBtc(value));
@@ -87,6 +80,22 @@ public class MuSigReviewDataDisplay {
 
     public void setFiatPaymentMethodDescription(String value) {
         controller.model.getFiatPaymentMethodDescription().set(value);
+    }
+
+    public void setToSendMinAmount(String value) {
+        controller.model.getToSendMinAmount().set(value);
+    }
+
+    public void setToSendMaxOrFixedAmount(String value) {
+        controller.model.getToSendMaxOrFixedAmount().set(value);
+    }
+
+    public void setToReceiveMinAmount(String value) {
+        controller.model.getToReceiveMinAmount().set(value);
+    }
+
+    public void setToReceiveMaxOrFixedAmount(String value) {
+        controller.model.getToReceiveMaxOrFixedAmount().set(value);
     }
 
     public void setFiatPaymentMethod(String value) {
@@ -117,28 +126,34 @@ public class MuSigReviewDataDisplay {
         private final BooleanProperty isRangeAmount = new SimpleBooleanProperty();
         private final StringProperty direction = new SimpleStringProperty();
         private final StringProperty toSendAmountDescription = new SimpleStringProperty();
-        private final StringProperty toSendAmount = new SimpleStringProperty();
         private final StringProperty toSendCode = new SimpleStringProperty();
         private final StringProperty toReceiveAmountDescription = new SimpleStringProperty();
-        private final StringProperty toReceiveAmount = new SimpleStringProperty();
         private final StringProperty toReceiveCode = new SimpleStringProperty();
         private final StringProperty fiatPaymentMethodDescription = new SimpleStringProperty();
         private final StringProperty fiatPaymentMethod = new SimpleStringProperty();
         private final BooleanProperty isSendBtc = new SimpleBooleanProperty(false);
         private final BooleanProperty isReceiveBtc = new SimpleBooleanProperty(false);
+        private final StringProperty toSendMinAmount = new SimpleStringProperty();
+        private final StringProperty toSendMaxOrFixedAmount = new SimpleStringProperty();
+        private final StringProperty toReceiveMinAmount = new SimpleStringProperty();
+        private final StringProperty toReceiveMaxOrFixedAmount = new SimpleStringProperty();
     }
 
     private static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         private static final double HEIGHT = 61;
+        private static final String DASH_SYMBOL = "\u2013"; // Unicode for "–"
 
         private final Triple<Text, Label, VBox> direction, paymentMethod;
         private final Triple<Triple<Text, Text, Text>, HBox, VBox> toSend, toReceive;
 
-        private final BitcoinAmountDisplay toSendBitcoinAmountDisplay = new BitcoinAmountDisplay();
-        private final BitcoinAmountDisplay toReceiveBitcoinAmountDisplay = new BitcoinAmountDisplay();
-
         private final VBox rangeAmountVBox = new VBox(0);
         private Subscription isRangeAmountPin, isSendBtcPin, isReceiveBtcPin;
+
+        private final BitcoinAmountDisplay toSendBitcoinMinAmountDisplay = new BitcoinAmountDisplay("0", false);
+        private final BitcoinAmountDisplay toSendBitcoinMaxOrFixedAmountDisplay = new BitcoinAmountDisplay("0", false);
+        private final Label dashLabel = new Label(DASH_SYMBOL);
+        private final BitcoinAmountDisplay toReceiveBitcoinMinAmountDisplay = new BitcoinAmountDisplay("0", false);
+        private final BitcoinAmountDisplay toReceiveBitcoinMaxOrFixedAmountDisplay = new BitcoinAmountDisplay("0", false);
 
         private View(Model model, Controller controller) {
             super(new HBox(), model, controller);
@@ -146,6 +161,9 @@ public class MuSigReviewDataDisplay {
             root.setMinHeight(HEIGHT);
             root.setMaxHeight(HEIGHT);
             root.setAlignment(Pos.TOP_LEFT);
+
+            dashLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
+            dashLabel.setAlignment(Pos.CENTER);
 
             direction = getElements(Res.get("bisqEasy.tradeState.header.direction"));
             toSend = getAmountElements();
@@ -155,54 +173,70 @@ public class MuSigReviewDataDisplay {
 
         @Override
         protected void onViewAttached() {
-            configureBitcoinAmountDisplay(toSendBitcoinAmountDisplay);
-            configureBitcoinAmountDisplay(toReceiveBitcoinAmountDisplay);
+            configureBitcoinAmountDisplay(toSendBitcoinMinAmountDisplay);
+            configureBitcoinAmountDisplay(toSendBitcoinMaxOrFixedAmountDisplay);
+            configureBitcoinAmountDisplay(toReceiveBitcoinMinAmountDisplay);
+            configureBitcoinAmountDisplay(toReceiveBitcoinMaxOrFixedAmountDisplay);
 
             direction.getSecond().textProperty().bind(model.getDirection());
             toSend.getFirst().getFirst().textProperty().bind(model.getToSendAmountDescription());
-            toSend.getFirst().getSecond().textProperty().bind(model.getToSendAmount());
+            toSend.getFirst().getSecond().textProperty().bind(model.getToSendMaxOrFixedAmount());
             toSend.getFirst().getThird().textProperty().bind(model.getToSendCode());
             toReceive.getFirst().getFirst().textProperty().bind(model.getToReceiveAmountDescription());
-            toReceive.getFirst().getSecond().textProperty().bind(model.getToReceiveAmount());
+            toReceive.getFirst().getSecond().textProperty().bind(model.getToReceiveMaxOrFixedAmount());
             toReceive.getFirst().getThird().textProperty().bind(model.getToReceiveCode());
             paymentMethod.getFirst().textProperty().bind(model.getFiatPaymentMethodDescription());
             paymentMethod.getSecond().textProperty().bind(model.getFiatPaymentMethod());
 
-            toSendBitcoinAmountDisplay.getBtcAmount().bind(model.getToSendAmount());
-            toReceiveBitcoinAmountDisplay.getBtcAmount().bind(model.getToReceiveAmount());
 
+            toSendBitcoinMinAmountDisplay.getBtcAmount().bind(model.getToSendMinAmount());
+            toSendBitcoinMaxOrFixedAmountDisplay.getBtcAmount().bind(model.getToSendMaxOrFixedAmount());
+            toReceiveBitcoinMinAmountDisplay.getBtcAmount().bind(model.getToReceiveMinAmount());
+            toReceiveBitcoinMaxOrFixedAmountDisplay.getBtcAmount().bind(model.getToReceiveMaxOrFixedAmount());
 
-            isSendBtcPin = EasyBind.subscribe(model.getIsSendBtc(), isSendBtc -> {
+            isSendBtcPin = EasyBind.subscribe(EasyBind.combine(model.getIsSendBtc(), model.getIsRangeAmount(), Pair::new), combinedValues -> {
+                boolean isSendBtc = combinedValues.getFirst();
+                boolean isRangeAmount = combinedValues.getSecond();
+
                 HBox amountHBox = toSend.getSecond();
                 amountHBox.getChildren().clear();
 
                 if (isSendBtc) {
-                    amountHBox.getChildren().add(toSendBitcoinAmountDisplay);
+                    if (isRangeAmount) {
+                        amountHBox.getChildren().addAll(toSendBitcoinMinAmountDisplay, dashLabel, toSendBitcoinMaxOrFixedAmountDisplay, toSend.getFirst().getThird());
+                    } else {
+                        amountHBox.getChildren().addAll(toSendBitcoinMaxOrFixedAmountDisplay, toSend.getFirst().getThird());
+                    }
                     amountHBox.setAlignment(Pos.CENTER_LEFT);
-                    VBox.setMargin(toSend.getSecond(), new Insets(-7, 0, 0, 0));
+                    VBox.setMargin(amountHBox, new Insets(-15, 0, 0, 0));
+//                    HBox.setMargin(amountHBox, new Insets(-12, 0, 0, 0));
                 } else {
-                    amountHBox.getChildren().addAll(
-                            toSend.getFirst().getSecond(),
-                            toSend.getFirst().getThird()
-                    );
+                    amountHBox.getChildren().addAll(toSend.getFirst().getSecond(), toSend.getFirst().getThird());
                     amountHBox.setAlignment(Pos.BASELINE_LEFT);
+//                    VBox.setMargin(toSend.getSecond(), new Insets(0, 0, 0, 0));
                 }
             });
 
-            isReceiveBtcPin = EasyBind.subscribe(model.getIsReceiveBtc(), isReceiveBtc -> {
+            isReceiveBtcPin = EasyBind.subscribe(EasyBind.combine(model.getIsReceiveBtc(), model.getIsRangeAmount(), Pair::new), combinedValues -> {
+                boolean isReceiveBtc = combinedValues.getFirst();
+                boolean isRangeAmount = combinedValues.getSecond();
+
                 HBox amountHBox = toReceive.getSecond();
                 amountHBox.getChildren().clear();
 
                 if (isReceiveBtc) {
-                    amountHBox.getChildren().add(toReceiveBitcoinAmountDisplay);
+                    if (isRangeAmount) {
+                        amountHBox.getChildren().addAll(toReceiveBitcoinMinAmountDisplay, dashLabel, toReceiveBitcoinMaxOrFixedAmountDisplay, toReceive.getFirst().getThird());
+                    } else {
+                        amountHBox.getChildren().addAll(toReceiveBitcoinMaxOrFixedAmountDisplay, toReceive.getFirst().getThird());
+                    }
                     amountHBox.setAlignment(Pos.CENTER_LEFT);
-                    VBox.setMargin(toReceive.getSecond(), new Insets(-7, 0, 0, 0));
+                    VBox.setMargin(amountHBox, new Insets(-15, 0, 0, 0));
+//                    VBox.setMargin(toReceive.getSecond(), new Insets(-12, 0, 0, 0));
                 } else {
-                    amountHBox.getChildren().addAll(
-                            toReceive.getFirst().getSecond(),
-                            toReceive.getFirst().getThird()
-                    );
+                    amountHBox.getChildren().addAll(toReceive.getFirst().getSecond(), toReceive.getFirst().getThird());
                     amountHBox.setAlignment(Pos.BASELINE_LEFT);
+//                    VBox.setMargin(toReceive.getSecond(), new Insets(0, 0, 0, 0));
                 }
             });
 
@@ -217,16 +251,9 @@ public class MuSigReviewDataDisplay {
                 if (isRangeAmount) {
                     VBox.setMargin(toReceiveVBox, new Insets(-10, 0, 0, 0));
                     rangeAmountVBox.getChildren().addAll(toSendVBox, toReceiveVBox);
-                    root.getChildren().addAll(
-                            direction.getThird(), Spacer.fillHBox(),
-                            rangeAmountVBox, Spacer.fillHBox(),
-                            paymentMethod.getThird());
+                    root.getChildren().addAll(direction.getThird(), Spacer.fillHBox(), rangeAmountVBox, Spacer.fillHBox(), paymentMethod.getThird());
                 } else {
-                    root.getChildren().addAll(
-                            direction.getThird(), Spacer.fillHBox(),
-                            toSendVBox, Spacer.fillHBox(),
-                            toReceiveVBox, Spacer.fillHBox(),
-                            paymentMethod.getThird());
+                    root.getChildren().addAll(direction.getThird(), Spacer.fillHBox(), toSendVBox, Spacer.fillHBox(), toReceiveVBox, Spacer.fillHBox(), paymentMethod.getThird());
                 }
             });
         }
@@ -243,17 +270,19 @@ public class MuSigReviewDataDisplay {
             paymentMethod.getFirst().textProperty().unbind();
             paymentMethod.getSecond().textProperty().unbind();
 
-            toSendBitcoinAmountDisplay.getBtcAmount().unbind();
-            toReceiveBitcoinAmountDisplay.getBtcAmount().unbind();
-
             isRangeAmountPin.unsubscribe();
             isSendBtcPin.unsubscribe();
             isReceiveBtcPin.unsubscribe();
+
+            toSendBitcoinMinAmountDisplay.getBtcAmount().unbind();
+            toSendBitcoinMaxOrFixedAmountDisplay.getBtcAmount().unbind();
+            toReceiveBitcoinMinAmountDisplay.getBtcAmount().unbind();
+            toReceiveBitcoinMaxOrFixedAmountDisplay.getBtcAmount().unbind();
         }
 
         private void configureBitcoinAmountDisplay(BitcoinAmountDisplay bitcoinAmountDisplay) {
             bitcoinAmountDisplay.applyMediumCompactConfig();
-            bitcoinAmountDisplay.setPadding(new Insets(-6, 0, 0, 0));
+//            bitcoinAmountDisplay.setPadding(new Insets(-6, 0, 0, 0));
 
             bitcoinAmountDisplay.setTextAlignment(TextAlignment.LEFT);
             bitcoinAmountDisplay.setAlignment(Pos.CENTER_LEFT);
