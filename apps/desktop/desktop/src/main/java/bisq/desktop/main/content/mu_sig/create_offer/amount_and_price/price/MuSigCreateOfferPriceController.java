@@ -72,7 +72,7 @@ public class MuSigCreateOfferPriceController implements Controller {
         this.owner = owner;
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         model = new MuSigCreateOfferPriceModel();
-        view = new MuSigCreateOfferPriceView(model, this, priceInput);
+        view = new MuSigCreateOfferPriceView(model, this, priceInput.getRoot());
     }
 
     public void setMarket(Market market) {
@@ -177,11 +177,13 @@ public class MuSigCreateOfferPriceController implements Controller {
 
         navigationButtonsVisibleHandler.accept(true);
         model.getIsOverlayVisible().set(false);
+
+        model.setShouldFocusPriceComponent(false);
     }
 
-    void onPercentageFocussed(boolean focussed) {
-        model.setFocused(focussed);
-        if (!focussed) {
+    void onPercentageFocused(boolean focused) {
+        model.setFocused(focused);
+        if (!focused) {
             try {
                 double percentage = parse(model.getPercentageInput().get());
                 String percentageAsString = PercentageFormatter.formatToPercent(percentage);
@@ -192,6 +194,21 @@ public class MuSigCreateOfferPriceController implements Controller {
             } catch (Exception e) {
                 model.getErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.numberFormatException"));
             }
+        }
+    }
+
+    void onPriceComponentUpdated() {
+        if (!model.isShouldFocusPriceComponent()) {
+            model.setShouldFocusPriceComponent(true);
+        }
+    }
+
+    void onUpdatePriceSpec() {
+        if (model.getUseFixPrice().get()) {
+            boolean shouldRequestFocus = model.isShouldFocusPriceComponent();
+            priceInput.activate(shouldRequestFocus);
+        } else {
+            priceInput.deactivate();
         }
     }
 

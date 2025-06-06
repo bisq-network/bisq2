@@ -98,21 +98,19 @@ public class PriceInput {
         controller.model.reset();
     }
 
-    public void requestFocusWithCursor() {
-        controller.view.textInput.requestFocusWithCursor();
+    public void activate(boolean shouldRequestFocus) {
+        controller.view.textInput.setEditable(true);
+        if (shouldRequestFocus) {
+            controller.view.textInput.requestFocusWithCursor();
+        }
     }
 
-    public void deselect() {
+    public void deactivate() {
         controller.view.textInput.deselect();
-    }
-
-    public void resetValidation() {
+        controller.view.textInput.setEditable(false);
+        // Reset validation
         controller.model.doResetValidation.set(true);
         controller.model.doResetValidation.set(false);
-    }
-
-    public void setEditable(boolean value) {
-        controller.view.textInput.setEditable(value);
     }
 
     public ReadOnlyBooleanProperty isPriceValid() {
@@ -261,6 +259,7 @@ public class PriceInput {
 
     public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
         private final static int WIDTH = 250;
+
         private final PriceInputBox textInput;
         private Subscription focusedPin, doResetValidationPin;
 

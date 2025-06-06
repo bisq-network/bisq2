@@ -24,7 +24,6 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.UnorderedList;
 import bisq.desktop.components.controls.validator.PercentageValidator;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
-import bisq.desktop.main.content.bisq_easy.components.PriceInput;
 import bisq.desktop.main.content.bisq_easy.components.PriceInputBox;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -36,6 +35,7 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -51,36 +51,36 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     private static final String PRICE_SLIDER_SELLER_STYLE_CLASS = "price-slider-seller";
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("00");
 
-    private final PriceInputBox percentageInput;
+    private final PriceInputBox percentageInputBox;
     @Getter
     private final VBox overlay;
-    private final PriceInput priceInput;
-    private final Button percentagePrice, fixedPrice, closeOverlayButton;
+    private final Pane priceInputBox;
+    private final Button percentagePriceButton, fixedPriceButton, closeOverlayButton;
     private final Label warningIcon, feedbackSentence, minSliderValue, maxSliderValue;
     private final Slider slider;
     private final Hyperlink showLearnWhyButton;
-    private Subscription percentageFocussedPin, useFixPricePin, isOverlayVisible;
+    private Subscription percentageFocusedPin, useFixPricePin, isOverlayVisible;
 
     public TradeWizardPriceView(TradeWizardPriceModel model,
                                 TradeWizardPriceController controller,
-                                PriceInput priceInput) {
+                                Pane priceInput) {
         super(new VBox(10), model, controller);
 
-        this.priceInput = priceInput;
+        this.priceInputBox = priceInput;
 
         root.setAlignment(Pos.TOP_CENTER);
 
         // Pricing model selection
-        percentagePrice = new Button(Res.get("bisqEasy.price.percentage.title"));
-        percentagePrice.getStyleClass().add("model-selection-item");
-        fixedPrice = new Button(Res.get("bisqEasy.price.tradePrice.title"));
-        fixedPrice.getStyleClass().add("model-selection-item");
+        percentagePriceButton = new Button(Res.get("bisqEasy.price.percentage.title"));
+        percentagePriceButton.getStyleClass().add("model-selection-item");
+        fixedPriceButton = new Button(Res.get("bisqEasy.price.tradePrice.title"));
+        fixedPriceButton.getStyleClass().add("model-selection-item");
         Label separator = new Label("|");
 
-        HBox percentagePriceBox = new HBox(percentagePrice);
+        HBox percentagePriceBox = new HBox(percentagePriceButton);
         percentagePriceBox.getStyleClass().add("model-selection-item-box");
         percentagePriceBox.setAlignment(Pos.CENTER_RIGHT);
-        HBox fixedPriceBox = new HBox(fixedPrice);
+        HBox fixedPriceBox = new HBox(fixedPriceButton);
         fixedPriceBox.getStyleClass().add("model-selection-item-box");
         fixedPriceBox.setAlignment(Pos.CENTER_LEFT);
 
@@ -88,11 +88,11 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         pricingModels.getStyleClass().addAll("selection-models", "bisq-text-3");
 
         // Input box
-        percentageInput = new PriceInputBox(Res.get("bisqEasy.price.percentage.inputBoxText"),
+        percentageInputBox = new PriceInputBox(Res.get("bisqEasy.price.percentage.inputBoxText"),
                 BisqEasyViewUtils.NUMERIC_WITH_DECIMAL_REGEX);
-        percentageInput.setValidator(new PercentageValidator());
-        percentageInput.textInputSymbolTextProperty().set("%");
-        VBox fieldsBox = new VBox(20, priceInput.getRoot(), percentageInput);
+        percentageInputBox.setValidator(new PercentageValidator());
+        percentageInputBox.textInputSymbolTextProperty().set("%");
+        VBox fieldsBox = new VBox(20, priceInput, percentageInputBox);
         fieldsBox.setAlignment(Pos.TOP_CENTER);
         fieldsBox.setMinWidth(340);
         fieldsBox.setPrefWidth(340);
@@ -144,10 +144,14 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     protected void onViewAttached() {
         minSliderValue.setText(DECIMAL_FORMAT.format(model.getMinPercentage() * 100) + "%");
         maxSliderValue.setText(DECIMAL_FORMAT.format(model.getMaxPercentage() * 100) + "%");
-        percentageInput.textProperty().bindBidirectional(model.getPercentageInput());
-        percentageInput.conversionPriceTextProperty().bind(model.getPriceAsString());
-        percentageInput.conversionPriceSymbolTextProperty().set(model.getMarket().getMarketCodes());
-        percentageInput.initialize();
+        priceInputBox.visibleProperty().bind(model.getUseFixPrice());
+        priceInputBox.managedProperty().bind(model.getUseFixPrice());
+        percentageInputBox.visibleProperty().bind(model.getUseFixPrice().not());
+        percentageInputBox.managedProperty().bind(model.getUseFixPrice().not());
+        percentageInputBox.textProperty().bindBidirectional(model.getPercentageInput());
+        percentageInputBox.conversionPriceTextProperty().bind(model.getPriceAsString());
+        percentageInputBox.conversionPriceSymbolTextProperty().set(model.getMarket().getMarketCodes());
+        percentageInputBox.initialize();
         feedbackSentence.textProperty().bind(model.getFeedbackSentence());
         warningIcon.visibleProperty().bind(model.getShouldShowWarningIcon());
         warningIcon.managedProperty().bind(model.getShouldShowWarningIcon());
@@ -157,10 +161,10 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         slider.getStyleClass().add(model.getDirection().isSell() ? PRICE_SLIDER_SELLER_STYLE_CLASS : PRICE_SLIDER_BUYER_STYLE_CLASS);
         model.getSliderFocus().bind(slider.focusedProperty());
 
-        percentageFocussedPin = EasyBind.subscribe(percentageInput.textInputFocusedProperty(), controller::onPercentageFocussed);
+        percentageFocusedPin = EasyBind.subscribe(percentageInputBox.textInputFocusedProperty(), controller::onPercentageFocused);
 
         useFixPricePin = EasyBind.subscribe(model.getUseFixPrice(), useFixPrice ->
-                UIScheduler.run(this::updateFieldsBox).after(100));
+                UIScheduler.run(this::updatePriceSpec).after(100));
 
         isOverlayVisible = EasyBind.subscribe(model.getIsOverlayVisible(), isOverlayVisible -> {
             if (isOverlayVisible) {
@@ -170,8 +174,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
             }
         });
 
-        percentagePrice.setOnAction(e -> controller.usePercentagePrice());
-        fixedPrice.setOnAction(e -> controller.useFixedPrice());
+        percentagePriceButton.setOnAction(e -> controller.usePercentagePrice());
+        fixedPriceButton.setOnAction(e -> controller.useFixedPrice());
         showLearnWhyButton.setOnAction(e -> controller.onShowOverlay());
         closeOverlayButton.setOnAction(e -> controller.onCloseOverlay());
 
@@ -186,9 +190,9 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
     @Override
     protected void onViewDetached() {
-        percentageInput.textProperty().unbindBidirectional(model.getPercentageInput());
-        percentageInput.conversionPriceTextProperty().unbind();
-        percentageInput.dispose();
+        percentageInputBox.textProperty().unbindBidirectional(model.getPercentageInput());
+        percentageInputBox.conversionPriceTextProperty().unbind();
+        percentageInputBox.dispose();
         feedbackSentence.textProperty().unbind();
         showLearnWhyButton.visibleProperty().unbind();
         showLearnWhyButton.managedProperty().unbind();
@@ -198,12 +202,12 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         slider.getStyleClass().removeAll(PRICE_SLIDER_BUYER_STYLE_CLASS, PRICE_SLIDER_SELLER_STYLE_CLASS);
         model.getSliderFocus().unbind();
 
-        percentageFocussedPin.unsubscribe();
+        percentageFocusedPin.unsubscribe();
         useFixPricePin.unsubscribe();
         isOverlayVisible.unsubscribe();
 
-        percentagePrice.setOnAction(null);
-        fixedPrice.setOnAction(null);
+        percentagePriceButton.setOnAction(null);
+        fixedPriceButton.setOnAction(null);
         showLearnWhyButton.setOnAction(null);
         closeOverlayButton.setOnAction(null);
 
@@ -216,31 +220,29 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         }
     }
 
-    private void updateFieldsBox() {
-        fixedPrice.getStyleClass().remove(SELECTED_PRICE_MODEL_STYLE_CLASS);
-        percentagePrice.getStyleClass().remove(SELECTED_PRICE_MODEL_STYLE_CLASS);
+    private void updatePriceSpec() {
+        updatePriceSpecButtonsStyle();
+        updatePercentagePrice();
+        controller.onUpdatePriceSpec();
+        controller.onPriceComponentUpdated();
+    }
+
+    private void updatePercentagePrice() {
         if (model.getUseFixPrice().get()) {
-            fixedPrice.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
-            priceInput.getRoot().visibleProperty().set(true);
-            priceInput.getRoot().managedProperty().set(true);
-            percentageInput.visibleProperty().set(false);
-            percentageInput.managedProperty().set(false);
-            percentageInput.deselect();
-            percentageInput.setEditable(false);
-            percentageInput.resetValidation();
-            priceInput.setEditable(true);
-            priceInput.requestFocusWithCursor();
+            percentageInputBox.deactivate();
         } else {
-            percentagePrice.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
-            priceInput.getRoot().visibleProperty().set(false);
-            priceInput.getRoot().managedProperty().set(false);
-            percentageInput.visibleProperty().set(true);
-            percentageInput.managedProperty().set(true);
-            priceInput.deselect();
-            priceInput.setEditable(false);
-            priceInput.resetValidation();
-            percentageInput.setEditable(true);
-            percentageInput.requestFocusWithCursor();
+            boolean shouldRequestFocus = model.isShouldFocusPriceComponent();
+            percentageInputBox.activate(shouldRequestFocus);
+        }
+    }
+
+    private void updatePriceSpecButtonsStyle() {
+        fixedPriceButton.getStyleClass().remove(SELECTED_PRICE_MODEL_STYLE_CLASS);
+        percentagePriceButton.getStyleClass().remove(SELECTED_PRICE_MODEL_STYLE_CLASS);
+        if (model.getUseFixPrice().get()) {
+            fixedPriceButton.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
+        } else {
+            percentagePriceButton.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
         }
     }
 
