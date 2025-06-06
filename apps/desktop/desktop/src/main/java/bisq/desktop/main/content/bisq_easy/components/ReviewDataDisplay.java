@@ -175,11 +175,6 @@ public class ReviewDataDisplay {
             dashLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
             dashLabel.setAlignment(Pos.CENTER);
 
-            configureBitcoinAmountDisplay(toSendBitcoinMinAmountDisplay);
-            configureBitcoinAmountDisplay(toSendBitcoinMaxOrFixedAmountDisplay);
-            configureBitcoinAmountDisplay(toReceiveBitcoinMinAmountDisplay);
-            configureBitcoinAmountDisplay(toReceiveBitcoinMaxOrFixedAmountDisplay);
-
             direction = getElements(Res.get("bisqEasy.tradeState.header.direction"));
             toSend = getAmountElements();
             toReceive = getAmountElements();
@@ -188,6 +183,11 @@ public class ReviewDataDisplay {
 
         @Override
         protected void onViewAttached() {
+            configureBitcoinAmountDisplay(toSendBitcoinMinAmountDisplay);
+            configureBitcoinAmountDisplay(toSendBitcoinMaxOrFixedAmountDisplay);
+            configureBitcoinAmountDisplay(toReceiveBitcoinMinAmountDisplay);
+            configureBitcoinAmountDisplay(toReceiveBitcoinMaxOrFixedAmountDisplay);
+
             direction.getSecond().textProperty().bind(model.getDirection());
             toSend.getFirst().getFirst().textProperty().bind(model.getToSendAmountDescription());
             toSend.getFirst().getSecond().textProperty().bind(model.getToSendMaxOrFixedAmount());

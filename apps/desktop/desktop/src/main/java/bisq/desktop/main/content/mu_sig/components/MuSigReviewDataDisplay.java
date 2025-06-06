@@ -147,9 +147,6 @@ public class MuSigReviewDataDisplay {
             root.setMaxHeight(HEIGHT);
             root.setAlignment(Pos.TOP_LEFT);
 
-            configureBitcoinAmountDisplay(toSendBitcoinAmountDisplay);
-            configureBitcoinAmountDisplay(toReceiveBitcoinAmountDisplay);
-
             direction = getElements(Res.get("bisqEasy.tradeState.header.direction"));
             toSend = getAmountElements();
             toReceive = getAmountElements();
@@ -158,6 +155,9 @@ public class MuSigReviewDataDisplay {
 
         @Override
         protected void onViewAttached() {
+            configureBitcoinAmountDisplay(toSendBitcoinAmountDisplay);
+            configureBitcoinAmountDisplay(toReceiveBitcoinAmountDisplay);
+
             direction.getSecond().textProperty().bind(model.getDirection());
             toSend.getFirst().getFirst().textProperty().bind(model.getToSendAmountDescription());
             toSend.getFirst().getSecond().textProperty().bind(model.getToSendAmount());
