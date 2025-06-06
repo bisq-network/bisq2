@@ -26,7 +26,7 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
             } else {
                 from(defaultInputDir)
             }
-            include("*.dmg", "*.deb", "*.exe", "*.rpm")
+            include("*.dmg", "*.deb", "*.exe", "*.rpm", "Bisq-*-aur/**")
             into(releaseDir)
             /* Bisq 1: "Bisq-1.9.15.dmg"          -> "Bisq-1.9.15.dmg"
                        "bisq_1.9.15-1_amd64.deb"  -> "Bisq-64bit-1.9.15.deb"
@@ -37,18 +37,25 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
                        "Bisq2-2.0.4.dmg"         -> "Bisq-2.0.4.dmg"
                        "Bisq2-2.0.4.exe"         -> "Bisq-2.0.4.exe"
                        "bisq2-2.0.4-1.x86_64.rpm" -> "Bisq-2.0.4.rpm" */
-            rename { fileName: String ->
-                // For Bisq 2 we do not use Bisq2 but the version number contains the '2'
-                val canonicalFileName = fileName.replace("bisq", "Bisq")
+
+            // Only rename regular files, preserve directories
+            eachFile {
+                if (!path.contains("-aur/")) {
+                    // This is a regular package file, apply renaming
+                    val fileName = name
+                    // For Bisq 2 we do not use Bisq2 but the version number contains the '2'
+                    val canonicalFileName = fileName.replace("bisq", "Bisq")
                         .replace("Bisq2", "Bisq")
                         .replace("Bisq_", "Bisq-")
                         .replace("-1_amd64", "")
                         .replace("-1.x86_64", "")
-                val fileWithoutExtension = canonicalFileName.substring(0, canonicalFileName.length - 4)
-                val fileExtension = canonicalFileName.substring(canonicalFileName.length - 4, canonicalFileName.length)
-                val platformName = getPlatform().platformName
-                // E.g. Bisq-2.0.4-macos_arm64.dmg
-                "$fileWithoutExtension-$platformName$fileExtension"
+                    val fileWithoutExtension = canonicalFileName.substring(0, canonicalFileName.length - 4)
+                    val fileExtension =
+                        canonicalFileName.substring(canonicalFileName.length - 4, canonicalFileName.length)
+                    val platformName = getPlatform().platformName
+                    // E.g. Bisq-2.0.4-macos_arm64.dmg
+                    "$fileWithoutExtension-$platformName$fileExtension"
+                }
             }
         }
     }
