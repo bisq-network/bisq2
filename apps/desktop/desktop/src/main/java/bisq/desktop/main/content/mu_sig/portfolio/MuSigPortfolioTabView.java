@@ -32,7 +32,6 @@ public class MuSigPortfolioTabView extends MuSigLevel2TabView<MuSigPortfolioTabM
     protected void addTabs() {
         Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-green", "bisq-text-grey-9");
         addTab(Res.get("muSig.portfolio.openOffers"), NavigationTarget.MU_SIG_OPEN_OFFERS, styles);
-        addTab(Res.get("muSig.portfolio.history"), NavigationTarget.MU_SIG_HISTORY, styles);
     }
 }
 

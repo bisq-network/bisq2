@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.portfolio.history;
+package bisq.desktop.main.content.mu_sig.history;
 
 import bisq.desktop.common.view.Model;
 import lombok.Getter;

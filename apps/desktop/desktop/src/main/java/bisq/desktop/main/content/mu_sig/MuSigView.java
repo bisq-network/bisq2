@@ -34,6 +34,7 @@ public class MuSigView extends ContentTabView<MuSigModel, MuSigController> {
 
         addTab(Res.get("muSig.offerbook"), NavigationTarget.MU_SIG_OFFERBOOK);
         addTab(Res.get("muSig.openTrades"), NavigationTarget.MU_SIG_OPEN_TRADES);
+        addTab(Res.get("muSig.history"), NavigationTarget.MU_SIG_HISTORY);
     }
 
     @Override

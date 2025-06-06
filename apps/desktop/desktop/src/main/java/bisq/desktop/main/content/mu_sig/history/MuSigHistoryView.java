@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.portfolio.history;
+package bisq.desktop.main.content.mu_sig.history;
 
 import bisq.desktop.common.view.View;
 import javafx.geometry.Insets;
@@ -29,9 +29,11 @@ public class MuSigHistoryView extends View<VBox, MuSigHistoryModel, MuSigHistory
     public MuSigHistoryView(MuSigHistoryModel model, MuSigHistoryController controller) {
         super(new VBox(), model, controller);
 
-        root.getChildren().add(new Label(this.getClass().getSimpleName()));
-        root.getStyleClass().add("offerbook-container");
-        root.setPadding(new Insets(20, 20, 500, 20));
+        VBox contentBox = new VBox(20);
+        contentBox.getChildren().addAll(new Label(this.getClass().getSimpleName()));
+        contentBox.getStyleClass().add("bisq-common-bg");
+        root.getChildren().add(contentBox);
+        root.setPadding(new Insets(0, 40, 500, 40));
     }
 
     @Override

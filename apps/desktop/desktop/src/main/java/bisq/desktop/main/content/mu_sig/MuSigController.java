@@ -20,6 +20,7 @@ package bisq.desktop.main.content.mu_sig;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
+import bisq.desktop.main.content.mu_sig.history.MuSigHistoryController;
 import bisq.desktop.main.content.mu_sig.offerbook.MuSigOfferbookController;
 import bisq.desktop.main.content.mu_sig.open_trades.MuSigOpenTradesController;
 import bisq.desktop.navigation.NavigationTarget;
@@ -42,6 +43,7 @@ public class MuSigController extends ContentTabController<MuSigModel> {
         return switch (navigationTarget) {
             case MU_SIG_OFFERBOOK -> Optional.of(new MuSigOfferbookController(serviceProvider));
             case MU_SIG_OPEN_TRADES -> Optional.of(new MuSigOpenTradesController(serviceProvider));
+            case MU_SIG_HISTORY -> Optional.of(new MuSigHistoryController(serviceProvider));
             default -> Optional.empty();
         };
     }
