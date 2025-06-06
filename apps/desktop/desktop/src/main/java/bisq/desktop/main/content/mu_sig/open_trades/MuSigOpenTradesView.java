@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.open_trades;
+package bisq.desktop.main.content.mu_sig.open_trades;
 
-import bisq.common.data.Quadruple;
 import bisq.desktop.CssConfig;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.threading.UIThread;
@@ -29,7 +28,6 @@ import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.DateColumnUtil;
-import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.chat.ChatView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
@@ -41,10 +39,19 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.Tooltip;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -55,23 +62,23 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Comparator;
 
 @Slf4j
-public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesView, BisqEasyOpenTradesModel> {
+public final class MuSigOpenTradesView extends ChatView<MuSigOpenTradesView, MuSigOpenTradesModel> {
     private final VBox tradeWelcomeViewRoot, tradeStateViewRoot, chatVBox;
-    private final BisqTableView<OpenTradeListItem> tableView;
+    private final BisqTableView<MuSigOpenTradeListItem> tableView;
     private final Button toggleChatWindowButton;
     private final AnchorPane tableViewAnchorPane;
     private Subscription noOpenTradesPin, tradeRulesAcceptedPin, tableViewSelectionPin,
             selectedModelItemPin, chatWindowPin, isAnyTradeInMediationPin;
-    private BisqTableColumn<OpenTradeListItem> mediatorColumn;
+    private BisqTableColumn<MuSigOpenTradeListItem> mediatorColumn;
     private final InvalidationListener listItemListener;
 
-    public BisqEasyOpenTradesView(BisqEasyOpenTradesModel model,
-                                  BisqEasyOpenTradesController controller,
-                                  HBox tradeDataHeader,
-                                  VBox chatMessagesComponent,
-                                  Pane channelSidebar,
-                                  VBox tradeStateViewRoot,
-                                  VBox tradeWelcomeViewRoot) {
+    public MuSigOpenTradesView(MuSigOpenTradesModel model,
+                               MuSigOpenTradesController controller,
+                               HBox tradeDataHeader,
+                               VBox chatMessagesComponent,
+                               Pane channelSidebar,
+                               VBox tradeStateViewRoot,
+                               VBox tradeWelcomeViewRoot) {
         super(model, controller, chatMessagesComponent, channelSidebar);
 
         this.tradeStateViewRoot = tradeStateViewRoot;
@@ -81,9 +88,19 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         tableView = new BisqTableView<>(getModel().getSortedList());
         configTableView();
 
-        Quadruple<Label, HBox, AnchorPane, VBox> quadruple = BisqEasyViewUtils.getTableViewContainer(Res.get("bisqEasy.openTrades.table.headline"), tableView);
-        tableViewAnchorPane = quadruple.getThird();
-        VBox tableViewVBox = quadruple.getForth();
+        Label headlineLabel = new Label(Res.get("bisqEasy.openTrades.table.headline"));
+        headlineLabel.getStyleClass().add("bisq-easy-container-headline");
+        HBox header = new HBox(10, headlineLabel);
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.getStyleClass().add("chat-container-header");
+
+        tableViewAnchorPane = new AnchorPane(tableView);
+        Layout.pinToAnchorPane(tableView, 0, 0, 0, 0);
+
+        VBox.setVgrow(tableViewAnchorPane, Priority.ALWAYS);
+        VBox tableViewVBox = new VBox(header, Layout.hLine(), tableViewAnchorPane);
+        tableViewVBox.setFillWidth(true);
+        tableViewVBox.getStyleClass().add("bisq-easy-container");
 
         // ChatBox
         toggleChatWindowButton = new Button();
@@ -132,7 +149,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
         tableView.initialize();
 
-        BisqEasyOpenTradesModel model = getModel();
+        MuSigOpenTradesModel model = getModel();
 
         tradeWelcomeViewRoot.visibleProperty().bind(model.getTradeWelcomeVisible());
         tradeWelcomeViewRoot.managedProperty().bind(model.getTradeWelcomeVisible());
@@ -299,84 +316,84 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
     private void configTableView() {
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<MuSigOpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.me"))
                 .fixWidth(45)
                 .left()
-                .comparator(Comparator.comparing(OpenTradeListItem::getMyUserName))
+                .comparator(Comparator.comparing(MuSigOpenTradeListItem::getMyUserName))
                 .setCellFactory(getMyUserCellFactory())
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<MuSigOpenTradeListItem>()
                 .minWidth(95)
                 .left()
-                .comparator(Comparator.comparing(OpenTradeListItem::getDirectionalTitle))
-                .valueSupplier(OpenTradeListItem::getDirectionalTitle)
+                .comparator(Comparator.comparing(MuSigOpenTradeListItem::getDirectionalTitle))
+                .valueSupplier(MuSigOpenTradeListItem::getDirectionalTitle)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<MuSigOpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradePeer"))
                 .minWidth(110)
                 .left()
-                .comparator(Comparator.comparing(OpenTradeListItem::getPeersUserName))
+                .comparator(Comparator.comparing(MuSigOpenTradeListItem::getPeersUserName))
                 .setCellFactory(getTradePeerCellFactory())
                 .build());
 
-        mediatorColumn = new BisqTableColumn.Builder<OpenTradeListItem>()
+        mediatorColumn = new BisqTableColumn.Builder<MuSigOpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.mediator"))
                 .minWidth(110)
                 .left()
-                .comparator(Comparator.comparing(OpenTradeListItem::getMediatorUserName))
+                .comparator(Comparator.comparing(MuSigOpenTradeListItem::getMediatorUserName))
                 .setCellFactory(getMediatorCellFactory())
                 .build();
 
         tableView.getColumns().add(DateColumnUtil.getDateColumn(tableView.getSortOrder()));
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<MuSigOpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradeId"))
                 .minWidth(85)
-                .comparator(Comparator.comparing(OpenTradeListItem::getTradeId))
-                .valueSupplier(OpenTradeListItem::getShortTradeId)
-                .tooltipSupplier(OpenTradeListItem::getTradeId)
+                .comparator(Comparator.comparing(MuSigOpenTradeListItem::getTradeId))
+                .valueSupplier(MuSigOpenTradeListItem::getShortTradeId)
+                .tooltipSupplier(MuSigOpenTradeListItem::getTradeId)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<MuSigOpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.quoteAmount"))
                 .fixWidth(120)
-                .comparator(Comparator.comparing(OpenTradeListItem::getQuoteAmount))
-                .valueSupplier(OpenTradeListItem::getQuoteAmountString)
+                .comparator(Comparator.comparing(MuSigOpenTradeListItem::getQuoteAmount))
+                .valueSupplier(MuSigOpenTradeListItem::getQuoteAmountString)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<MuSigOpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.baseAmount"))
                 .fixWidth(120)
-                .comparator(Comparator.comparing(OpenTradeListItem::getBaseAmount))
+                .comparator(Comparator.comparing(MuSigOpenTradeListItem::getBaseAmount))
                 .setCellFactory(getBaseCellFactory())
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<MuSigOpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.price"))
                 .fixWidth(170)
-                .comparator(Comparator.comparing(OpenTradeListItem::getPrice))
-                .valueSupplier(OpenTradeListItem::getPriceString)
+                .comparator(Comparator.comparing(MuSigOpenTradeListItem::getPrice))
+                .valueSupplier(MuSigOpenTradeListItem::getPriceString)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<MuSigOpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.paymentMethod"))
                 .minWidth(45)
-                .comparator(Comparator.comparing(OpenTradeListItem::getFiatPaymentMethod))
+                .comparator(Comparator.comparing(MuSigOpenTradeListItem::getFiatPaymentMethod))
                 .setCellFactory(getPaymentMethodCellFactory())
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<MuSigOpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.settlementMethod"))
                 .minWidth(45)
-                .comparator(Comparator.comparing(OpenTradeListItem::getBitcoinSettlementMethod))
+                .comparator(Comparator.comparing(MuSigOpenTradeListItem::getBitcoinSettlementMethod))
                 .setCellFactory(getSettlementMethodCellFactory())
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<MuSigOpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.makerTakerRole"))
                 .minWidth(85)
                 .right()
-                .comparator(Comparator.comparing(OpenTradeListItem::getMyRole))
-                .valueSupplier(OpenTradeListItem::getMyRole)
+                .comparator(Comparator.comparing(MuSigOpenTradeListItem::getMyRole))
+                .valueSupplier(MuSigOpenTradeListItem::getMyRole)
                 .build());
     }
 
-    private Callback<TableColumn<OpenTradeListItem, OpenTradeListItem>, TableCell<OpenTradeListItem, OpenTradeListItem>> getBaseCellFactory() {
+    private Callback<TableColumn<MuSigOpenTradeListItem, MuSigOpenTradeListItem>, TableCell<MuSigOpenTradeListItem, MuSigOpenTradeListItem>> getBaseCellFactory() {
         return column -> new TableCell<>() {
             private final BitcoinAmountDisplay bitcoinAmountDisplay = new BitcoinAmountDisplay("0", false);
 
@@ -388,7 +405,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
             }
 
             @Override
-            protected void updateItem(OpenTradeListItem item, boolean empty) {
+            protected void updateItem(MuSigOpenTradeListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -402,14 +419,14 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         };
     }
 
-    private Callback<TableColumn<OpenTradeListItem, OpenTradeListItem>, TableCell<OpenTradeListItem, OpenTradeListItem>> getMyUserCellFactory() {
+    private Callback<TableColumn<MuSigOpenTradeListItem, MuSigOpenTradeListItem>, TableCell<MuSigOpenTradeListItem, MuSigOpenTradeListItem>> getMyUserCellFactory() {
         return column -> new TableCell<>() {
 
             private final UserProfileIcon userProfileIcon = new UserProfileIcon();
             private final StackPane stackPane = new StackPane(userProfileIcon);
 
             @Override
-            protected void updateItem(OpenTradeListItem item, boolean empty) {
+            protected void updateItem(MuSigOpenTradeListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -424,13 +441,13 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         };
     }
 
-    private Callback<TableColumn<OpenTradeListItem, OpenTradeListItem>, TableCell<OpenTradeListItem, OpenTradeListItem>> getTradePeerCellFactory() {
+    private Callback<TableColumn<MuSigOpenTradeListItem, MuSigOpenTradeListItem>, TableCell<MuSigOpenTradeListItem, MuSigOpenTradeListItem>> getTradePeerCellFactory() {
         return column -> new TableCell<>() {
             private UserProfileDisplay userProfileDisplay;
             private Badge badge;
 
             @Override
-            protected void updateItem(OpenTradeListItem item, boolean empty) {
+            protected void updateItem(MuSigOpenTradeListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -460,13 +477,13 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         };
     }
 
-    private Callback<TableColumn<OpenTradeListItem, OpenTradeListItem>, TableCell<OpenTradeListItem, OpenTradeListItem>> getMediatorCellFactory() {
+    private Callback<TableColumn<MuSigOpenTradeListItem, MuSigOpenTradeListItem>, TableCell<MuSigOpenTradeListItem, MuSigOpenTradeListItem>> getMediatorCellFactory() {
         return column -> new TableCell<>() {
             private UserProfileDisplay userProfileDisplay;
             private Badge badge;
 
             @Override
-            protected void updateItem(OpenTradeListItem item, boolean empty) {
+            protected void updateItem(MuSigOpenTradeListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty && item.getChannel().getMediator().isPresent()) {
@@ -496,19 +513,19 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         };
     }
 
-    private Callback<TableColumn<OpenTradeListItem, OpenTradeListItem>, TableCell<OpenTradeListItem, OpenTradeListItem>> getPaymentMethodCellFactory() {
+    private Callback<TableColumn<MuSigOpenTradeListItem, MuSigOpenTradeListItem>, TableCell<MuSigOpenTradeListItem, MuSigOpenTradeListItem>> getPaymentMethodCellFactory() {
         return column -> new TableCell<>() {
             private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.MEDIUM_DARK);
             private final StackPane pane = new StackPane();
 
             @Override
-            protected void updateItem(OpenTradeListItem item, boolean empty) {
+            protected void updateItem(MuSigOpenTradeListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
                     Node paymentMethodIcon = !item.isFiatPaymentMethodCustom()
                             ? ImageUtil.getImageViewById(item.getFiatPaymentRail().name())
-                            : BisqEasyViewUtils.getCustomPaymentMethodIcon(item.getFiatPaymentMethod());
+                            : MuSigViewUtils.getCustomPaymentMethodIcon(item.getFiatPaymentMethod());
                     pane.getChildren().add(paymentMethodIcon);
                     tooltip.setText(Res.get("bisqEasy.openTrades.table.paymentMethod.tooltip",
                             item.getFiatPaymentMethod()));
@@ -523,7 +540,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         };
     }
 
-    private Callback<TableColumn<OpenTradeListItem, OpenTradeListItem>, TableCell<OpenTradeListItem, OpenTradeListItem>> getSettlementMethodCellFactory() {
+    private Callback<TableColumn<MuSigOpenTradeListItem, MuSigOpenTradeListItem>, TableCell<MuSigOpenTradeListItem, MuSigOpenTradeListItem>> getSettlementMethodCellFactory() {
         return column -> new TableCell<>() {
             private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.MEDIUM_DARK);
             private final StackPane pane = new StackPane();
@@ -534,7 +551,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
             }
 
             @Override
-            protected void updateItem(OpenTradeListItem item, boolean empty) {
+            protected void updateItem(MuSigOpenTradeListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -554,12 +571,12 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         };
     }
 
-    private BisqEasyOpenTradesModel getModel() {
-        return (BisqEasyOpenTradesModel) model;
+    private MuSigOpenTradesModel getModel() {
+        return (MuSigOpenTradesModel) model;
     }
 
-    private BisqEasyOpenTradesController getController() {
-        return (BisqEasyOpenTradesController) controller;
+    private MuSigOpenTradesController getController() {
+        return (MuSigOpenTradesController) controller;
     }
 
 }
