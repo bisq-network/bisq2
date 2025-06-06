@@ -98,27 +98,6 @@ public class PriceInput {
         controller.model.reset();
     }
 
-    // TODO: Remove when doing the change in MuSig
-    public void requestFocusWithCursor() {
-        controller.view.textInput.requestFocusWithCursor();
-    }
-
-    // TODO: Remove when doing the change in MuSig
-    public void deselect() {
-        controller.view.textInput.deselect();
-    }
-
-    // TODO: Remove when doing the change in MuSig
-    public void resetValidation() {
-        controller.model.doResetValidation.set(true);
-        controller.model.doResetValidation.set(false);
-    }
-
-    // TODO: Remove when doing the change in MuSig
-    public void setEditable(boolean value) {
-        controller.view.textInput.setEditable(value);
-    }
-
     public void activate(boolean shouldRequestFocus) {
         controller.view.textInput.setEditable(true);
         if (shouldRequestFocus) {

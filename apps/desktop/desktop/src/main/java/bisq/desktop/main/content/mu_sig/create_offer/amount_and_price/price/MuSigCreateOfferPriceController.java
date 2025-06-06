@@ -72,7 +72,7 @@ public class MuSigCreateOfferPriceController implements Controller {
         this.owner = owner;
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         model = new MuSigCreateOfferPriceModel();
-        view = new MuSigCreateOfferPriceView(model, this, priceInput);
+        view = new MuSigCreateOfferPriceView(model, this, priceInput.getRoot());
     }
 
     public void setMarket(Market market) {
@@ -200,6 +200,15 @@ public class MuSigCreateOfferPriceController implements Controller {
     void onPriceComponentUpdated() {
         if (!model.isShouldFocusPriceComponent()) {
             model.setShouldFocusPriceComponent(true);
+        }
+    }
+
+    void onUpdatePriceSpec() {
+        if (model.getUseFixPrice().get()) {
+            boolean shouldRequestFocus = model.isShouldFocusPriceComponent();
+            priceInput.activate(shouldRequestFocus);
+        } else {
+            priceInput.deactivate();
         }
     }
 
