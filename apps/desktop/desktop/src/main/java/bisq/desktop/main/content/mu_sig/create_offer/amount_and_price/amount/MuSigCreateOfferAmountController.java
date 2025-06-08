@@ -116,7 +116,7 @@ public class MuSigCreateOfferAmountController implements Controller {
         model = new MuSigCreateOfferAmountModel();
 
         amountSelectionController = new AmountSelectionController(serviceProvider);
-        view = new MuSigCreateOfferAmountView(model, this, amountSelectionController);
+        view = new MuSigCreateOfferAmountView(model, this, amountSelectionController.getView().getRoot());
     }
 
     public void setDirection(Direction direction) {
@@ -307,11 +307,11 @@ public class MuSigCreateOfferAmountController implements Controller {
         Browser.open(url);
     }
 
-    void useFixedAmount() {
+    void onSelectFixedAmount() {
         updateIsRangeAmountEnabled(false);
     }
 
-    void useRangeAmount() {
+    void onSelectRangeAmount() {
         updateIsRangeAmountEnabled(true);
     }
 
