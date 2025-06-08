@@ -20,7 +20,7 @@ package bisq.desktop.overlay.update;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.BisqHyperlink;
 import bisq.desktop.components.controls.Switch;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -35,7 +35,15 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
@@ -80,8 +88,7 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
         furtherInfo = new Label();
         furtherInfo.getStyleClass().add("updater-text");
 
-        downloadUrl = new Hyperlink();
-        downloadUrl.setTooltip(new BisqTooltip(model.getDownloadUrl().get()));
+        downloadUrl = new BisqHyperlink("", model.getDownloadUrl().get());
         downloadUrl.getStyleClass().add("updater-text");
 
         downloadButton = new Button(Res.get("updater.download"));
