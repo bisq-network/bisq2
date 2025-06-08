@@ -135,6 +135,11 @@ public class AmountSelectionController implements Controller {
         model.getSpendOrReceiveString().set(direction == Direction.BUY ? Res.get("offer.buying") : Res.get("offer.selling"));
     }
 
+    public void setAllowFlippingBaseAndQuoteCurrencies(boolean allowFlippingBaseAndQuoteCurrencies) {
+        model.getAllowFlippingBaseAndQuoteCurrencies().set(allowFlippingBaseAndQuoteCurrencies);
+        model.getBaseAmountSelectionHBoxWidth().set(allowFlippingBaseAndQuoteCurrencies ? model.getAmountBoxWidth() - 10 : model.getAmountBoxWidth());
+    }
+
     public void setTooltip(String tooltip) {
         maxOrFixedBaseSideAmountInput.setTooltip(tooltip);
         minBaseSideAmountInput.setTooltip(tooltip);

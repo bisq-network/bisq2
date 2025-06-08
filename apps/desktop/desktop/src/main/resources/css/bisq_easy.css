@@ -827,10 +827,6 @@
     -fx-text-fill: -bisq2-green;
 }
 
-.description-and-amount-box {
-    -fx-padding: 8 20 8 20;
-}
-
 .range-amount .quote-separator {
     -fx-alignment: center;
     -fx-text-alignment: center;
@@ -846,8 +842,7 @@
 }
 
 .range-amount .base-amount {
-    -fx-alignment: center-right;
-    -fx-padding: 0 20 0 0;
+    -fx-alignment: center;
 }
 
 .range-amount .base-amount .max-or-fixed-base-amount {

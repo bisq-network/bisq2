@@ -21,6 +21,7 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqMenuItem;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -38,8 +39,6 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class AmountSelectionView extends View<VBox, AmountSelectionModel, AmountSelectionController> {
-    public static final int AMOUNT_BOX_WIDTH = 300;
-    public static final int AMOUNT_BOX_HEIGHT = 120;
     private static final int RANGE_INPUT_TEXT_MAX_LENGTH = 11;
     private static final int FIXED_INPUT_TEXT_MAX_LENGTH = 18;
     private static final Insets SLIDER_INDICATORS_RANGE_MARGIN = new Insets(-15, 0, 0, 0);
@@ -68,9 +67,10 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
     private final Region selectionLine;
     private final QuoteAmountInputBox maxOrFixedQuoteAmount, minQuoteAmount;
     private final Pane minQuoteAmountRoot, minBaseAmountRoot;
-    private final HBox quoteAmountSelectionHBox, sliderIndicators;
+    private final HBox quoteAmountSelectionHBox, baseAmountSelectionHBox, sliderIndicators;
     private final ChangeListener<Number> maxOrFixedAmountSliderValueListener, minAmountSliderValueListener;
-    private Subscription maxOrFixedQuoteAmountFocusPin,minQuoteAmountFocusPin, sliderTrackStylePin, isRangeAmountEnabledPin,
+    private final BisqMenuItem flipCurrenciesButton;
+    private Subscription maxOrFixedQuoteAmountFocusPin, minQuoteAmountFocusPin, sliderTrackStylePin, isRangeAmountEnabledPin,
             maxOrFixedQuoteAmountLengthPin, minQuoteAmountLengthPin;
 
     AmountSelectionView(AmountSelectionModel model,
@@ -98,40 +98,45 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         maxOrFixedQuoteAmountRoot.getStyleClass().add("max-or-fixed-quote-amount");
         quoteAmountSelectionHBox = new HBox(5, minQuoteAmountRoot, quoteAmountSeparator, maxOrFixedQuoteAmountRoot);
         quoteAmountSelectionHBox.getStyleClass().add("quote-amount");
-        quoteAmountSelectionHBox.setMaxWidth(AMOUNT_BOX_WIDTH);
-        quoteAmountSelectionHBox.setMinWidth(AMOUNT_BOX_WIDTH);
+        quoteAmountSelectionHBox.setMaxWidth(model.getAmountBoxWidth() + 40);
+        quoteAmountSelectionHBox.setMinWidth(model.getAmountBoxWidth() + 40);
         quoteAmountSelectionHBox.setLayoutY(0);
         quoteAmountSelectionHBox.setMinHeight(70);
         quoteAmountSelectionHBox.setMaxHeight(70);
+        quoteAmountSelectionHBox.setPadding(new Insets(0, 20, 0, 20));
 
         // base amount selection
         baseAmountSeparator = new Label(EN_DASH_SYMBOL);
         baseAmountSeparator.getStyleClass().add("base-separator");
         minBaseAmountRoot.getStyleClass().add("min-base-amount");
         maxOrFixedBaseAmountRoot.getStyleClass().add("max-or-fixed-base-amount");
-        HBox baseAmountSelectionHBox = new HBox(minBaseAmountRoot, baseAmountSeparator, maxOrFixedBaseAmountRoot);
+        baseAmountSelectionHBox = new HBox(minBaseAmountRoot, baseAmountSeparator, maxOrFixedBaseAmountRoot);
         baseAmountSelectionHBox.getStyleClass().add("base-amount");
-        baseAmountSelectionHBox.setMaxWidth(AMOUNT_BOX_WIDTH);
-        baseAmountSelectionHBox.setMinWidth(AMOUNT_BOX_WIDTH);
-        baseAmountSelectionHBox.setLayoutY(70);
         HBox.setHgrow(maxOrFixedBaseAmountRoot, Priority.ALWAYS);
+
+        flipCurrenciesButton = new BisqMenuItem("flip-fields-arrows-green", "flip-fields-arrows-white");
+        HBox baseAmountAndFlippingButtonHBox = new HBox(baseAmountSelectionHBox, Spacer.fillHBox(), flipCurrenciesButton);
+        baseAmountAndFlippingButtonHBox.setLayoutY(70);
+        baseAmountAndFlippingButtonHBox.setPadding(new Insets(0, 10, 0, 20));
 
         // rest of the component
         description = new Label();
         description.setMouseTransparent(true);
+        description.setPadding(new Insets(0, 0, 0, 20));
 
-        Pane amountInputVBox = new Pane(quoteAmountSelectionHBox, baseAmountSelectionHBox);
-        amountInputVBox.setMinHeight(AMOUNT_BOX_HEIGHT - 30);
-        amountInputVBox.setMaxHeight(AMOUNT_BOX_HEIGHT - 30);
+        Pane amountInputVBox = new Pane(quoteAmountSelectionHBox, baseAmountAndFlippingButtonHBox);
+        amountInputVBox.setMinHeight(model.getAmountBoxHeight() - 30);
+        amountInputVBox.setMaxHeight(model.getAmountBoxHeight() - 30);
         amountInputVBox.getStyleClass().add("amount-input");
 
         VBox descriptionAndAmountVBox = new VBox(0, description, Spacer.fillVBox(), amountInputVBox);
-        descriptionAndAmountVBox.getStyleClass().addAll("bisq-dual-amount-bg", "description-and-amount-box");
+        descriptionAndAmountVBox.getStyleClass().add("bisq-dual-amount-bg");
+        descriptionAndAmountVBox.setPadding(new Insets(8, 0, 8, 0));
 
         Region line = new Region();
         line.setPrefHeight(1);
-        line.setPrefWidth(AMOUNT_BOX_WIDTH + 40); // plus 40 for the paddings
-        line.setLayoutY(AMOUNT_BOX_HEIGHT + 6);
+        line.setPrefWidth(model.getAmountBoxWidth() + 40); // plus 40 for the paddings
+        line.setLayoutY(model.getAmountBoxHeight() + 6);
         line.setStyle("-fx-background-color: -bisq-mid-grey-20");
         line.setMouseTransparent(true);
 
@@ -139,13 +144,13 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         selectionLine.getStyleClass().add("material-text-field-selection-line");
         selectionLine.setPrefHeight(2);
         selectionLine.setPrefWidth(0);
-        selectionLine.setLayoutY(AMOUNT_BOX_HEIGHT + 5);
+        selectionLine.setLayoutY(model.getAmountBoxHeight() + 5);
         selectionLine.setMouseTransparent(true);
 
         Pane amountPane = new Pane(descriptionAndAmountVBox, line, selectionLine);
-        amountPane.setMaxWidth(AMOUNT_BOX_WIDTH + 40);
-        amountPane.setMinHeight(AMOUNT_BOX_HEIGHT);
-        amountPane.setMaxHeight(AMOUNT_BOX_HEIGHT);
+        amountPane.setMaxWidth(model.getAmountBoxWidth() + 40);
+        amountPane.setMinHeight(model.getAmountBoxHeight());
+        amountPane.setMaxHeight(model.getAmountBoxHeight());
 
         // slider
         maxOrFixedAmountSlider = new Slider();
@@ -174,7 +179,7 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
 
         sliderIndicators = new HBox(minRangeValueAndCodeHBox, Spacer.fillHBox(), maxRangeValueAndCodeHBox);
         VBox sliderBox = new VBox(2, maxOrFixedAmountSlider, minAmountSlider, sliderIndicators);
-        sliderBox.setMaxWidth(AMOUNT_BOX_WIDTH + 40);
+        sliderBox.setMaxWidth(model.getAmountBoxWidth() + 40);
 
         VBox.setMargin(sliderBox, new Insets(30, 0, 0, 0));
         root.getChildren().addAll(amountPane, sliderBox);
@@ -243,6 +248,10 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         minBaseAmountRoot.managedProperty().bind(model.getIsRangeAmountEnabled());
         minAmountSlider.visibleProperty().bind(model.getIsRangeAmountEnabled());
         minAmountSlider.managedProperty().bind(model.getIsRangeAmountEnabled());
+        flipCurrenciesButton.visibleProperty().bind(model.getAllowFlippingBaseAndQuoteCurrencies());
+        flipCurrenciesButton.managedProperty().bind(model.getAllowFlippingBaseAndQuoteCurrencies());
+        baseAmountSelectionHBox.minWidthProperty().bind(model.getBaseAmountSelectionHBoxWidth());
+        baseAmountSelectionHBox.maxWidthProperty().bind(model.getBaseAmountSelectionHBoxWidth());
 
         // Needed to trigger focusOut event on amount components
         // We handle all parents mouse events.
@@ -290,6 +299,10 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         minBaseAmountRoot.managedProperty().unbind();
         minAmountSlider.visibleProperty().unbind();
         minAmountSlider.managedProperty().unbind();
+        flipCurrenciesButton.visibleProperty().unbind();
+        flipCurrenciesButton.managedProperty().unbind();
+        baseAmountSelectionHBox.minWidthProperty().unbind();
+        baseAmountSelectionHBox.maxWidthProperty().unbind();
 
         maxOrFixedQuoteAmount.isAmountValidProperty().set(true);
         minQuoteAmount.isAmountValidProperty().set(true);
@@ -306,7 +319,7 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         if (focus || isOtherFocused) {
             selectionLine.setPrefWidth(0);
             selectionLine.setOpacity(1);
-            Transitions.animatePrefWidth(selectionLine, AMOUNT_BOX_WIDTH + 40);
+            Transitions.animatePrefWidth(selectionLine, model.getAmountBoxWidth() + 40);
             description.getStyleClass().add("description-focused");
         } else {
             Transitions.fadeOut(selectionLine, 200);
