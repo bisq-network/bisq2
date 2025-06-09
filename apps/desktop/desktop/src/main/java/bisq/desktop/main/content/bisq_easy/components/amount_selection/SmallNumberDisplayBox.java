@@ -38,7 +38,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class SmallNumberDisplayBox {
+public class SmallNumberDisplayBox implements AmountNumberBox {
     private static final double ICON_SCALE = 0.85;
     private static final double ICON_OPACITY = 0.5;
     private static final String DEFAULT_TOOLTIP = "bisqEasy.component.amount.baseSide.tooltip.btcAmount.marketPrice";

@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class BigNumberAmountInputBox {
+public class BigNumberAmountInputBox implements AmountNumberBox {
     private final Controller controller;
 
     public BigNumberAmountInputBox(boolean isBaseCurrency, boolean showCurrencyCode) {
