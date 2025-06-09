@@ -108,7 +108,9 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         quoteAmountSeparator = new Label(EN_DASH_SYMBOL);
         quoteAmountSeparator.getStyleClass().add("quote-separator");
         minQuoteAmountRoot.getStyleClass().add("min-quote-amount");
+        invertedMinBaseAmountRoot.getStyleClass().add("min-quote-amount");
         maxOrFixedQuoteAmountRoot.getStyleClass().add("max-or-fixed-quote-amount");
+        invertedMaxOrFixedBaseAmountRoot.getStyleClass().add("max-or-fixed-quote-amount");
         quoteAmountSelectionHBox = new HBox(5, minQuoteAmountRoot, invertedMinBaseAmountRoot, quoteAmountSeparator,
                 maxOrFixedQuoteAmountRoot, invertedMaxOrFixedBaseAmountRoot);
         quoteAmountSelectionHBox.getStyleClass().add("quote-amount");
@@ -123,11 +125,12 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         baseAmountSeparator = new Label(EN_DASH_SYMBOL);
         baseAmountSeparator.getStyleClass().add("base-separator");
         minBaseAmountRoot.getStyleClass().add("min-base-amount");
+        invertedMinQuoteAmountRoot.getStyleClass().add("min-base-amount");
         maxOrFixedBaseAmountRoot.getStyleClass().add("max-or-fixed-base-amount");
+        invertedMaxOrFixedQuoteAmountRoot.getStyleClass().add("max-or-fixed-base-amount");
         baseAmountSelectionHBox = new HBox(minBaseAmountRoot, invertedMinQuoteAmountRoot, baseAmountSeparator,
                 maxOrFixedBaseAmountRoot, invertedMaxOrFixedQuoteAmountRoot);
         baseAmountSelectionHBox.getStyleClass().add("base-amount");
-        HBox.setHgrow(maxOrFixedBaseAmountRoot, Priority.ALWAYS);
 
         flipCurrenciesButton = new BisqMenuItem("flip-fields-arrows-green", "flip-fields-arrows-white");
         HBox baseAmountAndFlippingButtonHBox = new HBox(baseAmountSelectionHBox, Spacer.fillHBox(), flipCurrenciesButton);

@@ -841,14 +841,13 @@
     -fx-padding: 0 0 3 0;
 }
 
-.range-amount .base-amount {
+.base-amount {
     -fx-alignment: center;
 }
 
 .range-amount .base-amount .max-or-fixed-base-amount {
-    -fx-max-width: 145;
-    -fx-min-width: 145;
     -fx-padding: 0 0 0 4;
+    -fx-alignment: center-left;
 }
 
 .fixed-amount .quote-amount .big-amount-input .text-input,
