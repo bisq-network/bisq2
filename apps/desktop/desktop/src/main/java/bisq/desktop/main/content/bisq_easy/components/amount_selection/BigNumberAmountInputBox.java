@@ -273,7 +273,13 @@ public class BigNumberAmountInputBox {
         }
 
         private void applyAmount(Monetary newValue) {
-            textInput.setText(newValue == null ? "" : AmountFormatter.formatQuoteAmount(newValue));
+            String formattedAmount = "";
+            if (newValue != null) {
+                formattedAmount = model.isBaseCurrency
+                        ? AmountFormatter.formatBaseAmount(newValue)
+                        : AmountFormatter.formatQuoteAmount(newValue);
+            }
+            textInput.setText(newValue == null ? "" : formattedAmount);
             textInput.selectRange(textInput.getLength(), textInput.getLength());
         }
     }

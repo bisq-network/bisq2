@@ -64,18 +64,17 @@ public class AmountSelectionController implements Controller {
     public AmountSelectionController(ServiceProvider serviceProvider) {
         // max or fixed amount
         maxOrFixedQuoteSideAmountInput = new BigNumberAmountInputBox(false, true);
-        maxOrFixedBaseSideAmountInput = new SmallNumberDisplayBox(true);
+        maxOrFixedBaseSideAmountInput = new SmallNumberDisplayBox(true, true);
         // inverted to select amount using base
-        invertedMaxOrFixedQuoteSideAmountInput = new SmallNumberDisplayBox(true);
+        invertedMaxOrFixedQuoteSideAmountInput = new SmallNumberDisplayBox(false, true);
         invertedMaxOrFixedBaseSideAmountInput = new BigNumberAmountInputBox(true, true);
 
         // min amount (only applies when selecting a range)
         minQuoteSideAmountInput = new BigNumberAmountInputBox(false, false);
-        minBaseSideAmountInput = new SmallNumberDisplayBox(false);
+        minBaseSideAmountInput = new SmallNumberDisplayBox(true, false);
         // inverted to select amount using base
-        invertedMinQuoteSideAmountInput = new SmallNumberDisplayBox(false);
+        invertedMinQuoteSideAmountInput = new SmallNumberDisplayBox(false, false);
         invertedMinBaseSideAmountInput = new BigNumberAmountInputBox(true, false);
-
 
         price = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
 

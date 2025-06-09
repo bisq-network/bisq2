@@ -46,8 +46,8 @@ public class SmallNumberDisplayBox {
 
     private final Controller controller;
 
-    public SmallNumberDisplayBox(boolean showCurrencyCode) {
-        controller = new Controller(showCurrencyCode);
+    public SmallNumberDisplayBox(boolean isBaseCurrency, boolean showCurrencyCode) {
+        controller = new Controller(isBaseCurrency, showCurrencyCode);
     }
 
     public ReadOnlyObjectProperty<Monetary> amountProperty() {
@@ -79,8 +79,8 @@ public class SmallNumberDisplayBox {
         @Getter
         private final View view;
 
-        private Controller(boolean showCurrencyCode) {
-            model = new Model(showCurrencyCode);
+        private Controller(boolean isBaseCurrency, boolean showCurrencyCode) {
+            model = new Model(isBaseCurrency, showCurrencyCode);
             view = new View(model, this);
         }
 
@@ -105,12 +105,15 @@ public class SmallNumberDisplayBox {
                 model.code.set("");
                 return;
             }
-            model.code.set(model.selectedMarket.getBaseCurrencyCode());
+            model.code.set(model.isBaseCurrency
+                    ? model.selectedMarket.getBaseCurrencyCode()
+                    : model.selectedMarket.getQuoteCurrencyCode());
             model.isBtc.set(TradeCurrency.isBtc(model.code.get()));
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
+        private final boolean isBaseCurrency;
         private final boolean showCurrencyCode;
         private final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
         private final StringProperty code = new SimpleStringProperty();
@@ -118,7 +121,8 @@ public class SmallNumberDisplayBox {
         private final BooleanProperty isBtc = new SimpleBooleanProperty(false);
         private Market selectedMarket;
 
-        private Model(boolean showCurrencyCode) {
+        private Model(boolean isBaseCurrency, boolean showCurrencyCode) {
+            this.isBaseCurrency = isBaseCurrency;
             this.showCurrencyCode = showCurrencyCode;
         }
 
@@ -231,7 +235,9 @@ public class SmallNumberDisplayBox {
                 return;
             }
 
-            String formattedAmount = AmountFormatter.formatBaseAmount(newValue);
+            String formattedAmount = model.isBaseCurrency
+                    ? AmountFormatter.formatBaseAmount(newValue)
+                    : AmountFormatter.formatQuoteAmount(newValue);
             amountLabel.setText(formattedAmount);
 
             if (model.isBtc.get()) {
