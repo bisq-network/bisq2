@@ -65,8 +65,9 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
     private final Label minRangeValue, maxRangeValue, minRangeCode, maxRangeCode, description, quoteAmountSeparator,
             baseAmountSeparator;
     private final Region selectionLine;
-    private final QuoteAmountInputBox maxOrFixedQuoteAmount, minQuoteAmount;
-    private final Pane minQuoteAmountRoot, minBaseAmountRoot;
+    private final BigNumberAmountInputBox maxOrFixedQuoteAmount, minQuoteAmount, invertedMaxOrFixedBaseAmount, invertedMinBaseAmount;
+    private final Pane minQuoteAmountRoot, minBaseAmountRoot, invertedMinQuoteAmountRoot, invertedMinBaseAmountRoot,
+            maxOrFixedBaseAmountRoot, maxOrFixedQuoteAmountRoot, invertedMaxOrFixedQuoteAmountRoot, invertedMaxOrFixedBaseAmountRoot;
     private final HBox quoteAmountSelectionHBox, baseAmountSelectionHBox, sliderIndicators;
     private final ChangeListener<Number> maxOrFixedAmountSliderValueListener, minAmountSliderValueListener;
     private final BisqMenuItem flipCurrenciesButton;
@@ -75,28 +76,41 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
 
     AmountSelectionView(AmountSelectionModel model,
                         AmountSelectionController controller,
-                        BaseAmountBox maxOrFixedBaseAmount,
-                        QuoteAmountInputBox maxOrFixedQuoteAmount,
-                        BaseAmountBox minBaseAmount,
-                        QuoteAmountInputBox minQuoteAmount) {
+                        SmallNumberDisplayBox maxOrFixedBaseAmount,
+                        BigNumberAmountInputBox maxOrFixedQuoteAmount,
+                        SmallNumberDisplayBox invertedMaxOrFixedQuoteAmount,
+                        BigNumberAmountInputBox invertedMaxOrFixedBaseAmount,
+                        SmallNumberDisplayBox minBaseAmount,
+                        BigNumberAmountInputBox minQuoteAmount,
+                        SmallNumberDisplayBox invertedMinQuoteAmount,
+                        BigNumberAmountInputBox invertedMinBaseAmount) {
         super(new VBox(10), model, controller);
 
         // max or fixed component
-        Pane maxOrFixedBaseAmountRoot = maxOrFixedBaseAmount.getRoot();
-        Pane maxOrFixedQuoteAmountRoot = maxOrFixedQuoteAmount.getRoot();
+        maxOrFixedBaseAmountRoot = maxOrFixedBaseAmount.getRoot();
+        maxOrFixedQuoteAmountRoot = maxOrFixedQuoteAmount.getRoot();
         this.maxOrFixedQuoteAmount = maxOrFixedQuoteAmount;
+        // inverted ones
+        invertedMaxOrFixedQuoteAmountRoot = invertedMaxOrFixedQuoteAmount.getRoot();
+        invertedMaxOrFixedBaseAmountRoot = invertedMaxOrFixedBaseAmount.getRoot();
+        this.invertedMaxOrFixedBaseAmount = invertedMaxOrFixedBaseAmount;
 
         // min component (only shown when using a range)
         minBaseAmountRoot = minBaseAmount.getRoot();
         minQuoteAmountRoot = minQuoteAmount.getRoot();
         this.minQuoteAmount = minQuoteAmount;
+        // inverted ones
+        invertedMinQuoteAmountRoot = invertedMinQuoteAmount.getRoot();
+        invertedMinBaseAmountRoot = invertedMinBaseAmount.getRoot();
+        this.invertedMinBaseAmount = invertedMinBaseAmount;
 
         // quote amount selection
         quoteAmountSeparator = new Label(EN_DASH_SYMBOL);
         quoteAmountSeparator.getStyleClass().add("quote-separator");
         minQuoteAmountRoot.getStyleClass().add("min-quote-amount");
         maxOrFixedQuoteAmountRoot.getStyleClass().add("max-or-fixed-quote-amount");
-        quoteAmountSelectionHBox = new HBox(5, minQuoteAmountRoot, quoteAmountSeparator, maxOrFixedQuoteAmountRoot);
+        quoteAmountSelectionHBox = new HBox(5, minQuoteAmountRoot, invertedMinBaseAmountRoot, quoteAmountSeparator,
+                maxOrFixedQuoteAmountRoot, invertedMaxOrFixedBaseAmountRoot);
         quoteAmountSelectionHBox.getStyleClass().add("quote-amount");
         quoteAmountSelectionHBox.setMaxWidth(model.getAmountBoxWidth() + 40);
         quoteAmountSelectionHBox.setMinWidth(model.getAmountBoxWidth() + 40);
@@ -110,7 +124,8 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         baseAmountSeparator.getStyleClass().add("base-separator");
         minBaseAmountRoot.getStyleClass().add("min-base-amount");
         maxOrFixedBaseAmountRoot.getStyleClass().add("max-or-fixed-base-amount");
-        baseAmountSelectionHBox = new HBox(minBaseAmountRoot, baseAmountSeparator, maxOrFixedBaseAmountRoot);
+        baseAmountSelectionHBox = new HBox(minBaseAmountRoot, invertedMinQuoteAmountRoot, baseAmountSeparator,
+                maxOrFixedBaseAmountRoot, invertedMaxOrFixedQuoteAmountRoot);
         baseAmountSelectionHBox.getStyleClass().add("base-amount");
         HBox.setHgrow(maxOrFixedBaseAmountRoot, Priority.ALWAYS);
 
@@ -242,16 +257,30 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         quoteAmountSeparator.managedProperty().bind(model.getIsRangeAmountEnabled());
         baseAmountSeparator.visibleProperty().bind(model.getIsRangeAmountEnabled());
         baseAmountSeparator.managedProperty().bind(model.getIsRangeAmountEnabled());
-        minQuoteAmountRoot.visibleProperty().bind(model.getIsRangeAmountEnabled());
-        minQuoteAmountRoot.managedProperty().bind(model.getIsRangeAmountEnabled());
-        minBaseAmountRoot.visibleProperty().bind(model.getIsRangeAmountEnabled());
-        minBaseAmountRoot.managedProperty().bind(model.getIsRangeAmountEnabled());
+        minQuoteAmountRoot.visibleProperty().bind(model.getShouldShowMinAmounts());
+        minQuoteAmountRoot.managedProperty().bind(model.getShouldShowMinAmounts());
+        minBaseAmountRoot.visibleProperty().bind(model.getShouldShowMinAmounts());
+        minBaseAmountRoot.managedProperty().bind(model.getShouldShowMinAmounts());
+        invertedMinQuoteAmountRoot.visibleProperty().bind(model.getShouldShowInvertedMinAmounts());
+        invertedMinQuoteAmountRoot.managedProperty().bind(model.getShouldShowInvertedMinAmounts());
+        invertedMinBaseAmountRoot.visibleProperty().bind(model.getShouldShowInvertedMinAmounts());
+        invertedMinBaseAmountRoot.managedProperty().bind(model.getShouldShowInvertedMinAmounts());
         minAmountSlider.visibleProperty().bind(model.getIsRangeAmountEnabled());
         minAmountSlider.managedProperty().bind(model.getIsRangeAmountEnabled());
-        flipCurrenciesButton.visibleProperty().bind(model.getAllowFlippingBaseAndQuoteCurrencies());
-        flipCurrenciesButton.managedProperty().bind(model.getAllowFlippingBaseAndQuoteCurrencies());
+        flipCurrenciesButton.visibleProperty().bind(model.getAllowInvertingBaseAndQuoteCurrencies());
+        flipCurrenciesButton.managedProperty().bind(model.getAllowInvertingBaseAndQuoteCurrencies());
         baseAmountSelectionHBox.minWidthProperty().bind(model.getBaseAmountSelectionHBoxWidth());
         baseAmountSelectionHBox.maxWidthProperty().bind(model.getBaseAmountSelectionHBoxWidth());
+        maxOrFixedBaseAmountRoot.visibleProperty().bind(model.getShouldShowMaxOrFixedAmounts());
+        maxOrFixedBaseAmountRoot.managedProperty().bind(model.getShouldShowMaxOrFixedAmounts());
+        maxOrFixedQuoteAmountRoot.visibleProperty().bind(model.getShouldShowMaxOrFixedAmounts());
+        maxOrFixedQuoteAmountRoot.managedProperty().bind(model.getShouldShowMaxOrFixedAmounts());
+        invertedMaxOrFixedQuoteAmountRoot.visibleProperty().bind(model.getShouldShowInvertedMaxOrFixedAmounts());
+        invertedMaxOrFixedQuoteAmountRoot.managedProperty().bind(model.getShouldShowInvertedMaxOrFixedAmounts());
+        invertedMaxOrFixedBaseAmountRoot.visibleProperty().bind(model.getShouldShowInvertedMaxOrFixedAmounts());
+        invertedMaxOrFixedBaseAmountRoot.managedProperty().bind(model.getShouldShowInvertedMaxOrFixedAmounts());
+
+        flipCurrenciesButton.setOnAction(e -> controller.onClickFlipCurrenciesButton());
 
         // Needed to trigger focusOut event on amount components
         // We handle all parents mouse events.
@@ -307,6 +336,8 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         maxOrFixedQuoteAmount.isAmountValidProperty().set(true);
         minQuoteAmount.isAmountValidProperty().set(true);
 
+        flipCurrenciesButton.setOnAction(null);
+
         Parent node = root;
         while (node.getParent() != null) {
             node.setOnMousePressed(null);
@@ -357,7 +388,7 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         return count;
     }
 
-    private int getCalculatedTextInputLength(QuoteAmountInputBox quoteAmountInputBox) {
+    private int getCalculatedTextInputLength(BigNumberAmountInputBox quoteAmountInputBox) {
         // If using an integer we need to count one more char since a dot occupies much less space.
         return !quoteAmountInputBox.getTextInput().contains(".")
                 ? quoteAmountInputBox.getTextInputLength() + 1

@@ -197,7 +197,7 @@ public class MuSigCreateOfferAmountController implements Controller {
 
     @Override
     public void onActivate() {
-        amountSelectionController.setAllowFlippingBaseAndQuoteCurrencies(true);
+        amountSelectionController.setAllowInvertingBaseAndQuoteCurrencies(true);
         model.getShouldShowWarningIcon().set(false);
         applyQuoteSideMinMaxRange();
 

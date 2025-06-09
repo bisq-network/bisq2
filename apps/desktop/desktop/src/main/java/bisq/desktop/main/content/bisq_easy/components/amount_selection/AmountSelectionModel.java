@@ -83,8 +83,13 @@ public class AmountSelectionModel implements Model {
     private final StringProperty maxRangeValueLimitationAsString = new SimpleStringProperty();
     private final StringProperty maxRangeCodeAsString = new SimpleStringProperty();
     private final BooleanProperty showRangeAmountSelection = new SimpleBooleanProperty(false);
-    private final BooleanProperty allowFlippingBaseAndQuoteCurrencies = new SimpleBooleanProperty(false);
+    private final BooleanProperty allowInvertingBaseAndQuoteCurrencies = new SimpleBooleanProperty(false);
     private final IntegerProperty baseAmountSelectionHBoxWidth = new SimpleIntegerProperty(amountBoxWidth);
+    private final BooleanProperty areBaseAndQuoteCurrenciesInverted = new SimpleBooleanProperty(false);
+    private final BooleanProperty shouldShowMinAmounts = new SimpleBooleanProperty(false);
+    private final BooleanProperty shouldShowInvertedMinAmounts = new SimpleBooleanProperty(false);
+    private final BooleanProperty shouldShowMaxOrFixedAmounts = new SimpleBooleanProperty(false);
+    private final BooleanProperty shouldShowInvertedMaxOrFixedAmounts = new SimpleBooleanProperty(false);
 
     void reset() {
         maxOrFixedBaseSideAmount.set(null);
@@ -115,7 +120,12 @@ public class AmountSelectionModel implements Model {
         maxRangeValueLimitationAsString.set(null);
         maxRangeCodeAsString.set(null);
         showRangeAmountSelection.set(false);
-        allowFlippingBaseAndQuoteCurrencies.set(false);
+        allowInvertingBaseAndQuoteCurrencies.set(false);
         baseAmountSelectionHBoxWidth.set(amountBoxWidth);
+        areBaseAndQuoteCurrenciesInverted.set(false);
+        shouldShowMinAmounts.set(false);
+        shouldShowInvertedMinAmounts.set(false);
+        shouldShowMaxOrFixedAmounts.set(false);
+        shouldShowInvertedMaxOrFixedAmounts.set(false);
     }
 }

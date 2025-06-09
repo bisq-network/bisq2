@@ -48,24 +48,34 @@ public class AmountSelectionController implements Controller {
     final AmountSelectionModel model;
     @Getter
     private final AmountSelectionView view;
-    private final QuoteAmountInputBox maxOrFixedQuoteSideAmountInput, minQuoteSideAmountInput;
-    private final BaseAmountBox maxOrFixedBaseSideAmountInput, minBaseSideAmountInput;
+    private final BigNumberAmountInputBox maxOrFixedQuoteSideAmountInput, minQuoteSideAmountInput, invertedMinBaseSideAmountInput,
+            invertedMaxOrFixedBaseSideAmountInput;
+    private final SmallNumberDisplayBox maxOrFixedBaseSideAmountInput, minBaseSideAmountInput, invertedMinQuoteSideAmountInput,
+            invertedMaxOrFixedQuoteSideAmountInput;
     private final ChangeListener<Monetary> maxOrFixedQuoteSideAmountFromModelListener, minQuoteSideAmountFromModelListener;
     private final ChangeListener<PriceQuote> quoteListener;
     private final PriceInput price;
     private final ChangeListener<Number> maxOrFixedSliderListener, minSliderListener;
     private Subscription maxOrFixedQuoteAmountFromModelPin, maxOrFixedBaseAmountFromCompPin, maxOrFixedQuoteAmountFromCompPin,
             maxOrFixedQuoteSideAmountValidPin, minQuoteAmountFromModelPin, minBaseAmountFromCompPin, minQuoteAmountFromCompPin,
-            minQuoteSideAmountValidPin, priceFromCompPin, minRangeCustomValuePin, maxRangeCustomValuePin, isRangeAmountEnabledPin;
+            minQuoteSideAmountValidPin, priceFromCompPin, minRangeCustomValuePin, maxRangeCustomValuePin, isRangeAmountEnabledPin,
+            areBaseAndQuoteCurrenciesInvertedPin;
 
     public AmountSelectionController(ServiceProvider serviceProvider) {
         // max or fixed amount
-        maxOrFixedQuoteSideAmountInput = new QuoteAmountInputBox(false, true);
-        maxOrFixedBaseSideAmountInput = new BaseAmountBox(true);
+        maxOrFixedQuoteSideAmountInput = new BigNumberAmountInputBox(false, true);
+        maxOrFixedBaseSideAmountInput = new SmallNumberDisplayBox(true);
+        // inverted to select amount using base
+        invertedMaxOrFixedQuoteSideAmountInput = new SmallNumberDisplayBox(true);
+        invertedMaxOrFixedBaseSideAmountInput = new BigNumberAmountInputBox(true, true);
 
         // min amount (only applies when selecting a range)
-        minQuoteSideAmountInput = new QuoteAmountInputBox(false, false);
-        minBaseSideAmountInput = new BaseAmountBox(false);
+        minQuoteSideAmountInput = new BigNumberAmountInputBox(false, false);
+        minBaseSideAmountInput = new SmallNumberDisplayBox(false);
+        // inverted to select amount using base
+        invertedMinQuoteSideAmountInput = new SmallNumberDisplayBox(false);
+        invertedMinBaseSideAmountInput = new BigNumberAmountInputBox(true, false);
+
 
         price = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
 
@@ -73,8 +83,12 @@ public class AmountSelectionController implements Controller {
         view = new AmountSelectionView(model, this,
                 maxOrFixedBaseSideAmountInput,
                 maxOrFixedQuoteSideAmountInput,
+                invertedMaxOrFixedQuoteSideAmountInput,
+                invertedMaxOrFixedBaseSideAmountInput,
                 minBaseSideAmountInput,
-                minQuoteSideAmountInput);
+                minQuoteSideAmountInput,
+                invertedMinQuoteSideAmountInput,
+                invertedMinBaseSideAmountInput);
 
         // We delay with runLater to avoid that we get triggered at market change from the component's data changes and
         // apply the conversion before the other component has processed the market change event.
@@ -135,9 +149,9 @@ public class AmountSelectionController implements Controller {
         model.getSpendOrReceiveString().set(direction == Direction.BUY ? Res.get("offer.buying") : Res.get("offer.selling"));
     }
 
-    public void setAllowFlippingBaseAndQuoteCurrencies(boolean allowFlippingBaseAndQuoteCurrencies) {
-        model.getAllowFlippingBaseAndQuoteCurrencies().set(allowFlippingBaseAndQuoteCurrencies);
-        model.getBaseAmountSelectionHBoxWidth().set(allowFlippingBaseAndQuoteCurrencies ? model.getAmountBoxWidth() - 10 : model.getAmountBoxWidth());
+    public void setAllowInvertingBaseAndQuoteCurrencies(boolean allowInvertingBaseAndQuoteCurrencies) {
+        model.getAllowInvertingBaseAndQuoteCurrencies().set(allowInvertingBaseAndQuoteCurrencies);
+        model.getBaseAmountSelectionHBoxWidth().set(allowInvertingBaseAndQuoteCurrencies ? model.getAmountBoxWidth() - 10 : model.getAmountBoxWidth());
     }
 
     public void setTooltip(String tooltip) {
@@ -151,9 +165,13 @@ public class AmountSelectionController implements Controller {
         }
         model.setMarket(market);
         maxOrFixedBaseSideAmountInput.setSelectedMarket(market);
+        invertedMaxOrFixedBaseSideAmountInput.setSelectedMarket(market);
         maxOrFixedQuoteSideAmountInput.setSelectedMarket(market);
+        invertedMaxOrFixedQuoteSideAmountInput.setSelectedMarket(market);
         minBaseSideAmountInput.setSelectedMarket(market);
+        invertedMinBaseSideAmountInput.setSelectedMarket(market);
         minQuoteSideAmountInput.setSelectedMarket(market);
+        invertedMinQuoteSideAmountInput.setSelectedMarket(market);
         price.setMarket(market);
     }
 
@@ -206,9 +224,13 @@ public class AmountSelectionController implements Controller {
 
     public void reset() {
         maxOrFixedBaseSideAmountInput.reset();
+        invertedMaxOrFixedBaseSideAmountInput.reset();
         maxOrFixedQuoteSideAmountInput.reset();
+        invertedMaxOrFixedQuoteSideAmountInput.reset();
         minBaseSideAmountInput.reset();
+        invertedMinBaseSideAmountInput.reset();
         minQuoteSideAmountInput.reset();
+        invertedMinQuoteSideAmountInput.reset();
         price.reset();
         model.reset();
     }
@@ -226,18 +248,22 @@ public class AmountSelectionController implements Controller {
         price.getQuote().addListener(quoteListener);
 
         maxOrFixedBaseSideAmountInput.setAmount(null);
+        invertedMaxOrFixedBaseSideAmountInput.setAmount(null);
         if (model.getMaxOrFixedQuoteSideAmount().get() == null) {
-            initializeQuoteSideAmount(maxOrFixedQuoteSideAmountInput);
+            initializeQuoteSideAmount(maxOrFixedQuoteSideAmountInput, invertedMaxOrFixedQuoteSideAmountInput);
         } else {
             maxOrFixedQuoteSideAmountInput.setAmount(model.getMaxOrFixedQuoteSideAmount().get());
+            invertedMaxOrFixedQuoteSideAmountInput.setAmount(model.getMaxOrFixedQuoteSideAmount().get());
         }
         setMaxOrFixedBaseFromQuote();
 
         minBaseSideAmountInput.setAmount(null);
+        invertedMinBaseSideAmountInput.setAmount(null);
         if (model.getMinQuoteSideAmount().get() == null) {
-            initializeQuoteSideAmount(minQuoteSideAmountInput);
+            initializeQuoteSideAmount(minQuoteSideAmountInput, invertedMinQuoteSideAmountInput);
         } else {
             minQuoteSideAmountInput.setAmount(model.getMinQuoteSideAmount().get());
+            invertedMinQuoteSideAmountInput.setAmount(model.getMinQuoteSideAmount().get());
         }
         setMinBaseFromQuote();
 
@@ -331,12 +357,18 @@ public class AmountSelectionController implements Controller {
         maxOrFixedQuoteSideAmountValidPin = subscribeToAmountValidity(maxOrFixedQuoteSideAmountInput, this::setMaxOrFixedQuoteFromBase);
         minQuoteSideAmountValidPin = subscribeToAmountValidity(minQuoteSideAmountInput, this::setMinQuoteFromBase);
 
-        isRangeAmountEnabledPin = EasyBind.subscribe(model.getIsRangeAmountEnabled(), isRangeAmountEnabled ->
+        isRangeAmountEnabledPin = EasyBind.subscribe(model.getIsRangeAmountEnabled(), isRangeAmountEnabled -> {
                 model.getDescription().set(
                         Res.get(isRangeAmountEnabled
                                         ? "bisqEasy.tradeWizard.amount.description.range"
                                         : "bisqEasy.tradeWizard.amount.description.fixed"
-                                , model.getMarket().getQuoteCurrencyCode())));
+                                , model.getMarket().getQuoteCurrencyCode()));
+                updateShouldShowAmounts();
+        });
+
+        areBaseAndQuoteCurrenciesInvertedPin = EasyBind.subscribe(model.getAreBaseAndQuoteCurrenciesInverted(), areBaseAndQuoteCurrenciesInverted -> {
+           updateShouldShowAmounts();
+        });
 
         model.getMaxOrFixedAmountSliderValue().addListener(maxOrFixedSliderListener);
         model.getMinAmountSliderValue().addListener(minSliderListener);
@@ -362,6 +394,7 @@ public class AmountSelectionController implements Controller {
         maxOrFixedQuoteSideAmountValidPin.unsubscribe();
         minQuoteSideAmountValidPin.unsubscribe();
         isRangeAmountEnabledPin.unsubscribe();
+        areBaseAndQuoteCurrenciesInvertedPin.unsubscribe();
 
         model.setLeftMarkerQuoteSideValue(null);
         model.setRightMarkerQuoteSideValue(null);
@@ -369,6 +402,15 @@ public class AmountSelectionController implements Controller {
 
     double getMaxAllowedSliderValue() {
         return getSliderValue(model.getMaxRangeQuoteSideValue().get().getValue());
+    }
+
+    void onClickFlipCurrenciesButton() {
+        if (model.getAllowInvertingBaseAndQuoteCurrencies() == null || !model.getAllowInvertingBaseAndQuoteCurrencies().get()) {
+            return;
+        }
+
+        boolean currentValue = model.getAreBaseAndQuoteCurrenciesInverted().get();
+        model.getAreBaseAndQuoteCurrenciesInverted().set(!currentValue);
     }
 
     private double getSliderValue(long amountValue) {
@@ -379,7 +421,7 @@ public class AmountSelectionController implements Controller {
         return (double) (amountValue - min) / (max - min);
     }
 
-    private void initializeQuoteSideAmount(QuoteAmountInputBox quoteSideAmountInput) {
+    private void initializeQuoteSideAmount(BigNumberAmountInputBox quoteSideAmountInput, SmallNumberDisplayBox smallNumberDisplayBox) {
         PriceQuote priceQuote = price.getQuote().get();
         if (priceQuote != null) {
             Monetary minRangeQuoteSideValue = model.getMinRangeQuoteSideValue().get();
@@ -387,14 +429,16 @@ public class AmountSelectionController implements Controller {
             long midValue = minRangeQuoteSideValue.getValue() + (maxRangeQuoteSideValue.getValue() - minRangeQuoteSideValue.getValue()) / 2;
             Monetary exactAmount = Fiat.fromValue(midValue, priceQuote.getQuoteSideMonetary().getCode());
             quoteSideAmountInput.setAmount(exactAmount.round(0));
+            smallNumberDisplayBox.setAmount(exactAmount.round(0));
         } else {
             log.warn("price.quoteProperty().get() is null. We use a fiat value of 100 as default value.");
             Fiat defaultQuoteSideAmount = Fiat.fromFaceValue(100, model.getMarket().getQuoteCurrencyCode());
             quoteSideAmountInput.setAmount(defaultQuoteSideAmount);
+            smallNumberDisplayBox.setAmount(defaultQuoteSideAmount);
         }
     }
 
-    private Subscription subscribeToAmountValidity(QuoteAmountInputBox amountInput, Runnable autocorrect) {
+    private Subscription subscribeToAmountValidity(BigNumberAmountInputBox amountInput, Runnable autocorrect) {
         return EasyBind.subscribe(amountInput.isAmountValidProperty(), isAmountValid -> {
             if (!amountInput.isAmountValidProperty().get()) {
                 autocorrect.run();
@@ -492,7 +536,7 @@ public class AmountSelectionController implements Controller {
         model.getSliderTrackStyle().set(style);
     }
 
-    private void applySliderValue(double sliderValue, QuoteAmountInputBox bigAmountInput) {
+    private void applySliderValue(double sliderValue, BigNumberAmountInputBox bigAmountInput) {
         if (model.getMinRangeQuoteSideValue().get() != null) {
             long min = model.getMinRangeQuoteSideValue().get().getValue();
             long max = model.getMaxQuoteAllowedLimitation().get() != null
@@ -518,6 +562,7 @@ public class AmountSelectionController implements Controller {
             return;
         }
         maxOrFixedQuoteSideAmountInput.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount).round(0));
+        invertedMaxOrFixedQuoteSideAmountInput.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount).round(0));
     }
 
     private void setMinQuoteFromBase() {
@@ -530,6 +575,7 @@ public class AmountSelectionController implements Controller {
             return;
         }
         minQuoteSideAmountInput.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount).round(0));
+        invertedMinQuoteSideAmountInput.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount).round(0));
     }
 
     private void setMaxOrFixedBaseFromQuote() {
@@ -542,6 +588,7 @@ public class AmountSelectionController implements Controller {
             return;
         }
         maxOrFixedBaseSideAmountInput.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
+        invertedMaxOrFixedBaseSideAmountInput.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
     }
 
     private void setMinBaseFromQuote() {
@@ -554,10 +601,24 @@ public class AmountSelectionController implements Controller {
             return;
         }
         minBaseSideAmountInput.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
+        invertedMinBaseSideAmountInput.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
     }
 
     private void applyQuote() {
         setMaxOrFixedBaseFromQuote();
         setMinBaseFromQuote();
+    }
+
+    private void updateShouldShowAmounts() {
+        if (model.getAreBaseAndQuoteCurrenciesInverted() != null) {
+            boolean areCurrenciesInverted = model.getAreBaseAndQuoteCurrenciesInverted().get();
+            model.getShouldShowMaxOrFixedAmounts().set(!areCurrenciesInverted);
+            model.getShouldShowInvertedMaxOrFixedAmounts().set(areCurrenciesInverted);
+            if (model.getIsRangeAmountEnabled() != null) {
+                boolean isRangeAmountEnabled = model.getIsRangeAmountEnabled().get();
+                model.getShouldShowMinAmounts().set(isRangeAmountEnabled && !areCurrenciesInverted);
+                model.getShouldShowInvertedMinAmounts().set(isRangeAmountEnabled && areCurrenciesInverted);
+            }
+        }
     }
 }

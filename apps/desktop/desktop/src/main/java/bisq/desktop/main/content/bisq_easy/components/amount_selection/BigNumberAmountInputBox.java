@@ -37,10 +37,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class QuoteAmountInputBox {
+public class BigNumberAmountInputBox {
     private final Controller controller;
 
-    public QuoteAmountInputBox(boolean isBaseCurrency, boolean showCurrencyCode) {
+    public BigNumberAmountInputBox(boolean isBaseCurrency, boolean showCurrencyCode) {
         controller = new Controller(isBaseCurrency, showCurrencyCode);
     }
 
