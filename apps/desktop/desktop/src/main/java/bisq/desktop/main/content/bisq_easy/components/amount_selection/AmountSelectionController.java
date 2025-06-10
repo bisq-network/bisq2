@@ -182,6 +182,10 @@ public class AmountSelectionController implements Controller {
         model.getBaseAmountSelectionHBoxWidth().set(allowInvertingBaseAndQuoteCurrencies ? model.getAmountBoxWidth() - 10 : model.getAmountBoxWidth());
     }
 
+    public void setBaseAsInputCurrency(boolean setBaseAsInputCurrency) {
+        model.getAreBaseAndQuoteCurrenciesInverted().set(setBaseAsInputCurrency);
+    }
+
     public void setTooltip(String tooltip) {
         maxOrFixedBaseSideAmountDisplay.setTooltip(tooltip);
         minBaseSideAmountDisplay.setTooltip(tooltip);
