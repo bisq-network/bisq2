@@ -21,6 +21,7 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -109,6 +110,7 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         baseAmountSelectionHBox.getStyleClass().add("base-amount");
 
         flipCurrenciesButton = new BisqMenuItem("flip-fields-arrows-green", "flip-fields-arrows-white");
+        flipCurrenciesButton.setTooltip(Res.get("bisqEasy.tradeWizard.amount.selection.flipCurrenciesButton.tooltip"));
         HBox baseAmountAndFlippingButtonHBox = new HBox(baseAmountSelectionHBox, Spacer.fillHBox(), flipCurrenciesButton);
         baseAmountAndFlippingButtonHBox.setLayoutY(70);
         baseAmountAndFlippingButtonHBox.setPadding(new Insets(0, 10, 0, 20));
