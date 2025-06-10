@@ -98,7 +98,8 @@ public class MuSigCreateOfferAmountController implements Controller {
     private final Consumer<Boolean> navigationButtonsVisibleHandler;
     private final Consumer<NavigationTarget> closeAndNavigateToHandler;
     private Subscription isRangeAmountEnabledPin, maxOrFixAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
-            maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin, priceTooltipPin;
+            maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin, priceTooltipPin,
+            areBaseAndQuoteCurrenciesInvertedPin;
 
     public MuSigCreateOfferAmountController(ServiceProvider serviceProvider,
                                             Region owner,
@@ -259,7 +260,12 @@ public class MuSigCreateOfferAmountController implements Controller {
         });
         applyAmountSpec();
 
-        model.getPriceTooltip().set(Res.get("bisqEasy.component.amount.baseSide.tooltip.btcAmount.selectedPrice"));
+        areBaseAndQuoteCurrenciesInvertedPin = EasyBind.subscribe(amountSelectionController.getAreBaseAndQuoteCurrenciesInverted(), areInverted -> {
+            String quoteCode = model.getPriceQuote().get().getMarket().getQuoteCurrencyCode();
+            model.getPriceTooltip().set(amountSelectionController.isUsingInvertedBaseAndQuoteCurrencies()
+                    ? Res.get("bisqEasy.component.amount.quoteSide.tooltip.fiatAmount.selectedPrice", quoteCode)
+                    : Res.get("bisqEasy.component.amount.baseSide.tooltip.btcAmount.selectedPrice"));
+        });
 
         priceTooltipPin = EasyBind.subscribe(model.getPriceTooltip(), priceTooltip -> {
             if (priceTooltip != null) {
@@ -275,6 +281,7 @@ public class MuSigCreateOfferAmountController implements Controller {
         maxAmountCompQuoteSideAmountPin.unsubscribe();
         minAmountCompBaseSideAmountPin.unsubscribe();
         minAmountCompQuoteSideAmountPin.unsubscribe();
+        areBaseAndQuoteCurrenciesInvertedPin.unsubscribe();
         priceTooltipPin.unsubscribe();
         navigationButtonsVisibleHandler.accept(true);
         model.getIsOverlayVisible().set(false);

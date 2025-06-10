@@ -30,6 +30,8 @@ import bisq.desktop.main.content.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
 import lombok.Getter;
@@ -163,6 +165,10 @@ public class AmountSelectionController implements Controller {
         return model.getMinQuoteSideAmount();
     }
 
+    public ReadOnlyBooleanProperty getAreBaseAndQuoteCurrenciesInverted() {
+        return model.getAreBaseAndQuoteCurrenciesInverted();
+    }
+
     public void setDirection(Direction direction) {
         if (direction == null) {
             return;
@@ -179,6 +185,8 @@ public class AmountSelectionController implements Controller {
     public void setTooltip(String tooltip) {
         maxOrFixedBaseSideAmountDisplay.setTooltip(tooltip);
         minBaseSideAmountDisplay.setTooltip(tooltip);
+        invertedMaxOrFixedQuoteSideAmountDisplay.setTooltip(tooltip);
+        invertedMinQuoteSideAmountDisplay.setTooltip(tooltip);
     }
 
     public void setMarket(Market market) {
@@ -242,6 +250,11 @@ public class AmountSelectionController implements Controller {
 
     public Monetary getRightMarkerQuoteSideValue() {
         return model.getRightMarkerQuoteSideValue();
+    }
+
+    public boolean isUsingInvertedBaseAndQuoteCurrencies() {
+        return model.getAllowInvertingBaseAndQuoteCurrencies() != null && model.getAllowInvertingBaseAndQuoteCurrencies().get()
+                && model.getAreBaseAndQuoteCurrenciesInverted() != null && model.getAreBaseAndQuoteCurrenciesInverted().get();
     }
 
     public void reset() {
@@ -358,7 +371,7 @@ public class AmountSelectionController implements Controller {
         model.getMinAmountSliderValue().addListener(minSliderListener);
 
         UIScheduler.run(() -> {
-            if (isUsingInvertedCurrencies()) {
+            if (isUsingInvertedBaseAndQuoteCurrencies()) {
                 invertedMaxOrFixedBaseSideAmountInput.requestFocus();
             } else {
                 maxOrFixedQuoteSideAmountInput.requestFocus();
@@ -455,7 +468,7 @@ public class AmountSelectionController implements Controller {
     }
 
     int onGetCalculatedTotalCharCount() {
-        return isUsingInvertedCurrencies()
+        return isUsingInvertedBaseAndQuoteCurrencies()
                 ? getCount(invertedMinBaseSideAmountInput, invertedMaxOrFixedBaseSideAmountInput)
                 : getCount(minQuoteSideAmountInput, maxOrFixedQuoteSideAmountInput);
     }
@@ -470,11 +483,6 @@ public class AmountSelectionController implements Controller {
             ++count;
         }
         return count;
-    }
-
-    private boolean isUsingInvertedCurrencies() {
-        return model.getAllowInvertingBaseAndQuoteCurrencies() != null && model.getAllowInvertingBaseAndQuoteCurrencies().get()
-                && model.getAreBaseAndQuoteCurrenciesInverted() != null && model.getAreBaseAndQuoteCurrenciesInverted().get();
     }
 
     private double getSliderValue(long amountValue) {
@@ -758,7 +766,7 @@ public class AmountSelectionController implements Controller {
 
     private void applyTextInputPrefWidth() {
         int charCount = onGetCalculatedTotalCharCount();
-        if (isUsingInvertedCurrencies()) {
+        if (isUsingInvertedBaseAndQuoteCurrencies()) {
             applyPrefWidth(charCount, invertedMinBaseSideAmountInput);
             applyPrefWidth(charCount, invertedMaxOrFixedBaseSideAmountInput);
         } else {
