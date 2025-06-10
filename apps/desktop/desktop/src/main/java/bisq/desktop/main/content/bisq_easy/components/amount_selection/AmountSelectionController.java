@@ -79,8 +79,9 @@ public class AmountSelectionController implements Controller {
             maxOrFixedQuoteSideAmountValidPin, minQuoteAmountFromModelPin, minBaseAmountFromCompPin, invertedMinBaseAmountFromCompPin,
             minQuoteAmountFromCompPin, invertedMinQuoteAmountFromCompPin, invertedMaxOrFixedBaseSideAmountValidPin,
             minQuoteSideAmountValidPin, priceFromCompPin, minRangeCustomValuePin, maxRangeCustomValuePin, isRangeAmountEnabledPin,
-            areBaseAndQuoteCurrenciesInvertedPin, maxOrFixedQuoteAmountFocusPin, minQuoteAmountFocusPin,
-            maxOrFixedQuoteAmountLengthPin, minQuoteAmountLengthPin;
+            areBaseAndQuoteCurrenciesInvertedPin, maxOrFixedQuoteSideAmountInputFocusPin, minQuoteSideAmountInputFocusPin,
+            maxOrFixedQuoteSideAmountInputLengthPin, minQuoteSideAmountInputLengthPin, invertedMaxOrFixedBaseSideAmountInputFocusPin,
+            invertedMaxOrFixedBaseSideAmountInputLengthPin, invertedMinBaseSideAmountInputFocusPin, invertedMinBaseSideAmountInputLengthPin;
 
     public AmountSelectionController(ServiceProvider serviceProvider) {
         // max or fixed amount
@@ -357,19 +358,25 @@ public class AmountSelectionController implements Controller {
         model.getMinAmountSliderValue().addListener(minSliderListener);
 
         UIScheduler.run(() -> {
-            maxOrFixedQuoteSideAmountInput.requestFocus();
-            maxOrFixedQuoteAmountFocusPin = EasyBind.subscribe(maxOrFixedQuoteSideAmountInput.focusedProperty(),
+            if (isUsingInvertedCurrencies()) {
+                invertedMaxOrFixedBaseSideAmountInput.requestFocus();
+            } else {
+                maxOrFixedQuoteSideAmountInput.requestFocus();
+            }
+
+            maxOrFixedQuoteSideAmountInputFocusPin = EasyBind.subscribe(maxOrFixedQuoteSideAmountInput.focusedProperty(),
                     focus -> model.getShouldFocusInputTextField().set(minQuoteSideAmountInput.focusedProperty().get() || focus));
-            minQuoteAmountFocusPin = EasyBind.subscribe(minQuoteSideAmountInput.focusedProperty(),
+            minQuoteSideAmountInputFocusPin = EasyBind.subscribe(minQuoteSideAmountInput.focusedProperty(),
                     focus -> model.getShouldFocusInputTextField().set(maxOrFixedQuoteSideAmountInput.focusedProperty().get() || focus));
-            maxOrFixedQuoteAmountLengthPin = EasyBind.subscribe(maxOrFixedQuoteSideAmountInput.lengthProperty(), length -> {
-                model.getShouldApplyNewInputTextFontStyle().set(true);
-                applyTextInputPrefWidth();
-            });
-            minQuoteAmountLengthPin = EasyBind.subscribe(minQuoteSideAmountInput.lengthProperty(), length -> {
-                model.getShouldApplyNewInputTextFontStyle().set(true);
-                applyTextInputPrefWidth();
-            });
+            invertedMaxOrFixedBaseSideAmountInputFocusPin = EasyBind.subscribe(invertedMaxOrFixedBaseSideAmountInput.focusedProperty(),
+                    focus -> model.getShouldFocusInputTextField().set(invertedMinBaseSideAmountInput.focusedProperty().get() || focus));
+            invertedMinBaseSideAmountInputFocusPin = EasyBind.subscribe(invertedMinBaseSideAmountInput.focusedProperty(),
+                    focus -> model.getShouldFocusInputTextField().set(invertedMaxOrFixedBaseSideAmountInput.focusedProperty().get() || focus));
+
+            maxOrFixedQuoteSideAmountInputLengthPin = EasyBind.subscribe(maxOrFixedQuoteSideAmountInput.lengthProperty(), length -> applyNewStyles());
+            minQuoteSideAmountInputLengthPin = EasyBind.subscribe(minQuoteSideAmountInput.lengthProperty(), length -> applyNewStyles());
+            invertedMaxOrFixedBaseSideAmountInputLengthPin = EasyBind.subscribe(invertedMaxOrFixedBaseSideAmountInput.lengthProperty(), length -> applyNewStyles());
+            invertedMinBaseSideAmountInputLengthPin = EasyBind.subscribe(invertedMinBaseSideAmountInput.lengthProperty(), length -> applyNewStyles());
         }).after(700);
     }
 
@@ -407,17 +414,29 @@ public class AmountSelectionController implements Controller {
         model.setLeftMarkerQuoteSideValue(null);
         model.setRightMarkerQuoteSideValue(null);
 
-        if (maxOrFixedQuoteAmountFocusPin != null) {
-            maxOrFixedQuoteAmountFocusPin.unsubscribe();
+        if (maxOrFixedQuoteSideAmountInputFocusPin != null) {
+            maxOrFixedQuoteSideAmountInputFocusPin.unsubscribe();
         }
-        if (minQuoteAmountFocusPin != null) {
-            minQuoteAmountFocusPin.unsubscribe();
+        if (minQuoteSideAmountInputFocusPin != null) {
+            minQuoteSideAmountInputFocusPin.unsubscribe();
         }
-        if (maxOrFixedQuoteAmountLengthPin != null) {
-            maxOrFixedQuoteAmountLengthPin.unsubscribe();
+        if (invertedMaxOrFixedBaseSideAmountInputFocusPin != null) {
+            invertedMaxOrFixedBaseSideAmountInputFocusPin.unsubscribe();
         }
-        if (minQuoteAmountLengthPin != null) {
-            minQuoteAmountLengthPin.unsubscribe();
+        if (invertedMinBaseSideAmountInputFocusPin != null) {
+            invertedMinBaseSideAmountInputFocusPin.unsubscribe();
+        }
+        if (maxOrFixedQuoteSideAmountInputLengthPin != null) {
+            maxOrFixedQuoteSideAmountInputLengthPin.unsubscribe();
+        }
+        if (minQuoteSideAmountInputLengthPin != null) {
+            minQuoteSideAmountInputLengthPin.unsubscribe();
+        }
+        if (invertedMaxOrFixedBaseSideAmountInputLengthPin != null) {
+            invertedMaxOrFixedBaseSideAmountInputLengthPin.unsubscribe();
+        }
+        if (invertedMinBaseSideAmountInputLengthPin != null) {
+            invertedMinBaseSideAmountInputLengthPin.unsubscribe();
         }
     }
 
@@ -432,6 +451,30 @@ public class AmountSelectionController implements Controller {
 
         boolean currentValue = model.getAreBaseAndQuoteCurrenciesInverted().get();
         model.getAreBaseAndQuoteCurrenciesInverted().set(!currentValue);
+        applyNewStyles();
+    }
+
+    int onGetCalculatedTotalCharCount() {
+        return isUsingInvertedCurrencies()
+                ? getCount(invertedMinBaseSideAmountInput, invertedMaxOrFixedBaseSideAmountInput)
+                : getCount(minQuoteSideAmountInput, maxOrFixedQuoteSideAmountInput);
+    }
+
+    private int getCount(BigNumberAmountInputBox minSideAmountInput, BigNumberAmountInputBox maxOrFixedSideAmountInput) {
+        int count = model.getIsRangeAmountEnabled().get()
+                ? minSideAmountInput.getTextInputLength() + maxOrFixedSideAmountInput.getTextInputLength() + 1 // 1 for the dash
+                : maxOrFixedSideAmountInput.getTextInputLength();
+
+        if (!minSideAmountInput.getTextInput().contains(".") || !maxOrFixedSideAmountInput.getTextInput().contains(".")) {
+            // If using an integer we need to count one more char since a dot occupies much less space.
+            ++count;
+        }
+        return count;
+    }
+
+    private boolean isUsingInvertedCurrencies() {
+        return model.getAllowInvertingBaseAndQuoteCurrencies() != null && model.getAllowInvertingBaseAndQuoteCurrencies().get()
+                && model.getAreBaseAndQuoteCurrenciesInverted() != null && model.getAreBaseAndQuoteCurrenciesInverted().get();
     }
 
     private double getSliderValue(long amountValue) {
@@ -715,24 +758,18 @@ public class AmountSelectionController implements Controller {
 
     private void applyTextInputPrefWidth() {
         int charCount = onGetCalculatedTotalCharCount();
-
-        int length = getCalculatedTextInputLength(minQuoteSideAmountInput);
-        minQuoteSideAmountInput.setTextInputPrefWidth(length == 0 ? 1 : length * getFontCharWidth(charCount));
-
-        length = getCalculatedTextInputLength(maxOrFixedQuoteSideAmountInput);
-        maxOrFixedQuoteSideAmountInput.setTextInputPrefWidth(length == 0 ? 1 : length * getFontCharWidth(charCount));
+        if (isUsingInvertedCurrencies()) {
+            applyPrefWidth(charCount, invertedMinBaseSideAmountInput);
+            applyPrefWidth(charCount, invertedMaxOrFixedBaseSideAmountInput);
+        } else {
+            applyPrefWidth(charCount, minQuoteSideAmountInput);
+            applyPrefWidth(charCount, maxOrFixedQuoteSideAmountInput);
+        }
     }
 
-    int onGetCalculatedTotalCharCount() {
-        int count = model.getIsRangeAmountEnabled().get()
-                ? minQuoteSideAmountInput.getTextInputLength() + maxOrFixedQuoteSideAmountInput.getTextInputLength() + 1 // 1 for the dash
-                : maxOrFixedQuoteSideAmountInput.getTextInputLength();
-
-        if (!minQuoteSideAmountInput.getTextInput().contains(".") || !maxOrFixedQuoteSideAmountInput.getTextInput().contains(".")) {
-            // If using an integer we need to count one more char since a dot occupies much less space.
-            ++count;
-        }
-        return count;
+    private void applyPrefWidth(int charCount, BigNumberAmountInputBox amountInputBox) {
+        int length = getCalculatedTextInputLength(amountInputBox);
+        amountInputBox.setTextInputPrefWidth(length == 0 ? 1 : length * getFontCharWidth(charCount));
     }
 
     private int getCalculatedTextInputLength(BigNumberAmountInputBox quoteAmountInputBox) {
@@ -745,6 +782,13 @@ public class AmountSelectionController implements Controller {
     private void deselectAll() {
         minQuoteSideAmountInput.deselect();
         maxOrFixedQuoteSideAmountInput.deselect();
+        invertedMinBaseSideAmountInput.deselect();
+        invertedMaxOrFixedBaseSideAmountInput.deselect();
+    }
+
+    private void applyNewStyles() {
+        model.getShouldApplyNewInputTextFontStyle().set(true);
+        applyTextInputPrefWidth();
     }
 
     private static int getFontCharWidth(int charCount) {
