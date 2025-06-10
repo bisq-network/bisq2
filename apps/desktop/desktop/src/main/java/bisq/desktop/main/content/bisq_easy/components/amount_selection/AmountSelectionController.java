@@ -68,8 +68,8 @@ public class AmountSelectionController implements Controller {
     private final AmountSelectionView view;
     private final BigNumberAmountInputBox maxOrFixedQuoteSideAmountInput, minQuoteSideAmountInput, invertedMinBaseSideAmountInput,
             invertedMaxOrFixedBaseSideAmountInput;
-    private final SmallNumberDisplayBox maxOrFixedBaseSideAmountInput, minBaseSideAmountInput, invertedMinQuoteSideAmountInput,
-            invertedMaxOrFixedQuoteSideAmountInput;
+    private final SmallNumberDisplayBox maxOrFixedBaseSideAmountDisplay, minBaseSideAmountDisplay, invertedMinQuoteSideAmountDisplay,
+            invertedMaxOrFixedQuoteSideAmountDisplay;
     private final ChangeListener<Monetary> maxOrFixedQuoteSideAmountFromModelListener, minQuoteSideAmountFromModelListener;
     private final ChangeListener<PriceQuote> quoteListener;
     private final PriceInput price;
@@ -85,16 +85,16 @@ public class AmountSelectionController implements Controller {
     public AmountSelectionController(ServiceProvider serviceProvider) {
         // max or fixed amount
         maxOrFixedQuoteSideAmountInput = new BigNumberAmountInputBox(false, true);
-        maxOrFixedBaseSideAmountInput = new SmallNumberDisplayBox(true, true);
+        maxOrFixedBaseSideAmountDisplay = new SmallNumberDisplayBox(true, true);
         // inverted to select amount using base
-        invertedMaxOrFixedQuoteSideAmountInput = new SmallNumberDisplayBox(false, true);
+        invertedMaxOrFixedQuoteSideAmountDisplay = new SmallNumberDisplayBox(false, true);
         invertedMaxOrFixedBaseSideAmountInput = new BigNumberAmountInputBox(true, true);
 
         // min amount (only applies when selecting a range)
         minQuoteSideAmountInput = new BigNumberAmountInputBox(false, false);
-        minBaseSideAmountInput = new SmallNumberDisplayBox(true, false);
+        minBaseSideAmountDisplay = new SmallNumberDisplayBox(true, false);
         // inverted to select amount using base
-        invertedMinQuoteSideAmountInput = new SmallNumberDisplayBox(false, false);
+        invertedMinQuoteSideAmountDisplay = new SmallNumberDisplayBox(false, false);
         invertedMinBaseSideAmountInput = new BigNumberAmountInputBox(true, false);
 
         price = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
@@ -102,14 +102,14 @@ public class AmountSelectionController implements Controller {
         model = new AmountSelectionModel();
         view = new AmountSelectionView(model,
                 this,
-                maxOrFixedBaseSideAmountInput,
-                maxOrFixedQuoteSideAmountInput,
-                invertedMaxOrFixedQuoteSideAmountInput,
-                invertedMaxOrFixedBaseSideAmountInput,
-                minBaseSideAmountInput,
-                minQuoteSideAmountInput,
-                invertedMinQuoteSideAmountInput,
-                invertedMinBaseSideAmountInput);
+                maxOrFixedBaseSideAmountDisplay.getRoot(),
+                maxOrFixedQuoteSideAmountInput.getRoot(),
+                invertedMaxOrFixedQuoteSideAmountDisplay.getRoot(),
+                invertedMaxOrFixedBaseSideAmountInput.getRoot(),
+                minBaseSideAmountDisplay.getRoot(),
+                minQuoteSideAmountInput.getRoot(),
+                invertedMinQuoteSideAmountDisplay.getRoot(),
+                invertedMinBaseSideAmountInput.getRoot());
 
         // We delay with runLater to avoid that we get triggered at market change from the component's data changes and
         // apply the conversion before the other component has processed the market change event.
@@ -125,9 +125,9 @@ public class AmountSelectionController implements Controller {
             UIThread.runOnNextRenderFrame(this::applyQuote);
         };
         maxOrFixedSliderListener = (observable, oldValue, newValue) ->
-                applySliderValue(newValue.doubleValue(), maxOrFixedQuoteSideAmountInput, invertedMaxOrFixedQuoteSideAmountInput);
+                applySliderValue(newValue.doubleValue(), maxOrFixedQuoteSideAmountInput, invertedMaxOrFixedQuoteSideAmountDisplay);
         minSliderListener = (observable, oldValue, newValue) ->
-                applySliderValue(newValue.doubleValue(), minQuoteSideAmountInput, invertedMinQuoteSideAmountInput);
+                applySliderValue(newValue.doubleValue(), minQuoteSideAmountInput, invertedMinQuoteSideAmountDisplay);
     }
 
     public void setMaxOrFixedBaseSideAmount(Monetary value) {
@@ -176,8 +176,8 @@ public class AmountSelectionController implements Controller {
     }
 
     public void setTooltip(String tooltip) {
-        maxOrFixedBaseSideAmountInput.setTooltip(tooltip);
-        minBaseSideAmountInput.setTooltip(tooltip);
+        maxOrFixedBaseSideAmountDisplay.setTooltip(tooltip);
+        minBaseSideAmountDisplay.setTooltip(tooltip);
     }
 
     public void setMarket(Market market) {
@@ -185,14 +185,14 @@ public class AmountSelectionController implements Controller {
             return;
         }
         model.setMarket(market);
-        maxOrFixedBaseSideAmountInput.setSelectedMarket(market);
+        maxOrFixedBaseSideAmountDisplay.setSelectedMarket(market);
         invertedMaxOrFixedBaseSideAmountInput.setSelectedMarket(market);
         maxOrFixedQuoteSideAmountInput.setSelectedMarket(market);
-        invertedMaxOrFixedQuoteSideAmountInput.setSelectedMarket(market);
-        minBaseSideAmountInput.setSelectedMarket(market);
+        invertedMaxOrFixedQuoteSideAmountDisplay.setSelectedMarket(market);
+        minBaseSideAmountDisplay.setSelectedMarket(market);
         invertedMinBaseSideAmountInput.setSelectedMarket(market);
         minQuoteSideAmountInput.setSelectedMarket(market);
-        invertedMinQuoteSideAmountInput.setSelectedMarket(market);
+        invertedMinQuoteSideAmountDisplay.setSelectedMarket(market);
         price.setMarket(market);
     }
 
@@ -244,14 +244,14 @@ public class AmountSelectionController implements Controller {
     }
 
     public void reset() {
-        maxOrFixedBaseSideAmountInput.reset();
+        maxOrFixedBaseSideAmountDisplay.reset();
         invertedMaxOrFixedBaseSideAmountInput.reset();
         maxOrFixedQuoteSideAmountInput.reset();
-        invertedMaxOrFixedQuoteSideAmountInput.reset();
-        minBaseSideAmountInput.reset();
+        invertedMaxOrFixedQuoteSideAmountDisplay.reset();
+        minBaseSideAmountDisplay.reset();
         invertedMinBaseSideAmountInput.reset();
         minQuoteSideAmountInput.reset();
-        invertedMinQuoteSideAmountInput.reset();
+        invertedMinQuoteSideAmountDisplay.reset();
         price.reset();
         model.reset();
     }
@@ -268,23 +268,23 @@ public class AmountSelectionController implements Controller {
         model.getMinQuoteSideAmount().addListener(minQuoteSideAmountFromModelListener);
         price.getQuote().addListener(quoteListener);
 
-        maxOrFixedBaseSideAmountInput.setAmount(null);
+        maxOrFixedBaseSideAmountDisplay.setAmount(null);
         invertedMaxOrFixedBaseSideAmountInput.setAmount(null);
         if (model.getMaxOrFixedQuoteSideAmount().get() == null) {
-            initializeQuoteSideAmount(maxOrFixedQuoteSideAmountInput, invertedMaxOrFixedQuoteSideAmountInput);
+            initializeQuoteSideAmount(maxOrFixedQuoteSideAmountInput, invertedMaxOrFixedQuoteSideAmountDisplay);
         } else {
             maxOrFixedQuoteSideAmountInput.setAmount(model.getMaxOrFixedQuoteSideAmount().get());
-            invertedMaxOrFixedQuoteSideAmountInput.setAmount(model.getMaxOrFixedQuoteSideAmount().get());
+            invertedMaxOrFixedQuoteSideAmountDisplay.setAmount(model.getMaxOrFixedQuoteSideAmount().get());
         }
         setMaxOrFixedBaseFromQuote();
 
-        minBaseSideAmountInput.setAmount(null);
+        minBaseSideAmountDisplay.setAmount(null);
         invertedMinBaseSideAmountInput.setAmount(null);
         if (model.getMinQuoteSideAmount().get() == null) {
-            initializeQuoteSideAmount(minQuoteSideAmountInput, invertedMinQuoteSideAmountInput);
+            initializeQuoteSideAmount(minQuoteSideAmountInput, invertedMinQuoteSideAmountDisplay);
         } else {
             minQuoteSideAmountInput.setAmount(model.getMinQuoteSideAmount().get());
-            invertedMinQuoteSideAmountInput.setAmount(model.getMinQuoteSideAmount().get());
+            invertedMinQuoteSideAmountDisplay.setAmount(model.getMinQuoteSideAmount().get());
         }
         setMinBaseFromQuote();
 
@@ -302,14 +302,14 @@ public class AmountSelectionController implements Controller {
             }
         });
 
-        maxOrFixedBaseAmountFromCompPin = EasyBind.subscribe(maxOrFixedBaseSideAmountInput.amountProperty(),
-                amount -> updateMaxOrFixedBaseSideAmount(amount, maxOrFixedBaseSideAmountInput));
+        maxOrFixedBaseAmountFromCompPin = EasyBind.subscribe(maxOrFixedBaseSideAmountDisplay.amountProperty(),
+                amount -> updateMaxOrFixedBaseSideAmount(amount, maxOrFixedBaseSideAmountDisplay));
 
         invertedMaxOrFixedBaseAmountFromCompPin = EasyBind.subscribe(invertedMaxOrFixedBaseSideAmountInput.amountProperty(),
                 amount -> updateMaxOrFixedBaseSideAmount(amount, invertedMaxOrFixedBaseSideAmountInput));
 
-        minBaseAmountFromCompPin = EasyBind.subscribe(minBaseSideAmountInput.amountProperty(),
-                amount -> updateMinBaseAmount(amount, minBaseSideAmountInput));
+        minBaseAmountFromCompPin = EasyBind.subscribe(minBaseSideAmountDisplay.amountProperty(),
+                amount -> updateMinBaseAmount(amount, minBaseSideAmountDisplay));
 
         invertedMinBaseAmountFromCompPin = EasyBind.subscribe(invertedMinBaseSideAmountInput.amountProperty(),
                 amount -> updateMinBaseAmount(amount, invertedMinBaseSideAmountInput));
@@ -317,14 +317,14 @@ public class AmountSelectionController implements Controller {
         maxOrFixedQuoteAmountFromCompPin = EasyBind.subscribe(maxOrFixedQuoteSideAmountInput.amountProperty(),
                 amount -> updateMaxOrFixedQuoteSideAmount(amount, maxOrFixedQuoteSideAmountInput));
 
-        invertedMaxOrFixedQuoteAmountFromCompPin = EasyBind.subscribe(invertedMaxOrFixedQuoteSideAmountInput.amountProperty(),
-                amount -> updateMaxOrFixedQuoteSideAmount(amount, invertedMaxOrFixedQuoteSideAmountInput));
+        invertedMaxOrFixedQuoteAmountFromCompPin = EasyBind.subscribe(invertedMaxOrFixedQuoteSideAmountDisplay.amountProperty(),
+                amount -> updateMaxOrFixedQuoteSideAmount(amount, invertedMaxOrFixedQuoteSideAmountDisplay));
 
         minQuoteAmountFromCompPin = EasyBind.subscribe(minQuoteSideAmountInput.amountProperty(),
                 amount -> updateMinQuoteSideAmount(amount, minQuoteSideAmountInput));
 
-        invertedMinQuoteAmountFromCompPin = EasyBind.subscribe(invertedMinQuoteSideAmountInput.amountProperty(),
-                amount -> updateMinQuoteSideAmount(amount, invertedMinQuoteSideAmountInput));
+        invertedMinQuoteAmountFromCompPin = EasyBind.subscribe(invertedMinQuoteSideAmountDisplay.amountProperty(),
+                amount -> updateMinQuoteSideAmount(amount, invertedMinQuoteSideAmountDisplay));
 
         priceFromCompPin = EasyBind.subscribe(price.getQuote(), quote -> applyInitialRangeValues());
 
@@ -421,7 +421,7 @@ public class AmountSelectionController implements Controller {
         }
     }
 
-    double getMaxAllowedSliderValue() {
+    double onGetMaxAllowedSliderValue() {
         return getSliderValue(model.getMaxRangeQuoteSideValue().get().getValue());
     }
 
@@ -584,7 +584,7 @@ public class AmountSelectionController implements Controller {
             return;
         }
         maxOrFixedQuoteSideAmountInput.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount).round(0));
-        invertedMaxOrFixedQuoteSideAmountInput.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount).round(0));
+        invertedMaxOrFixedQuoteSideAmountDisplay.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount).round(0));
     }
 
     private void setMinQuoteFromBase() {
@@ -597,7 +597,7 @@ public class AmountSelectionController implements Controller {
             return;
         }
         minQuoteSideAmountInput.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount).round(0));
-        invertedMinQuoteSideAmountInput.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount).round(0));
+        invertedMinQuoteSideAmountDisplay.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount).round(0));
     }
 
     private void setMaxOrFixedBaseFromQuote() {
@@ -609,7 +609,7 @@ public class AmountSelectionController implements Controller {
         if (quoteSideAmount == null) {
             return;
         }
-        maxOrFixedBaseSideAmountInput.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
+        maxOrFixedBaseSideAmountDisplay.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
         invertedMaxOrFixedBaseSideAmountInput.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
     }
 
@@ -622,7 +622,7 @@ public class AmountSelectionController implements Controller {
         if (quoteSideAmount == null) {
             return;
         }
-        minBaseSideAmountInput.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
+        minBaseSideAmountDisplay.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
         invertedMinBaseSideAmountInput.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
     }
 

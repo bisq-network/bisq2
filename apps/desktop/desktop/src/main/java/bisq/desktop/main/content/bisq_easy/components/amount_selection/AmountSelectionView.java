@@ -56,29 +56,29 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
 
     AmountSelectionView(AmountSelectionModel model,
                         AmountSelectionController controller,
-                        SmallNumberDisplayBox maxOrFixedBaseAmount,
-                        BigNumberAmountInputBox maxOrFixedQuoteAmount,
-                        SmallNumberDisplayBox invertedMaxOrFixedQuoteAmount,
-                        BigNumberAmountInputBox invertedMaxOrFixedBaseAmount,
-                        SmallNumberDisplayBox minBaseAmount,
-                        BigNumberAmountInputBox minQuoteAmount,
-                        SmallNumberDisplayBox invertedMinQuoteAmount,
-                        BigNumberAmountInputBox invertedMinBaseAmount) {
+                        Pane maxOrFixedBaseAmount,
+                        Pane maxOrFixedQuoteAmount,
+                        Pane invertedMaxOrFixedQuoteAmount,
+                        Pane invertedMaxOrFixedBaseAmount,
+                        Pane minBaseAmount,
+                        Pane minQuoteAmount,
+                        Pane invertedMinQuoteAmount,
+                        Pane invertedMinBaseAmount) {
         super(new VBox(10), model, controller);
 
         // max or fixed component
-        maxOrFixedBaseAmountRoot = maxOrFixedBaseAmount.getRoot();
-        maxOrFixedQuoteAmountRoot = maxOrFixedQuoteAmount.getRoot();
+        maxOrFixedBaseAmountRoot = maxOrFixedBaseAmount;
+        maxOrFixedQuoteAmountRoot = maxOrFixedQuoteAmount;
         // inverted ones
-        invertedMaxOrFixedQuoteAmountRoot = invertedMaxOrFixedQuoteAmount.getRoot();
-        invertedMaxOrFixedBaseAmountRoot = invertedMaxOrFixedBaseAmount.getRoot();
+        invertedMaxOrFixedQuoteAmountRoot = invertedMaxOrFixedQuoteAmount;
+        invertedMaxOrFixedBaseAmountRoot = invertedMaxOrFixedBaseAmount;
 
         // min component (only shown when using a range)
-        minBaseAmountRoot = minBaseAmount.getRoot();
-        minQuoteAmountRoot = minQuoteAmount.getRoot();
+        minBaseAmountRoot = minBaseAmount;
+        minQuoteAmountRoot = minQuoteAmount;
         // inverted ones
-        invertedMinQuoteAmountRoot = invertedMinQuoteAmount.getRoot();
-        invertedMinBaseAmountRoot = invertedMinBaseAmount.getRoot();
+        invertedMinQuoteAmountRoot = invertedMinQuoteAmount;
+        invertedMinBaseAmountRoot = invertedMinBaseAmount;
 
         // quote amount selection
         quoteAmountSeparator = new Label(EN_DASH_SYMBOL);
@@ -180,11 +180,11 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         root.setAlignment(Pos.TOP_CENTER);
 
         maxOrFixedAmountSliderValueListener = (observable, oldValue, newValue) -> {
-            double maxAllowedSliderValue = controller.getMaxAllowedSliderValue();
+            double maxAllowedSliderValue = controller.onGetMaxAllowedSliderValue();
             maxOrFixedAmountSlider.setValue(Math.min(newValue.doubleValue(), maxAllowedSliderValue));
         };
         minAmountSliderValueListener = (observable, oldValue, newValue) -> {
-            double maxAllowedSliderValue = controller.getMaxAllowedSliderValue();
+            double maxAllowedSliderValue = controller.onGetMaxAllowedSliderValue();
             minAmountSlider.setValue(Math.min(newValue.doubleValue(), maxAllowedSliderValue));
         };
     }
