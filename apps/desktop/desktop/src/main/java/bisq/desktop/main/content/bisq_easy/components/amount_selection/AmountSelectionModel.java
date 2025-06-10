@@ -90,6 +90,8 @@ public class AmountSelectionModel implements Model {
     private final BooleanProperty shouldShowInvertedMinAmounts = new SimpleBooleanProperty(false);
     private final BooleanProperty shouldShowMaxOrFixedAmounts = new SimpleBooleanProperty(false);
     private final BooleanProperty shouldShowInvertedMaxOrFixedAmounts = new SimpleBooleanProperty(false);
+    private final BooleanProperty shouldFocusInputTextField = new SimpleBooleanProperty(false);
+    private final BooleanProperty shouldApplyNewInputTextFontStyle = new SimpleBooleanProperty(false);
 
     void reset() {
         maxOrFixedBaseSideAmount.set(null);
@@ -127,5 +129,7 @@ public class AmountSelectionModel implements Model {
         shouldShowInvertedMinAmounts.set(false);
         shouldShowMaxOrFixedAmounts.set(false);
         shouldShowInvertedMaxOrFixedAmounts.set(false);
+        shouldFocusInputTextField.set(false);
+        shouldApplyNewInputTextFontStyle.set(false);
     }
 }

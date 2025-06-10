@@ -23,6 +23,7 @@ import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
@@ -44,6 +45,23 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class AmountSelectionController implements Controller {
     private static final String SLIDER_TRACK_DEFAULT_COLOR = "-bisq-dark-grey-50";
     private static final String SLIDER_TRACK_MARKER_COLOR = "-bisq2-green";
+    private static final String INPUT_TEXT_9_STYLE_CLASS = "input-text-9";
+    private static final String INPUT_TEXT_10_STYLE_CLASS = "input-text-10";
+    private static final String INPUT_TEXT_11_STYLE_CLASS = "input-text-11";
+    private static final String INPUT_TEXT_12_STYLE_CLASS = "input-text-12";
+    private static final String INPUT_TEXT_13_STYLE_CLASS = "input-text-13";
+    private static final String INPUT_TEXT_14_STYLE_CLASS = "input-text-14";
+    private static final String INPUT_TEXT_15_STYLE_CLASS = "input-text-15";
+    private static final String INPUT_TEXT_16_STYLE_CLASS = "input-text-16";
+    private static final String INPUT_TEXT_17_STYLE_CLASS = "input-text-17";
+    private static final String INPUT_TEXT_18_STYLE_CLASS = "input-text-18";
+    private static final String INPUT_TEXT_19_STYLE_CLASS = "input-text-19";
+    private static final String INPUT_TEXT_20_STYLE_CLASS = "input-text-20";
+    private static final String INPUT_TEXT_21_STYLE_CLASS = "input-text-21";
+    private static final String INPUT_TEXT_22_STYLE_CLASS = "input-text-22";
+    private static final String INPUT_TEXT_23_STYLE_CLASS = "input-text-23";
+    private static final int RANGE_INPUT_TEXT_MAX_LENGTH = 11;
+    private static final int FIXED_INPUT_TEXT_MAX_LENGTH = 18;
 
     final AmountSelectionModel model;
     @Getter
@@ -61,7 +79,8 @@ public class AmountSelectionController implements Controller {
             maxOrFixedQuoteSideAmountValidPin, minQuoteAmountFromModelPin, minBaseAmountFromCompPin, invertedMinBaseAmountFromCompPin,
             minQuoteAmountFromCompPin, invertedMinQuoteAmountFromCompPin, invertedMaxOrFixedBaseSideAmountValidPin,
             minQuoteSideAmountValidPin, priceFromCompPin, minRangeCustomValuePin, maxRangeCustomValuePin, isRangeAmountEnabledPin,
-            areBaseAndQuoteCurrenciesInvertedPin;
+            areBaseAndQuoteCurrenciesInvertedPin, maxOrFixedQuoteAmountFocusPin, minQuoteAmountFocusPin,
+            maxOrFixedQuoteAmountLengthPin, minQuoteAmountLengthPin;
 
     public AmountSelectionController(ServiceProvider serviceProvider) {
         // max or fixed amount
@@ -81,7 +100,8 @@ public class AmountSelectionController implements Controller {
         price = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
 
         model = new AmountSelectionModel();
-        view = new AmountSelectionView(model, this,
+        view = new AmountSelectionView(model,
+                this,
                 maxOrFixedBaseSideAmountInput,
                 maxOrFixedQuoteSideAmountInput,
                 invertedMaxOrFixedQuoteSideAmountInput,
@@ -317,12 +337,17 @@ public class AmountSelectionController implements Controller {
         invertedMaxOrFixedBaseSideAmountValidPin = subscribeToAmountValidity(invertedMaxOrFixedBaseSideAmountInput, this::setMaxOrFixedBaseFromQuote);
 
         isRangeAmountEnabledPin = EasyBind.subscribe(model.getIsRangeAmountEnabled(), isRangeAmountEnabled -> {
-                model.getDescription().set(
-                        Res.get(isRangeAmountEnabled
-                                        ? "bisqEasy.tradeWizard.amount.description.range"
-                                        : "bisqEasy.tradeWizard.amount.description.fixed"
-                                , model.getMarket().getQuoteCurrencyCode()));
-                updateShouldShowAmounts();
+            model.getDescription().set(
+                    Res.get(isRangeAmountEnabled
+                                    ? "bisqEasy.tradeWizard.amount.description.range"
+                                    : "bisqEasy.tradeWizard.amount.description.fixed"
+                            , model.getMarket().getQuoteCurrencyCode()));
+            updateShouldShowAmounts();
+            maxOrFixedQuoteSideAmountInput.setTextInputMaxCharCount(isRangeAmountEnabled ? RANGE_INPUT_TEXT_MAX_LENGTH : FIXED_INPUT_TEXT_MAX_LENGTH);
+            minQuoteSideAmountInput.setTextInputMaxCharCount(RANGE_INPUT_TEXT_MAX_LENGTH);
+            applyTextInputPrefWidth();
+            deselectAll();
+            UIScheduler.run(maxOrFixedQuoteSideAmountInput::requestFocus).after(100);
         });
 
         areBaseAndQuoteCurrenciesInvertedPin = EasyBind.subscribe(model.getAreBaseAndQuoteCurrenciesInverted(),
@@ -330,6 +355,22 @@ public class AmountSelectionController implements Controller {
 
         model.getMaxOrFixedAmountSliderValue().addListener(maxOrFixedSliderListener);
         model.getMinAmountSliderValue().addListener(minSliderListener);
+
+        UIScheduler.run(() -> {
+            maxOrFixedQuoteSideAmountInput.requestFocus();
+            maxOrFixedQuoteAmountFocusPin = EasyBind.subscribe(maxOrFixedQuoteSideAmountInput.focusedProperty(),
+                    focus -> model.getShouldFocusInputTextField().set(minQuoteSideAmountInput.focusedProperty().get() || focus));
+            minQuoteAmountFocusPin = EasyBind.subscribe(minQuoteSideAmountInput.focusedProperty(),
+                    focus -> model.getShouldFocusInputTextField().set(maxOrFixedQuoteSideAmountInput.focusedProperty().get() || focus));
+            maxOrFixedQuoteAmountLengthPin = EasyBind.subscribe(maxOrFixedQuoteSideAmountInput.lengthProperty(), length -> {
+                model.getShouldApplyNewInputTextFontStyle().set(true);
+                applyTextInputPrefWidth();
+            });
+            minQuoteAmountLengthPin = EasyBind.subscribe(minQuoteSideAmountInput.lengthProperty(), length -> {
+                model.getShouldApplyNewInputTextFontStyle().set(true);
+                applyTextInputPrefWidth();
+            });
+        }).after(700);
     }
 
     @Override
@@ -360,8 +401,24 @@ public class AmountSelectionController implements Controller {
         isRangeAmountEnabledPin.unsubscribe();
         areBaseAndQuoteCurrenciesInvertedPin.unsubscribe();
 
+        maxOrFixedQuoteSideAmountInput.isAmountValidProperty().set(true);
+        minQuoteSideAmountInput.isAmountValidProperty().set(true);
+
         model.setLeftMarkerQuoteSideValue(null);
         model.setRightMarkerQuoteSideValue(null);
+
+        if (maxOrFixedQuoteAmountFocusPin != null) {
+            maxOrFixedQuoteAmountFocusPin.unsubscribe();
+        }
+        if (minQuoteAmountFocusPin != null) {
+            minQuoteAmountFocusPin.unsubscribe();
+        }
+        if (maxOrFixedQuoteAmountLengthPin != null) {
+            maxOrFixedQuoteAmountLengthPin.unsubscribe();
+        }
+        if (minQuoteAmountLengthPin != null) {
+            minQuoteAmountLengthPin.unsubscribe();
+        }
     }
 
     double getMaxAllowedSliderValue() {
@@ -654,5 +711,116 @@ public class AmountSelectionController implements Controller {
         } else {
             model.getMinQuoteSideAmount().set(amount);
         }
+    }
+
+    private void applyTextInputPrefWidth() {
+        int charCount = onGetCalculatedTotalCharCount();
+
+        int length = getCalculatedTextInputLength(minQuoteSideAmountInput);
+        minQuoteSideAmountInput.setTextInputPrefWidth(length == 0 ? 1 : length * getFontCharWidth(charCount));
+
+        length = getCalculatedTextInputLength(maxOrFixedQuoteSideAmountInput);
+        maxOrFixedQuoteSideAmountInput.setTextInputPrefWidth(length == 0 ? 1 : length * getFontCharWidth(charCount));
+    }
+
+    int onGetCalculatedTotalCharCount() {
+        int count = model.getIsRangeAmountEnabled().get()
+                ? minQuoteSideAmountInput.getTextInputLength() + maxOrFixedQuoteSideAmountInput.getTextInputLength() + 1 // 1 for the dash
+                : maxOrFixedQuoteSideAmountInput.getTextInputLength();
+
+        if (!minQuoteSideAmountInput.getTextInput().contains(".") || !maxOrFixedQuoteSideAmountInput.getTextInput().contains(".")) {
+            // If using an integer we need to count one more char since a dot occupies much less space.
+            ++count;
+        }
+        return count;
+    }
+
+    private int getCalculatedTextInputLength(BigNumberAmountInputBox quoteAmountInputBox) {
+        // If using an integer we need to count one more char since a dot occupies much less space.
+        return !quoteAmountInputBox.getTextInput().contains(".")
+                ? quoteAmountInputBox.getTextInputLength() + 1
+                : quoteAmountInputBox.getTextInputLength();
+    }
+
+    private void deselectAll() {
+        minQuoteSideAmountInput.deselect();
+        maxOrFixedQuoteSideAmountInput.deselect();
+    }
+
+    private static int getFontCharWidth(int charCount) {
+        if (charCount < 10) {
+            return 31;
+        }
+        if (charCount == 10) {
+            return 28;
+        }
+        if (charCount == 11) {
+            return 25;
+        }
+        if (charCount == 12) {
+            return 23;
+        }
+        if (charCount == 13) {
+            return 21;
+        }
+        if (charCount == 14) {
+            return 19;
+        }
+        if (charCount == 15) {
+            return 18;
+        }
+        if (charCount == 16) {
+            return 17;
+        }
+        if (charCount == 17) {
+            return 16;
+        }
+        return 15;
+    }
+
+    static String getFontStyleBasedOnTextLength(int charCount) {
+        if (charCount < 10) {
+            return INPUT_TEXT_9_STYLE_CLASS;
+        }
+        if (charCount == 10) {
+            return INPUT_TEXT_10_STYLE_CLASS;
+        }
+        if (charCount == 11) {
+            return INPUT_TEXT_11_STYLE_CLASS;
+        }
+        if (charCount == 12) {
+            return INPUT_TEXT_12_STYLE_CLASS;
+        }
+        if (charCount == 13) {
+            return INPUT_TEXT_13_STYLE_CLASS;
+        }
+        if (charCount == 14) {
+            return INPUT_TEXT_14_STYLE_CLASS;
+        }
+        if (charCount == 15) {
+            return INPUT_TEXT_15_STYLE_CLASS;
+        }
+        if (charCount == 16) {
+            return INPUT_TEXT_16_STYLE_CLASS;
+        }
+        if (charCount == 17) {
+            return INPUT_TEXT_17_STYLE_CLASS;
+        }
+        if (charCount == 18) {
+            return INPUT_TEXT_18_STYLE_CLASS;
+        }
+        if (charCount == 19) {
+            return INPUT_TEXT_19_STYLE_CLASS;
+        }
+        if (charCount == 20) {
+            return INPUT_TEXT_20_STYLE_CLASS;
+        }
+        if (charCount == 21) {
+            return INPUT_TEXT_21_STYLE_CLASS;
+        }
+        if (charCount == 22) {
+            return INPUT_TEXT_22_STYLE_CLASS;
+        }
+        return INPUT_TEXT_23_STYLE_CLASS;
     }
 }
