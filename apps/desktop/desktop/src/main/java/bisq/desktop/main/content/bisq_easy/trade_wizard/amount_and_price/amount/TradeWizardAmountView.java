@@ -22,7 +22,6 @@ import bisq.desktop.common.Icons;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.main.content.bisq_easy.components.amount_selection.AmountSelectionController;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
@@ -41,7 +40,6 @@ import org.fxmisc.easybind.Subscription;
 public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, TradeWizardAmountController> {
     private static final String SELECTED_PRICE_MODEL_STYLE_CLASS = "selected-model";
 
-    private final AmountSelectionController amountSelectionController;
     private final Label amountLimitInfo, amountLimitInfoOverlayInfo, linkToWikiText, warningIcon;
     private final Hyperlink learnMore, linkToWiki;
     @Getter
@@ -52,14 +50,11 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
 
     public TradeWizardAmountView(TradeWizardAmountModel model,
                                  TradeWizardAmountController controller,
-                                 AmountSelectionController amountSelectionController) {
+                                 VBox amountSelectionBox) {
         super(new VBox(10), model, controller);
 
-        this.amountSelectionController = amountSelectionController;
-
-        VBox amountSelectionRoot = amountSelectionController.getView().getRoot();
-        amountSelectionRoot.getStyleClass().add("min-amount");
-        HBox amountBox = new HBox(0, amountSelectionRoot);
+        amountSelectionBox.getStyleClass().add("min-amount");
+        HBox amountBox = new HBox(0, amountSelectionBox);
         amountBox.setAlignment(Pos.BASELINE_LEFT);
         amountBox.getStyleClass().add("amount-box");
 
@@ -137,7 +132,6 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
             } else {
                 fixedAmount.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
             }
-            amountSelectionController.setIsRangeAmountEnabled(isRangeAmountEnabled);
         });
 
         isOverlayVisible = EasyBind.subscribe(model.getIsOverlayVisible(), isOverlayVisible -> {
@@ -152,8 +146,8 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         linkToWiki.setOnAction(e -> controller.onOpenWiki(linkToWiki.getText()));
         learnHowToBuildReputation.setOnAction(e -> controller.onLearnHowToBuildReputation());
         closeOverlayButton.setOnAction(e -> controller.onCloseOverlay());
-        fixedAmount.setOnAction(e -> controller.useFixedAmount());
-        rangeAmount.setOnAction(e -> controller.useRangeAmount());
+        fixedAmount.setOnAction(e -> controller.onSelectFixedAmount());
+        rangeAmount.setOnAction(e -> controller.onSelectRangeAmount());
     }
 
     @Override
