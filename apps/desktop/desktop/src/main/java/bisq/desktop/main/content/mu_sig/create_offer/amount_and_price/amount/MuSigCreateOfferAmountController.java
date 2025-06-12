@@ -43,7 +43,6 @@ import bisq.offer.amount.spec.AmountSpecUtil;
 import bisq.offer.amount.spec.BaseSideAmountSpec;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
 import bisq.offer.amount.spec.BaseSideRangeAmountSpec;
-import bisq.offer.amount.spec.QuoteSideAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
@@ -156,14 +155,6 @@ public class MuSigCreateOfferAmountController implements Controller {
                     .show();
             return false;
         }
-    }
-
-    public void updateAmountSpecWithPriceSpec(PriceSpec priceSpec) {
-        if (priceSpec == null) {
-            return;
-        }
-
-        updateBaseSideAmountSpecWithPriceSpec(priceSpec);
     }
 
     public void updateBaseSideAmountSpecWithPriceSpec(PriceSpec priceSpec) {
