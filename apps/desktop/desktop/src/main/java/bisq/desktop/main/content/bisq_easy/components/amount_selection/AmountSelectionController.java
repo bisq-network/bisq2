@@ -130,9 +130,9 @@ public class AmountSelectionController implements Controller {
             UIThread.runOnNextRenderFrame(this::applyQuote);
         };
         maxOrFixedSliderListener = (observable, oldValue, newValue) ->
-                applySliderValue(newValue.doubleValue(), maxOrFixedQuoteSideAmountInput, invertedMaxOrFixedQuoteSideAmountDisplay);
+                applySliderValue(newValue.doubleValue(), maxOrFixedQuoteSideAmountInput, invertedMaxOrFixedBaseSideAmountInput);
         minSliderListener = (observable, oldValue, newValue) ->
-                applySliderValue(newValue.doubleValue(), minQuoteSideAmountInput, invertedMinQuoteSideAmountDisplay);
+                applySliderValue(newValue.doubleValue(), minQuoteSideAmountInput, invertedMinBaseSideAmountInput);
     }
 
     public void setMaxOrFixedBaseSideAmount(Monetary value) {
@@ -625,20 +625,31 @@ public class AmountSelectionController implements Controller {
         model.getSliderTrackStyle().set(style);
     }
 
-    private void applySliderValue(double sliderValue, BigNumberAmountInputBox bigAmountInput, SmallNumberDisplayBox smallNumberDisplayBox) {
-        if (model.getMinRangeQuoteSideValue().get() != null) {
-            long min = model.getMinRangeQuoteSideValue().get().getValue();
-            long max = model.getMaxQuoteAllowedLimitation().get() != null
-                    ? model.getMaxQuoteAllowedLimitation().get().getValue()
-                    : model.getMaxRangeQuoteSideValue().get().getValue();
-            long value = Math.round(sliderValue * (max - min)) + min;
+    private void applySliderValue(double sliderValue, BigNumberAmountInputBox quoteAmountInput, BigNumberAmountInputBox invertedBaseAmountInput) {
+        if (isUsingInvertedBaseAndQuoteCurrencies()) {
+            if (model.getMinRangeBaseSideValue().get() != null) {
+                long min = model.getMinRangeBaseSideValue().get().getValue();
+                long max = model.getMaxRangeBaseSideValue().get().getValue();
+                long value = Math.round(sliderValue * (max - min)) + min;
 
-            String quoteCurrencyCode = model.getMarket().getQuoteCurrencyCode();
-            Monetary exactQuoteAmount = Monetary.from(value, quoteCurrencyCode);
-            long roundedValueForLowPrecision = exactQuoteAmount.getRoundedValueForPrecision(0);
-            Monetary roundedQuoteAmount = Monetary.from(roundedValueForLowPrecision, quoteCurrencyCode);
-            bigAmountInput.setAmount(roundedQuoteAmount);
-            smallNumberDisplayBox.setAmount(roundedQuoteAmount);
+                String baseCurrencyCode = model.getMarket().getBaseCurrencyCode();
+                Monetary exactBaseAmount = Monetary.from(value, baseCurrencyCode);
+                invertedBaseAmountInput.setAmount(exactBaseAmount);
+            }
+        } else {
+            if (model.getMinRangeQuoteSideValue().get() != null) {
+                long min = model.getMinRangeQuoteSideValue().get().getValue();
+                long max = model.getMaxQuoteAllowedLimitation().get() != null
+                        ? model.getMaxQuoteAllowedLimitation().get().getValue()
+                        : model.getMaxRangeQuoteSideValue().get().getValue();
+                long value = Math.round(sliderValue * (max - min)) + min;
+
+                String quoteCurrencyCode = model.getMarket().getQuoteCurrencyCode();
+                Monetary exactQuoteAmount = Monetary.from(value, quoteCurrencyCode);
+                long roundedValueForLowPrecision = exactQuoteAmount.getRoundedValueForPrecision(0);
+                Monetary roundedQuoteAmount = Monetary.from(roundedValueForLowPrecision, quoteCurrencyCode);
+                quoteAmountInput.setAmount(roundedQuoteAmount);
+            }
         }
     }
 
