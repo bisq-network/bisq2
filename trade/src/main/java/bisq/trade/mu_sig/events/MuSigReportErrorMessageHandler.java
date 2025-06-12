@@ -47,13 +47,12 @@ public final class MuSigReportErrorMessageHandler extends MuSigTradeMessageHandl
 
     @Override
     protected void commit() {
-        // Set peersErrorStackTrace first as we use peersErrorMessage observable in the handler code accessing both fields
         trade.setPeersErrorStackTrace(stackTrace);
         trade.setPeersErrorMessage(errorMessage);
     }
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Error occurred");
+        sendLogMessage("We received an error report from our peer");
     }
 }

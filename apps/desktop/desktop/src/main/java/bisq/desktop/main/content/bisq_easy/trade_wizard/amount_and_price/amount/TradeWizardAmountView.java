@@ -48,7 +48,7 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
     private final VBox overlay;
     private final Button learnHowToBuildReputation, closeOverlayButton, fixedAmount, rangeAmount;
     private final HBox amountModelsBox, amountLimitInfoHBox;
-    private Subscription isRangeAmountEnabledPin;
+    private Subscription isRangeAmountEnabledPin, isOverlayVisible;
 
     public TradeWizardAmountView(TradeWizardAmountModel model,
                                  TradeWizardAmountController controller,
@@ -140,6 +140,14 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
             amountSelectionController.setIsRangeAmountEnabled(isRangeAmountEnabled);
         });
 
+        isOverlayVisible = EasyBind.subscribe(model.getIsOverlayVisible(), isOverlayVisible -> {
+            if (isOverlayVisible) {
+                root.setOnKeyPressed(controller::onKeyPressedWhileShowingOverlay);
+            } else {
+                root.setOnKeyPressed(null);
+            }
+        });
+
         learnMore.setOnAction(e -> controller.onShowOverlay());
         linkToWiki.setOnAction(e -> controller.onOpenWiki(linkToWiki.getText()));
         learnHowToBuildReputation.setOnAction(e -> controller.onLearnHowToBuildReputation());
@@ -164,6 +172,7 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         warningIcon.managedProperty().unbind();
 
         isRangeAmountEnabledPin.unsubscribe();
+        isOverlayVisible.unsubscribe();
 
         learnMore.setOnAction(null);
         linkToWiki.setOnAction(null);
@@ -171,6 +180,8 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         learnHowToBuildReputation.setOnAction(null);
         fixedAmount.setOnAction(null);
         rangeAmount.setOnAction(null);
+
+        root.setOnKeyPressed(null);
     }
 
     private static VBox createOverlay(Label amountLimitInfo,

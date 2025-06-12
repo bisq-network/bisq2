@@ -20,12 +20,12 @@ package bisq.trade.bisq_easy.protocol.events;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeEventHandlerAsMessageSender;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmBtcSentMessage;
-import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
 import java.util.Optional;
 
-public class BisqEasyConfirmBtcSentEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyConfirmBtcSentEvent> {
+public class BisqEasyConfirmBtcSentEventHandler extends BisqEasyTradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyConfirmBtcSentEvent> {
     private Optional<String> paymentProof;
 
     public BisqEasyConfirmBtcSentEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {

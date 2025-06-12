@@ -21,10 +21,10 @@ import bisq.common.util.StringUtils;
 import bisq.contract.Role;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeEventHandlerAsMessageSender;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyCancelTradeMessage;
-import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 
-public class BisqEasyCancelTradeEventHandler extends TradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyCancelTradeEvent> {
+public class BisqEasyCancelTradeEventHandler extends BisqEasyTradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyCancelTradeEvent> {
     public BisqEasyCancelTradeEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }

@@ -17,6 +17,6 @@
 package bisq.common.fsm;
 
 @FunctionalInterface
-public interface EventHandler {
-    void handle(Event event);
+public interface EventHandler<E extends Event> {
+    void handle(E event);
 }

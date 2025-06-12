@@ -19,11 +19,11 @@ package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.handler.TradeMessageHandler;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyConfirmFiatSentMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyConfirmFiatSentMessage> {
+public class BisqEasyConfirmFiatSentMessageHandler extends BisqEasyTradeMessageHandler<BisqEasyTrade, BisqEasyConfirmFiatSentMessage> {
     public BisqEasyConfirmFiatSentMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }

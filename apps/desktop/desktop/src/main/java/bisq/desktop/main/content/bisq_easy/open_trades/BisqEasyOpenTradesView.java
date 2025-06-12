@@ -79,7 +79,6 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
         // Table view
         tableView = new BisqTableView<>(getModel().getSortedList());
-        tableView.getStyleClass().addAll("bisq-easy-open-trades");
         configTableView();
 
         Quadruple<Label, HBox, AnchorPane, VBox> quadruple = BisqEasyViewUtils.getTableViewContainer(Res.get("bisqEasy.openTrades.table.headline"), tableView);

@@ -117,13 +117,13 @@ public class DropdownMenu extends HBox {
         ImageView newDefault = ImageUtil.getImageViewById(newDefaultIconId);
         ImageView newActive = ImageUtil.getImageViewById(newActiveIconId);
 
-        this.defaultIcon = newDefault;
-        this.activeIcon = newActive;
+        defaultIcon = newDefault;
+        activeIcon = newActive;
 
         if (isMenuShowing.get() || isHover()) {
-            updateIcon(this.activeIcon);
+            updateIcon(activeIcon);
         } else {
-            updateIcon(this.defaultIcon);
+            updateIcon(defaultIcon);
         }
     }
 
@@ -217,18 +217,11 @@ public class DropdownMenu extends HBox {
     }
 
     private void updateIcon(ImageView newIcon) {
-        if (this.buttonIcon == newIcon) {
-            return;
+        if (buttonIcon != newIcon) {
+            getChildren().remove(buttonIcon);
+            buttonIcon = newIcon;
+            getChildren().add(buttonIcon);
         }
-
-        int currentIndex = getChildren().indexOf(this.buttonIcon);
-        if (currentIndex != -1) {
-            getChildren().set(currentIndex, newIcon);
-        } else {
-            if (this.buttonIcon != null) getChildren().remove(this.buttonIcon);
-            getChildren().add(newIcon);
-        }
-        this.buttonIcon = newIcon;
     }
 
     private PopupWindow.AnchorLocation getAnchorLocation() {

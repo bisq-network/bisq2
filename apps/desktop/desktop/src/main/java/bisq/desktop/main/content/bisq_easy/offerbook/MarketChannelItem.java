@@ -28,7 +28,6 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.settings.FavouriteMarketsService;
 import bisq.user.profile.UserProfileService;
-import bisq.user.reputation.ReputationService;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -54,7 +53,6 @@ public class MarketChannelItem {
     private final Market market;
     private final MarketPriceService marketPriceService;
     private final UserProfileService userProfileService;
-    private final ReputationService reputationService;
     private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
     private final SimpleIntegerProperty numOffers = new SimpleIntegerProperty(0);
     private final SimpleBooleanProperty isFavourite = new SimpleBooleanProperty(false);
@@ -66,7 +64,6 @@ public class MarketChannelItem {
                       ChatNotificationService chatNotificationService,
                       MarketPriceService marketPriceService,
                       UserProfileService userProfileService,
-                      ReputationService reputationService,
                       BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService) {
         this.channel = channel;
 
@@ -75,7 +72,6 @@ public class MarketChannelItem {
         market = channel.getMarket();
         this.marketPriceService = marketPriceService;
         this.userProfileService = userProfileService;
-        this.reputationService = reputationService;
         this.bisqEasyOfferbookMessageService = bisqEasyOfferbookMessageService;
 
         refreshNotifications();

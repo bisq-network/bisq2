@@ -40,7 +40,7 @@ import org.fxmisc.easybind.Subscription;
 public class AmountSelectionView extends View<VBox, AmountSelectionModel, AmountSelectionController> {
     public static final int AMOUNT_BOX_WIDTH = 300;
     public static final int AMOUNT_BOX_HEIGHT = 120;
-    private static final int RANGE_INPUT_TEXT_MAX_LENGTH = 9;
+    private static final int RANGE_INPUT_TEXT_MAX_LENGTH = 11;
     private static final int FIXED_INPUT_TEXT_MAX_LENGTH = 18;
     private static final Insets SLIDER_INDICATORS_RANGE_MARGIN = new Insets(-15, 0, 0, 0);
     private static final Insets SLIDER_INDICATORS_FIXED_MARGIN = new Insets(2.5, 0, 0, 0);
@@ -55,6 +55,10 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
     private static final String INPUT_TEXT_17_STYLE_CLASS = "input-text-17";
     private static final String INPUT_TEXT_18_STYLE_CLASS = "input-text-18";
     private static final String INPUT_TEXT_19_STYLE_CLASS = "input-text-19";
+    private static final String INPUT_TEXT_20_STYLE_CLASS = "input-text-20";
+    private static final String INPUT_TEXT_21_STYLE_CLASS = "input-text-21";
+    private static final String INPUT_TEXT_22_STYLE_CLASS = "input-text-22";
+    private static final String INPUT_TEXT_23_STYLE_CLASS = "input-text-23";
     @SuppressWarnings("UnnecessaryUnicodeEscape")
     private static final String EN_DASH_SYMBOL = "\u2013"; // Unicode for "–"
 
@@ -414,6 +418,18 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         if (charCount == 18) {
             return INPUT_TEXT_18_STYLE_CLASS;
         }
-        return INPUT_TEXT_19_STYLE_CLASS;
+        if (charCount == 19) {
+            return INPUT_TEXT_19_STYLE_CLASS;
+        }
+        if (charCount == 20) {
+            return INPUT_TEXT_20_STYLE_CLASS;
+        }
+        if (charCount == 21) {
+            return INPUT_TEXT_21_STYLE_CLASS;
+        }
+        if (charCount == 22) {
+            return INPUT_TEXT_22_STYLE_CLASS;
+        }
+        return INPUT_TEXT_23_STYLE_CLASS;
     }
 }

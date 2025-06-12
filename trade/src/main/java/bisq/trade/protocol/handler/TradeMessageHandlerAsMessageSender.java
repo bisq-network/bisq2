@@ -17,7 +17,6 @@
 
 package bisq.trade.protocol.handler;
 
-import bisq.common.fsm.Event;
 import bisq.network.SendMessageResult;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
@@ -34,8 +33,9 @@ public abstract class TradeMessageHandlerAsMessageSender<T extends Trade<?, ?, ?
         super(serviceProvider, trade);
     }
 
-    public void handle(Event event) {
-        super.handle(event);
+    @Override
+    public void handle(M message) {
+        super.handle(message);
 
         sendMessage();
     }

@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig;
 
+import bisq.account.accounts.AccountPayload;
 import bisq.common.data.ByteArray;
 import bisq.network.identity.NetworkId;
 import bisq.trade.TradeParty;
@@ -26,10 +27,10 @@ import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
 import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
-import bisq.trade.mu_sig.messages.network.vo.NonceShares;
-import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
-import bisq.trade.mu_sig.messages.network.vo.PubKeyShares;
-import bisq.trade.mu_sig.messages.network.vo.SwapTxSignature;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.NonceShares;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.PubKeyShares;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.SwapTxSignature;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -47,10 +48,12 @@ public final class MuSigTradeParty extends TradeParty {
     private Optional<PartialSignaturesMessage> myPartialSignaturesMessage = Optional.empty();
     private Optional<PartialSignatures> peersPartialSignatures = Optional.empty();
     private Optional<DepositPsbt> myDepositPsbt = Optional.empty();
+    private Optional<ByteArray> depositTx = Optional.empty();
     private Optional<SwapTxSignatureResponse> mySwapTxSignatureResponse = Optional.empty();
     private Optional<SwapTxSignature> peersSwapTxSignature = Optional.empty();
     private Optional<CloseTradeResponse> myCloseTradeResponse = Optional.empty();
     private Optional<ByteArray> peersOutputPrvKeyShare = Optional.empty();
+    private Optional<AccountPayload> peersAccountPayload = Optional.empty();
 
     public MuSigTradeParty(NetworkId networkId) {
         super(networkId);
@@ -64,10 +67,12 @@ public final class MuSigTradeParty extends TradeParty {
                            Optional<PartialSignaturesMessage> myPartialSignaturesMessage,
                            Optional<PartialSignatures> peersPartialSignatures,
                            Optional<DepositPsbt> myDepositPsbt,
+                           Optional<ByteArray> depositTx,
                            Optional<SwapTxSignatureResponse> mySwapTxSignatureResponse,
                            Optional<SwapTxSignature> peersSwapTxSignature,
                            Optional<CloseTradeResponse> myCloseTradeResponse,
-                           Optional<ByteArray> peersOutputPrvKeyShare) {
+                           Optional<ByteArray> peersOutputPrvKeyShare,
+                           Optional<AccountPayload> peersAccountPayload) {
         super(networkId);
 
         this.myPubKeySharesResponse = myPubKeySharesResponse;
@@ -77,10 +82,12 @@ public final class MuSigTradeParty extends TradeParty {
         this.myPartialSignaturesMessage = myPartialSignaturesMessage;
         this.peersPartialSignatures = peersPartialSignatures;
         this.myDepositPsbt = myDepositPsbt;
+        this.depositTx = depositTx;
         this.mySwapTxSignatureResponse = mySwapTxSignatureResponse;
         this.peersSwapTxSignature = peersSwapTxSignature;
         this.myCloseTradeResponse = myCloseTradeResponse;
         this.peersOutputPrvKeyShare = peersOutputPrvKeyShare;
+        this.peersAccountPayload = peersAccountPayload;
     }
 
     @Override
@@ -93,10 +100,12 @@ public final class MuSigTradeParty extends TradeParty {
         myPartialSignaturesMessage.ifPresent(e -> builder.setMyPartialSignaturesMessage(e.toProto(serializeForHash)));
         peersPartialSignatures.ifPresent(e -> builder.setPeersPartialSignatures(e.toProto(serializeForHash)));
         myDepositPsbt.ifPresent(e -> builder.setMyDepositPsbt(e.toProto(serializeForHash)));
+        depositTx.ifPresent(e -> builder.setDepositTx(e.toProto(serializeForHash)));
         mySwapTxSignatureResponse.ifPresent(e -> builder.setMySwapTxSignatureResponse(e.toProto(serializeForHash)));
         peersSwapTxSignature.ifPresent(e -> builder.setPeersSwapTxSignature(e.toProto(serializeForHash)));
         myCloseTradeResponse.ifPresent(e -> builder.setMyCloseTradeResponse(e.toProto(serializeForHash)));
         peersOutputPrvKeyShare.ifPresent(e -> builder.setPeersOutputPrvKeyShare(e.toProto(serializeForHash)));
+        peersAccountPayload.ifPresent(e -> builder.setPeersAccountPayload(e.toProto(serializeForHash)));
         return getTradePartyBuilder(serializeForHash).setMuSigTradeParty(builder);
     }
 
@@ -110,7 +119,7 @@ public final class MuSigTradeParty extends TradeParty {
                 muSigTradePartyProto.hasPeersPubKeyShares()
                         ? Optional.of(PubKeyShares.fromProto(muSigTradePartyProto.getPeersPubKeyShares()))
                         : Optional.empty(),
-                muSigTradePartyProto.hasMyNonceSharesMessage()
+muSigTradePartyProto.hasMyNonceSharesMessage()
                         ? Optional.of(NonceSharesMessage.fromProto(muSigTradePartyProto.getMyNonceSharesMessage()))
                         : Optional.empty(),
                 muSigTradePartyProto.hasPeersNonceShares()
@@ -125,6 +134,9 @@ public final class MuSigTradeParty extends TradeParty {
                 muSigTradePartyProto.hasMyDepositPsbt()
                         ? Optional.of(DepositPsbt.fromProto(muSigTradePartyProto.getMyDepositPsbt()))
                         : Optional.empty(),
+                muSigTradePartyProto.hasDepositTx()
+                        ? Optional.of(ByteArray.fromProto(muSigTradePartyProto.getDepositTx()))
+                        : Optional.empty(),
                 muSigTradePartyProto.hasMySwapTxSignatureResponse()
                         ? Optional.of(SwapTxSignatureResponse.fromProto(muSigTradePartyProto.getMySwapTxSignatureResponse()))
                         : Optional.empty(),
@@ -136,6 +148,9 @@ public final class MuSigTradeParty extends TradeParty {
                         : Optional.empty(),
                 muSigTradePartyProto.hasPeersOutputPrvKeyShare()
                         ? Optional.of(ByteArray.fromProto(muSigTradePartyProto.getPeersOutputPrvKeyShare()))
+                        : Optional.empty(),
+                muSigTradePartyProto.hasPeersAccountPayload()
+                        ? Optional.of(AccountPayload.fromProto(muSigTradePartyProto.getPeersAccountPayload()))
                         : Optional.empty()
         );
     }
@@ -144,7 +159,7 @@ public final class MuSigTradeParty extends TradeParty {
         this.myPubKeySharesResponse = Optional.of(myPubKeySharesResponse);
     }
 
-    public void setPeersPubKeySharesResponse(PubKeyShares peersPubKeyShares) {
+    public void setPeersPubKeyShares(PubKeyShares peersPubKeyShares) {
         this.peersPubKeyShares = Optional.of(peersPubKeyShares);
     }
 
@@ -168,6 +183,10 @@ public final class MuSigTradeParty extends TradeParty {
         this.myDepositPsbt = Optional.of(myDepositPsbt);
     }
 
+    public void setDepositTx(ByteArray depositTx) {
+        this.depositTx = Optional.of(depositTx);
+    }
+
     public void setMySwapTxSignatureResponse(SwapTxSignatureResponse mySwapTxSignatureResponse) {
         this.mySwapTxSignatureResponse = Optional.of(mySwapTxSignatureResponse);
     }
@@ -182,5 +201,9 @@ public final class MuSigTradeParty extends TradeParty {
 
     public void setPeersOutputPrvKeyShare(ByteArray peersOutputPrvKeyShare) {
         this.peersOutputPrvKeyShare = Optional.of(peersOutputPrvKeyShare);
+    }
+
+    public void setPeersAccountPayload(AccountPayload peersAccountPayload) {
+        this.peersAccountPayload = Optional.of(peersAccountPayload);
     }
 }

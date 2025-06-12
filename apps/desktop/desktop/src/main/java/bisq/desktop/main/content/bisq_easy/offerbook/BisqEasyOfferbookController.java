@@ -365,7 +365,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                         chatNotificationService,
                         marketPriceService,
                         userProfileService,
-                        reputationService,
                         bisqEasyOfferbookMessageService))
                 .collect(Collectors.toList());
         model.getMarketChannelItems().setAll(marketChannelItems);

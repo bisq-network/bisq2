@@ -35,6 +35,7 @@ import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -81,7 +82,7 @@ public class TradeWizardPriceController implements Controller {
         this.owner = owner;
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         model = new TradeWizardPriceModel();
-        view = new TradeWizardPriceView(model, this, priceInput);
+        view = new TradeWizardPriceView(model, this, priceInput.getRoot());
     }
 
     public void setMarket(Market market) {
@@ -184,14 +185,15 @@ public class TradeWizardPriceController implements Controller {
         priceSliderValuePin.unsubscribe();
         percentagePin.unsubscribe();
 
-        view.getRoot().setOnKeyPressed(null);
         navigationButtonsVisibleHandler.accept(true);
         model.getIsOverlayVisible().set(false);
+
+        model.setShouldFocusPriceComponent(false);
     }
 
-    void onPercentageFocussed(boolean focussed) {
-        model.setFocused(focussed);
-        if (!focussed) {
+    void onPercentageFocused(boolean focused) {
+        model.setFocused(focused);
+        if (!focused) {
             try {
                 double percentage = parse(model.getPercentageInput().get());
                 String percentageAsString = PercentageFormatter.formatToPercent(percentage);
@@ -202,6 +204,21 @@ public class TradeWizardPriceController implements Controller {
             } catch (Exception e) {
                 model.getErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.numberFormatException"));
             }
+        }
+    }
+
+    void onPriceComponentUpdated() {
+        if (!model.isShouldFocusPriceComponent()) {
+            model.setShouldFocusPriceComponent(true);
+        }
+    }
+
+    void onUpdatePriceSpec() {
+        if (model.getUseFixPrice().get()) {
+            boolean shouldRequestFocus = model.isShouldFocusPriceComponent();
+            priceInput.activate(shouldRequestFocus);
+        } else {
+            priceInput.deactivate();
         }
     }
 
@@ -269,20 +286,24 @@ public class TradeWizardPriceController implements Controller {
         }
     }
 
-    void onShowOverlay() {
-        navigationButtonsVisibleHandler.accept(false);
-        model.getIsOverlayVisible().set(true);
-        view.getRoot().setOnKeyPressed(keyEvent -> {
-            KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
-            });
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
+    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
         });
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
+    }
+
+    void onShowOverlay() {
+        if (!model.getIsOverlayVisible().get()) {
+            navigationButtonsVisibleHandler.accept(false);
+            model.getIsOverlayVisible().set(true);
+        }
     }
 
     void onCloseOverlay() {
-        navigationButtonsVisibleHandler.accept(true);
-        model.getIsOverlayVisible().set(false);
-        view.getRoot().setOnKeyPressed(null);
+        if (model.getIsOverlayVisible().get()) {
+            navigationButtonsVisibleHandler.accept(true);
+            model.getIsOverlayVisible().set(false);
+        }
     }
 
     private void applyPriceSpec() {

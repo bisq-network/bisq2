@@ -18,7 +18,7 @@
 package bisq.application;
 
 public class NoFileLockException extends RuntimeException {
-    public NoFileLockException(String message, Throwable cause) {
-        super(message, cause);
+    public NoFileLockException(String message) {
+        super(message);
     }
 }

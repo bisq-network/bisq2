@@ -17,11 +17,10 @@
 
 package bisq.desktop.main.content.mu_sig.offerbook;
 
-import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
-import bisq.i18n.Res;
-import bisq.offer.Direction;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -33,53 +32,61 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Set;
 import java.util.function.Predicate;
 
 @Slf4j
 @Getter
-public abstract class MuSigOfferbookModel implements Model {
-    private final Direction direction;
-    private final ObservableList<Market> markets = FXCollections.observableArrayList();
-    private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
-    private final Comparator<MuSigOfferListItem> priceComparator;
-    private final String maker;
-    private final String createOfferButtonText;
-    private final String takeOfferButtonText;
-    private final Set<String> offerIds = new HashSet<>();
-    private final ObservableList<MuSigOfferListItem> listItems = FXCollections.observableArrayList();
-    private final FilteredList<MuSigOfferListItem> filteredList = new FilteredList<>(listItems);
-    private final SortedList<MuSigOfferListItem> sortedList = new SortedList<>(filteredList);
+public class MuSigOfferbookModel implements Model {
+    private final StringProperty marketTitle = new SimpleStringProperty("");
+    private final StringProperty marketDescription = new SimpleStringProperty("");
+    private final StringProperty marketPrice = new SimpleStringProperty("");
 
+    private final StringProperty baseCodeTitle = new SimpleStringProperty("");
+    private final StringProperty quoteCodeTitle = new SimpleStringProperty("");
+    private final StringProperty priceTitle = new SimpleStringProperty("");
+    private final StringProperty marketIconId = new SimpleStringProperty("");
+
+    private final Set<String> muSigOfferIds = new HashSet<>();
+    private final ObservableList<MuSigOfferListItem> muSigOfferListItems = FXCollections.observableArrayList();
+    private final FilteredList<MuSigOfferListItem> filteredMuSigOfferListItems = new FilteredList<>(muSigOfferListItems);
+    private final SortedList<MuSigOfferListItem> sortedMuSigOfferListItems = new SortedList<>(filteredMuSigOfferListItems);
+    private final ObjectProperty<MuSigFilters.MuSigOfferDirectionFilter> selectedMuSigOfferDirectionFilter = new SimpleObjectProperty<>();
+
+    private final Predicate<MuSigOfferListItem> muSigOfferListItemsPredicate = item ->
+            getMuSigOffersDirectionFilterPredicate().test(item)
+                    && getMuSigMarketFilterPredicate().test(item);
+    private final Predicate<MuSigOfferListItem> muSigMarketFilterPredicate = item ->
+            getSelectedMarketItem().get() == null
+                    || getSelectedMarketItem().get().getMarket() == null
+                    || getSelectedMarketItem().get().getMarket().equals(item.getMarket());
     @Setter
-    private Predicate<MuSigOfferListItem> searchPredicate = item -> true;
-    private final Predicate<MuSigOfferListItem> directionPredicate = item -> item.getOffer().getDirection().mirror().equals(getDirection());
+    private Predicate<MuSigOfferListItem> muSigOffersDirectionFilterPredicate = item -> true;
+
+    private final ObservableList<MarketItem> marketItems = FXCollections.observableArrayList();
+    private final FilteredList<MarketItem> filteredMarketItems = new FilteredList<>(marketItems);
+    private final SortedList<MarketItem> sortedMarketItems = new SortedList<>(filteredMarketItems);
+    private final FilteredList<MarketItem> favouriteMarketItems = new FilteredList<>(marketItems);
+    private final SortedList<MarketItem> sortedFavouriteMarketItems = new SortedList<>(favouriteMarketItems, MarketItemUtil.sortByMarketNameAsc());
+    private final ObjectProperty<MarketItem> selectedMarketItem = new SimpleObjectProperty<>();
+    private final StringProperty marketsSearchBoxText = new SimpleStringProperty();
+    private final ObjectProperty<MuSigFilters.MarketFilter> selectedMarketsFilter = new SimpleObjectProperty<>();
+    private final ObjectProperty<MarketSortType> selectedMarketSortType = new SimpleObjectProperty<>(MarketSortType.NUM_OFFERS);
+    private final BooleanProperty shouldShowAppliedFilters = new SimpleBooleanProperty();
+    private final BooleanProperty shouldShowFavouritesListView = new SimpleBooleanProperty();
+    private final BooleanProperty favouritesListViewNeedsHeightUpdate = new SimpleBooleanProperty();
+
+    private final Predicate<MarketItem> marketItemsPredicate = item ->
+            getMarketFilterPredicate().test(item)
+                    && getMarketSearchTextPredicate().test(item)
+                    && getMarketPricePredicate().test(item)
+                    && !item.getIsFavourite().get();
+    private final Predicate<MarketItem> favouriteMarketItemsPredicate = item -> item.getIsFavourite().get();;
     @Setter
-    protected Predicate<MuSigOfferListItem> marketPredicate = item -> true;
-
-    private final StringProperty priceTableHeader = new SimpleStringProperty();
-
-    private final StringProperty amountToReceive = new SimpleStringProperty();
-    private final StringProperty amountToSend = new SimpleStringProperty();
-
-    public MuSigOfferbookModel(Direction direction) {
-        this.direction = direction;
-        priceComparator = direction.isBuy()
-                ? Comparator.comparingLong(MuSigOfferListItem::getPriceAsLong)
-                : Comparator.comparingLong(MuSigOfferListItem::getPriceAsLong).reversed();
-
-        maker = direction.isSell()
-                ? Res.get("muSig.offerbook.table.header.maker.buyer").toUpperCase(Locale.ROOT)
-                : Res.get("muSig.offerbook.table.header.maker.seller").toUpperCase(Locale.ROOT);
-        createOfferButtonText = direction.isSell()
-                ? Res.get("muSig.offerbook.createOffer.sell").toUpperCase(Locale.ROOT)
-                : Res.get("muSig.offerbook.createOffer.buy").toUpperCase(Locale.ROOT);
-
-        takeOfferButtonText = direction.isSell()
-                ? Res.get("muSig.offerbook.table.cell.intent.sell").toUpperCase(Locale.ROOT)
-                : Res.get("muSig.offerbook.table.cell.intent.buy").toUpperCase(Locale.ROOT);
-    }
+    private Predicate<MarketItem> marketFilterPredicate = item -> true;
+    @Setter
+    private Predicate<MarketItem> marketSearchTextPredicate = item -> true;
+    @Setter
+    private Predicate<MarketItem> marketPricePredicate = item -> true;
 }

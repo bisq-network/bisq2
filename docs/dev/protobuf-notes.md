@@ -176,10 +176,10 @@ well as made search harder. I prefer to drop that official convention.
 When defining the message types we should follow the dependency order how the messages are composed. E.g. low level
 messages are on top.
 
-If a field in Java is optional we should use th optional specifies as well in the protobuf file.
+If a field in Java is optional we should use the optional specifies as well in the protobuf file.
 
 The `PersistableStore` implementations should be owned and created by a service class which is also responsible for the
-`persist()` calls. the `PersistableStore` can be used as data model container and observeAble wrappers can be used.
+`persist()` calls. the `PersistableStore` can be used as data model container and observable wrappers can be used.
 
 The protobuf methods should be placed after the constructor(s). If there is a common base class this class provides a
 method for the builder of the base class. E.g.

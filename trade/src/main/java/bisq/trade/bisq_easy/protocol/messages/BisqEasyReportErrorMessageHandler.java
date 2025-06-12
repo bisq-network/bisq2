@@ -19,11 +19,11 @@ package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.handler.TradeMessageHandler;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyReportErrorMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyReportErrorMessage> {
+public class BisqEasyReportErrorMessageHandler extends BisqEasyTradeMessageHandler<BisqEasyTrade, BisqEasyReportErrorMessage> {
     private String stackTrace;
     private String errorMessage;
 
@@ -42,12 +42,10 @@ public class BisqEasyReportErrorMessageHandler extends TradeMessageHandler<BisqE
                 message.getErrorMessage(), message.getStackTrace(), trade.getId());
         stackTrace = message.getStackTrace();
         errorMessage = message.getErrorMessage();
-
     }
 
     @Override
     protected void commit() {
-        // Set peersErrorStackTrace first as we use peersErrorMessage observable in the handler code accessing both fields
         trade.setPeersErrorStackTrace(stackTrace);
         trade.setPeersErrorMessage(errorMessage);
     }

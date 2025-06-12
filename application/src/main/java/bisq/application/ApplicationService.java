@@ -30,6 +30,7 @@ import bisq.common.locale.LocaleRepository;
 import bisq.common.logging.AsciiLogo;
 import bisq.common.logging.LogSetup;
 import bisq.common.observable.Observable;
+import bisq.common.threading.ThreadName;
 import bisq.common.util.ExceptionUtil;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
@@ -40,7 +41,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileLock;
 import java.nio.file.Path;
@@ -89,7 +89,8 @@ public abstract class ApplicationService implements Service {
                     config.getBoolean("ignoreSigningKeyInResourcesCheck"),
                     config.getBoolean("ignoreSignatureVerification"),
                     config.getInt("memoryReportIntervalSec"),
-                    config.getBoolean("includeThreadListInMemoryReport"));
+                    config.getBoolean("includeThreadListInMemoryReport"),
+                    config.getBoolean("checkInstanceLock"));
         }
 
         private final Path baseDir;
@@ -101,6 +102,7 @@ public abstract class ApplicationService implements Service {
         private final boolean ignoreSignatureVerification;
         private final int memoryReportIntervalSec;
         private final boolean includeThreadListInMemoryReport;
+        private final boolean checkInstanceLock;
 
         public Config(Path baseDir,
                       String appName,
@@ -110,7 +112,8 @@ public abstract class ApplicationService implements Service {
                       boolean ignoreSigningKeyInResourcesCheck,
                       boolean ignoreSignatureVerification,
                       int memoryReportIntervalSec,
-                      boolean includeThreadListInMemoryReport) {
+                      boolean includeThreadListInMemoryReport,
+                      boolean checkInstanceLock) {
             this.baseDir = baseDir;
             this.appName = appName;
             this.devMode = devMode;
@@ -123,6 +126,7 @@ public abstract class ApplicationService implements Service {
             this.ignoreSignatureVerification = ignoreSignatureVerification;
             this.memoryReportIntervalSec = memoryReportIntervalSec;
             this.includeThreadListInMemoryReport = includeThreadListInMemoryReport;
+            this.checkInstanceLock = checkInstanceLock;
         }
     }
 
@@ -135,6 +139,7 @@ public abstract class ApplicationService implements Service {
     private FileLock instanceLock;
     @Getter
     protected final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
+    private InstanceLockManager instanceLockManager;
 
     public ApplicationService(String configFileName, String[] args, Path userDataDir) {
         com.typesafe.config.Config defaultTypesafeConfig = ConfigFactory.load(configFileName);
@@ -168,7 +173,6 @@ public abstract class ApplicationService implements Service {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        checkInstanceLock();
 
         LogSetup.setup(dataDir.resolve("bisq").toString());
         log.info(AsciiLogo.getAsciiLogo());
@@ -185,6 +189,10 @@ public abstract class ApplicationService implements Service {
             DevMode.setDevModeReputationScore(config.getDevModeReputationScore());
         }
 
+        if (config.isCheckInstanceLock()) {
+            checkInstanceLock();
+        }
+
         Locale locale = LocaleRepository.getDefaultLocale();
         CountryRepository.applyDefaultLocale(locale);
         LanguageRepository.setDefaultLanguage(locale.getLanguage());
@@ -198,19 +206,23 @@ public abstract class ApplicationService implements Service {
     }
 
     private void checkInstanceLock() {
-        // Acquire exclusive lock on file basedir/lock, throw if locks fails
-        // to avoid running multiple instances using the same basedir
-        File lockFilePath = config.getBaseDir()
-                .resolve("lock")
-                .toFile();
-        try (FileOutputStream fileOutputStream = new FileOutputStream(lockFilePath)) {
-            instanceLock = fileOutputStream.getChannel().tryLock();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        if (instanceLock == null) {
-            throw new NoFileLockException("Another instance might be running", new Throwable("Unable to acquire lock file lock"));
-        }
+        // Create a quasi-unique port per data directory
+        // Dynamic/private ports: 49152 – 65535
+        int lowestPort = 49152;
+        int highestPort = 65535;
+        int port = lowestPort + Math.abs(config.getBaseDir().hashCode() % (highestPort - lowestPort));
+        instanceLockManager = new InstanceLockManager();
+        instanceLockManager.acquireLock(port);
+
+        // We release the instance lock with a shutdown hook to ensure it gets release in all cases.
+        // If we throw the NoFileLockException we are still in constructor call and the ApplicationService instance is
+        // not created, thus shutdown would not be called. Therefor the shutdown hook is a more reliable solution.
+        // Usually we try to avoid adding multiple shutdownHooks as the order of their execution is not
+        // defined. In that case the order from other hooks has no impact.
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            ThreadName.set(this, "releaseInstanceLock");
+            instanceLockManager.releaseLock();
+        }));
     }
 
     public CompletableFuture<Void> pruneAllBackups() {

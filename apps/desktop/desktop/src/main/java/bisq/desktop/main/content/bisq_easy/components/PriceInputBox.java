@@ -90,6 +90,19 @@ public class PriceInputBox extends MaterialTextField {
         textInputControl.textProperty().removeListener(textInputTextListener);
     }
 
+    public void activate(boolean shouldRequestFocus) {
+        setEditable(true);
+        if (shouldRequestFocus) {
+            requestFocusWithCursor();
+        }
+    }
+
+    public void deactivate() {
+        deselect();
+        setEditable(false);
+        resetValidation();
+    }
+
     public final StringProperty textInputSymbolTextProperty() {
         return textInputSymbolLabel.textProperty();
     }

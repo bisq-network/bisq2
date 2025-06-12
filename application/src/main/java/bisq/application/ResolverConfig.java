@@ -55,14 +55,16 @@ import bisq.trade.bisq_easy.protocol.messages.BisqEasyRejectTradeMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferResponse;
-import bisq.trade.mu_sig.messages.network.MuSigCooperativeClosureMessage_G;
-import bisq.trade.mu_sig.messages.network.MuSigPaymentInitiatedMessage_E;
-import bisq.trade.mu_sig.messages.network.MuSigPaymentReceivedMessage_F;
+import bisq.trade.mu_sig.messages.network.CooperativeClosureMessage_G;
+import bisq.trade.mu_sig.messages.network.PaymentInitiatedMessage_E;
+import bisq.trade.mu_sig.messages.network.PaymentReceivedMessage_F;
 import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
-import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
-import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_B;
-import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_C;
-import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_D;
+import bisq.trade.mu_sig.messages.network.SendAccountPayloadAndDepositTxMessage;
+import bisq.trade.mu_sig.messages.network.SendAccountPayloadMessage;
+import bisq.trade.mu_sig.messages.network.SetupTradeMessage_A;
+import bisq.trade.mu_sig.messages.network.SetupTradeMessage_B;
+import bisq.trade.mu_sig.messages.network.SetupTradeMessage_C;
+import bisq.trade.mu_sig.messages.network.SetupTradeMessage_D;
 import bisq.trade.protocol.messages.TradeMessage;
 import bisq.user.banned.BannedUserProfileData;
 import bisq.user.profile.UserProfile;
@@ -140,13 +142,15 @@ public class ResolverConfig {
 
         // MuSigTradeMessage subclasses
         NetworkStorageWhiteList.add(MuSigReportErrorMessage.class);
-        NetworkStorageWhiteList.add(MuSigSetupTradeMessage_A.class);
-        NetworkStorageWhiteList.add(MuSigSetupTradeMessage_B.class);
-        NetworkStorageWhiteList.add(MuSigSetupTradeMessage_C.class);
-        NetworkStorageWhiteList.add(MuSigSetupTradeMessage_D.class);
-        NetworkStorageWhiteList.add(MuSigPaymentInitiatedMessage_E.class);
-        NetworkStorageWhiteList.add(MuSigPaymentReceivedMessage_F.class);
-        NetworkStorageWhiteList.add(MuSigCooperativeClosureMessage_G.class);
+        NetworkStorageWhiteList.add(SetupTradeMessage_A.class);
+        NetworkStorageWhiteList.add(SetupTradeMessage_B.class);
+        NetworkStorageWhiteList.add(SetupTradeMessage_C.class);
+        NetworkStorageWhiteList.add(SetupTradeMessage_D.class);
+        NetworkStorageWhiteList.add(SendAccountPayloadMessage.class);
+        NetworkStorageWhiteList.add(SendAccountPayloadAndDepositTxMessage.class);
+        NetworkStorageWhiteList.add(PaymentInitiatedMessage_E.class);
+        NetworkStorageWhiteList.add(PaymentReceivedMessage_F.class);
+        NetworkStorageWhiteList.add(CooperativeClosureMessage_G.class);
 
         // ChatMessageReaction subclasses
         NetworkStorageWhiteList.add(CommonPublicChatMessageReaction.class);

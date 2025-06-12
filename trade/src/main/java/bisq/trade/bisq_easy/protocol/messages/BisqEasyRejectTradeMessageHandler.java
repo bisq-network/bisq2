@@ -20,11 +20,11 @@ package bisq.trade.bisq_easy.protocol.messages;
 import bisq.contract.Role;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.handler.TradeMessageHandler;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyRejectTradeMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyRejectTradeMessage> {
+public class BisqEasyRejectTradeMessageHandler extends BisqEasyTradeMessageHandler<BisqEasyTrade, BisqEasyRejectTradeMessage> {
     public BisqEasyRejectTradeMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }

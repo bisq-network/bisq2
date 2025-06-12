@@ -23,7 +23,7 @@ import bisq.common.validation.BitcoinTransactionValidation;
 import bisq.common.validation.LightningPreImageValidation;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.handler.TradeMessageHandler;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
@@ -31,7 +31,7 @@ import java.util.Optional;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class BisqEasyConfirmBtcSentMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyConfirmBtcSentMessage> {
+public class BisqEasyConfirmBtcSentMessageHandler extends BisqEasyTradeMessageHandler<BisqEasyTrade, BisqEasyConfirmBtcSentMessage> {
     private Optional<String> paymentProof;
 
     public BisqEasyConfirmBtcSentMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {

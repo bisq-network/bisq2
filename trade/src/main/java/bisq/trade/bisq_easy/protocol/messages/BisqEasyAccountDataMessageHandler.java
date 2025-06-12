@@ -21,14 +21,14 @@ import bisq.account.accounts.UserDefinedFiatAccountPayload;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.handler.TradeMessageHandler;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class BisqEasyAccountDataMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyAccountDataMessage> {
+public class BisqEasyAccountDataMessageHandler extends BisqEasyTradeMessageHandler<BisqEasyTrade, BisqEasyAccountDataMessage> {
     private String paymentAccountData;
 
     public BisqEasyAccountDataMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {

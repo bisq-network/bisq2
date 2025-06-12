@@ -18,7 +18,7 @@
 package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
-import bisq.trade.mu_sig.messages.network.vo.NonceShares;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.NonceShares;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 

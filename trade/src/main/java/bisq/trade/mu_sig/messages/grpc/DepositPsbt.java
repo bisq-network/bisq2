@@ -17,18 +17,23 @@
 
 package bisq.trade.mu_sig.messages.grpc;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 
 import java.util.Arrays;
 
 @Getter
-public final class DepositPsbt implements Proto {
+public final class DepositPsbt implements NetworkProto {
     private final byte[] depositPsbt;
 
     public DepositPsbt(byte[] depositPsbt) {
         this.depositPsbt = depositPsbt;
+    }
+
+    @Override
+    public void verify() {
+        //todo
     }
 
     @Override

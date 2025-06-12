@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 @Getter(AccessLevel.PACKAGE)
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-final class MessageDeliveryStatusStore implements PersistableStore<MessageDeliveryStatusStore> {
+public final class MessageDeliveryStatusStore implements PersistableStore<MessageDeliveryStatusStore> {
     private final ObservableHashMap<String, Observable<MessageDeliveryStatus>> messageDeliveryStatusByMessageId = new ObservableHashMap<>();
     private final Map<String, Long> creationDateByMessageId = new ConcurrentHashMap<>();
 

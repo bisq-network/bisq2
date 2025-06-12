@@ -18,11 +18,13 @@
 package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
-import bisq.trade.mu_sig.messages.network.vo.PartialSignatures;
+import bisq.common.util.OptionalUtils;
+import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 @Getter
 public final class PartialSignaturesMessage implements Proto {
@@ -38,12 +40,12 @@ public final class PartialSignaturesMessage implements Proto {
     private final byte[] peersWarningTxBuyerInputPartialSignature;
     private final byte[] peersWarningTxSellerInputPartialSignature;
     private final byte[] peersRedirectTxInputPartialSignature;
-    private final byte[] swapTxInputPartialSignature;
+    private final Optional<byte[]> swapTxInputPartialSignature;
 
     public PartialSignaturesMessage(byte[] peersWarningTxBuyerInputPartialSignature,
                                     byte[] peersWarningTxSellerInputPartialSignature,
                                     byte[] peersRedirectTxInputPartialSignature,
-                                    byte[] swapTxInputPartialSignature) {
+                                    Optional<byte[]> swapTxInputPartialSignature) {
         this.peersWarningTxBuyerInputPartialSignature = peersWarningTxBuyerInputPartialSignature;
         this.peersWarningTxSellerInputPartialSignature = peersWarningTxSellerInputPartialSignature;
         this.peersRedirectTxInputPartialSignature = peersRedirectTxInputPartialSignature;
@@ -52,11 +54,12 @@ public final class PartialSignaturesMessage implements Proto {
 
     @Override
     public bisq.trade.protobuf.PartialSignaturesMessage.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.protobuf.PartialSignaturesMessage.newBuilder()
+        bisq.trade.protobuf.PartialSignaturesMessage.Builder builder = bisq.trade.protobuf.PartialSignaturesMessage.newBuilder()
                 .setPeersWarningTxBuyerInputPartialSignature(ByteString.copyFrom(peersWarningTxBuyerInputPartialSignature))
                 .setPeersWarningTxSellerInputPartialSignature(ByteString.copyFrom(peersWarningTxSellerInputPartialSignature))
-                .setPeersRedirectTxInputPartialSignature(ByteString.copyFrom(peersRedirectTxInputPartialSignature))
-                .setSwapTxInputPartialSignature(ByteString.copyFrom(swapTxInputPartialSignature));
+                .setPeersRedirectTxInputPartialSignature(ByteString.copyFrom(peersRedirectTxInputPartialSignature));
+        swapTxInputPartialSignature.ifPresent(e -> builder.setSwapTxInputPartialSignature(ByteString.copyFrom(e)));
+        return builder;
     }
 
     @Override
@@ -68,17 +71,20 @@ public final class PartialSignaturesMessage implements Proto {
         return new PartialSignaturesMessage(proto.getPeersWarningTxBuyerInputPartialSignature().toByteArray(),
                 proto.getPeersWarningTxSellerInputPartialSignature().toByteArray(),
                 proto.getPeersRedirectTxInputPartialSignature().toByteArray(),
-                proto.getSwapTxInputPartialSignature().toByteArray());
+                proto.hasSwapTxInputPartialSignature()
+                        ? Optional.of(proto.getSwapTxInputPartialSignature().toByteArray())
+                        : Optional.empty());
     }
 
     @Override
     public boolean equals(Object o) {
+        if (this == o) return true;
         if (!(o instanceof PartialSignaturesMessage that)) return false;
 
         return Arrays.equals(peersWarningTxBuyerInputPartialSignature, that.peersWarningTxBuyerInputPartialSignature) &&
                 Arrays.equals(peersWarningTxSellerInputPartialSignature, that.peersWarningTxSellerInputPartialSignature) &&
                 Arrays.equals(peersRedirectTxInputPartialSignature, that.peersRedirectTxInputPartialSignature) &&
-                Arrays.equals(swapTxInputPartialSignature, that.swapTxInputPartialSignature);
+                OptionalUtils.optionalByteArrayEquals(swapTxInputPartialSignature, that.swapTxInputPartialSignature);
     }
 
     @Override
@@ -86,7 +92,7 @@ public final class PartialSignaturesMessage implements Proto {
         int result = Arrays.hashCode(peersWarningTxBuyerInputPartialSignature);
         result = 31 * result + Arrays.hashCode(peersWarningTxSellerInputPartialSignature);
         result = 31 * result + Arrays.hashCode(peersRedirectTxInputPartialSignature);
-        result = 31 * result + Arrays.hashCode(swapTxInputPartialSignature);
+        result = 31 * result + swapTxInputPartialSignature.map(Arrays::hashCode).orElse(0);
         return result;
     }
 }

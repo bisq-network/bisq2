@@ -18,7 +18,6 @@
 package bisq.desktop;
 
 import bisq.application.State;
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Observable;
 import bisq.desktop.common.Browser;
@@ -35,6 +34,7 @@ import bisq.desktop.components.cathash.JavaFxCatHashService;
 import bisq.desktop.components.overlay.Overlay;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.MainController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.tac.TacController;
 import bisq.desktop.overlay.unlock.UnlockController;
@@ -46,6 +46,7 @@ import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import bisq.user.RepublishUserProfileService;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
@@ -56,6 +57,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
+import java.util.Map;
 import java.util.Optional;
 
 import static bisq.settings.DontShowAgainKey.WELCOME;
@@ -138,6 +140,10 @@ public class DesktopController extends NavigationController {
         });
 
         EasyBind.subscribe(viewRoot.getScene().getWindow().focusedProperty(), chatNotificationService::setApplicationFocussed);
+
+        // Prune user profile icons
+        Map<String, UserProfile> userProfileById = serviceProvider.getUserService().getUserProfileService().getUserProfileById().getUnmodifiableMap();
+        CatHash.pruneOutdatedProfileIcons(userProfileById.values());
     }
 
     private void setInitialScreenSize() {

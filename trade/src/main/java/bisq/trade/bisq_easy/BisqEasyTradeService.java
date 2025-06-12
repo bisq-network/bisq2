@@ -81,6 +81,8 @@ import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+//TODO Consider to use async calls at handle (CompletableFuture.runAsync(()...)
+
 @Slf4j
 @Getter
 public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStore>, Service, ConfidentialMessageService.Listener {
@@ -223,36 +225,31 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     private void handleBisqEasyTakeOfferMessage(BisqEasyTakeOfferRequest message) {
         BisqEasyContract bisqEasyContract = message.getBisqEasyContract();
         BisqEasyProtocol protocol = createProtocol(bisqEasyContract, message.getSender(), message.getReceiver());
-        protocol.handle(message);
-        persist();
-
-        if (!pendingMessages.isEmpty()) {
-            log.info("We have pendingMessages. We try to re-process them now.");
-            pendingMessages.forEach(this::handleBisqEasyTradeMessage);
-        }
+        handleBisqEasyTradeMessage(message, protocol);
     }
 
     private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message) {
         String tradeId = message.getTradeId();
-        findProtocol(tradeId).ifPresentOrElse(protocol -> {
-                    protocol.handle(message);
-                    persist();
-
-                    if (pendingMessages.contains(message)) {
-                        log.info("We remove message {} from pendingMessages.", message);
-                        pendingMessages.remove(message);
-                    }
-
-                    if (!pendingMessages.isEmpty()) {
-                        log.info("We have pendingMessages. We try to re-process them now.");
-                        pendingMessages.forEach(this::handleBisqEasyTradeMessage);
-                    }
-                },
+        findProtocol(tradeId).ifPresentOrElse(protocol -> handleBisqEasyTradeMessage(message, protocol),
                 () -> {
                     log.info("Protocol with tradeId {} not found. We add the message to pendingMessages for " +
                             "re-processing when the next message arrives. message={}", tradeId, message);
                     pendingMessages.add(message);
                 });
+    }
+
+    private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message, BisqEasyProtocol protocol) {
+        protocol.handle(message);
+
+        if (pendingMessages.contains(message)) {
+            log.info("We remove message {} from pendingMessages.", message);
+            pendingMessages.remove(message);
+        }
+
+        if (!pendingMessages.isEmpty()) {
+            log.info("We have pendingMessages. We try to re-process them now.");
+            pendingMessages.forEach(this::handleBisqEasyTradeMessage);
+        }
     }
 
 
@@ -293,7 +290,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
         checkArgument(!tradeExists(bisqEasyTrade.getId()), "A trade with that ID exists already");
         persistableStore.addTrade(bisqEasyTrade);
-
+        persist();
         return createAndAddTradeProtocol(bisqEasyTrade);
     }
 
@@ -337,10 +334,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         verifyTradingNotOnHalt();
         verifyMinVersionForTrading();
         String tradeId = trade.getId();
-        findProtocol(tradeId).ifPresentOrElse(protocol -> {
-                    protocol.handle(event);
-                    persist();
-                },
+        findProtocol(tradeId).ifPresentOrElse(protocol -> protocol.handle(event),
                 () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
     }
 
@@ -403,6 +397,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         checkArgument(findProtocol(tradeId).isEmpty(), "We received the BisqEasyTakeOfferRequest for an already existing protocol");
         checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
         persistableStore.addTrade(bisqEasyTrade);
+        persist();
         return createAndAddTradeProtocol(bisqEasyTrade);
     }
 

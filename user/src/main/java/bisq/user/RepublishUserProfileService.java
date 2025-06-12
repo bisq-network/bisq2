@@ -52,18 +52,15 @@ public class RepublishUserProfileService implements Service {
         selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> {
             if (userIdentity != null && !userIdentity.getIdentity().isDefaultTag()) {
                 selectedUserIdentity = userIdentity;
+                publishSelectedUserProfile();
                 userActivityDetected();
             }
         });
 
-        republishScheduler = Scheduler.run(() -> {
-                    KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
-                    UserProfile userProfile = selectedUserIdentity.getUserProfile();
-                    userIdentityService.publishUserProfile(userProfile, keyPair);
-                })
+        republishScheduler = Scheduler.run(this::publishSelectedUserProfile)
                 .host(this)
                 .runnableName("republish")
-                .after(1, TimeUnit.MINUTES);
+                .repeated(1, 30, TimeUnit.SECONDS, 3);
         return CompletableFuture.completedFuture(true);
     }
 
@@ -97,6 +94,14 @@ public class RepublishUserProfileService implements Service {
             userIdentityService.publishUserProfile(userProfile, keyPair);
         } else {
             userIdentityService.refreshUserProfile(userProfile, keyPair);
+        }
+    }
+
+    private void publishSelectedUserProfile() {
+        if (selectedUserIdentity != null) {
+            KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
+            UserProfile userProfile = selectedUserIdentity.getUserProfile();
+            userIdentityService.publishUserProfile(userProfile, keyPair);
         }
     }
 }

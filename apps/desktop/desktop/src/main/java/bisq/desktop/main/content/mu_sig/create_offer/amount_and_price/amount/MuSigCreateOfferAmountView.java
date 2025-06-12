@@ -47,8 +47,8 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
     @Getter
     private final VBox overlay;
     private final Button learnHowToBuildReputation, closeOverlayButton, fixedAmount, rangeAmount;
-    private final HBox amountModelsBox, amountLimitInfoHBox;
-    private Subscription isRangeAmountEnabledPin;
+    private final HBox amountLimitInfoHBox;
+    private Subscription isRangeAmountEnabledPin, isOverlayVisible;
 
     public MuSigCreateOfferAmountView(MuSigCreateOfferAmountModel model,
                                       MuSigCreateOfferAmountController controller,
@@ -93,7 +93,7 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
         rangeAmountBox.getStyleClass().add("model-selection-item-box");
         rangeAmountBox.setAlignment(Pos.CENTER_LEFT);
 
-        amountModelsBox = new HBox(30, fixedAmountBox, separator, rangeAmountBox);
+        HBox amountModelsBox = new HBox(30, fixedAmountBox, separator, rangeAmountBox);
         amountModelsBox.getStyleClass().addAll("selection-models", "bisq-text-3");
 
         amountLimitInfoOverlayInfo = new Label();
@@ -138,6 +138,14 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
             amountSelectionController.setIsRangeAmountEnabled(isRangeAmountEnabled);
         });
 
+        isOverlayVisible = EasyBind.subscribe(model.getIsOverlayVisible(), isOverlayVisible -> {
+            if (isOverlayVisible) {
+                root.setOnKeyPressed(controller::onKeyPressedWhileShowingOverlay);
+            } else {
+                root.setOnKeyPressed(null);
+            }
+        });
+
         learnMore.setOnAction(e -> controller.onShowOverlay());
         linkToWiki.setOnAction(e -> controller.onOpenWiki(linkToWiki.getText()));
         learnHowToBuildReputation.setOnAction(e -> controller.onLearnHowToBuildReputation());
@@ -160,6 +168,7 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
         warningIcon.managedProperty().unbind();
 
         isRangeAmountEnabledPin.unsubscribe();
+        isOverlayVisible.unsubscribe();
 
         learnMore.setOnAction(null);
         linkToWiki.setOnAction(null);
@@ -167,6 +176,8 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
         learnHowToBuildReputation.setOnAction(null);
         fixedAmount.setOnAction(null);
         rangeAmount.setOnAction(null);
+
+        root.setOnKeyPressed(null);
     }
 
     private static VBox createOverlay(Label amountLimitInfo,

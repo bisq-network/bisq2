@@ -59,6 +59,10 @@ public class SearchBox extends HBox {
         applyStyle(searchField.isFocused());
     }
 
+    public void requestFieldFocus() {
+        searchField.requestFocus();
+    }
+
     public void setDefaultStyle(String defaultStyle) {
         this.defaultStyle = defaultStyle;
         applyStyle(searchField.isFocused());

@@ -175,11 +175,17 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
                         reputationInfo.setOpacity(1);
                         Transitions.blurStrong(content, 0);
                         Transitions.slideInTop(reputationInfo, 450);
+                        root.setOnKeyPressed(controller::onKeyPressedWhileShowingOverlay);
                     } else {
                         Transitions.removeEffect(content);
                         if (reputationInfo.isVisible()) {
                             Transitions.fadeOut(reputationInfo, ManagedDuration.getHalfOfDefaultDurationMillis(),
                                     () -> reputationInfo.setVisible(false));
+                        }
+                        root.setOnKeyPressed(null);
+                        // Return the focus to the wizard
+                        if (root.getParent() != null) {
+                            root.getParent().requestFocus();
                         }
                     }
                 });
@@ -220,6 +226,8 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         showReputationInfoPin.unsubscribe();
         marketPin.unsubscribe();
         marketSelectionPin.unsubscribe();
+
+        root.setOnKeyPressed(null);
     }
 
     private Button createAndGetDirectionButton(String title) {

@@ -26,7 +26,7 @@ import bisq.user.banned.UserProfileBannedException;
 
 import java.util.concurrent.CompletableFuture;
 
-interface TradeMessageSender<T extends Trade<?, ?, ?>> {
+public interface TradeMessageSender<T extends Trade<?, ?, ?>> {
     default CompletableFuture<SendMessageResult> sendMessage(TradeMessage message,
                                                              ServiceProvider serviceProvider,
                                                              T trade) {

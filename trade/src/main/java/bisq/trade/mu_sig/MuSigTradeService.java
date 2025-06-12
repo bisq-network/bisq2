@@ -47,20 +47,20 @@ import bisq.settings.SettingsService;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
 import bisq.trade.mu_sig.events.MuSigTradeEvent;
-import bisq.trade.mu_sig.events.blockchain.MuSigDepositTxConfirmedEvent;
-import bisq.trade.mu_sig.events.buyer_as_taker.MuSigPaymentInitiatedEvent;
-import bisq.trade.mu_sig.events.buyer_as_taker.MuSigTakeOfferEvent;
-import bisq.trade.mu_sig.events.seller_as_maker.MuSigPaymentReceiptConfirmedEvent;
+import bisq.trade.mu_sig.events.blockchain.DepositTxConfirmedEvent;
+import bisq.trade.mu_sig.events.buyer.PaymentInitiatedEvent;
+import bisq.trade.mu_sig.events.taker.MuSigTakeOfferEvent;
+import bisq.trade.mu_sig.events.seller.PaymentReceiptConfirmedEvent;
 import bisq.trade.mu_sig.grpc.MusigGrpcClient;
 import bisq.trade.mu_sig.messages.grpc.DepositPsbt;
 import bisq.trade.mu_sig.messages.grpc.TxConfirmationStatus;
-import bisq.trade.mu_sig.messages.network.MuSigSetupTradeMessage_A;
+import bisq.trade.mu_sig.messages.network.SetupTradeMessage_A;
 import bisq.trade.mu_sig.messages.network.MuSigTradeMessage;
 import bisq.trade.mu_sig.protocol.MuSigBuyerAsTakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigProtocol;
 import bisq.trade.mu_sig.protocol.MuSigSellerAsMakerProtocol;
-import bisq.trade.mu_sig.protocol.not_yet_impl.MuSigBuyerAsMakerProtocol;
-import bisq.trade.mu_sig.protocol.not_yet_impl.MuSigSellerAsTakerProtocol;
+import bisq.trade.mu_sig.protocol.MuSigBuyerAsMakerProtocol;
+import bisq.trade.mu_sig.protocol.MuSigSellerAsTakerProtocol;
 import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protobuf.SubscribeTxConfirmationStatusRequest;
 import bisq.user.banned.BannedUserService;
@@ -126,7 +126,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
     private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin;
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
     private final Set<MuSigTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
-    private final Map<String, Scheduler> cooperativeCloseTimeoutSchedulerByTradeId = new ConcurrentHashMap<>();
+    private final Map<String, Scheduler> closeTradeTimeoutSchedulerByTradeId = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<Void>> observeDepositTxConfirmationStatusFutureByTradeId = new ConcurrentHashMap<>();
 
     public MuSigTradeService(Config config, ServiceProvider serviceProvider) {
@@ -226,8 +226,8 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
 
         networkService.removeConfidentialMessageListener(this);
 
-        cooperativeCloseTimeoutSchedulerByTradeId.values().forEach(Scheduler::stop);
-        cooperativeCloseTimeoutSchedulerByTradeId.clear();
+        closeTradeTimeoutSchedulerByTradeId.values().forEach(Scheduler::stop);
+        closeTradeTimeoutSchedulerByTradeId.clear();
 
         tradeProtocolById.clear();
         pendingMessages.clear();
@@ -251,8 +251,8 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
                 return;
             }
 
-            if (muSigTradeMessage instanceof MuSigSetupTradeMessage_A) {
-                handleMuSigTakeOfferMessage((MuSigSetupTradeMessage_A) muSigTradeMessage);
+            if (muSigTradeMessage instanceof SetupTradeMessage_A) {
+                handleMuSigTakeOfferMessage((SetupTradeMessage_A) muSigTradeMessage);
             } else {
                 handleMuSigTradeMessage(muSigTradeMessage);
             }
@@ -264,44 +264,36 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
     // Message event
     /* --------------------------------------------------------------------- */
 
-    private void handleMuSigTakeOfferMessage(MuSigSetupTradeMessage_A message) {
+    private void handleMuSigTakeOfferMessage(SetupTradeMessage_A message) {
         MuSigContract muSigContract = message.getContract();
         MuSigProtocol protocol = createProtocol(muSigContract, message.getSender(), message.getReceiver());
+        handleMuSigTradeMessage(message, protocol);
+    }
 
+    private void handleMuSigTradeMessage(MuSigTradeMessage message) {
+        String tradeId = message.getTradeId();
+        findProtocol(tradeId).ifPresentOrElse(protocol -> handleMuSigTradeMessage(message, protocol),
+                () -> {
+                    log.info("Protocol with tradeId {} not found. We add the message to pendingMessages for " +
+                            "re-processing when the next message arrives. message={}", tradeId, message);
+                    pendingMessages.add(message);
+                });
+    }
+
+    private void handleMuSigTradeMessage(MuSigTradeMessage message, MuSigProtocol protocol) {
         CompletableFuture.runAsync(() -> {
             protocol.handle(message);
-            persist();
+
+            if (pendingMessages.contains(message)) {
+                log.info("We remove message {} from pendingMessages.", message);
+                pendingMessages.remove(message);
+            }
 
             if (!pendingMessages.isEmpty()) {
                 log.info("We have pendingMessages. We try to re-process them now.");
                 pendingMessages.forEach(this::handleMuSigTradeMessage);
             }
         });
-    }
-
-    private void handleMuSigTradeMessage(MuSigTradeMessage message) {
-        String tradeId = message.getTradeId();
-        findProtocol(tradeId).ifPresentOrElse(protocol -> {
-                    CompletableFuture.runAsync(() -> {
-                        protocol.handle(message);
-                        persist();
-
-                        if (pendingMessages.contains(message)) {
-                            log.info("We remove message {} from pendingMessages.", message);
-                            pendingMessages.remove(message);
-                        }
-
-                        if (!pendingMessages.isEmpty()) {
-                            log.info("We have pendingMessages. We try to re-process them now.");
-                            pendingMessages.forEach(this::handleMuSigTradeMessage);
-                        }
-                    });
-                },
-                () -> {
-                    log.info("Protocol with tradeId {} not found. We add the message to pendingMessages for " +
-                            "re-processing when the next message arrives. message={}", tradeId, message);
-                    pendingMessages.add(message);
-                });
     }
 
 
@@ -315,15 +307,15 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
 
     // TODO just temp for dev
     public void skipWaitForConfirmation(MuSigTrade trade) {
-        handleMuSigTradeEvent(trade, new MuSigDepositTxConfirmedEvent());
+        handleMuSigTradeEvent(trade, new DepositTxConfirmedEvent());
     }
 
     public void paymentInitiated(MuSigTrade trade) {
-        handleMuSigTradeEvent(trade, new MuSigPaymentInitiatedEvent());
+        handleMuSigTradeEvent(trade, new PaymentInitiatedEvent());
     }
 
     public void paymentReceiptConfirmed(MuSigTrade trade) {
-        handleMuSigTradeEvent(trade, new MuSigPaymentReceiptConfirmedEvent());
+        handleMuSigTradeEvent(trade, new PaymentReceiptConfirmedEvent());
     }
 
     public void closeTrade(MuSigTrade trade) {
@@ -342,10 +334,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         verifyMinVersionForTrading();
         String tradeId = trade.getId();
         findProtocol(tradeId).ifPresentOrElse(protocol -> {
-                    CompletableFuture.runAsync(() -> {
-                        protocol.handle(event);
-                        persist();
-                    });
+                    CompletableFuture.runAsync(() -> protocol.handle(event));
                 },
                 () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
     }
@@ -414,7 +403,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
                     TxConfirmationStatus status = TxConfirmationStatus.fromProto(proto);
                     if (status.getNumConfirmations() > 0) {
                         if (trade.isDepositTxCreatedButNotConfirmed()) {
-                            handleMuSigTradeEvent(trade, new MuSigDepositTxConfirmedEvent());
+                            handleMuSigTradeEvent(trade, new DepositTxConfirmedEvent());
                         }
                     }
                 }
@@ -431,18 +420,18 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         observeDepositTxConfirmationStatusFutureByTradeId.put(tradeId, future);
     }
 
-    public void startCooperativeCloseTimeout(MuSigTrade trade, MuSigTradeEvent event) {
-        stopCooperativeCloseTimeout(trade);
-        cooperativeCloseTimeoutSchedulerByTradeId.computeIfAbsent(trade.getId(), key ->
+    public void startCloseTradeTimeout(MuSigTrade trade, MuSigTradeEvent event) {
+        stopCloseTradeTimeout(trade);
+        closeTradeTimeoutSchedulerByTradeId.computeIfAbsent(trade.getId(), key ->
                 Scheduler.run(() ->
                                 handleMuSigTradeEvent(trade, event))
                         .after(24, TimeUnit.HOURS));
     }
 
-    public void stopCooperativeCloseTimeout(MuSigTrade trade) {
+    public void stopCloseTradeTimeout(MuSigTrade trade) {
         String tradeId = trade.getId();
-        if (cooperativeCloseTimeoutSchedulerByTradeId.containsKey(tradeId)) {
-            cooperativeCloseTimeoutSchedulerByTradeId.get(tradeId).stop();
+        if (closeTradeTimeoutSchedulerByTradeId.containsKey(tradeId)) {
+            closeTradeTimeoutSchedulerByTradeId.get(tradeId).stop();
         }
     }
 

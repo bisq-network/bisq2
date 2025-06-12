@@ -10,7 +10,7 @@ import java.util.List;
 @Slf4j
 public abstract class Executable<T extends ApplicationService> implements ShutDownHandler {
     protected final T applicationService;
-    protected final List<Runnable> shutDownHandlers = new ArrayList<>();
+    protected final List<Runnable> shutdownHandlers = new ArrayList<>();
     protected volatile boolean shutDownStarted;
 
     public Executable(String[] args) {
@@ -22,7 +22,8 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             ThreadName.set(this, "shutdownHook");
             if (!shutDownStarted) {
-                shutdown();
+                // We must not call System.exit as otherwise we would hang.
+                shutdown(false);
             }
         }));
 
@@ -42,25 +43,48 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
     protected abstract T createApplicationService(String[] args);
 
     public void shutdown() {
+        shutdown(true);
+    }
+
+    public void shutdown(boolean callExit) {
         if (shutDownStarted) {
             log.info("shutDown has already started");
             return;
         }
         shutDownStarted = true;
-        notifyAboutShutdown();
-        if (applicationService != null) {
-            applicationService.shutdown()
-                    .thenRun(() -> {
-                        try {
-                            shutDownHandlers.forEach(Runnable::run);
-                        } catch (Exception e) {
-                            log.error("Exception at running shutDownHandlers", e);
-                        }
-                        exitJvm();
-                    });
-        } else {
-            shutDownHandlers.forEach(Runnable::run);
-            exitJvm();
+        try {
+            notifyAboutShutdown();
+            if (applicationService != null) {
+                applicationService.shutdown()
+                        .thenRun(() -> {
+                            shutdownHandlers.forEach(shutdownHandler -> {
+                                try {
+                                    shutdownHandler.run();
+                                } catch (Exception e) {
+                                    log.error("Exception at running shutdownHandler", e);
+                                }
+                            });
+                            if (callExit) {
+                                exitJvm();
+                            }
+                        });
+            } else {
+                shutdownHandlers.forEach(shutdownHandler -> {
+                    try {
+                        shutdownHandler.run();
+                    } catch (Exception e) {
+                        log.error("Exception at running shutdownHandler", e);
+                    }
+                });
+                if (callExit) {
+                    exitJvm();
+                }
+            }
+        } catch (Exception e) {
+            log.error("Exception at shutdown", e);
+            if (callExit) {
+                exitJvm();
+            }
         }
     }
 
@@ -74,7 +98,7 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
 
     @Override
     public void addShutDownHook(Runnable shutDownHandler) {
-        shutDownHandlers.add(shutDownHandler);
+        shutdownHandlers.add(shutDownHandler);
     }
 
     protected void launchApplication(String[] args) {

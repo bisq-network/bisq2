@@ -22,7 +22,7 @@ import bisq.common.fsm.EventHandler;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
 
-public abstract class TradeEventHandler<T extends Trade<?, ?, ?>, E extends Event> implements EventHandler {
+public abstract class TradeEventHandler<T extends Trade<?, ?, ?>, E extends Event> implements EventHandler<E> {
     protected final ServiceProvider serviceProvider;
     protected final T trade;
 
@@ -31,8 +31,8 @@ public abstract class TradeEventHandler<T extends Trade<?, ?, ?>, E extends Even
         this.trade = trade;
     }
 
-    public void handle(Event event) {
-        process(unsafeCast(event));
+    public void handle(E event) {
+        process(event);
         commit();
     }
 
@@ -40,12 +40,4 @@ public abstract class TradeEventHandler<T extends Trade<?, ?, ?>, E extends Even
 
     protected abstract void commit();
 
-    @SuppressWarnings("unchecked")
-    private E unsafeCast(Event event) {
-        try {
-            return (E) event;
-        } catch (Exception e) {
-            throw new ClassCastException("Could not cast event to generic Event type in " + getClass().getSimpleName() + ". " + e.getMessage());
-        }
-    }
 }

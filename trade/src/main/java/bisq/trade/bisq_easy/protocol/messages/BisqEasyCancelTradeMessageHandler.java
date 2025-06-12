@@ -20,11 +20,11 @@ package bisq.trade.bisq_easy.protocol.messages;
 import bisq.contract.Role;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.handler.TradeMessageHandler;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyCancelTradeMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyCancelTradeMessage> {
+public class BisqEasyCancelTradeMessageHandler extends BisqEasyTradeMessageHandler<BisqEasyTrade, BisqEasyCancelTradeMessage> {
     public BisqEasyCancelTradeMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
@@ -35,7 +35,6 @@ public class BisqEasyCancelTradeMessageHandler extends TradeMessageHandler<BisqE
 
     @Override
     protected void process(BisqEasyCancelTradeMessage message) {
-
     }
 
     @Override

@@ -87,6 +87,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
         this.authorizedBondedRolesService = authorizedBondedRolesService;
     }
 
+    @Override
     public CompletableFuture<Boolean> initialize() {
         authorizedBondedRolesService.addListener(this);
         // In case we have received a AuthorizedDistributedData without the matching user profile because the
@@ -114,6 +115,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
         return CompletableFuture.completedFuture(true);
     }
 
+    @Override
     public CompletableFuture<Boolean> shutdown() {
         if (userProfileByIdPin != null) {
             userProfileByIdPin.unbind();
