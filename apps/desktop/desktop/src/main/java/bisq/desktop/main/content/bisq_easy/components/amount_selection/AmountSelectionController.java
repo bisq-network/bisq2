@@ -635,7 +635,7 @@ public class AmountSelectionController implements Controller {
                 invertedBaseAmountInput.setAmount(exactBaseAmount);
             }
         } else {
-            if (model.getMinRangeQuoteSideValue().get() != null) {
+            if (model.getMinRangeQuoteSideValue().get() != null && model.getMaxRangeQuoteSideValue().get() != null) {
                 long min = model.getMinRangeQuoteSideValue().get().getValue();
                 long max = model.getMaxQuoteAllowedLimitation().get() != null
                         ? model.getMaxQuoteAllowedLimitation().get().getValue()
