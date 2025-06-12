@@ -38,6 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -48,6 +50,17 @@ public class AmountSelectionController implements Controller {
     private static final String SLIDER_TRACK_MARKER_COLOR = "-bisq2-green";
     private static final int RANGE_INPUT_TEXT_MAX_LENGTH = 11;
     private static final int FIXED_INPUT_TEXT_MAX_LENGTH = 18;
+    private static final Map<Integer, Integer> CHAR_WIDTH_MAP = new HashMap<>();
+    static {
+        CHAR_WIDTH_MAP.put(10, 28);
+        CHAR_WIDTH_MAP.put(11, 25);
+        CHAR_WIDTH_MAP.put(12, 23);
+        CHAR_WIDTH_MAP.put(13, 21);
+        CHAR_WIDTH_MAP.put(14, 19);
+        CHAR_WIDTH_MAP.put(15, 18);
+        CHAR_WIDTH_MAP.put(16, 17);
+        CHAR_WIDTH_MAP.put(17, 16);
+    }
 
     final AmountSelectionModel model;
     @Getter
@@ -816,31 +829,8 @@ public class AmountSelectionController implements Controller {
     private static int getFontCharWidth(int charCount) {
         if (charCount < 10) {
             return 31;
+        } else {
+            return CHAR_WIDTH_MAP.getOrDefault(charCount, 15); // Default to 15 if not found
         }
-        if (charCount == 10) {
-            return 28;
-        }
-        if (charCount == 11) {
-            return 25;
-        }
-        if (charCount == 12) {
-            return 23;
-        }
-        if (charCount == 13) {
-            return 21;
-        }
-        if (charCount == 14) {
-            return 19;
-        }
-        if (charCount == 15) {
-            return 18;
-        }
-        if (charCount == 16) {
-            return 17;
-        }
-        if (charCount == 17) {
-            return 16;
-        }
-        return 15;
     }
 }
