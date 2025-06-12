@@ -300,12 +300,24 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         minQuoteAmountRoot.managedProperty().unbind();
         minBaseAmountRoot.visibleProperty().unbind();
         minBaseAmountRoot.managedProperty().unbind();
+        invertedMinQuoteAmountRoot.visibleProperty().unbind();
+        invertedMinQuoteAmountRoot.managedProperty().unbind();
+        invertedMinBaseAmountRoot.visibleProperty().unbind();
+        invertedMinBaseAmountRoot.managedProperty().unbind();
         minAmountSlider.visibleProperty().unbind();
         minAmountSlider.managedProperty().unbind();
         flipCurrenciesButton.visibleProperty().unbind();
         flipCurrenciesButton.managedProperty().unbind();
         baseAmountSelectionHBox.minWidthProperty().unbind();
         baseAmountSelectionHBox.maxWidthProperty().unbind();
+        maxOrFixedBaseAmountRoot.visibleProperty().unbind();
+        maxOrFixedBaseAmountRoot.managedProperty().unbind();
+        maxOrFixedQuoteAmountRoot.visibleProperty().unbind();
+        maxOrFixedQuoteAmountRoot.managedProperty().unbind();
+        invertedMaxOrFixedQuoteAmountRoot.visibleProperty().unbind();
+        invertedMaxOrFixedQuoteAmountRoot.managedProperty().unbind();
+        invertedMaxOrFixedBaseAmountRoot.visibleProperty().unbind();
+        invertedMaxOrFixedBaseAmountRoot.managedProperty().unbind();
 
         flipCurrenciesButton.setOnAction(null);
 
