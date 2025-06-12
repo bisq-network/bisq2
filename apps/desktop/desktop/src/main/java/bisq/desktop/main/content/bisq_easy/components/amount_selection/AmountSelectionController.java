@@ -257,8 +257,8 @@ public class AmountSelectionController implements Controller {
     }
 
     public boolean isUsingInvertedBaseAndQuoteCurrencies() {
-        return model.getAllowInvertingBaseAndQuoteCurrencies() != null && model.getAllowInvertingBaseAndQuoteCurrencies().get()
-                && model.getAreBaseAndQuoteCurrenciesInverted() != null && model.getAreBaseAndQuoteCurrenciesInverted().get();
+        return model.getAllowInvertingBaseAndQuoteCurrencies().get()
+                && model.getAreBaseAndQuoteCurrenciesInverted().get();
     }
 
     public void reset() {
