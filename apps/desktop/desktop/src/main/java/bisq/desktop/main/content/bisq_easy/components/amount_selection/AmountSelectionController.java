@@ -548,19 +548,26 @@ public class AmountSelectionController implements Controller {
 
         Monetary minRangeMonetaryAsFiat = isMinRangeMonetaryFiat ? minRangeMonetary : priceQuote.toQuoteSideMonetary(minRangeMonetary).round(0);
         model.getMinRangeQuoteSideValue().set(minRangeMonetaryAsFiat);
-        model.getMinRangeValueAsString().set(AmountFormatter.formatQuoteAmount(minRangeMonetaryAsFiat));
-        model.getMinRangeCodeAsString().set(minRangeMonetaryAsFiat.getCode());
 
         Monetary maxRangeMonetaryAsFiat = isMaxRangeMonetaryFiat ? maxRangeMonetary : priceQuote.toQuoteSideMonetary(maxRangeMonetary).round(0);
         model.getMaxRangeQuoteSideValue().set(maxRangeMonetaryAsFiat);
-        model.getMaxRangeCodeAsString().set(maxRangeMonetaryAsFiat.getCode());
 
-        Monetary maxRangeMonetaryLimitationAsFiat = maxRangeMonetaryAsFiat;
-        if (model.getMaxQuoteAllowedLimitation().get() != null) {
-            Monetary maxQuoteAllowedLimitation = model.getMaxQuoteAllowedLimitation().get();
-            maxRangeMonetaryLimitationAsFiat = isMaxRangeMonetaryFiat ? maxQuoteAllowedLimitation : priceQuote.toQuoteSideMonetary(maxQuoteAllowedLimitation).round(0);
+        if (isUsingInvertedBaseAndQuoteCurrencies()) {
+            model.getMinRangeValueAsString().set(AmountFormatter.formatBaseAmount(minRangeMonetaryAsCoin));
+            model.getMinRangeCodeAsString().set(minRangeMonetaryAsCoin.getCode());
+            model.getMaxRangeCodeAsString().set(maxRangeMonetaryAsCoin.getCode());
+            model.getMaxRangeValueLimitationAsString().set(AmountFormatter.formatBaseAmount(maxRangeMonetaryAsCoin));
+        } else {
+            model.getMinRangeValueAsString().set(AmountFormatter.formatQuoteAmount(minRangeMonetaryAsFiat));
+            model.getMinRangeCodeAsString().set(minRangeMonetaryAsFiat.getCode());
+            model.getMaxRangeCodeAsString().set(maxRangeMonetaryAsFiat.getCode());
+            Monetary maxRangeMonetaryLimitationAsFiat = maxRangeMonetaryAsFiat;
+            if (model.getMaxQuoteAllowedLimitation().get() != null) {
+                Monetary maxQuoteAllowedLimitation = model.getMaxQuoteAllowedLimitation().get();
+                maxRangeMonetaryLimitationAsFiat = isMaxRangeMonetaryFiat ? maxQuoteAllowedLimitation : priceQuote.toQuoteSideMonetary(maxQuoteAllowedLimitation).round(0);
+            }
+            model.getMaxRangeValueLimitationAsString().set(AmountFormatter.formatQuoteAmount(maxRangeMonetaryLimitationAsFiat));
         }
-        model.getMaxRangeValueLimitationAsString().set(AmountFormatter.formatQuoteAmount(maxRangeMonetaryLimitationAsFiat));
 
         applySliderTrackStyle();
     }
@@ -708,6 +715,7 @@ public class AmountSelectionController implements Controller {
                 model.getShouldShowInvertedMinAmounts().set(isRangeAmountEnabled && areCurrenciesInverted);
             }
         }
+        applyInitialRangeValues();
     }
 
     private void updateMaxOrFixedBaseSideAmount(Monetary amount, AmountNumberBox amountNumberBox) {
