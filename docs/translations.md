@@ -1,48 +1,73 @@
-## How to update/synchronize translations
+# How to update/synchronize translations
 
-Communication with Transifex is done via their Transifex Client[^1]
+This guide outlines the process for managing translations using the Transifex platform and the Transifex Client (`tx`)[^1].
 
-1. Install the Transifex Client
-2. Get an API token[^2] from your Transifex user profile. You have to have project maintainer rights to be able to
-   manipulate the translation files on transifex. Contact to Transifex maintainer to the get the required permissions.
-3. Run `tx pull` to download new translations from the Transifex website or e.g. `tx push -t bisq-2.academyproperties` 
-   if you want to overwrite remote translation with your local copy in the `i18n` module directory.
-4. If you want to add new translation files to the project run e.g. `tx add src/main/resources/authorized_role.properties`
-5. If you want to update a source file run e.g.`tx push -s bisq-2.academyproperties`
+### One-Time Setup
 
-So besides adding new initial translations via chatGPT the main use case will be to run `tx pull` before a new release
-to update all translation files.
+1.  **Install the Transifex Client**: Follow the instructions on the official documentation.
+2.  **Get an API token**: Generate an API token[^2] from your Transifex user profile. You must have "Project Maintainer" rights for the Bisq project to push source files and manage resources.
 
-Here is the prompt I use to kickstart a new translation. Any input of chatGPT prompt engineers to improve the quality
-of the translation is highly welcome.
+### Use Case 1: Syncing Existing Translations (e.g., Before a Release)
 
+This is the most common task. It pulls the latest completed translations from Transifex into your local repository.
+
+1.  Navigate to the `i18n` module directory.
+2.  Pull all translations:
+    ```bash
+    tx pull
+    ```
+3.  Commit the updated `..._<lang>.properties` files to the repository.
+
+### Use Case 2: Adding a New Translatable File
+
+When a new source file (e.g., `new_feature.properties`) is added to the project, it must be properly registered with Transifex and the repository. This is a multi-step process.
+
+**Step 1: Add the New Source File**
+
+Place your new `.properties` file in the `i18n/src/main/resources/` directory.
+
+**Step 2: Update Transifex Configuration**
+
+Manually add a new resource block to the `.tx/config` file in the project's root directory. Copy an existing block and change the resource name and file paths. The resource name in the `[...]` brackets must be unique.
+
+*Example for `new_feature.properties`*:
+```ini
+[o:bisq:p:bisq-2:r:new_featureproperties]
+file_filter            = i18n/src/main/resources/new_feature_<lang>.properties
+source_file            = i18n/src/main/resources/new_feature.properties
+type                   = UNICODEPROPERTIES
 ```
-You are an export Java programmer and translator. I'll give you a java property file in English and you will translate
- it as a first step into [ENTER YOUR DESIRED LANGUAGE]. You keep all comments (lines starting with a „#“ like 
- „# suppress inspection "UnusedProperty““, „# Dynamic values using DefaultApplicationService.State.name()“, 
- „## Dashboard“) that are already in the file and do NOT translate them. Also keep line breaks like „\n\n“ or „\n“ 
- in the translation. Also don’t translate lines starting with „##“. Also double check that you don’t translate 
- comment lines that start with e.g. „# Dynamically generated in“.  You're a multi-lingual expert. Your task is to 
- rewrite the provided text into [ENTER YOUR DESIRED LANGUAGE]. However, this isn't a mere word-for-word translation task.. You need to adapt 
- the content so that it reads naturally and fluently in the target language, considering its cultural, societal, 
- and regional norms. This process of adaptation is known as localization. Make sure your rewritten content is not 
- only linguistically accurate but also culturally appropriate and relevant to the target audience. 
- Preserve all placeholders (e.g., {0}, {1}), line breaks (\\n) and other formatting. The translation is for a 
- desktop trading app called Bisq. Keep the translations brief and consistent with typical software terminology. 
- On Bisq you can buy and sell bitcoin for fiat (or other cryptocurrencies) privately and securely using Bisq's 
- peer-to-peer network and "open-source desktop software. Bisq Easy is a brand name and should not be translated. 
- Do you have any more questions to fulfill your task perfectly?
 
+**Step 3: Push the New Source File to Transifex**
+
+This command uploads the English source strings to Transifex, making the resource visible and ready for translation. This replaces older workflows that may have used `tx add`.
+
+```bash
+tx push --source
+# Or using the shorthand:
+tx push -s
 ```
 
-After that just paste a part of the Java .property file and copy and paste the translation afterwards.
+**Step 4: Create Initial Local Files for Each Language**
 
-Known issues with this prompt: 
-- After some time chatGPT gets sloppy and starts translating comment lines again. After reminding it of its task,
-  it normally start to work again. If not you have to create a new chat and start a new chat context.
+The `tx pull` command **will not** create local translation files (e.g., `new_feature_de.properties`) if no translations for them exist on Transifex yet. You must create these empty files manually so they can be tracked by Git and populated later.
 
-Leveraging the chatGPT API to fullfill this task in a fully automated way (including giving feedback on errors)
-failed in context related issues for me, that I wasn't able to solve properly yet.
+Navigate to the resources directory and run the following command, replacing `new_feature` with the base name of your new file.
+
+```bash
+# In the i18n/src/main/resources/ directory, run this command:
+for lang in cs de es it pt_BR pcm ru af_ZA; do
+  touch "new_feature_${lang}.properties"
+done
+```
+
+**Step 5: Commit All Changes**
+
+Commit the following to your Git repository:
+1.  The new source file (e.g., `new_feature.properties`).
+2.  The updated `.tx/config` file.
+3.  All the new empty translation files (e.g., `new_feature_de.properties`, etc.).
+
 
 [^1]: https://developers.transifex.com/docs/cli
 [^2]: https://developers.transifex.com/reference/api-authentication
