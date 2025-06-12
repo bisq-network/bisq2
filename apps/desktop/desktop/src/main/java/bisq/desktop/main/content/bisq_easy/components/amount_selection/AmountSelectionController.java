@@ -625,7 +625,7 @@ public class AmountSelectionController implements Controller {
 
     private void applySliderValue(double sliderValue, BigNumberAmountInputBox quoteAmountInput, BigNumberAmountInputBox invertedBaseAmountInput) {
         if (isUsingInvertedBaseAndQuoteCurrencies()) {
-            if (model.getMinRangeBaseSideValue().get() != null) {
+            if (model.getMinRangeBaseSideValue().get() != null && model.getMaxRangeBaseSideValue().get() != null) {
                 long min = model.getMinRangeBaseSideValue().get().getValue();
                 long max = model.getMaxRangeBaseSideValue().get().getValue();
                 long value = Math.round(sliderValue * (max - min)) + min;
