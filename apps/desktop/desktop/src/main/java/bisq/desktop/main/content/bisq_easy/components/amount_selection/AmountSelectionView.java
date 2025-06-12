@@ -36,12 +36,33 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Slf4j
 public class AmountSelectionView extends View<VBox, AmountSelectionModel, AmountSelectionController> {
     private static final Insets SLIDER_INDICATORS_RANGE_MARGIN = new Insets(-15, 0, 0, 0);
     private static final Insets SLIDER_INDICATORS_FIXED_MARGIN = new Insets(2.5, 0, 0, 0);
     @SuppressWarnings("UnnecessaryUnicodeEscape")
     private static final String EN_DASH_SYMBOL = "\u2013"; // Unicode for "–"
+    private static final Map<Integer, String> STYLE_MAP = new HashMap<>();
+    static {
+        STYLE_MAP.put(9, "input-text-9");
+        STYLE_MAP.put(10, "input-text-10");
+        STYLE_MAP.put(11, "input-text-11");
+        STYLE_MAP.put(12, "input-text-12");
+        STYLE_MAP.put(13, "input-text-13");
+        STYLE_MAP.put(14, "input-text-14");
+        STYLE_MAP.put(15, "input-text-15");
+        STYLE_MAP.put(16, "input-text-16");
+        STYLE_MAP.put(17, "input-text-17");
+        STYLE_MAP.put(18, "input-text-18");
+        STYLE_MAP.put(19, "input-text-19");
+        STYLE_MAP.put(20, "input-text-20");
+        STYLE_MAP.put(21, "input-text-21");
+        STYLE_MAP.put(22, "input-text-22");
+        STYLE_MAP.put(23, "input-text-23");
+    }
 
     private final Slider maxOrFixedAmountSlider, minAmountSlider;
     private final Label minRangeValue, maxRangeValue, minRangeCode, maxRangeCode, description, quoteAmountSeparator,
@@ -313,8 +334,12 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
             quoteAmountSelectionHBox.getStyleClass().clear();
             quoteAmountSelectionHBox.getStyleClass().add("quote-amount");
             int charCount = controller.onGetCalculatedTotalCharCount();
-            quoteAmountSelectionHBox.getStyleClass().add(AmountSelectionController.getFontStyleBasedOnTextLength(charCount));
+            quoteAmountSelectionHBox.getStyleClass().add(getFontStyleBasedOnTextLength(charCount));
             model.getShouldApplyNewInputTextFontStyle().set(false);
         }
+    }
+
+    private static String getFontStyleBasedOnTextLength(int charCount) {
+        return STYLE_MAP.getOrDefault(charCount, "input-text-23");
     }
 }

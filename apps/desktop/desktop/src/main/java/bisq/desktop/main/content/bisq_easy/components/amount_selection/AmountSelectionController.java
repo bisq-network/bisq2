@@ -46,21 +46,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class AmountSelectionController implements Controller {
     private static final String SLIDER_TRACK_DEFAULT_COLOR = "-bisq-dark-grey-50";
     private static final String SLIDER_TRACK_MARKER_COLOR = "-bisq2-green";
-    private static final String INPUT_TEXT_9_STYLE_CLASS = "input-text-9";
-    private static final String INPUT_TEXT_10_STYLE_CLASS = "input-text-10";
-    private static final String INPUT_TEXT_11_STYLE_CLASS = "input-text-11";
-    private static final String INPUT_TEXT_12_STYLE_CLASS = "input-text-12";
-    private static final String INPUT_TEXT_13_STYLE_CLASS = "input-text-13";
-    private static final String INPUT_TEXT_14_STYLE_CLASS = "input-text-14";
-    private static final String INPUT_TEXT_15_STYLE_CLASS = "input-text-15";
-    private static final String INPUT_TEXT_16_STYLE_CLASS = "input-text-16";
-    private static final String INPUT_TEXT_17_STYLE_CLASS = "input-text-17";
-    private static final String INPUT_TEXT_18_STYLE_CLASS = "input-text-18";
-    private static final String INPUT_TEXT_19_STYLE_CLASS = "input-text-19";
-    private static final String INPUT_TEXT_20_STYLE_CLASS = "input-text-20";
-    private static final String INPUT_TEXT_21_STYLE_CLASS = "input-text-21";
-    private static final String INPUT_TEXT_22_STYLE_CLASS = "input-text-22";
-    private static final String INPUT_TEXT_23_STYLE_CLASS = "input-text-23";
     private static final int RANGE_INPUT_TEXT_MAX_LENGTH = 11;
     private static final int FIXED_INPUT_TEXT_MAX_LENGTH = 18;
 
@@ -857,51 +842,5 @@ public class AmountSelectionController implements Controller {
             return 16;
         }
         return 15;
-    }
-
-    static String getFontStyleBasedOnTextLength(int charCount) {
-        if (charCount < 10) {
-            return INPUT_TEXT_9_STYLE_CLASS;
-        }
-        if (charCount == 10) {
-            return INPUT_TEXT_10_STYLE_CLASS;
-        }
-        if (charCount == 11) {
-            return INPUT_TEXT_11_STYLE_CLASS;
-        }
-        if (charCount == 12) {
-            return INPUT_TEXT_12_STYLE_CLASS;
-        }
-        if (charCount == 13) {
-            return INPUT_TEXT_13_STYLE_CLASS;
-        }
-        if (charCount == 14) {
-            return INPUT_TEXT_14_STYLE_CLASS;
-        }
-        if (charCount == 15) {
-            return INPUT_TEXT_15_STYLE_CLASS;
-        }
-        if (charCount == 16) {
-            return INPUT_TEXT_16_STYLE_CLASS;
-        }
-        if (charCount == 17) {
-            return INPUT_TEXT_17_STYLE_CLASS;
-        }
-        if (charCount == 18) {
-            return INPUT_TEXT_18_STYLE_CLASS;
-        }
-        if (charCount == 19) {
-            return INPUT_TEXT_19_STYLE_CLASS;
-        }
-        if (charCount == 20) {
-            return INPUT_TEXT_20_STYLE_CLASS;
-        }
-        if (charCount == 21) {
-            return INPUT_TEXT_21_STYLE_CLASS;
-        }
-        if (charCount == 22) {
-            return INPUT_TEXT_22_STYLE_CLASS;
-        }
-        return INPUT_TEXT_23_STYLE_CLASS;
     }
 }
