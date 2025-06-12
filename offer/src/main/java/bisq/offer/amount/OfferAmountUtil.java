@@ -231,4 +231,34 @@ public class OfferAmountUtil {
             throw new RuntimeException("Unsupported amountSpec: {}" + amountSpec);
         }
     }
+
+    public static Optional<BaseSideAmountSpec> updateBaseSideAmountSpecWithPriceSpec(MarketPriceService marketPriceService,
+                                                                                     BaseSideAmountSpec amountSpec,
+                                                                                     PriceSpec priceSpec,
+                                                                                     Market market) {
+
+        if (amountSpec instanceof FixedAmountSpec) {
+            return OfferAmountUtil.findQuoteSideFixedAmount(marketPriceService, amountSpec, priceSpec, market)
+                    .flatMap(quoteAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
+                            .map(quote -> quote.toBaseSideMonetary(quoteAmount)))
+                    .map(Monetary::getValue)
+                    .map(BaseSideFixedAmountSpec::new);
+        } else if (amountSpec instanceof RangeAmountSpec) {
+            Optional<Long> minBaseSideAmount = OfferAmountUtil.findQuoteSideFixedAmount(marketPriceService, amountSpec, priceSpec, market)
+                    .flatMap(minAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
+                            .map(quote -> quote.toBaseSideMonetary(minAmount)))
+                    .map(Monetary::getValue);
+            Optional<Long> maxBaseSideAmount = OfferAmountUtil.findQuoteSideFixedAmount(marketPriceService, amountSpec, priceSpec, market)
+                    .flatMap(maxAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
+                            .map(quote -> quote.toBaseSideMonetary(maxAmount)))
+                    .map(Monetary::getValue);
+            if (minBaseSideAmount.isPresent() && maxBaseSideAmount.isPresent()) {
+                return Optional.of(new BaseSideRangeAmountSpec(minBaseSideAmount.get(), maxBaseSideAmount.get()));
+            } else {
+                return Optional.empty();
+            }
+        } else {
+            throw new RuntimeException("Unsupported amountSpec: {}" + amountSpec);
+        }
+    }
 }

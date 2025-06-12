@@ -26,7 +26,7 @@ import bisq.desktop.main.content.mu_sig.create_offer.amount_and_price.price.MuSi
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
-import bisq.offer.amount.spec.QuoteSideAmountSpec;
+import bisq.offer.amount.spec.BaseSideAmountSpec;
 import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.layout.Region;
@@ -97,12 +97,12 @@ public class MuSigCreateOfferAmountAndPriceController implements Controller {
         model.setMarket(market);
     }
 
-    public void updateQuoteSideAmountSpecWithPriceSpec(PriceSpec priceSpec) {
-        muSigCreateOfferAmountController.updateQuoteSideAmountSpecWithPriceSpec(priceSpec);
+    public void updateAmountSpecWithPriceSpec(PriceSpec priceSpec) {
+        muSigCreateOfferAmountController.updateAmountSpecWithPriceSpec(priceSpec);
     }
 
-    public ReadOnlyObjectProperty<QuoteSideAmountSpec> getQuoteSideAmountSpec() {
-        return muSigCreateOfferAmountController.getQuoteSideAmountSpec();
+    public ReadOnlyObjectProperty<BaseSideAmountSpec> getBaseSideAmountSpec() {
+        return muSigCreateOfferAmountController.getBaseSideAmountSpec();
     }
 
     public void setPaymentMethods(List<FiatPaymentMethod> paymentMethods) {

@@ -40,9 +40,10 @@ import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.AmountSpecUtil;
+import bisq.offer.amount.spec.BaseSideAmountSpec;
+import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
+import bisq.offer.amount.spec.BaseSideRangeAmountSpec;
 import bisq.offer.amount.spec.QuoteSideAmountSpec;
-import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
-import bisq.offer.amount.spec.QuoteSideRangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
@@ -157,12 +158,20 @@ public class MuSigCreateOfferAmountController implements Controller {
         }
     }
 
-    public void updateQuoteSideAmountSpecWithPriceSpec(PriceSpec priceSpec) {
+    public void updateAmountSpecWithPriceSpec(PriceSpec priceSpec) {
         if (priceSpec == null) {
             return;
         }
 
-        QuoteSideAmountSpec amountSpec = model.getQuoteSideAmountSpec().get();
+        updateBaseSideAmountSpecWithPriceSpec(priceSpec);
+    }
+
+    public void updateBaseSideAmountSpecWithPriceSpec(PriceSpec priceSpec) {
+        if (priceSpec == null) {
+            return;
+        }
+
+        BaseSideAmountSpec amountSpec = model.getBaseSideAmountSpec().get();
         if (amountSpec == null) {
             return;
         }
@@ -179,8 +188,8 @@ public class MuSigCreateOfferAmountController implements Controller {
         model.getPriceQuote().set(priceQuote.get());
         amountSelectionController.setQuote(priceQuote.get());
 
-        OfferAmountUtil.updateQuoteSideAmountSpecWithPriceSpec(marketPriceService, amountSpec, priceSpec, market)
-                .ifPresent(quoteSideAmountSpec -> model.getQuoteSideAmountSpec().set(quoteSideAmountSpec));
+        OfferAmountUtil.updateBaseSideAmountSpecWithPriceSpec(marketPriceService, amountSpec, priceSpec, market)
+                .ifPresent(baseSideAmountSpec -> model.getBaseSideAmountSpec().set(baseSideAmountSpec));
     }
 
     public void reset() {
@@ -188,8 +197,8 @@ public class MuSigCreateOfferAmountController implements Controller {
         model.reset();
     }
 
-    public ReadOnlyObjectProperty<QuoteSideAmountSpec> getQuoteSideAmountSpec() {
-        return model.getQuoteSideAmountSpec();
+    public ReadOnlyObjectProperty<BaseSideAmountSpec> getBaseSideAmountSpec() {
+        return model.getBaseSideAmountSpec();
     }
 
     public ReadOnlyBooleanProperty getIsOverlayVisible() {
@@ -331,17 +340,17 @@ public class MuSigCreateOfferAmountController implements Controller {
     }
 
     private void applyAmountSpec() {
-        Long maxOrFixAmount = getAmountValue(amountSelectionController.getMaxOrFixedQuoteSideAmount());
+        Long maxOrFixAmount = getAmountValue(amountSelectionController.getMaxOrFixedBaseSideAmount());
         if (maxOrFixAmount == null) {
             return;
         }
 
         if (model.getIsRangeAmountEnabled().get()) {
-            Long minAmount = getAmountValue(amountSelectionController.getMinQuoteSideAmount());
+            Long minAmount = getAmountValue(amountSelectionController.getMinBaseSideAmount());
             checkNotNull(minAmount);
             if (maxOrFixAmount.compareTo(minAmount) < 0) {
-                amountSelectionController.setMinQuoteSideAmount(amountSelectionController.getMaxOrFixedQuoteSideAmount().get());
-                minAmount = getAmountValue(amountSelectionController.getMinQuoteSideAmount());
+                amountSelectionController.setMinBaseSideAmount(amountSelectionController.getMaxOrFixedBaseSideAmount().get());
+                minAmount = getAmountValue(amountSelectionController.getMinBaseSideAmount());
             }
             applyRangeOrFixedAmountSpec(minAmount, maxOrFixAmount);
         } else {
@@ -368,13 +377,13 @@ public class MuSigCreateOfferAmountController implements Controller {
 
     private void applyFixedAmountSpec(long maxOrFixAmount) {
         if (maxOrFixAmount > 0) {
-            model.getQuoteSideAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
+            model.getBaseSideAmountSpec().set(new BaseSideFixedAmountSpec(maxOrFixAmount));
         }
     }
 
     private void applyRangeAmountSpec(long minAmount, long maxOrFixAmount) {
         if (minAmount > 0 && maxOrFixAmount > 0) {
-            model.getQuoteSideAmountSpec().set(new QuoteSideRangeAmountSpec(minAmount, maxOrFixAmount));
+            model.getBaseSideAmountSpec().set(new BaseSideRangeAmountSpec(minAmount, maxOrFixAmount));
         }
     }
 
@@ -406,7 +415,7 @@ public class MuSigCreateOfferAmountController implements Controller {
         } else {
             getMarketPriceQuote().ifPresent(amountSelectionController::setQuote);
         }
-        AmountSpecUtil.findQuoteSideFixedAmountFromSpec(model.getQuoteSideAmountSpec().get(), model.getMarket().getQuoteCurrencyCode())
+        AmountSpecUtil.findQuoteSideFixedAmountFromSpec(model.getBaseSideAmountSpec().get(), model.getMarket().getQuoteCurrencyCode())
                 .ifPresent(amount -> UIThread.runOnNextRenderFrame(() -> amountSelectionController.setMaxOrFixedQuoteSideAmount(amount)));
 
         return bestOffersPrice;
@@ -661,7 +670,7 @@ public class MuSigCreateOfferAmountController implements Controller {
     }
 
     private boolean isValidAmountRange(BisqEasyOffer peersOffer) {
-        Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
+        Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getBaseSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
         Optional<Monetary> peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
         if (myQuoteSideMinOrFixedAmount.isEmpty() || peersQuoteSideMaxOrFixedAmount.isEmpty()) {
             return false;
@@ -670,7 +679,7 @@ public class MuSigCreateOfferAmountController implements Controller {
             return false;
         }
 
-        Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
+        Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getBaseSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
         Optional<Monetary> peersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
         if (myQuoteSideMaxOrFixedAmount.isEmpty() || peersQuoteSideMinOrFixedAmount.isEmpty()) {
             return false;

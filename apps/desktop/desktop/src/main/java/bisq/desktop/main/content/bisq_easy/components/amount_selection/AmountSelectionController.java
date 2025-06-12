@@ -30,7 +30,6 @@ import bisq.desktop.main.content.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -72,7 +71,8 @@ public class AmountSelectionController implements Controller {
             invertedMaxOrFixedBaseSideAmountInput;
     private final SmallNumberDisplayBox maxOrFixedBaseSideAmountDisplay, minBaseSideAmountDisplay, invertedMinQuoteSideAmountDisplay,
             invertedMaxOrFixedQuoteSideAmountDisplay;
-    private final ChangeListener<Monetary> maxOrFixedQuoteSideAmountFromModelListener, minQuoteSideAmountFromModelListener;
+    private final ChangeListener<Monetary> maxOrFixedQuoteSideAmountFromModelListener, minQuoteSideAmountFromModelListener,
+            maxOrFixedBaseSideAmountFromModelListener, minBaseSideAmountFromModelListener;
     private final ChangeListener<PriceQuote> quoteListener;
     private final PriceInput price;
     private final ChangeListener<Number> maxOrFixedSliderListener, minSliderListener;
@@ -119,6 +119,8 @@ public class AmountSelectionController implements Controller {
         // The order of the event notification is not deterministic.
         maxOrFixedQuoteSideAmountFromModelListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setMaxOrFixedBaseFromQuote);
         minQuoteSideAmountFromModelListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setMinBaseFromQuote);
+        maxOrFixedBaseSideAmountFromModelListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setMaxOrFixedQuoteFromBase);
+        minBaseSideAmountFromModelListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setMinQuoteFromBase);
         quoteListener = (observable, oldValue, newValue) -> {
             model.getMinRangeBaseSideValue().set(null);
             model.getMaxRangeBaseSideValue().set(null);
@@ -284,6 +286,8 @@ public class AmountSelectionController implements Controller {
 
         model.getMaxOrFixedQuoteSideAmount().addListener(maxOrFixedQuoteSideAmountFromModelListener);
         model.getMinQuoteSideAmount().addListener(minQuoteSideAmountFromModelListener);
+        model.getMaxOrFixedBaseSideAmount().addListener(maxOrFixedBaseSideAmountFromModelListener);
+        model.getMinBaseSideAmount().addListener(minBaseSideAmountFromModelListener);
         price.getQuote().addListener(quoteListener);
 
         maxOrFixedBaseSideAmountDisplay.setAmount(null);
@@ -401,6 +405,8 @@ public class AmountSelectionController implements Controller {
     public void onDeactivate() {
         model.getMaxOrFixedQuoteSideAmount().removeListener(maxOrFixedQuoteSideAmountFromModelListener);
         model.getMinQuoteSideAmount().removeListener(minQuoteSideAmountFromModelListener);
+        model.getMaxOrFixedBaseSideAmount().removeListener(maxOrFixedBaseSideAmountFromModelListener);
+        model.getMinBaseSideAmount().removeListener(minBaseSideAmountFromModelListener);
         price.getQuote().removeListener(quoteListener);
         model.getMaxOrFixedAmountSliderValue().removeListener(maxOrFixedSliderListener);
         model.getMinAmountSliderValue().removeListener(minSliderListener);
