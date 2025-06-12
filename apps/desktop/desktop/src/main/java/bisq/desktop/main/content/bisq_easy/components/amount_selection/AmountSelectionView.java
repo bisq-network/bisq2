@@ -45,23 +45,23 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
     private static final Insets SLIDER_INDICATORS_FIXED_MARGIN = new Insets(2.5, 0, 0, 0);
     @SuppressWarnings("UnnecessaryUnicodeEscape")
     private static final String EN_DASH_SYMBOL = "\u2013"; // Unicode for "–"
-    private static final Map<Integer, String> STYLE_MAP = new HashMap<>();
+    private static final Map<Integer, String> CHAR_COUNT_FONT_STYLE_MAP = new HashMap<>();
     static {
-        STYLE_MAP.put(9, "input-text-9");
-        STYLE_MAP.put(10, "input-text-10");
-        STYLE_MAP.put(11, "input-text-11");
-        STYLE_MAP.put(12, "input-text-12");
-        STYLE_MAP.put(13, "input-text-13");
-        STYLE_MAP.put(14, "input-text-14");
-        STYLE_MAP.put(15, "input-text-15");
-        STYLE_MAP.put(16, "input-text-16");
-        STYLE_MAP.put(17, "input-text-17");
-        STYLE_MAP.put(18, "input-text-18");
-        STYLE_MAP.put(19, "input-text-19");
-        STYLE_MAP.put(20, "input-text-20");
-        STYLE_MAP.put(21, "input-text-21");
-        STYLE_MAP.put(22, "input-text-22");
-        STYLE_MAP.put(23, "input-text-23");
+        CHAR_COUNT_FONT_STYLE_MAP.put(9, "input-text-9");
+        CHAR_COUNT_FONT_STYLE_MAP.put(10, "input-text-10");
+        CHAR_COUNT_FONT_STYLE_MAP.put(11, "input-text-11");
+        CHAR_COUNT_FONT_STYLE_MAP.put(12, "input-text-12");
+        CHAR_COUNT_FONT_STYLE_MAP.put(13, "input-text-13");
+        CHAR_COUNT_FONT_STYLE_MAP.put(14, "input-text-14");
+        CHAR_COUNT_FONT_STYLE_MAP.put(15, "input-text-15");
+        CHAR_COUNT_FONT_STYLE_MAP.put(16, "input-text-16");
+        CHAR_COUNT_FONT_STYLE_MAP.put(17, "input-text-17");
+        CHAR_COUNT_FONT_STYLE_MAP.put(18, "input-text-18");
+        CHAR_COUNT_FONT_STYLE_MAP.put(19, "input-text-19");
+        CHAR_COUNT_FONT_STYLE_MAP.put(20, "input-text-20");
+        CHAR_COUNT_FONT_STYLE_MAP.put(21, "input-text-21");
+        CHAR_COUNT_FONT_STYLE_MAP.put(22, "input-text-22");
+        CHAR_COUNT_FONT_STYLE_MAP.put(23, "input-text-23");
     }
 
     private final Slider maxOrFixedAmountSlider, minAmountSlider;
@@ -352,6 +352,9 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
     }
 
     private static String getFontStyleBasedOnTextLength(int charCount) {
-        return STYLE_MAP.getOrDefault(charCount, "input-text-23");
+        if (charCount < 10) {
+            return "input-text-9";
+        }
+        return CHAR_COUNT_FONT_STYLE_MAP.getOrDefault(charCount, "input-text-23");
     }
 }
