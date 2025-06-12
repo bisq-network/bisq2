@@ -168,12 +168,12 @@ public class MuSigCreateOfferAmountController implements Controller {
         }
         Market market = model.getMarket();
         if (market == null) {
-            log.warn("market is null at updateQuoteSideAmountSpecWithPriceSpec");
+            log.warn("market is null at updateBaseSideAmountSpecWithPriceSpec");
             return;
         }
         Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService, priceSpec, market);
         if (priceQuote.isEmpty()) {
-            log.warn("priceQuote is empty at updateQuoteSideAmountSpecWithPriceSpec");
+            log.warn("priceQuote is empty at updateBaseSideAmountSpecWithPriceSpec");
             return;
         }
         model.getPriceQuote().set(priceQuote.get());
