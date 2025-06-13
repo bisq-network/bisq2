@@ -206,9 +206,11 @@ public class MuSigCreateOfferReviewController implements Controller {
 
         applyPriceDetails(model.getPriceSpec(), market);
 
-        String toSendAmountDescription, toSendAmount, toSendCode, toReceiveAmountDescription, toReceiveAmount, toReceiveCode;
-        boolean isRangeAmount = amountSpec instanceof RangeAmountSpec;
-        if (isRangeAmount) {
+        model.setRangeAmount(amountSpec instanceof RangeAmountSpec);
+        String currentToSendMinAmount = null, currentToReceiveMinAmount = null,
+                currentToReceiveMaxOrFixedAmount, currentToSendMaxOrFixedAmount,
+                toSendAmountDescription, toSendCode, toReceiveAmountDescription, toReceiveCode;
+        if (model.isRangeAmount()) {
             Monetary minBaseSideAmount = OfferAmountUtil.findBaseSideMinAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             model.setMinBaseSideAmount(minBaseSideAmount);
             Monetary maxBaseSideAmount = OfferAmountUtil.findBaseSideMaxAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
@@ -224,14 +226,20 @@ public class MuSigCreateOfferReviewController implements Controller {
             String formattedMaxQuoteAmount = AmountFormatter.formatQuoteAmount(maxQuoteSideAmount);
             String formattedMaxBaseAmount = AmountFormatter.formatBaseAmount(maxBaseSideAmount);
             if (direction.isSell()) {
-                toSendAmount = formattedMinBaseAmount + " " + DASH_SYMBOL + " " + formattedMaxBaseAmount;
+                currentToSendMinAmount = formattedMinBaseAmount;
+                currentToSendMaxOrFixedAmount = formattedMaxBaseAmount;
+                currentToReceiveMinAmount = formattedMinQuoteAmount;
+                currentToReceiveMaxOrFixedAmount = formattedMaxQuoteAmount;
+
                 toSendCode = maxBaseSideAmount.getCode();
-                toReceiveAmount = formattedMinQuoteAmount + " " + DASH_SYMBOL + " " + formattedMaxQuoteAmount;
                 toReceiveCode = maxQuoteSideAmount.getCode();
             } else {
-                toSendAmount = formattedMinQuoteAmount + " " + DASH_SYMBOL + " " + formattedMaxQuoteAmount;
+                currentToSendMinAmount = formattedMinQuoteAmount;
+                currentToSendMaxOrFixedAmount = formattedMaxQuoteAmount;
+                currentToReceiveMinAmount = formattedMinBaseAmount;
+                currentToReceiveMaxOrFixedAmount = formattedMaxBaseAmount;
+
                 toSendCode = maxQuoteSideAmount.getCode();
-                toReceiveAmount = formattedMinBaseAmount + " " + DASH_SYMBOL + " " + formattedMaxBaseAmount;
                 toReceiveCode = maxBaseSideAmount.getCode();
             }
         } else {
@@ -244,14 +252,14 @@ public class MuSigCreateOfferReviewController implements Controller {
             String formattedQuoteAmount = AmountFormatter.formatQuoteAmount(fixQuoteSideAmount);
 
             if (direction.isSell()) {
-                toSendAmount = formattedBaseAmount;
+                currentToSendMaxOrFixedAmount = formattedBaseAmount;
                 toSendCode = fixBaseSideAmount.getCode();
-                toReceiveAmount = formattedQuoteAmount;
+                currentToReceiveMaxOrFixedAmount = formattedQuoteAmount;
                 toReceiveCode = fixQuoteSideAmount.getCode();
             } else {
-                toSendAmount = formattedQuoteAmount;
+                currentToSendMaxOrFixedAmount = formattedQuoteAmount;
                 toSendCode = fixQuoteSideAmount.getCode();
-                toReceiveAmount = formattedBaseAmount;
+                currentToReceiveMaxOrFixedAmount = formattedBaseAmount;
                 toReceiveCode = fixBaseSideAmount.getCode();
             }
         }
@@ -274,14 +282,15 @@ public class MuSigCreateOfferReviewController implements Controller {
 
         applyHeaderFiatPaymentMethod();
 
-        model.setRangeAmount(isRangeAmount);
-        muSigReviewDataDisplay.setRangeAmount(isRangeAmount);
+        muSigReviewDataDisplay.setToSendMinAmount(currentToSendMinAmount);
+        muSigReviewDataDisplay.setToReceiveMinAmount(currentToReceiveMinAmount);
+        muSigReviewDataDisplay.setRangeAmount(model.isRangeAmount());
         muSigReviewDataDisplay.setDirection(Res.get("bisqEasy.tradeWizard.review.direction", Res.get(direction.isSell() ? "offer.sell" : "offer.buy").toUpperCase()));
         muSigReviewDataDisplay.setToSendAmountDescription(toSendAmountDescription.toUpperCase());
-        muSigReviewDataDisplay.setToSendAmount(toSendAmount);
+        muSigReviewDataDisplay.setToSendMaxOrFixedAmount(currentToSendMaxOrFixedAmount);
         muSigReviewDataDisplay.setToSendCode(toSendCode);
         muSigReviewDataDisplay.setToReceiveAmountDescription(toReceiveAmountDescription.toUpperCase());
-        muSigReviewDataDisplay.setToReceiveAmount(toReceiveAmount);
+        muSigReviewDataDisplay.setToReceiveMaxOrFixedAmount(currentToReceiveMaxOrFixedAmount);
         muSigReviewDataDisplay.setToReceiveCode(toReceiveCode);
         muSigReviewDataDisplay.setFiatPaymentMethodDescription(model.getPaymentMethodDescription().toUpperCase());
     }
