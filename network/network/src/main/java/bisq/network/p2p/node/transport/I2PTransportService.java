@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.network.p2p.node.transport;
 
 import bisq.common.network.Address;
@@ -9,8 +26,10 @@ import bisq.common.util.NetworkUtils;
 import bisq.network.NetworkService;
 import bisq.network.i2p.I2pClient;
 import bisq.network.i2p.I2pEmbeddedRouter;
+import bisq.network.i2p.util.PreventSleepService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
+import bisq.security.keys.I2PKeyPair;
 import bisq.security.keys.KeyBundle;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,19 +51,7 @@ public class I2PTransportService implements TransportService {
     @EqualsAndHashCode
     public static final class Config implements TransportConfig {
         public static Config from(Path dataDir, com.typesafe.config.Config config) {
-            return new Config(dataDir,
-                    config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
-                    (int) TimeUnit.SECONDS.toMillis(config.getInt("defaultNodeSocketTimeout")),
-                    (int) TimeUnit.SECONDS.toMillis(config.getInt("userNodeSocketTimeout")),
-                    config.getInt("inboundKBytesPerSecond"),
-                    config.getInt("outboundKBytesPerSecond"),
-                    config.getInt("bandwidthSharePercentage"),
-                    config.getString("i2cpHost"),
-                    config.getInt("i2cpPort"),
-                    config.getBoolean("embeddedRouter"),
-                    config.getBoolean("extendedI2pLogging"),
-                    config.getInt("sendMessageThrottleTime"),
-                    config.getInt("receiveMessageThrottleTime"));
+            return new Config(dataDir, config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1, (int) TimeUnit.SECONDS.toMillis(config.getInt("defaultNodeSocketTimeout")), (int) TimeUnit.SECONDS.toMillis(config.getInt("userNodeSocketTimeout")), config.getInt("inboundKBytesPerSecond"), config.getInt("outboundKBytesPerSecond"), config.getInt("bandwidthSharePercentage"), config.getString("i2cpHost"), config.getInt("i2cpPort"), config.getBoolean("embeddedRouter"), config.getBoolean("extendedI2pLogging"), config.getInt("sendMessageThrottleTime"), config.getInt("receiveMessageThrottleTime"));
         }
 
         private final int defaultNodePort;
@@ -92,6 +99,7 @@ public class I2PTransportService implements TransportService {
 
     private final String i2pDirPath;
     private I2pClient i2pClient;
+    private PreventSleepService preventSleepService;
     private boolean initializeCalled;
     private String sessionId;
     private final I2PTransportService.Config config;
@@ -129,11 +137,7 @@ public class I2PTransportService implements TransportService {
         boolean isEmbeddedRouter = isEmbeddedRouter();
         if (isEmbeddedRouter) {
             if (!I2pEmbeddedRouter.isInitialized()) {
-                I2pEmbeddedRouter.getI2pEmbeddedRouter(i2pDirPath,
-                        config.getInboundKBytesPerSecond(),
-                        config.getOutboundKBytesPerSecond(),
-                        config.getBandwidthSharePercentage(),
-                        config.isExtendedI2pLogging());
+                I2pEmbeddedRouter.getI2pEmbeddedRouter(i2pDirPath, config.getInboundKBytesPerSecond(), config.getOutboundKBytesPerSecond(), config.getBandwidthSharePercentage(), config.isExtendedI2pLogging());
             }
             while (!I2pEmbeddedRouter.isRouterRunning()) {
                 try {
@@ -145,6 +149,13 @@ public class I2PTransportService implements TransportService {
             i2pClient = getClient(true);
         } else {
             i2pClient = getClient(false);
+        }
+        preventSleepService = new PreventSleepService();
+        try {
+            log.info("Prevent from sleep service initialized");
+            preventSleepService.initialize();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
         setTransportState(TransportState.INITIALIZED);
     }
@@ -164,9 +175,10 @@ public class I2PTransportService implements TransportService {
         if (i2pClient == null) {
             return CompletableFuture.completedFuture(true);
         }
-        return CompletableFuture.runAsync(i2pClient::shutdown, NetworkService.NETWORK_IO_POOL)
-                .thenApply(nil -> true)
-                .whenComplete((result, throwable) -> setTransportState(TransportState.TERMINATED));
+        if (preventSleepService != null) {
+            preventSleepService.shutdown();
+        }
+        return CompletableFuture.runAsync(i2pClient::shutdown, NetworkService.NETWORK_IO_POOL).thenApply(nil -> true).whenComplete((result, throwable) -> setTransportState(TransportState.TERMINATED));
     }
 
     private boolean isEmbeddedRouter() {
@@ -182,11 +194,7 @@ public class I2PTransportService implements TransportService {
     }
 
     private I2pClient getClient(boolean isEmbeddedRouter) {
-        return I2pClient.getI2pClient(i2pDirPath,
-                config.getI2cpHost(),
-                config.getI2cpPort(),
-                config.getDefaultNodeSocketTimeout(),
-                isEmbeddedRouter);
+        return I2pClient.getI2pClient(i2pDirPath, config.getI2cpHost(), config.getI2cpPort(), config.getDefaultNodeSocketTimeout(), isEmbeddedRouter);
     }
 
 
@@ -197,14 +205,15 @@ public class I2PTransportService implements TransportService {
         log.debug("Create serverSocket");
         try {
             sessionId = UUID.randomUUID().toString();
+            I2PKeyPair i2PKeyPair = keyBundle.getI2PKeyPair();
             //TODO: Investigate why not using port passed as parameter and if no port, find one?
             //Pass parameters to connect with Local instance
             int i2pPort = port;
             if (!isEmbeddedRouter()) {
                 i2pPort = config.getI2cpPort();
             }
-            ServerSocket serverSocket = i2pClient.getServerSocket(sessionId, config.getI2cpHost(), i2pPort);
-            String destination = i2pClient.getMyDestination(sessionId);
+            ServerSocket serverSocket = i2pClient.getServerSocket(i2PKeyPair, sessionId, config.getI2cpHost(), i2pPort);
+            String destination = keyBundle.getI2PKeyPair().getBase64Destination();
             // Port is irrelevant for I2P
             Address address = new Address(destination, port);
 
@@ -235,6 +244,6 @@ public class I2PTransportService implements TransportService {
 
     @Override
     public boolean isPeerOnline(Address address) {
-        throw new UnsupportedOperationException("isPeerOnline needs to be implemented for I2P.");
+        return i2pClient.isPeerOnline(address.getHost());
     }
 }

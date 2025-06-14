@@ -44,6 +44,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import net.i2p.client.streaming.RouterRestartException;
 
 import java.io.EOFException;
 import java.io.IOException;
