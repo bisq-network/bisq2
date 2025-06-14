@@ -17,7 +17,6 @@
 
 package bisq.security.keys;
 
-import bisq.common.encoding.Hex;
 import bisq.common.file.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,14 +35,8 @@ public class I2PKeyUtils {
             FileUtils.makeDirs(i2pPrivateKeyDir);
             String dir = i2pPrivateKeyDir.getAbsolutePath();
 
-            FileUtils.writeToFile(Hex.encode(i2pKeyPair.getPrivateKey().getData()),
-                    Paths.get(dir, "private_key_hex").toFile());
+            FileUtils.writeToFile(i2pKeyPair.getBase64Destination(), Paths.get(dir, "destination_b64").toFile());
 
-            String b32Address = i2pKeyPair.getBase32Address();
-            FileUtils.writeToFile(b32Address, Paths.get(dir, "hostname").toFile());
-
-            log.info("Persisted I2P private key in hex encoding for b32Address {} for tag {} to {}.",
-                    b32Address, tag, dir);
         } catch (Exception e) {
             log.error("Could not persist I2P identity", e);
         }

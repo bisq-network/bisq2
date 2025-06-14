@@ -40,18 +40,18 @@ public class I2PNameResolver {
 
         Destination dest = null;
 
-            String hostsFile = ctx.getConfigDir() + System.getProperty("file.separator") + "hosts.txt";
-            SingleFileNamingService fileNS = new SingleFileNamingService(ctx, hostsFile);
-            dest = fileNS.lookup(host, null, null);
-            if (dest != null) {
-                return dest;
-            }
+        String hostsFile = ctx.getConfigDir() + System.getProperty("file.separator") + "hosts.txt";
+        SingleFileNamingService fileNS = new SingleFileNamingService(ctx, hostsFile);
+        dest = fileNS.lookup(host, null, null);
+        if (dest != null) {
+            return dest;
+        }
 
-            HostsTxtNamingService hostsNS = new HostsTxtNamingService(ctx);
-            dest = hostsNS.lookup(host, null, null);
-            if (dest != null) {
-                return dest;
-            }
+        HostsTxtNamingService hostsNS = new HostsTxtNamingService(ctx);
+        dest = hostsNS.lookup(host, null, null);
+        if (dest != null) {
+            return dest;
+        }
 
         if (routerCtx != null) {
             String base32 = null;
@@ -61,14 +61,14 @@ public class I2PNameResolver {
                 base32 = host.toLowerCase();
             }
             if (base32 != null) {
-                    byte[] hashBytes = decodeBase32(base32);
-                    if (hashBytes != null) {
-                        Hash hash = new Hash(hashBytes);
-                        dest = routerCtx.netDb().lookupDestinationLocally(hash);
-                        if (dest != null) {
-                            return dest;
-                        }
+                byte[] hashBytes = decodeBase32(base32);
+                if (hashBytes != null) {
+                    Hash hash = new Hash(hashBytes);
+                    dest = routerCtx.netDb().lookupDestinationLocally(hash);
+                    if (dest != null) {
+                        return dest;
                     }
+                }
             }
         }
         return null;

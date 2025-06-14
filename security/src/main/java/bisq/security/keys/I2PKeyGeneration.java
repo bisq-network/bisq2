@@ -17,80 +17,73 @@
 
 package bisq.security.keys;
 
-import net.i2p.crypto.KeyGenerator;
-import net.i2p.crypto.SHA256Generator;
-import net.i2p.crypto.SigType;
-import net.i2p.data.Base32;
-import net.i2p.data.Certificate;
+import net.i2p.I2PException;
+import net.i2p.client.I2PClientFactory;
+import net.i2p.data.DataFormatException;
 import net.i2p.data.Destination;
-import net.i2p.data.PrivateKey;
-import net.i2p.data.PublicKey;
-import net.i2p.data.SigningPrivateKey;
-import net.i2p.data.SigningPublicKey;
-import net.i2p.data.SimpleDataStructure;
+import net.i2p.crypto.SigType;
+import lombok.extern.slf4j.Slf4j;
 
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.GeneralSecurityException;
-import java.security.SecureRandom;
 
+@Slf4j
 public class I2PKeyGeneration {
 
+    public static I2PKeyPair generateKeyPair(Path storageDir, String tag) throws IOException, GeneralSecurityException {
+
+        Path targetDir = storageDir.resolve(tag);
+        Path destFilePath = targetDir.resolve("destination_b64");
+
+        if (Files.exists(destFilePath)) {
+            byte[] localDestinationKey = null;
+            try (FileReader fileReader = new FileReader(destFilePath.toFile())) {
+                char[] destKeyBuffer = new char[(int) destFilePath.toFile().length()];
+                fileReader.read(destKeyBuffer);
+                localDestinationKey = net.i2p.data.Base64.decode(new String(destKeyBuffer));
+                Destination dest = rebuildDestinationFromBytes(localDestinationKey);
+                return new I2PKeyPair(localDestinationKey);
+            } catch (IOException | DataFormatException e) {
+                log.warn("Failed to load existing I2P destination from {}: {}.  Will generate fresh.", destFilePath, e.getMessage());
+            }
+        }
+
+        byte[] freshDest = generateFreshDestination();
+        return new I2PKeyPair(freshDest);
+    }
+
     /**
-     * Generates a new I2P key pair including full Destination data.
+     * Given raw Destination-bytes (the output of Destination.toByteArray()),
+     * reconstruct a Destination object.
      *
-     * @return An {@link I2PKeyPair} containing serialized private key and full Destination public key bytes.
+     * @param destBytes Byte array from I2P’s createDestination.
+     * @return a fully-formed Destination
+     * @throws IOException If the InputStream fails
+     * @throws DataFormatException If the bytes are not a valid Destination
      */
-    public static I2PKeyPair generateKeyPair() throws GeneralSecurityException {
-            // Set up context and key generator
-        KeyGenerator keyGen = KeyGenerator.getInstance();
-
-        // Generate encryption key pair (ElGamal 2048 by default)
-        Object[] encPair = keyGen.generatePKIKeypair();
-        PublicKey pubKey = (PublicKey) encPair[0];
-        PrivateKey privKey = (PrivateKey) encPair[1];
-
-        // Generate signing key pair (Ed25519)
-        SimpleDataStructure[] signingPair = keyGen.generateSigningKeys(SigType.EdDSA_SHA512_Ed25519);
-        SigningPublicKey sigPub = (SigningPublicKey) signingPair[0];
-        SigningPrivateKey sigPriv = (SigningPrivateKey) signingPair[1];
-
-        int paddingLength = 384 - (256 + 32 );
-        SecureRandom rng = new SecureRandom();
-        byte[] pad = new byte[paddingLength];
-        rng.nextBytes(pad);
-
-        // Construct the Destination
-        Destination dest = new Destination();
-        dest.setPublicKey(pubKey);
-        dest.setSigningPublicKey(sigPub);
-        dest.setCertificate(Certificate.NULL_CERT);
-        dest.setPadding(pad);
-
-        return new I2PKeyPair(privKey, sigPriv, dest);
-
-    }
-
-    /**
-     * Not implemented: deriving public key from private key is not supported for I2P Destination format.
-     */
-    public static byte[] getPublicKey(byte[] privateKeyEncoded) {
-        throw new UnsupportedOperationException("Deriving Destination from private key is not supported.");
-    }
-
-    /**
-     * Converts Destination bytes to a .b32.i2p address.
-     */
-    public static String getDestinationFromPublicKey(byte[] publicKeyBytes) {
-        if (publicKeyBytes == null || publicKeyBytes.length == 0) {
-            throw new IllegalArgumentException("Public key bytes cannot be null or empty");
+    private static Destination rebuildDestinationFromBytes(byte[] destBytes) throws IOException, DataFormatException {
+        try (ByteArrayInputStream in = new ByteArrayInputStream(destBytes)) {
+            return Destination.create(in);
         }
+    }
+
+    /**
+     * Calls I2PClientFactory to build a brand-new Destination (ECDSA_SHA512_P521).
+     * We return it to the caller so they can choose to persist or not.
+     *
+     * @return a fresh Destination
+     * @throws GeneralSecurityException if any I2PException or parse error occurs
+     */
+    private static byte[] generateFreshDestination() throws GeneralSecurityException {
+        ByteArrayOutputStream arrayStream = new ByteArrayOutputStream();
         try {
-            Destination destination = new Destination();
-            destination.fromByteArray(publicKeyBytes);
-            byte[] hash = SHA256Generator.getInstance().calculateHash(destination.toByteArray()).getData();
-            return Base32.encode(hash).toLowerCase() + ".b32.i2p";
-        } catch (Exception e) {
-            throw new RuntimeException("Invalid Destination byte array", e);
+            I2PClientFactory.createClient().createDestination(arrayStream, SigType.ECDSA_SHA512_P521);
+        } catch (I2PException | IOException e) {
+            throw new GeneralSecurityException("Failed to generate new I2P Destination", e);
         }
-    }
 
+        return arrayStream.toByteArray();
+    }
 }

@@ -18,26 +18,12 @@
 package bisq.dto.security.keys;
 
 public class I2PKeyPairDto {
-    private String privateKey;
-    private String signingPrivateKey;
-    private String destination;
+    private byte[] destinationKey;
 
-    public String getPrivateKey() {
-        return privateKey;
+    public byte[] getDestinationKey() {
+        return destinationKey;
     }
-    public void setPrivateKey(String privateKey) {
-        this.privateKey = privateKey;
-    }
-    public String getSigningPrivateKey() {
-        return signingPrivateKey;
-    }
-    public void setSigningPrivateKey(String signingPrivateKey) {
-        this.signingPrivateKey = signingPrivateKey;
-    }
-    public String getDestination() {
-        return destination;
-    }
-    public void setDestination(String destination) {
-        this.destination = destination;
+    public void setDestinationKey(byte[] destinationKey) {
+        this.destinationKey = destinationKey;
     }
 }

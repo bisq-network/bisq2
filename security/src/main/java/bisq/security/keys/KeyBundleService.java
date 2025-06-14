@@ -27,6 +27,7 @@ import com.google.common.base.Strings;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,7 +48,9 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
         private final boolean writeDefaultTorPrivateKeyToFile;
         private final boolean writeDefaultI2pPrivateKeyToFile;
 
-        public Config(String defaultTorPrivateKey, String defaultI2pPrivateKey, boolean writeDefaultTorPrivateKeyToFile,
+        public Config(String defaultTorPrivateKey,
+                      String defaultI2pPrivateKey,
+                      boolean writeDefaultTorPrivateKeyToFile,
                       boolean writeDefaultI2pPrivateKeyToFile) {
             this.defaultTorPrivateKey = Optional.ofNullable(Strings.emptyToNull(defaultTorPrivateKey));
             this.defaultI2pPrivateKey = Optional.ofNullable(Strings.emptyToNull(defaultI2pPrivateKey));
@@ -56,12 +59,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
         }
 
         public static Config from(com.typesafe.config.Config config) {
-            return new Config(
-                    config.getString("defaultTorPrivateKey"),
-                    config.getString("defaultI2pPrivateKey"),
-                    config.getBoolean("writeDefaultTorPrivateKeyToFile"),
-                    config.getBoolean("writeDefaultI2pPrivateKeyToFile")
-            );
+            return new Config(config.getString("defaultTorPrivateKey"), config.getString("defaultI2pPrivateKey"), config.getBoolean("writeDefaultTorPrivateKeyToFile"), config.getBoolean("writeDefaultI2pPrivateKeyToFile"));
         }
     }
 
@@ -74,6 +72,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     private final Optional<String> defaultI2pPrivateKey; // <-- Store I2P from config
     private final boolean writeDefaultTorPrivateKeyToFile;
     private final boolean writeDefaultI2pPrivateKeyToFile;
+    private Path i2pPersistencePath;
 
     public KeyBundleService(PersistenceService persistenceService, Config config) {
         persistableStore = new KeyBundleStore();
@@ -99,24 +98,22 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
 
         Path torStoragePath = Paths.get(baseDir, "db", "private", "tor");
         Path i2pStoragePath = Paths.get(baseDir, "db", "private", "i2p");
+        i2pPersistencePath = i2pStoragePath;
 
         // Tor initialization future
         CompletableFuture<Boolean> torInit;
         if (defaultTorPrivateKey.isEmpty()) {
-            torInit = getOrCreateKeyBundleAsync(defaultKeyId)
-                    .thenApply(keyBundle -> {
-                        if (keyBundle != null && writeDefaultTorPrivateKeyToFile) {
-                            TorKeyUtils.writePrivateKey(keyBundle.getTorKeyPair(), torStoragePath, tag);
-                        }
-                        return keyBundle != null;
-                    });
+            torInit = getOrCreateKeyBundleAsync(defaultKeyId).thenApply(keyBundle -> {
+                if (keyBundle != null && writeDefaultTorPrivateKeyToFile) {
+                    TorKeyUtils.writePrivateKey(keyBundle.getTorKeyPair(), torStoragePath, tag);
+                }
+                return keyBundle != null;
+            });
         } else {
             torInit = CompletableFuture.supplyAsync(() -> {
                 byte[] torPrivateKey = Hex.decode(defaultTorPrivateKey.get());
                 TorKeyPair defaultTorKeyPair = TorKeyGeneration.generateKeyPair(torPrivateKey);
-                KeyBundle keyBundle = findKeyBundle(defaultKeyId)
-                        .map(bundle -> new KeyBundle(defaultKeyId, bundle.getKeyPair(), defaultTorKeyPair, bundle.getI2PKeyPair()))
-                        .orElseGet(() -> createKeyBundle(defaultKeyId, defaultTorKeyPair, null));
+                KeyBundle keyBundle = findKeyBundle(defaultKeyId).map(bundle -> new KeyBundle(defaultKeyId, bundle.getKeyPair(), defaultTorKeyPair, bundle.getI2PKeyPair())).orElseGet(() -> createKeyBundle(defaultKeyId, defaultTorKeyPair, null));
                 persistKeyBundle(defaultKeyId, keyBundle);
 
                 if (writeDefaultTorPrivateKeyToFile) {
@@ -126,29 +123,26 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
             }).thenApply(Objects::nonNull);
         }
 
-        // I2P initialization future
         CompletableFuture<Boolean> i2pInit;
         if (defaultI2pPrivateKey.isEmpty()) {
-            i2pInit = getOrCreateKeyBundleAsync(defaultKeyId)
-                    .thenApply(keyBundle -> {
-                        if (keyBundle != null && writeDefaultI2pPrivateKeyToFile) {
-                            I2PKeyUtils.writePrivateKey(keyBundle.getI2PKeyPair(), i2pStoragePath, tag);
-                        }
-                        return keyBundle != null;
-                    });
+            i2pInit = getOrCreateKeyBundleAsync(defaultKeyId).thenApply(keyBundle -> {
+                if (keyBundle != null && writeDefaultI2pPrivateKeyToFile) {
+                    I2PKeyUtils.writePrivateKey(keyBundle.getI2PKeyPair(), i2pStoragePath, tag);
+                }
+                return keyBundle != null;
+            });
         } else {
             i2pInit = CompletableFuture.supplyAsync(() -> {
-                byte[] i2pPrivateKey = Hex.decode(defaultI2pPrivateKey.get());
                 I2PKeyPair defaultI2pKeyPair = null;
                 try {
-                    defaultI2pKeyPair = I2PKeyGeneration.generateKeyPair();
-                } catch (GeneralSecurityException e) {
+                    defaultI2pKeyPair = I2PKeyGeneration.generateKeyPair(i2pStoragePath, tag);
+                } catch (IOException | GeneralSecurityException e) {
                     throw new RuntimeException(e);
                 }
+
                 I2PKeyPair finalDefaultI2pKeyPair = defaultI2pKeyPair;
-                KeyBundle keyBundle = findKeyBundle(defaultKeyId)
-                        .map(bundle -> new KeyBundle(defaultKeyId, bundle.getKeyPair(), bundle.getTorKeyPair(), finalDefaultI2pKeyPair))
-                        .orElseGet(() -> createKeyBundle(defaultKeyId, null, finalDefaultI2pKeyPair));
+                KeyBundle keyBundle = findKeyBundle(defaultKeyId).map(bundle -> new KeyBundle(defaultKeyId, bundle.getKeyPair(), bundle.getTorKeyPair(), finalDefaultI2pKeyPair)).orElseGet(() -> createKeyBundle(defaultKeyId, null, finalDefaultI2pKeyPair));
+
                 persistKeyBundle(defaultKeyId, keyBundle);
 
                 if (writeDefaultI2pPrivateKeyToFile) {
@@ -157,6 +151,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
                 return keyBundle;
             }).thenApply(Objects::nonNull);
         }
+
 
         // Run both in parallel, return true only if both succeeded
         return torInit.thenCombine(i2pInit, (torSuccess, i2pSuccess) -> torSuccess || i2pSuccess);
@@ -175,38 +170,41 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     public KeyBundle createAndPersistKeyBundle(String identityTag, KeyPair keyPair) throws GeneralSecurityException {
         String keyId = getKeyIdFromTag(identityTag);
         TorKeyPair torKeyPair = TorKeyGeneration.generateKeyPair();
-        I2PKeyPair i2pKeyPair = I2PKeyGeneration.generateKeyPair();
+        I2PKeyPair i2pKeyPair = null;
+        try {
+            i2pKeyPair = I2PKeyGeneration.generateKeyPair(i2pPersistencePath, identityTag);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
         KeyBundle keyBundle = new KeyBundle(keyId, keyPair, torKeyPair, i2pKeyPair);
         persistKeyBundle(keyId, keyBundle);
         return keyBundle;
     }
 
     public CompletableFuture<KeyBundle> getOrCreateKeyBundleAsync(String keyId) {
-        return findKeyBundle(keyId).map(CompletableFuture::completedFuture)
-                .orElseGet(() -> CompletableFuture.supplyAsync(() -> {
-                    KeyBundle keyBundle = null;
-                    try {
-                        keyBundle = createKeyBundle(keyId);
-                    } catch (GeneralSecurityException e) {
-                        throw new RuntimeException(e);
-                    }
-                    persistKeyBundle(keyId, keyBundle);
-                    return keyBundle;
-                }));
+        return findKeyBundle(keyId).map(CompletableFuture::completedFuture).orElseGet(() -> CompletableFuture.supplyAsync(() -> {
+            KeyBundle keyBundle = null;
+            try {
+                keyBundle = createKeyBundle(keyId);
+            } catch (GeneralSecurityException e) {
+                throw new RuntimeException(e);
+            }
+            persistKeyBundle(keyId, keyBundle);
+            return keyBundle;
+        }));
     }
 
     public KeyBundle getOrCreateKeyBundle(String keyId) {
-        return findKeyBundle(keyId)
-                .orElseGet(() -> {
-                    KeyBundle keyBundle = null;
-                    try {
-                        keyBundle = createKeyBundle(keyId);
-                    } catch (GeneralSecurityException e) {
-                        throw new RuntimeException(e);
-                    }
-                    persistKeyBundle(keyId, keyBundle);
-                    return keyBundle;
-                });
+        return findKeyBundle(keyId).orElseGet(() -> {
+            KeyBundle keyBundle = null;
+            try {
+                keyBundle = createKeyBundle(keyId);
+            } catch (GeneralSecurityException e) {
+                throw new RuntimeException(e);
+            }
+            persistKeyBundle(keyId, keyBundle);
+            return keyBundle;
+        });
     }
 
     public Optional<KeyBundle> findDefaultKeyBundle() {
@@ -223,7 +221,11 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     }
 
     public KeyBundle createKeyBundle(String keyId) throws GeneralSecurityException {
-        return createKeyBundle(keyId, TorKeyGeneration.generateKeyPair(), I2PKeyGeneration.generateKeyPair());
+        try {
+            return createKeyBundle(keyId, TorKeyGeneration.generateKeyPair(), I2PKeyGeneration.generateKeyPair(i2pPersistencePath, "default"));
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     // <-- Refactored to allow full control over all key types
