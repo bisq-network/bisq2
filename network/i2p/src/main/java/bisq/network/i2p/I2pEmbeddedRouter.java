@@ -20,12 +20,15 @@ package bisq.network.i2p;
 import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
 import bisq.network.i2p.util.I2PLogManager;
+import bisq.network.i2p.util.PreventSleepService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.client.I2PClient;
+import net.i2p.client.I2PSessionException;
 import net.i2p.client.streaming.I2PSocketManager;
 import net.i2p.client.streaming.I2PSocketManagerFactory;
 import net.i2p.data.DataHelper;
+import net.i2p.data.Destination;
 import net.i2p.router.CommSystemFacade;
 import net.i2p.router.Router;
 import net.i2p.router.RouterContext;
@@ -34,11 +37,14 @@ import net.i2p.util.FileUtil;
 import net.i2p.util.Log;
 import net.i2p.util.OrderedProperties;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
@@ -50,9 +56,8 @@ import java.util.jar.JarFile;
 @Getter
 public class I2pEmbeddedRouter {
 
-    //TODO - Restart of embedded router not implemented yet
-
     private Router router;
+    private PreventSleepService preventSleepService;
     private RouterContext routerContext;
     protected CommSystemFacade.Status i2pRouterStatus;
     private final int inboundKBytesPerSecond;
@@ -60,28 +65,26 @@ public class I2pEmbeddedRouter {
     private final int bandwidthSharePercentage;
     private final String dirPath;
     private File i2pDir;
-    private final Integer restartAttempts=0;
-    private static final Integer RESTART_ATTEMPTS_UNTIL_HARD_RESTART = 3;
+    private final Integer restartAttempts = 0;
     private static boolean initialized = false;
 
     private static I2pEmbeddedRouter localRouter;
 
-    public static I2pEmbeddedRouter getI2pEmbeddedRouter(String i2pDirPath, int inboundKBytesPerSecond, int outboundKBytesPerSecond,
-                                                         int bandwidthSharePercentage, boolean extendedI2pLogging) {
-        if(!initialized) {
+    public static I2pEmbeddedRouter getI2pEmbeddedRouter(String i2pDirPath,
+                                                         int inboundKBytesPerSecond,
+                                                         int outboundKBytesPerSecond,
+                                                         int bandwidthSharePercentage,
+                                                         boolean extendedI2pLogging) {
+        if (!initialized) {
             initialized = true;
         }
-        if(null == localRouter) {
-            localRouter = new I2pEmbeddedRouter(i2pDirPath,
-                    inboundKBytesPerSecond,
-                    outboundKBytesPerSecond,
-                    bandwidthSharePercentage,
-                    extendedI2pLogging);
+        if (null == localRouter) {
+            localRouter = new I2pEmbeddedRouter(i2pDirPath, inboundKBytesPerSecond, outboundKBytesPerSecond, bandwidthSharePercentage, extendedI2pLogging);
         }
         return localRouter;
     }
 
-    public static boolean isInitialized(){
+    public static boolean isInitialized() {
         return initialized;
     }
 
@@ -89,8 +92,11 @@ public class I2pEmbeddedRouter {
         return localRouter;
     }
 
-    private I2pEmbeddedRouter(String i2pDirPath, int inboundKBytesPerSecond, int outboundKBytesPerSecond,
-                              int bandwidthSharePercentage, boolean extendedI2pLogging) {
+    private I2pEmbeddedRouter(String i2pDirPath,
+                              int inboundKBytesPerSecond,
+                              int outboundKBytesPerSecond,
+                              int bandwidthSharePercentage,
+                              boolean extendedI2pLogging) {
         this.dirPath = i2pDirPath;
         this.inboundKBytesPerSecond = inboundKBytesPerSecond;
         this.outboundKBytesPerSecond = outboundKBytesPerSecond;
@@ -109,52 +115,7 @@ public class I2pEmbeddedRouter {
             shutdown();
         }));
 
-        Scheduler.run(this::checkRouterStats)
-                .host(this)
-                .runnableName("checkRouterStats")
-                .periodically(30, TimeUnit.SECONDS);
-
-    }
-
-    @SuppressWarnings("SpellCheckingInspection")
-    public I2PSocketManager getManager(File privKeyFile) throws IOException {
-
-        I2PSocketManager manager;
-        //Has the router been initialized?
-        while (RouterContext.listContexts().isEmpty()) {
-            try {
-                //noinspection BusyWait
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        routerContext = RouterContext.listContexts().get(0);
-        router = routerContext.router();
-        // Check for RUNNING state (indicating NetDB and tunnels are ready)
-        while(!router.isRunning()) {
-            try {
-                //noinspection BusyWait
-                Thread.sleep(1000);
-                if (!router.isAlive()) {
-                    log.error("Router died while starting");
-                    throw new IOException("Router died while starting");
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        log.info("Trying to create socket manager ...");
-
-        try (FileInputStream privKeyInputStream = new FileInputStream(privKeyFile)) {
-            manager = I2PSocketManagerFactory.createManager(privKeyInputStream);
-        }
-
-        log.info("Socket manager created");
-
-        return manager;
+        Scheduler.run(this::checkRouterStats).host(this).runnableName("checkRouterStats").periodically(30, TimeUnit.SECONDS);
 
     }
 
@@ -168,11 +129,10 @@ public class I2pEmbeddedRouter {
     }
 
     public void checkRouterStats() {
-        if(routerContext==null)
-            return; // Router not yet established
+        if (routerContext == null) return; // Router not yet established
         CommSystemFacade.Status latestStatus = getRouterStatus();
         log.trace("I2P Router Status changed to: {}", i2pRouterStatus.name());
-        if(i2pRouterStatus != latestStatus) {
+        if (i2pRouterStatus != latestStatus) {
             // Status changed
             i2pRouterStatus = latestStatus;
             log.info("I2P Router Status changed to: {}", i2pRouterStatus.name());
@@ -181,7 +141,7 @@ public class I2pEmbeddedRouter {
     }
 
     public static boolean isRouterRunning() {
-        if(null == localRouter) {
+        if (null == localRouter) {
             return false;
         }
         return localRouter.getRouter().isRunning();
@@ -196,7 +156,7 @@ public class I2pEmbeddedRouter {
         I2PSocketManager manager = null;
         System.setProperty("I2P_DISABLE_OUTPUT_OVERRIDE", "true");
 
-       setupRouterDirectories();
+        setupRouterDirectories();
 
         try {
             log.info("Launching I2P Router...");
@@ -205,7 +165,7 @@ public class I2pEmbeddedRouter {
             routerContext = routerContexts.get(0);
             router = routerContext.router();
             //Check for running routers on the JVM, if none, create.
-            if(extendedI2pLogging) {
+            if (extendedI2pLogging) {
                 router.getContext().setLogManager(new I2PLogManager());
             }
             router.setKillVMOnEnd(false);
@@ -213,7 +173,7 @@ public class I2pEmbeddedRouter {
             routerContext.logManager().setFileSize(10_000_000);
             long startTime = System.currentTimeMillis();
             final long timeoutMs = 60_000;
-            while(!router.isRunning()) {
+            while (!router.isRunning()) {
                 try {
                     //noinspection BusyWait
                     Thread.sleep(1000);
@@ -229,63 +189,62 @@ public class I2pEmbeddedRouter {
             log.info("Embedded router is running ...");
 
             log.trace("===========Begin Router Info===========\n{}\n===========End Router Info===========", router.getRouterInfo().toString());
-        }
-        catch (IllegalStateException e) {
+        } catch (IllegalStateException e) {
             log.error("Exception", e);
         }
     }
 
-private void setupRouterDirectories() throws IOException {
-    // Set up I2P base directory
-    if(System.getProperty("i2p.dir.base") == null) {
-        File homeDir = SystemSettings.getUserHomeDir();
-        File bisqDir = new File(homeDir, ".bisq2");
-        if (!bisqDir.exists() && !bisqDir.mkdir()) {
-            throw new IOException("Unable to create home/.bisq2 directory.");
+    private void setupRouterDirectories() throws IOException {
+        // Set up I2P base directory
+        if (System.getProperty("i2p.dir.base") == null) {
+            File homeDir = SystemSettings.getUserHomeDir();
+            File bisqDir = new File(homeDir, ".bisq2");
+            if (!bisqDir.exists() && !bisqDir.mkdir()) {
+                throw new IOException("Unable to create home/.bisq2 directory.");
+            }
+            File servicesDir = new File(bisqDir, "services");
+            if (!servicesDir.exists() && !servicesDir.mkdir()) {
+                throw new IOException("Unable to create services directory in home/.bisq2");
+            }
+            i2pDir = new File(servicesDir, I2pEmbeddedRouter.class.getName());
+            if (!i2pDir.exists() && !i2pDir.mkdir()) {
+                throw new IOException("Unable to create " + I2pEmbeddedRouter.class.getName() + " directory in home/.bisq2/services");
+            }
+        } else {
+            i2pDir = new File(System.getProperty("i2p.dir.base"));
         }
-        File servicesDir = new File(bisqDir, "services");
-        if (!servicesDir.exists() && !servicesDir.mkdir()) {
-            throw new IOException("Unable to create services directory in home/.bisq2");
-        }
-        i2pDir = new File(servicesDir, I2pEmbeddedRouter.class.getName());
-        if (!i2pDir.exists() && !i2pDir.mkdir()) {
-            throw new IOException("Unable to create " + I2pEmbeddedRouter.class.getName() + " directory in home/.bisq2/services");
-        }
-    } else {
-        i2pDir = new File(System.getProperty("i2p.dir.base"));
+
+        // Set up directory structure and system properties
+        setupDirectory("config", "i2p.dir.config");
+        setupDirectory("router", "i2p.dir.router");
+        setupDirectory("pid", "i2p.dir.pid");
+        setupDirectory("log", "i2p.dir.log");
+        setupDirectory("app", "i2p.dir.app");
+
+        // Set up client properties
+        System.setProperty(I2PClient.PROP_TCP_HOST, "internal");
+        System.setProperty(I2PClient.PROP_TCP_PORT, "internal");
+        System.setProperty("i2p.dir.base", i2pDir.getAbsolutePath());
+
+        Properties p = new Properties();
+
+        //Parameters related to router size and bandwidth share
+        p.put("i2np.bandwidth.inboundKBytesPerSecond", String.valueOf(inboundKBytesPerSecond));
+        p.put("i2np.bandwidth.inboundBurstKBytesPerSecond", String.valueOf(inboundKBytesPerSecond));
+        p.put("i2np.bandwidth.outboundKBytesPerSecond", String.valueOf(outboundKBytesPerSecond));
+        p.put("i2np.bandwidth.outboundBurstKBytesPerSecond", String.valueOf(outboundKBytesPerSecond));
+        p.put("router.sharePercentage", String.valueOf(bandwidthSharePercentage));
+
+        p.put("i2cp.disableInterface", "true");
+        p.put("i2np.ntcp.nodelay", "true");
+        p.put("router.encType", "4");
+        p.put("router.useShortTBM", "true");
+
+        // Set up configuration and certificates
+        mergeRouterConfig(p);
+        setupCertificatesDirectories();
+
     }
-
-    // Set up directory structure and system properties
-    setupDirectory("config", "i2p.dir.config");
-    setupDirectory("router", "i2p.dir.router");
-    setupDirectory("pid", "i2p.dir.pid");
-    setupDirectory("log", "i2p.dir.log");
-    setupDirectory("app", "i2p.dir.app");
-
-    // Set up client properties
-    System.setProperty(I2PClient.PROP_TCP_HOST, "internal");
-    System.setProperty(I2PClient.PROP_TCP_PORT, "internal");
-    System.setProperty("i2p.dir.base", i2pDir.getAbsolutePath());
-
-    Properties p = new Properties();
-
-    //Parameters related to router size and badwidth share
-    p.put("i2np.bandwidth.inboundKBytesPerSecond", inboundKBytesPerSecond);
-    p.put("i2np.bandwidth.inboundBurstKBytesPerSecond", inboundKBytesPerSecond);
-    p.put("i2np.bandwidth.outboundKBytesPerSecond", outboundKBytesPerSecond);
-    p.put("i2np.bandwidth.outboundBurstKBytesPerSecond", outboundKBytesPerSecond);
-    p.put("router.sharePercentage", bandwidthSharePercentage);
-
-    p.put("i2cp.disableInterface", "true");
-    p.put("i2np.ntcp.nodelay", "true");
-    p.put("router.encType","4");
-    p.put("router.useShortTBM","true");
-
-    // Set up configuration and certificates
-    mergeRouterConfig(p);
-    setupCertificatesDirectories();
-
-}
 
     private void setupDirectory(String dirName, String propertyName) throws IOException {
         File dir = new File(i2pDir, dirName);
@@ -313,18 +272,11 @@ private void setupRouterDirectories() throws IOException {
 
         copyCertificatesToBaseDir(seedDir, sslDir);
     }
+
     private CommSystemFacade.Status getRouterStatus() {
         return routerContext.commSystem().getStatus();
     }
 
-    /**
-     *  Load defaults from internal router.config on classpath,
-     *  then add props from i2pDir/router.config overriding any from internal router.config,
-     *  then override these with the supplied overrides if not null which would likely come from 3rd party app (not yet supported),
-     *  then write back to i2pDir/router.config.
-     *
-     *  @param overrides local overrides or null
-     */
     private void mergeRouterConfig(Properties overrides) {
         Properties props = new OrderedProperties();
         File f = new File(i2pDir, "router.config");
@@ -333,7 +285,7 @@ private void setupRouterDirectories() throws IOException {
             try {
                 if (!f.createNewFile()) {
                     log.warn("While merging router.config files, unable to create router.config in i2pBaseDirectory: " + i2pDir.getAbsolutePath());
-                } else{
+                } else {
                     i2pBaseRouterConfigIsNew = true;
                 }
             } catch (IOException e) {
@@ -350,8 +302,7 @@ private void setupRouterDirectories() throws IOException {
             }
 
             // override with user settings
-            if (overrides != null)
-                props.putAll(overrides);
+            if (overrides != null) props.putAll(overrides);
 
             DataHelper.storeProps(props, f);
         } catch (Exception e) {
@@ -483,9 +434,9 @@ private void setupRouterDirectories() throws IOException {
     }
 
     public void restart() {
-        if(router==null) {
+        if (router == null) {
             router = routerContext.router();
-            if(router==null) {
+            if (router == null) {
                 log.warn("Unable to restart I2P Router. Router instance not found in RouterContext.");
             }
         } else {
@@ -493,14 +444,14 @@ private void setupRouterDirectories() throws IOException {
             router.restart();
             int maxWaitSec = 10 * 60; // 10 minutes
             int currentWait = 0;
-            while(!routerContext.router().isAlive()) {
-                currentWait+=10;
-                if(currentWait > maxWaitSec) {
+            while (!routerContext.router().isAlive()) {
+                currentWait += 10;
+                if (currentWait > maxWaitSec) {
                     log.warn("Restart failed.");
-                    return ;
+                    return;
                 }
             }
-            log.info("Router hiddenMode="+router.isHidden());
+            log.info("Router hiddenMode=" + router.isHidden());
             log.info("I2P Router soft restart completed.");
         }
     }
@@ -516,17 +467,18 @@ private void setupRouterDirectories() throws IOException {
                 i2pRouterStatus == CommSystemFacade.Status.REJECT_UNSOLICITED ||
                 i2pRouterStatus == CommSystemFacade.Status.IPV4_OK_IPV6_FIREWALLED) {
             log.info("I2P Router status - {}", i2pRouterStatus.toStatusString());
-        }
-        else if(i2pRouterStatus == CommSystemFacade.Status.DIFFERENT ||
-                i2pRouterStatus == CommSystemFacade.Status.HOSED) {
+        } else if (i2pRouterStatus == CommSystemFacade.Status.DIFFERENT || i2pRouterStatus == CommSystemFacade.Status.HOSED) {
             log.warn("I2P Router status - {}", i2pRouterStatus.toStatusString());
-        }
-        else if(i2pRouterStatus == CommSystemFacade.Status.DISCONNECTED) {
+        } else if (i2pRouterStatus == CommSystemFacade.Status.DISCONNECTED) {
             log.warn("I2P Router status - {}", i2pRouterStatus.toStatusString());
             restart();
-        }
-        else {
+        } else {
             log.warn("Not connected to I2P Network.");
         }
     }
+
+    public boolean isPeerOnline(Destination destination) {
+        return routerContext.commSystem().wasUnreachable(destination.getHash());
+    }
+
 }

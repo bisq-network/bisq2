@@ -17,74 +17,64 @@
 
 package bisq.network.i2p.util;
 
-import lombok.extern.slf4j.Slf4j;
+import net.i2p.I2PAppContext;
+import net.i2p.client.naming.SingleFileNamingService;
+import net.i2p.client.naming.HostsTxtNamingService;
 import net.i2p.data.Base32;
 import net.i2p.data.Destination;
 import net.i2p.data.Hash;
 import net.i2p.router.RouterContext;
-import net.i2p.client.naming.SingleFileNamingService;
-import net.i2p.client.naming.NamingService;
-import net.i2p.client.naming.HostsTxtNamingService;
 
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-
-@Slf4j
 public class I2PNameResolver {
 
-    private final RouterContext ctx;
-    private final NamingService namingService;
-    private final ConcurrentHashMap<String, Destination> cache = new ConcurrentHashMap<>();
-
-    public I2PNameResolver(RouterContext context) {
-        this.ctx = context;
-        this.namingService = SingleFileNamingService.createInstance(context);
-    }
-
-    public Optional<Destination> resolve(String hostname) {
-        // Check cache first
-        Destination cachedDest = cache.get(hostname);
-        if (cachedDest != null) {
-            log.debug("Cache hit for hostname: {}", hostname);
-            return Optional.of(cachedDest);
+    public static Destination getDestinationFor(String peerName) {
+        String host = peerName;
+        if (host.toLowerCase().endsWith(".i2p")) {
+            host = host.substring(0, host.length() - 4);
         }
 
-        // Attempt resolution
-        try {
-            // First try Blockfile/NetDb
-            Destination dest = namingService.lookup(hostname);
-            if (dest != null) {
-                log.debug("Resolved via NetDB: {}", hostname);
-                cache.put(hostname, dest); // Cache the result
-                return Optional.of(dest);
-            }
+        RouterContext routerCtx = (RouterContext) RouterContext.getCurrentContext();
+        I2PAppContext ctx = (routerCtx != null)
+                ? routerCtx
+                : I2PAppContext.getGlobalContext();  // safe even if no router exists
 
-            // Fall back to host.txt
-            HostsTxtNamingService hostService = new HostsTxtNamingService(ctx);
-            dest = hostService.lookup(hostname);
-            if (dest != null) {
-                log.debug("Resolved via host.txt: {}", hostname);
-                cache.put(hostname, dest); // Cache the result
-                return Optional.of(dest);
-            }
+        Destination dest = null;
 
-            // Check if it's a valid base32 (can reconstruct Destination from it)
-            if (hostname.endsWith(".b32.i2p")) {
-                String base32 = hostname.substring(0, hostname.indexOf(".b32.i2p"));
-                byte[] hash = Base32.decode(base32);
-                Destination destFromBase32 = ctx.netDb().lookupDestinationLocally(new Hash(hash));
-                if (destFromBase32 != null) {
-                    log.debug("Reconstructed Destination from base32: {}", hostname);
-                    cache.put(hostname, destFromBase32); // Cache the result
-                    return Optional.of(destFromBase32);
+        String hostsFile = ctx.getConfigDir() + System.getProperty("file.separator") + "hosts.txt";
+        SingleFileNamingService fileNS = new SingleFileNamingService(ctx, hostsFile);
+        dest = fileNS.lookup(host, null, null);
+        if (dest != null) {
+            return dest;
+        }
+
+        HostsTxtNamingService hostsNS = new HostsTxtNamingService(ctx);
+        dest = hostsNS.lookup(host, null, null);
+        if (dest != null) {
+            return dest;
+        }
+
+        if (routerCtx != null) {
+            String base32 = null;
+            if (peerName.toLowerCase().endsWith(".b32.i2p")) {
+                base32 = peerName.substring(0, peerName.length() - 8).toLowerCase();
+            } else if (host.length() == 52 && host.matches("[a-z2-7]+")) {
+                base32 = host.toLowerCase();
+            }
+            if (base32 != null) {
+                byte[] hashBytes = decodeBase32(base32);
+                if (hashBytes != null) {
+                    Hash hash = new Hash(hashBytes);
+                    dest = routerCtx.netDb().lookupDestinationLocally(hash);
+                    if (dest != null) {
+                        return dest;
+                    }
                 }
             }
-
-        } catch (Exception e) {
-            log.warn("Failed to resolve hostname: {}", hostname, e);
         }
+        return null;
+    }
 
-        return Optional.empty();
+    private static byte[] decodeBase32(String s) {
+        return Base32.decode(s);
     }
 }
