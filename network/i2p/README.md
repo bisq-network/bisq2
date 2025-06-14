@@ -49,6 +49,18 @@ You can add multiple seed node addresses separated by commas if needed.
 
 ---
 
+## ⚠️ Important (Before Step 3)
+
+To enable both the Seed Node and the Desktop App to run in the same JVM environment for testing purposes, delete the router ping file before starting the Desktop App:
+
+```bash
+rm /home/${username}/.bisq2/services/bisq.network.i2p.I2pEmbeddedRouter/pid/router.ping
+```
+
+> **Note:** Running two I2P routers in the same JVM is not supported. The router is declared as a singleton in Bisq, and I2P documentation also recommends only one router per JVM. This step is a workaround intended only for test/dev environments where multiple Bisq apps need to run simultaneously.
+
+---
+
 ## 3. Build and Run the Desktop App
 
 ### Step 1: Build the Desktop App Binary

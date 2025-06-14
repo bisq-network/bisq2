@@ -17,5 +17,13 @@
 
 package bisq.dto.security.keys;
 
-public record I2pKeyPairDto(String privateKeyEncoded, String publicKeyEncoded, String destination) {
+public class I2PKeyPairDto {
+    private byte[] destinationKey;
+
+    public byte[] getDestinationKey() {
+        return destinationKey;
+    }
+    public void setDestinationKey(byte[] destinationKey) {
+        this.destinationKey = destinationKey;
+    }
 }

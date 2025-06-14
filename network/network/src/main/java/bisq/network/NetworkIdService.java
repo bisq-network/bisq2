@@ -136,9 +136,6 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
 
     private int getPortByTransport(String tag, TransportType transportType) {
         boolean isDefault = tag.equals("default");
-        /*  return isDefault ?
-                            defaultPorts.computeIfAbsent(TransportType.I2P, key-> NetworkUtils.selectRandomPort()) :
-                            NetworkUtils.selectRandomPort();*/
         return switch (transportType) {
             case TOR -> isDefault ?
                     defaultPortByTransportType.computeIfAbsent(TransportType.TOR, key -> NetworkUtils.selectRandomPort()) :
@@ -153,10 +150,9 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
     }
 
     private Address getAddressByTransport(KeyBundle keyBundle, int port, TransportType transportType) {
-        //return new Address(keyBundle.getI2pKeyPair().getDestination(), port);
         return switch (transportType) {
             case TOR -> new Address(keyBundle.getTorKeyPair().getOnionAddress(), port);
-            case I2P -> new Address(keyBundle.getI2PKeyPair().getDestination(), port);
+            case I2P -> new Address(keyBundle.getI2PKeyPair().getBase64Destination(), port);
             case CLEAR -> FacadeProvider.getClearNetAddressTypeFacade().toMyLocalAddress(port);
         };
     }

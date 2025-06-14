@@ -26,15 +26,16 @@ import bisq.common.util.NetworkUtils;
 import bisq.network.NetworkExecutors;
 import bisq.network.i2p.I2pClient;
 import bisq.network.i2p.I2pEmbeddedRouter;
+import bisq.network.i2p.util.PreventSleepService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
+import bisq.security.keys.I2PKeyPair;
 import bisq.security.keys.KeyBundle;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.print.attribute.standard.Destination;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -65,7 +66,6 @@ public class I2PTransportService implements TransportService {
         }
 
         private final int defaultNodePort;
-        private final int socketTimeout;
         private final int inboundKBytesPerSecond;
         private final int outboundKBytesPerSecond;
         private final int bandwidthSharePercentage;
@@ -107,6 +107,7 @@ public class I2PTransportService implements TransportService {
     private final int socketTimeout;
     private final String i2pDirPath;
     private I2pClient i2pClient;
+    private PreventSleepService preventSleepService;
     private boolean initializeCalled;
     private String sessionId;
     private final I2PTransportService.Config config;
@@ -164,6 +165,13 @@ public class I2PTransportService implements TransportService {
         } else {
             i2pClient = getClient(false);
         }
+        preventSleepService = new PreventSleepService();
+        try {
+            log.info("Prevent from sleep service initialized");
+            preventSleepService.initialize();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         setTransportState(TransportState.INITIALIZED);
     }
 
@@ -182,9 +190,10 @@ public class I2PTransportService implements TransportService {
         if (i2pClient == null) {
             return CompletableFuture.completedFuture(true);
         }
-        return CompletableFuture.runAsync(i2pClient::shutdown, NetworkExecutors.getSendExecutor())
-                .thenApply(nil -> true)
-                .whenComplete((result, throwable) -> setTransportState(TransportState.TERMINATED));
+        if (preventSleepService != null) {
+            preventSleepService.shutdown();
+        }
+        return CompletableFuture.runAsync(i2pClient::shutdown, NetworkService.NETWORK_IO_POOL).thenApply(nil -> true).whenComplete((result, throwable) -> setTransportState(TransportState.TERMINATED));
     }
 
     private boolean isEmbeddedRouter() {
@@ -210,19 +219,20 @@ public class I2PTransportService implements TransportService {
 
     @Override
     public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle) {
-        int port = 1234; //hard coding the port for now
+        int port = networkId.getAddressByTransportTypeMap().get(TransportType.I2P).getPort();
         initializeServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
         log.debug("Create serverSocket");
         try {
             sessionId = UUID.randomUUID().toString();
+            I2PKeyPair i2PKeyPair = keyBundle.getI2PKeyPair();
             //TODO: Investigate why not using port passed as parameter and if no port, find one?
             //Pass parameters to connect with Local instance
             int i2pPort = port;
             if (!isEmbeddedRouter()) {
                 i2pPort = config.getI2cpPort();
             }
-            ServerSocket serverSocket = i2pClient.getServerSocket(sessionId, config.getI2cpHost(), i2pPort);
-            String destination = i2pClient.getMyDestination(sessionId);
+            ServerSocket serverSocket = i2pClient.getServerSocket(i2PKeyPair, sessionId, config.getI2cpHost(), i2pPort);
+            String destination = keyBundle.getI2PKeyPair().getBase64Destination();
             // Port is irrelevant for I2P
             Address address = new Address(destination, port);
 
@@ -231,6 +241,7 @@ public class I2PTransportService implements TransportService {
             log.debug("ServerSocket created. SessionId={}, destination={}", sessionId, destination);
             return new ServerSocketResult(serverSocket, address);
         } catch (Exception exception) {
+            exception.printStackTrace();
             throw new ConnectionException(exception);
         }
     }
@@ -253,6 +264,6 @@ public class I2PTransportService implements TransportService {
 
     @Override
     public boolean isPeerOnline(Address address) {
-        throw new UnsupportedOperationException("isPeerOnline needs to be implemented for I2P.");
+        return i2pClient.isPeerOnline(address.getHost());
     }
 }

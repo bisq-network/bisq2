@@ -133,11 +133,7 @@ import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
-import net.i2p.data.Destination;
-import net.i2p.data.SigningPrivateKey;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -1052,31 +1048,15 @@ public class DtoMappings {
     public class I2PKeyPairMapping {
 
         public static I2PKeyPairDto fromBisq2Model(I2PKeyPair model) {
-            if (model == null) {
-                return null;
-            }
+            if (model == null) return null;
             I2PKeyPairDto dto = new I2PKeyPairDto();
-            byte[] privBytes = model.getPrivateKey().getData();
-            byte[] signBytes = model.getSigningPrivateKey().getData();
-            dto.setPrivateKey(Base64.getEncoder().encodeToString(privBytes));
-            dto.setSigningPrivateKey(Base64.getEncoder().encodeToString(signBytes));
-            dto.setDestination(model.getDestination().toBase32());
+            dto.setDestinationKey(model.getDestination());
             return dto;
         }
 
         public static I2PKeyPair toBisq2Model(I2PKeyPairDto dto) {
-
-            byte[] privBytes = Base64.getDecoder().decode(dto.getPrivateKey());
-            var privKey = new net.i2p.data.PrivateKey(privBytes);
-
-            byte[] signBytes = Base64.getDecoder().decode(dto.getSigningPrivateKey());
-            SigningPrivateKey signKey = new SigningPrivateKey(signBytes);
-
-            Destination dest = new Destination();
-            dest.setPublicKey(privKey.toPublic());
-            dest.setSigningPublicKey(signKey.toPublic());
-
-            return new I2PKeyPair(privKey, signKey, dest);
+            byte[] destinationKey = dto.getDestinationKey();
+            return new I2PKeyPair(destinationKey);
         }
     }
 
@@ -1095,7 +1075,7 @@ public class DtoMappings {
                     value.getKeyId(),
                     KeyPairMapping.fromBisq2Model(value.getKeyPair()),
                     TorKeyPairMapping.fromBisq2Model(value.getTorKeyPair()),
-                            I2PKeyPairMapping.fromBisq2Model(value.getI2PKeyPair())
+                    I2PKeyPairMapping.fromBisq2Model(value.getI2PKeyPair())
             );
         }
     }
