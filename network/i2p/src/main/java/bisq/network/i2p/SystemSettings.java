@@ -38,6 +38,7 @@ import java.io.IOException;
  */
 public class SystemSettings {
     public static String osName = System.getProperty("os.name").toLowerCase();
+
     public static File getSystemApplicationBaseDir() {
         File sysAppBaseDir = null;
         if (osName.contains("linux")) {
@@ -51,14 +52,14 @@ public class SystemSettings {
     }
 
     public static File getSystemApplicationDir(String groupName, String appName, boolean create) {
-        if(getSystemApplicationBaseDir()==null) {
+        if (getSystemApplicationBaseDir() == null) {
             return null;
         }
         File sysAppBaseDir = getSystemApplicationBaseDir();
-        File groupDir = new File(sysAppBaseDir.getAbsolutePath()+"/"+groupName);
-        if(groupDir.exists() || (create && groupDir.mkdir())) {
-            File appDir = new File(groupDir.getAbsolutePath()+"/"+appName);
-            if(appDir.exists() || (create && appDir.mkdir())) {
+        File groupDir = new File(sysAppBaseDir.getAbsolutePath() + "/" + groupName);
+        if (groupDir.exists() || (create && groupDir.mkdir())) {
+            File appDir = new File(groupDir.getAbsolutePath() + "/" + appName);
+            if (appDir.exists() || (create && appDir.mkdir())) {
                 return appDir;
             }
         }
@@ -74,12 +75,12 @@ public class SystemSettings {
      */
     public static File getUserHomeDir() {
         String userHome = System.getProperty("user.home");
-        if(userHome!=null) {
+        if (userHome != null) {
             return new File(userHome);
         }
         File userHomeDir = null;
         String username = System.getProperty("user.name");
-        if(username!=null) {
+        if (username != null) {
             if (osName.contains("linux")) {
                 userHomeDir = new File("/home/" + username);
             } else if (osName.contains("mac")) {
@@ -99,19 +100,19 @@ public class SystemSettings {
      * @return
      */
     public static File getUserDataDir(boolean create) {
-        if(getUserHomeDir()==null) {
+        if (getUserHomeDir() == null) {
             return null;
         }
         File userDataHome = null;
-        if(System.getenv("XDG_DATA_HOME")!=null) {
+        if (System.getenv("XDG_DATA_HOME") != null) {
             userDataHome = new File(System.getenv("XDG_DATA_HOME"));
         } else {
-            File local = new File(getUserHomeDir().getAbsolutePath()+"/.local");
-            if(local.exists() || (create && local.mkdir())) {
+            File local = new File(getUserHomeDir().getAbsolutePath() + "/.local");
+            if (local.exists() || (create && local.mkdir())) {
                 userDataHome = new File(local.getAbsolutePath() + "/share");
             }
         }
-        if(userDataHome!=null && (userDataHome.exists() || (create && userDataHome.mkdir()))) {
+        if (userDataHome != null && (userDataHome.exists() || (create && userDataHome.mkdir()))) {
             return userDataHome;
         }
         return null;
@@ -125,16 +126,16 @@ public class SystemSettings {
      * @return
      */
     public static File getUserConfigDir(boolean create) {
-        if(getUserHomeDir()==null) {
+        if (getUserHomeDir() == null) {
             return null;
         }
         File userConfigHome = null;
-        if(System.getenv("XDG_CONFIG_HOME")!=null) {
+        if (System.getenv("XDG_CONFIG_HOME") != null) {
             userConfigHome = new File(System.getenv("XDG_CONFIG_HOME"));
         } else {
-            userConfigHome = new File(getUserHomeDir().getAbsolutePath()+"/.config");
+            userConfigHome = new File(getUserHomeDir().getAbsolutePath() + "/.config");
         }
-        if(userConfigHome.exists() || (create && userConfigHome.mkdir())) {
+        if (userConfigHome.exists() || (create && userConfigHome.mkdir())) {
             return userConfigHome;
         }
         return null;
@@ -148,55 +149,55 @@ public class SystemSettings {
      * @return
      */
     public static File getUserCacheDir(boolean create) {
-        if(getUserHomeDir()==null) {
+        if (getUserHomeDir() == null) {
             return null;
         }
         File userConfigHome = null;
-        if(System.getenv("XDG_CACHE_HOME")!=null) {
+        if (System.getenv("XDG_CACHE_HOME") != null) {
             userConfigHome = new File(System.getenv("XDG_CACHE_HOME"));
         } else {
-            userConfigHome = new File(getUserHomeDir().getAbsolutePath()+"/.cache");
+            userConfigHome = new File(getUserHomeDir().getAbsolutePath() + "/.cache");
         }
-        if(userConfigHome.exists() || (create && userConfigHome.mkdir())) {
+        if (userConfigHome.exists() || (create && userConfigHome.mkdir())) {
             return userConfigHome;
         }
         return null;
     }
 
     public static File getUserAppHomeDir() throws IOException {
-        if(getUserHomeDir()==null) {
+        if (getUserHomeDir() == null) {
             return null;
         }
         File userHomeDir = getUserHomeDir();
         File userAppHomeDir = null;
-        if(osName.contains("linux")) {
+        if (osName.contains("linux")) {
             userAppHomeDir = userHomeDir;
-            if(!userAppHomeDir.exists()) {
-                throw new FileNotFoundException("User App Home Directory for Linux not found: "+userHomeDir.getAbsolutePath());
+            if (!userAppHomeDir.exists()) {
+                throw new FileNotFoundException("User App Home Directory for Linux not found: " + userHomeDir.getAbsolutePath());
             }
-        } else if(osName.contains("mac")) {
+        } else if (osName.contains("mac")) {
             userAppHomeDir = new File(userHomeDir, "Applications");
-            if(!userAppHomeDir.exists()) {
-                throw new FileNotFoundException("User App Home Directory for Mac not found: "+userHomeDir.getAbsolutePath()+"/Applications");
+            if (!userAppHomeDir.exists()) {
+                throw new FileNotFoundException("User App Home Directory for Mac not found: " + userHomeDir.getAbsolutePath() + "/Applications");
             }
-        } else if(osName.contains("windows")) {
-            userAppHomeDir = new File(userHomeDir.getAbsolutePath()+"\\AppData\\Local\\Programs");
-            if(!userAppHomeDir.exists()) {
-                throw new FileNotFoundException("User App Home Directory for Windows not found: "+userHomeDir.getAbsolutePath()+"\\AppData\\Local\\Programs");
+        } else if (osName.contains("windows")) {
+            userAppHomeDir = new File(userHomeDir.getAbsolutePath() + "\\AppData\\Local\\Programs");
+            if (!userAppHomeDir.exists()) {
+                throw new FileNotFoundException("User App Home Directory for Windows not found: " + userHomeDir.getAbsolutePath() + "\\AppData\\Local\\Programs");
             }
         }
         return userAppHomeDir;
     }
 
     public static File getUserAppDataDir(String groupName, String appName, boolean create) throws IOException {
-        if(getUserDataDir(create)==null) {
+        if (getUserDataDir(create) == null) {
             return null;
         }
         File userDataDir = getUserDataDir(create);
         File groupDir = new File(userDataDir, groupName);
-        if(groupDir.exists() || (create && groupDir.mkdir())) {
+        if (groupDir.exists() || (create && groupDir.mkdir())) {
             File appDir = new File(groupDir, appName);
-            if(appDir.exists() || (create && appDir.mkdir())) {
+            if (appDir.exists() || (create && appDir.mkdir())) {
                 return appDir;
             }
         }
@@ -204,14 +205,14 @@ public class SystemSettings {
     }
 
     public static File getUserAppConfigDir(String groupName, String appName, boolean create) throws IOException {
-        if(getUserConfigDir(create)==null) {
+        if (getUserConfigDir(create) == null) {
             return null;
         }
         File userConfigDir = getUserConfigDir(create);
         File groupDir = new File(userConfigDir, groupName);
-        if(groupDir.exists() || (create && groupDir.mkdir())) {
+        if (groupDir.exists() || (create && groupDir.mkdir())) {
             File appDir = new File(groupDir, appName);
-            if(appDir.exists() || (create && appDir.mkdir())) {
+            if (appDir.exists() || (create && appDir.mkdir())) {
                 return appDir;
             }
         }
@@ -219,14 +220,14 @@ public class SystemSettings {
     }
 
     public static File getUserAppCacheDir(String groupName, String appName, boolean create) throws IOException {
-        if(getUserCacheDir(create)==null) {
+        if (getUserCacheDir(create) == null) {
             return null;
         }
         File userCacheDir = getUserCacheDir(create);
         File groupDir = new File(userCacheDir, groupName);
-        if(groupDir.exists() || (create && groupDir.mkdir())) {
+        if (groupDir.exists() || (create && groupDir.mkdir())) {
             File appDir = new File(groupDir, appName);
-            if(appDir.exists() || (create && appDir.mkdir())) {
+            if (appDir.exists() || (create && appDir.mkdir())) {
                 return appDir;
             }
         }
@@ -238,7 +239,7 @@ public class SystemSettings {
         String sysAppName = "network";
         String appName = "i2p";
         print("System App Base", getSystemApplicationBaseDir());
-        print("System App Dir", getSystemApplicationDir( groupName, sysAppName, true));
+        print("System App Dir", getSystemApplicationDir(groupName, sysAppName, true));
         print("User Home", getUserHomeDir());
         print("User Data", getUserDataDir(true));
         print("User Config", getUserConfigDir(true));
@@ -254,7 +255,7 @@ public class SystemSettings {
     }
 
     private static void print(String message, File path) {
-        if(path==null) {
+        if (path == null) {
             System.out.println(message + ": null");
         } else {
             System.out.println(message + ": " + path.getAbsolutePath());
