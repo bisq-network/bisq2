@@ -18,9 +18,10 @@
 package bisq.desktop.main.content.bisq_easy.components.amount_selection;
 
 import bisq.desktop.common.Transitions;
-import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -29,109 +30,130 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Slf4j
 public class AmountSelectionView extends View<VBox, AmountSelectionModel, AmountSelectionController> {
-    public static final int AMOUNT_BOX_WIDTH = 300;
-    public static final int AMOUNT_BOX_HEIGHT = 120;
-    private static final int RANGE_INPUT_TEXT_MAX_LENGTH = 11;
-    private static final int FIXED_INPUT_TEXT_MAX_LENGTH = 18;
     private static final Insets SLIDER_INDICATORS_RANGE_MARGIN = new Insets(-15, 0, 0, 0);
     private static final Insets SLIDER_INDICATORS_FIXED_MARGIN = new Insets(2.5, 0, 0, 0);
-    private static final String INPUT_TEXT_9_STYLE_CLASS = "input-text-9";
-    private static final String INPUT_TEXT_10_STYLE_CLASS = "input-text-10";
-    private static final String INPUT_TEXT_11_STYLE_CLASS = "input-text-11";
-    private static final String INPUT_TEXT_12_STYLE_CLASS = "input-text-12";
-    private static final String INPUT_TEXT_13_STYLE_CLASS = "input-text-13";
-    private static final String INPUT_TEXT_14_STYLE_CLASS = "input-text-14";
-    private static final String INPUT_TEXT_15_STYLE_CLASS = "input-text-15";
-    private static final String INPUT_TEXT_16_STYLE_CLASS = "input-text-16";
-    private static final String INPUT_TEXT_17_STYLE_CLASS = "input-text-17";
-    private static final String INPUT_TEXT_18_STYLE_CLASS = "input-text-18";
-    private static final String INPUT_TEXT_19_STYLE_CLASS = "input-text-19";
-    private static final String INPUT_TEXT_20_STYLE_CLASS = "input-text-20";
-    private static final String INPUT_TEXT_21_STYLE_CLASS = "input-text-21";
-    private static final String INPUT_TEXT_22_STYLE_CLASS = "input-text-22";
-    private static final String INPUT_TEXT_23_STYLE_CLASS = "input-text-23";
     @SuppressWarnings("UnnecessaryUnicodeEscape")
     private static final String EN_DASH_SYMBOL = "\u2013"; // Unicode for "–"
+    private static final Map<Integer, String> CHAR_COUNT_FONT_STYLE_MAP = new HashMap<>();
+    static {
+        CHAR_COUNT_FONT_STYLE_MAP.put(9, "input-text-9");
+        CHAR_COUNT_FONT_STYLE_MAP.put(10, "input-text-10");
+        CHAR_COUNT_FONT_STYLE_MAP.put(11, "input-text-11");
+        CHAR_COUNT_FONT_STYLE_MAP.put(12, "input-text-12");
+        CHAR_COUNT_FONT_STYLE_MAP.put(13, "input-text-13");
+        CHAR_COUNT_FONT_STYLE_MAP.put(14, "input-text-14");
+        CHAR_COUNT_FONT_STYLE_MAP.put(15, "input-text-15");
+        CHAR_COUNT_FONT_STYLE_MAP.put(16, "input-text-16");
+        CHAR_COUNT_FONT_STYLE_MAP.put(17, "input-text-17");
+        CHAR_COUNT_FONT_STYLE_MAP.put(18, "input-text-18");
+        CHAR_COUNT_FONT_STYLE_MAP.put(19, "input-text-19");
+        CHAR_COUNT_FONT_STYLE_MAP.put(20, "input-text-20");
+        CHAR_COUNT_FONT_STYLE_MAP.put(21, "input-text-21");
+        CHAR_COUNT_FONT_STYLE_MAP.put(22, "input-text-22");
+        CHAR_COUNT_FONT_STYLE_MAP.put(23, "input-text-23");
+    }
 
     private final Slider maxOrFixedAmountSlider, minAmountSlider;
     private final Label minRangeValue, maxRangeValue, minRangeCode, maxRangeCode, description, quoteAmountSeparator,
             baseAmountSeparator;
     private final Region selectionLine;
-    private final QuoteAmountInputBox maxOrFixedQuoteAmount, minQuoteAmount;
-    private final Pane minQuoteAmountRoot, minBaseAmountRoot;
-    private final HBox quoteAmountSelectionHBox, sliderIndicators;
+    private final Pane minQuoteAmountRoot, minBaseAmountRoot, invertedMinQuoteAmountRoot, invertedMinBaseAmountRoot,
+            maxOrFixedBaseAmountRoot, maxOrFixedQuoteAmountRoot, invertedMaxOrFixedQuoteAmountRoot, invertedMaxOrFixedBaseAmountRoot;
+    private final HBox quoteAmountSelectionHBox, baseAmountSelectionHBox, sliderIndicators;
     private final ChangeListener<Number> maxOrFixedAmountSliderValueListener, minAmountSliderValueListener;
-    private Subscription maxOrFixedQuoteAmountFocusPin,minQuoteAmountFocusPin, sliderTrackStylePin, isRangeAmountEnabledPin,
-            maxOrFixedQuoteAmountLengthPin, minQuoteAmountLengthPin;
+    private final BisqMenuItem flipCurrenciesButton;
+    private Subscription shouldFocusInputTextFieldPin, sliderTrackStylePin, isRangeAmountEnabledPin,
+            shouldApplyNewInputTextFontStylePin;
 
     AmountSelectionView(AmountSelectionModel model,
                         AmountSelectionController controller,
-                        BaseAmountBox maxOrFixedBaseAmount,
-                        QuoteAmountInputBox maxOrFixedQuoteAmount,
-                        BaseAmountBox minBaseAmount,
-                        QuoteAmountInputBox minQuoteAmount) {
+                        Pane maxOrFixedBaseAmount,
+                        Pane maxOrFixedQuoteAmount,
+                        Pane invertedMaxOrFixedQuoteAmount,
+                        Pane invertedMaxOrFixedBaseAmount,
+                        Pane minBaseAmount,
+                        Pane minQuoteAmount,
+                        Pane invertedMinQuoteAmount,
+                        Pane invertedMinBaseAmount) {
         super(new VBox(10), model, controller);
 
         // max or fixed component
-        Pane maxOrFixedBaseAmountRoot = maxOrFixedBaseAmount.getRoot();
-        Pane maxOrFixedQuoteAmountRoot = maxOrFixedQuoteAmount.getRoot();
-        this.maxOrFixedQuoteAmount = maxOrFixedQuoteAmount;
+        maxOrFixedBaseAmountRoot = maxOrFixedBaseAmount;
+        maxOrFixedQuoteAmountRoot = maxOrFixedQuoteAmount;
+        // inverted ones
+        invertedMaxOrFixedQuoteAmountRoot = invertedMaxOrFixedQuoteAmount;
+        invertedMaxOrFixedBaseAmountRoot = invertedMaxOrFixedBaseAmount;
 
         // min component (only shown when using a range)
-        minBaseAmountRoot = minBaseAmount.getRoot();
-        minQuoteAmountRoot = minQuoteAmount.getRoot();
-        this.minQuoteAmount = minQuoteAmount;
+        minBaseAmountRoot = minBaseAmount;
+        minQuoteAmountRoot = minQuoteAmount;
+        // inverted ones
+        invertedMinQuoteAmountRoot = invertedMinQuoteAmount;
+        invertedMinBaseAmountRoot = invertedMinBaseAmount;
 
         // quote amount selection
         quoteAmountSeparator = new Label(EN_DASH_SYMBOL);
         quoteAmountSeparator.getStyleClass().add("quote-separator");
         minQuoteAmountRoot.getStyleClass().add("min-quote-amount");
+        invertedMinBaseAmountRoot.getStyleClass().add("min-quote-amount");
         maxOrFixedQuoteAmountRoot.getStyleClass().add("max-or-fixed-quote-amount");
-        quoteAmountSelectionHBox = new HBox(5, minQuoteAmountRoot, quoteAmountSeparator, maxOrFixedQuoteAmountRoot);
+        invertedMaxOrFixedBaseAmountRoot.getStyleClass().add("max-or-fixed-quote-amount");
+        quoteAmountSelectionHBox = new HBox(5, minQuoteAmountRoot, invertedMinBaseAmountRoot, quoteAmountSeparator,
+                maxOrFixedQuoteAmountRoot, invertedMaxOrFixedBaseAmountRoot);
         quoteAmountSelectionHBox.getStyleClass().add("quote-amount");
-        quoteAmountSelectionHBox.setMaxWidth(AMOUNT_BOX_WIDTH);
-        quoteAmountSelectionHBox.setMinWidth(AMOUNT_BOX_WIDTH);
+        quoteAmountSelectionHBox.setMaxWidth(model.getAmountBoxWidth() + 40);
+        quoteAmountSelectionHBox.setMinWidth(model.getAmountBoxWidth() + 40);
         quoteAmountSelectionHBox.setLayoutY(0);
         quoteAmountSelectionHBox.setMinHeight(70);
         quoteAmountSelectionHBox.setMaxHeight(70);
+        quoteAmountSelectionHBox.setPadding(new Insets(0, 20, 0, 20));
 
         // base amount selection
         baseAmountSeparator = new Label(EN_DASH_SYMBOL);
         baseAmountSeparator.getStyleClass().add("base-separator");
         minBaseAmountRoot.getStyleClass().add("min-base-amount");
+        invertedMinQuoteAmountRoot.getStyleClass().add("min-base-amount");
         maxOrFixedBaseAmountRoot.getStyleClass().add("max-or-fixed-base-amount");
-        HBox baseAmountSelectionHBox = new HBox(minBaseAmountRoot, baseAmountSeparator, maxOrFixedBaseAmountRoot);
+        invertedMaxOrFixedQuoteAmountRoot.getStyleClass().add("max-or-fixed-base-amount");
+        baseAmountSelectionHBox = new HBox(minBaseAmountRoot, invertedMinQuoteAmountRoot, baseAmountSeparator,
+                maxOrFixedBaseAmountRoot, invertedMaxOrFixedQuoteAmountRoot);
         baseAmountSelectionHBox.getStyleClass().add("base-amount");
-        baseAmountSelectionHBox.setMaxWidth(AMOUNT_BOX_WIDTH);
-        baseAmountSelectionHBox.setMinWidth(AMOUNT_BOX_WIDTH);
-        baseAmountSelectionHBox.setLayoutY(70);
-        HBox.setHgrow(maxOrFixedBaseAmountRoot, Priority.ALWAYS);
+
+        flipCurrenciesButton = new BisqMenuItem("flip-fields-arrows-green", "flip-fields-arrows-white");
+        flipCurrenciesButton.setTooltip(Res.get("bisqEasy.tradeWizard.amount.selection.flipCurrenciesButton.tooltip"));
+        HBox baseAmountAndFlippingButtonHBox = new HBox(baseAmountSelectionHBox, Spacer.fillHBox(), flipCurrenciesButton);
+        baseAmountAndFlippingButtonHBox.setLayoutY(70);
+        baseAmountAndFlippingButtonHBox.setPadding(new Insets(0, 10, 0, 20));
 
         // rest of the component
         description = new Label();
         description.setMouseTransparent(true);
+        description.setPadding(new Insets(0, 0, 0, 20));
 
-        Pane amountInputVBox = new Pane(quoteAmountSelectionHBox, baseAmountSelectionHBox);
-        amountInputVBox.setMinHeight(AMOUNT_BOX_HEIGHT - 30);
-        amountInputVBox.setMaxHeight(AMOUNT_BOX_HEIGHT - 30);
+        Pane amountInputVBox = new Pane(quoteAmountSelectionHBox, baseAmountAndFlippingButtonHBox);
+        amountInputVBox.setMinHeight(model.getAmountBoxHeight() - 30);
+        amountInputVBox.setMaxHeight(model.getAmountBoxHeight() - 30);
         amountInputVBox.getStyleClass().add("amount-input");
 
         VBox descriptionAndAmountVBox = new VBox(0, description, Spacer.fillVBox(), amountInputVBox);
-        descriptionAndAmountVBox.getStyleClass().addAll("bisq-dual-amount-bg", "description-and-amount-box");
+        descriptionAndAmountVBox.getStyleClass().add("bisq-dual-amount-bg");
+        descriptionAndAmountVBox.setPadding(new Insets(8, 0, 8, 0));
 
         Region line = new Region();
         line.setPrefHeight(1);
-        line.setPrefWidth(AMOUNT_BOX_WIDTH + 40); // plus 40 for the paddings
-        line.setLayoutY(AMOUNT_BOX_HEIGHT + 6);
+        line.setPrefWidth(model.getAmountBoxWidth() + 40); // plus 40 for the paddings
+        line.setLayoutY(model.getAmountBoxHeight() + 6);
         line.setStyle("-fx-background-color: -bisq-mid-grey-20");
         line.setMouseTransparent(true);
 
@@ -139,13 +161,13 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         selectionLine.getStyleClass().add("material-text-field-selection-line");
         selectionLine.setPrefHeight(2);
         selectionLine.setPrefWidth(0);
-        selectionLine.setLayoutY(AMOUNT_BOX_HEIGHT + 5);
+        selectionLine.setLayoutY(model.getAmountBoxHeight() + 5);
         selectionLine.setMouseTransparent(true);
 
         Pane amountPane = new Pane(descriptionAndAmountVBox, line, selectionLine);
-        amountPane.setMaxWidth(AMOUNT_BOX_WIDTH + 40);
-        amountPane.setMinHeight(AMOUNT_BOX_HEIGHT);
-        amountPane.setMaxHeight(AMOUNT_BOX_HEIGHT);
+        amountPane.setMaxWidth(model.getAmountBoxWidth() + 40);
+        amountPane.setMinHeight(model.getAmountBoxHeight());
+        amountPane.setMaxHeight(model.getAmountBoxHeight());
 
         // slider
         maxOrFixedAmountSlider = new Slider();
@@ -174,53 +196,34 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
 
         sliderIndicators = new HBox(minRangeValueAndCodeHBox, Spacer.fillHBox(), maxRangeValueAndCodeHBox);
         VBox sliderBox = new VBox(2, maxOrFixedAmountSlider, minAmountSlider, sliderIndicators);
-        sliderBox.setMaxWidth(AMOUNT_BOX_WIDTH + 40);
+        sliderBox.setMaxWidth(model.getAmountBoxWidth() + 40);
 
         VBox.setMargin(sliderBox, new Insets(30, 0, 0, 0));
         root.getChildren().addAll(amountPane, sliderBox);
         root.setAlignment(Pos.TOP_CENTER);
 
         maxOrFixedAmountSliderValueListener = (observable, oldValue, newValue) -> {
-            double maxAllowedSliderValue = controller.getMaxAllowedSliderValue();
+            double maxAllowedSliderValue = controller.onGetMaxAllowedSliderValue();
             maxOrFixedAmountSlider.setValue(Math.min(newValue.doubleValue(), maxAllowedSliderValue));
         };
         minAmountSliderValueListener = (observable, oldValue, newValue) -> {
-            double maxAllowedSliderValue = controller.getMaxAllowedSliderValue();
+            double maxAllowedSliderValue = controller.onGetMaxAllowedSliderValue();
             minAmountSlider.setValue(Math.min(newValue.doubleValue(), maxAllowedSliderValue));
         };
     }
 
     @Override
     protected void onViewAttached() {
-        UIScheduler.run(() -> {
-            maxOrFixedQuoteAmount.requestFocus();
-            maxOrFixedQuoteAmountFocusPin = EasyBind.subscribe(maxOrFixedQuoteAmount.focusedProperty(),
-                    focus -> onInputTextFieldFocus(minQuoteAmount.focusedProperty().get(), focus));
-            minQuoteAmountFocusPin = EasyBind.subscribe(minQuoteAmount.focusedProperty(),
-                    focus -> onInputTextFieldFocus(maxOrFixedQuoteAmount.focusedProperty().get(), focus));
-            maxOrFixedQuoteAmountLengthPin = EasyBind.subscribe(maxOrFixedQuoteAmount.lengthProperty(), length -> {
-                applyTextInputFontStyle();
-                applyTextInputPrefWidth();
-            });
-            minQuoteAmountLengthPin = EasyBind.subscribe(minQuoteAmount.lengthProperty(), length -> {
-                applyTextInputFontStyle();
-                applyTextInputPrefWidth();
-            });
-        }).after(700);
-
         isRangeAmountEnabledPin = EasyBind.subscribe(model.getIsRangeAmountEnabled(), isRangeAmountEnabled -> {
             root.getStyleClass().clear();
             root.getStyleClass().add("amount-selection");
             root.getStyleClass().add(isRangeAmountEnabled ? "range-amount" : "fixed-amount");
             VBox.setMargin(sliderIndicators, isRangeAmountEnabled ? SLIDER_INDICATORS_RANGE_MARGIN : SLIDER_INDICATORS_FIXED_MARGIN);
-            maxOrFixedQuoteAmount.setTextInputMaxCharCount(isRangeAmountEnabled ? RANGE_INPUT_TEXT_MAX_LENGTH : FIXED_INPUT_TEXT_MAX_LENGTH);
-            minQuoteAmount.setTextInputMaxCharCount(RANGE_INPUT_TEXT_MAX_LENGTH);
-            applyTextInputFontStyle();
-            applyTextInputPrefWidth();
-            deselectAll();
-            UIScheduler.run(maxOrFixedQuoteAmount::requestFocus).after(100);
+            applyTextInputFontStyle(true);
         });
         sliderTrackStylePin = EasyBind.subscribe(model.getSliderTrackStyle(), maxOrFixedAmountSlider::setStyle);
+        shouldFocusInputTextFieldPin = EasyBind.subscribe(model.getShouldFocusInputTextField(), this::maybeFocusInputTextField);
+        shouldApplyNewInputTextFontStylePin = EasyBind.subscribe(model.getShouldApplyNewInputTextFontStyle(), this::applyTextInputFontStyle);
 
         maxOrFixedAmountSlider.valueProperty().bindBidirectional(model.getMaxOrFixedAmountSliderValue());
         maxOrFixedAmountSlider.valueProperty().addListener(maxOrFixedAmountSliderValueListener);
@@ -237,12 +240,30 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         quoteAmountSeparator.managedProperty().bind(model.getIsRangeAmountEnabled());
         baseAmountSeparator.visibleProperty().bind(model.getIsRangeAmountEnabled());
         baseAmountSeparator.managedProperty().bind(model.getIsRangeAmountEnabled());
-        minQuoteAmountRoot.visibleProperty().bind(model.getIsRangeAmountEnabled());
-        minQuoteAmountRoot.managedProperty().bind(model.getIsRangeAmountEnabled());
-        minBaseAmountRoot.visibleProperty().bind(model.getIsRangeAmountEnabled());
-        minBaseAmountRoot.managedProperty().bind(model.getIsRangeAmountEnabled());
+        minQuoteAmountRoot.visibleProperty().bind(model.getShouldShowMinAmounts());
+        minQuoteAmountRoot.managedProperty().bind(model.getShouldShowMinAmounts());
+        minBaseAmountRoot.visibleProperty().bind(model.getShouldShowMinAmounts());
+        minBaseAmountRoot.managedProperty().bind(model.getShouldShowMinAmounts());
+        invertedMinQuoteAmountRoot.visibleProperty().bind(model.getShouldShowInvertedMinAmounts());
+        invertedMinQuoteAmountRoot.managedProperty().bind(model.getShouldShowInvertedMinAmounts());
+        invertedMinBaseAmountRoot.visibleProperty().bind(model.getShouldShowInvertedMinAmounts());
+        invertedMinBaseAmountRoot.managedProperty().bind(model.getShouldShowInvertedMinAmounts());
         minAmountSlider.visibleProperty().bind(model.getIsRangeAmountEnabled());
         minAmountSlider.managedProperty().bind(model.getIsRangeAmountEnabled());
+        flipCurrenciesButton.visibleProperty().bind(model.getAllowInvertingBaseAndQuoteCurrencies());
+        flipCurrenciesButton.managedProperty().bind(model.getAllowInvertingBaseAndQuoteCurrencies());
+        baseAmountSelectionHBox.minWidthProperty().bind(model.getBaseAmountSelectionHBoxWidth());
+        baseAmountSelectionHBox.maxWidthProperty().bind(model.getBaseAmountSelectionHBoxWidth());
+        maxOrFixedBaseAmountRoot.visibleProperty().bind(model.getShouldShowMaxOrFixedAmounts());
+        maxOrFixedBaseAmountRoot.managedProperty().bind(model.getShouldShowMaxOrFixedAmounts());
+        maxOrFixedQuoteAmountRoot.visibleProperty().bind(model.getShouldShowMaxOrFixedAmounts());
+        maxOrFixedQuoteAmountRoot.managedProperty().bind(model.getShouldShowMaxOrFixedAmounts());
+        invertedMaxOrFixedQuoteAmountRoot.visibleProperty().bind(model.getShouldShowInvertedMaxOrFixedAmounts());
+        invertedMaxOrFixedQuoteAmountRoot.managedProperty().bind(model.getShouldShowInvertedMaxOrFixedAmounts());
+        invertedMaxOrFixedBaseAmountRoot.visibleProperty().bind(model.getShouldShowInvertedMaxOrFixedAmounts());
+        invertedMaxOrFixedBaseAmountRoot.managedProperty().bind(model.getShouldShowInvertedMaxOrFixedAmounts());
+
+        flipCurrenciesButton.setOnAction(e -> controller.onClickFlipCurrenciesButton());
 
         // Needed to trigger focusOut event on amount components
         // We handle all parents mouse events.
@@ -255,20 +276,11 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
 
     @Override
     protected void onViewDetached() {
-        if (maxOrFixedQuoteAmountFocusPin != null) {
-            maxOrFixedQuoteAmountFocusPin.unsubscribe();
-        }
-        if (minQuoteAmountFocusPin != null) {
-            minQuoteAmountFocusPin.unsubscribe();
-        }
-        if (maxOrFixedQuoteAmountLengthPin != null) {
-            maxOrFixedQuoteAmountLengthPin.unsubscribe();
-        }
-        if (minQuoteAmountLengthPin != null) {
-            minQuoteAmountLengthPin.unsubscribe();
-        }
         isRangeAmountEnabledPin.unsubscribe();
         sliderTrackStylePin.unsubscribe();
+        shouldFocusInputTextFieldPin.unsubscribe();
+        shouldApplyNewInputTextFontStylePin.unsubscribe();
+
         maxOrFixedAmountSlider.valueProperty().unbindBidirectional(model.getMaxOrFixedAmountSliderValue());
         maxOrFixedAmountSlider.valueProperty().removeListener(maxOrFixedAmountSliderValueListener);
         minAmountSlider.valueProperty().unbindBidirectional(model.getMinAmountSliderValue());
@@ -288,11 +300,26 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         minQuoteAmountRoot.managedProperty().unbind();
         minBaseAmountRoot.visibleProperty().unbind();
         minBaseAmountRoot.managedProperty().unbind();
+        invertedMinQuoteAmountRoot.visibleProperty().unbind();
+        invertedMinQuoteAmountRoot.managedProperty().unbind();
+        invertedMinBaseAmountRoot.visibleProperty().unbind();
+        invertedMinBaseAmountRoot.managedProperty().unbind();
         minAmountSlider.visibleProperty().unbind();
         minAmountSlider.managedProperty().unbind();
+        flipCurrenciesButton.visibleProperty().unbind();
+        flipCurrenciesButton.managedProperty().unbind();
+        baseAmountSelectionHBox.minWidthProperty().unbind();
+        baseAmountSelectionHBox.maxWidthProperty().unbind();
+        maxOrFixedBaseAmountRoot.visibleProperty().unbind();
+        maxOrFixedBaseAmountRoot.managedProperty().unbind();
+        maxOrFixedQuoteAmountRoot.visibleProperty().unbind();
+        maxOrFixedQuoteAmountRoot.managedProperty().unbind();
+        invertedMaxOrFixedQuoteAmountRoot.visibleProperty().unbind();
+        invertedMaxOrFixedQuoteAmountRoot.managedProperty().unbind();
+        invertedMaxOrFixedBaseAmountRoot.visibleProperty().unbind();
+        invertedMaxOrFixedBaseAmountRoot.managedProperty().unbind();
 
-        maxOrFixedQuoteAmount.isAmountValidProperty().set(true);
-        minQuoteAmount.isAmountValidProperty().set(true);
+        flipCurrenciesButton.setOnAction(null);
 
         Parent node = root;
         while (node.getParent() != null) {
@@ -301,12 +328,12 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         }
     }
 
-    private void onInputTextFieldFocus(boolean isOtherFocused, boolean focus) {
+    private void maybeFocusInputTextField(boolean shouldFocus) {
         description.getStyleClass().clear();
-        if (focus || isOtherFocused) {
+        if (shouldFocus) {
             selectionLine.setPrefWidth(0);
             selectionLine.setOpacity(1);
-            Transitions.animatePrefWidth(selectionLine, AMOUNT_BOX_WIDTH + 40);
+            Transitions.animatePrefWidth(selectionLine, model.getAmountBoxWidth() + 40);
             description.getStyleClass().add("description-focused");
         } else {
             Transitions.fadeOut(selectionLine, 200);
@@ -314,122 +341,20 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         }
     }
 
-    private void applyTextInputPrefWidth() {
-        int charCount = getCalculatedTotalCharCount();
-
-        int length = getCalculatedTextInputLength(minQuoteAmount);
-        minQuoteAmount.setTextInputPrefWidth(length == 0 ? 1 : length * getFontCharWidth(charCount));
-
-        length = getCalculatedTextInputLength(maxOrFixedQuoteAmount);
-        maxOrFixedQuoteAmount.setTextInputPrefWidth(length == 0 ? 1 : length * getFontCharWidth(charCount));
-    }
-
-    private void applyTextInputFontStyle() {
-        quoteAmountSelectionHBox.getStyleClass().clear();
-        quoteAmountSelectionHBox.getStyleClass().add("quote-amount");
-
-        int charCount = getCalculatedTotalCharCount();
-        quoteAmountSelectionHBox.getStyleClass().add(getFontStyleBasedOnTextLength(charCount));
-    }
-
-    private int getCalculatedTotalCharCount() {
-        int count = model.getIsRangeAmountEnabled().get()
-                ? minQuoteAmount.getTextInputLength() + maxOrFixedQuoteAmount.getTextInputLength() + 1 // 1 for the dash
-                : maxOrFixedQuoteAmount.getTextInputLength();
-
-        if (!minQuoteAmount.getTextInput().contains(".") || !maxOrFixedQuoteAmount.getTextInput().contains(".")) {
-            // If using an integer we need to count one more char since a dot occupies much less space.
-            ++count;
+    private void applyTextInputFontStyle(boolean shouldApplyNewTextStyle) {
+        if (shouldApplyNewTextStyle) {
+            quoteAmountSelectionHBox.getStyleClass().clear();
+            quoteAmountSelectionHBox.getStyleClass().add("quote-amount");
+            int charCount = controller.onGetCalculatedTotalCharCount();
+            quoteAmountSelectionHBox.getStyleClass().add(getFontStyleBasedOnTextLength(charCount));
+            model.getShouldApplyNewInputTextFontStyle().set(false);
         }
-        return count;
-    }
-
-    private int getCalculatedTextInputLength(QuoteAmountInputBox quoteAmountInputBox) {
-        // If using an integer we need to count one more char since a dot occupies much less space.
-        return !quoteAmountInputBox.getTextInput().contains(".")
-                ? quoteAmountInputBox.getTextInputLength() + 1
-                : quoteAmountInputBox.getTextInputLength();
-    }
-
-    private void deselectAll() {
-        minQuoteAmount.deselect();
-        maxOrFixedQuoteAmount.deselect();
-    }
-
-    private static int getFontCharWidth(int charCount) {
-        if (charCount < 10) {
-            return 31;
-        }
-        if (charCount == 10) {
-            return 28;
-        }
-        if (charCount == 11) {
-            return 25;
-        }
-        if (charCount == 12) {
-            return 23;
-        }
-        if (charCount == 13) {
-            return 21;
-        }
-        if (charCount == 14) {
-            return 19;
-        }
-        if (charCount == 15) {
-            return 18;
-        }
-        if (charCount == 16) {
-            return 17;
-        }
-        if (charCount == 17) {
-            return 16;
-        }
-        return 15;
     }
 
     private static String getFontStyleBasedOnTextLength(int charCount) {
         if (charCount < 10) {
-            return INPUT_TEXT_9_STYLE_CLASS;
+            return "input-text-9";
         }
-        if (charCount == 10) {
-            return INPUT_TEXT_10_STYLE_CLASS;
-        }
-        if (charCount == 11) {
-            return INPUT_TEXT_11_STYLE_CLASS;
-        }
-        if (charCount == 12) {
-            return INPUT_TEXT_12_STYLE_CLASS;
-        }
-        if (charCount == 13) {
-            return INPUT_TEXT_13_STYLE_CLASS;
-        }
-        if (charCount == 14) {
-            return INPUT_TEXT_14_STYLE_CLASS;
-        }
-        if (charCount == 15) {
-            return INPUT_TEXT_15_STYLE_CLASS;
-        }
-        if (charCount == 16) {
-            return INPUT_TEXT_16_STYLE_CLASS;
-        }
-        if (charCount == 17) {
-            return INPUT_TEXT_17_STYLE_CLASS;
-        }
-        if (charCount == 18) {
-            return INPUT_TEXT_18_STYLE_CLASS;
-        }
-        if (charCount == 19) {
-            return INPUT_TEXT_19_STYLE_CLASS;
-        }
-        if (charCount == 20) {
-            return INPUT_TEXT_20_STYLE_CLASS;
-        }
-        if (charCount == 21) {
-            return INPUT_TEXT_21_STYLE_CLASS;
-        }
-        if (charCount == 22) {
-            return INPUT_TEXT_22_STYLE_CLASS;
-        }
-        return INPUT_TEXT_23_STYLE_CLASS;
+        return CHAR_COUNT_FONT_STYLE_MAP.getOrDefault(charCount, "input-text-23");
     }
 }

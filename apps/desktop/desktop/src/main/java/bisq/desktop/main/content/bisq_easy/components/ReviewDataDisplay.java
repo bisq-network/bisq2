@@ -151,6 +151,7 @@ public class ReviewDataDisplay {
 
     private static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         private static final double HEIGHT = 61;
+        @SuppressWarnings("UnnecessaryUnicodeEscape")
         private static final String DASH_SYMBOL = "\u2013"; // Unicode for "–"
 
         private final Triple<Text, Label, VBox> direction, paymentMethod;

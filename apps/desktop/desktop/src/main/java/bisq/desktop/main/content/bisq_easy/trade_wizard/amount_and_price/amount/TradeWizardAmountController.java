@@ -114,7 +114,7 @@ public class TradeWizardAmountController implements Controller {
         model = new TradeWizardAmountModel();
 
         amountSelectionController = new AmountSelectionController(serviceProvider);
-        view = new TradeWizardAmountView(model, this, amountSelectionController);
+        view = new TradeWizardAmountView(model, this, amountSelectionController.getView().getRoot());
     }
 
     public void setIsCreateOfferMode(boolean isCreateOfferMode) {
@@ -331,11 +331,11 @@ public class TradeWizardAmountController implements Controller {
         Browser.open(url);
     }
 
-    void useFixedAmount() {
+    void onSelectFixedAmount() {
         updateIsRangeAmountEnabled(false);
     }
 
-    void useRangeAmount() {
+    void onSelectRangeAmount() {
         updateIsRangeAmountEnabled(true);
     }
 
