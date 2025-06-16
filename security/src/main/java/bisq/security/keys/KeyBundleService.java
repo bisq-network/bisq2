@@ -157,8 +157,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
             }).thenApply(Objects::nonNull);
         }
 
-
-        // Run both in parallel, return true only if both succeeded
+        // Run both in parallel, return true if any one succeeded
         return torInit.thenCombine(i2pInit, (torSuccess, i2pSuccess) -> torSuccess || i2pSuccess);
     }
 
