@@ -20,13 +20,10 @@ package bisq.network.i2p;
 import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
 import bisq.network.i2p.util.I2PLogManager;
-import bisq.network.i2p.util.PreventSleepService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.client.I2PClient;
-import net.i2p.client.I2PSessionException;
 import net.i2p.client.streaming.I2PSocketManager;
-import net.i2p.client.streaming.I2PSocketManagerFactory;
 import net.i2p.data.DataHelper;
 import net.i2p.data.Destination;
 import net.i2p.router.CommSystemFacade;
@@ -57,7 +54,6 @@ import java.util.jar.JarFile;
 public class I2pEmbeddedRouter {
 
     private Router router;
-    private PreventSleepService preventSleepService;
     private RouterContext routerContext;
     protected CommSystemFacade.Status i2pRouterStatus;
     private final int inboundKBytesPerSecond;

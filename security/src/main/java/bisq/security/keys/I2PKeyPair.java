@@ -38,6 +38,9 @@ public class I2PKeyPair implements PersistableProto {
     private final byte[] destination;
 
     public I2PKeyPair(byte[] destination) {
+        if (destination == null) {
+            throw new IllegalArgumentException("destination must not be null");
+        }
         this.destination = destination;
     }
 
