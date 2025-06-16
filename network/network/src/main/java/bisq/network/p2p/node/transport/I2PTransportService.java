@@ -155,7 +155,7 @@ public class I2PTransportService implements TransportService {
             log.info("Prevent from sleep service initialized");
             preventSleepService.initialize();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            log.warn("Prevent-sleep service could not be started – continuing without it: {}", e.getMessage());
         }
         setTransportState(TransportState.INITIALIZED);
     }

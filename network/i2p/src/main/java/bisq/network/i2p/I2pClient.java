@@ -17,7 +17,6 @@
 
 package bisq.network.i2p;
 
-import bisq.common.file.FileUtils;
 import bisq.network.i2p.util.I2PNameResolver;
 import bisq.security.keys.I2PKeyPair;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +30,6 @@ import net.i2p.data.DataFormatException;
 import net.i2p.data.Destination;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -129,11 +127,6 @@ public class I2pClient {
         log.info("I2P shutdown completed. Took {} ms.", System.currentTimeMillis() - ts);
     }
 
-    private String getFileName(String sessionId) throws IOException {
-        FileUtils.makeDirs(dirPath);
-        return dirPath + File.separator + sessionId;
-    }
-
     private I2PSocketManager maybeCreateClientSession(String sessionId) {
         return sessionMap.computeIfAbsent(sessionId, k -> I2PSocketManagerFactory.createManager());
     }
@@ -183,11 +176,7 @@ public class I2pClient {
             manager.setDefaultOptions(options);
 
             i2pSession = manager.getSession();
-//            try {
-//                manager.getSession().connect();
-//            } catch (I2PSessionException e) {
-//                throw new IOException("Cannot build I2P tunnels for server", e);
-//            }
+
             // Cache and return
             sessionMap.put(sessionId, manager);
             log.info("Server socket manager ready for session {}. Took {} ms.",
@@ -230,7 +219,7 @@ public class I2pClient {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return destination != null & i2pRouter.isPeerOnline(destination);
+        return destination != null  && i2pRouter != null && i2pRouter.isPeerOnline(destination);
     }
 
     public Destination lookupDest(String address) {
