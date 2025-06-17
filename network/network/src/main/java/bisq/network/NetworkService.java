@@ -132,8 +132,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         NetworkEnvelope.setNetworkVersion(config.getVersion());
 
         I2PTransportService.Config i2pCfg =
-                (I2PTransportService.Config) config.getConfigByTransportType()
-                        .get(TransportType.I2P);
+                (I2PTransportService.Config) Optional
+                        .ofNullable(config.getConfigByTransportType().get(TransportType.I2P)).orElse(null);
         networkIdService = new NetworkIdService(persistenceService, keyBundleService, supportedTransportTypes, defaultPortByTransportType);
         httpClientsByTransport = new HttpClientsByTransport(i2pCfg);
 
