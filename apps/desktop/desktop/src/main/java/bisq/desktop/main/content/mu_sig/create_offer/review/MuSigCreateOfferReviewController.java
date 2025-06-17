@@ -70,9 +70,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class MuSigCreateOfferReviewController implements Controller {
-    @SuppressWarnings("UnnecessaryUnicodeEscape")
-    private static final String DASH_SYMBOL = "\u2013"; // Unicode for "–"
-
     private final MuSigCreateOfferReviewModel model;
     @Getter
     private final MuSigCreateOfferReviewView view;
