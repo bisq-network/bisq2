@@ -143,11 +143,7 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         feedbackLabel.visibleProperty().bind(model.getCreateProfileProgress().lessThan(0));
 
         saveButton.setOnAction((event) -> {
-            try {
-                controller.onSave();
-            } catch (GeneralSecurityException e) {
-                throw new RuntimeException(e);
-            }
+            controller.onSave();
         });
         cancelButton.setOnAction((event) -> controller.onCancel());
     }

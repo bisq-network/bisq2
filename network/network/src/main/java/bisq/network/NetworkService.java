@@ -39,6 +39,7 @@ import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
+import bisq.network.p2p.node.transport.I2PTransportService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
@@ -130,8 +131,11 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         defaultPortByTransportType = config.getDefaultPortByTransportType();
         NetworkEnvelope.setNetworkVersion(config.getVersion());
 
+        I2PTransportService.Config i2pCfg =
+                (I2PTransportService.Config) config.getConfigByTransportType()
+                        .get(TransportType.I2P);
         networkIdService = new NetworkIdService(persistenceService, keyBundleService, supportedTransportTypes, defaultPortByTransportType);
-        httpClientsByTransport = new HttpClientsByTransport();
+        httpClientsByTransport = new HttpClientsByTransport(i2pCfg);
 
         Set<ServiceNode.SupportedService> supportedServices = config.getServiceNodeConfig().getSupportedServices();
 

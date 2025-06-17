@@ -19,14 +19,20 @@ package bisq.network.http;
 
 import bisq.common.network.TransportType;
 import bisq.network.http.utils.Socks5ProxyProvider;
+import bisq.network.p2p.node.transport.I2PTransportService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.net.Socket;
+import java.util.List;
 import java.util.Optional;
 
 public class HttpClientsByTransport {
-    public HttpClientsByTransport() {
+    private final I2PTransportService.Config i2pConfig;
+
+    public HttpClientsByTransport(I2PTransportService.Config i2pConfig) {
+        this.i2pConfig = i2pConfig;
     }
 
     public BaseHttpClient getHttpClient(String url,
@@ -43,10 +49,33 @@ public class HttpClientsByTransport {
                 yield new TorHttpClient(url, userAgent, socks5ProxyProvider);
                 // If we have a socks5ProxyAddress defined in options we use that as proxy
             }
-            case I2P -> new ClearNetHttpClient(url, userAgent,
-                    new Proxy(Proxy.Type.HTTP, new InetSocketAddress("213.210.36.244", 4444))
-            );
+            case I2P -> {
+                // Try each configured HTTP proxy endpoint for I2P
+                Proxy proxy = selectWorkingProxy(i2pConfig.getProxyList());
+                yield new ClearNetHttpClient(url, userAgent, proxy);
+            }
             case CLEAR -> new ClearNetHttpClient(url, userAgent);
         };
+    }
+
+    private Proxy selectWorkingProxy(List<I2PTransportService.ProxyEndpoint> endpoints) {
+        for (I2PTransportService.ProxyEndpoint ep : endpoints) {
+            Proxy p = new Proxy(Proxy.Type.HTTP,
+                    new InetSocketAddress(ep.getHost(), ep.getPort()));
+            if (isReachable(p, 500)) {
+                return p;
+            }
+        }
+        throw new RuntimeException("No reachable I2P proxy available");
+    }
+
+    private boolean isReachable(Proxy proxy, int timeoutMs) {
+        try (Socket s = new Socket()) {
+            InetSocketAddress addr = (InetSocketAddress) proxy.address();
+            s.connect(addr, timeoutMs);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

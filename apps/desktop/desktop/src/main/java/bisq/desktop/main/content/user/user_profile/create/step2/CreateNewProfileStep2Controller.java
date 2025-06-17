@@ -132,7 +132,7 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
         OverlayController.hide();
     }
 
-    protected void onSave() throws GeneralSecurityException {
+    protected void onSave() {
         checkNotNull(model.getKeyPair());
         checkNotNull(model.getProofOfWork());
         checkNotNull(model.getPubKeyHash());
@@ -154,23 +154,29 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
         }
 
         model.getSaveButtonDisabled().set(true);
-        userIdentityService.createAndPublishNewUserProfile(
-                        nickName,
-                        model.getKeyPair(),
-                        model.getPubKeyHash(),
-                        model.getProofOfWork(),
-                        CURRENT_AVATARS_VERSION,
-                        model.getTerms().get(),
-                        model.getStatement().get())
-                .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
-                    if (throwable == null) {
-                        model.getCreateProfileProgress().set(0);
-                        close();
-                    } else {
-                        model.getSaveButtonDisabled().set(false);
-                        new Popup().error(throwable).show();
-                    }
-                }));
+        try {
+            userIdentityService.createAndPublishNewUserProfile(
+                            nickName,
+                            model.getKeyPair(),
+                            model.getPubKeyHash(),
+                            model.getProofOfWork(),
+                            CURRENT_AVATARS_VERSION,
+                            model.getTerms().get(),
+                            model.getStatement().get())
+                    .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
+                        if (throwable == null) {
+                            model.getCreateProfileProgress().set(0);
+                            close();
+                        } else {
+                            model.getSaveButtonDisabled().set(false);
+                            new Popup().error(throwable).show();
+                        }
+                    }));
+        } catch (GeneralSecurityException e) {
+            log.error("Error creating user profile", e);
+            model.getSaveButtonDisabled().set(false);
+            new Popup().error(e).show();
+        }
     }
 
     protected void close() {
