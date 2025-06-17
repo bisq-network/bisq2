@@ -20,7 +20,7 @@ package bisq.desktop.main.content.bisq_easy.wallet_guide.receive;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Carousel;
-import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.BisqHyperlink;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -55,10 +55,8 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
         text.getStyleClass().add("bisq-easy-trade-guide-content");
         TextFlow content = new TextFlow(text);
 
-        link1 = new Hyperlink(Res.get("bisqEasy.walletGuide.receive.link1"));
-        link2 = new Hyperlink(Res.get("bisqEasy.walletGuide.receive.link2"));
-        link1.setTooltip(new BisqTooltip("https://www.youtube.com/watch?v=NqY3wBhloH4"));
-        link2.setTooltip(new BisqTooltip("https://www.youtube.com/watch?v=imMX7i4qpmg"));
+        link1 = new BisqHyperlink(Res.get("bisqEasy.walletGuide.receive.link1"), "https://www.youtube.com/watch?v=NqY3wBhloH4");
+        link2 = new BisqHyperlink(Res.get("bisqEasy.walletGuide.receive.link2"), "https://www.youtube.com/watch?v=imMX7i4qpmg");
         backButton = new Button(Res.get("action.back"));
         closeButton = new Button(Res.get("action.close"));
         closeButton.setDefaultButton(true);

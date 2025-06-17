@@ -22,6 +22,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
+import bisq.desktop.components.controls.BisqHyperlink;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
@@ -47,7 +48,8 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 
-import static bisq.user.profile.UserProfile.*;
+import static bisq.user.profile.UserProfile.MAX_LENGTH_STATEMENT;
+import static bisq.user.profile.UserProfile.MAX_LENGTH_TERMS;
 
 @Slf4j
 public class UserProfileView extends View<HBox, UserProfileModel, UserProfileController> {
@@ -95,8 +97,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         createNewProfileButton = new Button(Res.get("user.userProfile.createNewProfile"));
         createNewProfileButton.getStyleClass().addAll("outlined-button");
 
-        learnMore = new Hyperlink(Res.get("user.userProfile.learnMore"));
-        learnMore.setTooltip(new BisqTooltip("https://bisq.wiki/Identity"));
+        learnMore = new BisqHyperlink(Res.get("user.userProfile.learnMore"), "https://bisq.wiki/Identity");
 
         VBox buttons = new VBox(5, createNewProfileButton, learnMore);
         buttons.setAlignment(Pos.TOP_RIGHT);
@@ -255,7 +256,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
     }
 
     private void onDeleteButtonPressed() {
-        if(!comboBox.getIsValidSelection().get()) {
+        if (!comboBox.getIsValidSelection().get()) {
             new Popup().invalid(Res.get("user.userProfile.popup.noSelectedProfile")).show();
             return;
         }
