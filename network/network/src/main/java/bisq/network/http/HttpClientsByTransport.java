@@ -28,6 +28,7 @@ import java.net.Socket;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -46,8 +47,8 @@ public class HttpClientsByTransport {
      * @param i2pConfig loaded from NetworkServiceConfig for TransportType.I2P
      */
     public HttpClientsByTransport(I2PTransportService.Config i2pConfig) {
-        this.proxyList = i2pConfig.getProxyList();
-        if (proxyList.isEmpty()) {
+        this.proxyList = i2pConfig == null ? List.of() : List.copyOf(i2pConfig.getProxyList());
+        if (proxyList.isEmpty() && i2pConfig != null) {
             throw new IllegalArgumentException("I2P proxyList must not be empty");
         }
     }
