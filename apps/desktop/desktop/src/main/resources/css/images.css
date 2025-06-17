@@ -816,6 +816,7 @@
 /* ------------------------------------------------------------------------------------ */
 /* Icons */
 /* ------------------------------------------------------------------------------------ */
+
 #icon-notification-mention-grey {
     -fx-image: url("/images/icons/icon-notification-mention-grey.png");
 }
@@ -1042,6 +1043,18 @@
 
 #moderator-badge-large {
     -fx-image: url("/images/icons/moderator-badge-large.png");
+}
+
+#flip-fields-arrows-grey {
+    -fx-image: url("/images/icons/flip-fields-arrows-grey.png");
+}
+
+#flip-fields-arrows-white {
+    -fx-image: url("/images/icons/flip-fields-arrows-white.png");
+}
+
+#flip-fields-arrows-green {
+    -fx-image: url("/images/icons/flip-fields-arrows-green.png");
 }
 
 

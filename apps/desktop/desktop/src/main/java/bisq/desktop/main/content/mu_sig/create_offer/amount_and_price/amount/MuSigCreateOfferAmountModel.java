@@ -24,7 +24,7 @@ import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
-import bisq.offer.amount.spec.QuoteSideAmountSpec;
+import bisq.offer.amount.spec.BaseSideAmountSpec;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -64,7 +64,7 @@ public class MuSigCreateOfferAmountModel implements Model {
     private final BooleanProperty isRangeAmountEnabled = new SimpleBooleanProperty();
     private final BooleanProperty isOverlayVisible = new SimpleBooleanProperty();
     private final StringProperty priceTooltip = new SimpleStringProperty();
-    private final ObjectProperty<QuoteSideAmountSpec> quoteSideAmountSpec = new SimpleObjectProperty<>();
+    private final ObjectProperty<BaseSideAmountSpec> baseSideAmountSpec = new SimpleObjectProperty<>();
     private final ObjectProperty<PriceQuote> priceQuote = new SimpleObjectProperty<>();
     private final StringProperty errorMessage = new SimpleStringProperty();
 
@@ -84,7 +84,7 @@ public class MuSigCreateOfferAmountModel implements Model {
         isRangeAmountEnabled.set(false);
         isOverlayVisible.set(false);
         priceTooltip.set(null);
-        quoteSideAmountSpec.set(null);
+        baseSideAmountSpec.set(null);
         priceQuote.set(null);
         errorMessage.set(null);
     }

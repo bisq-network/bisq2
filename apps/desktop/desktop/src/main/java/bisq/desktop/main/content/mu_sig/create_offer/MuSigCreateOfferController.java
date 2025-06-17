@@ -131,7 +131,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
             updateNextButtonDisabledState();
         });
         priceSpecPin = EasyBind.subscribe(muSigCreateOfferAmountAndPriceController.getPriceSpec(),
-                muSigCreateOfferAmountAndPriceController::updateQuoteSideAmountSpecWithPriceSpec);
+                muSigCreateOfferAmountAndPriceController::updateAmountSpecWithPriceSpec);
         handlePaymentMethodsUpdate();
         muSigCreateOfferPaymentMethodsController.getPaymentMethods().addListener(paymentMethodsListener);
     }
@@ -154,7 +154,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
                     muSigCreateOfferDirectionAndMarketController.getDirection().get(),
                     muSigCreateOfferDirectionAndMarketController.getMarket().get(),
                     muSigCreateOfferPaymentMethodsController.getPaymentMethods(),
-                    muSigCreateOfferAmountAndPriceController.getQuoteSideAmountSpec().get(),
+                    muSigCreateOfferAmountAndPriceController.getBaseSideAmountSpec().get(),
                     muSigCreateOfferAmountAndPriceController.getPriceSpec().get()
             );
             model.getNextButtonText().set(Res.get("bisqEasy.tradeWizard.review.nextButton.createOffer"));

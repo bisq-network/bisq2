@@ -37,10 +37,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class QuoteAmountInputBox {
+public class BigNumberAmountInputBox implements AmountNumberBox {
     private final Controller controller;
 
-    public QuoteAmountInputBox(boolean isBaseCurrency, boolean showCurrencyCode) {
+    public BigNumberAmountInputBox(boolean isBaseCurrency, boolean showCurrencyCode) {
         controller = new Controller(isBaseCurrency, showCurrencyCode);
     }
 
@@ -273,7 +273,13 @@ public class QuoteAmountInputBox {
         }
 
         private void applyAmount(Monetary newValue) {
-            textInput.setText(newValue == null ? "" : AmountFormatter.formatQuoteAmount(newValue));
+            String formattedAmount = "";
+            if (newValue != null) {
+                formattedAmount = model.isBaseCurrency
+                        ? AmountFormatter.formatBaseAmount(newValue)
+                        : AmountFormatter.formatQuoteAmount(newValue);
+            }
+            textInput.setText(newValue == null ? "" : formattedAmount);
             textInput.selectRange(textInput.getLength(), textInput.getLength());
         }
     }
