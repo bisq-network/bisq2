@@ -28,9 +28,9 @@ import java.util.concurrent.*;
 
 @Slf4j
 public class ExecutorFactory {
-    public static final Map<String, ThreadFactory> THREAD_FACTORY_BY_NAME = new HashMap<>();
     public static final ExecutorService WORKER_POOL = newFixedThreadPool("Worker-pool");
     public static final int DEFAULT_PRIORITY = 3;
+    private static final Map<String, ThreadFactory> THREAD_FACTORY_BY_NAME = new HashMap<>();
 
     public static boolean shutdownAndAwaitTermination(ExecutorService executor) {
         return shutdownAndAwaitTermination(executor, 100);
@@ -109,16 +109,20 @@ public class ExecutorFactory {
                                                            BlockingQueue<Runnable> workQueue) {
         ThreadFactory threadFactory = getThreadFactory(getNameWithThreadNum(name));
         return new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
-                TimeUnit.MILLISECONDS, workQueue, threadFactory);
+                TimeUnit.SECONDS, workQueue, threadFactory);
     }
 
     public static ThreadFactory getThreadFactory(String name) {
-        return THREAD_FACTORY_BY_NAME.computeIfAbsent(name,
-                key -> new ThreadFactoryBuilder()
-                        .setNameFormat(name)
-                        .setDaemon(true)
-                        .setPriority(DEFAULT_PRIORITY)
-                        .build());
+        synchronized (THREAD_FACTORY_BY_NAME) {
+            return THREAD_FACTORY_BY_NAME.computeIfAbsent(
+                    name,
+                    key ->
+                            new ThreadFactoryBuilder()
+                                    .setNameFormat(name)
+                                    .setDaemon(true)
+                                    .setPriority(DEFAULT_PRIORITY)
+                                    .build());
+        }
     }
 
     private static String getNameWithThreadNum(String name) {
