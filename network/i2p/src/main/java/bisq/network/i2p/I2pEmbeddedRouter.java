@@ -127,7 +127,9 @@ public class I2pEmbeddedRouter {
     public void checkRouterStats() {
         if (routerContext == null) return; // Router not yet established
         CommSystemFacade.Status latestStatus = getRouterStatus();
-        log.trace("I2P Router Status changed to: {}", i2pRouterStatus.name());
+        if (i2pRouterStatus != null) {
+            log.trace("I2P Router Status changed to: {}", i2pRouterStatus.name());
+        }
         if (i2pRouterStatus != latestStatus) {
             // Status changed
             i2pRouterStatus = latestStatus;
@@ -167,8 +169,6 @@ public class I2pEmbeddedRouter {
             router.setKillVMOnEnd(false);
             routerContext.logManager().setDefaultLimit(Log.STR_INFO);
             routerContext.logManager().setFileSize(10_000_000);
-            long startTime = System.currentTimeMillis();
-            final long timeoutMs = 60_000;
             while (!router.isRunning()) {
                 try {
                     //noinspection BusyWait
@@ -338,52 +338,51 @@ public class I2pEmbeddedRouter {
         final File jarFile = new File(jarPath);
         if (jarFile.isFile()) {
             try {
-                final JarFile jar = new JarFile(jarFile);
-                JarEntry entry;
-                File f = null;
-                final Enumeration<JarEntry> entries = jar.entries(); //gives ALL entries in jar
-                while (entries.hasMoreElements()) {
-                    entry = entries.nextElement();
-                    final String name = entry.getName();
-                    if (name.startsWith("certificates/reseed/")) { //filter according to the path
-                        if (!name.endsWith("/")) {
-                            String fileName = name.substring(name.lastIndexOf("/") + 1);
-                            log.info("fileName to save: " + fileName);
-                            f = new File(reseedCertificates, fileName);
-                        }
-                    }
-                    if (name.startsWith("certificates/ssl/")) {
-                        if (!name.endsWith("/")) {
-                            String fileName = name.substring(name.lastIndexOf("/") + 1);
-                            log.info("fileName to save: " + fileName);
-                            f = new File(sslCertificates, fileName);
-                        }
-                    }
-                    if (f != null) {
-                        boolean fileReadyToSave = false;
-                        if (!f.exists() && f.createNewFile()) fileReadyToSave = true;
-                        else if (f.exists() && f.delete() && f.createNewFile()) fileReadyToSave = true;
-                        if (fileReadyToSave) {
-                            FileOutputStream fos = new FileOutputStream(f);
-                            byte[] byteArray = new byte[1024];
-                            int i;
-                            InputStream is = getClass().getClassLoader().getResourceAsStream(name);
-                            //While the input stream has bytes
-                            while ((i = is.read(byteArray)) > 0) {
-                                //Write the bytes to the output stream
-                                fos.write(byteArray, 0, i);
+                try (final JarFile jar = new JarFile(jarFile)) {
+                    JarEntry entry;
+                    File f = null;
+                    final Enumeration<JarEntry> entries = jar.entries(); //gives ALL entries in jar
+                    while (entries.hasMoreElements()) {
+                        entry = entries.nextElement();
+                        final String name = entry.getName();
+                        if (name.startsWith("certificates/reseed/")) { //filter according to the path
+                            if (!name.endsWith("/")) {
+                                String fileName = name.substring(name.lastIndexOf("/") + 1);
+                                log.info("fileName to save: " + fileName);
+                                f = new File(reseedCertificates, fileName);
                             }
-                            //Close streams to prevent errors
-                            is.close();
-                            fos.close();
-                            f = null;
-                        } else {
-                            log.warn("Unable to save file from 1M5 jar and is required: " + name);
-                            return false;
+                        }
+                        if (name.startsWith("certificates/ssl/")) {
+                            if (!name.endsWith("/")) {
+                                String fileName = name.substring(name.lastIndexOf("/") + 1);
+                                log.info("fileName to save: " + fileName);
+                                f = new File(sslCertificates, fileName);
+                            }
+                        }
+                        if (f != null) {
+                            boolean fileReadyToSave = false;
+                            if (!f.exists() && f.createNewFile()) fileReadyToSave = true;
+                            else if (f.exists() && f.delete() && f.createNewFile()) fileReadyToSave = true;
+                            if (fileReadyToSave) {
+                                try (
+                                        FileOutputStream fos = new FileOutputStream(f);
+                                        InputStream is = getClass().getClassLoader().getResourceAsStream(name)) {
+                                    byte[] byteArray = new byte[1024];
+                                    int i;
+                                    //While the input stream has bytes
+                                    while ((i = is.read(byteArray)) > 0) {
+                                        //Write the bytes to the output stream
+                                        fos.write(byteArray, 0, i);
+                                    }
+                                }
+                                f = null;
+                            } else {
+                                log.warn("Unable to save file from 1M5 jar and is required: " + name);
+                                return false;
+                            }
                         }
                     }
                 }
-                jar.close();
             } catch (IOException e) {
                 log.warn(e.getLocalizedMessage());
                 return false;
@@ -446,6 +445,13 @@ public class I2pEmbeddedRouter {
                     log.warn("Restart failed.");
                     return;
                 }
+                try {
+                    Thread.sleep(10000); // Sleep for 10 seconds between checks
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    log.warn("Interrupted while waiting for router restart");
+                    return;
+                }
             }
             log.info("Router hiddenMode=" + router.isHidden());
             log.info("I2P Router soft restart completed.");
@@ -474,7 +480,7 @@ public class I2pEmbeddedRouter {
     }
 
     public boolean isPeerOnline(Destination destination) {
-        return routerContext.commSystem().wasUnreachable(destination.getHash());
+        return !routerContext.commSystem().wasUnreachable(destination.getHash());
     }
 
 }
