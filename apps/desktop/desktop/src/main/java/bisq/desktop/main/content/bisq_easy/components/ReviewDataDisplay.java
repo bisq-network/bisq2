@@ -173,7 +173,7 @@ public class ReviewDataDisplay {
             root.setMaxHeight(HEIGHT);
             root.setAlignment(Pos.TOP_LEFT);
 
-            dashLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
+            dashLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-code");
             dashLabel.setAlignment(Pos.CENTER);
 
             direction = getElements(Res.get("bisqEasy.tradeState.header.direction"));
