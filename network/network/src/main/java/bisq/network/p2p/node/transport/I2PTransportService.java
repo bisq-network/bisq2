@@ -40,9 +40,11 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class I2PTransportService implements TransportService {
@@ -76,6 +78,7 @@ public class I2PTransportService implements TransportService {
         private final boolean extendedI2pLogging;
         private final int sendMessageThrottleTime;
         private final int receiveMessageThrottleTime;
+        private final List<ProxyEndpoint> proxyList;
 
         public Config(Path dataDir,
                       int defaultNodePort,
@@ -88,7 +91,8 @@ public class I2PTransportService implements TransportService {
                       boolean embeddedRouter,
                       boolean extendedI2pLogging,
                       int sendMessageThrottleTime,
-                      int receiveMessageThrottleTime) {
+                      int receiveMessageThrottleTime,
+                      List<ProxyEndpoint> proxyList) {
             this.dataDir = dataDir;
             this.defaultNodePort = defaultNodePort;
             this.socketTimeout = socketTimeout;
@@ -101,6 +105,7 @@ public class I2PTransportService implements TransportService {
             this.extendedI2pLogging = extendedI2pLogging;
             this.sendMessageThrottleTime = sendMessageThrottleTime;
             this.receiveMessageThrottleTime = receiveMessageThrottleTime;
+            this.proxyList = proxyList;
         }
     }
 
@@ -225,6 +230,9 @@ public class I2PTransportService implements TransportService {
         try {
             sessionId = UUID.randomUUID().toString();
             I2PKeyPair i2PKeyPair = keyBundle.getI2PKeyPair();
+            if (i2PKeyPair == null) {
+                throw new ConnectionException("I2P KeyPair is null for networkId: " + networkId);
+            }
             //TODO: Investigate why not using port passed as parameter and if no port, find one?
             //Pass parameters to connect with Local instance
             int i2pPort = port;
@@ -265,5 +273,16 @@ public class I2PTransportService implements TransportService {
     @Override
     public boolean isPeerOnline(Address address) {
         return i2pClient.isPeerOnline(address.getHost());
+    }
+
+    @Getter
+    public static class ProxyEndpoint {
+        private final String host;
+        private final int port;
+
+        public ProxyEndpoint(String host, int port) {
+            this.host = host;
+            this.port = port;
+        }
     }
 }

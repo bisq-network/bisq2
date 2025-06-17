@@ -27,7 +27,7 @@ import java.nio.file.Paths;
 @Slf4j
 public class I2PKeyUtils {
 
-    public static void writePrivateKey(I2PKeyPair i2pKeyPair, Path storageDir, String tag) {
+    public static void writeDestination(I2PKeyPair i2pKeyPair, Path storageDir, String tag) {
         Path targetPath = Paths.get(storageDir.toString(), tag);
         File i2pPrivateKeyDir = targetPath.toFile();
         try {

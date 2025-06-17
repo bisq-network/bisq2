@@ -57,9 +57,9 @@ public class SystemSettings {
         }
         File sysAppBaseDir = getSystemApplicationBaseDir();
         File groupDir = new File(sysAppBaseDir.getAbsolutePath() + "/" + groupName);
-        if (groupDir.exists() || (create && groupDir.mkdir())) {
+        if (groupDir.exists() || (create && groupDir.mkdirs())) {
             File appDir = new File(groupDir.getAbsolutePath() + "/" + appName);
-            if (appDir.exists() || (create && appDir.mkdir())) {
+            if (appDir.exists() || (create && appDir.mkdirs())) {
                 return appDir;
             }
         }
@@ -233,33 +233,4 @@ public class SystemSettings {
         }
         return null;
     }
-
-    public static void main(String[] args) {
-        String groupName = "bisq2";
-        String sysAppName = "network";
-        String appName = "i2p";
-        print("System App Base", getSystemApplicationBaseDir());
-        print("System App Dir", getSystemApplicationDir(groupName, sysAppName, true));
-        print("User Home", getUserHomeDir());
-        print("User Data", getUserDataDir(true));
-        print("User Config", getUserConfigDir(true));
-        print("User Cache", getUserCacheDir(true));
-        try {
-            print("User App Home", getUserAppHomeDir());
-            print("User App Data", getUserAppDataDir(groupName, appName, true));
-            print("User App Config", getUserAppConfigDir(groupName, appName, true));
-            print("User App Cache", getUserAppCacheDir(groupName, appName, true));
-        } catch (IOException e) {
-            System.out.println(e.getLocalizedMessage());
-        }
-    }
-
-    private static void print(String message, File path) {
-        if (path == null) {
-            System.out.println(message + ": null");
-        } else {
-            System.out.println(message + ": " + path.getAbsolutePath());
-        }
-    }
-
 }

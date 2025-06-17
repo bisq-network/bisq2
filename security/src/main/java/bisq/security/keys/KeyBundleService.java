@@ -132,7 +132,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
         if (defaultI2pPrivateKey.isEmpty()) {
             i2pInit = getOrCreateKeyBundleAsync(defaultKeyId).thenApply(keyBundle -> {
                 if (keyBundle != null && writeDefaultI2pPrivateKeyToFile) {
-                    I2PKeyUtils.writePrivateKey(keyBundle.getI2PKeyPair(), i2pStoragePath, tag);
+                    I2PKeyUtils.writeDestination(keyBundle.getI2PKeyPair(), i2pStoragePath, tag);
                 }
                 return keyBundle != null;
             });
@@ -151,7 +151,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
                 persistKeyBundle(defaultKeyId, keyBundle);
 
                 if (writeDefaultI2pPrivateKeyToFile) {
-                    I2PKeyUtils.writePrivateKey(keyBundle.getI2PKeyPair(), i2pStoragePath, tag);
+                    I2PKeyUtils.writeDestination(keyBundle.getI2PKeyPair(), i2pStoragePath, tag);
                 }
                 return keyBundle;
             }).thenApply(Objects::nonNull);
