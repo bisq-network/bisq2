@@ -39,6 +39,7 @@ import bisq.desktop.main.content.reputation.build_reputation.bond.BondedReputati
 import bisq.desktop.main.content.reputation.build_reputation.burn.BurnBsqController;
 import bisq.desktop.main.content.reputation.build_reputation.signedAccount.SignedWitnessController;
 import bisq.desktop.main.content.user.accounts.create.CreatePaymentAccountController;
+import bisq.desktop.main.content.user.accounts.create.legacy.LegacyCreatePaymentAccountController;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.desktop.main.content.user.user_profile.create.CreateUserProfileController;
 import bisq.desktop.navigation.NavigationTarget;
@@ -152,7 +153,9 @@ public class OverlayController extends NavigationController {
             case CHAT_RULES -> Optional.of(new ChatRulesController(serviceProvider));
 
             case CREATE_PROFILE -> Optional.of(new CreateUserProfileController(serviceProvider));
-            case CREATE_BISQ_EASY_PAYMENT_ACCOUNT -> Optional.of(new CreatePaymentAccountController(serviceProvider));
+            case CREATE_PAYMENT_ACCOUNT -> Optional.of(new CreatePaymentAccountController(serviceProvider));
+            case CREATE_PAYMENT_ACCOUNT_LEGACY ->
+                    Optional.of(new LegacyCreatePaymentAccountController(serviceProvider));
 
             case BURN_BSQ -> Optional.of(new BurnBsqController(serviceProvider));
             case BSQ_BOND -> Optional.of(new BondedReputationController(serviceProvider));
