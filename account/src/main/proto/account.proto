@@ -111,7 +111,7 @@ message SepaAccountPayload {
   string holderName = 1;
   string iban = 2;
   string bic = 3;
-
+  repeated string acceptedCountryCodes = 5;
 }
 
 message SepaInstantAccountPayload {

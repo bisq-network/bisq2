@@ -17,63 +17,98 @@
 
 package bisq.desktop.main.content.user.accounts.create;
 
-import bisq.desktop.common.view.Model;
+import bisq.account.payment_method.PaymentMethod;
+import bisq.desktop.common.view.NavigationModel;
+import bisq.desktop.navigation.NavigationTarget;
+import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import lombok.Getter;
+import lombok.Setter;
 
-public class CreatePaymentAccountModel implements Model {
-    private final StringProperty accountData = new SimpleStringProperty();
-    private final StringProperty accountName = new SimpleStringProperty();
-    private final BooleanProperty saveButtonDisabled = new SimpleBooleanProperty();
-    private final BooleanProperty isEditable = new SimpleBooleanProperty();
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-    public String getAccountData() {
-        return accountData.get();
+@Getter
+public class CreatePaymentAccountModel extends NavigationModel {
+    private final IntegerProperty currentIndex = new SimpleIntegerProperty();
+    private final StringProperty nextButtonText = new SimpleStringProperty();
+    private final StringProperty backButtonText = new SimpleStringProperty(Res.get("action.back"));
+    private final BooleanProperty closeButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty createAccountButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty backButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty showProgressBox = new SimpleBooleanProperty();
+    private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
+    private final List<NavigationTarget> childTargets = new ArrayList<>();
+
+    @Setter
+    private boolean optionsVisible;
+    @Setter
+    private boolean animateRightOut = true;
+    @Setter
+    private Optional<PaymentMethod<?>> paymentMethod = Optional.empty();
+    @Setter
+    private Optional<Map<String, Object>> accountData = Optional.empty();
+    @Setter
+    private Optional<Map<String, Object>> optionsData = Optional.empty();
+
+    // Backward compatibility getters
+    public PaymentMethod<?> getPaymentMethod() {
+        return paymentMethod.orElse(null);
     }
 
-    public StringProperty accountDataProperty() {
+    public Map<String, Object> getAccountData() {
+        return accountData.orElse(null);
+    }
+
+    public Map<String, Object> getOptionsData() {
+        return optionsData.orElse(null);
+    }
+
+    // Optional getters
+    public Optional<PaymentMethod<?>> getPaymentMethodOpt() {
+        return paymentMethod;
+    }
+
+    public Optional<Map<String, Object>> getAccountDataOpt() {
         return accountData;
     }
 
-    public void setAccountData(String accountData) {
-        this.accountData.set(accountData);
+    public Optional<Map<String, Object>> getOptionsDataOpt() {
+        return optionsData;
     }
 
-    public String getAccountName() {
-        return accountName.get();
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.CREATE_PAYMENT_ACCOUNT_PAYMENT_METHOD;
     }
 
-    public StringProperty accountNameProperty() {
-        return accountName;
-    }
+    public void reset() {
+        optionsVisible = false;
+        animateRightOut = true;
+        paymentMethod = Optional.empty();
+        accountData = Optional.empty();
+        optionsData = Optional.empty();
 
-    public void setAccountName(String accountName) {
-        this.accountName.set(accountName);
-    }
+        currentIndex.set(0);
+        nextButtonText.set(Res.get("action.next"));
+        backButtonText.set(Res.get("action.back"));
+        closeButtonVisible.set(false);
+        nextButtonVisible.set(true);
+        createAccountButtonVisible.set(false);
+        backButtonVisible.set(false);
+        showProgressBox.set(false);
+        selectedChildTarget.set(null);
 
-    public boolean isSaveButtonDisabled() {
-        return saveButtonDisabled.get();
-    }
-
-    public BooleanProperty saveButtonDisabledProperty() {
-        return saveButtonDisabled;
-    }
-
-    public void setSaveButtonDisabled(boolean saveButtonDisabled) {
-        this.saveButtonDisabled.set(saveButtonDisabled);
-    }
-
-    public boolean isIsEditable() {
-        return isEditable.get();
-    }
-
-    public BooleanProperty isEditableProperty() {
-        return isEditable;
-    }
-
-    public void setIsEditable(boolean isEditable) {
-        this.isEditable.set(isEditable);
+        childTargets.clear();
     }
 }

@@ -19,12 +19,15 @@ package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
+import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.locale.Country;
 import bisq.common.util.StringUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
 
 @Getter
 @Slf4j
@@ -37,10 +40,19 @@ public final class SepaAccount extends CountryBasedAccount<SepaAccountPayload, F
                        String holderName,
                        String iban,
                        String bic,
-                       Country country) {
+                       Country country,
+                       List<String> acceptedCountryCodes) {
         this(accountName,
-                new SepaAccountPayload(StringUtils.createUid(), PAYMENT_METHOD.getName(), holderName, iban, bic, country.getCode()),
+                new SepaAccountPayload(StringUtils.createUid(), PAYMENT_METHOD.getName(), holderName, iban, bic, country.getCode(), acceptedCountryCodes),
                 country);
+    }
+
+    public SepaAccount(String accountName,
+                       String holderName,
+                       String iban,
+                       String bic,
+                       Country country) {
+        this(accountName, holderName, iban, bic, country, FiatPaymentRailUtil.getSepaEuroCountries());
     }
 
     private SepaAccount(String accountName, SepaAccountPayload sepaAccountPayload, Country country) {

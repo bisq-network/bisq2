@@ -18,12 +18,16 @@
 package bisq.account.payment_method;
 
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.common.currency.FiatCurrency;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.TradeCurrency;
+import bisq.common.locale.Country;
+import bisq.common.monetary.Monetary;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class FiatPaymentRailUtil {
@@ -59,8 +63,7 @@ public class FiatPaymentRailUtil {
                 .collect(Collectors.toList());
     }
 
-
-    static List<String> getSepaEuroCountries() {
+    static public List<String> getSepaEuroCountries() {
         return List.of("AT", "BE", "CY", "DE", "EE", "FI", "FR", "GR", "IE",
                 "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES", "AD", "SM", "VA");
     }
@@ -182,5 +185,74 @@ public class FiatPaymentRailUtil {
                 "USD",
                 "ZAR"
         );
+    }
+
+    public static Monetary getTradeLimit(PaymentMethod<?> paymentMethod, Country country) {
+        if (paymentMethod instanceof FiatPaymentMethod fiatMethod) {
+            FiatPaymentRail rail = fiatMethod.getPaymentRail();
+
+            FiatCurrency currency = Optional.ofNullable(country)
+                    .map(Country::getCode)
+                    .map(FiatCurrencyRepository::getCurrencyByCountryCode)
+                    .orElse(FiatCurrencyRepository.getCurrencyByCode("EUR"));
+
+            String currencyCode = currency.getCode();
+
+            int baseEurLimit = switch (rail) {
+                case F2F -> 4000;
+                case SEPA -> 3000;
+                default -> 1000;
+            };
+
+            return createLocalCurrencyLimit(currencyCode, baseEurLimit);
+        }
+
+        throw new UnsupportedOperationException("Trade limit calculation not implemented for payment method: " +
+                paymentMethod.getClass().getSimpleName());
+    }
+
+    public static Monetary createLocalCurrencyLimit(String currencyCode, int eurEquivalent) {
+        // Multiplier: rough EUR/currencyCode rate (June 2025)
+        double multiplier = switch (currencyCode) {
+            case "USD" -> 1.1;
+            case "GBP" -> 0.85;
+            case "JPY" -> 150;
+            case "CHF" -> 0.95;
+            case "CAD" -> 1.5;
+            case "AUD" -> 1.6;
+            case "CNY" -> 8.0;
+            case "INR" -> 90;
+            case "BRL" -> 6.0;
+            case "RUB" -> 85;
+            case "MXN" -> 20;
+            case "ZAR" -> 18;
+            case "SGD" -> 1.5;
+            case "HKD" -> 8.5;
+            case "SEK", "NOK", "DKK" -> 10;
+            case "NZD" -> 1.7;
+            case "PLN" -> 4.3;
+            case "CZK" -> 25;
+            case "HUF" -> 370;
+            case "RON" -> 4.9;
+            case "BGN" -> 1.95;
+            case "TRY" -> 35;
+            case "ILS" -> 4.0;
+            case "THB" -> 38;
+            case "IDR" -> 17000;
+            case "MYR" -> 5.0;
+            case "PHP" -> 60;
+            case "AED" -> 4.0;
+            case "SAR" -> 4.1;
+            case "QAR" -> 4.0;
+            case "ARS" -> 900;
+            case "CLP" -> 950;
+            case "COP" -> 4300;
+            case "AOA" -> 830;
+            case "EUR" -> 1.0;
+            default -> 1.0;
+        };
+
+        long amount = (long) (eurEquivalent * multiplier * 10000);
+        return Monetary.from(amount, currencyCode);
     }
 }
