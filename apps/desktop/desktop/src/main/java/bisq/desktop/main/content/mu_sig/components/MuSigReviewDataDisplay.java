@@ -141,10 +141,12 @@ public class MuSigReviewDataDisplay {
 
     private static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         private static final double HEIGHT = 61;
+        @SuppressWarnings("UnnecessaryUnicodeEscape")
         private static final String DASH_SYMBOL = "\u2013"; // Unicode for "–"
 
         private final Triple<Text, Label, VBox> direction, paymentMethod;
-        private final Triple<Triple<Text, Text, Text>, HBox, VBox> toSend, toReceive;
+        private final Triple<Triple<Text, Text, Text>, HBox, VBox> toSendMaxOrFixedAmount, toReceiveMaxOrFixedAmount;
+        private final Text toSendMinAmount, toReceiveMinAmount;
 
         private final VBox rangeAmountVBox = new VBox(0);
         private Subscription isRangeAmountPin, isSendBtcPin, isReceiveBtcPin;
@@ -163,15 +165,20 @@ public class MuSigReviewDataDisplay {
             root.setMaxHeight(HEIGHT);
             root.setAlignment(Pos.TOP_LEFT);
 
-            toSendDashLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
+            toSendDashLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-code");
             toSendDashLabel.setAlignment(Pos.CENTER);
-            toReceiveDashLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
+            toReceiveDashLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-code");
             toReceiveDashLabel.setAlignment(Pos.CENTER);
 
             direction = getElements(Res.get("bisqEasy.tradeState.header.direction"));
-            toSend = getAmountElements();
-            toReceive = getAmountElements();
+            toSendMaxOrFixedAmount = getAmountElements();
+            toReceiveMaxOrFixedAmount = getAmountElements();
             paymentMethod = getElements();
+
+            toSendMinAmount = new Text();
+            toSendMinAmount.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
+            toReceiveMinAmount = new Text();
+            toReceiveMinAmount.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
         }
 
         @Override
@@ -182,15 +189,16 @@ public class MuSigReviewDataDisplay {
             configureBitcoinAmountDisplay(toReceiveBitcoinMaxOrFixedAmountDisplay);
 
             direction.getSecond().textProperty().bind(model.getDirection());
-            toSend.getFirst().getFirst().textProperty().bind(model.getToSendAmountDescription());
-            toSend.getFirst().getSecond().textProperty().bind(model.getToSendMaxOrFixedAmount());
-            toSend.getFirst().getThird().textProperty().bind(model.getToSendCode());
-            toReceive.getFirst().getFirst().textProperty().bind(model.getToReceiveAmountDescription());
-            toReceive.getFirst().getSecond().textProperty().bind(model.getToReceiveMaxOrFixedAmount());
-            toReceive.getFirst().getThird().textProperty().bind(model.getToReceiveCode());
+            toSendMaxOrFixedAmount.getFirst().getFirst().textProperty().bind(model.getToSendAmountDescription());
+            toSendMaxOrFixedAmount.getFirst().getSecond().textProperty().bind(model.getToSendMaxOrFixedAmount());
+            toSendMaxOrFixedAmount.getFirst().getThird().textProperty().bind(model.getToSendCode());
+            toSendMinAmount.textProperty().bind(model.getToSendMinAmount());
+            toReceiveMaxOrFixedAmount.getFirst().getFirst().textProperty().bind(model.getToReceiveAmountDescription());
+            toReceiveMaxOrFixedAmount.getFirst().getSecond().textProperty().bind(model.getToReceiveMaxOrFixedAmount());
+            toReceiveMaxOrFixedAmount.getFirst().getThird().textProperty().bind(model.getToReceiveCode());
+            toReceiveMinAmount.textProperty().bind(model.getToReceiveMinAmount());
             paymentMethod.getFirst().textProperty().bind(model.getFiatPaymentMethodDescription());
             paymentMethod.getSecond().textProperty().bind(model.getFiatPaymentMethod());
-
 
             toSendBitcoinMinAmountDisplay.getBtcAmount().bind(model.getToSendMinAmount());
             toSendBitcoinMaxOrFixedAmountDisplay.getBtcAmount().bind(model.getToSendMaxOrFixedAmount());
@@ -201,20 +209,26 @@ public class MuSigReviewDataDisplay {
                 boolean isSendBtc = combinedValues.getFirst();
                 boolean isRangeAmount = combinedValues.getSecond();
 
-                HBox amountHBox = toSend.getSecond();
+                HBox amountHBox = toSendMaxOrFixedAmount.getSecond();
                 amountHBox.getChildren().clear();
                 VBox.setMargin(amountHBox, null);
 
                 if (isSendBtc) {
                     if (isRangeAmount) {
-                        amountHBox.getChildren().addAll(toSendBitcoinMinAmountDisplay, toSendDashLabel, toSendBitcoinMaxOrFixedAmountDisplay, toSend.getFirst().getThird());
+                        amountHBox.getChildren().addAll(toSendBitcoinMinAmountDisplay, toSendDashLabel, toSendBitcoinMaxOrFixedAmountDisplay, toSendMaxOrFixedAmount.getFirst().getThird());
+                        toSendDashLabel.setTranslateY(0);
                     } else {
-                        amountHBox.getChildren().addAll(toSendBitcoinMaxOrFixedAmountDisplay, toSend.getFirst().getThird());
+                        amountHBox.getChildren().addAll(toSendBitcoinMaxOrFixedAmountDisplay, toSendMaxOrFixedAmount.getFirst().getThird());
                     }
                     amountHBox.setAlignment(Pos.CENTER_LEFT);
                     VBox.setMargin(amountHBox, new Insets(-15, 0, 0, 0));
                 } else {
-                    amountHBox.getChildren().addAll(toSend.getFirst().getSecond(), toSend.getFirst().getThird());
+                    if (isRangeAmount) {
+                        amountHBox.getChildren().addAll(toSendMinAmount, toSendDashLabel, toSendMaxOrFixedAmount.getFirst().getSecond(), toSendMaxOrFixedAmount.getFirst().getThird());
+                        toSendDashLabel.setTranslateY(-2);
+                    } else {
+                        amountHBox.getChildren().addAll(toSendMaxOrFixedAmount.getFirst().getSecond(), toSendMaxOrFixedAmount.getFirst().getThird());
+                    }
                     amountHBox.setAlignment(Pos.BASELINE_LEFT);
                 }
             });
@@ -223,27 +237,33 @@ public class MuSigReviewDataDisplay {
                 boolean isReceiveBtc = combinedValues.getFirst();
                 boolean isRangeAmount = combinedValues.getSecond();
 
-                HBox amountHBox = toReceive.getSecond();
+                HBox amountHBox = toReceiveMaxOrFixedAmount.getSecond();
                 amountHBox.getChildren().clear();
                 VBox.setMargin(amountHBox, null);//reset Margin setting
 
                 if (isReceiveBtc) {
                     if (isRangeAmount) {
-                        amountHBox.getChildren().addAll(toReceiveBitcoinMinAmountDisplay, toReceiveDashLabel, toReceiveBitcoinMaxOrFixedAmountDisplay, toReceive.getFirst().getThird());
+                        amountHBox.getChildren().addAll(toReceiveBitcoinMinAmountDisplay, toReceiveDashLabel, toReceiveBitcoinMaxOrFixedAmountDisplay, toReceiveMaxOrFixedAmount.getFirst().getThird());
+                        toReceiveDashLabel.setTranslateY(0);
                     } else {
-                        amountHBox.getChildren().addAll(toReceiveBitcoinMaxOrFixedAmountDisplay, toReceive.getFirst().getThird());
+                        amountHBox.getChildren().addAll(toReceiveBitcoinMaxOrFixedAmountDisplay, toReceiveMaxOrFixedAmount.getFirst().getThird());
                     }
                     amountHBox.setAlignment(Pos.CENTER_LEFT);
                     VBox.setMargin(amountHBox, new Insets(-15, 0, 0, 0));
                 } else {
-                    amountHBox.getChildren().addAll(toReceive.getFirst().getSecond(), toReceive.getFirst().getThird());
+                    if (isRangeAmount) {
+                        amountHBox.getChildren().addAll(toReceiveMinAmount, toReceiveDashLabel, toReceiveMaxOrFixedAmount.getFirst().getSecond(), toReceiveMaxOrFixedAmount.getFirst().getThird());
+                        toReceiveDashLabel.setTranslateY(-2);
+                    } else {
+                        amountHBox.getChildren().addAll(toReceiveMaxOrFixedAmount.getFirst().getSecond(), toReceiveMaxOrFixedAmount.getFirst().getThird());
+                    }
                     amountHBox.setAlignment(Pos.BASELINE_LEFT);
                 }
             });
 
             isRangeAmountPin = EasyBind.subscribe(model.getIsRangeAmount(), isRangeAmount -> {
-                VBox toSendVBox = toSend.getThird();
-                VBox toReceiveVBox = toReceive.getThird();
+                VBox toSendVBox = toSendMaxOrFixedAmount.getThird();
+                VBox toReceiveVBox = toReceiveMaxOrFixedAmount.getThird();
                 rangeAmountVBox.getChildren().clear();
                 rangeAmountVBox.setAlignment(Pos.TOP_LEFT);
                 root.getChildren().clear();
@@ -262,12 +282,14 @@ public class MuSigReviewDataDisplay {
         @Override
         protected void onViewDetached() {
             direction.getSecond().textProperty().unbind();
-            toSend.getFirst().getFirst().textProperty().unbind();
-            toSend.getFirst().getSecond().textProperty().unbind();
-            toSend.getFirst().getThird().textProperty().unbind();
-            toReceive.getFirst().getFirst().textProperty().unbind();
-            toReceive.getFirst().getSecond().textProperty().unbind();
-            toReceive.getFirst().getThird().textProperty().unbind();
+            toSendMaxOrFixedAmount.getFirst().getFirst().textProperty().unbind();
+            toSendMaxOrFixedAmount.getFirst().getSecond().textProperty().unbind();
+            toSendMaxOrFixedAmount.getFirst().getThird().textProperty().unbind();
+            toSendMinAmount.textProperty().unbind();
+            toReceiveMaxOrFixedAmount.getFirst().getFirst().textProperty().unbind();
+            toReceiveMaxOrFixedAmount.getFirst().getSecond().textProperty().unbind();
+            toReceiveMaxOrFixedAmount.getFirst().getThird().textProperty().unbind();
+            toReceiveMinAmount.textProperty().unbind();
             paymentMethod.getFirst().textProperty().unbind();
             paymentMethod.getSecond().textProperty().unbind();
 

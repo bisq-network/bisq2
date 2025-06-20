@@ -54,7 +54,7 @@
 }
 
 .mu-sig-offerbook-offerlist-toggle-button-hbox .offerlist-toggle-button-all-offers.toggle-button:selected {
-    -fx-background-color: -bisq2-yellow-dim-10;
+    -fx-background-color: -bisq-mid-grey-10;
 }
 
 .mu-sig-offerbook-offerlist-toggle-button-hbox .offerlist-toggle-button-buy.toggle-button:selected {
