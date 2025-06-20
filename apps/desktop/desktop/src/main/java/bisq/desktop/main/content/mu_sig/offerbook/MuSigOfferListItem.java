@@ -17,12 +17,12 @@
 
 package bisq.desktop.main.content.mu_sig.offerbook;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
-import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
@@ -47,6 +47,8 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -62,13 +64,13 @@ public class MuSigOfferListItem {
     private final String quoteCurrencyCode;
     private final String baseAmountAsString;
     private final String quoteAmountAsString;
-    private final String paymentMethodTooltip;
-    private final String paymentMethod;
+    private final String fiatPaymentMethodsAsString;
     private final String deposit;
     private final String maker;
     private final Market market;
     private final String takeOfferButtonText;
     private final Direction direction;
+    private final List<FiatPaymentMethod> fiatPaymentMethods;
 
     private double priceSpecAsPercent = 0;
     private String formattedPercentagePrice = Res.get("data.na");
@@ -100,11 +102,11 @@ public class MuSigOfferListItem {
         direction = offer.getDirection();
 
         // ImageUtil.getImageViewById(fiatPaymentMethod.getName());
-        paymentMethodTooltip = Joiner.on(", ")
+        fiatPaymentMethodsAsString = Joiner.on("\n")
                 .join(PaymentMethodSpecUtil.getPaymentMethods(offer.getQuoteSidePaymentMethodSpecs()).stream()
                         .map(PaymentMethod::getDisplayString)
                         .collect(Collectors.toList()));
-        paymentMethod = StringUtils.truncate(paymentMethodTooltip, 30);
+        fiatPaymentMethods = retrieveAndSortFiatPaymentMethods();
         deposit = "15%";
         maker = userProfileService.findUserProfile(offer.getMakersUserProfileId())
                 .map(UserProfile::getUserName)
@@ -149,5 +151,13 @@ public class MuSigOfferListItem {
 
                     priceAsLong = PriceUtil.findQuote(marketPriceService, priceSpec, offer.getMarket()).map(PriceQuote::getValue).orElse(0L);
                 });
+    }
+
+    private List<FiatPaymentMethod> retrieveAndSortFiatPaymentMethods() {
+        List<FiatPaymentMethod> paymentMethods =
+                PaymentMethodSpecUtil.getPaymentMethods(offer.getQuoteSidePaymentMethodSpecs());
+        paymentMethods.sort(Comparator.comparing(FiatPaymentMethod::isCustomPaymentMethod)
+                .thenComparing(FiatPaymentMethod::getDisplayString));
+        return paymentMethods;
     }
 }

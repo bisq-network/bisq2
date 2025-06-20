@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.offerbook;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.utils.ImageUtil;
@@ -31,6 +32,7 @@ import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.RichTableView;
+import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import javafx.beans.binding.Bindings;
@@ -296,10 +298,11 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 .build());
 
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+                .left()
                 .title(Res.get("muSig.offerbook.table.header.paymentMethod"))
-                .comparator(Comparator.comparing(MuSigOfferListItem::getPaymentMethod))
-                .valueSupplier(MuSigOfferListItem::getPaymentMethod)
-                .tooltipSupplier(MuSigOfferListItem::getPaymentMethodTooltip)
+                .setCellFactory(getPaymentCellFactory())
+                .minWidth(105)
+                .comparator(Comparator.comparing(MuSigOfferListItem::getFiatPaymentMethodsAsString))
                 .build());
 
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
@@ -550,6 +553,40 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 takeOfferButton.getStyleClass().remove("buy-button");
                 takeOfferButton.getStyleClass().remove("sell-button");
                 takeOfferButton.getStyleClass().remove("white-transparent-outlined-button");
+            }
+        };
+    }
+
+    private Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>,
+            TableCell<MuSigOfferListItem, MuSigOfferListItem>> getPaymentCellFactory() {
+        return column -> new TableCell<>() {
+            private final HBox hbox = new HBox(5);
+            private final BisqTooltip tooltip = new BisqTooltip();
+
+            {
+                hbox.setAlignment(Pos.CENTER_LEFT);
+            }
+
+            @Override
+            protected void updateItem(MuSigOfferListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    hbox.getChildren().clear();
+                    for (FiatPaymentMethod fiatPaymentMethod : item.getFiatPaymentMethods()) {
+                        Node icon = !fiatPaymentMethod.isCustomPaymentMethod()
+                                ? ImageUtil.getImageViewById(fiatPaymentMethod.getName())
+                                : BisqEasyViewUtils.getCustomPaymentMethodIcon(fiatPaymentMethod.getDisplayString());
+                        hbox.getChildren().add(icon);
+                    }
+                    tooltip.setText(item.getFiatPaymentMethodsAsString());
+                    Tooltip.install(hbox, tooltip);
+                    setGraphic(hbox);
+                } else {
+                    Tooltip.uninstall(hbox, tooltip);
+                    hbox.getChildren().clear();
+                    setGraphic(null);
+                }
             }
         };
     }
