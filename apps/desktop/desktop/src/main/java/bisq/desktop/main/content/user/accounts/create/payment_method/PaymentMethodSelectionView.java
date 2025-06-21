@@ -389,7 +389,7 @@ public class PaymentMethodSelectionView extends View<VBox, PaymentMethodSelectio
 
             chargebackRiskEnum = getChargebackRiskEnum(paymentMethod);
             chargebackRisk = formatChargebackRisk(chargebackRiskEnum);
-            chargebackRiskLevel = chargebackRiskEnum.getNumericLevel();
+            chargebackRiskLevel = chargebackRiskEnum.ordinal();
         }
 
         private List<String> getCountryCodes(PaymentMethod<?> method) {
