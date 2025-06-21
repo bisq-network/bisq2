@@ -367,30 +367,29 @@ public class AmountSelectionController implements Controller {
             minQuoteSideAmountInput.setTextInputMaxCharCount(RANGE_INPUT_TEXT_MAX_LENGTH);
             applyTextInputPrefWidth();
             deselectAll();
-            UIScheduler.run(maxOrFixedQuoteSideAmountInput::requestFocus).after(100);
+            UIScheduler.run(this::requestFocusForAmountInput).after(150);
         });
 
-        areBaseAndQuoteCurrenciesInvertedPin = EasyBind.subscribe(model.getAreBaseAndQuoteCurrenciesInverted(),
-                areBaseAndQuoteCurrenciesInverted -> updateShouldShowAmounts());
+        areBaseAndQuoteCurrenciesInvertedPin = EasyBind.subscribe(model.getAreBaseAndQuoteCurrenciesInverted(), areBaseAndQuoteCurrenciesInverted -> {
+            updateShouldShowAmounts();
+            applyInitialRangeValues();
+            UIScheduler.run(this::requestFocusForAmountInput).after(150);
+        });
 
         model.getMaxOrFixedAmountSliderValue().addListener(maxOrFixedSliderListener);
         model.getMinAmountSliderValue().addListener(minSliderListener);
 
         UIScheduler.run(() -> {
-            if (isUsingInvertedBaseAndQuoteCurrencies()) {
-                invertedMaxOrFixedBaseSideAmountInput.requestFocus();
-            } else {
-                maxOrFixedQuoteSideAmountInput.requestFocus();
-            }
+            requestFocusForAmountInput();
 
             maxOrFixedQuoteSideAmountInputFocusPin = EasyBind.subscribe(maxOrFixedQuoteSideAmountInput.focusedProperty(),
-                    focus -> model.getShouldFocusInputTextField().set(minQuoteSideAmountInput.focusedProperty().get() || focus));
+                    focus -> model.getShouldFocusInputTextField().set(shouldFocusAmountComponent()));
             minQuoteSideAmountInputFocusPin = EasyBind.subscribe(minQuoteSideAmountInput.focusedProperty(),
-                    focus -> model.getShouldFocusInputTextField().set(maxOrFixedQuoteSideAmountInput.focusedProperty().get() || focus));
+                    focus -> model.getShouldFocusInputTextField().set(shouldFocusAmountComponent()));
             invertedMaxOrFixedBaseSideAmountInputFocusPin = EasyBind.subscribe(invertedMaxOrFixedBaseSideAmountInput.focusedProperty(),
-                    focus -> model.getShouldFocusInputTextField().set(invertedMinBaseSideAmountInput.focusedProperty().get() || focus));
+                    focus -> model.getShouldFocusInputTextField().set(shouldFocusAmountComponent()));
             invertedMinBaseSideAmountInputFocusPin = EasyBind.subscribe(invertedMinBaseSideAmountInput.focusedProperty(),
-                    focus -> model.getShouldFocusInputTextField().set(invertedMaxOrFixedBaseSideAmountInput.focusedProperty().get() || focus));
+                    focus -> model.getShouldFocusInputTextField().set(shouldFocusAmountComponent()));
 
             maxOrFixedQuoteSideAmountInputLengthPin = EasyBind.subscribe(maxOrFixedQuoteSideAmountInput.lengthProperty(), length -> applyNewStyles());
             minQuoteSideAmountInputLengthPin = EasyBind.subscribe(minQuoteSideAmountInput.lengthProperty(), length -> applyNewStyles());
@@ -479,6 +478,21 @@ public class AmountSelectionController implements Controller {
         return isUsingInvertedBaseAndQuoteCurrencies()
                 ? getCount(invertedMinBaseSideAmountInput, invertedMaxOrFixedBaseSideAmountInput)
                 : getCount(minQuoteSideAmountInput, maxOrFixedQuoteSideAmountInput);
+    }
+
+    private boolean shouldFocusAmountComponent() {
+        return maxOrFixedQuoteSideAmountInput.focusedProperty().get()
+                || minQuoteSideAmountInput.focusedProperty().get()
+                || invertedMinBaseSideAmountInput.focusedProperty().get()
+                || invertedMaxOrFixedBaseSideAmountInput.focusedProperty().get();
+    }
+
+    private void requestFocusForAmountInput() {
+        if (isUsingInvertedBaseAndQuoteCurrencies()) {
+            invertedMaxOrFixedBaseSideAmountInput.requestFocus();
+        } else {
+            maxOrFixedQuoteSideAmountInput.requestFocus();
+        }
     }
 
     private int getCount(BigNumberAmountInputBox minSideAmountInput, BigNumberAmountInputBox maxOrFixedSideAmountInput) {
@@ -722,7 +736,6 @@ public class AmountSelectionController implements Controller {
                 model.getShouldShowInvertedMinAmounts().set(isRangeAmountEnabled && areCurrenciesInverted);
             }
         }
-        applyInitialRangeValues();
     }
 
     private void updateMaxOrFixedBaseSideAmount(Monetary amount, AmountNumberBox amountNumberBox) {
