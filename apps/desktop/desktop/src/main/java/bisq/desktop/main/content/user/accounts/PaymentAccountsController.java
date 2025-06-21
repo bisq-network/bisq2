@@ -133,12 +133,14 @@ public class PaymentAccountsController implements Controller {
     }
 
     private void updateButtonStates() {
-        model.setSaveButtonDisabled(model.getSelectedAccount().isEmpty()
-                || model.getAccountData().isEmpty()
-                || ((UserDefinedFiatAccount) model.getSelectedAccount().get()).getAccountPayload().getAccountData()
-                .equals(model.getAccountData().get()));
-
-        model.setDeleteButtonDisabled(model.getSelectedAccount().isEmpty());
+        //todo
+        if (model.getSelectedAccount().isPresent() && model.getSelectedAccount().get() instanceof UserDefinedFiatAccount) {
+            model.setSaveButtonDisabled(model.getSelectedAccount().isEmpty()
+                    || model.getAccountData().isEmpty()
+                    || ((UserDefinedFiatAccount) model.getSelectedAccount().get()).getAccountPayload().getAccountData()
+                    .equals(model.getAccountData().get()));
+            model.setDeleteButtonDisabled(model.getSelectedAccount().isEmpty());
+        }
     }
 
     private void maybeSelectFirstAccount() {
