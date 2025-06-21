@@ -186,7 +186,7 @@ public class MaterialTextField extends Pane {
         if (animate) {
             selectionLine.setPrefWidth(0);
 
-            Platform.runLater(() -> {
+            UIThread.run(() -> {
                 Transitions.animatePrefWidth(selectionLine, getWidth());
                 UIThread.runOnNextRenderFrame(() -> {
                     if (textInputControl.isFocused()) {

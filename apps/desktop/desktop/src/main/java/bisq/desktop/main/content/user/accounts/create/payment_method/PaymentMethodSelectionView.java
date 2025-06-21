@@ -22,6 +22,7 @@ import bisq.account.payment_method.FiatPaymentMethodChargebackRisk;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.locale.Country;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -31,7 +32,6 @@ import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.i18n.Res;
-import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -253,7 +253,7 @@ public class PaymentMethodSelectionView extends View<VBox, PaymentMethodSelectio
                     double availableWidth = getTableColumn().getWidth();
                     label.setMaxWidth(availableWidth);
 
-                    Platform.runLater(() -> {
+                    UIThread.run(() -> {
                         Double cachedWidth = textWidthCache.get(fullText);
                         if (cachedWidth == null) {
                             Text textNode = new Text(fullText);

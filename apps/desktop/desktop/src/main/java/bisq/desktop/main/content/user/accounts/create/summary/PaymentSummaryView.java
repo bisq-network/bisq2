@@ -22,6 +22,7 @@ import bisq.account.payment_method.PaymentMethod;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
 import bisq.common.util.TextFormatterUtils;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -339,7 +340,7 @@ public class PaymentSummaryView extends View<VBox, PaymentSummaryModel, PaymentS
         label.setMinWidth(50);
         label.setPrefWidth(VALUE_COLUMN_MAX_WIDTH);
 
-        Platform.runLater(() -> {
+        UIThread.run(() -> {
             Text textNode = new Text(cleanValue);
             textNode.setFont(label.getFont());
             if (textNode.getLayoutBounds().getWidth() > VALUE_COLUMN_MAX_WIDTH) {
@@ -359,7 +360,7 @@ public class PaymentSummaryView extends View<VBox, PaymentSummaryModel, PaymentS
 
         addBottomSeparator();
 
-        Platform.runLater(() -> {
+        UIThread.run(() -> {
             contentBox.applyCss();
             contentBox.autosize();
 
@@ -616,7 +617,7 @@ public class PaymentSummaryView extends View<VBox, PaymentSummaryModel, PaymentS
             accountNameContainer.applyCss();
             accountNameContainer.layout();
 
-            Platform.runLater(() -> {
+            UIThread.run(() -> {
                 accountNameField.requestFocus();
                 accountNameField.showSelectionLine(true);
             });
