@@ -160,16 +160,18 @@ public class MaterialTextField extends Pane {
         update();
     }
 
-    public void setCompactMode(double height) {
-        compactMode = height > 0;
-        compactHeight = height;
 
-        if (compactMode) {
-            applyCompactModeLayout(height);
-        } else {
-            doLayout();
-            update();
-        }
+    public void useCompactModeWithHeight(double compactHeight) {
+        this.compactMode = true;
+        this.compactHeight = compactHeight;
+        applyCompactModeLayout(compactHeight);
+    }
+
+    public void useRegularMode() {
+        compactMode = false;
+        compactHeight = 0;
+        doLayout();
+        update();
     }
 
     public void showSelectionLine(boolean animate) {

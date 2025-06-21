@@ -404,7 +404,7 @@ public class PaymentSummaryView extends View<VBox, PaymentSummaryModel, PaymentS
     private MaterialTextField createAccountNameField() {
         MaterialTextField field = new MaterialTextField();
         field.setPrefWidth(300);
-        field.setCompactMode(30);
+        field.useCompactModeWithHeight(30);
 
         Predicate<String> validator = TextFormatterUtils.safeWithLength(MAX_ACCOUNT_NAME_LENGTH);
 
