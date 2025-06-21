@@ -10,5 +10,6 @@ dependencies {
     implementation(libs.bouncycastle.pg)
     implementation(libs.typesafe.config)
     implementation(libs.bundles.jackson)
+    implementation(libs.bundles.i2p)
     testImplementation(libs.apache.commons.lang)
 }
