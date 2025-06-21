@@ -261,7 +261,7 @@
  ******************************************************************************/
 
 .account-summary-section-header {
-    -fx-font-family: 'IBM Plex Sans';
+    -fx-font-family: "IBM Plex Sans";
     -fx-font-size: 14px;
     -fx-text-fill: -bisq-mid-grey-20;
 }
@@ -294,25 +294,25 @@
 }
 
 .account-summary-title {
-    -fx-font-family: 'IBM Plex Sans Light';
+    -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 22px;
     -fx-text-fill: -fx-light-text-color;
 }
 
 .account-summary-subtitle {
-    -fx-font-family: 'IBM Plex Sans';
+    -fx-font-family: "IBM Plex Sans";
     -fx-font-size: 18px;
     -fx-text-fill: -fx-light-text-color;
 }
 
 .account-summary-label-key {
-    -fx-font-family: 'IBM Plex Sans Light';
+    -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 14px;
     -fx-text-fill: -fx-mid-text-color;
 }
 
 .account-summary-label-value {
-    -fx-font-family: 'IBM Plex Sans';
+    -fx-font-family: "IBM Plex Sans";
     -fx-font-size: 14px;
     -fx-text-fill: -fx-light-text-color;
     -fx-wrap-text: true;
