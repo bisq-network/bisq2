@@ -20,15 +20,12 @@ package bisq.desktop.main.content.user.accounts.create;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.navigation.NavigationTarget;
-import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -40,9 +37,7 @@ import java.util.Optional;
 @Getter
 public class CreatePaymentAccountModel extends NavigationModel {
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
-    private final StringProperty backButtonText = new SimpleStringProperty(Res.get("action.back"));
     private final BooleanProperty closeButtonVisible = new SimpleBooleanProperty();
-    private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty createAccountButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty();
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
@@ -98,9 +93,7 @@ public class CreatePaymentAccountModel extends NavigationModel {
         optionsData = Optional.empty();
 
         currentIndex.set(0);
-        backButtonText.set(Res.get("action.back"));
         closeButtonVisible.set(false);
-        nextButtonVisible.set(true);
         createAccountButtonVisible.set(false);
         backButtonVisible.set(false);
         selectedChildTarget.set(null);

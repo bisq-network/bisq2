@@ -39,7 +39,6 @@ import bisq.desktop.main.content.user.accounts.create.payment_method.PaymentMeth
 import bisq.desktop.main.content.user.accounts.create.summary.PaymentSummaryController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
-import bisq.i18n.Res;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
 import lombok.Getter;
@@ -63,10 +62,7 @@ public class CreatePaymentAccountController extends NavigationController {
     private final PaymentDataEntryController accountDataController;
     private final PaymentOptionsController optionsController;
     private final PaymentSummaryController summaryController;
-
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
-
-
     private Subscription selectedPaymentMethodPin, accountDataPin;
 
     public CreatePaymentAccountController(ServiceProvider serviceProvider) {
@@ -99,8 +95,6 @@ public class CreatePaymentAccountController extends NavigationController {
 
         NavigationTarget firstTarget = model.getChildTargets().getFirst();
         model.getSelectedChildTarget().set(firstTarget);
-        model.getBackButtonText().set(Res.get("action.back"));
-        model.getNextButtonVisible().set(true);
 
         setupReactiveDataFlow();
     }
@@ -126,7 +120,6 @@ public class CreatePaymentAccountController extends NavigationController {
 
         boolean isSummary = navigationTarget == NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY;
         model.getCreateAccountButtonVisible().set(isSummary);
-        model.getNextButtonVisible().set(!isSummary);
         model.getBackButtonVisible().set(model.getCurrentIndex().get() > 0);
     }
 
@@ -167,20 +160,12 @@ public class CreatePaymentAccountController extends NavigationController {
     }
 
     void onClose() {
-        if (accountDataController != null) {
-            accountDataController.cleanup();
-        }
-        if (paymentMethodController != null) {
-            paymentMethodController.cleanup();
-        }
-        if (optionsController != null) {
-            optionsController.cleanup();
-        }
-        if (summaryController != null) {
-            summaryController.cleanup();
-        }
+        paymentMethodController.cleanup();
+        accountDataController.cleanup();
+        optionsController.cleanup();
+        summaryController.cleanup();
 
-        resetModel();
+        reset();
 
         OverlayController.hide();
     }
@@ -355,14 +340,8 @@ public class CreatePaymentAccountController extends NavigationController {
         return Optional.of(new F2FAccount(accountName, payload, countryOpt.get()));
     }
 
-    private void resetModel() {
-        model.setPaymentMethod(Optional.empty());
-        model.setAccountData(Optional.empty());
-        model.setOptionsData(Optional.empty());
-        model.setOptionsVisible(false);
-        model.setAnimateRightOut(true);
-
+    private void reset() {
         resetSelectedChildTarget();
-        model.getChildTargets().clear();
+        model.reset();
     }
 }

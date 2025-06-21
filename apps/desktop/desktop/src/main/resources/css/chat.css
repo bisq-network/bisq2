@@ -319,10 +319,6 @@
     -fx-text-fill: grey;
 }
 
-#onboarding-top-panel {
-    -fx-background-color: -bisq-dark-grey-20;
-}
-
 .notifications-settings-menu .dropdown-menu-popup {
     -fx-padding: 18 8 8 8 !important;
 }

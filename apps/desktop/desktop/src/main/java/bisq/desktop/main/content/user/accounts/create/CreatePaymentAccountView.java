@@ -29,6 +29,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
+import javafx.animation.FadeTransition;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -40,12 +41,9 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 public class CreatePaymentAccountView extends NavigationView<VBox, CreatePaymentAccountModel, CreatePaymentAccountController> {
@@ -56,21 +54,15 @@ public class CreatePaymentAccountView extends NavigationView<VBox, CreatePayment
     private static final double CONTENT_HEIGHT = POPUP_HEIGHT - TOP_PANE_HEIGHT - BUTTON_HEIGHT - BUTTON_BOTTOM;
     private static final double OPACITY = 0.35;
 
-    private static final long PROGRESS_ANIMATION_DELAY = ManagedDuration.getHalfOfDefaultDurationMillis();
-    private static final long PROGRESS_ANIMATION_DURATION = ManagedDuration.getHalfOfDefaultDurationMillis();
-
-
     private final List<Label> progressLabelList = new ArrayList<>();
-    private final HBox progressBox;
-
     private final Button nextButton, backButton, closeButton, createAccountButton;
-
     private final VBox content;
-
     private final ChangeListener<Number> currentIndexListener;
     private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
-
-    private Subscription  createAccountButtonVisiblePin;
+    private final Region optionsHLine;
+    private final Label options;
+    private UIScheduler progressLabelAnimationScheduler;
+    private FadeTransition progressLabelAnimation;
 
     public CreatePaymentAccountView(CreatePaymentAccountModel model, CreatePaymentAccountController controller) {
         super(new VBox(), model, controller);
@@ -79,17 +71,22 @@ public class CreatePaymentAccountView extends NavigationView<VBox, CreatePayment
         root.setPrefHeight(POPUP_HEIGHT);
 
         Label paymentMethod = createAndGetProgressLabel(Res.get("user.paymentAccounts.createAccount.progress.paymentMethod"));
-        progressLabelList.addFirst(paymentMethod);
+        progressLabelList.add(paymentMethod);
 
         Label accountData = createAndGetProgressLabel(Res.get("user.paymentAccounts.createAccount.progress.accountData"));
-        progressLabelList.addFirst(accountData);
+        progressLabelList.add(accountData);
+
+        options = createAndGetProgressLabel(Res.get("user.paymentAccounts.createAccount.progress.options"));
+        progressLabelList.add(options);
+        optionsHLine = getHLine();
 
         Label summary = createAndGetProgressLabel(Res.get("user.paymentAccounts.createAccount.progress.summary"));
         progressLabelList.add(summary);
 
-        progressBox = new HBox(10,
+        HBox progressBox = new HBox(10,
                 paymentMethod, getHLine(),
                 accountData, getHLine(),
+                options, optionsHLine,
                 summary);
         progressBox.setAlignment(Pos.CENTER);
         progressBox.setMinHeight(TOP_PANE_HEIGHT);
@@ -97,28 +94,29 @@ public class CreatePaymentAccountView extends NavigationView<VBox, CreatePayment
         progressBox.setPadding(new Insets(0, 20, 0, 50));
 
         closeButton = BisqIconButton.createIconButton("close");
+        closeButton.setFocusTraversable(false);
 
-        HBox headerBox = new HBox();
-        headerBox.setAlignment(Pos.CENTER);
-        headerBox.setStyle("-fx-background-color: -bisq-dark-grey-20");
-        headerBox.setMinHeight(TOP_PANE_HEIGHT);
-        headerBox.setMaxHeight(TOP_PANE_HEIGHT);
-        headerBox.setPadding(new Insets(0, 20, 0, 50));
-        headerBox.getChildren().addAll(
+        HBox progressItemsBox = new HBox();
+        progressItemsBox.setAlignment(Pos.CENTER);
+        progressItemsBox.setId("wizard-progress-box");
+        progressItemsBox.setMinHeight(TOP_PANE_HEIGHT);
+        progressItemsBox.setMaxHeight(TOP_PANE_HEIGHT);
+        progressItemsBox.setPadding(new Insets(0, 20, 0, 50));
+        progressItemsBox.getChildren().addAll(
                 Spacer.fillHBox(),
                 progressBox,
                 Spacer.fillHBox(),
                 closeButton
         );
 
+        backButton = new Button(Res.get("action.back"));
+        backButton.setFocusTraversable(false);
+
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
 
         createAccountButton = new Button(Res.get("user.paymentAccounts.createAccount.createAccount"));
         createAccountButton.setDefaultButton(true);
-
-        backButton = new Button(Res.get("action.back"));
-        backButton.setFocusTraversable(false);
 
         HBox buttons = new HBox(10, backButton, nextButton, createAccountButton);
         buttons.setAlignment(Pos.CENTER);
@@ -128,75 +126,47 @@ public class CreatePaymentAccountView extends NavigationView<VBox, CreatePayment
         content.setMaxHeight(CONTENT_HEIGHT);
         content.setAlignment(Pos.CENTER);
 
-        viewChangeListener =
-                (observable, oldValue, newValue) ->
-                        Optional.ofNullable(newValue).ifPresentOrElse(
-                                view -> {
-                                    Region childRoot = view.getRoot();
-                                    childRoot.setMinHeight(CONTENT_HEIGHT);
-                                    childRoot.setMaxHeight(CONTENT_HEIGHT);
-                                    content.getChildren().setAll(childRoot);
-
-                                    Optional.ofNullable(oldValue).ifPresentOrElse(
-                                            oldView -> {
-                                                if (model.isAnimateRightOut()) {
-                                                    Transitions.transitRightOut(childRoot, oldView.getRoot());
-                                                } else {
-                                                    Transitions.transitLeftOut(childRoot, oldView.getRoot());
-                                                }
-                                            },
-                                            () -> Transitions.fadeIn(childRoot)
-                                    );
-                                },
-                                () -> content.getChildren().clear()
-                        );
-
-
-        currentIndexListener = (observable, oldValue, newValue) ->
-                applyProgress(newValue.intValue(), true);
-
         VBox.setMargin(buttons, new Insets(0, 0, BUTTON_BOTTOM, 0));
         VBox.setMargin(content, new Insets(0, 40, 0, 40));
-        root.getChildren().addAll(headerBox, content, Spacer.fillVBox(), buttons);
+        root.getChildren().addAll(progressItemsBox, content, Spacer.fillVBox(), buttons);
+
+        viewChangeListener = (observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                Region childRoot = newValue.getRoot();
+                childRoot.setMinHeight(CONTENT_HEIGHT);
+                childRoot.setMaxHeight(CONTENT_HEIGHT);
+                content.getChildren().setAll(childRoot);
+                if (oldValue != null) {
+                    if (model.isAnimateRightOut()) {
+                        Transitions.transitRightOut(childRoot, oldValue.getRoot());
+                    } else {
+                        Transitions.transitLeftOut(childRoot, oldValue.getRoot());
+                    }
+                } else {
+                    Transitions.fadeIn(childRoot);
+                }
+            } else {
+                content.getChildren().clear();
+            }
+        };
+
+        currentIndexListener = (observable, oldValue, newValue) -> applyProgress(newValue.intValue(), true);
     }
 
     @Override
     protected void onViewAttached() {
-        buildProgressBar();
-        setupBindings();
-        setupEventHandlers();
-        applyProgress(model.getCurrentIndex().get(), false);
-    }
-
-    @Override
-    protected void onViewDetached() {
-        cleanupBindings();
-        cleanupEventHandlers();
-    }
-
-    private void buildProgressBar() {
-        if (model.isOptionsVisible()) {
-            Label options = createAndGetProgressLabel(Res.get("user.paymentAccounts.createAccount.progress.options"));
-            progressLabelList.addFirst(options);
-            progressBox.getChildren().addFirst(getHLine());
-            progressBox.getChildren().addFirst(options);
+        boolean optionsVisible = model.isOptionsVisible();
+        options.setVisible(optionsVisible);
+        options.setManaged(optionsVisible);
+        optionsHLine.setVisible(optionsVisible);
+        optionsHLine.setManaged(optionsVisible);
+        if (!optionsVisible) {
+            progressLabelList.remove(options);
         }
-    }
 
-    private void setupBindings() {
-        setupButtonBindings();
+        nextButton.visibleProperty().bind(model.getCreateAccountButtonVisible().not());
+        nextButton.managedProperty().bind(model.getCreateAccountButtonVisible().not());
 
-        setupCreateAccountButtonBinding();
-
-        model.getCurrentIndex().addListener(currentIndexListener);
-        model.getView().addListener(viewChangeListener);
-    }
-
-    private void setupButtonBindings() {
-        nextButton.visibleProperty().bind(model.getNextButtonVisible());
-        nextButton.managedProperty().bind(model.getNextButtonVisible());
-
-        backButton.textProperty().bind(model.getBackButtonText());
         backButton.visibleProperty().bind(model.getBackButtonVisible());
         backButton.managedProperty().bind(model.getBackButtonVisible());
 
@@ -204,40 +174,28 @@ public class CreatePaymentAccountView extends NavigationView<VBox, CreatePayment
 
         createAccountButton.visibleProperty().bind(model.getCreateAccountButtonVisible());
         createAccountButton.managedProperty().bind(model.getCreateAccountButtonVisible());
-    }
 
-    private void setupCreateAccountButtonBinding() {
-        createAccountButtonVisiblePin =
-                EasyBind.subscribe(model.getCreateAccountButtonVisible(), this::handleCreateButtonVisibilityChange);
-    }
+        model.getCurrentIndex().addListener(currentIndexListener);
+        model.getView().addListener(viewChangeListener);
 
-    private void handleCreateButtonVisibilityChange(boolean createButtonVisible) {
-        if (createButtonVisible) {
-            backButton.prefWidthProperty().bind(createAccountButton.widthProperty());
-        } else {
-            backButton.prefWidthProperty().unbind();
-            backButton.setPrefWidth(Region.USE_COMPUTED_SIZE);
-        }
-    }
-
-    private void setupEventHandlers() {
         nextButton.setOnAction(e -> controller.onNext());
         backButton.setOnAction(evt -> controller.onBack());
         closeButton.setOnAction(e -> controller.onClose());
         createAccountButton.setOnAction(e -> controller.onCreateAccount());
 
         root.setOnKeyPressed(controller::onKeyPressed);
+
+        applyProgress(model.getCurrentIndex().get(), false);
     }
 
-    private void cleanupBindings() {
+    @Override
+    protected void onViewDetached() {
         nextButton.textProperty().unbind();
         nextButton.visibleProperty().unbind();
         nextButton.managedProperty().unbind();
 
-        backButton.textProperty().unbind();
         backButton.visibleProperty().unbind();
         backButton.managedProperty().unbind();
-        backButton.prefWidthProperty().unbind();
 
         closeButton.visibleProperty().unbind();
 
@@ -247,18 +205,20 @@ public class CreatePaymentAccountView extends NavigationView<VBox, CreatePayment
         model.getCurrentIndex().removeListener(currentIndexListener);
         model.getView().removeListener(viewChangeListener);
 
-        Optional.ofNullable(createAccountButtonVisiblePin).ifPresent(pin -> {
-            pin.unsubscribe();
-            createAccountButtonVisiblePin = null;
-        });
-    }
-
-    private void cleanupEventHandlers() {
         nextButton.setOnAction(null);
         backButton.setOnAction(null);
         closeButton.setOnAction(null);
         createAccountButton.setOnAction(null);
         root.setOnKeyPressed(null);
+
+        if (progressLabelAnimationScheduler != null) {
+            progressLabelAnimationScheduler.stop();
+            progressLabelAnimationScheduler = null;
+        }
+        if (progressLabelAnimation != null) {
+            progressLabelAnimation.stop();
+            progressLabelAnimation = null;
+        }
     }
 
     private Region getHLine() {
@@ -277,21 +237,23 @@ public class CreatePaymentAccountView extends NavigationView<VBox, CreatePayment
     }
 
     private void applyProgress(int progressIndex, boolean delay) {
-        if (progressIndex < 0 || progressIndex >= progressLabelList.size()) {
-            log.warn("Invalid progress index: {} for list size: {}", progressIndex, progressLabelList.size());
-            return;
-        }
-        progressLabelList.forEach(label -> label.setOpacity(OPACITY));
+        if (progressIndex < progressLabelList.size()) {
+            progressLabelList.forEach(label -> label.setOpacity(OPACITY));
 
-        Optional.of(progressLabelList.get(progressIndex)).ifPresent(currentLabel -> {
-            if (delay) {
-                UIScheduler.run(() ->
-                                Transitions.fade(currentLabel, OPACITY, 1,
-                                        PROGRESS_ANIMATION_DURATION))
-                        .after(PROGRESS_ANIMATION_DELAY);
-            } else {
-                currentLabel.setOpacity(1);
+            if (progressLabelAnimation != null) {
+                progressLabelAnimation.stop();
+                progressLabelAnimation.getNode().setOpacity(OPACITY);
             }
-        });
+            Label label = progressLabelList.get(progressIndex);
+            if (delay) {
+                if (progressLabelAnimationScheduler != null) {
+                    progressLabelAnimationScheduler.stop();
+                }
+                progressLabelAnimationScheduler = UIScheduler.run(() -> progressLabelAnimation = Transitions.fade(label, OPACITY, 1, ManagedDuration.getHalfOfDefaultDurationMillis()))
+                        .after(ManagedDuration.getHalfOfDefaultDurationMillis());
+            } else {
+                label.setOpacity(1);
+            }
+        }
     }
 }

@@ -74,12 +74,14 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
         Triple<HBox, Button, List<Label>> triple = getProgressItems();
         HBox progressItemsBox = triple.getFirst();
         closeButton = triple.getSecond();
+        closeButton.setFocusTraversable(false);
         progressLabelList = triple.getThird();
 
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
 
         backButton = new Button(Res.get("action.back"));
+        backButton.setFocusTraversable(false);
         HBox buttons = new HBox(10, backButton, nextButton);
         buttons.setAlignment(Pos.CENTER);
 
@@ -132,10 +134,8 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
         backButton.visibleProperty().bind(model.getBackButtonVisible());
         backButton.managedProperty().bind(model.getBackButtonVisible());
         backButton.defaultButtonProperty().bind(model.getIsBackButtonHighlighted());
-        backButton.setFocusTraversable(false);
 
         closeButton.visibleProperty().bind(model.getCloseButtonVisible());
-        closeButton.setFocusTraversable(false);
 
         model.getCurrentIndex().addListener(currentIndexListener);
         model.getView().addListener(viewChangeListener);
@@ -192,7 +192,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
 
         HBox hBox = new HBox(10);
         hBox.setAlignment(Pos.CENTER);
-        hBox.setId("onboarding-top-panel");
+        hBox.setId("wizard-progress-box");
         hBox.setMinHeight(TOP_PANE_HEIGHT);
         hBox.setMaxHeight(TOP_PANE_HEIGHT);
         hBox.setPadding(new Insets(0, 20, 0, 50));
