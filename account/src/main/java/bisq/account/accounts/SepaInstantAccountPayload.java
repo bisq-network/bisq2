@@ -19,6 +19,7 @@ package bisq.account.accounts;
 
 import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.common.validation.PaymentAccountValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -72,8 +73,8 @@ public final class SepaInstantAccountPayload extends CountryBasedAccountPayload 
     public void verify() {
         super.verify();
         NetworkDataValidation.validateRequiredText(holderName, 100);
-        NetworkDataValidation.validateIbanFormat(iban);
-        NetworkDataValidation.validateBicFormat(bic);
+        PaymentAccountValidation.validateIbanFormat(iban);
+        PaymentAccountValidation.validateBicFormat(bic);
         acceptedCountryCodes.forEach(NetworkDataValidation::validateRequiredCode);
     }
 

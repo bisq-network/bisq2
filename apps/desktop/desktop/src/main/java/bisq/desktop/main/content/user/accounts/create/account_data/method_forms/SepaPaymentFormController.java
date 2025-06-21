@@ -21,6 +21,7 @@ import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.locale.Country;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.desktop.ServiceProvider;
 import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;
@@ -121,7 +122,7 @@ public class SepaPaymentFormController extends PaymentFormController {
                 .filter(StringUtils::isNotEmpty)
                 .map(i -> {
                     try {
-                        NetworkDataValidation.validateSepaIbanFormat(i, sepaCountryCodes);
+                        PaymentAccountValidation.validateSepaIbanFormat(i, sepaCountryCodes);
                         return true;
                     } catch (IllegalArgumentException e) {
                         return false;
@@ -135,7 +136,7 @@ public class SepaPaymentFormController extends PaymentFormController {
                 .filter(b -> !b.trim().isEmpty())
                 .map(b -> {
                     try {
-                        NetworkDataValidation.validateBicFormat(b);
+                        PaymentAccountValidation.validateBicFormat(b);
                         return true;
                     } catch (IllegalArgumentException e) {
                         log.debug("BIC validation failed: {}", e.getMessage());
@@ -221,13 +222,13 @@ public class SepaPaymentFormController extends PaymentFormController {
         String iban = ibanOpt.get();
         if (!validateIban(iban)) {
             if (iban.length() < 15 || iban.length() > 34) {
-                return Optional.of(Res.get("validation.iban.invalidLength"));
+                return Optional.of(Res.get("paymentMethod.validation.iban.invalidLength"));
             }
             if (!Character.isLetter(iban.charAt(0)) || !Character.isLetter(iban.charAt(1))) {
-                return Optional.of(Res.get("validation.iban.invalidCountryCode"));
+                return Optional.of(Res.get("paymentMethod.validation.iban.invalidCountryCode"));
             }
             if (!Character.isDigit(iban.charAt(2)) || !Character.isDigit(iban.charAt(3))) {
-                return Optional.of(Res.get("validation.iban.checkSumNotNumeric"));
+                return Optional.of(Res.get("paymentMethod.validation.iban.checkSumNotNumeric"));
             }
 
             boolean hasInvalidChars = false;
@@ -238,15 +239,15 @@ public class SepaPaymentFormController extends PaymentFormController {
                 }
             }
             if (hasInvalidChars) {
-                return Optional.of(Res.get("validation.iban.nonNumericChars"));
+                return Optional.of(Res.get("paymentMethod.validation.iban.nonNumericChars"));
             }
 
             String countryCode = iban.substring(0, 2);
             if (!sepaCountryCodes.contains(countryCode)) {
-                return Optional.of(Res.get("validation.iban.sepaNotSupported"));
+                return Optional.of(Res.get("paymentMethod.validation.iban.sepaNotSupported"));
             }
 
-            return Optional.of(Res.get("validation.iban.checkSumInvalid"));
+            return Optional.of(Res.get("paymentMethod.validation.iban.checkSumInvalid"));
         }
 
         return Optional.empty();
@@ -260,27 +261,27 @@ public class SepaPaymentFormController extends PaymentFormController {
         String bic = bicOpt.get();
         if (!validateBic(bic)) {
             if (isRevolutBic(bic)) {
-                return Optional.of(Res.get("validation.bic.sepaRevolutBic"));
+                return Optional.of(Res.get("paymentMethod.validation.bic.sepaRevolutBic"));
             }
             if (bic.length() != 8 && bic.length() != 11) {
-                return Optional.of(Res.get("validation.bic.invalidLength"));
+                return Optional.of(Res.get("paymentMethod.validation.bic.invalidLength"));
             }
             if (!bic.matches("[A-Za-z]{4}[A-Za-z]{2}[A-Za-z0-9]{2}([A-Za-z0-9]{3})?")) {
                 boolean bankCodeValid = bic.substring(0, 4).matches("[A-Z]{4}");
                 boolean countryCodeValid = bic.substring(4, 6).matches("[A-Z]{2}");
                 if (!bankCodeValid || !countryCodeValid) {
-                    return Optional.of(Res.get("validation.bic.letters"));
+                    return Optional.of(Res.get("paymentMethod.validation.bic.letters"));
                 }
                 if (bic.charAt(6) == '0' || bic.charAt(6) == '1') {
-                    return Optional.of(Res.get("validation.bic.invalidLocationCode"));
+                    return Optional.of(Res.get("paymentMethod.validation.bic.invalidLocationCode"));
                 }
                 if (bic.charAt(7) == 'O') {
-                    return Optional.of(Res.get("validation.bic.invalidLocationCode"));
+                    return Optional.of(Res.get("paymentMethod.validation.bic.invalidLocationCode"));
                 }
                 if (bic.length() == 11 && bic.charAt(8) == 'X' && (!bic.substring(8).equals("XXX"))) {
-                    return Optional.of(Res.get("validation.bic.invalidBranchCode"));
+                    return Optional.of(Res.get("paymentMethod.validation.bic.invalidBranchCode"));
                 }
-                return Optional.of(Res.get("validation.bic.invalidLength"));
+                return Optional.of(Res.get("paymentMethod.validation.bic.invalidLength"));
             }
         }
 

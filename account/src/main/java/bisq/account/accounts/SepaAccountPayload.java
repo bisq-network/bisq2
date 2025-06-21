@@ -19,6 +19,7 @@ package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.common.validation.PaymentAccountValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -55,12 +56,12 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
     public void verify() {
         super.verify();
         NetworkDataValidation.validateRequiredText(holderName, 100);
-        NetworkDataValidation.validateSepaIbanFormat(iban, FiatPaymentRailUtil.getSepaEuroCountries());
-        NetworkDataValidation.validateBicFormat(bic);
-        NetworkDataValidation.validateCountryCodes(acceptedCountryCodes,
+        PaymentAccountValidation.validateSepaIbanFormat(iban, FiatPaymentRailUtil.getSepaEuroCountries());
+        PaymentAccountValidation.validateBicFormat(bic);
+        PaymentAccountValidation.validateCountryCodes(acceptedCountryCodes,
                 FiatPaymentRailUtil.getSepaEuroCountries(),
                 "SEPA payments");
-        NetworkDataValidation.validateIbanCountryConsistency(iban, getCountryCode());
+        PaymentAccountValidation.validateIbanCountryConsistency(iban, getCountryCode());
     }
 
     @Override
