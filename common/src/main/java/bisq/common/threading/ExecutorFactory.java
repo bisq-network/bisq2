@@ -28,9 +28,9 @@ import java.util.concurrent.*;
 
 @Slf4j
 public class ExecutorFactory {
-    public static final ExecutorService WORKER_POOL = newFixedThreadPool("Worker-pool");
     public static final int DEFAULT_PRIORITY = 3;
     private static final Map<String, ThreadFactory> THREAD_FACTORY_BY_NAME = new HashMap<>();
+    public static final ExecutorService WORKER_POOL = newFixedThreadPool("Worker-pool");
 
     public static boolean shutdownAndAwaitTermination(ExecutorService executor) {
         return shutdownAndAwaitTermination(executor, 100);
