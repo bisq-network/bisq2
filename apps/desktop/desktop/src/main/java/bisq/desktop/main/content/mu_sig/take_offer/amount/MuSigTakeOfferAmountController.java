@@ -102,6 +102,8 @@ public class MuSigTakeOfferAmountController implements Controller {
 
     @Override
     public void onActivate() {
+        amountSelectionController.setAllowInvertingBaseAndQuoteCurrencies(true);
+        amountSelectionController.setBaseAsInputCurrency(true);
         applyQuoteSideMinMaxRange();
         baseSideAmountPin = EasyBind.subscribe(amountSelectionController.getMaxOrFixedBaseSideAmount(),
                 amount -> {
