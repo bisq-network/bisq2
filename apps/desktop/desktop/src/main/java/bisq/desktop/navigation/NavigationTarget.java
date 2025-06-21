@@ -198,7 +198,7 @@ public enum NavigationTarget {
     USER(CONTENT),
     USER_PROFILE(USER),
     PASSWORD(USER),
-    BISQ_EASY_PAYMENT_ACCOUNTS(USER),
+    PAYMENT_ACCOUNTS(USER),
 
 
     // NETWORK

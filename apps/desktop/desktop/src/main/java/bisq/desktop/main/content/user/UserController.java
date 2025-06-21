@@ -44,7 +44,7 @@ public class UserController extends ContentTabController<UserModel> {
         return switch (navigationTarget) {
             case USER_PROFILE -> Optional.of(new UserProfileController(serviceProvider));
             case PASSWORD -> Optional.of(new PasswordController(serviceProvider));
-            case BISQ_EASY_PAYMENT_ACCOUNTS -> Optional.of(new PaymentAccountsController(serviceProvider));
+            case PAYMENT_ACCOUNTS -> Optional.of(new PaymentAccountsController(serviceProvider));
             default -> Optional.empty();
         };
     }
