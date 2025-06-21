@@ -27,6 +27,7 @@ import bisq.common.monetary.Monetary;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -254,5 +255,32 @@ public class FiatPaymentRailUtil {
 
         long amount = (long) (eurEquivalent * multiplier * 10000);
         return Monetary.from(amount, currencyCode);
+    }
+
+    // Popularity scores based on historical snapshot of Bisq1 offers count
+    // Higher scores indicate more commonly used payment methods
+    public static Map<FiatPaymentRail, Integer> getPopularityScore() {
+        return Map.ofEntries(
+                Map.entry(FiatPaymentRail.SEPA, 10),
+                Map.entry(FiatPaymentRail.ZELLE, 9),
+                Map.entry(FiatPaymentRail.PIX, 8),
+                Map.entry(FiatPaymentRail.NATIONAL_BANK, 7),
+                Map.entry(FiatPaymentRail.REVOLUT, 6),
+                Map.entry(FiatPaymentRail.CASH_BY_MAIL, 6),
+                Map.entry(FiatPaymentRail.ACH_TRANSFER, 5),
+                Map.entry(FiatPaymentRail.STRIKE, 5),
+                Map.entry(FiatPaymentRail.INTERAC_E_TRANSFER, 4),
+                Map.entry(FiatPaymentRail.WISE, 4),
+                Map.entry(FiatPaymentRail.F2F, 3),
+                Map.entry(FiatPaymentRail.US_POSTAL_MONEY_ORDER, 3),
+                Map.entry(FiatPaymentRail.PAY_ID, 3),
+                Map.entry(FiatPaymentRail.FASTER_PAYMENTS, 3),
+                Map.entry(FiatPaymentRail.AMAZON_GIFT_CARD, 2),
+                Map.entry(FiatPaymentRail.SWIFT, 2),
+                Map.entry(FiatPaymentRail.BIZUM, 2),
+                Map.entry(FiatPaymentRail.CASH_DEPOSIT, 2),
+                Map.entry(FiatPaymentRail.UPI, 1),
+                Map.entry(FiatPaymentRail.CASH_APP, 1)
+        );
     }
 }

@@ -38,33 +38,22 @@
     -fx-padding: 0;
 }
 
-.payment-method-table-container {
-    -fx-background-color: -bisq-dark-grey-20;
-    -fx-border-width: 0 0 5px 0;
-    -fx-border-color: -bisq-dark-grey-20;
+.payment-method-table .table-row-cell:selected .table-cell {
+    -fx-background-color: -bisq-dark-grey-30;
 }
 
 .payment-method-search-box {
-    -fx-background-color: -bisq-dark-grey-20;
-    -fx-border-color: transparent;
-    -fx-border-width: 0;
-    -fx-border-radius: 0;
-    -fx-padding: 0;
-    -fx-max-height: 32;
-    -fx-min-height: 32;
-    -fx-pref-height: 32;
+    -fx-background-color: transparent;
 }
 
-.payment-method-search-field {
-    -fx-background-color: transparent;
-    -fx-border-width: 0;
+.payment-method-header {
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 0.9em;
-    -fx-text-fill: -fx-mid-text-color;
-    -fx-prompt-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1.1em;
+    -fx-text-fill: -fx-light-text-color;
     -fx-alignment: center-left;
-    -fx-padding: 0 5 0 8;
+    -fx-label-padding: 0 10 0 10;
 }
+
 
 /*******************************************************************************
  * Reputation                                                                  *

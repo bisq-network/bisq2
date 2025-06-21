@@ -166,11 +166,10 @@ public class CreatePaymentAccountView extends NavigationView<VBox, CreatePayment
 
         nextButton.visibleProperty().bind(model.getCreateAccountButtonVisible().not());
         nextButton.managedProperty().bind(model.getCreateAccountButtonVisible().not());
+        nextButton.disableProperty().bind(model.getNextButtonDisabled());
 
         backButton.visibleProperty().bind(model.getBackButtonVisible());
         backButton.managedProperty().bind(model.getBackButtonVisible());
-
-        closeButton.visibleProperty().bind(model.getCloseButtonVisible());
 
         createAccountButton.visibleProperty().bind(model.getCreateAccountButtonVisible());
         createAccountButton.managedProperty().bind(model.getCreateAccountButtonVisible());
@@ -193,11 +192,10 @@ public class CreatePaymentAccountView extends NavigationView<VBox, CreatePayment
         nextButton.textProperty().unbind();
         nextButton.visibleProperty().unbind();
         nextButton.managedProperty().unbind();
+        nextButton.disableProperty().unbind();
 
         backButton.visibleProperty().unbind();
         backButton.managedProperty().unbind();
-
-        closeButton.visibleProperty().unbind();
 
         createAccountButton.visibleProperty().unbind();
         createAccountButton.managedProperty().unbind();

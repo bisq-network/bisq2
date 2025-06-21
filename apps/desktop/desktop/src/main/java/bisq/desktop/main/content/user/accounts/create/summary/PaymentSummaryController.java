@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.accounts.create.summary;
 
+import bisq.account.AccountService;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethodChargebackRisk;
 import bisq.account.payment_method.FiatPaymentRailUtil;
@@ -25,6 +26,7 @@ import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
 import bisq.common.util.StringUtils;
 import bisq.common.util.TextFormatterUtils;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
@@ -41,11 +43,13 @@ import java.util.Optional;
 @Slf4j
 public class PaymentSummaryController implements Controller {
     private final PaymentSummaryModel model;
+    private final AccountService accountService;
     @Getter
     private View<? extends Parent, PaymentSummaryModel, ? extends Controller> view;
     private final Runnable createAccountHandler;
 
-    public PaymentSummaryController(Runnable createAccountHandler) {
+    public PaymentSummaryController(ServiceProvider serviceProvider, Runnable createAccountHandler) {
+        accountService = serviceProvider.getAccountService();
         this.createAccountHandler = createAccountHandler;
         model = new PaymentSummaryModel();
     }
@@ -235,9 +239,9 @@ public class PaymentSummaryController implements Controller {
             FiatPaymentMethodChargebackRisk riskEnum = fiatMethod.getPaymentRail().getChargebackRisk();
 
             return switch (riskEnum) {
-                case LOW -> Res.get("user.paymentAccounts.summary.risk.low");
-                case MEDIUM -> Res.get("user.paymentAccounts.summary.risk.medium");
-                case HIGH -> Res.get("user.paymentAccounts.summary.risk.high");
+                case VERY_LOW -> Res.get("user.paymentAccounts.summary.risk.low");
+                case LOW -> Res.get("user.paymentAccounts.summary.risk.medium");
+                case MODERATE -> Res.get("user.paymentAccounts.summary.risk.high");
             };
         }
 

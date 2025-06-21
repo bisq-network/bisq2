@@ -68,7 +68,7 @@ public class CreatePaymentAccountController extends NavigationController {
     public CreatePaymentAccountController(ServiceProvider serviceProvider) {
         super(NavigationTarget.CREATE_PAYMENT_ACCOUNT);
 
-        this.accountService = serviceProvider.getAccountService();
+        accountService = serviceProvider.getAccountService();
         overlayController = OverlayController.getInstance();
 
         model = new CreatePaymentAccountModel();
@@ -77,9 +77,7 @@ public class CreatePaymentAccountController extends NavigationController {
         paymentMethodController = new PaymentMethodSelectionController(this::onPaymentMethodSelected);
         accountDataController = new PaymentDataEntryController(serviceProvider);
         optionsController = new PaymentOptionsController(serviceProvider);
-        summaryController = new PaymentSummaryController(this::createAndSaveAccount);
-
-        initializeWizardFlow();
+        summaryController = new PaymentSummaryController(serviceProvider, this::createAndSaveAccount);
     }
 
     @Override
@@ -93,10 +91,33 @@ public class CreatePaymentAccountController extends NavigationController {
         overlayController.setEnterKeyHandler(null);
         overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
-        NavigationTarget firstTarget = model.getChildTargets().getFirst();
-        model.getSelectedChildTarget().set(firstTarget);
+        setChildTargets();
 
-        setupReactiveDataFlow();
+        model.getCurrentIndex().set(0);
+        model.getSelectedChildTarget().set(model.getChildTargets().get(0));
+
+        selectedPaymentMethodPin = EasyBind.subscribe(paymentMethodController.getSelectedPaymentMethod(),
+                paymentMethod -> {
+                    if (paymentMethod != null) {
+                        model.setPaymentMethod(Optional.of(paymentMethod));
+                        accountDataController.setPaymentMethod(paymentMethod);
+                        optionsController.setPaymentMethod(paymentMethod);
+                        summaryController.setPaymentMethod(paymentMethod);
+                        boolean hasOptions = paymentMethod instanceof FiatPaymentMethod fiatMethod &&
+                                hasConfigurableOptions(fiatMethod);
+                        model.setOptionsVisible(hasOptions);
+                        setChildTargets();
+                    }
+                    model.getNextButtonDisabled().set(paymentMethod == null);
+                });
+
+        accountDataPin = EasyBind.subscribe(accountDataController.getAccountData(),
+                data -> {
+                    if (data != null) {
+                        model.setAccountData(Optional.of(data));
+                        summaryController.setAccountData(data);
+                    }
+                });
     }
 
     @Override
@@ -116,10 +137,7 @@ public class CreatePaymentAccountController extends NavigationController {
 
     @Override
     protected void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
-        model.getCloseButtonVisible().set(true);
-
-        boolean isSummary = navigationTarget == NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY;
-        model.getCreateAccountButtonVisible().set(isSummary);
+        model.getCreateAccountButtonVisible().set(navigationTarget == NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY);
         model.getBackButtonVisible().set(model.getCurrentIndex().get() > 0);
     }
 
@@ -136,13 +154,23 @@ public class CreatePaymentAccountController extends NavigationController {
 
     void onKeyPressed(KeyEvent keyEvent) {
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onClose);
-        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onNext);
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+            if (model.getSelectedChildTarget().get() == NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY) {
+                summaryController.createAccount();
+            } else {
+                navigateNext();
+            }
+        });
     }
 
     void onNext() {
+        navigateNext();
+    }
+
+    private void navigateNext() {
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
-            if (!validateCurrentStep()) {
+            if (!validate()) {
                 return;
             }
 
@@ -160,77 +188,12 @@ public class CreatePaymentAccountController extends NavigationController {
     }
 
     void onClose() {
-        paymentMethodController.cleanup();
-        accountDataController.cleanup();
-        optionsController.cleanup();
-        summaryController.cleanup();
-
         reset();
-
         OverlayController.hide();
     }
 
     void onCreateAccount() {
         summaryController.createAccount();
-    }
-
-    private void onPaymentMethodSelected() {
-        onNext();
-    }
-
-    private void initializeWizardFlow() {
-        model.getChildTargets().clear();
-
-        model.getChildTargets().add(NavigationTarget.CREATE_PAYMENT_ACCOUNT_PAYMENT_METHOD);
-        model.getChildTargets().add(NavigationTarget.CREATE_PAYMENT_ACCOUNT_DATA);
-        model.getChildTargets().add(NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY);
-
-        model.getCurrentIndex().set(0);
-        NavigationTarget firstTarget = model.getChildTargets().getFirst();
-        model.getSelectedChildTarget().set(firstTarget);
-    }
-
-    private void setupReactiveDataFlow() {
-        selectedPaymentMethodPin = EasyBind.subscribe(paymentMethodController.getSelectedPaymentMethod(),
-                paymentMethod -> {
-                    if (paymentMethod != null) {
-                        model.setPaymentMethod(Optional.of(paymentMethod));
-                        accountDataController.setPaymentMethod(paymentMethod);
-                        optionsController.setPaymentMethod(paymentMethod);
-                        summaryController.setPaymentMethod(paymentMethod);
-                    }
-                    updateChildTargets();
-                });
-
-        accountDataPin = EasyBind.subscribe(accountDataController.getAccountData(),
-                data -> {
-                    if (data != null) {
-                        model.setAccountData(Optional.of(data));
-                        summaryController.setAccountData(data);
-                    }
-                });
-    }
-
-    private void updateChildTargets() {
-        model.getPaymentMethodOpt().ifPresent(paymentMethod -> {
-            boolean hasOptions = paymentMethod instanceof FiatPaymentMethod fiatMethod &&
-                    hasConfigurableOptions(fiatMethod);
-            model.setOptionsVisible(hasOptions);
-
-            model.getChildTargets().clear();
-            model.getChildTargets().add(NavigationTarget.CREATE_PAYMENT_ACCOUNT_PAYMENT_METHOD);
-            model.getChildTargets().add(NavigationTarget.CREATE_PAYMENT_ACCOUNT_DATA);
-            if (hasOptions) {
-                model.getChildTargets().add(NavigationTarget.CREATE_PAYMENT_ACCOUNT_OPTIONS);
-            }
-            model.getChildTargets().add(NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY);
-        });
-    }
-
-    private boolean hasConfigurableOptions(FiatPaymentMethod method) {
-        // TODO: Implement logic to determine if the payment method has configurable options
-        // For now, return false because no payment methods currently have Options page
-        return false;
     }
 
     private void navigateToIndex(int index) {
@@ -240,31 +203,47 @@ public class CreatePaymentAccountController extends NavigationController {
         Navigation.navigateTo(target);
     }
 
-    private boolean validateCurrentStep() {
-        NavigationTarget current = model.getSelectedChildTarget().get();
+    private void onPaymentMethodSelected() {
+        navigateNext();
+    }
 
-        if (current == NavigationTarget.CREATE_PAYMENT_ACCOUNT_PAYMENT_METHOD) {
-            return paymentMethodController.getSelectedPaymentMethod().get() != null;
+    private void setChildTargets() {
+        model.getChildTargets().clear();
+        model.getChildTargets().add(NavigationTarget.CREATE_PAYMENT_ACCOUNT_PAYMENT_METHOD);
+        model.getChildTargets().add(NavigationTarget.CREATE_PAYMENT_ACCOUNT_DATA);
+        if (model.isOptionsVisible()) {
+            model.getChildTargets().add(NavigationTarget.CREATE_PAYMENT_ACCOUNT_OPTIONS);
         }
-        if (current == NavigationTarget.CREATE_PAYMENT_ACCOUNT_DATA) {
-            return accountDataController.validate();
-        } else if (current == NavigationTarget.CREATE_PAYMENT_ACCOUNT_OPTIONS) {
-            return optionsController.validate();
-        }
+        model.getChildTargets().add(NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY);
+    }
 
-        return true;
+
+    private boolean hasConfigurableOptions(FiatPaymentMethod method) {
+        // TODO: Implement logic to determine if the payment method has configurable options
+        // For now, return false because no payment methods currently have Options page
+        return false;
+    }
+
+    private boolean validate() {
+        return switch (model.getSelectedChildTarget().get()) {
+            case CREATE_PAYMENT_ACCOUNT_PAYMENT_METHOD -> paymentMethodController.validate();
+            case CREATE_PAYMENT_ACCOUNT_DATA -> accountDataController.validate();
+            case CREATE_PAYMENT_ACCOUNT_OPTIONS -> optionsController.validate();
+            default -> true;
+        };
     }
 
     private void createAndSaveAccount() {
+        //todo
         getCreatedAccount().ifPresent(account -> {
             accountService.addPaymentAccount(account);
             accountService.setSelectedAccount(account);
             onClose();
         });
     }
-
+    //todo
     private Optional<Account<?, ?>> getCreatedAccount() {
-        Optional<PaymentMethod<?>> paymentMethodOpt = model.getPaymentMethodOpt();
+        Optional<PaymentMethod<?>> paymentMethodOpt = model.getPaymentMethod();
         Optional<Map<String, Object>> accountDataOpt = model.getAccountDataOpt();
 
         if (paymentMethodOpt.isEmpty() || accountDataOpt.isEmpty()) {
@@ -287,7 +266,7 @@ public class CreatePaymentAccountController extends NavigationController {
 
         return Optional.empty();
     }
-
+    //todo
     private Optional<SepaAccount> createSepaAccount(String accountName, Map<String, Object> data) {
         String holderName = (String) data.get("holderName");
         String iban = (String) data.get("iban");
@@ -317,7 +296,7 @@ public class CreatePaymentAccountController extends NavigationController {
 
         return Optional.of(new SepaAccount(accountName, holderName, iban, bic, countryOpt.get(), acceptedCountryCodes));
     }
-
+    //todo
     private Optional<F2FAccount> createF2FAccount(String accountName, Map<String, Object> data) {
         String city = (String) data.get("city");
         String contact = (String) data.get("contact");
@@ -342,6 +321,12 @@ public class CreatePaymentAccountController extends NavigationController {
 
     private void reset() {
         resetSelectedChildTarget();
+
+        paymentMethodController.reset();
+        accountDataController.cleanup();
+        optionsController.cleanup();
+        summaryController.cleanup();
+
         model.reset();
     }
 }

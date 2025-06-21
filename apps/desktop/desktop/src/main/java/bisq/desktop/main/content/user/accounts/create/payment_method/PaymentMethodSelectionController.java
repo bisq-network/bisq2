@@ -23,209 +23,93 @@ import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.locale.LocaleRepository;
-import bisq.common.util.StringUtils;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.main.content.user.accounts.create.payment_method.PaymentMethodSelectionView.PaymentMethodItem;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class PaymentMethodSelectionController implements Controller {
-    // Popularity scores based on historical snapshot of Bisq1 offers count
-    // Higher scores indicate more commonly used payment methods
-    private static final Map<FiatPaymentRail, Integer> POPULARITY_SCORES = Map.ofEntries(
-            Map.entry(FiatPaymentRail.SEPA, 10),
-            Map.entry(FiatPaymentRail.ZELLE, 9),
-            Map.entry(FiatPaymentRail.PIX, 8),
-            Map.entry(FiatPaymentRail.NATIONAL_BANK, 7),
-            Map.entry(FiatPaymentRail.REVOLUT, 6),
-            Map.entry(FiatPaymentRail.CASH_BY_MAIL, 6),
-            Map.entry(FiatPaymentRail.ACH_TRANSFER, 5),
-            Map.entry(FiatPaymentRail.STRIKE, 5),
-            Map.entry(FiatPaymentRail.INTERAC_E_TRANSFER, 4),
-            Map.entry(FiatPaymentRail.WISE, 4),
-            Map.entry(FiatPaymentRail.F2F, 3),
-            Map.entry(FiatPaymentRail.US_POSTAL_MONEY_ORDER, 3),
-            Map.entry(FiatPaymentRail.PAY_ID, 3),
-            Map.entry(FiatPaymentRail.FASTER_PAYMENTS, 3),
-            Map.entry(FiatPaymentRail.AMAZON_GIFT_CARD, 2),
-            Map.entry(FiatPaymentRail.SWIFT, 2),
-            Map.entry(FiatPaymentRail.BIZUM, 2),
-            Map.entry(FiatPaymentRail.CASH_DEPOSIT, 2),
-            Map.entry(FiatPaymentRail.UPI, 1),
-            Map.entry(FiatPaymentRail.CASH_APP, 1)
-    );
-
     private final PaymentMethodSelectionModel model;
     @Getter
     private final PaymentMethodSelectionView view;
     private final Runnable onSelectionConfirmedHandler;
-
-    private String userCountryCode;
-    private String userCurrencyCode;
+    private Subscription searchTextPin;
 
     public PaymentMethodSelectionController(Runnable onSelectionConfirmedHandler) {
         this.onSelectionConfirmedHandler = onSelectionConfirmedHandler;
-        List<PaymentMethodSelectionView.PaymentMethodItem> items = FiatPaymentRailUtil.getPaymentRails().stream()
+        List<PaymentMethodItem> items = FiatPaymentRailUtil.getPaymentRails().stream()
                 .filter(rail -> rail != FiatPaymentRail.CUSTOM)
                 .filter(FiatPaymentRail::isActive)
                 .map(FiatPaymentMethod::fromPaymentRail)
-                .map(PaymentMethodSelectionView.PaymentMethodItem::new)
+                .map(PaymentMethodItem::new)
                 .collect(Collectors.toList());
         model = new PaymentMethodSelectionModel(items);
         view = new PaymentMethodSelectionView(model, this);
-
-        detectUserLocale();
-        setupLocaleAwareSorting();
-        model.updateFilterPredicate();
     }
 
     @Override
     public void onActivate() {
-        model.updateFilterPredicate();
+        String userCountryCode = LocaleRepository.getDefaultLocale().getCountry();
+        String userCurrencyCode = FiatCurrencyRepository.getCurrencyByCountryCode(userCountryCode).getCode();
+        PaymentMethodComparator comparator = new PaymentMethodComparator(userCountryCode, userCurrencyCode);
+        // We do not use sorted list as we want to use the column sort properties.
+        // This initial sorting is just applied at start. If user use column sorting that will be applied.
+        model.getList().sort(comparator);
 
-        UIThread.runOnNextRenderFrame(() -> {
-            view.getTableView().refresh();
-            performSelectionRestoration();
+        searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
+            model.getFilteredList().setPredicate(item -> {
+                if (searchText == null) {
+                    return true;
+                } else if (item == null) {
+                    return false;
+                } else {
+                    String searchLowerCase = searchText.toLowerCase().trim();
+                    if (searchLowerCase.isEmpty()) {
+                        return true;
+                    } else {
+                        return item.getName().toLowerCase().contains(searchLowerCase);
+                    }
+                }
+            });
         });
     }
 
     @Override
     public void onDeactivate() {
+        searchTextPin.unsubscribe();
     }
 
-    public void cleanup() {
-        model.getAllPaymentMethodItems().clear();
-        model.selectPaymentMethod(null);
-        model.getSearchText().set("");
+    public boolean validate() {
+        return model.getSelectedPaymentMethod().get() != null;
+    }
+
+    public void reset() {
+        model.reset();
     }
 
     public ReadOnlyObjectProperty<PaymentMethod<?>> getSelectedPaymentMethod() {
         return model.getSelectedPaymentMethod();
     }
 
-    void onSelectPaymentMethod(PaymentMethod<?> paymentMethod) {
-        if (paymentMethod != null) {
-            model.selectPaymentMethod(paymentMethod);
-            if (onSelectionConfirmedHandler != null) {
-                onSelectionConfirmedHandler.run();
-            }
+    void onPaymentMethodSelected(PaymentMethodItem item) {
+        if (item != null) {
+            model.getSelectedItem().set(item);
+            model.getSelectedPaymentMethod().set(item.getPaymentMethod());
         }
     }
 
     void onSearchTextChanged(String searchText) {
-        model.getSearchText().set(StringUtils.toOptional(searchText).orElse("").trim());
-    }
-
-    private void performSelectionRestoration() {
-        PaymentMethod<?> currentSelection = model.getSelectedPaymentMethod().get();
-
-        if (currentSelection != null) {
-            PaymentMethodSelectionView.PaymentMethodItem selectedItem = model.getFilteredPaymentMethodItems().stream()
-                    .filter(item -> item.getPaymentMethod().equals(currentSelection))
-                    .findFirst()
-                    .orElse(null);
-
-            if (selectedItem != null) {
-                view.getTableView().getSelectionModel().select(selectedItem);
-                view.getTableView().scrollTo(selectedItem);
-            } else {
-                view.getTableView().getSelectionModel().clearSelection();
-            }
-            return;
-        }
-
-        selectFirstAvailableItem();
-    }
-
-    private void selectFirstAvailableItem() {
-        if (model.getFilteredPaymentMethodItems().isEmpty()) {
-            return;
-        }
-
-        PaymentMethodSelectionView.PaymentMethodItem firstItem = model.getFilteredPaymentMethodItems().getFirst();
-
-        model.selectPaymentMethod(firstItem.getPaymentMethod());
-        view.getTableView().getSelectionModel().select(firstItem);
-        view.getTableView().scrollTo(firstItem);
-    }
-
-    private void detectUserLocale() {
-        Locale userLocale = LocaleRepository.getDefaultLocale();
-        userCountryCode = userLocale.getCountry();
-        userCurrencyCode = FiatCurrencyRepository.getCurrencyByCountryCode(userCountryCode).getCode();
-    }
-
-    private void setupLocaleAwareSorting() {
-        LocaleAwarePaymentMethodComparator localeComparator =
-                new LocaleAwarePaymentMethodComparator(userCountryCode, userCurrencyCode);
-        model.getAllPaymentMethodItems().sort(localeComparator);
-    }
-
-    private static class LocaleAwarePaymentMethodComparator implements
-            Comparator<PaymentMethodSelectionView.PaymentMethodItem> {
-        private final String userCountryCode;
-        private final String userCurrencyCode;
-
-        public LocaleAwarePaymentMethodComparator(String userCountryCode, String userCurrencyCode) {
-            this.userCountryCode = StringUtils.toOptional(userCountryCode).orElse("").toUpperCase();
-            this.userCurrencyCode = StringUtils.toOptional(userCurrencyCode).orElse("").toUpperCase();
-        }
-
-        @Override
-        public int compare(PaymentMethodSelectionView.PaymentMethodItem a,
-                           PaymentMethodSelectionView.PaymentMethodItem b) {
-            int localeRelevanceA = calculateLocaleRelevance(a);
-            int localeRelevanceB = calculateLocaleRelevance(b);
-
-            if (localeRelevanceA != localeRelevanceB) {
-                return Integer.compare(localeRelevanceB, localeRelevanceA);
-            }
-
-            int popularityA = calculatePopularityScore(a.getPaymentMethod());
-            int popularityB = calculatePopularityScore(b.getPaymentMethod());
-
-            if (popularityA != popularityB) {
-                return Integer.compare(popularityB, popularityA);
-            }
-
-            return a.getName().compareToIgnoreCase(b.getName());
-        }
-
-        private int calculateLocaleRelevance(PaymentMethodSelectionView.PaymentMethodItem item) {
-            PaymentMethod<?> method = item.getPaymentMethod();
-            int relevanceScore = 0;
-
-            if (method instanceof FiatPaymentMethod fiatMethod) {
-                FiatPaymentRail rail = fiatMethod.getPaymentRail();
-
-                if (rail.getCurrencyCodes().contains(userCurrencyCode)) {
-                    relevanceScore += 2;
-                }
-
-                boolean supportsUserCountry = rail.getCountries().stream()
-                        .anyMatch(country -> country.getCode().equalsIgnoreCase(userCountryCode));
-                if (supportsUserCountry) {
-                    relevanceScore++;
-                }
-            }
-
-            return relevanceScore;
-        }
-
-        private int calculatePopularityScore(PaymentMethod<?> method) {
-            if (method instanceof FiatPaymentMethod fiatMethod) {
-                FiatPaymentRail rail = fiatMethod.getPaymentRail();
-                return POPULARITY_SCORES.getOrDefault(rail, 0);
-            }
-            return 0;
+        if (searchText != null) {
+            model.getSearchText().set(searchText.trim());
+        } else {
+            model.getSearchText().set("");
         }
     }
 }

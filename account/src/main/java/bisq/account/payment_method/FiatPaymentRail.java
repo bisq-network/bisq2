@@ -37,32 +37,32 @@ import java.util.stream.Collectors;
  * Provide static data associated with the payment rail.
  */
 public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
-    CUSTOM(new ArrayList<>(), new ArrayList<>(), FiatPaymentMethodChargebackRisk.HIGH, false),
-    SEPA(FiatPaymentRailUtil.getSepaEuroCountries(), FiatPaymentMethodChargebackRisk.HIGH, true),
-    SEPA_INSTANT(FiatPaymentRailUtil.getSepaEuroCountries(), FiatPaymentMethodChargebackRisk.HIGH, false),
-    ZELLE(List.of("US"), FiatPaymentMethodChargebackRisk.HIGH, false),
+    CUSTOM(new ArrayList<>(), new ArrayList<>(), FiatPaymentMethodChargebackRisk.MODERATE, false),
+    SEPA(FiatPaymentRailUtil.getSepaEuroCountries(), FiatPaymentMethodChargebackRisk.MODERATE, true),
+    SEPA_INSTANT(FiatPaymentRailUtil.getSepaEuroCountries(), FiatPaymentMethodChargebackRisk.MODERATE, false),
+    ZELLE(List.of("US"), FiatPaymentMethodChargebackRisk.MODERATE, false),
     REVOLUT(FiatPaymentRailUtil.getRevolutCountries(), FiatPaymentRailUtil.getRevolutCurrencies(),
-            FiatPaymentMethodChargebackRisk.HIGH, false),
+            FiatPaymentMethodChargebackRisk.MODERATE, false),
     WISE(FiatPaymentRailUtil.getWiseCountries(), FiatPaymentRailUtil.getWiseCurrencies(),
-            FiatPaymentMethodChargebackRisk.HIGH, false),
-    NATIONAL_BANK(new ArrayList<>(), new ArrayList<>(), FiatPaymentMethodChargebackRisk.HIGH, false),
-    SWIFT(FiatPaymentMethodChargebackRisk.MEDIUM, false),
-    F2F(FiatPaymentMethodChargebackRisk.LOW, true),
-    ACH_TRANSFER(List.of("US"), List.of("USD"), FiatPaymentMethodChargebackRisk.HIGH, false),
-    PIX(List.of("BR"), List.of("BRL"), FiatPaymentMethodChargebackRisk.HIGH, false),
-    FASTER_PAYMENTS(List.of("GB"), List.of("GBP"), FiatPaymentMethodChargebackRisk.HIGH, false),
-    PAY_ID(List.of("AU"), List.of("AUD"), FiatPaymentMethodChargebackRisk.LOW, false),
-    US_POSTAL_MONEY_ORDER(List.of("US"), List.of("USD"), FiatPaymentMethodChargebackRisk.HIGH, false),
-    CASH_BY_MAIL(FiatPaymentMethodChargebackRisk.HIGH, false),
-    STRIKE(List.of("US", "SV"), List.of("USD"), FiatPaymentMethodChargebackRisk.HIGH, false),
-    INTERAC_E_TRANSFER(new ArrayList<>(), List.of("CAD"), FiatPaymentMethodChargebackRisk.HIGH, false),
+            FiatPaymentMethodChargebackRisk.MODERATE, false),
+    NATIONAL_BANK(new ArrayList<>(), new ArrayList<>(), FiatPaymentMethodChargebackRisk.MODERATE, false),
+    SWIFT(FiatPaymentMethodChargebackRisk.LOW, false),
+    F2F(FiatPaymentMethodChargebackRisk.VERY_LOW, true),
+    ACH_TRANSFER(List.of("US"), List.of("USD"), FiatPaymentMethodChargebackRisk.MODERATE, false),
+    PIX(List.of("BR"), List.of("BRL"), FiatPaymentMethodChargebackRisk.MODERATE, false),
+    FASTER_PAYMENTS(List.of("GB"), List.of("GBP"), FiatPaymentMethodChargebackRisk.MODERATE, false),
+    PAY_ID(List.of("AU"), List.of("AUD"), FiatPaymentMethodChargebackRisk.VERY_LOW, false),
+    US_POSTAL_MONEY_ORDER(List.of("US"), List.of("USD"), FiatPaymentMethodChargebackRisk.MODERATE, false),
+    CASH_BY_MAIL(FiatPaymentMethodChargebackRisk.MODERATE, false),
+    STRIKE(List.of("US", "SV"), List.of("USD"), FiatPaymentMethodChargebackRisk.MODERATE, false),
+    INTERAC_E_TRANSFER(new ArrayList<>(), List.of("CAD"), FiatPaymentMethodChargebackRisk.MODERATE, false),
     AMAZON_GIFT_CARD(new ArrayList<>(),
             List.of("AUD", "CAD", "EUR", "GBP", "INR", "JPY", "SAR", "SEK", "SGD", "TRY", "USD"),
-            FiatPaymentMethodChargebackRisk.HIGH, false),
-    CASH_DEPOSIT(FiatPaymentMethodChargebackRisk.HIGH, false),
-    UPI(new ArrayList<>(), List.of("INR"), FiatPaymentMethodChargebackRisk.LOW, false),
-    BIZUM(List.of("ES"), List.of("EUR"), FiatPaymentMethodChargebackRisk.LOW, false),
-    CASH_APP(List.of("US"), List.of("USD"), FiatPaymentMethodChargebackRisk.HIGH, false);
+            FiatPaymentMethodChargebackRisk.MODERATE, false),
+    CASH_DEPOSIT(FiatPaymentMethodChargebackRisk.MODERATE, false),
+    UPI(new ArrayList<>(), List.of("INR"), FiatPaymentMethodChargebackRisk.VERY_LOW, false),
+    BIZUM(List.of("ES"), List.of("EUR"), FiatPaymentMethodChargebackRisk.VERY_LOW, false),
+    CASH_APP(List.of("US"), List.of("USD"), FiatPaymentMethodChargebackRisk.MODERATE, false);
 
     @Getter
     @EqualsAndHashCode.Exclude
@@ -92,8 +92,10 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
      * @param countryCodes  If countryCodes is null we use all countries
      * @param currencyCodes If currencyCodes is null we create it from the countries
      */
-    FiatPaymentRail(@Nullable List<String> countryCodes, @Nullable List<String> currencyCodes,
-                    FiatPaymentMethodChargebackRisk chargebackRisk, boolean isActive) {
+    FiatPaymentRail(@Nullable List<String> countryCodes,
+                    @Nullable List<String> currencyCodes,
+                    FiatPaymentMethodChargebackRisk chargebackRisk,
+                    boolean isActive) {
         this.isActive = isActive;
         this.chargebackRisk = chargebackRisk;
         countries = countryCodes != null ?

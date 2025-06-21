@@ -37,9 +37,9 @@ import java.util.Optional;
 @Getter
 public class CreatePaymentAccountModel extends NavigationModel {
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
-    private final BooleanProperty closeButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty createAccountButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty nextButtonDisabled = new SimpleBooleanProperty();
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     private final List<NavigationTarget> childTargets = new ArrayList<>();
 
@@ -54,10 +54,6 @@ public class CreatePaymentAccountModel extends NavigationModel {
     @Setter
     private Optional<Map<String, Object>> optionsData = Optional.empty();
 
-    // Backward compatibility getters
-    public PaymentMethod<?> getPaymentMethod() {
-        return paymentMethod.orElse(null);
-    }
 
     public Map<String, Object> getAccountData() {
         return accountData.orElse(null);
@@ -65,11 +61,6 @@ public class CreatePaymentAccountModel extends NavigationModel {
 
     public Map<String, Object> getOptionsData() {
         return optionsData.orElse(null);
-    }
-
-    // Optional getters
-    public Optional<PaymentMethod<?>> getPaymentMethodOpt() {
-        return paymentMethod;
     }
 
     public Optional<Map<String, Object>> getAccountDataOpt() {
@@ -93,8 +84,8 @@ public class CreatePaymentAccountModel extends NavigationModel {
         optionsData = Optional.empty();
 
         currentIndex.set(0);
-        closeButtonVisible.set(false);
         createAccountButtonVisible.set(false);
+        nextButtonDisabled.set(true);
         backButtonVisible.set(false);
         selectedChildTarget.set(null);
 

@@ -17,10 +17,13 @@
 
 package bisq.account.payment_method;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class FiatPaymentMethodUtil {
     public static Optional<FiatPaymentMethod> findPaymentMethod(String name) {
         try {
@@ -35,7 +38,7 @@ public class FiatPaymentMethodUtil {
             return Optional.empty();
         }
     }
-    
+
     public static FiatPaymentMethod getPaymentMethod(String name) {
         try {
             FiatPaymentRail paymentRail = FiatPaymentRail.valueOf(name);
@@ -43,7 +46,8 @@ public class FiatPaymentMethodUtil {
             if (!paymentMethod.isCustomPaymentMethod()) {
                 return paymentMethod;
             }
-        } catch (Throwable ignore) {
+        } catch (Throwable throwable) {
+            log.error("Failed to create FiatPaymentRail from name {}", name, throwable);
         }
         return FiatPaymentMethod.fromCustomName(name);
     }
