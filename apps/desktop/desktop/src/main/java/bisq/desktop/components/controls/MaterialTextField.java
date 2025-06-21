@@ -26,6 +26,7 @@ import bisq.desktop.components.controls.validator.ValidationControl;
 import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -49,6 +50,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -56,11 +58,35 @@ import static bisq.desktop.components.controls.validator.ValidatorBase.PSEUDO_CL
 
 @Slf4j
 public class MaterialTextField extends Pane {
+    private static final double BORDER_LINE_OFFSET = 1.0;
+    private static final double SELECTION_LINE_OFFSET = 2.0;
+
+    private static final List<String> BG_STYLE_CLASSES = List.of(
+            "material-text-field-bg-hover",
+            "material-text-field-bg-selected",
+            "material-text-field-bg"
+    );
+
+    private static final List<String> DESCRIPTION_STYLE_CLASSES = List.of(
+            "material-text-field-description-read-only",
+            "material-text-field-description-small",
+            "material-text-field-description-big",
+            "material-text-field-description-selected",
+            "material-text-field-description-deselected"
+    );
+
+    private static final List<String> TEXT_INPUT_STYLE_CLASSES = List.of(
+            "material-text-field",
+            "material-text-field-read-only"
+    );
+
     protected final Region bg = new Region();
     protected final Region line = new Region();
     @Getter
     protected final Region selectionLine = new Region();
+    @Getter
     protected final Label descriptionLabel = new Label();
+    @Getter
     protected final TextInputControl textInputControl;
     @Getter
     protected final Label helpLabel = new Label();
@@ -72,7 +98,12 @@ public class MaterialTextField extends Pane {
     private final BooleanProperty isValid = new SimpleBooleanProperty(false);
     private Optional<StringConverter<Number>> stringConverter = Optional.empty();
 
+    private boolean compactMode = false;
+    private double compactHeight = -1;
+
     private ChangeListener<Number> iconButtonHeightListener;
+    private ChangeListener<Number> layoutWidthListener;
+
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> onWidthChanged((double) newValue);
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
@@ -118,76 +149,53 @@ public class MaterialTextField extends Pane {
                              @Nullable String prompt,
                              @Nullable String help,
                              @Nullable String value) {
-        bg.getStyleClass().add("material-text-field-bg");
-
-        line.setPrefHeight(1);
-        line.setStyle("-fx-background-color: -bisq-mid-grey-20");
-        line.setMouseTransparent(true);
-
-        selectionLine.setPrefWidth(0);
-        selectionLine.setPrefHeight(2);
-        selectionLine.getStyleClass().add("material-text-field-selection-line");
-        selectionLine.setMouseTransparent(true);
-
-        descriptionLabel.setLayoutX(16);
-        descriptionLabel.setMouseTransparent(true);
-        if (StringUtils.isNotEmpty(description)) {
-            descriptionLabel.setText(description);
-        }
-
         textInputControl = createTextInputControl();
-        if (StringUtils.isNotEmpty(value)) {
-            textInputControl.setText(value);
-        }
-        textInputControl.setLayoutX(6.5);
-        textInputControl.getStyleClass().add("material-text-field");
-        if (StringUtils.isNotEmpty(prompt)) {
-            textInputControl.setPromptText(prompt);
-        }
 
-        iconButton.setAlignment(Pos.TOP_RIGHT);
-        iconButton.setIcon("info");
-        iconButton.setOpacity(0.6);
-        iconButton.setManaged(false);
-        iconButton.setVisible(false);
+        setupVisualComponents(description, prompt, help, value);
+        setupEventHandlers();
 
-        helpLabel.setLayoutX(16);
-        helpLabel.getStyleClass().add("material-text-field-help");
-        helpLabel.setMouseTransparent(true);
-        if (StringUtils.isNotEmpty(help)) {
-            helpLabel.setText(help);
-        }
-
-        errorLabel.setLayoutX(16);
-        errorLabel.setMouseTransparent(true);
-        errorLabel.getStyleClass().add("material-text-field-error");
-        errorLabel.setManaged(false);
-        errorLabel.setVisible(false);
-
-        getChildren().addAll(bg, line, selectionLine, descriptionLabel, textInputControl, iconButton, helpLabel, errorLabel);
-
-
-        widthProperty().addListener(new WeakChangeListener<>(widthListener));
-        textInputControl.focusedProperty().addListener(new WeakChangeListener<>(textInputControlFocusListener));
-        descriptionLabel.textProperty().addListener(new WeakChangeListener<>(descriptionLabelTextListener));
-        promptTextProperty().addListener(new WeakChangeListener<>(promptTextListener));
-        helpProperty().addListener(new WeakChangeListener<>(helpListener));
-        textInputControl.editableProperty().addListener(new WeakChangeListener<>(textInputControlEditableListener));
-        disabledProperty().addListener(new WeakChangeListener<>(disabledListener));
-        textInputControl.textProperty().addListener(new WeakChangeListener<>(textInputControlTextListener));
-
-        bg.setOnMousePressed(e -> textInputControl.requestFocus());
-        bg.setOnMouseEntered(e -> onMouseEntered());
-        bg.setOnMouseExited(e -> onMouseExited());
-        textInputControl.setOnMouseEntered(e -> onMouseEntered());
-        textInputControl.setOnMouseExited(e -> onMouseExited());
-
-        validationControl = new ValidationControl(this.textInputControl);
+        validationControl = new ValidationControl(textInputControl);
 
         doLayout();
         update();
     }
 
+    public void setCompactMode(double height) {
+        compactMode = height > 0;
+        compactHeight = height;
+
+        if (compactMode) {
+            applyCompactModeLayout(height);
+        } else {
+            doLayout();
+            update();
+        }
+    }
+
+    public void showSelectionLine(boolean animate) {
+        if (getWidth() <= 0 || getHeight() <= 0) {
+            ensureLayoutThenShowSelectionLine(animate);
+            return;
+        }
+
+        selectionLine.setVisible(true);
+        selectionLine.setOpacity(1);
+
+        if (animate) {
+            selectionLine.setPrefWidth(0);
+
+            Platform.runLater(() -> {
+                Transitions.animatePrefWidth(selectionLine, getWidth());
+                UIThread.runOnNextRenderFrame(() -> {
+                    if (textInputControl.isFocused()) {
+                        maintainSelectionLineVisibility();
+                    }
+                });
+            });
+        } else {
+            selectionLine.setPrefWidth(getWidth());
+        }
+    }
 
     /* --------------------------------------------------------------------- */
     // Validation
@@ -220,13 +228,8 @@ public class MaterialTextField extends Pane {
         resetValidation();
         boolean valid = validationControl.validate();
         isValid.set(valid);
-        selectionLine.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !valid);
-        descriptionLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !valid);
-        textInputControl.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !valid);
-        errorLabel.setVisible(!valid);
-        errorLabel.setManaged(errorLabel.isVisible());
-        Optional<ValidatorBase> activeValidator = getActiveValidator();
-        errorLabel.setText(activeValidator.map(ValidatorBase::getMessage).orElse(""));
+        applyValidationStyling(!valid);
+        updateErrorDisplay(valid);
         update();
         return valid;
     }
@@ -260,10 +263,6 @@ public class MaterialTextField extends Pane {
         return descriptionLabel.textProperty();
     }
 
-    public Label getDescriptionLabel() {
-        return descriptionLabel;
-    }
-
 
     /* --------------------------------------------------------------------- */
     // Text
@@ -284,10 +283,6 @@ public class MaterialTextField extends Pane {
 
     protected TextInputControl createTextInputControl() {
         return new TextField();
-    }
-
-    public TextInputControl getTextInputControl() {
-        return textInputControl;
     }
 
     public void setEditable(boolean value) {
@@ -409,160 +404,418 @@ public class MaterialTextField extends Pane {
         textInputControl.setOnMousePressed(handler);
     }
 
+    public void filterMouseEventOnNonEditableText() {
+        textInputControl.addEventFilter(MouseEvent.ANY, new WeakEventHandler<>(textInputControlMouseEventFilter));
+    }
+
+    /* --------------------------------------------------------------------- */
+    // Style Management
+    /* --------------------------------------------------------------------- */
+
+    protected void removeBgStyles() {
+        bg.getStyleClass().removeAll(BG_STYLE_CLASSES);
+    }
+
+    protected void removeDescriptionStyles() {
+        descriptionLabel.getStyleClass().removeAll(DESCRIPTION_STYLE_CLASSES);
+    }
+
+    protected void removeTextInputStyles() {
+        textInputControl.getStyleClass().removeAll(TEXT_INPUT_STYLE_CLASSES);
+    }
+
+    protected void applyBgStyle(String styleClass) {
+        if (BG_STYLE_CLASSES.contains(styleClass)) {
+            removeBgStyles();
+            bg.getStyleClass().add(styleClass);
+        }
+    }
+
+    /* --------------------------------------------------------------------- */
+    // Mouse Event Handling
+    /* --------------------------------------------------------------------- */
+
     protected void onMouseEntered() {
-        removeBgStyles();
         if (textInputControl.isFocused() && textInputControl.isEditable()) {
-            bg.getStyleClass().add("material-text-field-bg-selected");
+            applyBgStyle("material-text-field-bg-selected");
         } else {
-            bg.getStyleClass().add("material-text-field-bg-hover");
+            applyBgStyle("material-text-field-bg-hover");
         }
     }
 
     protected void onMouseExited() {
-        removeBgStyles();
         if (textInputControl.isFocused() && textInputControl.isEditable()) {
-            bg.getStyleClass().add("material-text-field-bg-selected");
+            applyBgStyle("material-text-field-bg-selected");
         } else {
-            bg.getStyleClass().add("material-text-field-bg");
+            applyBgStyle("material-text-field-bg");
         }
     }
 
     protected void onInputTextFieldFocus(boolean focus) {
         if (textInputControl.isEditable()) {
-            if (focus) {
-                resetValidation();
-                selectionLine.setPrefWidth(0);
-                selectionLine.setOpacity(1);
-                Transitions.animatePrefWidth(selectionLine, getWidth());
-            } else {
-                Transitions.fadeOut(selectionLine, 200);
-                stringConverter.ifPresent(stringConverter -> {
-                    try {
-                        setText(stringConverter.toString(stringConverter.fromString(getText())));
-                    } catch (Exception ignore) {
-                    }
-                });
-                validate();
-            }
-            onMouseExited();
-            update();
+            handleEditableFocusChange(focus);
         } else {
             super.requestFocus();
         }
     }
 
+    private void handleEditableFocusChange(boolean focus) {
+        if (focus) {
+            resetValidation();
+            applyBgStyle("material-text-field-bg-selected");
+            showSelectionLine(true);
+        } else {
+            hideSelectionLine();
+            applyStringConverter();
+            validate();
+            onMouseExited();
+        }
+        update();
+    }
+
+    private void applyStringConverter() {
+        stringConverter.ifPresent(converter -> {
+            try {
+                setText(converter.toString(converter.fromString(getText())));
+            } catch (Exception ignore) {
+            }
+        });
+    }
+
     protected void onWidthChanged(double width) {
         if (width > 0) {
-            bg.setPrefWidth(width);
-            line.setPrefWidth(width);
-            selectionLine.setPrefWidth(textInputControl.isFocused() && textInputControl.isEditable() ? width : 0);
-            descriptionLabel.setPrefWidth(width - 2 * descriptionLabel.getLayoutX());
-            double iconWidth = iconButton.isVisible() ? 25 : 0;
-            textInputControl.setPrefWidth(width - 2 * textInputControl.getLayoutX() - iconWidth);
-            helpLabel.setPrefWidth(width - 2 * helpLabel.getLayoutX());
-            errorLabel.setPrefWidth(width - 2 * errorLabel.getLayoutX());
+            updateComponentWidths(width);
+            updateSelectionLineIfVisible(width);
         }
         layoutIconButton();
     }
 
-    public void filterMouseEventOnNonEditableText() {
-        textInputControl.addEventFilter(MouseEvent.ANY, new WeakEventHandler<>(textInputControlMouseEventFilter));
+    private void updateComponentWidths(double width) {
+        bg.setPrefWidth(width);
+        line.setPrefWidth(width);
+
+        double iconWidth = iconButton.isVisible() ? 25 : 0;
+        double labelWidth = width - 2 * descriptionLabel.getLayoutX();
+        double textFieldWidth = width - 2 * textInputControl.getLayoutX() - iconWidth;
+
+        descriptionLabel.setPrefWidth(labelWidth);
+        textInputControl.setPrefWidth(textFieldWidth);
+        helpLabel.setPrefWidth(labelWidth);
+        errorLabel.setPrefWidth(labelWidth);
     }
 
+    private void updateSelectionLineIfVisible(double width) {
+        if (textInputControl.isFocused() && textInputControl.isEditable() && selectionLine.isVisible()) {
+            selectionLine.setPrefWidth(width);
+        }
+    }
 
     /* --------------------------------------------------------------------- */
     // Layout
     /* --------------------------------------------------------------------- */
 
     protected void doLayout() {
-        bg.setMinHeight(getBgHeight());
-        bg.setMaxHeight(getBgHeight());
-        line.setLayoutY(getBgHeight() - 1);
-        selectionLine.setLayoutY(getBgHeight() - 2);
+        double bgHeight = getBgHeight();
+        bg.setMinHeight(bgHeight);
+        bg.setMaxHeight(bgHeight);
+        line.setLayoutY(bgHeight - BORDER_LINE_OFFSET);
+        selectionLine.setLayoutY(bgHeight - SELECTION_LINE_OFFSET);
         textInputControl.setLayoutY(getFieldLayoutY());
-        helpLabel.setLayoutY(getBgHeight() + 3.5);
-        errorLabel.setLayoutY(getBgHeight() + 3.5);
+        helpLabel.setLayoutY(bgHeight + 3.5);
+        errorLabel.setLayoutY(bgHeight + 3.5);
     }
 
     private void layoutIconButton() {
         if (iconButton.getHeight() > 0) {
-            if (getWidth() > 0 && iconButton.isManaged()) {
-                if (iconButton.getAlignment() == Pos.CENTER ||
-                        iconButton.getAlignment() == Pos.CENTER_LEFT ||
-                        iconButton.getAlignment() == Pos.CENTER_RIGHT) {
-                    iconButton.setLayoutY((getBgHeight() - iconButton.getHeight()) / 2 - 1);
-                } else {
-                    iconButton.setLayoutY(6);
-                }
-                iconButton.setLayoutX(getWidth() - iconButton.getWidth() - 12 + iconButton.getPadding().getLeft());
-            }
+            positionIconButton();
         } else {
-            iconButtonHeightListener = (observable, oldValue, newValue) -> {
-                if (newValue.doubleValue() > 0) {
-                    layoutIconButton();
-                    UIThread.runOnNextRenderFrame(() -> iconButton.heightProperty().removeListener(iconButtonHeightListener));
-                }
-            };
-            iconButton.heightProperty().addListener(iconButtonHeightListener);
+            setupIconButtonHeightListener();
         }
     }
 
-    void update() {
-        if (StringUtils.isNotEmpty(descriptionLabel.getText())) {
-            long duration = ManagedDuration.getOneSixthOfDefaultDurationMillis();
-            if (showInputTextField()) {
-                Transitions.animateLayoutY(descriptionLabel, 6.5, duration, null);
-            } else {
-                Transitions.animateLayoutY(descriptionLabel, 16.5, duration, null);
-            }
+    private void positionIconButton() {
+        if (getWidth() > 0 && iconButton.isManaged()) {
+            double yPosition = calculateIconButtonYPosition();
+            double xPosition = getWidth() - iconButton.getWidth() - 12 + iconButton.getPadding().getLeft();
+
+            iconButton.setLayoutY(yPosition);
+            iconButton.setLayoutX(xPosition);
         }
+    }
 
-        helpLabel.setVisible(StringUtils.isNotEmpty(getHelpText()) && StringUtils.isEmpty(errorLabel.getText()));
+    private double calculateIconButtonYPosition() {
+        if (iconButton.getAlignment() == Pos.CENTER ||
+                iconButton.getAlignment() == Pos.CENTER_LEFT ||
+                iconButton.getAlignment() == Pos.CENTER_RIGHT) {
+            return (getBgHeight() - iconButton.getHeight()) / 2 - 1;
+        } else {
+            return 6;
+        }
+    }
+
+    private void setupIconButtonHeightListener() {
+        iconButtonHeightListener = (observable, oldValue, newValue) -> {
+            if (newValue.doubleValue() > 0) {
+                layoutIconButton();
+                UIThread.runOnNextRenderFrame(() ->
+                        iconButton.heightProperty().removeListener(iconButtonHeightListener));
+            }
+        };
+        iconButton.heightProperty().addListener(new WeakChangeListener<>(iconButtonHeightListener));
+    }
+
+    /* --------------------------------------------------------------------- */
+    // Update Methods
+    /* --------------------------------------------------------------------- */
+
+    void update() {
+        if (compactMode) {
+            updateCompactMode();
+        } else {
+            updateNormalMode();
+        }
+    }
+
+    private void updateCompactMode() {
+        applyCompactModeStyles();
+        updateEditableState();
+        setOpacity(textInputControl.isDisabled() ? 0.35 : 1);
+        UIThread.runOnNextRenderFrame(this::layoutIconButton);
+        layout();
+    }
+
+    private void applyCompactModeStyles() {
+        StringUtils.toOptional(descriptionLabel.getText()).ifPresent(text -> {
+            removeDescriptionStyles();
+            descriptionLabel.getStyleClass().add("material-text-field-description-small");
+        });
+
+        helpLabel.setVisible(false);
+        helpLabel.setManaged(false);
+        errorLabel.setVisible(false);
+        errorLabel.setManaged(false);
+
+        removeTextInputStyles();
+        textInputControl.getStyleClass().add("material-text-field");
+    }
+
+    private void updateNormalMode() {
+        animateDescriptionPosition();
+        updateHelpLabelVisibility();
+        applyNormalModeStyles();
+        updateEditableState();
+        setOpacity(textInputControl.isDisabled() ? 0.35 : 1);
+        UIThread.runOnNextRenderFrame(this::layoutIconButton);
+        layout();
+    }
+
+    private void animateDescriptionPosition() {
+        StringUtils.toOptional(descriptionLabel.getText()).ifPresent(text -> {
+            long duration = ManagedDuration.getOneSixthOfDefaultDurationMillis();
+            double targetY = showInputTextField() ? 6.5 : 16.5;
+            Transitions.animateLayoutY(descriptionLabel, targetY, duration, null);
+        });
+    }
+
+    private void updateHelpLabelVisibility() {
+        boolean shouldShowHelp = StringUtils.isNotEmpty(getHelpText()) &&
+                StringUtils.isEmpty(errorLabel.getText());
+        helpLabel.setVisible(shouldShowHelp);
         helpLabel.setManaged(helpLabel.isVisible());
+    }
 
-        descriptionLabel.getStyleClass().remove("material-text-field-description-read-only");
-        textInputControl.getStyleClass().remove("material-text-field-read-only");
+    private void applyNormalModeStyles() {
+        removeDescriptionStyles();
+        removeTextInputStyles();
 
-        descriptionLabel.getStyleClass().remove("material-text-field-description-small");
-        descriptionLabel.getStyleClass().remove("material-text-field-description-big");
-        descriptionLabel.getStyleClass().remove("material-text-field-description-selected");
-        descriptionLabel.getStyleClass().remove("material-text-field-description-deselected");
-        descriptionLabel.getStyleClass().remove("material-text-field-description-read-only");
+        textInputControl.getStyleClass().add("material-text-field");
 
         if (showInputTextField()) {
             descriptionLabel.getStyleClass().add("material-text-field-description-small");
         } else {
             descriptionLabel.getStyleClass().add("material-text-field-description-big");
         }
-        if (textInputControl.isFocused()) {
-            descriptionLabel.getStyleClass().add("material-text-field-description-selected");
-        } else {
-            descriptionLabel.getStyleClass().add("material-text-field-description-deselected");
-        }
 
+        String focusStyle = textInputControl.isFocused() ?
+                "material-text-field-description-selected" :
+                "material-text-field-description-deselected";
+        descriptionLabel.getStyleClass().add(focusStyle);
+    }
+
+    private void updateEditableState() {
         if (textInputControl.isEditable()) {
             bg.setMouseTransparent(false);
             bg.setOpacity(1);
             line.setOpacity(1);
-            textInputControl.getStyleClass().remove("material-text-field-read-only");
         } else {
             bg.setMouseTransparent(true);
             bg.setOpacity(0.4);
             line.setOpacity(0.25);
-            descriptionLabel.getStyleClass().add("material-text-field-description-small");
-            descriptionLabel.getStyleClass().add("material-text-field-description-read-only");
-            textInputControl.getStyleClass().add("material-text-field-read-only");
-        }
 
-        setOpacity(textInputControl.isDisabled() ? 0.35 : 1);
-        UIThread.runOnNextRenderFrame(this::layoutIconButton);
-        layout();
+            if (!compactMode) {
+                descriptionLabel.getStyleClass().addAll(
+                        "material-text-field-description-small",
+                        "material-text-field-description-read-only"
+                );
+                textInputControl.getStyleClass().add("material-text-field-read-only");
+            }
+        }
     }
 
-    protected void removeBgStyles() {
-        bg.getStyleClass().remove("material-text-field-bg-hover");
-        bg.getStyleClass().remove("material-text-field-bg-selected");
-        bg.getStyleClass().remove("material-text-field-bg");
+    private void setupVisualComponents(@Nullable String description, @Nullable String prompt,
+                                       @Nullable String help, @Nullable String value) {
+        bg.getStyleClass().add("material-text-field-bg");
+
+        line.setPrefHeight(1);
+        line.setStyle("-fx-background-color: -bisq-mid-grey-20");
+        line.setMouseTransparent(true);
+
+        setupSelectionLine();
+
+        setupDescriptionLabel(description);
+        setupTextInputControl(prompt, value);
+        setupLabels(help);
+        setupIconButton();
+
+        getChildren().addAll(bg, line, selectionLine, descriptionLabel, textInputControl, iconButton, helpLabel, errorLabel);
+    }
+
+    private void setupSelectionLine() {
+        selectionLine.setPrefWidth(0);
+        selectionLine.setPrefHeight(2);
+        selectionLine.getStyleClass().add("material-text-field-selection-line");
+        selectionLine.setMouseTransparent(true);
+        selectionLine.setVisible(false);
+    }
+
+    private void setupDescriptionLabel(@Nullable String description) {
+        descriptionLabel.setLayoutX(16);
+        descriptionLabel.setMouseTransparent(true);
+        StringUtils.toOptional(description).ifPresent(descriptionLabel::setText);
+    }
+
+    private void setupTextInputControl(@Nullable String prompt, @Nullable String value) {
+        StringUtils.toOptional(value).ifPresent(textInputControl::setText);
+        textInputControl.setLayoutX(6.5);
+        textInputControl.getStyleClass().add("material-text-field");
+        StringUtils.toOptional(prompt).ifPresent(textInputControl::setPromptText);
+    }
+
+    private void setupLabels(@Nullable String help) {
+        helpLabel.setLayoutX(16);
+        helpLabel.getStyleClass().add("material-text-field-help");
+        helpLabel.setMouseTransparent(true);
+        StringUtils.toOptional(help).ifPresent(helpLabel::setText);
+
+        errorLabel.setLayoutX(16);
+        errorLabel.setMouseTransparent(true);
+        errorLabel.getStyleClass().add("material-text-field-error");
+        errorLabel.setManaged(false);
+        errorLabel.setVisible(false);
+    }
+
+    private void setupIconButton() {
+        iconButton.setAlignment(Pos.TOP_RIGHT);
+        iconButton.setIcon("info");
+        iconButton.setOpacity(0.6);
+        iconButton.setManaged(false);
+        iconButton.setVisible(false);
+    }
+
+    private void setupEventHandlers() {
+        widthProperty().addListener(new WeakChangeListener<>(widthListener));
+        textInputControl.focusedProperty().addListener(new WeakChangeListener<>(textInputControlFocusListener));
+        descriptionLabel.textProperty().addListener(new WeakChangeListener<>(descriptionLabelTextListener));
+        promptTextProperty().addListener(new WeakChangeListener<>(promptTextListener));
+        helpProperty().addListener(new WeakChangeListener<>(helpListener));
+        textInputControl.editableProperty().addListener(new WeakChangeListener<>(textInputControlEditableListener));
+        disabledProperty().addListener(new WeakChangeListener<>(disabledListener));
+        textInputControl.textProperty().addListener(new WeakChangeListener<>(textInputControlTextListener));
+
+        setupMouseHandlers();
+    }
+
+    private void setupMouseHandlers() {
+        bg.setOnMousePressed(e -> textInputControl.requestFocus());
+        bg.setOnMouseEntered(e -> onMouseEntered());
+        bg.setOnMouseExited(e -> onMouseExited());
+
+        textInputControl.setOnMouseEntered(e -> onMouseEntered());
+        textInputControl.setOnMouseExited(e -> onMouseExited());
+    }
+
+    private void applyCompactModeLayout(double height) {
+        helpLabel.setVisible(false);
+        helpLabel.setManaged(false);
+        errorLabel.setVisible(false);
+        errorLabel.setManaged(false);
+
+        StringUtils.toOptional(descriptionLabel.getText())
+                .ifPresent(text -> descriptionLabel.setLayoutY(2));
+
+        textInputControl.setLayoutY(2);
+
+        bg.setMinHeight(height);
+        bg.setMaxHeight(height);
+        line.setLayoutY(height - BORDER_LINE_OFFSET);
+        selectionLine.setLayoutY(height - SELECTION_LINE_OFFSET);
+
+        requestLayout();
+    }
+
+    private void ensureLayoutThenShowSelectionLine(boolean animate) {
+        applyCss();
+        layout();
+
+        if (getWidth() > 0) {
+            showSelectionLine(animate);
+        } else {
+            setupLayoutCompleteListener(animate);
+        }
+    }
+
+    private void setupLayoutCompleteListener(boolean animate) {
+        if (layoutWidthListener != null) {
+            widthProperty().removeListener(layoutWidthListener);
+        }
+
+        layoutWidthListener = (observable, oldValue, newValue) -> {
+            if (newValue.doubleValue() > 0) {
+                widthProperty().removeListener(layoutWidthListener);
+                layoutWidthListener = null;
+                Platform.runLater(() -> showSelectionLine(animate));
+            }
+        };
+        widthProperty().addListener(new WeakChangeListener<>(layoutWidthListener));
+    }
+
+    private void maintainSelectionLineVisibility() {
+        if (textInputControl.isFocused() && textInputControl.isEditable()) {
+            selectionLine.setVisible(true);
+            selectionLine.setOpacity(1);
+            selectionLine.setPrefWidth(getWidth());
+        }
+    }
+
+    private void hideSelectionLine() {
+        Transitions.fadeOut(selectionLine, 200);
+    }
+
+    private void applyValidationStyling(boolean hasError) {
+        selectionLine.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, hasError);
+        descriptionLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, hasError);
+        textInputControl.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, hasError);
+    }
+
+    private void updateErrorDisplay(boolean isValid) {
+        errorLabel.setVisible(!isValid);
+        errorLabel.setManaged(errorLabel.isVisible());
+
+        String errorMessage = getActiveValidator()
+                .map(ValidatorBase::getMessage)
+                .filter(StringUtils::isNotEmpty)
+                .orElse("");
+        errorLabel.setText(errorMessage);
     }
 
     protected boolean showInputTextField() {
@@ -581,6 +834,10 @@ public class MaterialTextField extends Pane {
 
     @Override
     protected double computeMinHeight(double width) {
+        if (compactMode) {
+            return compactHeight;
+        }
+
         if (helpLabel.isManaged()) {
             return helpLabel.getLayoutY() + helpLabel.getHeight();
         } else if (errorLabel.isManaged()) {
@@ -592,11 +849,17 @@ public class MaterialTextField extends Pane {
 
     @Override
     protected double computeMaxHeight(double width) {
+        if (compactMode) {
+            return compactHeight;
+        }
         return computeMinHeight(width);
     }
 
     @Override
     protected double computePrefHeight(double width) {
+        if (compactMode) {
+            return compactHeight;
+        }
         return computeMinHeight(width);
     }
 

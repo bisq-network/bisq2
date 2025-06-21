@@ -17,10 +17,14 @@
 
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentRailUtil;
+import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
 
 @Getter
 @Slf4j
@@ -30,12 +34,33 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
     private final String holderName;
     private final String iban;
     private final String bic;
+    private final List<String> acceptedCountryCodes;
 
-    public SepaAccountPayload(String id, String paymentMethodName, String holderName, String iban, String bic, String countryCode) {
+    public SepaAccountPayload(String id,
+                              String paymentMethodName,
+                              String holderName,
+                              String iban,
+                              String bic,
+                              String countryCode,
+                              List<String> acceptedCountryCodes) {
         super(id, paymentMethodName, countryCode);
         this.holderName = holderName;
         this.iban = iban;
         this.bic = bic;
+        this.acceptedCountryCodes = acceptedCountryCodes != null ? List.copyOf(acceptedCountryCodes) : List.of();
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
+        NetworkDataValidation.validateRequiredText(holderName, 100);
+        NetworkDataValidation.validateSepaIbanFormat(iban, FiatPaymentRailUtil.getSepaEuroCountries());
+        NetworkDataValidation.validateBicFormat(bic);
+        NetworkDataValidation.validateCountryCodes(acceptedCountryCodes,
+                FiatPaymentRailUtil.getSepaEuroCountries(),
+                "SEPA payments");
+        NetworkDataValidation.validateIbanCountryConsistency(iban, getCountryCode());
     }
 
     @Override
@@ -52,7 +77,8 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
         return bisq.account.protobuf.SepaAccountPayload.newBuilder()
                 .setHolderName(holderName)
                 .setIban(iban)
-                .setBic(bic);
+                .setBic(bic)
+                .addAllAcceptedCountryCodes(acceptedCountryCodes);
     }
 
     public static SepaAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
@@ -63,6 +89,7 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
                 sepaAccountPayload.getHolderName(),
                 sepaAccountPayload.getIban(),
                 sepaAccountPayload.getBic(),
-                countryBasedAccountPayload.getCountryCode());
+                countryBasedAccountPayload.getCountryCode(),
+                sepaAccountPayload.getAcceptedCountryCodesList());
     }
 }

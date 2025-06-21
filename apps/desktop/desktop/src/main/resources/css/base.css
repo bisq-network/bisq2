@@ -102,6 +102,7 @@
     -bisq-dark-grey: -bisq-dark-grey-20;
     -bisq-content-bg-grey: -bisq-dark-grey-40;
     -bisq-popup-bg-grey: -bisq-dark-grey-40;
+    -bisq-form-bg: rgba(255, 255, 255, 0.05);
 
     /* Border colors */
     -bisq-border-color-grey: -bisq-mid-grey-10;

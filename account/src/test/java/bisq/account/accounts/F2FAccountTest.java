@@ -6,7 +6,8 @@ import bisq.account.protobuf.CountryBasedAccount;
 import bisq.account.protobuf.CountryBasedAccountPayload;
 import bisq.account.protobuf.F2FAccount;
 import bisq.account.protobuf.F2FAccountPayload;
-import bisq.account.protobuf.*;
+import bisq.account.protobuf.FiatPaymentMethod;
+import bisq.account.protobuf.PaymentMethod;
 import bisq.common.protobuf.Country;
 import bisq.common.protobuf.Region;
 import org.junit.jupiter.api.Test;
@@ -28,7 +29,7 @@ class F2FAccountTest {
                     .setId("id")
                     .setPaymentMethodName("F2F")
                     .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
-                            .setCountryCode("countryCode")
+                            .setCountryCode("CO")
                             .setF2FAccountPayload(F2FAccountPayload.newBuilder()
                                     .setCity("city")
                                     .setContact("contact")
@@ -36,7 +37,7 @@ class F2FAccountTest {
             )
             .setCountryBasedAccount(CountryBasedAccount.newBuilder()
                     .setCountry(Country.newBuilder()
-                            .setCode("countryCode")
+                            .setCode("CO")
                             .setName("countryName")
                             .setRegion(Region.newBuilder()
                                     .setCode("regionCode")
@@ -47,9 +48,9 @@ class F2FAccountTest {
 
     private static final bisq.account.accounts.F2FAccount ACCOUNT = new bisq.account.accounts.F2FAccount(
             "accountName",
-            new bisq.account.accounts.F2FAccountPayload("id", "F2F", "countryCode", "city", "contact", "extraInfo"),
+            new bisq.account.accounts.F2FAccountPayload("id", "F2F", "CO", "city", "contact", "extraInfo"),
             new bisq.common.locale.Country(
-                    "countryCode",
+                    "CO",
                     "countryName",
                     new bisq.common.locale.Region("regionCode", "regionName")));
 

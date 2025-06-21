@@ -1,5 +1,7 @@
 package bisq.account.accounts;
 
+import bisq.common.validation.NetworkDataValidation;
+
 public class F2FAccountPayload extends CountryBasedAccountPayload {
 
     private final String city;
@@ -11,7 +13,17 @@ public class F2FAccountPayload extends CountryBasedAccountPayload {
         this.city = city;
         this.contact = contact;
         this.extraInfo = extraInfo;
+        verify();
     }
+
+    @Override
+    public void verify() {
+        super.verify();
+        NetworkDataValidation.validateRequiredText(city, 100);
+        NetworkDataValidation.validateRequiredText(contact, 100);
+        NetworkDataValidation.validateRequiredText(extraInfo, 500);
+    }
+
     @Override
     protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
         return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setF2FAccountPayload(

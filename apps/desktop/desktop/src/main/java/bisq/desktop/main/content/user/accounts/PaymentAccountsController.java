@@ -22,13 +22,16 @@ import bisq.account.accounts.Account;
 import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.account.accounts.UserDefinedFiatAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.common.application.DevMode;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
+import bisq.mu_sig.MuSigService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -37,8 +40,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Comparator;
 import java.util.NoSuchElementException;
 
-import static bisq.desktop.navigation.NavigationTarget.CREATE_BISQ_EASY_PAYMENT_ACCOUNT;
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class PaymentAccountsController implements Controller {
@@ -46,12 +48,14 @@ public class PaymentAccountsController implements Controller {
     @Getter
     private final PaymentAccountsView view;
     private final AccountService accountService;
+    private final MuSigService muSigService;
     private Subscription selectedAccountSubscription, accountDataSubscription;
     private Pin accountsPin, selectedAccountPin;
 
 
     public PaymentAccountsController(ServiceProvider serviceProvider) {
         accountService = serviceProvider.getAccountService();
+        muSigService = serviceProvider.getMuSigService();
 
         model = new PaymentAccountsModel();
         view = new PaymentAccountsView(model, this);
@@ -104,14 +108,19 @@ public class PaymentAccountsController implements Controller {
     }
 
     void onCreateAccount() {
-        Navigation.navigateTo(CREATE_BISQ_EASY_PAYMENT_ACCOUNT);
+        if (shouldUseNewPaymentAccountWizard()) {
+            Navigation.navigateTo(NavigationTarget.CREATE_PAYMENT_ACCOUNT);
+        } else {
+            Navigation.navigateTo(NavigationTarget.CREATE_PAYMENT_ACCOUNT_LEGACY);
+        }
     }
 
     void onSaveAccount() {
         var selectedAccount = this.getSelectedAccount();
         String accountName = selectedAccount.getAccountName();
         model.getAccountData().ifPresent(accountData -> {
-            checkArgument(accountData.length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH, "Account data must not be longer than 1000 characters");
+            checkArgument(accountData.length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH,
+                    "Account data must not be longer than 1000 characters");
             UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(accountName, accountData);
             accountService.removePaymentAccount(selectedAccount);
             accountService.addPaymentAccount(newAccount);
@@ -141,5 +150,9 @@ public class PaymentAccountsController implements Controller {
 
     private Account<?, ? extends PaymentMethod<?>> getSelectedAccount() throws NoSuchElementException {
         return model.getSelectedAccount().orElseThrow(() -> new NoSuchElementException("There is no account selected."));
+    }
+
+    private boolean shouldUseNewPaymentAccountWizard() {
+        return muSigService.getMuSigActivated().get() || DevMode.isDevMode();
     }
 }
