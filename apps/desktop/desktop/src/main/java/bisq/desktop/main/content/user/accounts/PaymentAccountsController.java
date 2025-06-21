@@ -22,7 +22,6 @@ import bisq.account.accounts.Account;
 import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.account.accounts.UserDefinedFiatAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.common.application.DevMode;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
@@ -108,7 +107,7 @@ public class PaymentAccountsController implements Controller {
     }
 
     void onCreateAccount() {
-        if (shouldUseNewPaymentAccountWizard()) {
+        if (muSigService.getMuSigActivated().get()) {
             Navigation.navigateTo(NavigationTarget.CREATE_PAYMENT_ACCOUNT);
         } else {
             Navigation.navigateTo(NavigationTarget.CREATE_PAYMENT_ACCOUNT_LEGACY);
@@ -150,9 +149,5 @@ public class PaymentAccountsController implements Controller {
 
     private Account<?, ? extends PaymentMethod<?>> getSelectedAccount() throws NoSuchElementException {
         return model.getSelectedAccount().orElseThrow(() -> new NoSuchElementException("There is no account selected."));
-    }
-
-    private boolean shouldUseNewPaymentAccountWizard() {
-        return muSigService.getMuSigActivated().get() || DevMode.isDevMode();
     }
 }
