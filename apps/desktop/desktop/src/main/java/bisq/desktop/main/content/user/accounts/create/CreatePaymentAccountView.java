@@ -70,7 +70,7 @@ public class CreatePaymentAccountView extends NavigationView<VBox, CreatePayment
     private final ChangeListener<Number> currentIndexListener;
     private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
 
-    private Subscription showProgressBoxPin, createAccountButtonVisiblePin;
+    private Subscription  createAccountButtonVisiblePin;
 
     public CreatePaymentAccountView(CreatePaymentAccountModel model, CreatePaymentAccountController controller) {
         super(new VBox(), model, controller);
@@ -78,15 +78,23 @@ public class CreatePaymentAccountView extends NavigationView<VBox, CreatePayment
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(POPUP_HEIGHT);
 
+        Label paymentMethod = createAndGetProgressLabel(Res.get("user.paymentAccounts.createAccount.progress.paymentMethod"));
+        progressLabelList.addFirst(paymentMethod);
+
+        Label accountData = createAndGetProgressLabel(Res.get("user.paymentAccounts.createAccount.progress.accountData"));
+        progressLabelList.addFirst(accountData);
+
         Label summary = createAndGetProgressLabel(Res.get("user.paymentAccounts.createAccount.progress.summary"));
         progressLabelList.add(summary);
 
-        progressBox = new HBox(10);
+        progressBox = new HBox(10,
+                paymentMethod, getHLine(),
+                accountData, getHLine(),
+                summary);
         progressBox.setAlignment(Pos.CENTER);
         progressBox.setMinHeight(TOP_PANE_HEIGHT);
         progressBox.setMaxHeight(TOP_PANE_HEIGHT);
         progressBox.setPadding(new Insets(0, 20, 0, 50));
-        progressBox.getChildren().add(summary);
 
         closeButton = BisqIconButton.createIconButton("close");
 
@@ -173,32 +181,18 @@ public class CreatePaymentAccountView extends NavigationView<VBox, CreatePayment
             progressBox.getChildren().addFirst(getHLine());
             progressBox.getChildren().addFirst(options);
         }
-
-        Label accountData =
-                createAndGetProgressLabel(Res.get("user.paymentAccounts.createAccount.progress.accountData"));
-        progressLabelList.addFirst(accountData);
-        progressBox.getChildren().addFirst(getHLine());
-        progressBox.getChildren().addFirst(accountData);
-
-        Label paymentMethod =
-                createAndGetProgressLabel(Res.get("user.paymentAccounts.createAccount.progress.paymentMethod"));
-        progressLabelList.addFirst(paymentMethod);
-        progressBox.getChildren().addFirst(getHLine());
-        progressBox.getChildren().addFirst(paymentMethod);
     }
 
     private void setupBindings() {
         setupButtonBindings();
 
         setupCreateAccountButtonBinding();
-        setupProgressBoxBinding();
 
         model.getCurrentIndex().addListener(currentIndexListener);
         model.getView().addListener(viewChangeListener);
     }
 
     private void setupButtonBindings() {
-        nextButton.textProperty().bind(model.getNextButtonText());
         nextButton.visibleProperty().bind(model.getNextButtonVisible());
         nextButton.managedProperty().bind(model.getNextButtonVisible());
 
@@ -224,13 +218,6 @@ public class CreatePaymentAccountView extends NavigationView<VBox, CreatePayment
             backButton.prefWidthProperty().unbind();
             backButton.setPrefWidth(Region.USE_COMPUTED_SIZE);
         }
-    }
-
-    private void setupProgressBoxBinding() {
-        showProgressBoxPin = EasyBind.subscribe(model.getShowProgressBox(), showProgressBox -> {
-            progressBox.setVisible(showProgressBox);
-            progressBox.setManaged(showProgressBox);
-        });
     }
 
     private void setupEventHandlers() {
@@ -260,10 +247,6 @@ public class CreatePaymentAccountView extends NavigationView<VBox, CreatePayment
         model.getCurrentIndex().removeListener(currentIndexListener);
         model.getView().removeListener(viewChangeListener);
 
-        Optional.ofNullable(showProgressBoxPin).ifPresent(pin -> {
-            pin.unsubscribe();
-            showProgressBoxPin = null;
-        });
         Optional.ofNullable(createAccountButtonVisiblePin).ifPresent(pin -> {
             pin.unsubscribe();
             createAccountButtonVisiblePin = null;

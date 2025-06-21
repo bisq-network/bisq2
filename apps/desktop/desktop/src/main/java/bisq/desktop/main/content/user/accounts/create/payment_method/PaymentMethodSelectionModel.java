@@ -34,15 +34,13 @@ import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
 @Getter
 public class PaymentMethodSelectionModel implements Model {
-
-    private final ObservableList<PaymentMethod<?>> allPaymentMethods = FXCollections.observableArrayList();
-    private final ObservableList<PaymentMethodSelectionView.PaymentMethodItem> allPaymentMethodItems =
-            FXCollections.observableArrayList();
+    private final ObservableList<PaymentMethodSelectionView.PaymentMethodItem> allPaymentMethodItems = FXCollections.observableArrayList();
     private final FilteredList<PaymentMethodSelectionView.PaymentMethodItem> filteredPaymentMethodItems =
             new FilteredList<>(allPaymentMethodItems);
     private final SortedList<PaymentMethodSelectionView.PaymentMethodItem> sortedPaymentMethodItems =
@@ -53,30 +51,11 @@ public class PaymentMethodSelectionModel implements Model {
     private final IntegerProperty totalMethodsCount = new SimpleIntegerProperty(0);
     private final IntegerProperty filteredMethodsCount = new SimpleIntegerProperty(0);
 
-    private final ListChangeListener<PaymentMethod<?>> paymentMethodsChangeListener;
     private final ListChangeListener<PaymentMethodSelectionView.PaymentMethodItem> filteredItemsChangeListener;
 
-    public PaymentMethodSelectionModel() {
-        paymentMethodsChangeListener = change -> {
-            while (change.next()) {
-                if (change.wasAdded()) {
-                    change.getAddedSubList().forEach(paymentMethod -> {
-                        PaymentMethodSelectionView.PaymentMethodItem item =
-                                new PaymentMethodSelectionView.PaymentMethodItem(paymentMethod);
-                        allPaymentMethodItems.add(item);
-                    });
-                }
-                if (change.wasRemoved()) {
-                    change.getRemoved().forEach(paymentMethod ->
-                            allPaymentMethodItems.removeIf(item ->
-                                    item.getPaymentMethod().equals(paymentMethod))
-                    );
-                }
-            }
-            totalMethodsCount.set(allPaymentMethods.size());
-        };
-        allPaymentMethods.addListener(paymentMethodsChangeListener);
-
+    public PaymentMethodSelectionModel(List<PaymentMethodSelectionView.PaymentMethodItem> items) {
+        this.allPaymentMethodItems.setAll(items);
+        totalMethodsCount.set(items.size());
         filteredItemsChangeListener = change ->
                 filteredMethodsCount.set(filteredPaymentMethodItems.size());
         filteredPaymentMethodItems.addListener(filteredItemsChangeListener);

@@ -40,13 +40,11 @@ import java.util.Optional;
 @Getter
 public class CreatePaymentAccountModel extends NavigationModel {
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
-    private final StringProperty nextButtonText = new SimpleStringProperty();
     private final StringProperty backButtonText = new SimpleStringProperty(Res.get("action.back"));
     private final BooleanProperty closeButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty createAccountButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty();
-    private final BooleanProperty showProgressBox = new SimpleBooleanProperty();
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     private final List<NavigationTarget> childTargets = new ArrayList<>();
 
@@ -100,13 +98,11 @@ public class CreatePaymentAccountModel extends NavigationModel {
         optionsData = Optional.empty();
 
         currentIndex.set(0);
-        nextButtonText.set(Res.get("action.next"));
         backButtonText.set(Res.get("action.back"));
         closeButtonVisible.set(false);
         nextButtonVisible.set(true);
         createAccountButtonVisible.set(false);
         backButtonVisible.set(false);
-        showProgressBox.set(false);
         selectedChildTarget.set(null);
 
         childTargets.clear();

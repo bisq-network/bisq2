@@ -53,13 +53,12 @@ import java.util.Optional;
 
 @Slf4j
 public class CreatePaymentAccountController extends NavigationController {
-
+    private final AccountService accountService;
     private final OverlayController overlayController;
     @Getter
     private final CreatePaymentAccountModel model;
     @Getter
     private final CreatePaymentAccountView view;
-
     private final PaymentMethodSelectionController paymentMethodController;
     private final PaymentDataEntryController accountDataController;
     private final PaymentOptionsController optionsController;
@@ -67,7 +66,6 @@ public class CreatePaymentAccountController extends NavigationController {
 
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
 
-    private final AccountService accountService;
 
     private Subscription selectedPaymentMethodPin, accountDataPin;
 
@@ -75,7 +73,6 @@ public class CreatePaymentAccountController extends NavigationController {
         super(NavigationTarget.CREATE_PAYMENT_ACCOUNT);
 
         this.accountService = serviceProvider.getAccountService();
-
         overlayController = OverlayController.getInstance();
 
         model = new CreatePaymentAccountModel();
@@ -123,23 +120,11 @@ public class CreatePaymentAccountController extends NavigationController {
         }
     }
 
-    public void onKeyPressed(KeyEvent keyEvent) {
-        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onClose);
-        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onNext);
-    }
-
     @Override
     protected void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
         model.getCloseButtonVisible().set(true);
 
         boolean isSummary = navigationTarget == NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY;
-
-        model.getNextButtonText().set(isSummary ?
-                Res.get("user.paymentAccounts.createAccount.createAccount") :
-                Res.get("action.next"));
-
-        model.getShowProgressBox().set(true);
-
         model.getCreateAccountButtonVisible().set(isSummary);
         model.getNextButtonVisible().set(!isSummary);
         model.getBackButtonVisible().set(model.getCurrentIndex().get() > 0);
@@ -150,16 +135,15 @@ public class CreatePaymentAccountController extends NavigationController {
         return switch (navigationTarget) {
             case CREATE_PAYMENT_ACCOUNT_PAYMENT_METHOD -> Optional.of(paymentMethodController);
             case CREATE_PAYMENT_ACCOUNT_DATA -> Optional.of(accountDataController);
-            case CREATE_PAYMENT_ACCOUNT_OPTIONS -> {
-                if (!model.isOptionsVisible()) {
-                    Navigation.navigateTo(NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY);
-                    yield Optional.empty();
-                }
-                yield Optional.of(optionsController);
-            }
+            case CREATE_PAYMENT_ACCOUNT_OPTIONS -> Optional.of(optionsController);
             case CREATE_PAYMENT_ACCOUNT_SUMMARY -> Optional.of(summaryController);
             default -> Optional.empty();
         };
+    }
+
+    void onKeyPressed(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onClose);
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onNext);
     }
 
     void onNext() {
@@ -196,9 +180,8 @@ public class CreatePaymentAccountController extends NavigationController {
             summaryController.cleanup();
         }
 
-        cleanupWizardState();
+        resetModel();
 
-        Navigation.navigateTo(NavigationTarget.MAIN);
         OverlayController.hide();
     }
 
@@ -372,21 +355,12 @@ public class CreatePaymentAccountController extends NavigationController {
         return Optional.of(new F2FAccount(accountName, payload, countryOpt.get()));
     }
 
-    private void cleanupWizardState() {
+    private void resetModel() {
         model.setPaymentMethod(Optional.empty());
         model.setAccountData(Optional.empty());
         model.setOptionsData(Optional.empty());
         model.setOptionsVisible(false);
         model.setAnimateRightOut(true);
-
-        if (selectedPaymentMethodPin != null) {
-            selectedPaymentMethodPin.unsubscribe();
-            selectedPaymentMethodPin = null;
-        }
-        if (accountDataPin != null) {
-            accountDataPin.unsubscribe();
-            accountDataPin = null;
-        }
 
         resetSelectedChildTarget();
         model.getChildTargets().clear();

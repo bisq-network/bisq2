@@ -70,40 +70,25 @@ public class PaymentMethodSelectionController implements Controller {
 
     private String userCountryCode;
     private String userCurrencyCode;
-    private boolean isInitialized = false;
 
     public PaymentMethodSelectionController(Runnable onSelectionConfirmedHandler) {
         this.onSelectionConfirmedHandler = onSelectionConfirmedHandler;
-        model = new PaymentMethodSelectionModel();
-        view = new PaymentMethodSelectionView(model, this);
-    }
-
-    public void init() {
-        if (isInitialized) {
-            return;
-        }
-
-        List<FiatPaymentMethod> availableMethods = FiatPaymentRailUtil.getPaymentRails().stream()
+        List<PaymentMethodSelectionView.PaymentMethodItem> items = FiatPaymentRailUtil.getPaymentRails().stream()
                 .filter(rail -> rail != FiatPaymentRail.CUSTOM)
                 .filter(FiatPaymentRail::isActive)
                 .map(FiatPaymentMethod::fromPaymentRail)
+                .map(PaymentMethodSelectionView.PaymentMethodItem::new)
                 .collect(Collectors.toList());
-
-        model.getAllPaymentMethods().setAll(availableMethods);
+        model = new PaymentMethodSelectionModel(items);
+        view = new PaymentMethodSelectionView(model, this);
 
         detectUserLocale();
         setupLocaleAwareSorting();
         model.updateFilterPredicate();
-
-        isInitialized = true;
     }
 
     @Override
     public void onActivate() {
-        if (!isInitialized) {
-            init();
-        }
-
         model.updateFilterPredicate();
 
         UIThread.runOnNextRenderFrame(() -> {
@@ -117,11 +102,9 @@ public class PaymentMethodSelectionController implements Controller {
     }
 
     public void cleanup() {
-        model.getAllPaymentMethods().clear();
         model.getAllPaymentMethodItems().clear();
         model.selectPaymentMethod(null);
         model.getSearchText().set("");
-        isInitialized = false;
     }
 
     public ReadOnlyObjectProperty<PaymentMethod<?>> getSelectedPaymentMethod() {
