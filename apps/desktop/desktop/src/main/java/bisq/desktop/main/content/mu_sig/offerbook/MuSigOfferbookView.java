@@ -204,11 +204,10 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         selectedOfferDirectionFilterPin = EasyBind.subscribe(model.getSelectedMuSigOfferDirectionFilter(), this::updateSelectedOfferDirectionFilter);
 
         activeMarketPaymentsCountPin = EasyBind.subscribe(model.getActiveMarketPaymentsCount(), count -> {
-            if (count.intValue() != 0) {
-                if (!paymentsFilterLabel.getStyleClass().contains(ACTIVE_FILTER_CLASS)) {
-                    paymentsFilterLabel.getStyleClass().add(ACTIVE_FILTER_CLASS);
-                }
-            } else {
+            boolean hasActiveFilters = count.intValue() != 0;
+            if (hasActiveFilters && !paymentsFilterLabel.getStyleClass().contains(ACTIVE_FILTER_CLASS)) {
+                paymentsFilterLabel.getStyleClass().add(ACTIVE_FILTER_CLASS);
+            } else if (!hasActiveFilters) {
                 paymentsFilterLabel.getStyleClass().remove(ACTIVE_FILTER_CLASS);
             }
         });
