@@ -17,15 +17,19 @@
 
 package bisq.desktop.main.content.mu_sig.offerbook;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
@@ -53,16 +57,24 @@ public class MuSigOfferbookModel implements Model {
     private final FilteredList<MuSigOfferListItem> filteredMuSigOfferListItems = new FilteredList<>(muSigOfferListItems);
     private final SortedList<MuSigOfferListItem> sortedMuSigOfferListItems = new SortedList<>(filteredMuSigOfferListItems);
     private final ObjectProperty<MuSigFilters.MuSigOfferDirectionFilter> selectedMuSigOfferDirectionFilter = new SimpleObjectProperty<>();
+    private final ObservableList<FiatPaymentMethod> availablePaymentMethods = FXCollections.observableArrayList();
+    private final ObservableSet<FiatPaymentMethod> selectedPaymentMethods = FXCollections.observableSet();
+    private final StringProperty paymentFilterTitle = new SimpleStringProperty("");
+    private final BooleanProperty isCustomPaymentsSelected = new SimpleBooleanProperty();
+    private final IntegerProperty activeMarketPaymentsCount = new SimpleIntegerProperty();
 
     private final Predicate<MuSigOfferListItem> muSigOfferListItemsPredicate = item ->
             getMuSigOffersDirectionFilterPredicate().test(item)
-                    && getMuSigMarketFilterPredicate().test(item);
+                    && getMuSigMarketFilterPredicate().test(item)
+                    && getPaymentMethodFilterPredicate().test(item);
     private final Predicate<MuSigOfferListItem> muSigMarketFilterPredicate = item ->
             getSelectedMarketItem().get() == null
                     || getSelectedMarketItem().get().getMarket() == null
                     || getSelectedMarketItem().get().getMarket().equals(item.getMarket());
     @Setter
     private Predicate<MuSigOfferListItem> muSigOffersDirectionFilterPredicate = item -> true;
+    @Setter
+    private Predicate<MuSigOfferListItem> paymentMethodFilterPredicate = item -> true;
 
     private final ObservableList<MarketItem> marketItems = FXCollections.observableArrayList();
     private final FilteredList<MarketItem> filteredMarketItems = new FilteredList<>(marketItems);
