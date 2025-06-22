@@ -236,7 +236,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         widthPropertyPin = EasyBind.subscribe(root.widthProperty(), widthProperty -> {
             if (widthProperty != null && model.getShowOfferListExpanded() != null) {
                 if (widthProperty.intValue() == COLLAPSED_LIST_WIDTH && model.getShowOfferListExpanded().get()) {
-                    controller.toggleOfferList();
+                    controller.onToggleOfferList();
                 }
             }
         });
@@ -248,16 +248,16 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
 
         headline.setOnMouseEntered(e -> headline.setGraphic(offerListExpandedWhiteIcon));
         headline.setOnMouseExited(e -> headline.setGraphic(offerListGreenIcon));
-        headline.setOnMouseClicked(e -> controller.toggleOfferList());
+        headline.setOnMouseClicked(e -> controller.onToggleOfferList());
         collapseOfferListLabel.setOnMouseEntered(e -> collapseOfferListLabel.setGraphic(collapseOfferListWhiteIcon));
         collapseOfferListLabel.setOnMouseExited(e -> collapseOfferListLabel.setGraphic(collapseOfferListGreyIcon));
-        collapseOfferListLabel.setOnMouseClicked(e -> controller.toggleOfferList());
+        collapseOfferListLabel.setOnMouseClicked(e -> controller.onToggleOfferList());
         expandOfferListLabel.setOnMouseEntered(e -> expandOfferListLabel.setGraphic(expandOfferListWhiteIcon));
         expandOfferListLabel.setOnMouseExited(e -> expandOfferListLabel.setGraphic(expandOfferListGreyIcon));
-        expandOfferListLabel.setOnMouseClicked(e -> controller.toggleOfferList());
+        expandOfferListLabel.setOnMouseClicked(e -> controller.onToggleOfferList());
         offerListCollapsedIconLabel.setOnMouseEntered(e -> offerListCollapsedIconLabel.setGraphic(offerListCollapsedWhiteIcon));
         offerListCollapsedIconLabel.setOnMouseExited(e -> offerListCollapsedIconLabel.setGraphic(offerListGreyIcon));
-        offerListCollapsedIconLabel.setOnMouseClicked(e -> controller.toggleOfferList());
+        offerListCollapsedIconLabel.setOnMouseClicked(e -> controller.onToggleOfferList());
 
         buyFromOffers.setOnAction(e -> controller.onSelectBuyFromFilter());
         sellToOffers.setOnAction(e -> controller.onSelectSellToFilter());
@@ -354,7 +354,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
             paymentLabel.setGraphicTextGap(10);
             PaymentMenuItem paymentItem = new PaymentMenuItem(payment, paymentLabel);
             paymentItem.setHideOnClick(false);
-            paymentItem.setOnAction(e -> controller.togglePaymentFilter(payment, paymentItem.isSelected()));
+            paymentItem.setOnAction(e -> controller.onTogglePaymentFilter(payment, paymentItem.isSelected()));
             paymentsFilterMenu.addMenuItems(paymentItem);
         });
 
@@ -364,14 +364,14 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         customPaymentLabel.setGraphicTextGap(10);
         PaymentMenuItem customItem = new PaymentMenuItem(null, customPaymentLabel);
         customItem.setHideOnClick(false);
-        customItem.setOnAction(e -> controller.toggleCustomPaymentFilter(customItem.isSelected()));
+        customItem.setOnAction(e -> controller.onToggleCustomPaymentFilter(customItem.isSelected()));
         paymentsFilterMenu.addMenuItems(customItem);
 
         SeparatorMenuItem separator = new SeparatorMenuItem();
         DropdownBisqMenuItem clearFilters = new DropdownBisqMenuItem("delete-t-grey", "delete-t-white",
                 Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.clearFilters"));
         clearFilters.setHideOnClick(false);
-        clearFilters.setOnAction(e -> controller.clearPaymentFilters());
+        clearFilters.setOnAction(e -> controller.onClearPaymentFilters());
         paymentsFilterMenu.addMenuItems(separator, clearFilters);
     }
 

@@ -183,7 +183,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         });
     }
 
-    void toggleOfferList() {
+    void onToggleOfferList() {
         model.getShowOfferListExpanded().set(!model.getShowOfferListExpanded().get());
     }
 
@@ -201,7 +201,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         model.getShowBuyOffers().set(true);
     }
 
-    void togglePaymentFilter(FiatPaymentMethod paymentMethod, boolean isSelected) {
+    void onTogglePaymentFilter(FiatPaymentMethod paymentMethod, boolean isSelected) {
         if (isSelected) {
             model.getSelectedMarketPayments().remove(paymentMethod);
         } else {
@@ -213,14 +213,14 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
                         .map(payment -> payment.getPaymentRail().name()).collect(Collectors.toList())));
     }
 
-    void toggleCustomPaymentFilter(boolean isSelected) {
+    void onToggleCustomPaymentFilter(boolean isSelected) {
         boolean newValue = !isSelected;
         model.getIsCustomPaymentsSelected().set(newValue);
         updateActiveMarketPaymentsCount();
         settingsService.setCookie(CookieKey.BISQ_EASY_OFFER_LIST_CUSTOM_PAYMENT_FILTER, getCookieSubKey(), newValue);
     }
 
-    void clearPaymentFilters() {
+    void onClearPaymentFilters() {
         model.getSelectedMarketPayments().clear();
         model.getIsCustomPaymentsSelected().set(false);
         updateActiveMarketPaymentsCount();
