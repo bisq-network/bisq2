@@ -68,7 +68,9 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -79,6 +81,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     private static final double SIDE_PADDING = 40;
     private static final double FAVOURITES_TABLE_PADDING = 21;
     private static final String ACTIVE_FILTER_CLASS = "active-filter";
+    private static final Map<String, StackPane> MARKET_HEADER_ICON_CACHE = new HashMap<>();
 
     private final RichTableView<MuSigOfferListItem> muSigOfferListView;
     private final BisqTableView<MarketItem> marketListView, favouritesListView;
@@ -636,7 +639,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
             // TODO: This now needs to take into account the base market as well
             if (marketHeaderIcon != null) {
-                StackPane tradePairImage = MarketImageComposition.getMarketIcons(selectedItem.getMarket());
+                StackPane tradePairImage = MarketImageComposition.getMarketIcons(selectedItem.getMarket(), MARKET_HEADER_ICON_CACHE);
                 marketHeaderIcon.setGraphic(tradePairImage);
             }
         }
