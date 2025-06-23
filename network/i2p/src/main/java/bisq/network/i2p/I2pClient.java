@@ -66,8 +66,7 @@ public class I2pClient {
                                          long socketTimeout,
                                          boolean isEmbeddedRouter) {
         synchronized (I2P_CLIENT_BY_APP) {
-            return I2P_CLIENT_BY_APP.computeIfAbsent(dirPath,
-                    k -> new I2pClient(dirPath, host, port, socketTimeout, isEmbeddedRouter));
+            return I2P_CLIENT_BY_APP.computeIfAbsent(dirPath, k -> new I2pClient(dirPath, host, port, socketTimeout, isEmbeddedRouter));
         }
     }
 
@@ -99,9 +98,7 @@ public class I2pClient {
             i2pSession.connect();
 
             if (keepAliveTask == null || keepAliveTask.isCancelled()) {
-                keepAliveTask = keepAliveExecutor.scheduleAtFixedRate(
-                        () -> manager.ping(destination, (int) socketTimeout),
-                        4, 4, TimeUnit.MINUTES);
+                keepAliveTask = keepAliveExecutor.scheduleAtFixedRate(() -> manager.ping(destination, (int) socketTimeout), 4, 4, TimeUnit.MINUTES);
             }
 
             Socket socket = manager.connectToSocket(destination, Math.toIntExact(socketTimeout));
@@ -158,29 +155,23 @@ public class I2pClient {
             props.setProperty("i2cp.reduceOnIdle", "false");
             I2PSocketManager mgr = I2PSocketManagerFactory.createManager(DEFAULT_HOST, DEFAULT_PORT, props);
 
-            // CHANGED: tune socket options
             I2PSocketOptions opts = mgr.buildOptions();
-            opts.setConnectTimeout(Math.toIntExact(socketTimeout));  // CHANGED: longer connect timeout
-            opts.setReadTimeout((int) TimeUnit.MINUTES.toMillis(10));  // CHANGED: 10-min read timeout
-            opts.setWriteTimeout((int) TimeUnit.MINUTES.toMillis(10)); // CHANGED: 10-min write timeout
-            opts.setMaxBufferSize(256 * 1024);  // CHANGED: larger buffer for throughput
+            opts.setConnectTimeout(Math.toIntExact(socketTimeout));
+            opts.setReadTimeout((int) TimeUnit.MINUTES.toMillis(10));
+            opts.setWriteTimeout((int) TimeUnit.MINUTES.toMillis(10));
+            opts.setMaxBufferSize(256 * 1024);
             mgr.setDefaultOptions(opts);
 
-            // CHANGED: add disconnect listener to auto-log and handle drops
-            mgr.addDisconnectListener(() ->
-                log.warn("I2P socket disconnected")
-            );
+            mgr.addDisconnectListener(() -> log.warn("I2P socket disconnected"));
 
             return mgr;
         });
     }
 
-    private I2PSocketManager maybeCreateServerSession(
-            I2PKeyPair i2PKeyPair,
-            String sessionId,
-            String host,
-            int port
-    ) throws IOException {
+    private I2PSocketManager maybeCreateServerSession(I2PKeyPair i2PKeyPair,
+                                                      String sessionId,
+                                                      String host,
+                                                      int port) throws IOException {
         if (sessionMap.containsKey(sessionId)) {
             return sessionMap.get(sessionId);
         }
@@ -196,23 +187,17 @@ public class I2pClient {
             byte[] rawDestBytes = i2PKeyPair.getDestination();
             I2PSocketManager manager;
             try (ByteArrayInputStream privKeyStream = new ByteArrayInputStream(rawDestBytes)) {
-                manager = I2PSocketManagerFactory.createDisconnectedManager(
-                        privKeyStream,
-                        host,
-                        port,
-                        null
-                );
+                manager = I2PSocketManagerFactory.createDisconnectedManager(privKeyStream, host, port, null);
             } catch (I2PSessionException e) {
                 throw new RuntimeException(e);
             }
 
-            // CHANGED: apply same streaming options for server
             I2PSocketOptions options = manager.getDefaultOptions();
             options.setLocalPort(port);
             options.setConnectTimeout(Math.toIntExact(socketTimeout));
-            options.setReadTimeout((int) TimeUnit.MINUTES.toMillis(10));  // CHANGED
-            options.setWriteTimeout((int) TimeUnit.MINUTES.toMillis(10)); // CHANGED
-            options.setMaxBufferSize(256 * 1024);  // CHANGED
+            options.setReadTimeout((int) TimeUnit.MINUTES.toMillis(10));
+            options.setWriteTimeout((int) TimeUnit.MINUTES.toMillis(10));
+            options.setMaxBufferSize(256 * 1024);
             manager.setDefaultOptions(options);
 
             i2pSession = manager.getSession();
@@ -260,7 +245,7 @@ public class I2pClient {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return destination != null  && i2pRouter != null && i2pRouter.isPeerOnline(destination);
+        return destination != null && i2pRouter != null && i2pRouter.isPeerOnline(destination);
     }
 
     public Destination lookupDest(String address) {
