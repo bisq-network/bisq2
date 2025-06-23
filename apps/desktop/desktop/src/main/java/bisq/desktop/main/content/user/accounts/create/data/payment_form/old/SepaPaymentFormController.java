@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.data.method_forms;
+package bisq.desktop.main.content.user.accounts.create.data.payment_form.old;
 
 import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.locale.Country;
@@ -36,6 +36,11 @@ import java.util.function.Consumer;
 public class SepaPaymentFormController extends PaymentFormController {
 
     private final List<String> sepaCountryCodes;
+
+    public SepaPaymentFormController(ServiceProvider serviceProvider) {
+        super(serviceProvider);
+        sepaCountryCodes = FiatPaymentRailUtil.getSepaEuroCountries();
+    }
 
     public SepaPaymentFormController(ServiceProvider serviceProvider, Consumer<Map<String, Object>> dataChangeHandler) {
         super(serviceProvider, dataChangeHandler);
@@ -176,7 +181,7 @@ public class SepaPaymentFormController extends PaymentFormController {
 
     @Override
     protected PaymentFormView createView() {
-        return new SepaPaymentFormView(new PaymentFormModel(), this);
+        return new SepaPaymentFormView(new SepaPaymentFormModel(), this);
     }
 
     @Override

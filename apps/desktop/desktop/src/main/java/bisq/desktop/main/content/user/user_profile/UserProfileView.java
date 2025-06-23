@@ -55,9 +55,9 @@ import static bisq.user.profile.UserProfile.MAX_LENGTH_TERMS;
 public class UserProfileView extends View<HBox, UserProfileModel, UserProfileController> {
 
     private static final TextMaxLengthValidator TERMS_MAX_LENGTH_VALIDATOR =
-            new TextMaxLengthValidator(MAX_LENGTH_TERMS, Res.get("user.userProfile.terms.tooLong", MAX_LENGTH_TERMS));
+            new TextMaxLengthValidator(Res.get("user.userProfile.terms.tooLong", MAX_LENGTH_TERMS), MAX_LENGTH_TERMS);
     private static final TextMaxLengthValidator STATEMENT_MAX_LENGTH_VALIDATOR =
-            new TextMaxLengthValidator(MAX_LENGTH_STATEMENT, Res.get("user.userProfile.statement.tooLong", MAX_LENGTH_STATEMENT));
+            new TextMaxLengthValidator(Res.get("user.userProfile.statement.tooLong", MAX_LENGTH_STATEMENT), MAX_LENGTH_STATEMENT);
 
     private static final String STATEMENT_PROMPT = Res.get("user.userProfile.statement.prompt");
     private static final String TERMS_PROMPT = Res.get("user.userProfile.terms.prompt");

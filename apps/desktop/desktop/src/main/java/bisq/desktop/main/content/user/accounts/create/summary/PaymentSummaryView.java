@@ -405,7 +405,7 @@ public class PaymentSummaryView extends View<VBox, PaymentSummaryModel, PaymentS
     private MaterialTextField createAccountNameField() {
         MaterialTextField field = new MaterialTextField();
         field.setPrefWidth(300);
-        field.useCompactModeWithHeight(30);
+       // field.useCompactModeWithHeight(30);
 
         Predicate<String> validator = TextFormatterUtils.safeWithLength(MAX_ACCOUNT_NAME_LENGTH);
 
@@ -619,7 +619,7 @@ public class PaymentSummaryView extends View<VBox, PaymentSummaryModel, PaymentS
 
             UIThread.run(() -> {
                 accountNameField.requestFocus();
-                accountNameField.showSelectionLine(true);
+               // accountNameField.showSelectionLine(true);
             });
         } else {
             displayModeBox.setVisible(true);

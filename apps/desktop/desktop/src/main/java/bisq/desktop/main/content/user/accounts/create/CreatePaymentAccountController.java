@@ -18,16 +18,7 @@
 package bisq.desktop.main.content.user.accounts.create;
 
 import bisq.account.AccountService;
-import bisq.account.accounts.Account;
-import bisq.account.accounts.F2FAccount;
-import bisq.account.accounts.F2FAccountPayload;
-import bisq.account.accounts.SepaAccount;
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentRail;
-import bisq.account.payment_method.FiatPaymentRailUtil;
-import bisq.account.payment_method.PaymentMethod;
-import bisq.common.locale.Country;
-import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
@@ -46,8 +37,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -77,7 +66,7 @@ public class CreatePaymentAccountController extends NavigationController {
         paymentMethodController = new PaymentMethodSelectionController();
         accountDataController = new PaymentDataController(serviceProvider);
         optionsController = new PaymentOptionsController(serviceProvider);
-        summaryController = new PaymentSummaryController(serviceProvider, this::createAndSaveAccount);
+        summaryController = new PaymentSummaryController(serviceProvider, ()->{}); //todo
     }
 
     @Override
@@ -111,13 +100,13 @@ public class CreatePaymentAccountController extends NavigationController {
                     model.getNextButtonDisabled().set(paymentMethod == null);
                 });
 
-        accountDataPin = EasyBind.subscribe(accountDataController.getAccountData(),
+     /*   accountDataPin = EasyBind.subscribe(accountDataController.getAccountData(),
                 data -> {
                     if (data != null) {
                         model.setAccountData(Optional.of(data));
                         summaryController.setAccountData(data);
                     }
-                });
+                });*/
     }
 
     @Override
@@ -129,10 +118,10 @@ public class CreatePaymentAccountController extends NavigationController {
             selectedPaymentMethodPin.unsubscribe();
             selectedPaymentMethodPin = null;
         }
-        if (accountDataPin != null) {
+      /*  if (accountDataPin != null) {
             accountDataPin.unsubscribe();
             accountDataPin = null;
-        }
+        }*/
     }
 
     @Override
@@ -169,11 +158,8 @@ public class CreatePaymentAccountController extends NavigationController {
 
     private void navigateNext() {
         int nextIndex = model.getCurrentIndex().get() + 1;
-        if (nextIndex < model.getChildTargets().size()) {
-            if (!validate()) {
-                return;
-            }
-
+        boolean validate = validate();
+        if (nextIndex < model.getChildTargets().size() && validate) {
             model.setAnimateRightOut(false);
             navigateToIndex(nextIndex);
         }
@@ -229,97 +215,11 @@ public class CreatePaymentAccountController extends NavigationController {
         };
     }
 
-    private void createAndSaveAccount() {
-        //todo
-        getCreatedAccount().ifPresent(account -> {
-            accountService.addPaymentAccount(account);
-            accountService.setSelectedAccount(account);
-            onClose();
-        });
-    }
-    //todo
-    private Optional<Account<?, ?>> getCreatedAccount() {
-        Optional<PaymentMethod<?>> paymentMethodOpt = model.getPaymentMethod();
-        Optional<Map<String, Object>> accountDataOpt = model.getAccountDataOpt();
-
-        if (paymentMethodOpt.isEmpty() || accountDataOpt.isEmpty()) {
-            return Optional.empty();
-        }
-
-        PaymentMethod<?> paymentMethod = paymentMethodOpt.get();
-        Map<String, Object> accountData = accountDataOpt.get();
-        String accountName = summaryController.getAccountName().orElse("");
-
-        if (paymentMethod.getPaymentRail() instanceof FiatPaymentRail fiatRail) {
-            return switch (fiatRail) {
-                case SEPA -> createSepaAccount(accountName, accountData)
-                        .map(account -> (Account<?, ?>) account);
-                case F2F -> createF2FAccount(accountName, accountData)
-                        .map(account -> (Account<?, ?>) account);
-                default -> Optional.empty();
-            };
-        }
-
-        return Optional.empty();
-    }
-    //todo
-    private Optional<SepaAccount> createSepaAccount(String accountName, Map<String, Object> data) {
-        String holderName = (String) data.get("holderName");
-        String iban = (String) data.get("iban");
-        String bic = (String) data.get("bic");
-        Optional<Country> countryOpt = Optional.ofNullable((Country) data.get("country"));
-
-        if (StringUtils.isEmpty(holderName) || StringUtils.isEmpty(iban) || countryOpt.isEmpty()) {
-            return Optional.empty();
-        }
-
-        List<String> acceptedCountryCodes;
-        try {
-            Object countryCodes = data.get("acceptedCountryCodes");
-
-            if (countryCodes instanceof List<?> list &&
-                    list.stream().allMatch(item -> item instanceof String)) {
-                @SuppressWarnings("unchecked")
-                List<String> codes = (List<String>) countryCodes;
-                acceptedCountryCodes = codes;
-            } else {
-                acceptedCountryCodes = FiatPaymentRailUtil.getSepaEuroCountries();
-            }
-        } catch (Exception e) {
-            log.error("Failed to parse accepted country codes", e);
-            acceptedCountryCodes = FiatPaymentRailUtil.getSepaEuroCountries();
-        }
-
-        return Optional.of(new SepaAccount(accountName, holderName, iban, bic, countryOpt.get(), acceptedCountryCodes));
-    }
-    //todo
-    private Optional<F2FAccount> createF2FAccount(String accountName, Map<String, Object> data) {
-        String city = (String) data.get("city");
-        String contact = (String) data.get("contact");
-        Optional<String> extraInfo = StringUtils.toOptional((String) data.get("extraInfo"));
-        Optional<Country> countryOpt = Optional.ofNullable((Country) data.get("country"));
-
-        if (StringUtils.isEmpty(city) || StringUtils.isEmpty(contact) || countryOpt.isEmpty()) {
-            return Optional.empty();
-        }
-
-        F2FAccountPayload payload = new F2FAccountPayload(
-                StringUtils.createUid(),
-                FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.F2F).getName(),
-                countryOpt.get().getCode(),
-                city,
-                contact,
-                extraInfo.orElse("")
-        );
-
-        return Optional.of(new F2FAccount(accountName, payload, countryOpt.get()));
-    }
-
     private void reset() {
         resetSelectedChildTarget();
 
         paymentMethodController.reset();
-        accountDataController.cleanup();
+        accountDataController.reset();
         optionsController.cleanup();
         summaryController.cleanup();
 

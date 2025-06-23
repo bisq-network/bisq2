@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.data.method_forms;
+package bisq.desktop.main.content.user.accounts.create.data.payment_form.old;
 
 import bisq.common.locale.Country;
 import bisq.common.util.StringUtils;
@@ -30,13 +30,17 @@ import java.util.function.Consumer;
 
 public class F2FPaymentFormController extends PaymentFormController {
 
+    public F2FPaymentFormController(ServiceProvider serviceProvider) {
+        super(serviceProvider);
+    }
+
     public F2FPaymentFormController(ServiceProvider serviceProvider, Consumer<Map<String, Object>> dataChangeHandler) {
         super(serviceProvider, dataChangeHandler);
     }
 
     @Override
     protected PaymentFormView createView() {
-        return new F2FPaymentFormView(new PaymentFormModel(), this);
+        return new F2FPaymentFormView(new F2FPaymentFormModel(), this);
     }
 
     public Map<String, String> getValidationErrors() {

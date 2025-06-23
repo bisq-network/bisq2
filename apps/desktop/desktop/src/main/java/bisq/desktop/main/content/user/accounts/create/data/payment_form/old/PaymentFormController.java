@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.data.method_forms;
+package bisq.desktop.main.content.user.accounts.create.data.payment_form.old;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -32,6 +32,12 @@ public abstract class PaymentFormController implements Controller {
     protected final PaymentFormView view;
     @Getter
     protected final Map<String, Object> formData = new HashMap<>();
+
+    protected PaymentFormController(ServiceProvider serviceProvider) {
+        this.serviceProvider = serviceProvider;
+        this.dataChangeHandler = null; //todo
+        this.view = createView();
+    }
 
     protected PaymentFormController(ServiceProvider serviceProvider,
                                     Consumer<Map<String, Object>> dataChangeHandler) {

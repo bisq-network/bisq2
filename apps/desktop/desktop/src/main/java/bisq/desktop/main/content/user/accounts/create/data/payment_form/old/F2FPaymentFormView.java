@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.data.method_forms;
+package bisq.desktop.main.content.user.accounts.create.data.payment_form.old;
 
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
@@ -93,8 +93,8 @@ public class F2FPaymentFormView extends PaymentFormView {
             }
         });
 
-        cityField = new MaterialTextField(Res.get("user.paymentAccounts.createAccount.accountData.city"));
-        cityField.setPromptText(Res.get("user.paymentAccounts.f2f.city.prompt"));
+        cityField = new MaterialTextField(Res.get("user.paymentAccounts.createAccount.accountData.f2f.city"));
+        cityField.setPromptText(Res.get("user.paymentAccounts.createAccount.accountData.f2f.city.prompt"));
 
         HBox countryAndCityBox = new HBox(10);
         countryAndCityBox.setAlignment(Pos.CENTER_LEFT);
@@ -104,11 +104,11 @@ public class F2FPaymentFormView extends PaymentFormView {
         HBox.setHgrow(cityField, Priority.ALWAYS);
         countryAndCityBox.getChildren().addAll(countryBox, cityField);
 
-        contactField = new MaterialTextField(Res.get("user.paymentAccounts.createAccount.accountData.contact"));
-        contactField.setPromptText(Res.get("user.paymentAccounts.f2f.contact.prompt"));
+        contactField = new MaterialTextField(Res.get("user.paymentAccounts.createAccount.accountData.f2f.contact"));
+        contactField.setPromptText(Res.get("user.paymentAccounts.createAccount.accountData.f2f.contact.prompt"));
 
-        extraInfoField = new MaterialTextArea(Res.get("user.paymentAccounts.createAccount.accountData.extraInfo"));
-        extraInfoField.setPromptText(Res.get("user.paymentAccounts.f2f.extraInfo.prompt"));
+        extraInfoField = new MaterialTextArea(Res.get("user.paymentAccounts.createAccount.accountData.f2f.extraInfo"));
+        extraInfoField.setPromptText(Res.get("user.paymentAccounts.createAccount.accountData.f2f.extraInfo.prompt"));
         extraInfoField.setFixedHeight(100);
 
         Label cityErrorLabel = createErrorLabel();

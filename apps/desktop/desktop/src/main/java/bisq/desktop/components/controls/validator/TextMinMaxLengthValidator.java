@@ -20,32 +20,37 @@ package bisq.desktop.components.controls.validator;
 import bisq.i18n.Res;
 import javafx.scene.control.TextInputControl;
 
-public class TextMinLengthValidator extends ValidatorBase {
-
+public class TextMinMaxLengthValidator extends ValidatorBase {
     private static final int DEFAULT_MIN_LENGTH = 8;
+    private static final int DEFAULT_MAX_LENGTH = 100;
+
     private final int minLength;
+    private final int maxLength;
 
-    public TextMinLengthValidator(int minLength) {
-        this(Res.get("validation.tooShort", minLength), minLength);
+    public TextMinMaxLengthValidator() {
+        this(DEFAULT_MIN_LENGTH, DEFAULT_MAX_LENGTH);
     }
 
-    public TextMinLengthValidator() {
-        this(DEFAULT_MIN_LENGTH);
+    public TextMinMaxLengthValidator(String message) {
+        this(message, DEFAULT_MIN_LENGTH, DEFAULT_MAX_LENGTH);
     }
 
-    public TextMinLengthValidator(String message) {
-        this(message, DEFAULT_MIN_LENGTH);
+    public TextMinMaxLengthValidator(int minLength, int maxLength) {
+        this(Res.get("validation.tooShortOrTooLong", minLength, maxLength), minLength, maxLength);
     }
 
-    public TextMinLengthValidator(String message, int minLength) {
+    public TextMinMaxLengthValidator(String message, int minLength, int maxLength) {
         super(message);
         this.minLength = minLength;
+        this.maxLength = maxLength;
     }
 
     @Override
     protected void eval() {
-        if (srcControl.get() instanceof TextInputControl textInputControl && textInputControl.getText()!=null) {
-            hasErrors.set(textInputControl.getText().length() < minLength);
+        if (srcControl.get() instanceof TextInputControl textInputControl) {
+            hasErrors.set(textInputControl.getText() == null ||
+                    textInputControl.getText().length() > maxLength ||
+                    textInputControl.getText().length() < minLength);
         }
     }
 }

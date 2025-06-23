@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.user.accounts.create.data;
 
-import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
@@ -30,49 +29,27 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PaymentDataView extends View<VBox, PaymentDataModel, PaymentDataController> {
     private final Label titleLabel;
-    private final VBox formContainer;
 
     public PaymentDataView(PaymentDataModel model, PaymentDataController controller) {
         super(new VBox(10), model, controller);
 
-        root.setPadding(new Insets(15));
+        root.setPadding(new Insets(25, 15, 15, 15));
         root.setAlignment(Pos.TOP_CENTER);
         root.getStyleClass().add("create-account-data-view");
 
-        titleLabel = new Label(Res.get("user.paymentAccounts.createAccount.accountData.title"));
+        titleLabel = new Label();
         titleLabel.getStyleClass().add("bisq-text-headline-2");
-
-        formContainer = new VBox();
-        formContainer.setAlignment(Pos.TOP_CENTER);
-        formContainer.setPadding(new Insets(5));
-
-        root.getChildren().addAll(titleLabel, formContainer, Spacer.fillVBox());
-    }
-
-    public void setFormView(View<?, ?, ?> formView) {
-        updateFormContainer(formView);
-        updateTitle(model.getPaymentMethod().get());
     }
 
     @Override
     protected void onViewAttached() {
-        updateTitle(model.getPaymentMethod().get());
+        root.getChildren().addAll(titleLabel, model.getPaymentForm(), Spacer.fillVBox());
+        titleLabel.setText(Res.get("user.paymentAccounts.createAccount.accountData.title",
+                model.getPaymentMethod().getDisplayString()));
     }
 
     @Override
     protected void onViewDetached() {
-    }
-
-    private void updateFormContainer(View<?, ?, ?> formView) {
-        formContainer.getChildren().clear();
-
-        if (formView != null) {
-            formContainer.getChildren().add(formView.getRoot());
-        }
-    }
-
-    private void updateTitle(PaymentMethod<?> paymentMethod) {
-        titleLabel.setText(Res.get("user.paymentAccounts.createAccount.accountData.title",
-                paymentMethod.getDisplayString()));
+        root.getChildren().clear();
     }
 }

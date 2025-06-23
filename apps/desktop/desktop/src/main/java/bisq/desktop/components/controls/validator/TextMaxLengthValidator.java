@@ -17,20 +17,31 @@
 
 package bisq.desktop.components.controls.validator;
 
+import bisq.i18n.Res;
 import javafx.scene.control.TextInputControl;
 
 public class TextMaxLengthValidator extends ValidatorBase {
+    private static final int DEFAULT_MAX_LENGTH = 100;
 
     private final int maxLength;
 
-    public TextMaxLengthValidator(int length, String message) {
+    public TextMaxLengthValidator() {
+        this(DEFAULT_MAX_LENGTH);
+    }
+
+    public TextMaxLengthValidator(int maxLength) {
+        this(Res.get("validation.tooLong", maxLength), maxLength);
+    }
+
+    public TextMaxLengthValidator(String message, int maxLength) {
         super(message);
-        this.maxLength = length;
+        this.maxLength = maxLength;
     }
 
     @Override
     protected void eval() {
-        var textField = (TextInputControl) srcControl.get();
-        hasErrors.set(textField.getText().length() > maxLength);
+        if (srcControl.get() instanceof TextInputControl textInputControl && textInputControl.getText()!=null) {
+            hasErrors.set(textInputControl.getText().length() > maxLength);
+        }
     }
 }

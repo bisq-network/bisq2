@@ -15,19 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.data.method_forms;
+package bisq.desktop.main.content.user.accounts.create.data.payment_form.old;
 
-import bisq.desktop.common.view.Model;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import lombok.Getter;
-
-import java.util.HashMap;
-import java.util.Map;
-
-@Getter
-public class PaymentFormModel implements Model {
-    private final Map<String, Object> formData = new HashMap<>();
-    private final Map<String, String> validationErrors = new HashMap<>();
-    private final BooleanProperty isValid = new SimpleBooleanProperty(false);
+public class F2FPaymentFormModel extends PaymentFormModel {
 }

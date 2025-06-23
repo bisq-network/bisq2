@@ -91,7 +91,7 @@ public abstract class ValidatorBase {
 
     public boolean validateAndGet() {
         validate();
-        return !isHasErrors();
+        return !hasErrors();
     }
 
 
@@ -147,7 +147,7 @@ public abstract class ValidatorBase {
         return hasErrors.get();
     }
 
-    public boolean isHasErrors() {
+    public boolean hasErrors() {
         return hasErrors.get();
     }
 

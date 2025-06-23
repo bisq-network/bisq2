@@ -15,22 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.data;
+package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
-import bisq.account.payment_method.PaymentMethod;
-import bisq.desktop.common.view.Model;
-import bisq.desktop.main.content.user.accounts.create.data.payment_form.PaymentFormController;
-import javafx.scene.layout.Region;
+import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.view.Controller;
 import lombok.Getter;
-import lombok.Setter;
 
-import java.util.HashMap;
-import java.util.Map;
-@Getter
-public class PaymentDataModel implements Model {
-    @Setter
-    private PaymentMethod<?> paymentMethod;
-    @Setter
-    private Region paymentForm;
-    private final Map<String, PaymentFormController<?, ?>> controllerCache = new HashMap<>();
+public abstract class PaymentFormController<V extends PaymentFormView<?, ?>, M extends PaymentFormModel> implements Controller {
+    @Getter
+    protected final V view;
+    protected final M model;
+
+    protected PaymentFormController(ServiceProvider serviceProvider) {
+        this.model = createModel();
+        this.view = createView();
+    }
+
+    protected abstract V createView();
+
+    protected abstract M createModel();
+
+    public abstract boolean validate();
 }

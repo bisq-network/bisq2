@@ -17,23 +17,20 @@
 
 package bisq.desktop.main.content.user.accounts.create.data;
 
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.CryptoPaymentRail;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentRail;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.user.accounts.create.data.method_forms.F2FPaymentFormController;
-import bisq.desktop.main.content.user.accounts.create.data.method_forms.PaymentFormController;
-import bisq.desktop.main.content.user.accounts.create.data.method_forms.SepaPaymentFormController;
-import javafx.beans.property.ReadOnlyObjectProperty;
+import bisq.desktop.main.content.user.accounts.create.data.payment_form.F2FPaymentFormController;
+import bisq.desktop.main.content.user.accounts.create.data.payment_form.PaymentFormController;
+import bisq.desktop.main.content.user.accounts.create.data.payment_form.SepaPaymentFormController;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class PaymentDataController implements Controller {
@@ -41,141 +38,128 @@ public class PaymentDataController implements Controller {
     @Getter
     private final PaymentDataView view;
     private final ServiceProvider serviceProvider;
-
-    private final Map<String, PaymentFormController> formControllerCache = new HashMap<>();
-    private String currentControllerCacheKey;
-
-    private Subscription paymentMethodPin;
-    private PaymentFormController currentFormController;
+    private PaymentFormController<?, ?> paymentFormController;
 
     public PaymentDataController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
+
         model = new PaymentDataModel();
         view = new PaymentDataView(model, this);
     }
 
+    public void setPaymentMethod(PaymentMethod<?> paymentMethod) {
+        checkNotNull(paymentMethod, "PaymentMethod must not be null");
+        model.setPaymentMethod(paymentMethod);
+    }
+
     @Override
     public void onActivate() {
-        paymentMethodPin = EasyBind.subscribe(model.paymentMethodProperty(), this::onPaymentMethodChanged);
-        Optional.ofNullable(model.getPaymentMethod().get())
-                .ifPresent(this::createPaymentMethodForm);
+        PaymentMethod<?> paymentMethod = model.getPaymentMethod();
+        checkNotNull(paymentMethod, "PaymentMethod must be set before onActivate is called");
+
+        String key = paymentMethod.getPaymentRail().name();
+        if( model.getControllerCache().containsKey(key)){
+
+        }
+
+        paymentFormController = getOrCreateController(paymentMethod);
+        VBox root = paymentFormController.getView().getRoot();
+        model.setPaymentForm(root);
     }
 
     @Override
     public void onDeactivate() {
-        Optional.ofNullable(paymentMethodPin).ifPresent(pin -> {
-            pin.unsubscribe();
-            paymentMethodPin = null;
-        });
-
-        // Note: We intentionally do NOT deactivate the current form controller here
-        // because we want to preserve its state when navigating away and back.
-        // The form controllers will be properly cleaned up when the entire wizard is closed.
-    }
-
-    public void setPaymentMethod(PaymentMethod<?> paymentMethod) {
-        model.setPaymentMethod(paymentMethod);
-    }
-
-    public ReadOnlyObjectProperty<Map<String, Object>> getAccountData() {
-        return model.getAccountData();
+        model.setPaymentForm(null);
     }
 
     public boolean validate() {
-        return currentFormController != null && currentFormController.validate();
-    }
-
-    public void onFormDataChanged(Map<String, Object> data) {
-        Map<String, Object> defensiveCopy = new HashMap<>(data);
-        model.getAccountData().set(defensiveCopy);
+        return paymentFormController != null && paymentFormController.validate();
     }
 
     public void reset() {
-        Optional.ofNullable(currentFormController).ifPresent(controller -> {
-            controller.onDeactivate();
-            currentFormController = null;
-            currentControllerCacheKey = null;
-        });
-
-        model.setPaymentMethod(null);
-        model.getAccountData().set(new HashMap<>());
     }
 
-    public void cleanup() {
-        formControllerCache.values().forEach(PaymentFormController::onDeactivate);
-        formControllerCache.clear();
-        Optional.ofNullable(currentFormController).ifPresent(controller -> {
-            controller.onDeactivate();
-            currentFormController = null;
-            currentControllerCacheKey = null;
-        });
+    public PaymentFormController<?, ?> getOrCreateController(PaymentMethod<?> paymentMethod) {
+        String key = paymentMethod.getPaymentRail().name();
+        return model.getControllerCache().computeIfAbsent(key, k -> createController(paymentMethod));
     }
 
-    private void onPaymentMethodChanged(PaymentMethod<?> paymentMethod) {
-        createPaymentMethodForm(paymentMethod);
-    }
-
-    private void createPaymentMethodForm(PaymentMethod<?> paymentMethod) {
-        Optional.ofNullable(currentFormController).ifPresent(controller -> {
-            String newKey = createCacheKey(paymentMethod);
-            if (!newKey.equals(currentControllerCacheKey)) {
-                log.debug("Deactivating previous form controller");
-                controller.onDeactivate();
-            }
-        });
-
-        currentFormController = createOrGetFormController(paymentMethod);
-
-        Optional.ofNullable(currentFormController)
-                .ifPresentOrElse(
-                        controller -> {
-                            currentControllerCacheKey = createCacheKey(paymentMethod);
-                            view.setFormView(controller.getView());
-                            controller.onActivate();
-
-                            Map<String, Object> currentData = controller.getFormData();
-                            onFormDataChanged(currentData);
-                        },
-                        () -> {
-                            log.warn("Failed to create form controller for payment method: {}", paymentMethod);
-                            currentControllerCacheKey = null;
-                        }
-                );
-    }
-
-    private PaymentFormController createOrGetFormController(PaymentMethod<?> paymentMethod) {
-        String cacheKey = createCacheKey(paymentMethod);
-        PaymentFormController cachedController = formControllerCache.get(cacheKey);
-        if (cachedController != null) {
-            return cachedController;
-        }
-
-        PaymentFormController newController = createNewFormController(paymentMethod);
-        Optional.ofNullable(newController)
-                .ifPresent(controller -> formControllerCache.put(cacheKey, controller));
-
-        return newController;
-    }
-
-    private PaymentFormController createNewFormController(PaymentMethod<?> paymentMethod) {
-        if (paymentMethod instanceof FiatPaymentMethod fiatMethod) {
-            FiatPaymentRail rail = fiatMethod.getPaymentRail();
-
-            return switch (rail) {
-                case SEPA -> new SepaPaymentFormController(serviceProvider, this::onFormDataChanged);
-                case F2F -> new F2FPaymentFormController(serviceProvider, this::onFormDataChanged);
+    public PaymentFormController<?, ?> createController(PaymentMethod<?> paymentMethod) {
+        PaymentRail paymentRail = paymentMethod.getPaymentRail();
+        if (paymentRail instanceof FiatPaymentRail fiatPaymentRail) {
+            return switch (fiatPaymentRail) {
+                case CUSTOM -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+                case SEPA -> new SepaPaymentFormController(serviceProvider);
+                case SEPA_INSTANT -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+                case ZELLE -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+                case REVOLUT -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+                case WISE -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+                case NATIONAL_BANK -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+                case SWIFT -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+                case F2F -> new F2FPaymentFormController(serviceProvider);
+                case ACH_TRANSFER -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+                case PIX -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+                case FASTER_PAYMENTS -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+                case PAY_ID -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+                case US_POSTAL_MONEY_ORDER -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+                case CASH_BY_MAIL -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+                case STRIKE -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+                case INTERAC_E_TRANSFER -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+                case AMAZON_GIFT_CARD -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+                case CASH_DEPOSIT -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+                case UPI -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+                case BIZUM -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
+                case CASH_APP -> {
+                    throw new UnsupportedOperationException("Not implemented yet");
+                }
                 default -> {
-                    log.warn("No specific form controller found for payment method: {}", rail);
-                    yield null;
+                    throw new UnsupportedOperationException("No implementation found for " + fiatPaymentRail);
                 }
             };
+        } else if (paymentRail instanceof CryptoPaymentRail cryptoPaymentRail) {
+            {
+                throw new UnsupportedOperationException("CryptoPaymentRail not implemented yet");
+            }
+        } else {
+            throw new UnsupportedOperationException("No implementation found for " + paymentRail.name());
         }
-
-        log.warn("Unsupported payment method type: {}", paymentMethod.getClass().getSimpleName());
-        return null;
-    }
-
-    private String createCacheKey(PaymentMethod<?> paymentMethod) {
-        return paymentMethod.getClass().getSimpleName() + "::" + paymentMethod.getName();
     }
 }

@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.authorized_role.moderator;
 
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.chat.ChatChannelDomain;
 import bisq.common.observable.Pin;
@@ -38,6 +37,7 @@ import bisq.desktop.components.table.DateColumnUtil;
 import bisq.desktop.components.table.DateTableItem;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.UserProfileIcon;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.network.SendMessageResult;
 import bisq.presentation.formatters.DateFormatter;
@@ -130,7 +130,7 @@ public class ReportToModeratorTable {
                     .description(Res.get("authorizedRole.moderator.banDialog.description"))
                     .helpText(Res.get("authorizedRole.moderator.banDialog.helpText"))
                     .onResult(banReason -> moderatorService.banReportedUser(message, banReason))
-                    .validator(new TextMaxLengthValidator(maxLength, Res.get("validation.tooLong", maxLength)))
+                    .validator(new TextMaxLengthValidator(Res.get("validation.tooLong", maxLength), maxLength))
                     .actionButtonText(Res.get("authorizedRole.moderator.banDialog.action.ban"))
                     .width(800)
                     .show();
