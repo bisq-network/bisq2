@@ -33,7 +33,7 @@ import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.main.content.user.accounts.create.account_data.PaymentDataEntryController;
+import bisq.desktop.main.content.user.accounts.create.data.PaymentDataController;
 import bisq.desktop.main.content.user.accounts.create.options.PaymentOptionsController;
 import bisq.desktop.main.content.user.accounts.create.payment_method.PaymentMethodSelectionController;
 import bisq.desktop.main.content.user.accounts.create.summary.PaymentSummaryController;
@@ -59,7 +59,7 @@ public class CreatePaymentAccountController extends NavigationController {
     @Getter
     private final CreatePaymentAccountView view;
     private final PaymentMethodSelectionController paymentMethodController;
-    private final PaymentDataEntryController accountDataController;
+    private final PaymentDataController accountDataController;
     private final PaymentOptionsController optionsController;
     private final PaymentSummaryController summaryController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
@@ -74,8 +74,8 @@ public class CreatePaymentAccountController extends NavigationController {
         model = new CreatePaymentAccountModel();
         view = new CreatePaymentAccountView(model, this);
 
-        paymentMethodController = new PaymentMethodSelectionController(this::onPaymentMethodSelected);
-        accountDataController = new PaymentDataEntryController(serviceProvider);
+        paymentMethodController = new PaymentMethodSelectionController();
+        accountDataController = new PaymentDataController(serviceProvider);
         optionsController = new PaymentOptionsController(serviceProvider);
         summaryController = new PaymentSummaryController(serviceProvider, this::createAndSaveAccount);
     }
@@ -201,10 +201,6 @@ public class CreatePaymentAccountController extends NavigationController {
         NavigationTarget target = model.getChildTargets().get(index);
         model.getSelectedChildTarget().set(target);
         Navigation.navigateTo(target);
-    }
-
-    private void onPaymentMethodSelected() {
-        navigateNext();
     }
 
     private void setChildTargets() {

@@ -15,16 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.account_data;
+package bisq.desktop.main.content.user.accounts.create.data;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.user.accounts.create.account_data.method_forms.F2FPaymentFormController;
-import bisq.desktop.main.content.user.accounts.create.account_data.method_forms.PaymentFormController;
-import bisq.desktop.main.content.user.accounts.create.account_data.method_forms.SepaPaymentFormController;
+import bisq.desktop.main.content.user.accounts.create.data.method_forms.F2FPaymentFormController;
+import bisq.desktop.main.content.user.accounts.create.data.method_forms.PaymentFormController;
+import bisq.desktop.main.content.user.accounts.create.data.method_forms.SepaPaymentFormController;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,10 +36,10 @@ import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
-public class PaymentDataEntryController implements Controller {
-    private final PaymentDataEntryModel model;
+public class PaymentDataController implements Controller {
+    private final PaymentDataModel model;
     @Getter
-    private final PaymentDataEntryView view;
+    private final PaymentDataView view;
     private final ServiceProvider serviceProvider;
 
     private final Map<String, PaymentFormController> formControllerCache = new HashMap<>();
@@ -48,10 +48,10 @@ public class PaymentDataEntryController implements Controller {
     private Subscription paymentMethodPin;
     private PaymentFormController currentFormController;
 
-    public PaymentDataEntryController(ServiceProvider serviceProvider) {
+    public PaymentDataController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
-        model = new PaymentDataEntryModel();
-        view = new PaymentDataEntryView(model, this);
+        model = new PaymentDataModel();
+        view = new PaymentDataView(model, this);
     }
 
     @Override

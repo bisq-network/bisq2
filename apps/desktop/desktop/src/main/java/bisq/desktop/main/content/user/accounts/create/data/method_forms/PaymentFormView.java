@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.account_data.method_forms;
+package bisq.desktop.main.content.user.accounts.create.data.method_forms;
 
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.view.View;

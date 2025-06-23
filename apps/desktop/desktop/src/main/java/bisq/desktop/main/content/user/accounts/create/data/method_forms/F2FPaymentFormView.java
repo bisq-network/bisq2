@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.account_data.method_forms;
+package bisq.desktop.main.content.user.accounts.create.data.method_forms;
 
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;

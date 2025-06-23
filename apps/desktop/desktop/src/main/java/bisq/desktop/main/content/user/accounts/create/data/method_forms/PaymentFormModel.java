@@ -15,28 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.account_data;
+package bisq.desktop.main.content.user.accounts.create.data.method_forms;
 
-import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.view.Model;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class PaymentDataEntryModel implements Model {
-    @Getter
-    private final ObjectProperty<PaymentMethod<?>> paymentMethod = new SimpleObjectProperty<>();
-    @Getter
-    private final ObjectProperty<Map<String, Object>> accountData = new SimpleObjectProperty<>(new HashMap<>());
-
-    public ObjectProperty<PaymentMethod<?>> paymentMethodProperty() {
-        return paymentMethod;
-    }
-
-    public void setPaymentMethod(PaymentMethod<?> paymentMethod) {
-        this.paymentMethod.set(paymentMethod);
-    }
+@Getter
+public class PaymentFormModel implements Model {
+    private final Map<String, Object> formData = new HashMap<>();
+    private final Map<String, String> validationErrors = new HashMap<>();
+    private final BooleanProperty isValid = new SimpleBooleanProperty(false);
 }

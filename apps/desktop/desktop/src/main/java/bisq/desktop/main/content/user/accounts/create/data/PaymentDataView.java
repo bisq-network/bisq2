@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.account_data;
+package bisq.desktop.main.content.user.accounts.create.data;
 
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.view.View;
@@ -28,11 +28,11 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PaymentDataEntryView extends View<VBox, PaymentDataEntryModel, PaymentDataEntryController> {
+public class PaymentDataView extends View<VBox, PaymentDataModel, PaymentDataController> {
     private final Label titleLabel;
     private final VBox formContainer;
 
-    public PaymentDataEntryView(PaymentDataEntryModel model, PaymentDataEntryController controller) {
+    public PaymentDataView(PaymentDataModel model, PaymentDataController controller) {
         super(new VBox(10), model, controller);
 
         root.setPadding(new Insets(15));

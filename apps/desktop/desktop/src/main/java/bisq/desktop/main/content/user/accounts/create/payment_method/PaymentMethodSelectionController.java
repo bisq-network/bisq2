@@ -39,11 +39,9 @@ public class PaymentMethodSelectionController implements Controller {
     private final PaymentMethodSelectionModel model;
     @Getter
     private final PaymentMethodSelectionView view;
-    private final Runnable onSelectionConfirmedHandler;
     private Subscription searchTextPin;
 
-    public PaymentMethodSelectionController(Runnable onSelectionConfirmedHandler) {
-        this.onSelectionConfirmedHandler = onSelectionConfirmedHandler;
+    public PaymentMethodSelectionController() {
         List<PaymentMethodItem> items = FiatPaymentRailUtil.getPaymentRails().stream()
                 .filter(rail -> rail != FiatPaymentRail.CUSTOM)
                 .filter(FiatPaymentRail::isActive)
