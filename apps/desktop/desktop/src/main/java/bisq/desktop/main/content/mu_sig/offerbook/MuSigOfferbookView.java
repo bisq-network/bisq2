@@ -636,7 +636,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
             // TODO: This now needs to take into account the base market as well
             if (marketHeaderIcon != null) {
-                StackPane tradePairImage = MarketImageComposition.getMarketIcons(selectedItem.getMarket(), Optional.empty());
+                StackPane tradePairImage = MarketImageComposition.getMarketIcons(selectedItem.getMarket());
                 marketHeaderIcon.setGraphic(tradePairImage);
             }
         }
