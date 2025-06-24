@@ -27,6 +27,7 @@ import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.components.controls.DropdownMenu;
+import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.components.controls.DropdownTitleMenuItem;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -38,6 +39,7 @@ import bisq.i18n.Res;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
+import javafx.collections.SetChangeListener;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -76,6 +78,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     private static final double MARKET_LIST_WIDTH = 210;
     private static final double SIDE_PADDING = 40;
     private static final double FAVOURITES_TABLE_PADDING = 21;
+    private static final String ACTIVE_FILTER_CLASS = "active-filter";
 
     private final RichTableView<MuSigOfferListItem> muSigOfferListView;
     private final BisqTableView<MarketItem> marketListView, favouritesListView;
@@ -83,13 +86,15 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     private final VBox offersVBox;
     private final ListChangeListener<MarketItem> favouriteItemsChangeListener;
     private final ChangeListener<Toggle> toggleChangeListener;
+    private final ListChangeListener<FiatPaymentMethod> availablePaymentsChangeListener;
+    private final SetChangeListener<FiatPaymentMethod> selectedPaymentsChangeListener;
     private HBox appliedFiltersSection, withOffersDisplayHint, onlyFavouritesDisplayHint;
     private VBox marketListVBox;
     private Label marketListTitle, marketHeaderIcon, marketTitle, marketDescription, marketPrice,
             removeWithOffersFilter, removeFavouritesFilter;
     private Button createOfferButton;
     private SearchBox marketsSearchBox;
-    private DropdownMenu sortAndFilterMarketsMenu;
+    private DropdownMenu sortAndFilterMarketsMenu, paymentsFilterMenu;
     private SortAndFilterDropdownMenuItem<MarketSortType> sortByMostOffers, sortByNameAZ, sortByNameZA;
     private SortAndFilterDropdownMenuItem<MuSigFilters.MarketFilter> filterShowAll, filterWithOffers, filterFavourites;
     private ToggleGroup offerFiltersToggleGroup;
@@ -98,7 +103,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
             favouritesRemoveFilterDefaultIcon, favouritesRemoveFilterActiveIcon;
     private Subscription selectedMarketItemPin, marketListViewSelectionPin, favouritesListViewNeedsHeightUpdatePin,
             favouritesListViewSelectionPin, selectedMarketFilterPin, selectedMarketSortTypePin, shouldShowAppliedFiltersPin,
-            selectedOfferDirectionFilterPin;
+            selectedOfferDirectionFilterPin, activeMarketPaymentsCountPin, isCustomPaymentsSelectedPin;
+    private Label paymentsFilterLabel;
 
     public MuSigOfferbookView(MuSigOfferbookModel model, MuSigOfferbookController controller) {
         super(new VBox(), model, controller);
@@ -142,6 +148,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 updateSelectedOfferDirectionFilter(model.getSelectedMuSigOfferDirectionFilter().get());
             }
         };
+        availablePaymentsChangeListener = change -> updatePaymentsFilterMenu();
+        selectedPaymentsChangeListener = change -> updatePaymentsSelection();
     }
 
     @Override
@@ -165,6 +173,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         withOffersDisplayHint.managedProperty().bind(model.getSelectedMarketsFilter().isEqualTo(MuSigFilters.MarketFilter.WITH_OFFERS));
         onlyFavouritesDisplayHint.visibleProperty().bind(model.getSelectedMarketsFilter().isEqualTo(MuSigFilters.MarketFilter.FAVOURITES));
         onlyFavouritesDisplayHint.managedProperty().bind(model.getSelectedMarketsFilter().isEqualTo(MuSigFilters.MarketFilter.FAVOURITES));
+        paymentsFilterLabel.textProperty().bind(model.getPaymentFilterTitle());
 
         selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), this::selectedMarketItemChanged);
         marketListViewSelectionPin = EasyBind.subscribe(marketListView.getSelectionModel().selectedItemProperty(), item -> {
@@ -194,6 +203,18 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 this::updateAppliedFiltersSectionStyles);
         selectedOfferDirectionFilterPin = EasyBind.subscribe(model.getSelectedMuSigOfferDirectionFilter(), this::updateSelectedOfferDirectionFilter);
 
+        activeMarketPaymentsCountPin = EasyBind.subscribe(model.getActiveMarketPaymentsCount(), count -> {
+            boolean hasActiveFilters = count.intValue() != 0;
+            if (hasActiveFilters && !paymentsFilterLabel.getStyleClass().contains(ACTIVE_FILTER_CLASS)) {
+                paymentsFilterLabel.getStyleClass().add(ACTIVE_FILTER_CLASS);
+            } else if (!hasActiveFilters) {
+                paymentsFilterLabel.getStyleClass().remove(ACTIVE_FILTER_CLASS);
+            }
+        });
+
+        isCustomPaymentsSelectedPin = EasyBind.subscribe(model.getIsCustomPaymentsSelected(),
+                isSelected -> updatePaymentsSelection());
+
         sortByMostOffers.setOnAction(e -> controller.onSortMarkets(MarketSortType.NUM_OFFERS));
         sortByNameAZ.setOnAction(e -> controller.onSortMarkets(MarketSortType.ASC));
         sortByNameZA.setOnAction(e -> controller.onSortMarkets(MarketSortType.DESC));
@@ -215,6 +236,11 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         allOffersToggleButton.setOnAction(e -> model.getSelectedMuSigOfferDirectionFilter().set(MuSigFilters.MuSigOfferDirectionFilter.ALL));
         buyToggleButton.setOnAction(e -> model.getSelectedMuSigOfferDirectionFilter().set(MuSigFilters.MuSigOfferDirectionFilter.SELL));
         sellToggleButton.setOnAction(e -> model.getSelectedMuSigOfferDirectionFilter().set(MuSigFilters.MuSigOfferDirectionFilter.BUY));
+
+        model.getAvailablePaymentMethods().addListener(availablePaymentsChangeListener);
+        updatePaymentsFilterMenu();
+        model.getSelectedPaymentMethods().addListener(selectedPaymentsChangeListener);
+        updatePaymentsSelection();
     }
 
     @Override
@@ -234,6 +260,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         withOffersDisplayHint.managedProperty().unbind();
         onlyFavouritesDisplayHint.visibleProperty().unbind();
         onlyFavouritesDisplayHint.managedProperty().unbind();
+        paymentsFilterLabel.textProperty().unbind();
 
         selectedMarketItemPin.unsubscribe();
         marketListViewSelectionPin.unsubscribe();
@@ -243,6 +270,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         selectedMarketSortTypePin.unsubscribe();
         shouldShowAppliedFiltersPin.unsubscribe();
         selectedOfferDirectionFilterPin.unsubscribe();
+        activeMarketPaymentsCountPin.unsubscribe();
+        isCustomPaymentsSelectedPin.unsubscribe();
 
         sortByMostOffers.setOnAction(null);
         sortByNameAZ.setOnAction(null);
@@ -265,6 +294,10 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
         model.getFavouriteMarketItems().removeListener(favouriteItemsChangeListener);
         offerFiltersToggleGroup.selectedToggleProperty().removeListener(toggleChangeListener);
+
+        model.getAvailablePaymentMethods().removeListener(availablePaymentsChangeListener);
+        model.getSelectedPaymentMethods().removeListener(selectedPaymentsChangeListener);
+        cleanUpPaymentsFilterMenu();
     }
 
     private void configMuSigOfferListView() {
@@ -651,7 +684,9 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         HBox toggleButtonHBox = new HBox(3, allOffersToggleButton, buyToggleButton, sellToggleButton);
         toggleButtonHBox.getStyleClass().add("mu-sig-offerbook-offerlist-toggle-button-hbox");
 
-        HBox subheaderContent = new HBox(toggleButtonHBox, Spacer.fillHBox());
+        // Add payments filter menu to subheader
+        paymentsFilterMenu = createAndGetPaymentsFilterDropdownMenu();
+        HBox subheaderContent = new HBox(toggleButtonHBox, Spacer.fillHBox(), paymentsFilterMenu);
         subheaderContent.getStyleClass().add("mu-sig-offerbook-subheader-content");
         subheaderContent.setPadding(new Insets(0, 12, 0, 13));
         HBox.setHgrow(subheaderContent, Priority.ALWAYS);
@@ -680,6 +715,14 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         favouritesListView.setPrefHeight(height);
         favouritesListView.setMaxHeight(height);
         model.getFavouritesListViewNeedsHeightUpdate().set(false);
+    }
+
+    private DropdownMenu createAndGetPaymentsFilterDropdownMenu() {
+        DropdownMenu menu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
+        menu.getStyleClass().add("dropdown-offer-list-payment-filter-menu");
+        paymentsFilterLabel = new Label();
+        menu.setContent(paymentsFilterLabel);
+        return menu;
     }
 
     private DropdownMenu createAndGetSortAndFilterMarketsMenu() {
@@ -769,6 +812,56 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         }
     }
 
+    private void updatePaymentsFilterMenu() {
+        cleanUpPaymentsFilterMenu();
+
+        model.getAvailablePaymentMethods().forEach(paymentMethod -> {
+            ImageView paymentIcon = ImageUtil.getImageViewById(paymentMethod.getName());
+            Label paymentLabel = new Label(paymentMethod.getDisplayString(), paymentIcon);
+            paymentLabel.setGraphicTextGap(10);
+            PaymentMenuItem paymentItem = new PaymentMenuItem(paymentMethod, paymentLabel);
+            paymentItem.setHideOnClick(false);
+            paymentItem.setOnAction(e -> controller.onTogglePaymentFilter(paymentMethod, paymentItem.isSelected()));
+            paymentsFilterMenu.addMenuItems(paymentItem);
+        });
+
+        StackPane customPaymentIcon = BisqEasyViewUtils.getCustomPaymentMethodIcon("C");
+        Label customPaymentLabel = new Label(
+                Res.get("muSig.offerbook.offerlistSubheader.paymentMethods.customPayments"), customPaymentIcon);
+        customPaymentLabel.setGraphicTextGap(10);
+        PaymentMenuItem customItem = new PaymentMenuItem(null, customPaymentLabel);
+        customItem.setHideOnClick(false);
+        customItem.setOnAction(e -> controller.onToggleCustomPaymentFilter(customItem.isSelected()));
+        paymentsFilterMenu.addMenuItems(customItem);
+
+        SeparatorMenuItem separator = new SeparatorMenuItem();
+        DropdownBisqMenuItem clearFilters = new DropdownBisqMenuItem("delete-t-grey", "delete-t-white",
+                Res.get("muSig.offerbook.offerlistSubheader.paymentMethods.clearFilters"));
+        clearFilters.setHideOnClick(false);
+        clearFilters.setOnAction(e -> controller.onClearPaymentFilters());
+        paymentsFilterMenu.addMenuItems(separator, clearFilters);
+    }
+
+    private void updatePaymentsSelection() {
+        paymentsFilterMenu.getMenuItems().stream()
+                .filter(item -> item instanceof PaymentMenuItem)
+                .map(item -> (PaymentMenuItem) item)
+                .forEach(paymentMenuItem ->
+                        paymentMenuItem.getPaymentMethod()
+                                .ifPresentOrElse(
+                                        payment -> paymentMenuItem.updateSelection(model.getSelectedPaymentMethods().contains(payment)),
+                                        () -> paymentMenuItem.updateSelection(model.getIsCustomPaymentsSelected().get()))
+                );
+    }
+
+    private void cleanUpPaymentsFilterMenu() {
+        paymentsFilterMenu.getMenuItems().stream()
+                .filter(item -> item instanceof PaymentMenuItem)
+                .map(item -> (PaymentMenuItem) item)
+                .forEach(PaymentMenuItem::dispose);
+        paymentsFilterMenu.clearMenuItems();
+    }
+
     @Getter
     private static final class SortAndFilterDropdownMenuItem<T> extends DropdownBisqMenuItem {
         private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
@@ -785,6 +878,33 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
         void updateSelection(boolean isSelected) {
             getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
+        }
+    }
+
+    @Getter
+    private static final class PaymentMenuItem extends DropdownMenuItem {
+        private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
+
+        private final Optional<FiatPaymentMethod> paymentMethod;
+
+        private PaymentMenuItem(FiatPaymentMethod paymentMethod, Label displayLabel) {
+            super("check-white", "check-white", displayLabel);
+
+            this.paymentMethod = Optional.ofNullable(paymentMethod);
+            getStyleClass().add("dropdown-menu-item");
+            updateSelection(false);
+        }
+
+        public void dispose() {
+            setOnAction(null);
+        }
+
+        void updateSelection(boolean isSelected) {
+            getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
+        }
+
+        boolean isSelected() {
+            return getContent().getPseudoClassStates().contains(SELECTED_PSEUDO_CLASS);
         }
     }
 }
