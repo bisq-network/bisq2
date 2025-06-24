@@ -59,7 +59,15 @@ public class MarketImageComposition {
             .collect(Collectors.toUnmodifiableSet());
     private static final Map<String, StackPane> MARKET_IMAGE_CACHE = new HashMap<>();
 
-    public static StackPane getMarketIcons(Market market, Optional<Map<String, StackPane>> dedicatedCache) {
+    public static StackPane getMarketIcons(Market market) {
+        return getMarketIcons(market, Optional.empty());
+    }
+
+    public static StackPane getMarketIcons(Market market, Map<String, StackPane> dedicatedCache) {
+        return getMarketIcons(market, Optional.of(dedicatedCache));
+    }
+
+    private static StackPane getMarketIcons(Market market, Optional<Map<String, StackPane>> dedicatedCache) {
         String baseCurrencyCode = market.getBaseCurrencyCode().toLowerCase();
         String quoteCurrencyCode = market.getQuoteCurrencyCode().toLowerCase();
         String key = baseCurrencyCode + "." + quoteCurrencyCode;

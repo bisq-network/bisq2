@@ -312,7 +312,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         favouritesTableView.getSelectionModel().clearSelection();
         favouritesTableView.getSelectionModel().select(selectedItem);
 
-        StackPane marketsImage = MarketImageComposition.getMarketIcons(selectedItem.getMarket(), Optional.empty());
+        StackPane marketsImage = MarketImageComposition.getMarketIcons(selectedItem.getMarket());
         channelHeaderIcon.setGraphic(marketsImage);
     }
 
