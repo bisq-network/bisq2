@@ -19,7 +19,10 @@ package bisq.common.locale;
 
 import lombok.Getter;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class CountryRepository {
@@ -45,26 +48,36 @@ public class CountryRepository {
     private static final List<Country> countries;
 
     public static String getNameByCode(String countryCode) {
-        if (countryCode.equals("XK"))
+        if (countryCode.equals("XK")) {
             return "Republic of Kosovo";
-        else
-            return new Locale(LanguageRepository.getDefaultLanguage(), countryCode).getDisplayCountry();
+        } else {
+            return getLocalizedCountryDisplayString(countryCode);
+        }
     }
 
-    public static List<Country> getCountriesFromCodes(List<String> codes) {
-        List<Country> list = new ArrayList<>();
-        for (String code : codes) {
-            Locale locale = new Locale(LanguageRepository.getDefaultLanguage(), code, "");
-            String countryCode = locale.getCountry();
-            String regionCode = RegionRepository.getRegionCode(countryCode);
-            Region region = new Region(regionCode, RegionRepository.getRegionName(regionCode));
-            Country country = new Country(countryCode, locale.getDisplayCountry(), region);
-            if (countryCode.equals("XK")) {
-                country = new Country(countryCode, CountryRepository.getNameByCode(countryCode), region);
-            }
-            list.add(country);
+    public static String getLocalizedCountryDisplayString(String countryCode) {
+        return new Locale.Builder()
+                .setLanguage(LanguageRepository.getDefaultLanguage())
+                .setRegion(countryCode)
+                .build()
+                .getDisplayCountry();
+    }
+
+    public static Country getCountry(String countryCode) {
+        String regionCode = RegionRepository.getRegionCode(countryCode);
+        Region region = new Region(regionCode, RegionRepository.getRegionName(regionCode));
+
+        Country country = new Country(countryCode, getLocalizedCountryDisplayString(countryCode), region);
+        if (countryCode.equals("XK")) {
+            country = new Country(countryCode, CountryRepository.getNameByCode(countryCode), region);
         }
-        return list;
+        return country;
+    }
+
+    public static List<Country> getCountriesFromCodes(List<String> countryCodes) {
+        return countryCodes.stream()
+                .map(CountryRepository::getCountry)
+                .collect(Collectors.toList());
     }
 
     static {

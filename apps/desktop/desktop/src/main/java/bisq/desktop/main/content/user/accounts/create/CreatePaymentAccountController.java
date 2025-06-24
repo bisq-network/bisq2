@@ -66,7 +66,8 @@ public class CreatePaymentAccountController extends NavigationController {
         paymentMethodController = new PaymentMethodSelectionController();
         accountDataController = new PaymentDataController(serviceProvider);
         optionsController = new PaymentOptionsController(serviceProvider);
-        summaryController = new PaymentSummaryController(serviceProvider, ()->{}); //todo
+        summaryController = new PaymentSummaryController(serviceProvider, () -> {
+        }); //todo
     }
 
     @Override
@@ -143,13 +144,7 @@ public class CreatePaymentAccountController extends NavigationController {
 
     void onKeyPressed(KeyEvent keyEvent) {
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onClose);
-        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
-            if (model.getSelectedChildTarget().get() == NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY) {
-                summaryController.createAccount();
-            } else {
-                navigateNext();
-            }
-        });
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::navigateNext);
     }
 
     void onNext() {
@@ -180,11 +175,15 @@ public class CreatePaymentAccountController extends NavigationController {
 
     void onCreateAccount() {
         summaryController.createAccount();
+        OverlayController.hide();
     }
 
     private void navigateToIndex(int index) {
         model.getCurrentIndex().set(index);
         NavigationTarget target = model.getChildTargets().get(index);
+        if (target == NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY) {
+            summaryController.setAccountPayload(accountDataController.getAccountPayload());
+        }
         model.getSelectedChildTarget().set(target);
         Navigation.navigateTo(target);
     }
@@ -216,13 +215,13 @@ public class CreatePaymentAccountController extends NavigationController {
     }
 
     private void reset() {
-        resetSelectedChildTarget();
+     /*   resetSelectedChildTarget();
 
         paymentMethodController.reset();
         accountDataController.reset();
-        optionsController.cleanup();
-        summaryController.cleanup();
+        optionsController.reset();
+        summaryController.reset();
 
-        model.reset();
+        model.reset();*/
     }
 }

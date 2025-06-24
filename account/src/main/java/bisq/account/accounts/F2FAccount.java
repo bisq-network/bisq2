@@ -16,6 +16,14 @@ public final class F2FAccount extends CountryBasedAccount<F2FAccountPayload, Fia
 
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.F2F);
 
+    public F2FAccount(F2FAccountPayload payload) {
+        this(payload.getDefaultAccountName(), payload);
+    }
+
+    public F2FAccount(String accountName, F2FAccountPayload payload) {
+        this(accountName, payload, payload.getCountry());
+    }
+
     public F2FAccount(String accountName, F2FAccountPayload payload, Country country) {
         super(accountName, PAYMENT_METHOD, payload, country);
     }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.summary;
+package bisq.desktop.main.content.user.accounts.create.summary.old;
 
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.view.Controller;
@@ -25,8 +25,9 @@ import javafx.scene.Parent;
 import java.util.Optional;
 
 public class PaymentSummaryViewFactory {
-    public static View<? extends Parent, PaymentSummaryModel, ? extends Controller> createView(PaymentSummaryModel model,
-                                                                                               PaymentSummaryController controller) {
+    public static View<? extends Parent, PaymentSummaryModel, ? extends Controller> createView(
+            PaymentSummaryModel model,
+            PaymentSummaryController controller) {
         Optional<PaymentMethod<?>> paymentMethodOpt = model.getPaymentMethod();
 
         if (paymentMethodOpt.isEmpty()) {

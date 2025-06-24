@@ -32,5 +32,5 @@ public class PaymentDataModel implements Model {
     private PaymentMethod<?> paymentMethod;
     @Setter
     private Region paymentForm;
-    private final Map<String, PaymentFormController<?, ?>> controllerCache = new HashMap<>();
+    private final Map<String, PaymentFormController<?, ?, ?>> controllerCache = new HashMap<>();
 }

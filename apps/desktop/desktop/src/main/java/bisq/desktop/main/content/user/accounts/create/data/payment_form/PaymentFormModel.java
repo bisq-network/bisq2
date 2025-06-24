@@ -22,4 +22,9 @@ import lombok.Getter;
 
 @Getter
 public abstract class PaymentFormModel implements Model {
+    protected final String id;
+
+    public PaymentFormModel(String id) {
+        this.id = id;
+    }
 }

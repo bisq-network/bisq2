@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.accounts.create.data;
 
+import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.CryptoPaymentRail;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.PaymentMethod;
@@ -38,13 +39,17 @@ public class PaymentDataController implements Controller {
     @Getter
     private final PaymentDataView view;
     private final ServiceProvider serviceProvider;
-    private PaymentFormController<?, ?> paymentFormController;
+    private PaymentFormController<?, ?, ?> paymentFormController;
 
     public PaymentDataController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
 
         model = new PaymentDataModel();
         view = new PaymentDataView(model, this);
+    }
+
+    public AccountPayload getAccountPayload() {
+        return paymentFormController.getAccountPayload();
     }
 
     public void setPaymentMethod(PaymentMethod<?> paymentMethod) {
@@ -79,12 +84,12 @@ public class PaymentDataController implements Controller {
     public void reset() {
     }
 
-    public PaymentFormController<?, ?> getOrCreateController(PaymentMethod<?> paymentMethod) {
+    public PaymentFormController<?, ?, ?> getOrCreateController(PaymentMethod<?> paymentMethod) {
         String key = paymentMethod.getPaymentRail().name();
         return model.getControllerCache().computeIfAbsent(key, k -> createController(paymentMethod));
     }
 
-    public PaymentFormController<?, ?> createController(PaymentMethod<?> paymentMethod) {
+    public PaymentFormController<?, ?, ?> createController(PaymentMethod<?> paymentMethod) {
         PaymentRail paymentRail = paymentMethod.getPaymentRail();
         if (paymentRail instanceof FiatPaymentRail fiatPaymentRail) {
             return switch (fiatPaymentRail) {

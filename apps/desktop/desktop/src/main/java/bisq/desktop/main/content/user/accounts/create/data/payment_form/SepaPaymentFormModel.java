@@ -18,4 +18,7 @@
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
 public class SepaPaymentFormModel extends PaymentFormModel{
+    public SepaPaymentFormModel(String id) {
+        super(id);
+    }
 }

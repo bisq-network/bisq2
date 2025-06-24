@@ -17,82 +17,23 @@
 
 package bisq.desktop.main.content.user.accounts.create.summary;
 
+import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.common.monetary.Monetary;
-import bisq.common.util.StringUtils;
 import bisq.desktop.common.view.Model;
+import bisq.desktop.main.content.user.accounts.create.summary.data_display.DataDisplay;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-
+@Getter
 public class PaymentSummaryModel implements Model {
-    @Getter
-    private Optional<PaymentMethod<?>> paymentMethod = Optional.empty();
-    @Getter
-    private Optional<String> accountName = Optional.empty();
-    @Getter
-    private Optional<String> riskLevel = Optional.empty();
-    @Getter
-    private Optional<Monetary> tradeLimit = Optional.empty();
-
-    @Getter
-    private Map<String, Object> accountData = new HashMap<>();
-
-    @Getter
-    private Map<String, Object> optionsData = new HashMap<>();
-
-    @Getter
-    private Map<String, String> summaryDetails = new LinkedHashMap<>();
-
     @Setter
-    @Getter
-    private boolean accountNameManuallyEdited = false;
-
-    private final Map<String, String> fullTextForTooltips = new LinkedHashMap<>();
-
-    public void setAccountData(Map<String, Object> accountData) {
-        this.accountData = accountData != null ? new HashMap<>(accountData) : new HashMap<>();
-    }
-
-    public void setOptionsData(Map<String, Object> optionsData) {
-        this.optionsData = optionsData != null ? new HashMap<>(optionsData) : new HashMap<>();
-    }
-
-    public void setSummaryDetails(Map<String, String> summaryDetails) {
-        this.summaryDetails = summaryDetails != null ? new LinkedHashMap<>(summaryDetails) : new LinkedHashMap<>();
-    }
-
-    public void addFullTextForTooltip(String key, String fullText) {
-        if (StringUtils.isNotEmpty(fullText)) {
-            fullTextForTooltips.put(key, fullText);
-        }
-    }
-
-    public Optional<String> getFullTextForTooltip(String key) {
-        return Optional.ofNullable(fullTextForTooltips.get(key));
-    }
-
-    public void clearTooltipData() {
-        fullTextForTooltips.clear();
-    }
-
-    public void setPaymentMethod(PaymentMethod<?> method) {
-        paymentMethod = Optional.ofNullable(method);
-    }
-
-    public void setAccountName(String name) {
-        accountName = Optional.ofNullable(name);
-    }
-
-    public void setRiskLevel(String level) {
-        riskLevel = Optional.ofNullable(level);
-    }
-
-    public void setTradeLimit(Monetary limit) {
-        tradeLimit = Optional.ofNullable(limit);
-    }
+    private PaymentMethod<?> paymentMethod;
+    @Setter
+    private AccountPayload accountPayload;
+    @Setter
+    private DataDisplay<?> dataDisplay;
+    @Setter
+    private String risk;
+    @Setter
+    private String tradeLimit;
 }

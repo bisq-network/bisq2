@@ -77,4 +77,8 @@ public abstract class AccountPayload implements NetworkProto {
             default -> throw new UnresolvableProtobufMessageException(proto);
         };
     }
+
+    protected String getDefaultAccountName() {
+        return paymentMethodName + "-" + id.substring(0, 4);
+    }
 }

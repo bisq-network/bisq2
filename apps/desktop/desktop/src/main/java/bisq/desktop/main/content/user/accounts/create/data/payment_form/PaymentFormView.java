@@ -27,8 +27,7 @@ import javafx.scene.layout.VBox;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class PaymentFormView<M extends PaymentFormModel, C extends PaymentFormController<?, ?>> extends View<VBox, M, C> {
-
+public abstract class PaymentFormView<M extends PaymentFormModel, C extends PaymentFormController<?, ?, ?>> extends View<VBox, M, C> {
     protected final Map<String, Label> errorLabels = new HashMap<>();
     protected final Map<String, ChangeListener<?>> listeners = new HashMap<>();
 

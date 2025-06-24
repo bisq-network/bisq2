@@ -17,11 +17,12 @@
 
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
+import bisq.account.accounts.AccountPayload;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
-public abstract class PaymentFormController<V extends PaymentFormView<?, ?>, M extends PaymentFormModel> implements Controller {
+public abstract class PaymentFormController<V extends PaymentFormView<?, ?>, M extends PaymentFormModel, P extends AccountPayload> implements Controller {
     @Getter
     protected final V view;
     protected final M model;
@@ -36,4 +37,6 @@ public abstract class PaymentFormController<V extends PaymentFormView<?, ?>, M e
     protected abstract M createModel();
 
     public abstract boolean validate();
+
+    public abstract P getAccountPayload();
 }

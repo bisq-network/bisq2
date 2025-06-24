@@ -18,233 +18,158 @@
 package bisq.desktop.main.content.user.accounts.create.summary;
 
 import bisq.account.AccountService;
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethodChargebackRisk;
-import bisq.account.payment_method.FiatPaymentRailUtil;
+import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.F2FAccount;
+import bisq.account.accounts.F2FAccountPayload;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.common.locale.Country;
-import bisq.common.locale.CountryRepository;
-import bisq.common.util.StringUtils;
-import bisq.common.util.TextFormatterUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.View;
-import bisq.i18n.Res;
-import javafx.scene.Parent;
+import bisq.desktop.main.content.user.accounts.create.summary.data_display.F2FDataDisplay;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class PaymentSummaryController implements Controller {
     private final PaymentSummaryModel model;
-    private final AccountService accountService;
     @Getter
-    private View<? extends Parent, PaymentSummaryModel, ? extends Controller> view;
+    private PaymentSummaryView view;
+    private final AccountService accountService;
     private final Runnable createAccountHandler;
 
     public PaymentSummaryController(ServiceProvider serviceProvider, Runnable createAccountHandler) {
         accountService = serviceProvider.getAccountService();
         this.createAccountHandler = createAccountHandler;
         model = new PaymentSummaryModel();
+        view = new PaymentSummaryView(model, this);
+    }
+
+
+    public void setPaymentMethod(PaymentMethod<?> paymentMethod) {
+        checkNotNull(paymentMethod, "PaymentMethod must not be null");
+        model.setPaymentMethod(paymentMethod);
+    }
+
+    public void setAccountPayload(AccountPayload accountPayload) {
+        model.setAccountPayload(accountPayload);
+
+        if (model.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
+            model.setRisk(fiatPaymentRail.getChargebackRisk().getDisplayString());
+            model.setTradeLimit("TODO limit for " + fiatPaymentRail.getChargebackRisk().getDisplayString());
+
+            switch (fiatPaymentRail) {
+                case CUSTOM -> {
+                }
+                case SEPA -> {
+                }
+                case SEPA_INSTANT -> {
+                }
+                case ZELLE -> {
+                }
+                case REVOLUT -> {
+                }
+                case WISE -> {
+                }
+                case NATIONAL_BANK -> {
+                }
+                case SWIFT -> {
+                }
+                case F2F -> {
+                    model.setDataDisplay(new F2FDataDisplay((F2FAccountPayload) accountPayload));
+                }
+                case ACH_TRANSFER -> {
+                }
+                case PIX -> {
+                }
+                case FASTER_PAYMENTS -> {
+                }
+                case PAY_ID -> {
+                }
+                case US_POSTAL_MONEY_ORDER -> {
+                }
+                case CASH_BY_MAIL -> {
+                }
+                case STRIKE -> {
+                }
+                case INTERAC_E_TRANSFER -> {
+                }
+                case AMAZON_GIFT_CARD -> {
+                }
+                case CASH_DEPOSIT -> {
+                }
+                case UPI -> {
+                }
+                case BIZUM -> {
+                }
+                case CASH_APP -> {
+                }
+            }
+        }
+    }
+
+    public void reset() {
+    }
+
+    public void createAccount() {
+        if (model.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
+            switch (fiatPaymentRail) {
+                case CUSTOM -> {
+                }
+                case SEPA -> {
+                }
+                case SEPA_INSTANT -> {
+                }
+                case ZELLE -> {
+                }
+                case REVOLUT -> {
+                }
+                case WISE -> {
+                }
+                case NATIONAL_BANK -> {
+                }
+                case SWIFT -> {
+                }
+                case F2F -> {
+                    F2FAccountPayload f2FAccountPayload = (F2FAccountPayload) model.getAccountPayload();
+                    accountService.addPaymentAccount(new F2FAccount(f2FAccountPayload));
+                }
+                case ACH_TRANSFER -> {
+                }
+                case PIX -> {
+                }
+                case FASTER_PAYMENTS -> {
+                }
+                case PAY_ID -> {
+                }
+                case US_POSTAL_MONEY_ORDER -> {
+                }
+                case CASH_BY_MAIL -> {
+                }
+                case STRIKE -> {
+                }
+                case INTERAC_E_TRANSFER -> {
+                }
+                case AMAZON_GIFT_CARD -> {
+                }
+                case CASH_DEPOSIT -> {
+                }
+                case UPI -> {
+                }
+                case BIZUM -> {
+                }
+                case CASH_APP -> {
+                }
+            }
+        }
     }
 
     @Override
     public void onActivate() {
-        updateViewWithAccountData();
     }
 
     @Override
     public void onDeactivate() {
-    }
-
-    public void cleanup() {
-        model.setPaymentMethod(null);
-        model.setAccountName(null);
-        model.setRiskLevel(null);
-        model.setTradeLimit(null);
-        model.setAccountNameManuallyEdited(false);
-    }
-
-    public void setPaymentMethod(PaymentMethod<?> paymentMethod) {
-        Optional<PaymentMethod<?>> previousPaymentMethod = model.getPaymentMethod();
-
-        if (previousPaymentMethod.isPresent() && !previousPaymentMethod.equals(Optional.ofNullable(paymentMethod))) {
-            model.setAccountNameManuallyEdited(false);
-        }
-
-        model.setPaymentMethod(paymentMethod);
-
-        if (view == null || !previousPaymentMethod.equals(Optional.ofNullable(paymentMethod))) {
-            view = PaymentSummaryViewFactory.createView(model, this);
-        }
-
-        updateViewWithAccountData();
-    }
-
-    public void setAccountData(Map<String, Object> accountData) {
-        model.setAccountData(accountData != null ? new HashMap<>(accountData) : new HashMap<>());
-        updateViewWithAccountData();
-    }
-
-    public void createAccount() {
-        createAccountHandler.run();
-    }
-
-    public void onEditAccountName(String newName) {
-        if (StringUtils.isNotEmpty(newName)) {
-            model.setAccountName(newName.trim());
-            model.setAccountNameManuallyEdited(true);
-            if (view instanceof PaymentSummaryView) {
-                ((PaymentSummaryView) view).updateAccountName(newName);
-            }
-        }
-    }
-
-    public Optional<String> getAccountName() {
-        return model.getAccountName();
-    }
-
-    private void updateViewWithAccountData() {
-        Map<String, Object> accountData = model.getAccountData();
-        if (accountData.isEmpty()) {
-            return;
-        }
-
-        Optional<PaymentMethod<?>> paymentMethodOpt = model.getPaymentMethod();
-        if (paymentMethodOpt.isEmpty()) {
-            return;
-        }
-
-        PaymentMethod<?> paymentMethod = paymentMethodOpt.get();
-
-        model.clearTooltipData();
-        if (!model.isAccountNameManuallyEdited()) {
-            model.setAccountName(generateAccountName(paymentMethod, accountData));
-        }
-
-        if (paymentMethod instanceof FiatPaymentMethod fiatMethod) {
-            switch (fiatMethod.getPaymentRail()) {
-                case F2F -> configureF2FSummary(accountData);
-                case SEPA -> configureSepaAccountSummary(accountData);
-            }
-        }
-
-        model.setRiskLevel(getRiskLevel(paymentMethod));
-
-        Country country = getCountryOrDefault(model.getAccountData());
-        model.setTradeLimit(FiatPaymentRailUtil.getTradeLimit(paymentMethod, country));
-    }
-
-    private void configureF2FSummary(Map<String, Object> data) {
-        if (data == null) {
-            return;
-        }
-        Country country = (Country) data.get("country");
-        String city = StringUtils.toOptional((String) data.get("city")).orElse("");
-        String contact = StringUtils.toOptional((String) data.get("contact")).orElse("");
-        String extraInfo = StringUtils.toOptional((String) data.get("extraInfo")).orElse("");
-
-        Map<String, String> summaryMap = new LinkedHashMap<>();
-        if (country != null) {
-            summaryMap.put(Res.get("user.paymentAccounts.summary.country"), country.getName());
-        }
-        summaryMap.put(Res.get("user.paymentAccounts.summary.city"), city);
-        summaryMap.put(Res.get("user.paymentAccounts.summary.contact"), contact);
-        model.addFullTextForTooltip("contact", contact);
-
-        summaryMap.put(Res.get("user.paymentAccounts.summary.extraInfo"), extraInfo);
-        model.addFullTextForTooltip("extraInfo", extraInfo);
-        model.setSummaryDetails(summaryMap);
-    }
-
-    private void configureSepaAccountSummary(Map<String, Object> data) {
-        Country country = getCountryOrDefault(data);
-        String holderName = StringUtils.toOptional((String) data.get("holderName")).orElse("");
-        String iban = StringUtils.toOptional((String) data.get("iban")).orElse("").toUpperCase();
-        String bic = StringUtils.toOptional((String) data.get("bic")).orElse("").toUpperCase();
-
-        @SuppressWarnings("unchecked")
-        List<String> acceptedCountryCodes = (List<String>) data.get("acceptedCountryCodes");
-
-        Map<String, String> summaryMap = new LinkedHashMap<>();
-        if (country != null) {
-            summaryMap.put(Res.get("user.paymentAccounts.summary.country"), country.getName());
-        }
-        summaryMap.put(Res.get("user.paymentAccounts.summary.currency"), "EUR");
-
-        summaryMap.put(Res.get("user.paymentAccounts.summary.holderName"), holderName);
-        model.addFullTextForTooltip("holderName", holderName);
-
-        String formattedIban = TextFormatterUtils.formatIban(iban);
-        summaryMap.put(Res.get("user.paymentAccounts.summary.iban"), formattedIban);
-        model.addFullTextForTooltip("iban", iban);
-
-        summaryMap.put(Res.get("user.paymentAccounts.summary.bic"), bic);
-        if (acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty()) {
-            String completeCountriesList = String.join(", ", acceptedCountryCodes);
-            summaryMap.put(Res.get("user.paymentAccounts.summary.acceptedCountries"), completeCountriesList);
-            model.addFullTextForTooltip("acceptedCountries", completeCountriesList);
-        }
-        model.setSummaryDetails(summaryMap);
-    }
-
-    private Country getCountryOrDefault(Map<String, Object> data) {
-        return Optional.ofNullable((Country) data.get("country"))
-                .orElse(CountryRepository.getDefaultCountry());
-    }
-
-    private String generateAccountName(PaymentMethod<?> paymentMethod, Map<String, Object> data) {
-        String baseName = paymentMethod.getShortDisplayString();
-        String suffix = "";
-
-        if (paymentMethod instanceof FiatPaymentMethod fiatMethod) {
-            switch (fiatMethod.getPaymentRail()) {
-                case SEPA -> {
-                    // Use the last 4 digits of IBAN for quick identification
-                    String iban = StringUtils.toOptional((String) data.get("iban")).orElse("");
-                    if (iban.length() > 4) {
-                        suffix = " - " + iban.substring(iban.length() - 4);
-                    }
-                }
-                case F2F -> {
-                    // Use city and country for geographical identification
-                    String city = StringUtils.toOptional((String) data.get("city")).orElse("");
-                    Country country = (Country) data.get("country");
-
-                    if (city.length() > 15) {
-                        city = city.substring(0, 15);
-                    }
-
-                    if (!city.isEmpty() && country != null) {
-                        suffix = " " + city + ", " + country.getCode();
-                    } else if (!city.isEmpty()) {
-                        suffix = " " + city;
-                    } else if (country != null) {
-                        suffix = " " + country.getName();
-                    }
-                }
-            }
-        }
-        return baseName + suffix;
-    }
-
-    private String getRiskLevel(PaymentMethod<?> paymentMethod) {
-        if (paymentMethod instanceof FiatPaymentMethod fiatMethod) {
-            FiatPaymentMethodChargebackRisk riskEnum = fiatMethod.getPaymentRail().getChargebackRisk();
-
-            return switch (riskEnum) {
-                case VERY_LOW -> Res.get("user.paymentAccounts.summary.risk.low");
-                case LOW -> Res.get("user.paymentAccounts.summary.risk.medium");
-                case MODERATE -> Res.get("user.paymentAccounts.summary.risk.high");
-            };
-        }
-
-        return Res.get("user.paymentAccounts.summary.risk.unknown");
     }
 }

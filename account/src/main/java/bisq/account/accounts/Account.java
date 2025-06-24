@@ -93,7 +93,6 @@ public abstract class Account<P extends AccountPayload, M extends PaymentMethod<
         };
     }
 
-
     public Set<String> getTradeCurrencyCodes() {
         return paymentMethod.getTradeCurrencies().stream().map(TradeCurrency::getCode).collect(Collectors.toSet());
     }

@@ -17,12 +17,15 @@
 
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
+import bisq.account.accounts.F2FAccountPayload;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFormView, F2FPaymentFormModel> {
+import java.util.UUID;
 
+@Slf4j
+public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFormView, F2FPaymentFormModel, F2FAccountPayload> {
     public F2FPaymentFormController(ServiceProvider serviceProvider) {
         super(serviceProvider);
     }
@@ -34,9 +37,18 @@ public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFo
 
     @Override
     protected F2FPaymentFormModel createModel() {
-        return new F2FPaymentFormModel();
+        return new F2FPaymentFormModel(UUID.randomUUID().toString());
     }
 
+    @Override
+    public F2FAccountPayload getAccountPayload() {
+        return new F2FAccountPayload(model.getId(),
+                FiatPaymentRail.F2F.name(),
+                model.getCountry().get().getCode(),
+                model.getCity().get(),
+                model.getContact().get(),
+                model.getExtraInfo().get());
+    }
 
     @Override
     public void onActivate() {

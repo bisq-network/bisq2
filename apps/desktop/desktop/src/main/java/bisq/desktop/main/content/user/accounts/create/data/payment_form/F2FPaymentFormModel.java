@@ -30,23 +30,22 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 
 @Getter
-@ToString
-@Slf4j
 public class F2FPaymentFormModel extends PaymentFormModel {
-    @ToString.Exclude
     private final ObservableList<Country> countries = FXCollections.observableArrayList(CountryRepository.getCountries());
     private final ObjectProperty<Country> country = new SimpleObjectProperty<>();
     private final BooleanProperty countryErrorVisible = new SimpleBooleanProperty();
     private final BooleanProperty requireValidation = new SimpleBooleanProperty();
-    private final StringProperty city = new SimpleStringProperty();
-    private final StringProperty contact = new SimpleStringProperty();
-    private final StringProperty extraInfo = new SimpleStringProperty();
+    private final StringProperty city = new SimpleStringProperty("Paris");
+    private final StringProperty contact = new SimpleStringProperty("contact...");
+    private final StringProperty extraInfo = new SimpleStringProperty("extraInfo...");
 
     private final TextMinMaxLengthValidator cityValidator = new TextMinMaxLengthValidator(2, 50);
     private final TextMinMaxLengthValidator contactValidator = new TextMinMaxLengthValidator(5, 150);
     private final TextMaxLengthValidator extraInfoValidator = new TextMaxLengthValidator(30);
+
+    public F2FPaymentFormModel(String id) {
+       super(id);
+    }
 }

@@ -48,7 +48,7 @@ public class PaymentOptionsController implements Controller {
         log.debug("CreateAccountOptionsController deactivated");
     }
 
-    public void cleanup() {
+    public void reset() {
         log.debug("Cleaning up CreateAccountOptionsController");
         model.setPaymentMethod(null);
     }

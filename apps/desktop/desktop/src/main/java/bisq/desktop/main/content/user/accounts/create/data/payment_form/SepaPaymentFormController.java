@@ -17,23 +17,31 @@
 
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
+import bisq.account.accounts.SepaAccountPayload;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.UUID;
+
 @Slf4j
-public class SepaPaymentFormController extends PaymentFormController<SepaPaymentFormView, SepaPaymentFormModel> {
+public class SepaPaymentFormController extends PaymentFormController<SepaPaymentFormView, SepaPaymentFormModel, SepaAccountPayload> {
     public SepaPaymentFormController(ServiceProvider serviceProvider) {
         super(serviceProvider);
     }
 
     @Override
+    public SepaAccountPayload getAccountPayload() {
+        return null;
+    }
+
+    @Override
     protected SepaPaymentFormView createView() {
-        return new SepaPaymentFormView(new SepaPaymentFormModel(), this);
+        return new SepaPaymentFormView(model, this);
     }
 
     @Override
     protected SepaPaymentFormModel createModel() {
-        return new SepaPaymentFormModel();
+        return new SepaPaymentFormModel(UUID.randomUUID().toString());
     }
 
     @Override
