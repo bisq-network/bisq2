@@ -17,92 +17,182 @@
 
 package bisq.desktop.main.content.user.accounts.create;
 
-import bisq.account.AccountService;
-import bisq.account.accounts.UserDefinedFiatAccount;
-import bisq.account.accounts.UserDefinedFiatAccountPayload;
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationController;
+import bisq.desktop.main.content.user.accounts.create.data.PaymentDataController;
+import bisq.desktop.main.content.user.accounts.create.options.PaymentOptionsController;
+import bisq.desktop.main.content.user.accounts.create.payment_method.PaymentMethodSelectionController;
+import bisq.desktop.main.content.user.accounts.create.summary.PaymentSummaryController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
-import bisq.i18n.Res;
+import javafx.event.EventHandler;
+import javafx.scene.input.KeyEvent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.Optional;
 
 @Slf4j
-public class CreatePaymentAccountController implements Controller {
-
-    protected final CreatePaymentAccountModel model;
+public class CreatePaymentAccountController extends NavigationController {
+    private final OverlayController overlayController;
     @Getter
-    protected final CreatePaymentAccountView view;
-    private final ServiceProvider serviceProvider;
-    private final AccountService accountService;
-    private Subscription accountDataSubscription, accountNameSubscription;
+    private final CreatePaymentAccountModel model;
+    @Getter
+    private final CreatePaymentAccountView view;
+    private final PaymentMethodSelectionController paymentMethodController;
+    private final PaymentDataController accountDataController;
+    private final PaymentOptionsController optionsController;
+    private final PaymentSummaryController summaryController;
+    private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
+    private Subscription selectedPaymentMethodPin, accountDataPin;
 
     public CreatePaymentAccountController(ServiceProvider serviceProvider) {
-        this.serviceProvider = serviceProvider;
-        accountService = serviceProvider.getAccountService();
+        super(NavigationTarget.CREATE_PAYMENT_ACCOUNT);
+
+        overlayController = OverlayController.getInstance();
 
         model = new CreatePaymentAccountModel();
         view = new CreatePaymentAccountView(model, this);
+
+        paymentMethodController = new PaymentMethodSelectionController();
+        accountDataController = new PaymentDataController(serviceProvider);
+        optionsController = new PaymentOptionsController(serviceProvider);
+        summaryController = new PaymentSummaryController(serviceProvider);
+    }
+
+    @Override
+    public boolean useCaching() {
+        return false;
     }
 
     @Override
     public void onActivate() {
-        model.setAccountData("");
-        model.setAccountName("");
-        accountDataSubscription = EasyBind.subscribe(model.accountDataProperty(), accountData -> updateButtonStates());
-        accountNameSubscription = EasyBind.subscribe(model.accountNameProperty(), accountName -> updateButtonStates());
+        overlayController.setUseEscapeKeyHandler(false);
+        overlayController.setEnterKeyHandler(null);
+        overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
+
+        setChildTargets();
+
+        model.getCurrentIndex().set(0);
+        model.getSelectedChildTarget().set(model.getChildTargets().get(0));
+
+        selectedPaymentMethodPin = EasyBind.subscribe(paymentMethodController.getSelectedPaymentMethod(),
+                paymentMethod -> {
+                    if (paymentMethod != null) {
+                        model.setPaymentMethod(Optional.of(paymentMethod));
+                        accountDataController.setPaymentMethod(paymentMethod);
+                        optionsController.setPaymentMethod(paymentMethod);
+                        summaryController.setPaymentMethod(paymentMethod);
+                        boolean hasOptions = paymentMethod instanceof FiatPaymentMethod fiatMethod &&
+                                hasConfigurableOptions(fiatMethod);
+                        model.setOptionsVisible(hasOptions);
+                        setChildTargets();
+                    }
+                    model.getNextButtonDisabled().set(paymentMethod == null);
+                });
     }
 
     @Override
     public void onDeactivate() {
-        accountDataSubscription.unsubscribe();
-        accountNameSubscription.unsubscribe();
-    }
+        overlayController.setUseEscapeKeyHandler(true);
+        overlayController.getApplicationRoot().removeEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
-    void onCancel() {
-        close();
-    }
-
-    void onQuit() {
-         serviceProvider.getShutDownHandler().shutdown();
-    }
-
-    protected void onSave() {
-        checkArgument(isDataValid());
-        if (accountService.findAccount(model.getAccountName()).isPresent()) {
-            new Popup()
-                    .warning(Res.get("user.paymentAccounts.createAccount.sameName"))
-                    .onAction(() -> model.setAccountName(""))
-                    .show();
-        } else {
-            String accountData = model.getAccountData();
-            checkNotNull(accountData);
-            checkArgument(accountData.length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH, "Account data must not be longer than 1000 characters");
-            UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(model.getAccountName(), accountData);
-            accountService.addPaymentAccount(newAccount);
-            accountService.setSelectedAccount(newAccount);
-            close();
+        if (selectedPaymentMethodPin != null) {
+            selectedPaymentMethodPin.unsubscribe();
+            selectedPaymentMethodPin = null;
         }
     }
 
-    protected void close() {
+    @Override
+    protected void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
+        model.getCreateAccountButtonVisible().set(navigationTarget == NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY);
+        model.getBackButtonVisible().set(model.getCurrentIndex().get() > 0);
+    }
+
+    @Override
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
+        return switch (navigationTarget) {
+            case CREATE_PAYMENT_ACCOUNT_PAYMENT_METHOD -> Optional.of(paymentMethodController);
+            case CREATE_PAYMENT_ACCOUNT_DATA -> Optional.of(accountDataController);
+            case CREATE_PAYMENT_ACCOUNT_OPTIONS -> Optional.of(optionsController);
+            case CREATE_PAYMENT_ACCOUNT_SUMMARY -> Optional.of(summaryController);
+            default -> Optional.empty();
+        };
+    }
+
+    void onKeyPressed(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onClose);
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::navigateNext);
+    }
+
+    void onNext() {
+        navigateNext();
+    }
+
+    private void navigateNext() {
+        int nextIndex = model.getCurrentIndex().get() + 1;
+        if (nextIndex < model.getChildTargets().size() && validate()) {
+            model.setAnimateRightOut(false);
+            navigateToIndex(nextIndex);
+        }
+    }
+
+    void onBack() {
+        int prevIndex = model.getCurrentIndex().get() - 1;
+        if (prevIndex >= 0) {
+            model.setAnimateRightOut(true);
+            navigateToIndex(prevIndex);
+        }
+    }
+
+    void onClose() {
         OverlayController.hide();
     }
 
-    private void updateButtonStates() {
-        model.setSaveButtonDisabled(!isDataValid());
+    void onCreateAccount() {
+        summaryController.createAccount();
+        OverlayController.hide();
     }
 
-    private boolean isDataValid() {
-        return model.getAccountData() != null
-                && !model.getAccountData().isEmpty()
-                && model.getAccountName() != null
-                && !model.getAccountName().isEmpty();
+    private void navigateToIndex(int index) {
+        model.getCurrentIndex().set(index);
+        NavigationTarget target = model.getChildTargets().get(index);
+        if (target == NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY) {
+            summaryController.setAccountPayload(accountDataController.getAccountPayload());
+        }
+        model.getSelectedChildTarget().set(target);
+        Navigation.navigateTo(target);
+    }
+
+    private void setChildTargets() {
+        model.getChildTargets().clear();
+        model.getChildTargets().add(NavigationTarget.CREATE_PAYMENT_ACCOUNT_PAYMENT_METHOD);
+        model.getChildTargets().add(NavigationTarget.CREATE_PAYMENT_ACCOUNT_DATA);
+        if (model.isOptionsVisible()) {
+            model.getChildTargets().add(NavigationTarget.CREATE_PAYMENT_ACCOUNT_OPTIONS);
+        }
+        model.getChildTargets().add(NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY);
+    }
+
+
+    private boolean hasConfigurableOptions(FiatPaymentMethod method) {
+        // TODO: Implement logic to determine if the payment method has configurable options
+        // For now, return false because no payment methods currently have Options page
+        return false;
+    }
+
+    private boolean validate() {
+        return switch (model.getSelectedChildTarget().get()) {
+            case CREATE_PAYMENT_ACCOUNT_PAYMENT_METHOD -> paymentMethodController.validate();
+            case CREATE_PAYMENT_ACCOUNT_DATA -> accountDataController.validate();
+            case CREATE_PAYMENT_ACCOUNT_OPTIONS -> optionsController.validate();
+            default -> true;
+        };
     }
 }

@@ -22,8 +22,10 @@ import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.TradeCurrency;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class FiatPaymentRailUtil {
@@ -59,10 +61,23 @@ public class FiatPaymentRailUtil {
                 .collect(Collectors.toList());
     }
 
+    static public List<String> getAllSepaCountries() {
+        List<String> sepaEuroCountries = getSepaEuroCountries();
+        List<String> sepaNonEuroCountries = getSepaNonEuroCountries();
+        List<String> sepaCountries = new ArrayList<>(sepaEuroCountries);
+        sepaCountries.addAll(sepaNonEuroCountries);
+        Collections.sort(sepaCountries);
+        return sepaCountries;
+    }
 
-    static List<String> getSepaEuroCountries() {
+    static public List<String> getSepaEuroCountries() {
         return List.of("AT", "BE", "CY", "DE", "EE", "FI", "FR", "GR", "IE",
                 "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES", "AD", "SM", "VA");
+    }
+
+    static public List<String> getSepaNonEuroCountries() {
+        return List.of("BG", "HR", "CZ", "DK", "GB", "HU", "PL", "RO",
+                "SE", "IS", "NO", "LI", "CH", "JE", "GI");
     }
 
     static List<TradeCurrency> toTradeCurrencies(List<String> currencyCodes) {
@@ -181,6 +196,33 @@ public class FiatPaymentRailUtil {
                 "TRY",
                 "USD",
                 "ZAR"
+        );
+    }
+
+    // Popularity scores based on historical snapshot of Bisq1 offers count
+    // Higher scores indicate more commonly used payment methods
+    public static Map<FiatPaymentRail, Integer> getPopularityScore() {
+        return Map.ofEntries(
+                Map.entry(FiatPaymentRail.SEPA, 10),
+                Map.entry(FiatPaymentRail.ZELLE, 9),
+                Map.entry(FiatPaymentRail.PIX, 8),
+                Map.entry(FiatPaymentRail.NATIONAL_BANK, 7),
+                Map.entry(FiatPaymentRail.REVOLUT, 6),
+                Map.entry(FiatPaymentRail.CASH_BY_MAIL, 6),
+                Map.entry(FiatPaymentRail.ACH_TRANSFER, 5),
+                Map.entry(FiatPaymentRail.STRIKE, 5),
+                Map.entry(FiatPaymentRail.INTERAC_E_TRANSFER, 4),
+                Map.entry(FiatPaymentRail.WISE, 4),
+                Map.entry(FiatPaymentRail.F2F, 3),
+                Map.entry(FiatPaymentRail.US_POSTAL_MONEY_ORDER, 3),
+                Map.entry(FiatPaymentRail.PAY_ID, 3),
+                Map.entry(FiatPaymentRail.FASTER_PAYMENTS, 3),
+                Map.entry(FiatPaymentRail.AMAZON_GIFT_CARD, 2),
+                Map.entry(FiatPaymentRail.SWIFT, 2),
+                Map.entry(FiatPaymentRail.BIZUM, 2),
+                Map.entry(FiatPaymentRail.CASH_DEPOSIT, 2),
+                Map.entry(FiatPaymentRail.UPI, 1),
+                Map.entry(FiatPaymentRail.CASH_APP, 1)
         );
     }
 }

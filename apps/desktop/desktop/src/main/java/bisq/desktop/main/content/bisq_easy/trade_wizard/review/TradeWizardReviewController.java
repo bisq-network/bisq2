@@ -20,7 +20,6 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.review;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.bisq_easy.BisqEasyService;
 import bisq.bisq_easy.BisqEasyServiceUtil;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -108,7 +107,6 @@ public class TradeWizardReviewController implements Controller {
     private final SettingsService settingsService;
     private final ReviewDataDisplay reviewDataDisplay;
     private final MediationRequestService mediationRequestService;
-    private final BisqEasyService bisqEasyService;
     private Pin errorMessagePin, peersErrorMessagePin;
     private UIScheduler timeoutScheduler;
 
@@ -126,7 +124,6 @@ public class TradeWizardReviewController implements Controller {
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         settingsService = serviceProvider.getSettingsService();
-        bisqEasyService = serviceProvider.getBisqEasyService();
         mediationRequestService = serviceProvider.getSupportService().getMediationRequestService();
 
         priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());

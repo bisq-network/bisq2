@@ -127,7 +127,7 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
         }
 
         void onCompleteTrade() {
-            if (model.getExplorerResultValidator().isHasErrors()) {
+            if (model.getExplorerResultValidator().hasErrors()) {
                 String warning = createWarningMessage();
                 showWarningPopup(warning);
             } else {

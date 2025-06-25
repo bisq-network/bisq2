@@ -19,8 +19,6 @@ package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
-import bisq.common.locale.Country;
-import bisq.common.util.StringUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -33,18 +31,12 @@ import lombok.extern.slf4j.Slf4j;
 public final class SepaAccount extends CountryBasedAccount<SepaAccountPayload, FiatPaymentMethod> {
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA);
 
-    public SepaAccount(String accountName,
-                       String holderName,
-                       String iban,
-                       String bic,
-                       Country country) {
-        this(accountName,
-                new SepaAccountPayload(StringUtils.createUid(), PAYMENT_METHOD.getName(), holderName, iban, bic, country.getCode()),
-                country);
+    public SepaAccount(SepaAccountPayload payload) {
+        this(payload.getDefaultAccountName(), payload);
     }
 
-    private SepaAccount(String accountName, SepaAccountPayload sepaAccountPayload, Country country) {
-        super(accountName, PAYMENT_METHOD, sepaAccountPayload, country);
+    public SepaAccount(String accountName, SepaAccountPayload sepaAccountPayload) {
+        super(accountName, PAYMENT_METHOD, sepaAccountPayload);
     }
 
     @Override
@@ -63,7 +55,6 @@ public final class SepaAccount extends CountryBasedAccount<SepaAccountPayload, F
 
     public static SepaAccount fromProto(bisq.account.protobuf.Account proto) {
         return new SepaAccount(proto.getAccountName(),
-                SepaAccountPayload.fromProto(proto.getAccountPayload()),
-                Country.fromProto(proto.getCountryBasedAccount().getCountry()));
+                SepaAccountPayload.fromProto(proto.getAccountPayload()));
     }
 }

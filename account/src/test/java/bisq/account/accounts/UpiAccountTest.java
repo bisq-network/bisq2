@@ -27,28 +27,18 @@ class UpiAccountTest {
                     .setId("id")
                     .setPaymentMethodName("UPI")
                     .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
-                            .setCountryCode("countryCode")
+                            .setCountryCode("US")
                             .setUpiAccountPayload(UpiAccountPayload.newBuilder()
                                     .setVirtualPaymentAddress("virtualPaymentAddress")))
             )
             .setCountryBasedAccount(CountryBasedAccount.newBuilder()
-                    .setCountry(Country.newBuilder()
-                            .setCode("countryCode")
-                            .setName("countryName")
-                            .setRegion(Region.newBuilder()
-                                    .setCode("regionCode")
-                                    .setName("regionName")))
                     .setUpiAccount(UpiAccount.newBuilder())
             )
             .build();
 
     private static final bisq.account.accounts.UpiAccount ACCOUNT = new bisq.account.accounts.UpiAccount(
             "accountName",
-            new bisq.account.accounts.UpiAccountPayload("id", "UPI", "countryCode", "virtualPaymentAddress"),
-            new bisq.common.locale.Country(
-                    "countryCode",
-                    "countryName",
-                    new bisq.common.locale.Region("regionCode", "regionName")));
+            new bisq.account.accounts.UpiAccountPayload("id", "UPI", "US", "virtualPaymentAddress"));
 
     @Test
     void testToProto() {

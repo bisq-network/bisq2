@@ -19,6 +19,7 @@ package bisq.account.accounts;
 
 import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.common.validation.PaymentAccountValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -56,7 +57,7 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload {
     @Override
     public void verify() {
         super.verify();
-        NetworkDataValidation.validateEmail(email);
+        PaymentAccountValidation.validateEmail(email);
         NetworkDataValidation.validateText(holderName, 100);
         NetworkDataValidation.validateText(beneficiaryAddress, 200);
 

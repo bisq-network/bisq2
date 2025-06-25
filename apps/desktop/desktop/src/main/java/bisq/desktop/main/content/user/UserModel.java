@@ -25,6 +25,6 @@ import lombok.Getter;
 public class UserModel extends ContentTabModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.USER_PROFILE;
+        return NavigationTarget.PAYMENT_ACCOUNTS; //todo just for dev
     }
 }

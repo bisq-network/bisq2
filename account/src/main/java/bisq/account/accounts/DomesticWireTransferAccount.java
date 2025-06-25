@@ -32,17 +32,14 @@ import lombok.extern.slf4j.Slf4j;
 public final class DomesticWireTransferAccount extends BankAccount<DomesticWireTransferAccountPayload> {
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.NATIONAL_BANK);
 
-    public DomesticWireTransferAccount(String accountName,
-                                       DomesticWireTransferAccountPayload payload,
-                                       Country country) {
-        super(accountName, PAYMENT_METHOD, payload, country);
+    public DomesticWireTransferAccount(String accountName, DomesticWireTransferAccountPayload payload) {
+        super(accountName, PAYMENT_METHOD, payload);
     }
 
     public static DomesticWireTransferAccount fromProto(bisq.account.protobuf.Account proto) {
         return new DomesticWireTransferAccount(
                 proto.getAccountName(),
-                DomesticWireTransferAccountPayload.fromProto(proto.getAccountPayload()),
-                Country.fromProto(proto.getCountryBasedAccount().getCountry()));
+                DomesticWireTransferAccountPayload.fromProto(proto.getAccountPayload()));
     }
 
     @Override

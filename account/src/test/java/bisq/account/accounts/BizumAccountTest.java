@@ -27,28 +27,18 @@ class BizumAccountTest {
                     .setId("id")
                     .setPaymentMethodName("BIZUM")
                     .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
-                            .setCountryCode("countryCode")
+                            .setCountryCode("US")
                             .setBizumAccountPayload(BizumAccountPayload.newBuilder()
                                     .setMobileNr("mobileNr")))
             )
             .setCountryBasedAccount(CountryBasedAccount.newBuilder()
-                    .setCountry(Country.newBuilder()
-                            .setCode("countryCode")
-                            .setName("countryName")
-                            .setRegion(Region.newBuilder()
-                                    .setCode("regionCode")
-                                    .setName("regionName")))
                     .setBizumAccount(BizumAccount.newBuilder())
             )
             .build();
 
     private static final bisq.account.accounts.BizumAccount ACCOUNT = new bisq.account.accounts.BizumAccount(
             "accountName",
-            new bisq.account.accounts.BizumAccountPayload("id", "BIZUM", "countryCode", "mobileNr"),
-            new bisq.common.locale.Country(
-                    "countryCode",
-                    "countryName",
-                    new bisq.common.locale.Region("regionCode", "regionName")));
+            new bisq.account.accounts.BizumAccountPayload("id", "BIZUM", "US", "mobileNr"));
 
     @Test
     void testToProto() {

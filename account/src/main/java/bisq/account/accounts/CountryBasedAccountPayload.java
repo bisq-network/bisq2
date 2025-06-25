@@ -17,6 +17,8 @@
 
 package bisq.account.accounts;
 
+import bisq.common.locale.Country;
+import bisq.common.locale.CountryRepository;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
@@ -71,5 +73,9 @@ public abstract class CountryBasedAccountPayload extends AccountPayload {
     protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.CountryBasedAccountPayload.newBuilder()
                 .setCountryCode(countryCode);
+    }
+
+    public Country getCountry() {
+        return CountryRepository.getCountry(countryCode);
     }
 }

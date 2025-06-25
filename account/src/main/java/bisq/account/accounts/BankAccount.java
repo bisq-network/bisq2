@@ -2,12 +2,11 @@ package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protobuf.Account;
-import bisq.common.locale.Country;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
 public abstract class BankAccount<P extends BankAccountPayload> extends CountryBasedAccount<P, FiatPaymentMethod> {
-    public BankAccount(String accountName, FiatPaymentMethod paymentMethod, P payload, Country country) {
-        super(accountName, paymentMethod, payload, country);
+    public BankAccount(String accountName, FiatPaymentMethod paymentMethod, P payload) {
+        super(accountName, paymentMethod, payload);
     }
 
     protected bisq.account.protobuf.BankAccount.Builder getBankAccountBuilder(boolean serializeForHash) {

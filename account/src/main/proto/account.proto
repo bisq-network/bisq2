@@ -111,14 +111,14 @@ message SepaAccountPayload {
   string holderName = 1;
   string iban = 2;
   string bic = 3;
-
+  repeated string acceptedCountryCodes = 4;
 }
 
 message SepaInstantAccountPayload {
   string holderName = 1;
   string iban = 2;
   string bic = 3;
-  repeated string acceptedCountryCodes = 5;
+  repeated string acceptedCountryCodes = 4;
 }
 
 message WiseAccountPayload {
@@ -253,7 +253,6 @@ message UserDefinedFiatAccount {
 message RevolutAccount {
 }
 message CountryBasedAccount {
-  common.Country country = 1;
   oneof message {
     BankAccount bankAccount = 19;
     SepaAccount sepaAccount = 20;

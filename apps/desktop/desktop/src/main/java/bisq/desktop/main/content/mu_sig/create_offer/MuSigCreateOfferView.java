@@ -182,7 +182,7 @@ public class MuSigCreateOfferView extends NavigationView<VBox, MuSigCreateOfferM
 
         HBox hBox = new HBox(10);
         hBox.setAlignment(Pos.CENTER);
-        hBox.setId("onboarding-top-panel");
+        hBox.setId("wizard-progress-box");
         hBox.setMinHeight(TOP_PANE_HEIGHT);
         hBox.setMaxHeight(TOP_PANE_HEIGHT);
         hBox.setPadding(new Insets(0, 20, 0, 50));

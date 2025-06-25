@@ -1,17 +1,43 @@
 package bisq.account.accounts;
 
+import bisq.common.util.StringUtils;
+import bisq.common.validation.NetworkDataValidation;
+import lombok.Getter;
+
+@Getter
 public class F2FAccountPayload extends CountryBasedAccountPayload {
+    public static final int CITY_MIN_LENGTH = 2;
+    public static final int CITY_MAX_LENGTH = 50;
+    public static final int CONTACT_MIN_LENGTH = 5;
+    public static final int CONTACT_MAX_LENGTH = 100;
+    public static final int EXTRA_INFO_MIN_LENGTH = 1;
+    public static final int EXTRA_INFO_MAX_LENGTH = 300;
 
     private final String city;
     private final String contact;
     private final String extraInfo;
 
-    public F2FAccountPayload(String id, String paymentMethodName, String countryCode, String city, String contact, String extraInfo) {
+    public F2FAccountPayload(String id,
+                             String paymentMethodName,
+                             String countryCode,
+                             String city,
+                             String contact,
+                             String extraInfo) {
         super(id, paymentMethodName, countryCode);
         this.city = city;
         this.contact = contact;
         this.extraInfo = extraInfo;
+        verify();
     }
+
+    @Override
+    public void verify() {
+        super.verify();
+        NetworkDataValidation.validateRequiredText(city, CITY_MIN_LENGTH, CITY_MAX_LENGTH);
+        NetworkDataValidation.validateRequiredText(contact, CONTACT_MIN_LENGTH, CONTACT_MAX_LENGTH);
+        NetworkDataValidation.validateText(extraInfo, EXTRA_INFO_MIN_LENGTH, EXTRA_INFO_MAX_LENGTH);
+    }
+
     @Override
     protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
         return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setF2FAccountPayload(
@@ -40,5 +66,10 @@ public class F2FAccountPayload extends CountryBasedAccountPayload {
                 f2fAccountPayload.getContact(),
                 f2fAccountPayload.getExtraInfo()
         );
+    }
+
+    @Override
+    protected String getDefaultAccountName() {
+        return paymentMethodName + "-" + countryCode + "/" + StringUtils.truncate(city, 5);
     }
 }

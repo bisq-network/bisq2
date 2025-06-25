@@ -3,7 +3,6 @@ package bisq.account.accounts;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.Account;
-import bisq.common.locale.Country;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -17,8 +16,8 @@ public final class UpiAccount extends CountryBasedAccount<UpiAccountPayload, Fia
 
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.UPI);
 
-    public UpiAccount(String accountName, UpiAccountPayload accountPayload, Country country) {
-        super(accountName, PAYMENT_METHOD, accountPayload, country);
+    public UpiAccount(String accountName, UpiAccountPayload accountPayload) {
+        super(accountName, PAYMENT_METHOD, accountPayload);
     }
 
     @Override
@@ -38,7 +37,6 @@ public final class UpiAccount extends CountryBasedAccount<UpiAccountPayload, Fia
     public static UpiAccount fromProto(Account proto) {
         return new UpiAccount(
                 proto.getAccountName(),
-                UpiAccountPayload.fromProto(proto.getAccountPayload()),
-                Country.fromProto(proto.getCountryBasedAccount().getCountry()));
+                UpiAccountPayload.fromProto(proto.getAccountPayload()));
     }
 }

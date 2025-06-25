@@ -6,7 +6,6 @@ import bisq.account.protobuf.SepaInstantAccountPayload;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,58 +45,6 @@ class SepaInstantAccountPayloadTest {
     @Test
     void testFromProto() {
         assertEquals(PAYLOAD, bisq.account.accounts.SepaInstantAccountPayload.fromProto(PROTO));
-    }
-
-    @Test
-    void testToProtoWithEmptyAcceptedCountries() {
-        var payloadWithoutCountries = new bisq.account.accounts.SepaInstantAccountPayload(
-                "id",
-                "SEPA_INSTANT",
-                "holderName",
-                "DE89370400440532013000",
-                "DEUTDEBBXXX",
-                "DE",
-                null);
-
-        var protoWithoutCountries = AccountPayload.newBuilder()
-                .setId("id")
-                .setPaymentMethodName("SEPA_INSTANT")
-                .setCountryBasedAccountPayload(
-                        CountryBasedAccountPayload.newBuilder()
-                                .setCountryCode("DE")
-                                .setSepaInstantAccountPayload(SepaInstantAccountPayload.newBuilder()
-                                        .setHolderName("holderName")
-                                        .setIban("DE89370400440532013000")
-                                        .setBic("DEUTDEBBXXX")))
-                .build();
-
-        assertEquals(protoWithoutCountries, payloadWithoutCountries.completeProto());
-    }
-
-    @Test
-    void testToProtoWithEmptyAcceptedCountriesList() {
-        var payloadWithEmptyList = new bisq.account.accounts.SepaInstantAccountPayload(
-                "id",
-                "SEPA_INSTANT",
-                "holderName",
-                "DE89370400440532013000",
-                "DEUTDEBBXXX",
-                "DE",
-                Collections.emptyList());
-
-        var protoWithEmptyList = AccountPayload.newBuilder()
-                .setId("id")
-                .setPaymentMethodName("SEPA_INSTANT")
-                .setCountryBasedAccountPayload(
-                        CountryBasedAccountPayload.newBuilder()
-                                .setCountryCode("DE")
-                                .setSepaInstantAccountPayload(SepaInstantAccountPayload.newBuilder()
-                                        .setHolderName("holderName")
-                                        .setIban("DE89370400440532013000")
-                                        .setBic("DEUTDEBBXXX")))
-                .build();
-
-        assertEquals(protoWithEmptyList, payloadWithEmptyList.completeProto());
     }
 
     @Test

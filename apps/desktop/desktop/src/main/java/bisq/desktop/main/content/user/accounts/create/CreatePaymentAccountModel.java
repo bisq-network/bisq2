@@ -17,63 +17,39 @@
 
 package bisq.desktop.main.content.user.accounts.create;
 
-import bisq.desktop.common.view.Model;
+import bisq.account.payment_method.PaymentMethod;
+import bisq.desktop.common.view.NavigationModel;
+import bisq.desktop.navigation.NavigationTarget;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import lombok.Getter;
+import lombok.Setter;
 
-public class CreatePaymentAccountModel implements Model {
-    private final StringProperty accountData = new SimpleStringProperty();
-    private final StringProperty accountName = new SimpleStringProperty();
-    private final BooleanProperty saveButtonDisabled = new SimpleBooleanProperty();
-    private final BooleanProperty isEditable = new SimpleBooleanProperty();
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
-    public String getAccountData() {
-        return accountData.get();
-    }
+@Getter
+public class CreatePaymentAccountModel extends NavigationModel {
+    private final IntegerProperty currentIndex = new SimpleIntegerProperty();
+    private final BooleanProperty createAccountButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty backButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty nextButtonDisabled = new SimpleBooleanProperty();
+    private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
+    private final List<NavigationTarget> childTargets = new ArrayList<>();
+    @Setter
+    private boolean optionsVisible;
+    @Setter
+    private boolean animateRightOut = true;
+    @Setter
+    private Optional<PaymentMethod<?>> paymentMethod = Optional.empty();
 
-    public StringProperty accountDataProperty() {
-        return accountData;
-    }
-
-    public void setAccountData(String accountData) {
-        this.accountData.set(accountData);
-    }
-
-    public String getAccountName() {
-        return accountName.get();
-    }
-
-    public StringProperty accountNameProperty() {
-        return accountName;
-    }
-
-    public void setAccountName(String accountName) {
-        this.accountName.set(accountName);
-    }
-
-    public boolean isSaveButtonDisabled() {
-        return saveButtonDisabled.get();
-    }
-
-    public BooleanProperty saveButtonDisabledProperty() {
-        return saveButtonDisabled;
-    }
-
-    public void setSaveButtonDisabled(boolean saveButtonDisabled) {
-        this.saveButtonDisabled.set(saveButtonDisabled);
-    }
-
-    public boolean isIsEditable() {
-        return isEditable.get();
-    }
-
-    public BooleanProperty isEditableProperty() {
-        return isEditable;
-    }
-
-    public void setIsEditable(boolean isEditable) {
-        this.isEditable.set(isEditable);
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.CREATE_PAYMENT_ACCOUNT_PAYMENT_METHOD;
     }
 }

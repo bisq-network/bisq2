@@ -29,19 +29,13 @@ class NationalBankAccountTest {
                     .setId("id")
                     .setPaymentMethodName("NATIONAL_BANK")
                     .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
-                            .setCountryCode("countryCode")
+                            .setCountryCode("US")
                             .setBankAccountPayload(BankAccountPayload.newBuilder()
                                     .setBankName("bankName")
                                     .setNationalBankAccountPayload(
                                             bisq.account.protobuf.NationalBankAccountPayload.newBuilder())))
             )
             .setCountryBasedAccount(CountryBasedAccount.newBuilder()
-                    .setCountry(Country.newBuilder()
-                            .setCode("countryCode")
-                            .setName("countryName")
-                            .setRegion(Region.newBuilder()
-                                    .setCode("regionCode")
-                                    .setName("regionName")))
                     .setBankAccount(BankAccount.newBuilder()
                             .setNationalBankAccount(bisq.account.protobuf.NationalBankAccount.newBuilder())))
             .build();
@@ -49,14 +43,10 @@ class NationalBankAccountTest {
     private static final NationalBankAccount ACCOUNT = new NationalBankAccount(
             "accountName",
             new NationalBankAccountPayload(
-                    "id", "NATIONAL_BANK", "countryCode",
+                    "id", "NATIONAL_BANK", "US",
                     Optional.empty(), Optional.of("bankName"), Optional.empty(),
                     Optional.empty(), Optional.empty(), Optional.empty(),
-                    Optional.empty(), Optional.empty()),
-            new bisq.common.locale.Country(
-                    "countryCode",
-                    "countryName",
-                    new bisq.common.locale.Region("regionCode", "regionName")));
+                    Optional.empty(), Optional.empty()));
 
     @Test
     void testToProto() {

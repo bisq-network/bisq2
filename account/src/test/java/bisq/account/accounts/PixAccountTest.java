@@ -26,28 +26,18 @@ class PixAccountTest {
                     .setId("id")
                     .setPaymentMethodName("PIX")
                     .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
-                            .setCountryCode("countryCode")
+                            .setCountryCode("US")
                             .setPixAccountPayload(bisq.account.protobuf.PixAccountPayload.newBuilder()
                                     .setPixKey("pixKey")))
             )
             .setCountryBasedAccount(CountryBasedAccount.newBuilder()
-                    .setCountry(Country.newBuilder()
-                            .setCode("countryCode")
-                            .setName("countryName")
-                            .setRegion(Region.newBuilder()
-                                    .setCode("regionCode")
-                                    .setName("regionName")))
                     .setPixAccount(bisq.account.protobuf.PixAccount.newBuilder().build())
             )
             .build();
 
     private static final bisq.account.accounts.PixAccount ACCOUNT = new bisq.account.accounts.PixAccount(
             "accountName",
-            new bisq.account.accounts.PixAccountPayload("id", "PIX", "countryCode", "pixKey"),
-            new bisq.common.locale.Country(
-                    "countryCode",
-                    "countryName",
-                    new bisq.common.locale.Region("regionCode", "regionName")));
+            new bisq.account.accounts.PixAccountPayload("id", "PIX", "US", "pixKey"));
 
     @Test
     void testToProto() {

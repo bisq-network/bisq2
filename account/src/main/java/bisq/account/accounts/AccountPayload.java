@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 public abstract class AccountPayload implements NetworkProto {
     protected final String id;
-    private final String paymentMethodName;
+    protected final String paymentMethodName;
 
     public AccountPayload(String id, String paymentMethodName) {
         this.id = id;
@@ -76,5 +76,9 @@ public abstract class AccountPayload implements NetworkProto {
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);
         };
+    }
+
+    protected String getDefaultAccountName() {
+        return paymentMethodName + "-" + id.substring(0, 4);
     }
 }

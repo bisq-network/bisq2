@@ -88,8 +88,19 @@ public class NetworkDataValidation {
                 "Text must not be longer than " + maxLength + ". text=" + text);
     }
 
+    public static void validateText(String text, int minLength, int maxLength) {
+        validateText(text, maxLength);
+        checkArgument(text.length() >= minLength,
+                "Text must not be shorter than " + minLength + ". text=" + text);
+    }
+
     public static void validateText(Optional<String> text, int maxTextLength) {
         text.ifPresent(e -> validateText(e, maxTextLength));
+    }
+
+    public static void validateRequiredText(String text, int minLength, int maxLength) {
+        checkArgument(!StringUtils.isEmpty(text), "Text must not be null or empty");
+        validateText(text, minLength, maxLength);
     }
 
     public static void validateRequiredText(String text, int maxLength) {
@@ -157,28 +168,5 @@ public class NetworkDataValidation {
     public static void validateBondUserName(String bondUserName) {
         checkArgument(bondUserName.length() < 100,
                 "Bond username too long. bondUserName=" + bondUserName);
-    }
-
-    // Format: country code (2 letters) + check digits (2 numbers) + BBAN (up to 30 alphanumeric chars)
-    public static void validateIbanFormat(String iban) {
-        checkArgument(!StringUtils.isEmpty(iban), "IBAN must not be null or empty");
-        checkArgument(iban.matches("[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}"),
-                "Invalid IBAN format. Must start with country code (2 letters) followed by check digits (2 numbers) and BBAN. iban=" + iban);
-    }
-
-    // Format: institution code (4 letters) + country code (2 letters) + location code (2 alphanumeric) +
-    // optional branch code (3 alphanumeric).
-    public static void validateBicFormat(String bic) {
-        checkArgument(!StringUtils.isEmpty(bic), "BIC must not be null or empty");
-        checkArgument(bic.matches("[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?"),
-                "Invalid BIC/SWIFT format. Must follow pattern of institution code (4 letters) + country code (2 letters) + location code (2 alphanumeric) + optional branch code (3 alphanumeric). bic=" + bic);
-    }
-
-    public static void validateEmail(String email) {
-        checkArgument(!StringUtils.isEmpty(email), "Email must not be empty");
-        checkArgument(email.length() <= 100, "Email must not be longer than 100 characters. email=" + email);
-
-        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-        checkArgument(email.matches(emailRegex), "Invalid email format. email: " + email);
     }
 }

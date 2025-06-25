@@ -2,7 +2,6 @@ package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
-import bisq.common.locale.Country;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -16,8 +15,12 @@ public final class F2FAccount extends CountryBasedAccount<F2FAccountPayload, Fia
 
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.F2F);
 
-    public F2FAccount(String accountName, F2FAccountPayload payload, Country country) {
-        super(accountName, PAYMENT_METHOD, payload, country);
+    public F2FAccount(F2FAccountPayload payload) {
+        this(payload.getDefaultAccountName(), payload);
+    }
+
+    public F2FAccount(String accountName, F2FAccountPayload payload) {
+        super(accountName, PAYMENT_METHOD, payload);
     }
 
     @Override
@@ -36,7 +39,6 @@ public final class F2FAccount extends CountryBasedAccount<F2FAccountPayload, Fia
 
     public static F2FAccount fromProto(bisq.account.protobuf.Account proto) {
         return new F2FAccount(proto.getAccountName(),
-                F2FAccountPayload.fromProto(proto.getAccountPayload()),
-                Country.fromProto(proto.getCountryBasedAccount().getCountry()));
+                F2FAccountPayload.fromProto(proto.getAccountPayload()));
     }
 }

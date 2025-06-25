@@ -46,12 +46,6 @@ class CashDepositAccountTest {
                                             .build())))
             )
             .setCountryBasedAccount(CountryBasedAccount.newBuilder()
-                    .setCountry(Country.newBuilder()
-                            .setCode("US")
-                            .setName("countryName")
-                            .setRegion(Region.newBuilder()
-                                    .setCode("regionCode")
-                                    .setName("regionName")))
                     .setBankAccount(BankAccount.newBuilder()
                             .setCashDepositAccount(CashDepositAccount.newBuilder().build())))
             .build();
@@ -62,11 +56,7 @@ class CashDepositAccountTest {
                     "id", "CASH_DEPOSIT", "US",
                     Optional.of("holderName"), Optional.of("bankName"), Optional.of("branchId"),
                     Optional.of("accountNr"), Optional.of("accountType"), Optional.of("holderTaxId"),
-                    Optional.of("bankId"), Optional.of("nationalAccountId"), "requirements"),
-            new bisq.common.locale.Country(
-                    "US",
-                    "countryName",
-                    new bisq.common.locale.Region("regionCode", "regionName")));
+                    Optional.of("bankId"), Optional.of("nationalAccountId"), "requirements"));
 
     @Test
     void testToProto() {

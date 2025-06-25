@@ -61,12 +61,6 @@ class SameBankAccountTest {
                                     .setNationalAccountId("NAI12345")
                                     .setSameBankAccountPayload(SameBankAccountPayload.newBuilder()))))
             .setCountryBasedAccount(CountryBasedAccount.newBuilder()
-                    .setCountry(Country.newBuilder()
-                            .setCode("US")
-                            .setName("United States")
-                            .setRegion(Region.newBuilder()
-                                    .setCode("NA")
-                                    .setName("North America")))
                     .setBankAccount(BankAccount.newBuilder()
                             .setSameBankAccount(SameBankAccount.newBuilder())))
             .build();
@@ -84,11 +78,7 @@ class SameBankAccountTest {
                     Optional.of("Checking"),
                     Optional.of("TID12345"),
                     Optional.of("BID12345"),
-                    Optional.of("NAI12345")),
-            new bisq.common.locale.Country(
-                    "US",
-                    "United States",
-                    new bisq.common.locale.Region("NA", "North America")));
+                    Optional.of("NAI12345")));
 
     @Test
     void testToProto() {
