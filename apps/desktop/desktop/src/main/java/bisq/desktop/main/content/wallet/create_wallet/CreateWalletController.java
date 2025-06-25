@@ -6,6 +6,8 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.wallet.create_wallet.protect.CreateWalletProtectController;
+import bisq.desktop.main.content.wallet.create_wallet.backup.CreateWalletBackupController;
+import bisq.desktop.main.content.wallet.create_wallet.verify.CreateWalletVerifyController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
@@ -25,8 +27,8 @@ public class CreateWalletController extends NavigationController {
     private final CreateWalletView view;
 
     private final CreateWalletProtectController createWalletProtectController;
-    private final CreateWalletProtectController createWalletProtectController1;
-    private final CreateWalletProtectController createWalletProtectController2;
+    private final CreateWalletBackupController createWalletBackupController;
+    private final CreateWalletVerifyController createWalletVerifyController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
 
     public CreateWalletController(ServiceProvider serviceProvider) {
@@ -38,8 +40,8 @@ public class CreateWalletController extends NavigationController {
         view = new CreateWalletView(model, this);
 
         createWalletProtectController = new CreateWalletProtectController(serviceProvider, this::setMainButtonsVisibleState);
-        createWalletProtectController1 = new CreateWalletProtectController(serviceProvider, this::setMainButtonsVisibleState);
-        createWalletProtectController2 = new CreateWalletProtectController(serviceProvider, this::setMainButtonsVisibleState);
+        createWalletBackupController = new CreateWalletBackupController(serviceProvider, this::setMainButtonsVisibleState);
+        createWalletVerifyController = new CreateWalletVerifyController(serviceProvider, this::setMainButtonsVisibleState);
     }
 
     @Override
@@ -79,13 +81,12 @@ public class CreateWalletController extends NavigationController {
         model.getNextButtonVisible().set(!isTakeOfferReview);
     }
 
-
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
             case CREATE_WALLET_PROTECT -> Optional.of(createWalletProtectController);
-            case CREATE_WALLET_BACKUP -> Optional.of(createWalletProtectController1);
-            case CREATE_WALLET_VERIFY -> Optional.of(createWalletProtectController2);
+            case CREATE_WALLET_BACKUP -> Optional.of(createWalletBackupController);
+            case CREATE_WALLET_VERIFY -> Optional.of(createWalletVerifyController);
             default -> Optional.empty();
         };
     }
