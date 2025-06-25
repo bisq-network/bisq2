@@ -77,6 +77,11 @@ public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinW
     }
 
     @Override
+    public Observable<Boolean> getIsWalletInitialized() {
+        return new Observable<Boolean>(true);
+    }
+
+    @Override
     public CompletableFuture<Coin> requestBalance() {
         return wallet.map(bitcoinWallet -> CompletableFuture.supplyAsync(() -> {
             double balance = bitcoinWallet.getBalance();
@@ -84,5 +89,10 @@ public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinW
             this.balance.set(balanceAsCoin);
             return balanceAsCoin;
         })).orElseGet(() -> CompletableFuture.completedFuture(Coin.asBtcFromValue(0)));
+    }
+
+    @Override
+    public void setEncryptionPassword(String password) {
+        log.debug("setEncryptionPassword: " + password);
     }
 }

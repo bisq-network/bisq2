@@ -17,19 +17,15 @@
 
 package bisq.desktop.main.content.wallet.create_wallet.protect;
 
-import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
-import bisq.offer.bisq_easy.BisqEasyOffer;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
 public class CreateWalletProtectModel implements Model {
-
+    private final StringProperty password = new SimpleStringProperty("");
+    private final StringProperty confirmPassword = new SimpleStringProperty("");
 }

@@ -17,36 +17,25 @@
 
 package bisq.desktop.main.content.wallet.create_wallet.protect;
 
-import bisq.bisq_easy.BisqEasyTradeAmountLimits;
-import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.currency.Market;
-import bisq.common.monetary.Monetary;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.Browser;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.bisq_easy.components.amount_selection.AmountSelectionController;
-import bisq.i18n.Res;
-import bisq.offer.Direction;
-import bisq.offer.amount.OfferAmountUtil;
+import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.wallet.create_wallet.CreateWalletModel;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.price.PriceUtil;
-import bisq.presentation.formatters.AmountFormatter;
-import bisq.presentation.formatters.PriceFormatter;
-import bisq.user.identity.UserIdentityService;
-import bisq.user.reputation.ReputationService;
-import javafx.beans.property.ReadOnlyObjectProperty;
+import bisq.wallets.core.WalletService;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
 import java.util.function.Consumer;
 
 @Slf4j
 public class CreateWalletProtectController implements Controller {
+    private static final Logger log = LoggerFactory.getLogger(CreateWalletProtectController.class);
     private final CreateWalletProtectModel model;
     @Getter
     private final CreateWalletProtectView view;
@@ -63,6 +52,35 @@ public class CreateWalletProtectController implements Controller {
 
     }
 
+    public boolean isValid() {
+        String password = model.getPassword().get();
+        String confirmPassword = model.getConfirmPassword().get();
+
+        log.error("model.getPassword().get(): ");
+        log.error(password);
+        log.error(confirmPassword);
+        return !password.isEmpty() && password.equals(confirmPassword);
+    }
+
+    public void handleInvalidInput() {
+        String password = model.getPassword().get();
+        String confirmPassword = model.getConfirmPassword().get();
+
+        if (password.isEmpty()) {
+            new Popup().invalid("Please enter password")
+                    .owner((Region) view.getRoot().getParent().getParent())
+                    .show();
+        } else if (confirmPassword.isEmpty()) {
+            new Popup().invalid("Please enter password again")
+                    .owner((Region) view.getRoot().getParent().getParent())
+                    .show();
+        } else if (!password.equals(confirmPassword)) {
+            new Popup().invalid("Passwords don't match")
+                    .owner((Region) view.getRoot().getParent().getParent())
+                    .show();
+        }
+    }
+
     @Override
     public void onActivate() {
 
@@ -71,6 +89,10 @@ public class CreateWalletProtectController implements Controller {
     @Override
     public void onDeactivate() {
         navigationButtonsVisibleHandler.accept(true);
+    }
+
+    public CreateWalletProtectModel getModel() {
+        return model;
     }
 
     void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {

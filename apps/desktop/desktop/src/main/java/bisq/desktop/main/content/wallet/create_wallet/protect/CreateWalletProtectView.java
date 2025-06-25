@@ -17,57 +17,82 @@
 
 package bisq.desktop.main.content.wallet.create_wallet.protect;
 
-import bisq.desktop.common.Browser;
-import bisq.desktop.common.Icons;
-import bisq.desktop.common.ManagedDuration;
-import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
+import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
 import bisq.i18n.Res;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
+
+import javax.annotation.Nullable;
 
 @Slf4j
 public class CreateWalletProtectView extends View<StackPane, CreateWalletProtectModel, CreateWalletProtectController> {
-    private final Label headlineLabel;
-    private final VBox content;
+    private final MaterialTextField passwordField, confirmPasswordField;
+    private static final TextMaxLengthValidator PASSWORD_MAX_LENGTH_VALIDATOR =
+            new TextMaxLengthValidator(100, Res.get("wallet.protectWallet.password.tooLong", 100));
 
     public CreateWalletProtectView(CreateWalletProtectModel model,
                                CreateWalletProtectController controller) {
         super(new StackPane(), model, controller);
 
         root.setAlignment(Pos.CENTER);
-        content = new VBox(10);
+        VBox content = new VBox(10);
         content.setAlignment(Pos.TOP_CENTER);
 
-        headlineLabel = new Label();
+        Label headlineLabel = new Label(Res.get("wallet.protectWallet.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
+        VBox.setMargin(headlineLabel, new Insets(0, 0, 10, 0));
 
-        content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, Spacer.fillVBox());
+        Label descriptionLabel = new Label(Res.get("wallet.protectWallet.description"));
+        descriptionLabel.setWrapText(true);
+        descriptionLabel.setMaxWidth(550);
+        descriptionLabel.setTextAlignment(TextAlignment.CENTER);
+        descriptionLabel.getStyleClass().add("bisq-text-1");
+        VBox.setMargin(descriptionLabel, new Insets(0, 0, 40, 0));
+
+        passwordField = addField(Res.get("wallet.protectWallet.password.setPassword"), Res.get("wallet.protectWallet.password.setPassword.placeholder"));
+        passwordField.setEditable(true);
+        passwordField.setMaxWidth(500);
+        passwordField.setValidators(PASSWORD_MAX_LENGTH_VALIDATOR);
+        VBox.setMargin(passwordField, new Insets(0, 0, 10, 0));
+
+        confirmPasswordField = addField(Res.get("wallet.protectWallet.password.confirmPassword"), Res.get("wallet.protectWallet.password.confirmPassword.placeholder"));
+        confirmPasswordField.setEditable(true);
+        confirmPasswordField.setMaxWidth(500);
+        confirmPasswordField.setValidators(PASSWORD_MAX_LENGTH_VALIDATOR);
+
+        content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, descriptionLabel, passwordField, confirmPasswordField, Spacer.fillVBox());
 
         root.getChildren().addAll(content);
     }
 
     @Override
     protected void onViewAttached() {
-        headlineLabel.setText("Protect your wallet");
+        passwordField.textProperty().bindBidirectional(model.getPassword());
+        confirmPasswordField.textProperty().bindBidirectional(model.getConfirmPassword());
     }
 
     @Override
     protected void onViewDetached() {
         root.setOnKeyPressed(null);
+        passwordField.textProperty().unbindBidirectional(model.getPassword());
+        confirmPasswordField.textProperty().unbindBidirectional(model.getConfirmPassword());
+
+        passwordField.resetValidation();
+        confirmPasswordField.resetValidation();
+    }
+
+    private MaterialTextField addField(String description, @Nullable String prompt) {
+        MaterialTextField field = new MaterialTextField(description, prompt);
+        field.setEditable(false);
+        return field;
     }
 
 }

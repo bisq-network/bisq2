@@ -24,6 +24,8 @@ import bisq.wallets.bitcoind.RpcConfig;
 import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.core.model.Utxo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +39,10 @@ import java.util.concurrent.TimeUnit;
  * work to get those working again would be wasted effort.
  */
 public class MockWalletService implements WalletService{
-    private final Observable<Boolean> isWalletInitialized = new Observable<>(false);
+    private static final Logger log = LoggerFactory.getLogger(MockWalletService.class);
+
+    public Observable<Boolean> isWalletInitialized = new Observable<>(false);
+    private String encryptionPassword = "";
 
     @Override
     public CompletableFuture<Boolean> initializeWallet(RpcConfig rpcConfig, Optional<String> walletPassphrase) {
@@ -112,5 +117,11 @@ public class MockWalletService implements WalletService{
 
     public Observable<Boolean> getIsWalletInitialized() {
         return isWalletInitialized;
+    }
+
+    @Override
+    public void setEncryptionPassword(String password) {
+        log.debug("setEncryptionPassword: " + password);
+        encryptionPassword = password;
     }
 }

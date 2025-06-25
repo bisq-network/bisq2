@@ -7,10 +7,12 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.wallet.create_wallet.protect.CreateWalletProtectController;
 import bisq.desktop.main.content.wallet.create_wallet.backup.CreateWalletBackupController;
+import bisq.desktop.main.content.wallet.create_wallet.protect.CreateWalletProtectModel;
 import bisq.desktop.main.content.wallet.create_wallet.verify.CreateWalletVerifyController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
+import bisq.wallets.core.WalletService;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
 import lombok.Getter;
@@ -29,6 +31,7 @@ public class CreateWalletController extends NavigationController {
     private final CreateWalletProtectController createWalletProtectController;
     private final CreateWalletBackupController createWalletBackupController;
     private final CreateWalletVerifyController createWalletVerifyController;
+    private final WalletService walletService;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
 
     public CreateWalletController(ServiceProvider serviceProvider) {
@@ -42,6 +45,8 @@ public class CreateWalletController extends NavigationController {
         createWalletProtectController = new CreateWalletProtectController(serviceProvider, this::setMainButtonsVisibleState);
         createWalletBackupController = new CreateWalletBackupController(serviceProvider, this::setMainButtonsVisibleState);
         createWalletVerifyController = new CreateWalletVerifyController(serviceProvider, this::setMainButtonsVisibleState);
+
+        this.walletService = serviceProvider.getWalletService().orElseThrow();
     }
 
     @Override
@@ -72,13 +77,26 @@ public class CreateWalletController extends NavigationController {
     @Override
     protected void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
         model.getCloseButtonVisible().set(true);
-        boolean isTakeOfferReview = navigationTarget == NavigationTarget.CREATE_WALLET_VERIFY;
-        model.getNextButtonText().set(isTakeOfferReview ?
-                Res.get("bisqEasy.takeOffer.review.takeOffer") :
-                Res.get("action.next"));
-        model.getShowProgressBox().set(!isTakeOfferReview);
-        setMainButtonsVisibleState(true);
-        model.getNextButtonVisible().set(!isTakeOfferReview);
+        model.getBackButtonVisible().set(true);
+        String nextString = "";
+        if (navigationTarget == NavigationTarget.CREATE_WALLET_PROTECT) {
+            nextString = Res.get("wallet.protectWallet.button.nextStep");
+        } else if (navigationTarget == NavigationTarget.CREATE_WALLET_BACKUP ) {
+            nextString = Res.get("wallet.backupSeeds.button.verify");
+        } else if (navigationTarget == NavigationTarget.CREATE_WALLET_VERIFY ) {
+            nextString = "Go to wallet";
+        }
+        model.getNextButtonText().set(nextString);
+
+        String backString = "";
+        if (navigationTarget == NavigationTarget.CREATE_WALLET_PROTECT) {
+            backString = Res.get("wallet.protectWallet.button.skipStep");
+        } else if (navigationTarget == NavigationTarget.CREATE_WALLET_BACKUP) {
+            backString = Res.get("action.back");
+        } else if (navigationTarget == NavigationTarget.CREATE_WALLET_VERIFY) {
+            backString = Res.get("action.back");
+        }
+        model.getBackButtonText().set(backString);
     }
 
     @Override
@@ -94,6 +112,14 @@ public class CreateWalletController extends NavigationController {
     void onNext() {
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
+            if (model.getNavigationTarget() == NavigationTarget.CREATE_WALLET_PROTECT) {
+                if (!createWalletProtectController.isValid()) {
+                    createWalletProtectController.handleInvalidInput();
+                    return;
+                }
+                CreateWalletProtectModel protectModel = createWalletProtectController.getModel();
+                walletService.setEncryptionPassword(protectModel.getPassword().get());
+            }
             model.setAnimateRightOut(false);
             model.getCurrentIndex().set(nextIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
@@ -104,7 +130,14 @@ public class CreateWalletController extends NavigationController {
 
     void onBack() {
         int prevIndex = model.getCurrentIndex().get() - 1;
-        if (prevIndex >= 0) {
+        if (prevIndex == -1) { // Handling 'Skip this step' in Protect your wallet
+            int nextIndex = model.getCurrentIndex().get() + 1;
+            model.setAnimateRightOut(false);
+            model.getCurrentIndex().set(nextIndex);
+            NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
+            model.getSelectedChildTarget().set(nextTarget);
+            Navigation.navigateTo(nextTarget);
+        } else if (prevIndex >= 0) {
             model.setAnimateRightOut(true);
             model.getCurrentIndex().set(prevIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
@@ -128,9 +161,6 @@ public class CreateWalletController extends NavigationController {
     }
 
     private void setMainButtonsVisibleState(boolean value) {
-        NavigationTarget navigationTarget = model.getNavigationTarget();
-        model.getBackButtonVisible().set(value && model.getChildTargets().indexOf(navigationTarget) > 0);
-        model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.CREATE_WALLET_VERIFY);
-        model.getCloseButtonVisible().set(value);
+
     }
 }

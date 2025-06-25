@@ -31,6 +31,7 @@ import bisq.desktop.main.content.wallet.receive.WalletReceiveController;
 import bisq.desktop.main.content.wallet.send.WalletSendController;
 import bisq.desktop.main.content.wallet.settings.WalletSettingsController;
 import bisq.desktop.main.content.wallet.txs.WalletTxsController;
+import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import bisq.wallets.core.MockWalletService;
@@ -46,12 +47,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class WalletController extends ContentTabController<WalletModel> {
     @Getter
     private final WalletView view;
-    private final MockWalletService mockWalletService;
+    private final WalletService walletService;
     private Pin isWalletInitializedPin;
 
     public WalletController(ServiceProvider serviceProvider) {
         super(new WalletModel(), NavigationTarget.WALLET, serviceProvider);
-        this.mockWalletService = new MockWalletService();
+        this.walletService = serviceProvider.getWalletService().orElseThrow();
         view = new WalletView(model, this);
     }
 
@@ -59,7 +60,7 @@ public class WalletController extends ContentTabController<WalletModel> {
     public void onActivate() {
         super.onActivate();
         isWalletInitializedPin = FxBindings.bind(model.getIsWalletInitialized())
-                .to(mockWalletService.getIsWalletInitialized());
+                .to(walletService.getIsWalletInitialized());
     }
 
     @Override
@@ -83,7 +84,7 @@ public class WalletController extends ContentTabController<WalletModel> {
     }
 
     // public void onInitWallet() {
-        // mockWalletService.initializeWallet(null, Optional.empty());
+        // walletService.initializeWallet(null, Optional.empty());
     // }
 
     void onCreateWallet() {
