@@ -21,11 +21,13 @@ import bisq.account.AccountService;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.F2FAccount;
 import bisq.account.accounts.F2FAccountPayload;
+import bisq.account.accounts.SepaAccountPayload;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.user.accounts.create.summary.data_display.F2FDataDisplay;
+import bisq.desktop.main.content.user.accounts.create.summary.data_display.SepaDataDisplay;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,7 +64,7 @@ public class PaymentSummaryController implements Controller {
             switch (fiatPaymentRail) {
                 case CUSTOM -> {
                 }
-                case SEPA -> {
+                case SEPA -> {model.setDataDisplay(new SepaDataDisplay((SepaAccountPayload) accountPayload));
                 }
                 case SEPA_INSTANT -> {
                 }

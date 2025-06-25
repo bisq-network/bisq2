@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 public class SepaPaymentFormView extends PaymentFormView<SepaPaymentFormModel, SepaPaymentFormController> {
     private final AutoCompleteComboBox<Country> country;
     private final MaterialTextField holderName, iban, bic;
-    private final Label countryErrorLabel;
+    private final Label countryErrorLabel, acceptedCountriesErrorLabel;
     private final FlowPane acceptEuroCountriesFlowPane, acceptNonEuroCountriesFlowPane;
     private Subscription selectedCountryPin, requireValidationPin;
 
@@ -78,7 +78,6 @@ public class SepaPaymentFormView extends PaymentFormView<SepaPaymentFormModel, S
         });
 
         countryErrorLabel = new Label(Res.get("user.paymentAccounts.createAccount.accountData.country.error"));
-        countryErrorLabel.setMouseTransparent(true);
         countryErrorLabel.getStyleClass().add("material-text-field-error");
 
         VBox.setMargin(countryErrorLabel, new Insets(3.5, 0, 0, 16));
@@ -115,6 +114,9 @@ public class SepaPaymentFormView extends PaymentFormView<SepaPaymentFormModel, S
         acceptEuroCountriesFlowPane = new FlowPane(5, 10);
         acceptNonEuroCountriesFlowPane = new FlowPane(5, 10);
 
+        acceptedCountriesErrorLabel = new Label(Res.get("user.paymentAccounts.createAccount.accountData.sepa.acceptCountries.error"));
+        acceptedCountriesErrorLabel.getStyleClass().add("material-text-field-error");
+
         VBox.setVgrow(countryAndHolderNameHBox, Priority.ALWAYS);
         VBox.setVgrow(ibanBicHBox, Priority.ALWAYS);
         VBox.setMargin(acceptEuroCountriesFlowPane, new Insets(0, 0, 5, 0));
@@ -123,7 +125,8 @@ public class SepaPaymentFormView extends PaymentFormView<SepaPaymentFormModel, S
                 new HBox(acceptAllEuroCountriesLabel, Spacer.fillHBox()),
                 acceptEuroCountriesFlowPane,
                 new HBox(acceptAllNonEuroCountriesLabel, Spacer.fillHBox()),
-                acceptNonEuroCountriesFlowPane
+                acceptNonEuroCountriesFlowPane,
+                new HBox(acceptedCountriesErrorLabel, Spacer.fillHBox())
         );
     }
 
@@ -148,6 +151,9 @@ public class SepaPaymentFormView extends PaymentFormView<SepaPaymentFormModel, S
         countryErrorLabel.visibleProperty().bind(model.getCountryErrorVisible());
         countryErrorLabel.managedProperty().bind(model.getCountryErrorVisible());
 
+        acceptedCountriesErrorLabel.visibleProperty().bind(model.getAcceptedCountriesErrorVisible());
+        acceptedCountriesErrorLabel.managedProperty().bind(model.getAcceptedCountriesErrorVisible());
+
         holderName.textProperty().bindBidirectional(model.getHolderName());
         iban.textProperty().bindBidirectional(model.getIban());
         bic.textProperty().bindBidirectional(model.getBic());
@@ -166,8 +172,12 @@ public class SepaPaymentFormView extends PaymentFormView<SepaPaymentFormModel, S
             }
         });
 
-        acceptEuroCountriesFlowPane.getChildren().addAll(getCountryEntries(model.getAllEuroCountries(), model.getAcceptedEuroCountries(), true));
-        acceptNonEuroCountriesFlowPane.getChildren().addAll(getCountryEntries(model.getAllNonEuroCountries(), model.getAcceptedNonEuroCountries(), false));
+        acceptEuroCountriesFlowPane.getChildren().addAll(getCountryEntries(model.getAllEuroCountries(),
+                model.getAcceptedEuroCountries(),
+                true));
+        acceptNonEuroCountriesFlowPane.getChildren().addAll(getCountryEntries(model.getAllNonEuroCountries(),
+                model.getAcceptedNonEuroCountries(),
+                false));
     }
 
     @Override
@@ -178,6 +188,8 @@ public class SepaPaymentFormView extends PaymentFormView<SepaPaymentFormModel, S
 
         countryErrorLabel.visibleProperty().unbind();
         countryErrorLabel.managedProperty().unbind();
+        acceptedCountriesErrorLabel.visibleProperty().unbind();
+        acceptedCountriesErrorLabel.managedProperty().unbind();
 
         holderName.textProperty().unbindBidirectional(model.getHolderName());
         iban.textProperty().unbindBidirectional(model.getIban());

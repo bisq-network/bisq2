@@ -65,7 +65,7 @@ public class FiatPaymentRailUtil {
                 .collect(Collectors.toList());
     }
 
-    static public List<String> getSepaCountries() {
+    static public List<String> getAllSepaCountries() {
         List<String> sepaEuroCountries = getSepaEuroCountries();
         List<String> sepaNonEuroCountries = getSepaNonEuroCountries();
         List<String> sepaCountries = new ArrayList<>(sepaEuroCountries);

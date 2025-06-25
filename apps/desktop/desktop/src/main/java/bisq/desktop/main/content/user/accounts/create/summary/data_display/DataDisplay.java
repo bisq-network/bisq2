@@ -80,7 +80,6 @@ public abstract class DataDisplay<T extends AccountPayload> {
 
             root.setHgap(10);
             root.setVgap(10);
-            root.setMouseTransparent(true);
             GridPaneUtil.setGridPaneMultiColumnsConstraints(root, 3);
         }
 
@@ -93,9 +92,9 @@ public abstract class DataDisplay<T extends AccountPayload> {
         }
 
 
-        protected void addDescriptionAndValue(String description, String value, int rowIndex) {
+        protected Label addDescriptionAndValue(String description, String value, int rowIndex) {
             addDescriptionLabel(description, rowIndex);
-            addValueLabel(value, rowIndex);
+           return addValueLabel(value, rowIndex);
         }
 
         protected Label addDescriptionLabel(String description, int rowIndex) {

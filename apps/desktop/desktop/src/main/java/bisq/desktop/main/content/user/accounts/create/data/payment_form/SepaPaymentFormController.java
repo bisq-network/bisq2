@@ -44,7 +44,7 @@ public class SepaPaymentFormController extends PaymentFormController<SepaPayment
 
     @Override
     protected SepaPaymentFormModel createModel() {
-        List<Country> sepaEuroCountries = FiatPaymentRailUtil.getSepaCountries().stream()
+        List<Country> allSepaCountries = FiatPaymentRailUtil.getAllSepaCountries().stream()
                 .map(CountryRepository::getCountry)
                 .sorted(Comparator.comparing(Country::getName))
                 .collect(Collectors.toList());
@@ -57,7 +57,7 @@ public class SepaPaymentFormController extends PaymentFormController<SepaPayment
                 .sorted(Comparator.comparing(Country::getName))
                 .collect(Collectors.toList());
         return new SepaPaymentFormModel(UUID.randomUUID().toString(),
-                sepaEuroCountries,
+                allSepaCountries,
                 allEuroCountries,
                 allNonEuroCountries);
     }
@@ -66,6 +66,7 @@ public class SepaPaymentFormController extends PaymentFormController<SepaPayment
     public void onActivate() {
         model.getRequireValidation().set(false);
         model.getCountryErrorVisible().set(false);
+        model.getAcceptedCountriesErrorVisible().set(false);
 
         Country defaultCountry = CountryRepository.getDefaultCountry();
         if (model.getSelectedCountryOfBank().get() == null &&
@@ -83,10 +84,16 @@ public class SepaPaymentFormController extends PaymentFormController<SepaPayment
     public boolean validate() {
         boolean isCountrySet = model.getSelectedCountryOfBank().get() != null;
         model.getCountryErrorVisible().set(!isCountrySet);
+
+        boolean acceptedCountriesValid = !getAcceptedCountries().isEmpty();
+        model.getAcceptedCountriesErrorVisible().set(!acceptedCountriesValid);
+
         boolean holderNameValid = model.getHolderNameValidator().validateAndGet();
         boolean ibanValid = model.getSepaIbanValidator().validateAndGet();
         boolean bicValid = model.getSepaBicValidator().validateAndGet();
+
         boolean isValid = isCountrySet &&
+                acceptedCountriesValid &&
                 holderNameValid &&
                 ibanValid &&
                 bicValid;
@@ -97,8 +104,7 @@ public class SepaPaymentFormController extends PaymentFormController<SepaPayment
 
     @Override
     public SepaAccountPayload getAccountPayload() {
-        List<Country> acceptedCountries = new ArrayList<>(model.getAcceptedEuroCountries());
-        acceptedCountries.addAll(model.getAcceptedNonEuroCountries());
+        List<Country> acceptedCountries = getAcceptedCountries();
         List<String> acceptedCountryCodes = acceptedCountries.stream()
                 .map(Country::getCode)
                 .collect(Collectors.toList());
@@ -127,9 +133,17 @@ public class SepaPaymentFormController extends PaymentFormController<SepaPayment
         } else {
             if (selected) {
                 model.getAcceptedNonEuroCountries().add(country);
+
             } else {
                 model.getAcceptedNonEuroCountries().remove(country);
             }
         }
+        model.getAcceptedCountriesErrorVisible().set(getAcceptedCountries().isEmpty());
+    }
+
+    private ArrayList<Country> getAcceptedCountries() {
+        ArrayList<Country> acceptedCountries = new ArrayList<>(model.getAcceptedEuroCountries());
+        acceptedCountries.addAll(model.getAcceptedNonEuroCountries());
+        return acceptedCountries;
     }
 }
