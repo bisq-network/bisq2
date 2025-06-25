@@ -88,8 +88,19 @@ public class NetworkDataValidation {
                 "Text must not be longer than " + maxLength + ". text=" + text);
     }
 
+    public static void validateText(String text, int minLength, int maxLength) {
+        validateText(text, maxLength);
+        checkArgument(text.length() >= minLength,
+                "Text must not be shorter than " + minLength + ". text=" + text);
+    }
+
     public static void validateText(Optional<String> text, int maxTextLength) {
         text.ifPresent(e -> validateText(e, maxTextLength));
+    }
+
+    public static void validateRequiredText(String text, int minLength, int maxLength) {
+        checkArgument(!StringUtils.isEmpty(text), "Text must not be null or empty");
+        validateText(text, minLength, maxLength);
     }
 
     public static void validateRequiredText(String text, int maxLength) {

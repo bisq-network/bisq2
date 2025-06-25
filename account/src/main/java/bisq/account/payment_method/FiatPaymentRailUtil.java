@@ -25,6 +25,7 @@ import bisq.common.locale.Country;
 import bisq.common.monetary.Monetary;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -64,9 +65,23 @@ public class FiatPaymentRailUtil {
                 .collect(Collectors.toList());
     }
 
+    static public List<String> getSepaCountries() {
+        List<String> sepaEuroCountries = getSepaEuroCountries();
+        List<String> sepaNonEuroCountries = getSepaNonEuroCountries();
+        List<String> sepaCountries = new ArrayList<>(sepaEuroCountries);
+        sepaCountries.addAll(sepaNonEuroCountries);
+        Collections.sort(sepaCountries);
+        return sepaCountries;
+    }
+
     static public List<String> getSepaEuroCountries() {
         return List.of("AT", "BE", "CY", "DE", "EE", "FI", "FR", "GR", "IE",
                 "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES", "AD", "SM", "VA");
+    }
+
+    static public List<String> getSepaNonEuroCountries() {
+        return List.of("BG", "HR", "CZ", "DK", "GB", "HU", "PL", "RO",
+                "SE", "IS", "NO", "LI", "CH", "JE", "GI");
     }
 
     static List<TradeCurrency> toTradeCurrencies(List<String> currencyCodes) {

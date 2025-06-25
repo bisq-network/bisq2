@@ -21,7 +21,7 @@ import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.locale.Country;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.common.validation.PaymentAccountValidation;
+import bisq.common.validation.SepaPaymentAccountValidation;
 import bisq.desktop.ServiceProvider;
 import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;
@@ -127,7 +127,7 @@ public class SepaPaymentFormController extends PaymentFormController {
                 .filter(StringUtils::isNotEmpty)
                 .map(i -> {
                     try {
-                        PaymentAccountValidation.validateSepaIbanFormat(i, sepaCountryCodes);
+                        SepaPaymentAccountValidation.validateSepaIbanFormat(i, sepaCountryCodes);
                         return true;
                     } catch (IllegalArgumentException e) {
                         return false;
@@ -141,7 +141,7 @@ public class SepaPaymentFormController extends PaymentFormController {
                 .filter(b -> !b.trim().isEmpty())
                 .map(b -> {
                     try {
-                        PaymentAccountValidation.validateBicFormat(b);
+                        SepaPaymentAccountValidation.validateBicFormat(b);
                         return true;
                     } catch (IllegalArgumentException e) {
                         log.debug("BIC validation failed: {}", e.getMessage());

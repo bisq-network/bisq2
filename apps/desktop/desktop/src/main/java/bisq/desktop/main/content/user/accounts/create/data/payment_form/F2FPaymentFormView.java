@@ -49,12 +49,15 @@ public class F2FPaymentFormView extends PaymentFormView<F2FPaymentFormModel, F2F
     public F2FPaymentFormView(F2FPaymentFormModel model, F2FPaymentFormController controller) {
         super(model, controller);
 
+       // root.setPadding(new Insets(20, 0, 0, 0));
+
         country = new AutoCompleteComboBox<>(
-                model.getCountries(),
+                model.getAllCountries(),
                 Res.get("user.paymentAccounts.createAccount.accountData.country"),
                 Res.get("user.paymentAccounts.createAccount.accountData.country.prompt")
         );
-        country.setPrefWidth(240);
+        country.setPrefWidth(830/4d);
+
         country.setConverter(new StringConverter<>() {
             @Override
             public String toString(Country country) {
@@ -82,7 +85,7 @@ public class F2FPaymentFormView extends PaymentFormView<F2FPaymentFormModel, F2F
 
         city = new MaterialTextField(Res.get("user.paymentAccounts.createAccount.accountData.f2f.city"),
                 Res.get("user.paymentAccounts.createAccount.accountData.f2f.city.prompt"));
-        city.setPrefWidth(400);
+        city.setMaxWidth(Double.MAX_VALUE);
         city.setValidators(model.getCityValidator());
 
         HBox.setHgrow(city, Priority.ALWAYS);
@@ -115,8 +118,8 @@ public class F2FPaymentFormView extends PaymentFormView<F2FPaymentFormModel, F2F
             extraInfo.setText(model.getExtraInfo().get());
             extraInfo.validate();
         }
-        if (model.getCountry().get() != null) {
-            country.getSelectionModel().select(model.getCountry().get());
+        if (model.getSelectedCountry().get() != null) {
+            country.getSelectionModel().select(model.getSelectedCountry().get());
         }
 
         countryErrorLabel.visibleProperty().bind(model.getCountryErrorVisible());
@@ -130,7 +133,7 @@ public class F2FPaymentFormView extends PaymentFormView<F2FPaymentFormModel, F2F
 
         selectedCountryPin = EasyBind.subscribe(country.getSelectionModel().selectedItemProperty(), selectedCountry -> {
             if (selectedCountry != null) {
-                model.getCountry().set(selectedCountry);
+                model.getSelectedCountry().set(selectedCountry);
                 model.getCountryErrorVisible().set(false);
             }
         });

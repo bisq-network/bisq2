@@ -19,7 +19,6 @@ package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
 import bisq.desktop.common.view.View;
 import javafx.beans.value.ChangeListener;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
@@ -32,10 +31,9 @@ public abstract class PaymentFormView<M extends PaymentFormModel, C extends Paym
     protected final Map<String, ChangeListener<?>> listeners = new HashMap<>();
 
     protected PaymentFormView(M model, C controller) {
-        super(new VBox(15), model, controller);
+        super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
-        root.setPadding(new Insets(0, 20, 0, 20));
         root.getStyleClass().add("payment-method-form");
     }
 }

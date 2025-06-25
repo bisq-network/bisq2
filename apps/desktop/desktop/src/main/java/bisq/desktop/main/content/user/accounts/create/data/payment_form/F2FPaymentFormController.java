@@ -19,6 +19,7 @@ package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
 import bisq.account.accounts.F2FAccountPayload;
 import bisq.account.payment_method.FiatPaymentRail;
+import bisq.common.locale.CountryRepository;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,17 +38,7 @@ public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFo
 
     @Override
     protected F2FPaymentFormModel createModel() {
-        return new F2FPaymentFormModel(UUID.randomUUID().toString());
-    }
-
-    @Override
-    public F2FAccountPayload getAccountPayload() {
-        return new F2FAccountPayload(model.getId(),
-                FiatPaymentRail.F2F.name(),
-                model.getCountry().get().getCode(),
-                model.getCity().get(),
-                model.getContact().get(),
-                model.getExtraInfo().get());
+        return new F2FPaymentFormModel(UUID.randomUUID().toString(), CountryRepository.getCountries());
     }
 
     @Override
@@ -62,7 +53,7 @@ public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFo
 
     @Override
     public boolean validate() {
-        boolean isCountrySet = model.getCountry().get() != null;
+        boolean isCountrySet = model.getSelectedCountry().get() != null;
         model.getCountryErrorVisible().set(!isCountrySet);
         boolean isValid = isCountrySet &&
                 model.getCityValidator().validateAndGet() &&
@@ -72,4 +63,15 @@ public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFo
         model.getRequireValidation().set(false);
         return isValid;
     }
+
+    @Override
+    public F2FAccountPayload getAccountPayload() {
+        return new F2FAccountPayload(model.getId(),
+                FiatPaymentRail.F2F.name(),
+                model.getSelectedCountry().get().getCode(),
+                model.getCity().get(),
+                model.getContact().get(),
+                model.getExtraInfo().get());
+    }
+
 }

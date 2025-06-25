@@ -88,10 +88,6 @@ public class PaymentMethodSelectionController implements Controller {
         return model.getSelectedPaymentMethod().get() != null;
     }
 
-    public void reset() {
-        model.reset();
-    }
-
     public ReadOnlyObjectProperty<PaymentMethod<?>> getSelectedPaymentMethod() {
         return model.getSelectedPaymentMethod();
     }

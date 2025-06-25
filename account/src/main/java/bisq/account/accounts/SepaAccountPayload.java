@@ -20,6 +20,7 @@ package bisq.account.accounts;
 import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
+import bisq.common.validation.SepaPaymentAccountValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -32,6 +33,9 @@ import java.util.List;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class SepaAccountPayload extends CountryBasedAccountPayload {
+    public static final int HOLDER_NAME_MIN_LENGTH = 2;
+    public static final int HOLDER_NAME_MAX_LENGTH = 70;
+
     private final String holderName;
     private final String iban;
     private final String bic;
@@ -55,13 +59,15 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
     @Override
     public void verify() {
         super.verify();
-        NetworkDataValidation.validateRequiredText(holderName, 100);
-        PaymentAccountValidation.validateSepaIbanFormat(iban, FiatPaymentRailUtil.getSepaEuroCountries());
-        PaymentAccountValidation.validateBicFormat(bic);
+
+        NetworkDataValidation.validateRequiredText(holderName, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);
+        SepaPaymentAccountValidation.validateSepaIbanFormat(iban, FiatPaymentRailUtil.getSepaCountries());
+        SepaPaymentAccountValidation.validateBicFormat(bic);
         PaymentAccountValidation.validateCountryCodes(acceptedCountryCodes,
-                FiatPaymentRailUtil.getSepaEuroCountries(),
+                FiatPaymentRailUtil.getSepaCountries(),
                 "SEPA payments");
-        PaymentAccountValidation.validateIbanCountryConsistency(iban, getCountryCode());
+        SepaPaymentAccountValidation.validateIbanCountryConsistency(iban, getCountryCode());
+        acceptedCountryCodes.forEach(NetworkDataValidation::validateRequiredCode);
     }
 
     @Override

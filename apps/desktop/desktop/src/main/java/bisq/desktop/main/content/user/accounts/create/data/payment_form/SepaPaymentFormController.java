@@ -18,20 +18,23 @@
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
 import bisq.account.accounts.SepaAccountPayload;
+import bisq.account.payment_method.FiatPaymentRail;
+import bisq.account.payment_method.FiatPaymentRailUtil;
+import bisq.common.locale.Country;
+import bisq.common.locale.CountryRepository;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class SepaPaymentFormController extends PaymentFormController<SepaPaymentFormView, SepaPaymentFormModel, SepaAccountPayload> {
     public SepaPaymentFormController(ServiceProvider serviceProvider) {
         super(serviceProvider);
-    }
-
-    @Override
-    public SepaAccountPayload getAccountPayload() {
-        return null;
     }
 
     @Override
@@ -41,11 +44,35 @@ public class SepaPaymentFormController extends PaymentFormController<SepaPayment
 
     @Override
     protected SepaPaymentFormModel createModel() {
-        return new SepaPaymentFormModel(UUID.randomUUID().toString());
+        List<Country> sepaEuroCountries = FiatPaymentRailUtil.getSepaCountries().stream()
+                .map(CountryRepository::getCountry)
+                .sorted(Comparator.comparing(Country::getName))
+                .collect(Collectors.toList());
+        List<Country> allEuroCountries = FiatPaymentRailUtil.getSepaEuroCountries().stream()
+                .map(CountryRepository::getCountry)
+                .sorted(Comparator.comparing(Country::getName))
+                .collect(Collectors.toList());
+        List<Country> allNonEuroCountries = FiatPaymentRailUtil.getSepaNonEuroCountries().stream()
+                .map(CountryRepository::getCountry)
+                .sorted(Comparator.comparing(Country::getName))
+                .collect(Collectors.toList());
+        return new SepaPaymentFormModel(UUID.randomUUID().toString(),
+                sepaEuroCountries,
+                allEuroCountries,
+                allNonEuroCountries);
     }
 
     @Override
     public void onActivate() {
+        model.getRequireValidation().set(false);
+        model.getCountryErrorVisible().set(false);
+
+        Country defaultCountry = CountryRepository.getDefaultCountry();
+        if (model.getSelectedCountryOfBank().get() == null &&
+                model.getAllSepaCountries().contains(defaultCountry)) {
+            model.getSelectedCountryOfBank().set(defaultCountry);
+            model.getSepaIbanValidator().setRestrictedToCountryCode(defaultCountry.getCode());
+        }
     }
 
     @Override
@@ -54,6 +81,55 @@ public class SepaPaymentFormController extends PaymentFormController<SepaPayment
 
     @Override
     public boolean validate() {
-        return false;
+        boolean isCountrySet = model.getSelectedCountryOfBank().get() != null;
+        model.getCountryErrorVisible().set(!isCountrySet);
+        boolean holderNameValid = model.getHolderNameValidator().validateAndGet();
+        boolean ibanValid = model.getSepaIbanValidator().validateAndGet();
+        boolean bicValid = model.getSepaBicValidator().validateAndGet();
+        boolean isValid = isCountrySet &&
+                holderNameValid &&
+                ibanValid &&
+                bicValid;
+        model.getRequireValidation().set(true);
+        model.getRequireValidation().set(false);
+        return isValid;
+    }
+
+    @Override
+    public SepaAccountPayload getAccountPayload() {
+        List<Country> acceptedCountries = new ArrayList<>(model.getAcceptedEuroCountries());
+        acceptedCountries.addAll(model.getAcceptedNonEuroCountries());
+        List<String> acceptedCountryCodes = acceptedCountries.stream()
+                .map(Country::getCode)
+                .collect(Collectors.toList());
+        return new SepaAccountPayload(model.getId(),
+                FiatPaymentRail.SEPA.name(),
+                model.getHolderName().get(),
+                model.getIban().get(),
+                model.getBic().get(),
+                model.getSelectedCountryOfBank().get().getCode(),
+                acceptedCountryCodes);
+    }
+
+    void onCountryOfBankSelected(Country selectedCountry) {
+        model.getSelectedCountryOfBank().set(selectedCountry);
+        model.getCountryErrorVisible().set(false);
+        model.getSepaIbanValidator().setRestrictedToCountryCode(selectedCountry.getCode());
+    }
+
+    void onSelectAcceptedCountry(Country country, boolean selected, boolean isEuroCountry) {
+        if (isEuroCountry) {
+            if (selected) {
+                model.getAcceptedEuroCountries().add(country);
+            } else {
+                model.getAcceptedEuroCountries().remove(country);
+            }
+        } else {
+            if (selected) {
+                model.getAcceptedNonEuroCountries().add(country);
+            } else {
+                model.getAcceptedNonEuroCountries().remove(country);
+            }
+        }
     }
 }

@@ -109,9 +109,6 @@ public class PaymentSummaryController implements Controller {
         }
     }
 
-    public void reset() {
-    }
-
     public void createAccount() {
         if (model.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
             switch (fiatPaymentRail) {

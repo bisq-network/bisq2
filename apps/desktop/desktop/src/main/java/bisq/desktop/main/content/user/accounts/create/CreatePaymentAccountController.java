@@ -169,7 +169,6 @@ public class CreatePaymentAccountController extends NavigationController {
     }
 
     void onClose() {
-        reset();
         OverlayController.hide();
     }
 
@@ -212,16 +211,5 @@ public class CreatePaymentAccountController extends NavigationController {
             case CREATE_PAYMENT_ACCOUNT_OPTIONS -> optionsController.validate();
             default -> true;
         };
-    }
-
-    private void reset() {
-     /*   resetSelectedChildTarget();
-
-        paymentMethodController.reset();
-        accountDataController.reset();
-        optionsController.reset();
-        summaryController.reset();
-
-        model.reset();*/
     }
 }

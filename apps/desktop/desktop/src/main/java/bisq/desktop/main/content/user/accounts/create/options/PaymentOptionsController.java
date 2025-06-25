@@ -48,11 +48,6 @@ public class PaymentOptionsController implements Controller {
         log.debug("CreateAccountOptionsController deactivated");
     }
 
-    public void reset() {
-        log.debug("Cleaning up CreateAccountOptionsController");
-        model.setPaymentMethod(null);
-    }
-
     public void setPaymentMethod(PaymentMethod<?> paymentMethod) {
         model.setPaymentMethod(paymentMethod);
         log.debug("Payment method set: {}", paymentMethod != null ? paymentMethod.getDisplayString() : "null");

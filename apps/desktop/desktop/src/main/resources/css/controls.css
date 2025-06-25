@@ -735,6 +735,11 @@
     -fx-border-color: transparent;
 }
 
+.small-checkbox {
+    -fx-font-size: 10px;
+    -fx-label-padding: 0.0em 0.0em 0.0em 0.5em;
+}
+
 
 /*******************************************************************************
  *                                                                             *

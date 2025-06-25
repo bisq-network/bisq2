@@ -81,9 +81,6 @@ public class PaymentDataController implements Controller {
         return paymentFormController != null && paymentFormController.validate();
     }
 
-    public void reset() {
-    }
-
     public PaymentFormController<?, ?, ?> getOrCreateController(PaymentMethod<?> paymentMethod) {
         String key = paymentMethod.getPaymentRail().name();
         return model.getControllerCache().computeIfAbsent(key, k -> createController(paymentMethod));

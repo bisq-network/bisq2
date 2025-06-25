@@ -20,7 +20,6 @@ package bisq.desktop.main.content.user.accounts.create.data;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
@@ -31,21 +30,21 @@ public class PaymentDataView extends View<VBox, PaymentDataModel, PaymentDataCon
     private final Label titleLabel;
 
     public PaymentDataView(PaymentDataModel model, PaymentDataController controller) {
-        super(new VBox(10), model, controller);
+        super(new VBox(15), model, controller);
 
-        root.setPadding(new Insets(25, 15, 15, 15));
-        root.setAlignment(Pos.TOP_CENTER);
+        root.setAlignment(Pos.CENTER);
         root.getStyleClass().add("create-account-data-view");
 
-        titleLabel = new Label();
+        titleLabel = new Label(Res.get("user.paymentAccounts.createAccount.accountData.title"));
         titleLabel.getStyleClass().add("bisq-text-headline-2");
     }
 
     @Override
     protected void onViewAttached() {
-        root.getChildren().addAll(titleLabel, model.getPaymentForm(), Spacer.fillVBox());
-        titleLabel.setText(Res.get("user.paymentAccounts.createAccount.accountData.title",
-                model.getPaymentMethod().getDisplayString()));
+        root.getChildren().addAll(Spacer.fillVBox(),
+                titleLabel,
+                model.getPaymentForm(),
+                Spacer.fillVBox());
     }
 
     @Override

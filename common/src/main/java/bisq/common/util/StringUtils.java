@@ -250,16 +250,28 @@ public class StringUtils {
     }
 
     /**
-      * Normalizes line breaks in the provided text to use the system's default line separator.
-      * This ensures consistent text handling across different operating systems (Windows, Unix/Linux, Mac).
-      *
-      * @param text The text to normalize, may be null
-      * @return The normalized text with consistent line separators, or null if input was null
-      */
+     * Normalizes line breaks in the provided text to use the system's default line separator.
+     * This ensures consistent text handling across different operating systems (Windows, Unix/Linux, Mac).
+     *
+     * @param text The text to normalize, may be null
+     * @return The normalized text with consistent line separators, or null if input was null
+     */
     public static String normalizeLineBreaks(String text) {
         if (text == null) {
             return null;
         }
         return text.replaceAll("\r\n|\n|\r", Matcher.quoteReplacement(System.lineSeparator()));
+    }
+
+    public static boolean isAlphaNumeric(String value) {
+        return value.chars().allMatch(e -> Character.isLetter(e) || Character.isDigit(e));
+    }
+
+    public static boolean isDigit(String value) {
+        return value.chars().allMatch(Character::isDigit);
+    }
+
+    public static boolean isLetter(String value) {
+        return value.chars().allMatch(Character::isLetter);
     }
 }

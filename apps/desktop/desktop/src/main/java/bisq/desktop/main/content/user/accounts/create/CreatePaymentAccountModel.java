@@ -75,20 +75,4 @@ public class CreatePaymentAccountModel extends NavigationModel {
     public NavigationTarget getDefaultNavigationTarget() {
         return NavigationTarget.CREATE_PAYMENT_ACCOUNT_PAYMENT_METHOD;
     }
-
-    public void reset() {
-        optionsVisible = false;
-        animateRightOut = true;
-        paymentMethod = Optional.empty();
-        accountData = Optional.empty();
-        optionsData = Optional.empty();
-
-        currentIndex.set(0);
-        createAccountButtonVisible.set(false);
-        nextButtonDisabled.set(true);
-        backButtonVisible.set(false);
-        selectedChildTarget.set(null);
-
-        childTargets.clear();
-    }
 }

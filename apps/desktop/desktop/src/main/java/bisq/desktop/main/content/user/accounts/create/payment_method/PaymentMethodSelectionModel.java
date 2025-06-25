@@ -46,10 +46,4 @@ public class PaymentMethodSelectionModel implements Model {
     public PaymentMethodSelectionModel(List<PaymentMethodItem> list) {
         this.list.setAll(list);
     }
-
-    public void reset() {
-        list.clear();
-        selectedPaymentMethod.set(null);
-        searchText.set("");
-    }
 }
