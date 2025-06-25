@@ -5,6 +5,13 @@ import lombok.Getter;
 
 @Getter
 public class F2FAccountPayload extends CountryBasedAccountPayload {
+    public static final int CITY_MIN_LENGTH = 2;
+    public static final int CITY_MAX_LENGTH = 50;
+    public static final int CONTACT_MIN_LENGTH = 5;
+    public static final int CONTACT_MAX_LENGTH = 100;
+    public static final int EXTRA_INFO_MIN_LENGTH = 1;
+    public static final int EXTRA_INFO_MAX_LENGTH = 300;
+
     private final String city;
     private final String contact;
     private final String extraInfo;
@@ -26,9 +33,9 @@ public class F2FAccountPayload extends CountryBasedAccountPayload {
     public void verify() {
         super.verify();
         //todo make statics
-        NetworkDataValidation.validateRequiredText(city, 100);
-        NetworkDataValidation.validateRequiredText(contact, 100);
-        NetworkDataValidation.validateText(extraInfo, 500);
+        NetworkDataValidation.validateRequiredText(city, CITY_MIN_LENGTH, CITY_MAX_LENGTH);
+        NetworkDataValidation.validateRequiredText(contact, CONTACT_MIN_LENGTH, CONTACT_MAX_LENGTH);
+        NetworkDataValidation.validateText(extraInfo, EXTRA_INFO_MIN_LENGTH, EXTRA_INFO_MAX_LENGTH);
     }
 
     @Override

@@ -49,8 +49,6 @@ public class F2FPaymentFormView extends PaymentFormView<F2FPaymentFormModel, F2F
     public F2FPaymentFormView(F2FPaymentFormModel model, F2FPaymentFormController controller) {
         super(model, controller);
 
-       // root.setPadding(new Insets(20, 0, 0, 0));
-
         country = new AutoCompleteComboBox<>(
                 model.getAllCountries(),
                 Res.get("user.paymentAccounts.createAccount.accountData.country"),
