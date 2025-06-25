@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This is just a temporary mock implementation for facilitation wallet UI development.
@@ -36,9 +37,17 @@ import java.util.concurrent.CompletableFuture;
  * work to get those working again would be wasted effort.
  */
 public class MockWalletService implements WalletService{
+    private final Observable<Boolean> isWalletInitialized = new Observable<>(false);
+
     @Override
     public CompletableFuture<Boolean> initializeWallet(RpcConfig rpcConfig, Optional<String> walletPassphrase) {
-        return CompletableFuture.completedFuture(true);
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        CompletableFuture.runAsync(() -> {}, CompletableFuture.delayedExecutor(3, TimeUnit.SECONDS))
+            .thenRun(() -> {
+                isWalletInitialized.set(true);
+                future.complete(true);
+            });
+        return future;
     }
 
     @Override
@@ -99,5 +108,9 @@ public class MockWalletService implements WalletService{
     @Override
     public CompletableFuture<ObservableSet<Transaction>> requestTransactions() {
         return CompletableFuture.completedFuture(new ObservableSet<>(Set.of()));
+    }
+
+    public Observable<Boolean> getIsWalletInitialized() {
+        return isWalletInitialized;
     }
 }

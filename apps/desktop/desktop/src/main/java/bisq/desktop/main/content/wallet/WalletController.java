@@ -28,6 +28,10 @@ import bisq.desktop.main.content.wallet.settings.WalletSettingsController;
 import bisq.desktop.main.content.wallet.txs.WalletTxsController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import bisq.wallets.core.MockWalletService;
+import bisq.desktop.common.observable.FxBindings;
+import bisq.common.observable.Pin;
+import bisq.wallets.bitcoind.RpcConfig;
 
 import java.util.Optional;
 
@@ -35,11 +39,30 @@ import java.util.Optional;
 public class WalletController extends ContentTabController<WalletModel> {
     @Getter
     private final WalletView view;
+    private final MockWalletService mockWalletService;
+    private Pin isWalletInitializedPin;
 
     public WalletController(ServiceProvider serviceProvider) {
         super(new WalletModel(), NavigationTarget.WALLET, serviceProvider);
-
+        this.mockWalletService = new MockWalletService();
         view = new WalletView(model, this);
+    }
+
+    @Override
+    public void onActivate() {
+        super.onActivate();
+        // mockWalletService.initializeWallet(null, Optional.empty());
+        isWalletInitializedPin = FxBindings.bind(model.getIsWalletInitialized())
+                .to(mockWalletService.getIsWalletInitialized());
+    }
+
+    @Override
+    public void onDeactivate() {
+        super.onDeactivate();
+        if (isWalletInitializedPin != null) {
+            isWalletInitializedPin.unbind();
+            isWalletInitializedPin = null;
+        }
     }
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
@@ -51,5 +74,9 @@ public class WalletController extends ContentTabController<WalletModel> {
             case WALLET_SETTINGS -> Optional.of(new WalletSettingsController(serviceProvider));
             default -> Optional.empty();
         };
+    }
+
+    public void onInitWallet() {
+        mockWalletService.initializeWallet(null, Optional.empty());
     }
 }
