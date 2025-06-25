@@ -47,7 +47,7 @@ public class MockWalletService implements WalletService{
     @Override
     public CompletableFuture<Boolean> initializeWallet(RpcConfig rpcConfig, Optional<String> walletPassphrase) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
-        CompletableFuture.runAsync(() -> {}, CompletableFuture.delayedExecutor(3, TimeUnit.SECONDS))
+        CompletableFuture.runAsync(() -> {}, CompletableFuture.delayedExecutor(200, TimeUnit.MILLISECONDS))
             .thenRun(() -> {
                 isWalletInitialized.set(true);
                 future.complete(true);

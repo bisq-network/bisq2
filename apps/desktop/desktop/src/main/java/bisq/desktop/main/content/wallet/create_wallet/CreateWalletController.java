@@ -125,6 +125,9 @@ public class CreateWalletController extends NavigationController {
             NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
             model.getSelectedChildTarget().set(nextTarget);
             Navigation.navigateTo(nextTarget);
+        } else if (nextIndex == model.getChildTargets().size()) {
+            walletService.initializeWallet(null, Optional.empty());
+            OverlayController.hide();
         }
     }
 
