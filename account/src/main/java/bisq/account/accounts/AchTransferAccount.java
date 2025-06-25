@@ -10,8 +10,8 @@ public final class AchTransferAccount extends BankAccount<AchTransferAccountPayl
 
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER);
 
-    public AchTransferAccount(String accountName, AchTransferAccountPayload payload, Country country) {
-        super(accountName, PAYMENT_METHOD, payload, country);
+    public AchTransferAccount(String accountName, AchTransferAccountPayload payload) {
+        super(accountName, PAYMENT_METHOD, payload);
     }
 
     @Override
@@ -31,7 +31,6 @@ public final class AchTransferAccount extends BankAccount<AchTransferAccountPayl
     public static AchTransferAccount fromProto(bisq.account.protobuf.Account proto) {
         return new AchTransferAccount(
                 proto.getAccountName(),
-                AchTransferAccountPayload.fromProto(proto.getAccountPayload()),
-                Country.fromProto(proto.getCountryBasedAccount().getCountry()));
+                AchTransferAccountPayload.fromProto(proto.getAccountPayload()));
     }
 }

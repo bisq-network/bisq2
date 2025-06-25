@@ -52,12 +52,6 @@ class WiseAccountTest {
                                     .setHolderName("John Doe")
                                     .setBeneficiaryAddress("123 Main St, London"))))
             .setCountryBasedAccount(CountryBasedAccount.newBuilder()
-                    .setCountry(Country.newBuilder()
-                            .setCode("GB")
-                            .setName("United Kingdom")
-                            .setRegion(Region.newBuilder()
-                                    .setCode("EU")
-                                    .setName("Europe")))
                     .setWiseAccount(bisq.account.protobuf.WiseAccount.newBuilder()))
             .build();
 
@@ -69,11 +63,7 @@ class WiseAccountTest {
                     "GB",
                     "test@example.com",
                     Optional.of("John Doe"),
-                    Optional.of("123 Main St, London")),
-            new bisq.common.locale.Country(
-                    "GB",
-                    "United Kingdom",
-                    new bisq.common.locale.Region("EU", "Europe")));
+                    Optional.of("123 Main St, London")));
 
     @Test
     void testToProto() {

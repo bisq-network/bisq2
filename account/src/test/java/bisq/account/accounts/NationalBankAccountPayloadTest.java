@@ -15,7 +15,7 @@ class NationalBankAccountPayloadTest {
             .setId("id")
             .setPaymentMethodName("paymentMethodName")
             .setCountryBasedAccountPayload(bisq.account.protobuf.CountryBasedAccountPayload.newBuilder()
-                    .setCountryCode("countryCode")
+                    .setCountryCode("US")
                     .setBankAccountPayload(bisq.account.protobuf.BankAccountPayload.newBuilder()
                             .setHolderName("holderName")
                             .setAccountNr("accountNr")
@@ -32,7 +32,7 @@ class NationalBankAccountPayloadTest {
             .setId("id")
             .setPaymentMethodName("paymentMethodName")
             .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
-                    .setCountryCode("countryCode")
+                    .setCountryCode("US")
                     .setBankAccountPayload(BankAccountPayload.newBuilder()
                             .setHolderName("holderName")
                             .setNationalBankAccountPayload(bisq.account.protobuf.NationalBankAccountPayload.newBuilder())))
@@ -40,14 +40,14 @@ class NationalBankAccountPayloadTest {
 
     private static final bisq.account.accounts.NationalBankAccountPayload PAYLOAD =
             new bisq.account.accounts.NationalBankAccountPayload(
-                    "id", "paymentMethodName", "countryCode",
+                    "id", "paymentMethodName", "US",
                     Optional.of("holderName"), Optional.of("bankName"), Optional.of("branchId"),
                     Optional.of("accountNr"), Optional.of("accountType"), Optional.of("holderTaxId"),
                     Optional.of("bankId"), Optional.of("nationalAccountId")
             );
     private static final bisq.account.accounts.NationalBankAccountPayload PAYLOAD_OPTIONALS_NOT_SET =
             new bisq.account.accounts.NationalBankAccountPayload(
-                    "id", "paymentMethodName", "countryCode",
+                    "id", "paymentMethodName", "US",
                     Optional.of("holderName"), null, null, null, null,
                     null, null, null);
 

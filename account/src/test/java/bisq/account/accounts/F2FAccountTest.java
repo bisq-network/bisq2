@@ -36,23 +36,13 @@ class F2FAccountTest {
                                     .setExtraInfo("extraInfo")))
             )
             .setCountryBasedAccount(CountryBasedAccount.newBuilder()
-                    .setCountry(Country.newBuilder()
-                            .setCode("CO")
-                            .setName("countryName")
-                            .setRegion(Region.newBuilder()
-                                    .setCode("regionCode")
-                                    .setName("regionName")))
                     .setF2FAccount(F2FAccount.newBuilder())
             )
             .build();
 
     private static final bisq.account.accounts.F2FAccount ACCOUNT = new bisq.account.accounts.F2FAccount(
             "accountName",
-            new bisq.account.accounts.F2FAccountPayload("id", "F2F", "CO", "city", "contact", "extraInfo"),
-            new bisq.common.locale.Country(
-                    "CO",
-                    "countryName",
-                    new bisq.common.locale.Region("regionCode", "regionName")));
+            new bisq.account.accounts.F2FAccountPayload("id", "F2F", "CO", "city", "contact", "extraInfo"));
 
     @Test
     void testToProto() {

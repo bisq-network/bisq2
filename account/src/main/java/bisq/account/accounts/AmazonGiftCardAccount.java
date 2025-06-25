@@ -3,7 +3,6 @@ package bisq.account.accounts;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.Account;
-import bisq.common.locale.Country;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -17,8 +16,8 @@ public final class AmazonGiftCardAccount extends CountryBasedAccount<AmazonGiftC
 
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.AMAZON_GIFT_CARD);
 
-    public AmazonGiftCardAccount(String accountName, AmazonGiftCardAccountPayload payload, Country country) {
-        super(accountName, PAYMENT_METHOD, payload, country);
+    public AmazonGiftCardAccount(String accountName, AmazonGiftCardAccountPayload payload) {
+        super(accountName, PAYMENT_METHOD, payload);
     }
 
     @Override
@@ -44,7 +43,6 @@ public final class AmazonGiftCardAccount extends CountryBasedAccount<AmazonGiftC
 
     public static AmazonGiftCardAccount fromProto(bisq.account.protobuf.Account proto) {
         return new AmazonGiftCardAccount(proto.getAccountName(),
-                AmazonGiftCardAccountPayload.fromProto(proto.getAccountPayload()),
-                Country.fromProto(proto.getCountryBasedAccount().getCountry()));
+                AmazonGiftCardAccountPayload.fromProto(proto.getAccountPayload()));
     }
 }

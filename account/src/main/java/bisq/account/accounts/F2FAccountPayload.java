@@ -1,7 +1,5 @@
 package bisq.account.accounts;
 
-import bisq.common.locale.Country;
-import bisq.common.locale.CountryRepository;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.Getter;
 
@@ -61,9 +59,5 @@ public class F2FAccountPayload extends CountryBasedAccountPayload {
                 f2fAccountPayload.getContact(),
                 f2fAccountPayload.getExtraInfo()
         );
-    }
-
-    public Country getCountry() {
-        return CountryRepository.getCountry(countryCode);
     }
 }

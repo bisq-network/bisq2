@@ -3,7 +3,6 @@ package bisq.account.accounts;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.Account;
-import bisq.common.locale.Country;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -17,8 +16,8 @@ public final class StrikeAccount extends CountryBasedAccount<StrikeAccountPayloa
 
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.STRIKE);
 
-    public StrikeAccount(String accountName, StrikeAccountPayload accountPayload, Country country) {
-        super(accountName, PAYMENT_METHOD, accountPayload, country);
+    public StrikeAccount(String accountName, StrikeAccountPayload accountPayload) {
+        super(accountName, PAYMENT_METHOD, accountPayload);
     }
 
     @Override
@@ -38,7 +37,6 @@ public final class StrikeAccount extends CountryBasedAccount<StrikeAccountPayloa
     public static StrikeAccount fromProto(Account proto) {
         return new StrikeAccount(
                 proto.getAccountName(),
-                StrikeAccountPayload.fromProto(proto.getAccountPayload()),
-                Country.fromProto(proto.getCountryBasedAccount().getCountry()));
+                StrikeAccountPayload.fromProto(proto.getAccountPayload()));
     }
 }

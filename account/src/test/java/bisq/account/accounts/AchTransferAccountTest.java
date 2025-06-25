@@ -8,8 +8,6 @@ import bisq.account.protobuf.CountryBasedAccount;
 import bisq.account.protobuf.CountryBasedAccountPayload;
 import bisq.account.protobuf.FiatPaymentMethod;
 import bisq.account.protobuf.PaymentMethod;
-import bisq.common.protobuf.Country;
-import bisq.common.protobuf.Region;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -37,12 +35,6 @@ class AchTransferAccountTest {
                                             bisq.account.protobuf.AchTransferAccountPayload.newBuilder())))
             )
             .setCountryBasedAccount(CountryBasedAccount.newBuilder()
-                    .setCountry(Country.newBuilder()
-                            .setCode("US")
-                            .setName("countryName")
-                            .setRegion(Region.newBuilder()
-                                    .setCode("regionCode")
-                                    .setName("regionName")))
                     .setBankAccount(BankAccount.newBuilder()
                             .setAchTransferAccount(bisq.account.protobuf.AchTransferAccount.newBuilder())))
             .build();
@@ -51,11 +43,7 @@ class AchTransferAccountTest {
             "accountName",
             new AchTransferAccountPayload("id", "ACH_TRANSFER",
                     "US", null, Optional.of("bankName"),
-                    null, null, null, null),
-            new bisq.common.locale.Country(
-                    "US",
-                    "countryName",
-                    new bisq.common.locale.Region("regionCode", "regionName")));
+                    null, null, null, null));
 
     @Test
     void testToProto() {

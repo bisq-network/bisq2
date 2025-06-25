@@ -27,8 +27,6 @@ import bisq.account.protobuf.DomesticWireTransferAccount;
 import bisq.account.protobuf.DomesticWireTransferAccountPayload;
 import bisq.account.protobuf.FiatPaymentMethod;
 import bisq.account.protobuf.PaymentMethod;
-import bisq.common.protobuf.Country;
-import bisq.common.protobuf.Region;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -62,12 +60,6 @@ class DomesticWireTransferAccountTest {
                                     .setDomesticWireTransferAccountPayload(DomesticWireTransferAccountPayload.newBuilder()
                                             .setHolderAddress("123 Main St, New York, NY 10001")))))
             .setCountryBasedAccount(CountryBasedAccount.newBuilder()
-                    .setCountry(Country.newBuilder()
-                            .setCode("US")
-                            .setName("United States")
-                            .setRegion(Region.newBuilder()
-                                    .setCode("NA")
-                                    .setName("North America")))
                     .setBankAccount(BankAccount.newBuilder()
                             .setDomesticWireTransferAccount(DomesticWireTransferAccount.newBuilder())))
             .build();
@@ -86,11 +78,7 @@ class DomesticWireTransferAccountTest {
                     Optional.of("TID12345"),
                     Optional.of("BID12345"),
                     Optional.of("NAI12345"),
-                    Optional.of("123 Main St, New York, NY 10001")),
-            new bisq.common.locale.Country(
-                    "US",
-                    "United States",
-                    new bisq.common.locale.Region("NA", "North America")));
+                    Optional.of("123 Main St, New York, NY 10001")));
 
     @Test
     void testToProto() {

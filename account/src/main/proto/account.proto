@@ -253,7 +253,6 @@ message UserDefinedFiatAccount {
 message RevolutAccount {
 }
 message CountryBasedAccount {
-  common.Country country = 1;
   oneof message {
     BankAccount bankAccount = 19;
     SepaAccount sepaAccount = 20;

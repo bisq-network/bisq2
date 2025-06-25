@@ -34,10 +34,9 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, 
 
     public CountryBasedAccount(String accountName,
                                M paymentMethod,
-                               P payload,
-                               Country country) {
+                               P payload) {
         super(accountName, paymentMethod, payload);
-        this.country = country;
+        this.country = payload.getCountry();
     }
 
     public static CountryBasedAccount<?, ?> fromProto(bisq.account.protobuf.Account proto) {
@@ -57,8 +56,7 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, 
     }
 
     protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.CountryBasedAccount.newBuilder()
-                .setCountry(country.toProto(serializeForHash));
+        return bisq.account.protobuf.CountryBasedAccount.newBuilder();
     }
 
     @Override

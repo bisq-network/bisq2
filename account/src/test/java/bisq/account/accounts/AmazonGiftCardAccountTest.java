@@ -28,18 +28,12 @@ class AmazonGiftCardAccountTest {
                     .setId("id")
                     .setPaymentMethodName("AMAZON_GIFT_CARD")
                     .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
-                            .setCountryCode("countryCode")
+                            .setCountryCode("US")
                             .setAmazonGiftCardAccountPayload(AmazonGiftCardAccountPayload.newBuilder()
                                     .setEmailOrMobileNr("emailOrMobileNr")
                             ))
             )
             .setCountryBasedAccount(CountryBasedAccount.newBuilder()
-                    .setCountry(Country.newBuilder()
-                            .setCode("countryCode")
-                            .setName("countryName")
-                            .setRegion(Region.newBuilder()
-                                    .setCode("regionCode")
-                                    .setName("regionName")))
                     .setAmazonGiftCardAccount(AmazonGiftCardAccount.newBuilder())
             )
             .build();
@@ -47,11 +41,7 @@ class AmazonGiftCardAccountTest {
     private static final bisq.account.accounts.AmazonGiftCardAccount ACCOUNT =
             new bisq.account.accounts.AmazonGiftCardAccount(
                     "accountName",
-                    new bisq.account.accounts.AmazonGiftCardAccountPayload("id", "AMAZON_GIFT_CARD", "countryCode", "emailOrMobileNr"),
-                    new bisq.common.locale.Country(
-                            "countryCode",
-                            "countryName",
-                            new bisq.common.locale.Region("regionCode", "regionName")));
+                    new bisq.account.accounts.AmazonGiftCardAccountPayload("id", "AMAZON_GIFT_CARD", "US", "emailOrMobileNr"));
 
     @Test
     void testToProto() {

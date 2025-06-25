@@ -2,7 +2,6 @@ package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
-import bisq.common.locale.Country;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -16,8 +15,8 @@ public final class PixAccount extends CountryBasedAccount<PixAccountPayload, Fia
 
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.PIX);
 
-    public PixAccount(String accountName, PixAccountPayload payload, Country country) {
-        super(accountName, PAYMENT_METHOD, payload, country);
+    public PixAccount(String accountName, PixAccountPayload payload) {
+        super(accountName, PAYMENT_METHOD, payload);
     }
 
     @Override
@@ -36,7 +35,6 @@ public final class PixAccount extends CountryBasedAccount<PixAccountPayload, Fia
 
     public static PixAccount fromProto(bisq.account.protobuf.Account proto) {
         return new PixAccount(proto.getAccountName(),
-                PixAccountPayload.fromProto(proto.getAccountPayload()),
-                Country.fromProto(proto.getCountryBasedAccount().getCountry()));
+                PixAccountPayload.fromProto(proto.getAccountPayload()));
     }
 }

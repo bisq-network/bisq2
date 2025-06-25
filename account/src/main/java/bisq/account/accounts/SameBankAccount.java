@@ -17,7 +17,6 @@
 
 package bisq.account.accounts;
 
-import bisq.common.locale.Country;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -27,8 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = true)
 public final class SameBankAccount extends NationalBankAccount {
 
-    public SameBankAccount(String accountName, SameBankAccountPayload payload, Country country) {
-        super(accountName, payload, country);
+    public SameBankAccount(String accountName, SameBankAccountPayload payload) {
+        super(accountName, payload);
     }
 
     @Override
@@ -48,7 +47,6 @@ public final class SameBankAccount extends NationalBankAccount {
     public static SameBankAccount fromProto(bisq.account.protobuf.Account proto) {
         return new SameBankAccount(
                 proto.getAccountName(),
-                SameBankAccountPayload.fromProto(proto.getAccountPayload()),
-                Country.fromProto(proto.getCountryBasedAccount().getCountry()));
+                SameBankAccountPayload.fromProto(proto.getAccountPayload()));
     }
 }

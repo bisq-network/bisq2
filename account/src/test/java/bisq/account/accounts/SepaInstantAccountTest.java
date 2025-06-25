@@ -37,12 +37,6 @@ class SepaInstantAccountTest {
                                     .setBic("DEUTDEBBXXX")
                                     .addAllAcceptedCountryCodes(List.of("DE", "FR", "IT")))))
             .setCountryBasedAccount(CountryBasedAccount.newBuilder()
-                    .setCountry(Country.newBuilder()
-                            .setCode("DE")
-                            .setName("Germany")
-                            .setRegion(Region.newBuilder()
-                                    .setCode("EU")
-                                    .setName("Europe")))
                     .setSepaInstantAccount(SepaInstantAccount.newBuilder()))
             .build();
 
@@ -55,11 +49,7 @@ class SepaInstantAccountTest {
                     "DE89370400440532013000",
                     "DEUTDEBBXXX",
                     "DE",
-                    List.of("DE", "FR", "IT")),
-            new bisq.common.locale.Country(
-                    "DE",
-                    "Germany",
-                    new bisq.common.locale.Region("EU", "Europe")));
+                    List.of("DE", "FR", "IT")));
 
     @Test
     void testToProto() {

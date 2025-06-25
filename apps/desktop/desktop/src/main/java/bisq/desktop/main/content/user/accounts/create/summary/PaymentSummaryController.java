@@ -21,6 +21,7 @@ import bisq.account.AccountService;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.F2FAccount;
 import bisq.account.accounts.F2FAccountPayload;
+import bisq.account.accounts.SepaAccount;
 import bisq.account.accounts.SepaAccountPayload;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.PaymentMethod;
@@ -64,7 +65,8 @@ public class PaymentSummaryController implements Controller {
             switch (fiatPaymentRail) {
                 case CUSTOM -> {
                 }
-                case SEPA -> {model.setDataDisplay(new SepaDataDisplay((SepaAccountPayload) accountPayload));
+                case SEPA -> {
+                    model.setDataDisplay(new SepaDataDisplay((SepaAccountPayload) accountPayload));
                 }
                 case SEPA_INSTANT -> {
                 }
@@ -117,6 +119,8 @@ public class PaymentSummaryController implements Controller {
                 case CUSTOM -> {
                 }
                 case SEPA -> {
+                    SepaAccountPayload sepaAccountPayload = (SepaAccountPayload) model.getAccountPayload();
+                    accountService.addPaymentAccount(new SepaAccount(sepaAccountPayload));
                 }
                 case SEPA_INSTANT -> {
                 }

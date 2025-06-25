@@ -19,7 +19,6 @@ package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
-import bisq.common.locale.Country;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -33,15 +32,14 @@ public final class WiseAccount extends CountryBasedAccount<WiseAccountPayload, F
 
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.WISE);
 
-    public WiseAccount(String accountName, WiseAccountPayload payload, Country country) {
-        super(accountName, PAYMENT_METHOD, payload, country);
+    public WiseAccount(String accountName, WiseAccountPayload payload) {
+        super(accountName, PAYMENT_METHOD, payload);
     }
 
     public static WiseAccount fromProto(bisq.account.protobuf.Account proto) {
         return new WiseAccount(
                 proto.getAccountName(),
-                WiseAccountPayload.fromProto(proto.getAccountPayload()),
-                Country.fromProto(proto.getCountryBasedAccount().getCountry())
+                WiseAccountPayload.fromProto(proto.getAccountPayload())
         );
     }
 
