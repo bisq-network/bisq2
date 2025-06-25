@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.user.accounts.create;
 
-import bisq.account.AccountService;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
@@ -41,7 +40,6 @@ import java.util.Optional;
 
 @Slf4j
 public class CreatePaymentAccountController extends NavigationController {
-    private final AccountService accountService;
     private final OverlayController overlayController;
     @Getter
     private final CreatePaymentAccountModel model;
@@ -57,7 +55,6 @@ public class CreatePaymentAccountController extends NavigationController {
     public CreatePaymentAccountController(ServiceProvider serviceProvider) {
         super(NavigationTarget.CREATE_PAYMENT_ACCOUNT);
 
-        accountService = serviceProvider.getAccountService();
         overlayController = OverlayController.getInstance();
 
         model = new CreatePaymentAccountModel();
@@ -66,8 +63,7 @@ public class CreatePaymentAccountController extends NavigationController {
         paymentMethodController = new PaymentMethodSelectionController();
         accountDataController = new PaymentDataController(serviceProvider);
         optionsController = new PaymentOptionsController(serviceProvider);
-        summaryController = new PaymentSummaryController(serviceProvider, () -> {
-        }); //todo
+        summaryController = new PaymentSummaryController(serviceProvider);
     }
 
     @Override
@@ -100,14 +96,6 @@ public class CreatePaymentAccountController extends NavigationController {
                     }
                     model.getNextButtonDisabled().set(paymentMethod == null);
                 });
-
-     /*   accountDataPin = EasyBind.subscribe(accountDataController.getAccountData(),
-                data -> {
-                    if (data != null) {
-                        model.setAccountData(Optional.of(data));
-                        summaryController.setAccountData(data);
-                    }
-                });*/
     }
 
     @Override
@@ -119,10 +107,6 @@ public class CreatePaymentAccountController extends NavigationController {
             selectedPaymentMethodPin.unsubscribe();
             selectedPaymentMethodPin = null;
         }
-      /*  if (accountDataPin != null) {
-            accountDataPin.unsubscribe();
-            accountDataPin = null;
-        }*/
     }
 
     @Override
@@ -153,8 +137,7 @@ public class CreatePaymentAccountController extends NavigationController {
 
     private void navigateNext() {
         int nextIndex = model.getCurrentIndex().get() + 1;
-        boolean validate = validate();
-        if (nextIndex < model.getChildTargets().size() && validate) {
+        if (nextIndex < model.getChildTargets().size() && validate()) {
             model.setAnimateRightOut(false);
             navigateToIndex(nextIndex);
         }

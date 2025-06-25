@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 public abstract class AccountPayload implements NetworkProto {
     protected final String id;
-    private final String paymentMethodName;
+    protected final String paymentMethodName;
 
     public AccountPayload(String id, String paymentMethodName) {
         this.id = id;

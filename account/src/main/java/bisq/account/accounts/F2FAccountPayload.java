@@ -1,5 +1,6 @@
 package bisq.account.accounts;
 
+import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.Getter;
 
@@ -32,7 +33,6 @@ public class F2FAccountPayload extends CountryBasedAccountPayload {
     @Override
     public void verify() {
         super.verify();
-        //todo make statics
         NetworkDataValidation.validateRequiredText(city, CITY_MIN_LENGTH, CITY_MAX_LENGTH);
         NetworkDataValidation.validateRequiredText(contact, CONTACT_MIN_LENGTH, CONTACT_MAX_LENGTH);
         NetworkDataValidation.validateText(extraInfo, EXTRA_INFO_MIN_LENGTH, EXTRA_INFO_MAX_LENGTH);
@@ -66,5 +66,10 @@ public class F2FAccountPayload extends CountryBasedAccountPayload {
                 f2fAccountPayload.getContact(),
                 f2fAccountPayload.getExtraInfo()
         );
+    }
+
+    @Override
+    protected String getDefaultAccountName() {
+        return paymentMethodName + "-" + countryCode + "/" + StringUtils.truncate(city, 5);
     }
 }

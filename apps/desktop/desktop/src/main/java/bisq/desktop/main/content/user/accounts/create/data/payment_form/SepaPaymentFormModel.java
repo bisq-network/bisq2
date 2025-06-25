@@ -43,13 +43,13 @@ public class SepaPaymentFormModel extends PaymentFormModel {
     private final List<Country> allNonEuroCountries;
     private final List<Country> acceptedEuroCountries = new ArrayList<>();
     private final List<Country> acceptedNonEuroCountries = new ArrayList<>();
-    private final ObjectProperty<Country> selectedCountryOfBank = new SimpleObjectProperty<>(CountryRepository.getCountry("LT"));
+    private final ObjectProperty<Country> selectedCountryOfBank = new SimpleObjectProperty<>();
     private final BooleanProperty countryErrorVisible = new SimpleBooleanProperty();
     private final BooleanProperty acceptedCountriesErrorVisible = new SimpleBooleanProperty();
     private final BooleanProperty requireValidation = new SimpleBooleanProperty();
-    private final StringProperty holderName = new SimpleStringProperty("asdfaf");
-    private final StringProperty iban = new SimpleStringProperty("LT183510000045741160");
-    private final StringProperty bic = new SimpleStringProperty("MIEGLT21");
+    private final StringProperty holderName = new SimpleStringProperty();
+    private final StringProperty iban = new SimpleStringProperty();
+    private final StringProperty bic = new SimpleStringProperty();
 
 
     private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(SepaAccountPayload.HOLDER_NAME_MIN_LENGTH, SepaAccountPayload.HOLDER_NAME_MAX_LENGTH);

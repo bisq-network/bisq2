@@ -31,7 +31,6 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Getter
@@ -42,34 +41,12 @@ public class CreatePaymentAccountModel extends NavigationModel {
     private final BooleanProperty nextButtonDisabled = new SimpleBooleanProperty();
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     private final List<NavigationTarget> childTargets = new ArrayList<>();
-
     @Setter
     private boolean optionsVisible;
     @Setter
     private boolean animateRightOut = true;
     @Setter
     private Optional<PaymentMethod<?>> paymentMethod = Optional.empty();
-    @Setter
-    private Optional<Map<String, Object>> accountData = Optional.empty();
-    @Setter
-    private Optional<Map<String, Object>> optionsData = Optional.empty();
-
-
-    public Map<String, Object> getAccountData() {
-        return accountData.orElse(null);
-    }
-
-    public Map<String, Object> getOptionsData() {
-        return optionsData.orElse(null);
-    }
-
-    public Optional<Map<String, Object>> getAccountDataOpt() {
-        return accountData;
-    }
-
-    public Optional<Map<String, Object>> getOptionsDataOpt() {
-        return optionsData;
-    }
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {

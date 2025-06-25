@@ -62,11 +62,6 @@ public class PaymentDataController implements Controller {
         PaymentMethod<?> paymentMethod = model.getPaymentMethod();
         checkNotNull(paymentMethod, "PaymentMethod must be set before onActivate is called");
 
-        String key = paymentMethod.getPaymentRail().name();
-        if( model.getControllerCache().containsKey(key)){
-
-        }
-
         paymentFormController = getOrCreateController(paymentMethod);
         VBox root = paymentFormController.getView().getRoot();
         model.setPaymentForm(root);

@@ -51,6 +51,10 @@ public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFo
     public void onDeactivate() {
     }
 
+    void onValidationDone() {
+        model.getRequireValidation().set(false);
+    }
+
     @Override
     public boolean validate() {
         boolean isCountrySet = model.getSelectedCountry().get() != null;
@@ -60,7 +64,6 @@ public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFo
                 model.getContactValidator().validateAndGet() &&
                 model.getExtraInfoValidator().validateAndGet();
         model.getRequireValidation().set(true);
-        model.getRequireValidation().set(false);
         return isValid;
     }
 
@@ -73,5 +76,4 @@ public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFo
                 model.getContact().get(),
                 model.getExtraInfo().get());
     }
-
 }

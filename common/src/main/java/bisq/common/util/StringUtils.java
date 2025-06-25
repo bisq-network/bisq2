@@ -264,14 +264,14 @@ public class StringUtils {
     }
 
     public static boolean isAlphaNumeric(String value) {
-        return value.chars().allMatch(e -> Character.isLetter(e) || Character.isDigit(e));
+        return value != null && value.chars().allMatch(e -> Character.isLetter(e) || Character.isDigit(e));
     }
 
     public static boolean isDigit(String value) {
-        return value.chars().allMatch(Character::isDigit);
+        return value != null && value.chars().allMatch(Character::isDigit);
     }
 
     public static boolean isLetter(String value) {
-        return value.chars().allMatch(Character::isLetter);
+        return value != null && value.chars().allMatch(Character::isLetter);
     }
 }

@@ -141,6 +141,7 @@ public class F2FPaymentFormView extends PaymentFormView<F2FPaymentFormModel, F2F
                 city.validate();
                 contact.validate();
                 extraInfo.validate();
+                controller.onValidationDone();
             }
         });
     }

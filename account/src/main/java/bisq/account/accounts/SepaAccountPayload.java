@@ -18,6 +18,7 @@
 package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentRailUtil;
+import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.common.validation.SepaPaymentAccountValidation;
@@ -98,5 +99,10 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
                 sepaAccountPayload.getBic(),
                 countryBasedAccountPayload.getCountryCode(),
                 sepaAccountPayload.getAcceptedCountryCodesList());
+    }
+
+    @Override
+    protected String getDefaultAccountName() {
+        return paymentMethodName + "-" + StringUtils.truncate(iban, 8);
     }
 }

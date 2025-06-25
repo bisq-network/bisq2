@@ -169,6 +169,7 @@ public class SepaPaymentFormView extends PaymentFormView<SepaPaymentFormModel, S
                 holderName.validate();
                 iban.validate();
                 bic.validate();
+                controller.onValidationDone();
             }
         });
 

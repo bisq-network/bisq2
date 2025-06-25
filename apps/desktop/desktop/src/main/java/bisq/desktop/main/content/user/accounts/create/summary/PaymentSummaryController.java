@@ -38,17 +38,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class PaymentSummaryController implements Controller {
     private final PaymentSummaryModel model;
     @Getter
-    private PaymentSummaryView view;
+    private final PaymentSummaryView view;
     private final AccountService accountService;
-    private final Runnable createAccountHandler;
 
-    public PaymentSummaryController(ServiceProvider serviceProvider, Runnable createAccountHandler) {
+    public PaymentSummaryController(ServiceProvider serviceProvider) {
         accountService = serviceProvider.getAccountService();
-        this.createAccountHandler = createAccountHandler;
         model = new PaymentSummaryModel();
         view = new PaymentSummaryView(model, this);
     }
-
 
     public void setPaymentMethod(PaymentMethod<?> paymentMethod) {
         checkNotNull(paymentMethod, "PaymentMethod must not be null");
@@ -60,7 +57,7 @@ public class PaymentSummaryController implements Controller {
 
         if (model.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
             model.setRisk(fiatPaymentRail.getChargebackRisk().getDisplayString());
-            model.setTradeLimit("TODO limit for " + fiatPaymentRail.getChargebackRisk().getDisplayString());
+            model.setTradeLimit(getTradeLimit(fiatPaymentRail));
 
             switch (fiatPaymentRail) {
                 case CUSTOM -> {
@@ -174,5 +171,20 @@ public class PaymentSummaryController implements Controller {
 
     @Override
     public void onDeactivate() {
+    }
+
+    private String getTradeLimit(FiatPaymentRail fiatPaymentRail) {
+        //todo
+        switch (fiatPaymentRail.getChargebackRisk()) {
+            case VERY_LOW -> {
+                return "10000 USD";
+            }
+            case LOW -> {
+                return "5000 USD";
+            }
+            default -> {
+                return "2500 USD";
+            }
+        }
     }
 }
