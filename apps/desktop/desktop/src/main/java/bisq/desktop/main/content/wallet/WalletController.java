@@ -17,6 +17,11 @@
 
 package bisq.desktop.main.content.wallet;
 
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatMessage;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -35,6 +40,8 @@ import bisq.wallets.bitcoind.RpcConfig;
 
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class WalletController extends ContentTabController<WalletModel> {
     @Getter
@@ -51,7 +58,6 @@ public class WalletController extends ContentTabController<WalletModel> {
     @Override
     public void onActivate() {
         super.onActivate();
-        // mockWalletService.initializeWallet(null, Optional.empty());
         isWalletInitializedPin = FxBindings.bind(model.getIsWalletInitialized())
                 .to(mockWalletService.getIsWalletInitialized());
     }
@@ -76,7 +82,11 @@ public class WalletController extends ContentTabController<WalletModel> {
         };
     }
 
-    public void onInitWallet() {
-        mockWalletService.initializeWallet(null, Optional.empty());
+    // public void onInitWallet() {
+        // mockWalletService.initializeWallet(null, Optional.empty());
+    // }
+
+    void onCreateWallet() {
+        Navigation.navigateTo(NavigationTarget.CREATE_WALLET);
     }
 }

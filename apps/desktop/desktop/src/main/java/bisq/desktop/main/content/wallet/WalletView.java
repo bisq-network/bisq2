@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.content.wallet;
 
+import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookController;
+import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookModel;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.main.content.ContentTabView;
 import bisq.i18n.Res;
@@ -110,6 +112,8 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
     private void setContentToNotInitialized() {
         root.setPadding(new Insets(40, 40, 20, 40));
         root.getChildren().setAll(notInitializedBox);
+
+        createWalletButton.setOnAction(e -> getController().onCreateWallet());
     }
 
     @Override
@@ -215,5 +219,13 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
 
         return vBox;
 
+    }
+
+    private WalletModel getModel() {
+        return (WalletModel) model;
+    }
+
+    private WalletController getController() {
+        return (WalletController) controller;
     }
 }
