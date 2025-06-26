@@ -18,19 +18,28 @@
 package bisq.desktop.main.content.user.accounts.create.summary;
 
 import bisq.account.AccountService;
+import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.F2FAccount;
 import bisq.account.accounts.F2FAccountPayload;
 import bisq.account.accounts.SepaAccount;
 import bisq.account.accounts.SepaAccountPayload;
+import bisq.account.payment_method.CryptoPaymentRail;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.user.accounts.create.summary.details.AccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.create.summary.details.F2FAccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.create.summary.details.SepaAccountDetailsGridPane;
+import bisq.desktop.overlay.OverlayController;
+import bisq.i18n.Res;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -54,123 +63,126 @@ public class PaymentSummaryController implements Controller {
 
     public void setAccountPayload(AccountPayload accountPayload) {
         model.setAccountPayload(accountPayload);
+        model.setDefaultAccountName(accountPayload.getDefaultAccountName());
 
         if (model.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
             model.setRisk(fiatPaymentRail.getChargebackRisk().getDisplayString());
             model.setTradeLimit(getTradeLimit(fiatPaymentRail));
-
-            switch (fiatPaymentRail) {
-                case CUSTOM -> {
-                }
-                case SEPA -> {
-                    model.setAccountDetailsGridPane(new SepaAccountDetailsGridPane((SepaAccountPayload) accountPayload));
-                }
-                case SEPA_INSTANT -> {
-                }
-                case ZELLE -> {
-                }
-                case REVOLUT -> {
-                }
-                case WISE -> {
-                }
-                case NATIONAL_BANK -> {
-                }
-                case SWIFT -> {
-                }
-                case F2F -> {
-                    model.setAccountDetailsGridPane(new F2FAccountDetailsGridPane((F2FAccountPayload) accountPayload));
-                }
-                case ACH_TRANSFER -> {
-                }
-                case PIX -> {
-                }
-                case FASTER_PAYMENTS -> {
-                }
-                case PAY_ID -> {
-                }
-                case US_POSTAL_MONEY_ORDER -> {
-                }
-                case CASH_BY_MAIL -> {
-                }
-                case STRIKE -> {
-                }
-                case INTERAC_E_TRANSFER -> {
-                }
-                case AMAZON_GIFT_CARD -> {
-                }
-                case CASH_DEPOSIT -> {
-                }
-                case UPI -> {
-                }
-                case BIZUM -> {
-                }
-                case CASH_APP -> {
-                }
-            }
+            AccountDetailsGridPane accountDetailsGridPane = getAccountDetailsGridPane(accountPayload, fiatPaymentRail);
+            model.setAccountDetailsGridPane(accountDetailsGridPane);
         }
     }
 
-    public void createAccount() {
-        if (model.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
-            switch (fiatPaymentRail) {
-                case CUSTOM -> {
-                }
-                case SEPA -> {
-                    SepaAccountPayload sepaAccountPayload = (SepaAccountPayload) model.getAccountPayload();
-                    accountService.addPaymentAccount(new SepaAccount(sepaAccountPayload));
-                }
-                case SEPA_INSTANT -> {
-                }
-                case ZELLE -> {
-                }
-                case REVOLUT -> {
-                }
-                case WISE -> {
-                }
-                case NATIONAL_BANK -> {
-                }
-                case SWIFT -> {
-                }
-                case F2F -> {
-                    F2FAccountPayload f2FAccountPayload = (F2FAccountPayload) model.getAccountPayload();
-                    accountService.addPaymentAccount(new F2FAccount(f2FAccountPayload));
-                }
-                case ACH_TRANSFER -> {
-                }
-                case PIX -> {
-                }
-                case FASTER_PAYMENTS -> {
-                }
-                case PAY_ID -> {
-                }
-                case US_POSTAL_MONEY_ORDER -> {
-                }
-                case CASH_BY_MAIL -> {
-                }
-                case STRIKE -> {
-                }
-                case INTERAC_E_TRANSFER -> {
-                }
-                case AMAZON_GIFT_CARD -> {
-                }
-                case CASH_DEPOSIT -> {
-                }
-                case UPI -> {
-                }
-                case BIZUM -> {
-                }
-                case CASH_APP -> {
-                }
-            }
-        }
+    public void showAccountNameOverlay() {
+        model.getShowAccountNameOverlay().set(true);
     }
+
+    public void onCreateAccount(String accountName) {
+        Set<String> existingNames = accountService.getAccounts().stream()
+                .map(Account::getAccountName)
+                .collect(Collectors.toSet());
+        if (existingNames.contains(accountName)) {
+            new Popup().warning(Res.get("user.paymentAccounts.summary.accountNameOverlay.accountName.error.nameAlreadyExists")).show();
+            return;
+        }
+
+        Account<?, ? extends PaymentMethod<?>> account = getAccount(accountName);
+        accountService.addPaymentAccount(account);
+        model.getShowAccountNameOverlay().set(false);
+        OverlayController.hide();
+    }
+
 
     @Override
     public void onActivate() {
+        model.getShowAccountNameOverlay().set(false);
     }
 
     @Override
     public void onDeactivate() {
+    }
+
+    private AccountDetailsGridPane getAccountDetailsGridPane(AccountPayload accountPayload,
+                                                             FiatPaymentRail fiatPaymentRail) {
+        return switch (fiatPaymentRail) {
+            case CUSTOM -> throw new UnsupportedOperationException("FiatPaymentRail.CUSTOM is not supported");
+            case SEPA -> new SepaAccountDetailsGridPane((SepaAccountPayload) accountPayload);
+            case SEPA_INSTANT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case ZELLE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case REVOLUT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case NATIONAL_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case F2F -> new F2FAccountDetailsGridPane((F2FAccountPayload) accountPayload);
+            case ACH_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case PIX -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case FASTER_PAYMENTS -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case PAY_ID -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case US_POSTAL_MONEY_ORDER ->
+                    throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case CASH_BY_MAIL -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case STRIKE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case INTERAC_E_TRANSFER ->
+                    throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case AMAZON_GIFT_CARD ->
+                    throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case CASH_DEPOSIT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case UPI -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case BIZUM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+        };
+    }
+
+    private Account<?, ? extends PaymentMethod<?>> getAccount(String accountName) {
+        if (model.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
+            return switch (fiatPaymentRail) {
+                case CUSTOM -> throw new UnsupportedOperationException("FiatPaymentRail.CUSTOM is not supported");
+                case SEPA -> new SepaAccount(accountName, (SepaAccountPayload) model.getAccountPayload());
+                case SEPA_INSTANT ->
+                        throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case ZELLE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case REVOLUT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case NATIONAL_BANK ->
+                        throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case F2F -> new F2FAccount(accountName, (F2FAccountPayload) model.getAccountPayload());
+                case ACH_TRANSFER ->
+                        throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case PIX -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case FASTER_PAYMENTS ->
+                        throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case PAY_ID -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case US_POSTAL_MONEY_ORDER ->
+                        throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case CASH_BY_MAIL ->
+                        throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case STRIKE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case INTERAC_E_TRANSFER ->
+                        throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case AMAZON_GIFT_CARD ->
+                        throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case CASH_DEPOSIT ->
+                        throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case UPI -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case BIZUM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            };
+        } else if (model.getPaymentMethod().getPaymentRail() instanceof CryptoPaymentRail cryptoPaymentRail) {
+            throw new UnsupportedOperationException("Unsupported paymentRail " + model.getPaymentMethod().getPaymentRail());
+            /*
+            return switch (cryptoPaymentRail) {
+                case CUSTOM -> throw new UnsupportedOperationException("Not yet implemented:  " + cryptoPaymentRail);
+                case BSQ -> throw new UnsupportedOperationException("Not yet implemented:  " + cryptoPaymentRail);
+                case MONERO -> throw new UnsupportedOperationException("Not yet implemented:  " + cryptoPaymentRail);
+                case LIQUID -> throw new UnsupportedOperationException("Not yet implemented:  " + cryptoPaymentRail);
+                case NATIVE_CHAIN -> throw new UnsupportedOperationException("Not yet implemented:  " + cryptoPaymentRail);
+                case ATOMIC_SWAP_CAPABLE_CHAIN -> throw new UnsupportedOperationException("Not yet implemented:  " + cryptoPaymentRail);
+                case OTHER -> throw new UnsupportedOperationException("Not yet implemented:  " + cryptoPaymentRail);
+            };*/
+        } else {
+            throw new UnsupportedOperationException("Unsupported paymentRail " + model.getPaymentMethod().getPaymentRail());
+        }
     }
 
     private String getTradeLimit(FiatPaymentRail fiatPaymentRail) {

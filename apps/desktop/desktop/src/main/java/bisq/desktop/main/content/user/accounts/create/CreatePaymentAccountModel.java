@@ -39,6 +39,7 @@ public class CreatePaymentAccountModel extends NavigationModel {
     private final BooleanProperty createAccountButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty nextButtonDisabled = new SimpleBooleanProperty();
+    private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty();
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     private final List<NavigationTarget> childTargets = new ArrayList<>();
     @Setter

@@ -73,6 +73,7 @@ public class CreatePaymentAccountController extends NavigationController {
 
     @Override
     public void onActivate() {
+        model.getNextButtonVisible().set(true);
         overlayController.setUseEscapeKeyHandler(false);
         overlayController.setEnterKeyHandler(null);
         overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
@@ -112,6 +113,7 @@ public class CreatePaymentAccountController extends NavigationController {
     @Override
     protected void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
         model.getCreateAccountButtonVisible().set(navigationTarget == NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY);
+        model.getNextButtonVisible().set(navigationTarget != NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY);
         model.getBackButtonVisible().set(model.getCurrentIndex().get() > 0);
     }
 
@@ -156,8 +158,10 @@ public class CreatePaymentAccountController extends NavigationController {
     }
 
     void onCreateAccount() {
-        summaryController.createAccount();
-        OverlayController.hide();
+        summaryController.showAccountNameOverlay();
+        model.getNextButtonVisible().set(false);
+        model.getCreateAccountButtonVisible().set(false);
+        model.getBackButtonVisible().set(false);
     }
 
     private void navigateToIndex(int index) {

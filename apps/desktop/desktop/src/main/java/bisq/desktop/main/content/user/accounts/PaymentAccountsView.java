@@ -149,6 +149,8 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
         accountDisplayPin = EasyBind.subscribe(model.getAccountDetailsGridPane(), accountDisplay -> {
             if (accountDisplay != null) {
                 accountDisplayPane.getChildren().setAll(accountDisplay);
+            } else {
+                accountDisplayPane.getChildren().clear();
             }
         });
     }

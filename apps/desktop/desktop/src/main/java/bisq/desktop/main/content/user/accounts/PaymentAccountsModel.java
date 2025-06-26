@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.user.accounts;
 
 import bisq.account.accounts.Account;
-import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.main.content.user.accounts.details.AccountDetailsVBox;
@@ -32,7 +31,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Getter
@@ -45,7 +43,5 @@ public class PaymentAccountsModel implements Model {
     private final ObservableList<Account<?, ? extends PaymentMethod<?>>> accounts = FXCollections.observableArrayList();
     private final SortedList<Account<?, ? extends PaymentMethod<?>>> sortedAccounts = new SortedList<>(accounts);
     private final ObjectProperty<Account<?, ? extends PaymentMethod<?>>> selectedAccount = new SimpleObjectProperty<>();
-    @Setter
-    private AccountPayload accountPayload;
     private final ObjectProperty<AccountDetailsVBox> accountDetailsGridPane = new SimpleObjectProperty<>();
 }

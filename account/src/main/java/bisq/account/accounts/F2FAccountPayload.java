@@ -69,7 +69,7 @@ public class F2FAccountPayload extends CountryBasedAccountPayload {
     }
 
     @Override
-    protected String getDefaultAccountName() {
+    public String getDefaultAccountName() {
         return paymentMethodName + "-" + countryCode + "/" + StringUtils.truncate(city, 5);
     }
 }
