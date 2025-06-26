@@ -26,6 +26,7 @@ import javafx.scene.Cursor;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
@@ -115,5 +116,10 @@ public class SelectableLabel extends StackPane {
     public void setWrapText(boolean value) {
         label.setWrapText(value);
         textArea.setWrapText(value);
+    }
+
+    public void setTooltip(Tooltip value) {
+        label.setTooltip(value);
+        textArea.setTooltip(value);
     }
 }

@@ -20,7 +20,7 @@ package bisq.desktop.main.content.user.accounts.create.summary;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.view.Model;
-import bisq.desktop.main.content.user.accounts.create.summary.data_display.DataDisplay;
+import bisq.desktop.main.content.user.accounts.create.summary.details.AccountDetailsGridPane;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -31,7 +31,7 @@ public class PaymentSummaryModel implements Model {
     @Setter
     private AccountPayload accountPayload;
     @Setter
-    private DataDisplay<?> dataDisplay;
+    private AccountDetailsGridPane accountDetailsGridPane;
     @Setter
     private String risk;
     @Setter

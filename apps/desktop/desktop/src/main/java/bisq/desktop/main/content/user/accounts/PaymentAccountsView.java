@@ -22,13 +22,15 @@ import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
-import bisq.desktop.components.controls.MaterialTextArea;
+import bisq.desktop.main.content.settings.SettingsViewUtils;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
@@ -38,13 +40,12 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, PaymentAccountsController> {
     private final Label headline;
-    private final Button createButton, largeCreateButton, deletedButton, saveButton;
-    private final MaterialTextArea accountData;
-    private final AutoCompleteComboBox<Account<?, ? extends PaymentMethod<?>>> accountSelection;
-    private final HBox buttonsHBox;
-    private final HBox selectionButtonHBox;
+    private final Button createButton2, createButton1, deletedButton;
+    private final AutoCompleteComboBox<Account<?, ?>> comboBox;
+    private final HBox comboBoxAndCreateButtonHBox;
     private final VBox noAccountsVBox;
-    private Subscription selectedAccountPin, noAccountsSetupPin;
+    private final Pane accountDisplayPane;
+    private Subscription selectedAccountPin, noAccountsSetupPin, accountDisplayPin;
 
     public PaymentAccountsView(PaymentAccountsModel model, PaymentAccountsController controller) {
         super(new VBox(0), model, controller);
@@ -72,18 +73,18 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
         VBox.setMargin(whySetupNote, new Insets(10, 0, 15, 0));
         noAccountsVBox = new VBox(20, noAccountsInfo, whySetup, whySetupInfo, whySetupNote);
 
-        largeCreateButton = new Button(Res.get("user.paymentAccounts.createAccount"));
-        largeCreateButton.setDefaultButton(true);
+        createButton1 = new Button(Res.get("user.paymentAccounts.createAccount"));
+        createButton1.setDefaultButton(true);
 
-        createButton = new Button(Res.get("user.paymentAccounts.createAccount"));
-        createButton.getStyleClass().add("outlined-button");
+        createButton2 = new Button(Res.get("user.paymentAccounts.createAccount"));
+        createButton2.getStyleClass().add("outlined-button");
 
-        accountSelection = new AutoCompleteComboBox<>(model.getSortedAccounts(), Res.get("user.paymentAccounts.selectAccount"));
-        accountSelection.setPrefWidth(300);
-        accountSelection.setConverter(new StringConverter<>() {
+        comboBox = new AutoCompleteComboBox<>(model.getSortedAccounts(), Res.get("user.paymentAccounts.selectAccount"));
+        comboBox.setPrefWidth(230);
+        comboBox.setConverter(new StringConverter<>() {
             @Override
-            public String toString(Account<?, ? extends PaymentMethod<?>> object) {
-                return object != null ? object.getAccountName() : "";
+            public String toString(Account<?, ? extends PaymentMethod<?>> account) {
+                return account != null ? account.getAccountName() : "";
             }
 
             @Override
@@ -92,24 +93,22 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
             }
         });
 
-        selectionButtonHBox = new HBox(20, accountSelection, Spacer.fillHBox(), createButton);
-
-        accountData = new MaterialTextArea(Res.get("user.paymentAccounts.accountData"), Res.get("user.paymentAccounts.createAccount.accountData.prompt"));
-        accountData.setEditable(true);
-        accountData.showEditIcon();
-        accountData.getIconButton().setOpacity(0.2);
-        accountData.getIconButton().setMouseTransparent(true);
-        accountData.setFixedHeight(300);
-
-        saveButton = new Button(Res.get("action.save"));
-        saveButton.setDefaultButton(true);
+        comboBoxAndCreateButtonHBox = new HBox(20, comboBox, Spacer.fillHBox(), createButton2);
 
         deletedButton = new Button(Res.get("user.paymentAccounts.deleteAccount"));
 
-        buttonsHBox = new HBox(20, saveButton, deletedButton);
-        VBox contentBox = new VBox(20);
-        contentBox.getChildren().addAll(headline, noAccountsVBox, largeCreateButton, selectionButtonHBox, accountData, buttonsHBox);
+        accountDisplayPane = new StackPane();
+
+        VBox contentBox = new VBox(30);
+        contentBox.getChildren().addAll(headline,
+                SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()),
+                noAccountsVBox,
+                createButton1,
+                comboBoxAndCreateButtonHBox,
+                accountDisplayPane,
+                deletedButton);
         contentBox.getStyleClass().add("bisq-common-bg");
+
         root.getChildren().add(contentBox);
         root.setPadding(new Insets(0, 40, 20, 40));
     }
@@ -117,59 +116,56 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
     @Override
     protected void onViewAttached() {
         headline.textProperty().bind(model.getHeadline());
-        accountData.textProperty().bindBidirectional(model.accountDataProperty());
-        saveButton.disableProperty().bind(model.saveButtonDisabledProperty());
-        deletedButton.disableProperty().bind(model.deleteButtonDisabledProperty());
+        deletedButton.disableProperty().bind(model.getDeleteButtonDisabled());
 
-        largeCreateButton.setOnAction(e -> controller.onCreateAccount());
-        createButton.setOnAction(e -> controller.onCreateAccount());
-        saveButton.setOnAction(e -> controller.onSaveAccount());
+        createButton1.setOnAction(e -> controller.onCreateAccount());
+        createButton2.setOnAction(e -> controller.onCreateAccount());
         deletedButton.setOnAction(e -> controller.onDeleteAccount());
 
-        accountSelection.setOnChangeConfirmed(e -> {
-            if (accountSelection.getSelectionModel().getSelectedItem() == null) {
-                model.getSelectedAccount().ifPresent(accountSelection.getSelectionModel()::select);
+        comboBox.setOnChangeConfirmed(e -> {
+            if (comboBox.getSelectionModel().getSelectedItem() == null) {
+                comboBox.getSelectionModel().select(model.getSelectedAccount().get());
                 return;
             }
-            controller.onSelectAccount(accountSelection.getSelectionModel().getSelectedItem());
+            controller.onSelectAccount(comboBox.getSelectionModel().getSelectedItem());
         });
-
-        selectedAccountPin = EasyBind.subscribe(model.selectedAccountProperty(),
-                accountName -> accountSelection.getSelectionModel().select(accountName));
 
         noAccountsSetupPin = EasyBind.subscribe(model.getNoAccountsSetup(), noAccountsSetup -> {
             headline.setVisible(!noAccountsSetup);
             headline.setManaged(!noAccountsSetup);
             noAccountsVBox.setVisible(noAccountsSetup);
             noAccountsVBox.setManaged(noAccountsSetup);
-            largeCreateButton.setVisible(noAccountsSetup);
-            largeCreateButton.setManaged(noAccountsSetup);
+            createButton1.setVisible(noAccountsSetup);
+            createButton1.setManaged(noAccountsSetup);
 
             boolean anyAccountSetup = !noAccountsSetup;
-            selectionButtonHBox.setVisible(anyAccountSetup);
-            selectionButtonHBox.setManaged(anyAccountSetup);
-            accountData.setVisible(anyAccountSetup);
-            accountData.setManaged(anyAccountSetup);
-            buttonsHBox.setVisible(anyAccountSetup);
-            buttonsHBox.setManaged(anyAccountSetup);
+            comboBoxAndCreateButtonHBox.setVisible(anyAccountSetup);
+            comboBoxAndCreateButtonHBox.setManaged(anyAccountSetup);
+        });
+
+        selectedAccountPin = EasyBind.subscribe(model.getSelectedAccount(),
+                account -> comboBox.getSelectionModel().select(account));
+
+        accountDisplayPin = EasyBind.subscribe(model.getAccountDetailsGridPane(), accountDisplay -> {
+            if (accountDisplay != null) {
+                accountDisplayPane.getChildren().setAll(accountDisplay);
+            }
         });
     }
 
     @Override
     protected void onViewDetached() {
         headline.textProperty().unbind();
-        model.getAccountData().ifPresent(accountData.textProperty()::unbindBidirectional);
-        saveButton.disableProperty().unbind();
         deletedButton.disableProperty().unbind();
 
-        largeCreateButton.setOnAction(null);
-        createButton.setOnAction(null);
+        createButton1.setOnAction(null);
+        createButton2.setOnAction(null);
         deletedButton.setOnAction(null);
-        saveButton.setOnAction(null);
 
-        accountSelection.setOnChangeConfirmed(null);
+        comboBox.setOnChangeConfirmed(null);
 
         selectedAccountPin.unsubscribe();
         noAccountsSetupPin.unsubscribe();
+        accountDisplayPin.unsubscribe();
     }
 }

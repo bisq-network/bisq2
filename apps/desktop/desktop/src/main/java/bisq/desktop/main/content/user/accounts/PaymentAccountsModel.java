@@ -18,81 +18,34 @@
 package bisq.desktop.main.content.user.accounts;
 
 import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.view.Model;
-import javafx.beans.property.*;
+import bisq.desktop.main.content.user.accounts.details.AccountDetailsVBox;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Collection;
-import java.util.Optional;
 
 @Getter
 @Slf4j
 public class PaymentAccountsModel implements Model {
     private final StringProperty headline = new SimpleStringProperty();
-    private final StringProperty accountData = new SimpleStringProperty("");
-    private final BooleanProperty saveButtonDisabled = new SimpleBooleanProperty();
-    private final BooleanProperty deleteButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty noAccountsSetup = new SimpleBooleanProperty();
-    private final ObjectProperty<Account<?, ? extends PaymentMethod<?>>> selectedAccount = new SimpleObjectProperty<>();
+    private final BooleanProperty deleteButtonDisabled = new SimpleBooleanProperty();
+
     private final ObservableList<Account<?, ? extends PaymentMethod<?>>> accounts = FXCollections.observableArrayList();
     private final SortedList<Account<?, ? extends PaymentMethod<?>>> sortedAccounts = new SortedList<>(accounts);
-
-    // selectedAccount
-    public Optional<Account<?, ? extends PaymentMethod<?>>> getSelectedAccount() {
-        return Optional.ofNullable(selectedAccount.get());
-    }
-
-    public ObjectProperty<Account<?, ? extends PaymentMethod<?>>> selectedAccountProperty() {
-        return selectedAccount;
-    }
-
-    public void setSelectedAccount(Account<?, ? extends PaymentMethod<?>> selectedAccount) {
-        this.selectedAccount.set(selectedAccount);
-    }
-
-    public Optional<String> getAccountData() {
-        return Optional.ofNullable(accountData.get());
-    }
-
-    public StringProperty accountDataProperty() {
-        return accountData;
-    }
-
-    public void setAccountData(String accountData) {
-        this.accountData.set(accountData);
-    }
-
-    // saveButtonDisabled
-    public boolean isSaveButtonDisabled() {
-        return saveButtonDisabled.get();
-    }
-
-    public BooleanProperty saveButtonDisabledProperty() {
-        return saveButtonDisabled;
-    }
-
-    public void setSaveButtonDisabled(boolean saveButtonDisabled) {
-        this.saveButtonDisabled.set(saveButtonDisabled);
-    }
-
-    public boolean isDeleteButtonDisabled() {
-        return deleteButtonDisabled.get();
-    }
-
-    public BooleanProperty deleteButtonDisabledProperty() {
-        return deleteButtonDisabled;
-    }
-
-    public void setDeleteButtonDisabled(boolean deleteButtonDisabled) {
-        this.deleteButtonDisabled.set(deleteButtonDisabled);
-    }
-
-    public void setAllAccounts(Collection<Account<?, ? extends PaymentMethod<?>>> collection) {
-        accounts.setAll(collection);
-    }
+    private final ObjectProperty<Account<?, ? extends PaymentMethod<?>>> selectedAccount = new SimpleObjectProperty<>();
+    @Setter
+    private AccountPayload accountPayload;
+    private final ObjectProperty<AccountDetailsVBox> accountDetailsGridPane = new SimpleObjectProperty<>();
 }

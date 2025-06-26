@@ -27,8 +27,8 @@ import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.user.accounts.create.summary.data_display.F2FDataDisplay;
-import bisq.desktop.main.content.user.accounts.create.summary.data_display.SepaDataDisplay;
+import bisq.desktop.main.content.user.accounts.create.summary.details.F2FAccountDetailsGridPane;
+import bisq.desktop.main.content.user.accounts.create.summary.details.SepaAccountDetailsGridPane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,7 +63,7 @@ public class PaymentSummaryController implements Controller {
                 case CUSTOM -> {
                 }
                 case SEPA -> {
-                    model.setDataDisplay(new SepaDataDisplay((SepaAccountPayload) accountPayload));
+                    model.setAccountDetailsGridPane(new SepaAccountDetailsGridPane((SepaAccountPayload) accountPayload));
                 }
                 case SEPA_INSTANT -> {
                 }
@@ -78,7 +78,7 @@ public class PaymentSummaryController implements Controller {
                 case SWIFT -> {
                 }
                 case F2F -> {
-                    model.setDataDisplay(new F2FDataDisplay((F2FAccountPayload) accountPayload));
+                    model.setAccountDetailsGridPane(new F2FAccountDetailsGridPane((F2FAccountPayload) accountPayload));
                 }
                 case ACH_TRANSFER -> {
                 }

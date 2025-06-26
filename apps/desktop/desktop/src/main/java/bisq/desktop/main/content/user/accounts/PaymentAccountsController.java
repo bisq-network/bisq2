@@ -19,15 +19,21 @@ package bisq.desktop.main.content.user.accounts;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.F2FAccountPayload;
+import bisq.account.accounts.SepaAccountPayload;
 import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.account.accounts.UserDefinedFiatAccountPayload;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.main.content.user.accounts.details.F2FAccountDetailsVBox;
+import bisq.desktop.main.content.user.accounts.details.SepaAccountDetailsVBox;
+import bisq.desktop.main.content.user.accounts.details.UserDefinedAccountDetailsVBox;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.mu_sig.MuSigService;
@@ -37,9 +43,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
-import java.util.NoSuchElementException;
-
-import static com.google.common.base.Preconditions.checkArgument;
+import java.util.Optional;
 
 @Slf4j
 public class PaymentAccountsController implements Controller {
@@ -48,9 +52,8 @@ public class PaymentAccountsController implements Controller {
     private final PaymentAccountsView view;
     private final AccountService accountService;
     private final MuSigService muSigService;
-    private Subscription selectedAccountSubscription, accountDataSubscription;
-    private Pin accountsPin, selectedAccountPin;
-
+    private Subscription selectedAccountSubscription;
+    private Pin selectedAccountPin;
 
     public PaymentAccountsController(ServiceProvider serviceProvider) {
         accountService = serviceProvider.getAccountService();
@@ -64,45 +67,91 @@ public class PaymentAccountsController implements Controller {
     public void onActivate() {
         model.getSortedAccounts().setComparator(Comparator.comparing(Account::getAccountName));
 
-        accountsPin = accountService.getAccounts().addObserver(() -> UIThread.run(() -> {
-            model.setAllAccounts(accountService.getAccounts());
-            maybeSelectFirstAccount();
-            model.getNoAccountsSetup().set(!accountService.hasAccounts());
-            model.getHeadline().set(accountService.hasAccounts() ?
-                    Res.get("user.paymentAccounts.headline") :
-                    Res.get("user.paymentAccounts.noAccounts.headline")
-            );
-        }));
+        model.getAccounts().setAll(accountService.getAccounts());
+        maybeSelectFirstAccount();
+        model.getNoAccountsSetup().set(!accountService.hasAccounts());
+        model.getHeadline().set(accountService.hasAccounts() ?
+                Res.get("user.paymentAccounts.headline") :
+                Res.get("user.paymentAccounts.noAccounts.headline")
+        );
 
-        selectedAccountPin = FxBindings.bind(model.selectedAccountProperty())
+        selectedAccountPin = FxBindings.bind(model.getSelectedAccount())
                 .to(accountService.selectedAccountAsObservable());
 
-        selectedAccountSubscription = EasyBind.subscribe(model.selectedAccountProperty(),
+        selectedAccountSubscription = EasyBind.subscribe(model.getSelectedAccount(),
                 selectedAccount -> {
-                    if (selectedAccount instanceof UserDefinedFiatAccount) {
-                        accountService.setSelectedAccount(selectedAccount);
-                        model.setAccountData(((UserDefinedFiatAccount) selectedAccount).getAccountPayload().getAccountData());
-                        updateButtonStates();
-                    } else {
-                        model.setAccountData("");
-                    }
+                    accountService.setSelectedAccount(selectedAccount);
+                    applyDataDisplay(selectedAccount);
+                    updateButtonStates();
                 });
-
-        accountDataSubscription = EasyBind.subscribe(model.accountDataProperty(),
-                accountData -> updateButtonStates());
     }
 
     @Override
     public void onDeactivate() {
-        selectedAccountSubscription.unsubscribe();
-        accountDataSubscription.unsubscribe();
-        accountsPin.unbind();
         selectedAccountPin.unbind();
+        selectedAccountSubscription.unsubscribe();
     }
 
     void onSelectAccount(Account<?, ? extends PaymentMethod<?>> account) {
         if (account != null) {
             accountService.setSelectedAccount(account);
+        }
+    }
+
+    private void applyDataDisplay(Account<?, ? extends PaymentMethod<?>> account) {
+        AccountPayload accountPayload = account.getAccountPayload();
+        model.setAccountPayload(accountPayload);
+        if (account.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
+
+            switch (fiatPaymentRail) {
+                case CUSTOM -> {
+                    model.getAccountDetailsGridPane().set(new UserDefinedAccountDetailsVBox((UserDefinedFiatAccountPayload) accountPayload));
+                }
+                case SEPA -> {
+                    model.getAccountDetailsGridPane().set(new SepaAccountDetailsVBox((SepaAccountPayload) accountPayload));
+                }
+                case SEPA_INSTANT -> {
+                }
+                case ZELLE -> {
+                }
+                case REVOLUT -> {
+                }
+                case WISE -> {
+                }
+                case NATIONAL_BANK -> {
+                }
+                case SWIFT -> {
+                }
+                case F2F -> {
+                    model.getAccountDetailsGridPane().set(new F2FAccountDetailsVBox((F2FAccountPayload) accountPayload));
+                }
+                case ACH_TRANSFER -> {
+                }
+                case PIX -> {
+                }
+                case FASTER_PAYMENTS -> {
+                }
+                case PAY_ID -> {
+                }
+                case US_POSTAL_MONEY_ORDER -> {
+                }
+                case CASH_BY_MAIL -> {
+                }
+                case STRIKE -> {
+                }
+                case INTERAC_E_TRANSFER -> {
+                }
+                case AMAZON_GIFT_CARD -> {
+                }
+                case CASH_DEPOSIT -> {
+                }
+                case UPI -> {
+                }
+                case BIZUM -> {
+                }
+                case CASH_APP -> {
+                }
+            }
         }
     }
 
@@ -114,42 +163,22 @@ public class PaymentAccountsController implements Controller {
         }
     }
 
-    void onSaveAccount() {
-        var selectedAccount = this.getSelectedAccount();
-        String accountName = selectedAccount.getAccountName();
-        model.getAccountData().ifPresent(accountData -> {
-            checkArgument(accountData.length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH,
-                    "Account data must not be longer than 1000 characters");
-            UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(accountName, accountData);
-            accountService.removePaymentAccount(selectedAccount);
-            accountService.addPaymentAccount(newAccount);
-            accountService.setSelectedAccount(newAccount);
-        });
-    }
-
     void onDeleteAccount() {
-        accountService.removePaymentAccount(this.getSelectedAccount());
+        accountService.removePaymentAccount(model.getSelectedAccount().get());
         maybeSelectFirstAccount();
     }
 
     private void updateButtonStates() {
         //todo
-        if (model.getSelectedAccount().isPresent() && model.getSelectedAccount().get() instanceof UserDefinedFiatAccount) {
-            model.setSaveButtonDisabled(model.getSelectedAccount().isEmpty()
-                    || model.getAccountData().isEmpty()
-                    || ((UserDefinedFiatAccount) model.getSelectedAccount().get()).getAccountPayload().getAccountData()
-                    .equals(model.getAccountData().get()));
-            model.setDeleteButtonDisabled(model.getSelectedAccount().isEmpty());
+        if (Optional.ofNullable(model.getSelectedAccount().get()).isPresent() &&
+                model.getSelectedAccount().get() instanceof UserDefinedFiatAccount) {
+            model.getDeleteButtonDisabled().set(model.getSelectedAccount().get() == null);
         }
     }
 
     private void maybeSelectFirstAccount() {
-        if (!model.getSortedAccounts().isEmpty() && accountService.getSelectedAccount().isEmpty()) {
+        if (!model.getSortedAccounts().isEmpty()) {
             accountService.setSelectedAccount(model.getSortedAccounts().get(0));
         }
-    }
-
-    private Account<?, ? extends PaymentMethod<?>> getSelectedAccount() throws NoSuchElementException {
-        return model.getSelectedAccount().orElseThrow(() -> new NoSuchElementException("There is no account selected."));
     }
 }

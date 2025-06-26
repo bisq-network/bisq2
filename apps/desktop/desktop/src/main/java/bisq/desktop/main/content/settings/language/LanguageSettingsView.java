@@ -129,8 +129,12 @@ public class LanguageSettingsView extends View<VBox, LanguageSettingsModel, Lang
         VBox.setMargin(languageSelection, insets);
         VBox.setMargin(supportedLanguageGridPane, insets);
         VBox contentBox = new VBox(50);
-        contentBox.getChildren().addAll(languageSelectionHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), languageSelection,
-                supportedLanguagesHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), supportedLanguageGridPane);
+        contentBox.getChildren().addAll(languageSelectionHeadline,
+                SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()),
+                languageSelection,
+                supportedLanguagesHeadline,
+                SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()),
+                supportedLanguageGridPane);
         contentBox.getStyleClass().add("bisq-common-bg");
         root.getChildren().add(contentBox);
         root.setPadding(new Insets(0, 40, 20, 40));

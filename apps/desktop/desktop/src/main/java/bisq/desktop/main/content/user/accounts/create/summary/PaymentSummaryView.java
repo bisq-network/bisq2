@@ -101,12 +101,12 @@ public class PaymentSummaryView extends View<VBox, PaymentSummaryModel, PaymentS
         risk.setText(model.getRisk());
         tradeLimit.setText(model.getTradeLimit());
 
-        gridPane.add(model.getDataDisplay().getViewRoot(), 0, rowIndex, 3, 1);
+        gridPane.add(model.getAccountDetailsGridPane(), 0, rowIndex, 3, 1);
     }
 
     @Override
     protected void onViewDetached() {
-        gridPane.getChildren().remove(model.getDataDisplay().getViewRoot());
+        gridPane.getChildren().remove(model.getAccountDetailsGridPane());
     }
 
     private Triple<Label, Button, VBox> getAccountNameElements(@Nullable String description) {
