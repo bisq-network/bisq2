@@ -98,7 +98,7 @@ public class I2pClient {
             i2pSession.connect();
 
             if (keepAliveTask == null || keepAliveTask.isCancelled()) {
-                keepAliveTask = keepAliveExecutor.scheduleAtFixedRate(() -> manager.ping(destination, (int) socketTimeout), 4, 4, TimeUnit.MINUTES);
+                keepAliveTask = keepAliveExecutor.scheduleAtFixedRate(() -> manager.ping(destination, 6000), 90, 90, TimeUnit.SECONDS);
             }
 
             Socket socket = manager.connectToSocket(destination, Math.toIntExact(socketTimeout));
