@@ -329,35 +329,35 @@
 }
 
 .split-button.dropdown-menu.dropdown-offer-list-direction-filter-menu .split-button-dropdown-label {
-    -fx-text-fill: -fx-light-text-color !important;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 /* BUY FROM */
 .split-button.dropdown-menu.dropdown-offer-list-direction-filter-menu.buy-from-offers .split-button-dropdown-label-box,
 .split-button.dropdown-menu.dropdown-offer-list-direction-filter-menu.buy-from-offers .split-button-dropdown-button {
-    -fx-background-color: -fx-default-button !important;
+    -fx-background-color: -fx-default-button;
 }
 
-.split-button.dropdown-menu.dropdown-offer-list-direction-filter-menu.buy-from-offers:hover .split-button-dropdown-button {
-    -fx-background-color: -bisq-green-hover !important;
+.split-button.dropdown-menu.dropdown-offer-list-direction-filter-menu.buy-from-offers .split-button-dropdown-button:hover {
+    -fx-background-color: -bisq-green-hover;
 }
 
-.split-button.dropdown-menu.dropdown-offer-list-direction-filter-menu.buy-from-offers:pressed .split-button-dropdown-button {
-    -fx-background-color: -bisq-green-pressed !important;
+.split-button.dropdown-menu.dropdown-offer-list-direction-filter-menu.buy-from-offers .split-button-dropdown-button:pressed {
+    -fx-background-color: -bisq-green-pressed;
 }
 
 /* SELL TO */
 .split-button.dropdown-menu.dropdown-offer-list-direction-filter-menu.sell-to-offers .split-button-dropdown-label-box,
 .split-button.dropdown-menu.dropdown-offer-list-direction-filter-menu.sell-to-offers .split-button-dropdown-button {
-    -fx-background-color: -fx-default-red-button !important;
+    -fx-background-color: -fx-default-red-button;
 }
 
-.split-button.dropdown-menu.dropdown-offer-list-direction-filter-menu.sell-to-offers:hover .split-button-dropdown-button {
-    -fx-background-color: -bisq-red-hover !important;
+.split-button.dropdown-menu.dropdown-offer-list-direction-filter-menu.sell-to-offers .split-button-dropdown-button:hover {
+    -fx-background-color: -bisq-red-hover;
 }
 
-.split-button.dropdown-menu.dropdown-offer-list-direction-filter-menu.sell-to-offers:pressed .split-button-dropdown-button {
-    -fx-background-color: -bisq-red-pressed !important;
+.split-button.dropdown-menu.dropdown-offer-list-direction-filter-menu.sell-to-offers .split-button-dropdown-button:pressed {
+    -fx-background-color: -bisq-red-pressed;
 }
 
 /* PAYMENT METHODS FILTER */

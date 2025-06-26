@@ -1267,7 +1267,7 @@
 
 .split-button.dropdown-menu {
     -fx-border-width: 0;
-    -fx-cursor: cursor;
+    -fx-cursor: default;
     -fx-padding: 0;
     -fx-font-size: 0.96em;
     -fx-font-family: "IBM Plex Sans";
@@ -1282,9 +1282,6 @@
     -fx-padding: 0 10 0 5;
     -fx-background-color: -bisq-dark-grey-50;
     -fx-cursor: hand;
-}
-
-.split-button.dropdown-menu .split-button-dropdown-label {
 }
 
 .split-button.dropdown-menu .split-button-dropdown-label-box {
