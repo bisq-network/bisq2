@@ -30,8 +30,8 @@ public class SplitButton extends DropdownMenu {
     private final VBox labelBox = new VBox(label);
     private final HBox button = new HBox();
 
-    public SplitButton() {
-        super("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
+    public SplitButton(String defaultIconId, String activeIconId) {
+        super(defaultIconId, activeIconId, false);
 
         double height = 18;
         setupButton(height);
@@ -39,6 +39,10 @@ public class SplitButton extends DropdownMenu {
         setupLabelBox(height);
         setupSplitButtonMenu(height);
         initialize();
+    }
+
+    public SplitButton() {
+        this("chevron-drop-menu-grey", "chevron-drop-menu-white");
     }
 
     private void initialize() {
@@ -83,7 +87,7 @@ public class SplitButton extends DropdownMenu {
         setMinHeight(height);
         setPrefHeight(height);
         getChildren().setAll(labelBox, button);
-        setSpacing(2);
+        setSpacing(1);
         getStyleClass().add("split-button");
     }
 

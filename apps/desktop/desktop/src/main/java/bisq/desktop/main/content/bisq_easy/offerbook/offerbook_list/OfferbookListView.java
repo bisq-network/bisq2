@@ -202,13 +202,15 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
 
         showBuyFromOffersPin = EasyBind.subscribe(model.getShowBuyOffers(), showBuyFromOffers -> {
             if (showBuyFromOffers != null) {
-//                offerDirectionFilterMenu.getLabel().getStyleClass().clear();
+                String sellToLabelStyleClass = "sell-to-offers";
+                String buyFromLabelStyleClass = "buy-from-offers";
+                offerDirectionFilterMenu.getStyleClass().removeAll(sellToLabelStyleClass, buyFromLabelStyleClass);
                 if (showBuyFromOffers) {
                     offerDirectionFilterMenu.getLabel().setText(sellToOffers.getLabelText());
-//                    offerDirectionFilterMenu.getLabel().getStyleClass().add("sell-to-offers");
+                    offerDirectionFilterMenu.getStyleClass().add(sellToLabelStyleClass);
                 } else {
                     offerDirectionFilterMenu.getLabel().setText(buyFromOffers.getLabelText());
-//                    offerDirectionFilterMenu.getLabel().getStyleClass().add("buy-from-offers");
+                    offerDirectionFilterMenu.getStyleClass().add(buyFromLabelStyleClass);
                 }
             }
         });
@@ -328,11 +330,12 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     }
 
     private SplitButton createAndGetOffersDirectionFilterMenu() {
-        SplitButton menu = new SplitButton();
+        SplitButton menu = new SplitButton("chevron-drop-menu-white", "chevron-drop-menu-white");
         menu.getStyleClass().add("dropdown-offer-list-direction-filter-menu");
         buyFromOffers = new DropdownBisqMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.buyFrom"));
         sellToOffers = new DropdownBisqMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.sellTo"));
         menu.addMenuItems(buyFromOffers, sellToOffers);
+        HBox.setMargin(menu, new Insets(0, 0, 0, 6));
         return menu;
     }
 
