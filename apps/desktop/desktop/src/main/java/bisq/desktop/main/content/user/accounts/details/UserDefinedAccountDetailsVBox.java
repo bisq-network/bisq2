@@ -15,17 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user;
+package bisq.desktop.main.content.user.accounts.details;
 
-import bisq.desktop.navigation.NavigationTarget;
-import bisq.desktop.main.content.ContentTabModel;
-import lombok.Getter;
+import bisq.account.accounts.UserDefinedFiatAccountPayload;
+import javafx.geometry.Insets;
 
-@Getter
-public class UserModel extends ContentTabModel {
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.PAYMENT_ACCOUNTS; //todo just for dev
-        //return NavigationTarget.USER_PROFILE;  //todo just for dev
+public class UserDefinedAccountDetailsVBox extends AccountDetailsVBox {
+    public UserDefinedAccountDetailsVBox(UserDefinedFiatAccountPayload accountPayload) {
+        super();
+
+        setPadding(new Insets(0));
+        getStyleClass().remove("bisq-content-bg");
+
+        addTextAreaValueWithCopyButton( accountPayload.getAccountData());
     }
 }

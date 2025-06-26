@@ -164,8 +164,8 @@ public class CreatePaymentAccountView extends NavigationView<VBox, CreatePayment
             progressLabelList.remove(options);
         }
 
-        nextButton.visibleProperty().bind(model.getCreateAccountButtonVisible().not());
-        nextButton.managedProperty().bind(model.getCreateAccountButtonVisible().not());
+        nextButton.visibleProperty().bind(model.getNextButtonVisible());
+        nextButton.managedProperty().bind(model.getNextButtonVisible());
         nextButton.disableProperty().bind(model.getNextButtonDisabled());
 
         backButton.visibleProperty().bind(model.getBackButtonVisible());

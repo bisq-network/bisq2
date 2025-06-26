@@ -18,11 +18,13 @@
 package bisq.desktop.main.content.user.accounts.create.summary;
 
 import bisq.common.data.Triple;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.HPos;
@@ -34,22 +36,31 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 
 @Slf4j
-public class PaymentSummaryView extends View<VBox, PaymentSummaryModel, PaymentSummaryController> {
+public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, PaymentSummaryController> {
     private final static int FEEDBACK_WIDTH = 700;
+    private static final double TOP_PANE_HEIGHT = 55;
     private static final double HEIGHT = 61;
     private final Label paymentMethod, risk, tradeLimit;
     private final GridPane gridPane;
+    private final VBox accountNameOverlay;
+    private final Button accountNameButton;
+    private final MaterialTextField accountNameField;
     private int rowIndex = 0;
+    private Subscription showAccountNameOverlayPin;
 
     public PaymentSummaryView(PaymentSummaryModel model, PaymentSummaryController controller) {
-        super(new VBox(), model, controller);
+        super(new StackPane(), model, controller);
 
         gridPane = new GridPane();
         gridPane.setHgap(10);
@@ -90,23 +101,52 @@ public class PaymentSummaryView extends View<VBox, PaymentSummaryModel, PaymentS
         gridPane.add(line2, 0, rowIndex, 3, 1);
         rowIndex++;
 
+        accountNameField = new MaterialTextField(Res.get("user.paymentAccounts.summary.accountNameOverlay.accountName.description"));
+        accountNameButton = new Button(Res.get("user.paymentAccounts.summary.accountNameOverlay.button"));
+        accountNameOverlay = new VBox(20);
+        configAccountNameOverlay();
+
         VBox.setMargin(gridPane, new Insets(40));
-        root.getChildren().addAll(gridPane);
+        StackPane.setMargin(accountNameOverlay, new Insets(-TOP_PANE_HEIGHT, 0, 0, 0));
+        root.getChildren().addAll(gridPane, accountNameOverlay);
     }
 
     @Override
     protected void onViewAttached() {
+        accountNameButton.disableProperty().bind(accountNameField.textProperty().isEmpty());
+
+        accountNameButton.setOnAction(e -> controller.onCreateAccount(accountNameField.getText()));
+
+        showAccountNameOverlayPin = EasyBind.subscribe(model.getShowAccountNameOverlay(),
+                show -> {
+                    accountNameOverlay.setVisible(show);
+                    if (show) {
+                        Transitions.blurStrong(gridPane, 0);
+                        Transitions.slideInTop(accountNameOverlay, 450);
+                        accountNameOverlay.requestFocus();
+                    } else {
+                        Transitions.removeEffect(gridPane);
+                    }
+                });
+
+        accountNameField.setText(model.getDefaultAccountName());
         paymentMethod.setText(model.getPaymentMethod().getDisplayString());
         paymentMethod.setTooltip(new BisqTooltip(model.getPaymentMethod().getDisplayString()));
         risk.setText(model.getRisk());
         tradeLimit.setText(model.getTradeLimit());
 
-        gridPane.add(model.getDataDisplay().getViewRoot(), 0, rowIndex, 3, 1);
+        gridPane.add(model.getAccountDetailsGridPane(), 0, rowIndex, 3, 1);
     }
 
     @Override
     protected void onViewDetached() {
-        gridPane.getChildren().remove(model.getDataDisplay().getViewRoot());
+        accountNameButton.disableProperty().unbind();
+
+        accountNameButton.setOnAction(null);
+
+        showAccountNameOverlayPin.unsubscribe();
+
+        gridPane.getChildren().remove(model.getAccountDetailsGridPane());
     }
 
     private Triple<Label, Button, VBox> getAccountNameElements(@Nullable String description) {
@@ -154,5 +194,41 @@ public class PaymentSummaryView extends View<VBox, PaymentSummaryModel, PaymentS
         line.setStyle("-fx-background-color: -bisq-border-color-grey");
         line.setPadding(new Insets(9, 0, 8, 0));
         return line;
+    }
+
+    private void configAccountNameOverlay() {
+        VBox contentBox = getFeedbackContentBox();
+
+        accountNameOverlay.setVisible(false);
+        accountNameOverlay.setAlignment(Pos.TOP_CENTER);
+
+        Label headlineLabel = new Label(Res.get("user.paymentAccounts.summary.accountNameOverlay.headline"));
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
+
+        Label subtitleLabel = new Label(Res.get("user.paymentAccounts.summary.accountNameOverlay.subTitle"));
+        configFeedbackSubtitleLabel(subtitleLabel);
+
+        accountNameButton.setDefaultButton(true);
+        VBox.setMargin(accountNameButton, new Insets(10, 0, 0, 0));
+        contentBox.getChildren().addAll(headlineLabel, subtitleLabel, accountNameField, accountNameButton);
+        accountNameOverlay.getChildren().addAll(contentBox, Spacer.fillVBox());
+    }
+
+    private VBox getFeedbackContentBox() {
+        VBox contentBox = new VBox(20);
+        contentBox.setAlignment(Pos.TOP_CENTER);
+        contentBox.getStyleClass().setAll("trade-wizard-feedback-bg");
+        contentBox.setPadding(new Insets(30));
+        contentBox.setMaxWidth(FEEDBACK_WIDTH);
+        return contentBox;
+    }
+
+    private void configFeedbackSubtitleLabel(Label subtitleLabel) {
+        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
+        subtitleLabel.setAlignment(Pos.CENTER);
+        subtitleLabel.setMinWidth(FEEDBACK_WIDTH - 200);
+        subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
+        subtitleLabel.setWrapText(true);
+        subtitleLabel.getStyleClass().add("bisq-text-21");
     }
 }

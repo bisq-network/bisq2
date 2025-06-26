@@ -78,7 +78,7 @@ public abstract class AccountPayload implements NetworkProto {
         };
     }
 
-    protected String getDefaultAccountName() {
+    public String getDefaultAccountName() {
         return paymentMethodName + "-" + id.substring(0, 4);
     }
 }
