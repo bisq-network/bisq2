@@ -24,7 +24,7 @@ class PixAccountTest {
                     .build())
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("PIX")
+                    .setPaymentRailName("PIX")
                     .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
                             .setCountryCode("US")
                             .setPixAccountPayload(bisq.account.protobuf.PixAccountPayload.newBuilder()

@@ -40,7 +40,7 @@ public final class PayIDAccountPayload extends AccountPayload {
         var payload = proto.getPayIDAccountPayload();
         return new PayIDAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
+                proto.getPaymentRailName(),
                 payload.getBankAccountName(),
                 payload.getPayId());
     }

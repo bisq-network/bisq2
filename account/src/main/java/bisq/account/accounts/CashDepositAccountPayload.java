@@ -57,7 +57,7 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
         var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
         return new CashDepositAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
+                proto.getPaymentRailName(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 toOptional(bankAccountPayload.getHolderName()),
                 toOptional(bankAccountPayload.getBankName()),

@@ -16,7 +16,7 @@ class SepaInstantAccountPayloadTest {
 
     private static final AccountPayload PROTO = AccountPayload.newBuilder()
             .setId("id")
-            .setPaymentMethodName("SEPA_INSTANT")
+            .setPaymentRailName("SEPA_INSTANT")
             .setCountryBasedAccountPayload(
                     CountryBasedAccountPayload.newBuilder()
                             .setCountryCode("DE")

@@ -46,7 +46,7 @@ public final class InteracETransferAccountPayload extends AccountPayload {
         var interactETransferAccountPayload = proto.getInteracETransferAccountPayload();
         return new InteracETransferAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
+                proto.getPaymentRailName(),
                 interactETransferAccountPayload.getEmail(),
                 interactETransferAccountPayload.getHolderName(),
                 interactETransferAccountPayload.getQuestion(),

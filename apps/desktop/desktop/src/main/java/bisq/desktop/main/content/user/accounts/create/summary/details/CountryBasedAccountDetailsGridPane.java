@@ -17,23 +17,14 @@
 
 package bisq.desktop.main.content.user.accounts.create.summary.details;
 
-import bisq.account.accounts.F2FAccountPayload;
+import bisq.account.accounts.CountryBasedAccountPayload;
+import bisq.common.locale.CountryRepository;
 import bisq.i18n.Res;
 
-public class F2FAccountDetailsGridPane extends CountryBasedAccountDetailsGridPane {
-    public F2FAccountDetailsGridPane(F2FAccountPayload accountPayload) {
-        super(accountPayload);
-
-        addDescriptionAndValue(Res.get("user.paymentAccounts.createAccount.accountData.f2f.city"),
-                accountPayload.getCity(),
-                ++rowIndex);
-
-        addDescriptionAndValue(Res.get("user.paymentAccounts.createAccount.accountData.f2f.contact"),
-                accountPayload.getContact(),
-                ++rowIndex);
-
-        addDescriptionAndValue(Res.get("user.paymentAccounts.createAccount.accountData.f2f.extraInfo"),
-                accountPayload.getExtraInfo(),
-                ++rowIndex);
+public class CountryBasedAccountDetailsGridPane extends AccountDetailsGridPane {
+    public CountryBasedAccountDetailsGridPane(CountryBasedAccountPayload accountPayload) {
+        addDescriptionAndValue(Res.get("user.paymentAccounts.createAccount.accountData.country"),
+                CountryRepository.getNameByCode(accountPayload.getCountryCode()),
+                rowIndex);
     }
 }

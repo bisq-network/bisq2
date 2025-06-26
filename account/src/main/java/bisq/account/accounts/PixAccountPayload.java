@@ -37,7 +37,7 @@ public final class PixAccountPayload extends CountryBasedAccountPayload {
         bisq.account.protobuf.PixAccountPayload pixAccountPayload = countryBasedAccountPayload.getPixAccountPayload();
         return new PixAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
+                proto.getPaymentRailName(),
                 countryBasedAccountPayload.getCountryCode(),
                 pixAccountPayload.getPixKey()
         );

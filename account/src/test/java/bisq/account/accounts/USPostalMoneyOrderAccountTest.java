@@ -21,7 +21,7 @@ class USPostalMoneyOrderAccountTest {
                                     FiatPaymentMethod.newBuilder()))
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("US_POSTAL_MONEY_ORDER")
+                    .setPaymentRailName("US_POSTAL_MONEY_ORDER")
                     .setUsPostalMoneyOrderAccountPayload(USPostalMoneyOrderAccountPayload.newBuilder()
                             .setPostalAddress("postalAddress")
                             .setHolderName("holderName")))

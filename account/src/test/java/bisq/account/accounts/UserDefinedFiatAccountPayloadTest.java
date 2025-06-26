@@ -10,7 +10,7 @@ class UserDefinedFiatAccountPayloadTest {
 
     private static final AccountPayload PROTO = AccountPayload.newBuilder()
             .setId("id")
-            .setPaymentMethodName("paymentMethodName")
+            .setPaymentRailName("paymentMethodName")
             .setUserDefinedFiatAccountPayload(UserDefinedFiatAccountPayload.newBuilder()
                     .setAccountData("custom data"))
             .build();

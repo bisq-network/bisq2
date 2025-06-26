@@ -36,7 +36,7 @@ public final class UpiAccountPayload extends CountryBasedAccountPayload {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         return new UpiAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
+                proto.getPaymentRailName(),
                 countryBasedAccountPayload.getCountryCode(),
                 countryBasedAccountPayload.getUpiAccountPayload().getVirtualPaymentAddress());
     }

@@ -27,7 +27,7 @@ class F2FAccountTest {
                     .build())
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("F2F")
+                    .setPaymentRailName("F2F")
                     .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
                             .setCountryCode("CO")
                             .setF2FAccountPayload(F2FAccountPayload.newBuilder()

@@ -73,7 +73,7 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
         var accountPayload = bankAccountPayload.getAchTransferAccountPayload();
         return new AchTransferAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
+                proto.getPaymentRailName(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 toOptional(bankAccountPayload.getHolderName()),
                 toOptional(bankAccountPayload.getBankName()),

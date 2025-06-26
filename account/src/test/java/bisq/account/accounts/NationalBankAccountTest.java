@@ -27,7 +27,7 @@ class NationalBankAccountTest {
                     .setFiatPaymentMethod(FiatPaymentMethod.newBuilder()))
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("NATIONAL_BANK")
+                    .setPaymentRailName("NATIONAL_BANK")
                     .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
                             .setCountryCode("US")
                             .setBankAccountPayload(BankAccountPayload.newBuilder()

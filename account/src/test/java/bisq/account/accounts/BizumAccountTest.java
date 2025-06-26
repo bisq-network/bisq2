@@ -25,7 +25,7 @@ class BizumAccountTest {
                     .setFiatPaymentMethod(FiatPaymentMethod.newBuilder()))
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("BIZUM")
+                    .setPaymentRailName("BIZUM")
                     .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
                             .setCountryCode("US")
                             .setBizumAccountPayload(BizumAccountPayload.newBuilder()

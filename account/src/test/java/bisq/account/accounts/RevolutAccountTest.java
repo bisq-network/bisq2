@@ -25,7 +25,7 @@ class RevolutAccountTest {
             .setRevolutAccount(RevolutAccount.newBuilder())
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("REVOLUT")
+                    .setPaymentRailName("REVOLUT")
                     .setRevolutAccountPayload(RevolutAccountPayload.newBuilder()
                             .setEmail("email")
                             .build())

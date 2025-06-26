@@ -21,7 +21,7 @@ class PayIDAccountTest {
                                     FiatPaymentMethod.newBuilder()))
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("PAY_ID")
+                    .setPaymentRailName("PAY_ID")
                     .setPayIDAccountPayload(PayIDAccountPayload.newBuilder()
                             .setBankAccountName("bankAccountName")
                             .setPayId("payId")))

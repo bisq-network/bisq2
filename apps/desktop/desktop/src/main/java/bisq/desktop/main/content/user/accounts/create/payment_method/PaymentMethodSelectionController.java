@@ -44,7 +44,6 @@ public class PaymentMethodSelectionController implements Controller {
     public PaymentMethodSelectionController() {
         List<PaymentMethodItem> items = FiatPaymentRailUtil.getPaymentRails().stream()
                 .filter(rail -> rail != FiatPaymentRail.CUSTOM)
-                .filter(FiatPaymentRail::isActive)
                 .map(FiatPaymentMethod::fromPaymentRail)
                 .map(PaymentMethodItem::new)
                 .collect(Collectors.toList());

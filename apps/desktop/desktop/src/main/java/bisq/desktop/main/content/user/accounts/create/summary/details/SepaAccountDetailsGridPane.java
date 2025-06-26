@@ -29,13 +29,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class SepaAccountDetailsGridPane extends AccountDetailsGridPane {
+public class SepaAccountDetailsGridPane extends CountryBasedAccountDetailsGridPane {
     public SepaAccountDetailsGridPane(SepaAccountPayload accountPayload) {
-        super();
-
-        addDescriptionAndValue(Res.get("user.paymentAccounts.createAccount.accountData.country"),
-                CountryRepository.getNameByCode(accountPayload.getCountryCode()),
-                rowIndex);
+        super(accountPayload);
 
         addDescriptionAndValue(Res.get("user.paymentAccounts.createAccount.accountData.sepa.holderName"),
                 accountPayload.getHolderName(),
@@ -52,7 +48,7 @@ public class SepaAccountDetailsGridPane extends AccountDetailsGridPane {
         String countryName = CountryRepository.getNameByCode(accountPayload.getCountryCode());
         List<String> acceptedCountryCodes = new ArrayList<>(accountPayload.getAcceptedCountryCodes());
         Collections.sort(acceptedCountryCodes);
-        List<String> allSepaCountries = new ArrayList<>(FiatPaymentRailUtil.getAllSepaCountries());
+        List<String> allSepaCountries = new ArrayList<>(FiatPaymentRailUtil.getAllSepaCountryCodes());
         Collections.sort(allSepaCountries);
         String acceptCountries;
         if (acceptedCountryCodes.equals(allSepaCountries)) {

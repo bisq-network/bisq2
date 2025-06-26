@@ -25,7 +25,7 @@ class UpiAccountTest {
                     .setFiatPaymentMethod(FiatPaymentMethod.newBuilder()))
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("UPI")
+                    .setPaymentRailName("UPI")
                     .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
                             .setCountryCode("US")
                             .setUpiAccountPayload(UpiAccountPayload.newBuilder()

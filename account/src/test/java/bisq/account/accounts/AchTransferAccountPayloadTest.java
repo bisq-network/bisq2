@@ -16,7 +16,7 @@ class AchTransferAccountPayloadTest {
 
     private static final AccountPayload PROTO = bisq.account.protobuf.AccountPayload.newBuilder()
             .setId("id")
-            .setPaymentMethodName("paymentMethodName")
+            .setPaymentRailName("paymentMethodName")
             .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
                     .setCountryCode("US")
                     .setBankAccountPayload(BankAccountPayload.newBuilder()
@@ -32,7 +32,7 @@ class AchTransferAccountPayloadTest {
 
     private static final AccountPayload PROTO_OPTIONALS_NOT_SET = bisq.account.protobuf.AccountPayload.newBuilder()
             .setId("id")
-            .setPaymentMethodName("paymentMethodName")
+            .setPaymentRailName("paymentMethodName")
             .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
                     .setCountryCode("US")
                     .setBankAccountPayload(BankAccountPayload.newBuilder()

@@ -68,7 +68,7 @@ public final class DomesticWireTransferAccountPayload extends BankAccountPayload
         var domesticWireTransferPayload = bankAccountPayload.getDomesticWireTransferAccountPayload();
         return new DomesticWireTransferAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
+                proto.getPaymentRailName(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 toOptional(bankAccountPayload.getHolderName()),
                 toOptional(bankAccountPayload.getBankName()),

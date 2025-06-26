@@ -45,11 +45,11 @@ public final class FasterPaymentsAccountPayload extends AccountPayload {
                 .setAccountNr(accountNr);
     }
 
-    public static FasterPaymentsAccountPayload fromProto(bisq.account.protobuf.AccountPayload account) {
-        var fasterPaymentsPayload = account.getFasterPaymentsAccountPayload();
+    public static FasterPaymentsAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+        var fasterPaymentsPayload = proto.getFasterPaymentsAccountPayload();
         return new FasterPaymentsAccountPayload(
-                account.getId(),
-                account.getPaymentMethodName(),
+                proto.getId(),
+                proto.getPaymentRailName(),
                 fasterPaymentsPayload.getSortCode(),
                 fasterPaymentsPayload.getAccountNr());
     }

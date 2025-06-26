@@ -125,7 +125,7 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
                 new HashSet<>(PaymentMethodUtil.getPaymentRails(protocolTyp, currencyCode));
         return persistableStore.getAccountByName().values().stream()
                 .filter(account -> paymentMethods.contains(account.getPaymentMethod().getPaymentRail()))
-                .filter(account -> account.getTradeCurrencyCodes().contains(currencyCode))
+                .filter(account -> account.getSupportedCurrencyCodes().contains(currencyCode))
                 .collect(Collectors.toList());
     }
 }

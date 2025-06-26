@@ -23,7 +23,6 @@ import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -51,6 +50,7 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
     private final static int FEEDBACK_WIDTH = 700;
     private static final double TOP_PANE_HEIGHT = 55;
     private static final double HEIGHT = 61;
+
     private final Label paymentMethod, risk, tradeLimit;
     private final GridPane gridPane;
     private final VBox accountNameOverlay;
@@ -131,7 +131,6 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
 
         accountNameField.setText(model.getDefaultAccountName());
         paymentMethod.setText(model.getPaymentMethod().getDisplayString());
-        paymentMethod.setTooltip(new BisqTooltip(model.getPaymentMethod().getDisplayString()));
         risk.setText(model.getRisk());
         tradeLimit.setText(model.getTradeLimit());
 

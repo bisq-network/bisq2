@@ -52,7 +52,7 @@ public class NationalBankAccountPayload extends BankAccountPayload {
         var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
         return new NationalBankAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
+                proto.getPaymentRailName(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 toOptional(bankAccountPayload.getHolderName()),
                 toOptional(bankAccountPayload.getBankName()),

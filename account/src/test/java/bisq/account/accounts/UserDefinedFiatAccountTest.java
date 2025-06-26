@@ -24,7 +24,7 @@ class UserDefinedFiatAccountTest {
                             .build())
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("accountName")
+                    .setPaymentRailName("accountName")
                     .setUserDefinedFiatAccountPayload(UserDefinedFiatAccountPayload.newBuilder()
                             .setAccountData("customData")
                             .build())

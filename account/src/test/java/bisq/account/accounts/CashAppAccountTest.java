@@ -37,7 +37,7 @@ class CashAppAccountTest {
                                     FiatPaymentMethod.newBuilder()))
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("CASH_APP")
+                    .setPaymentRailName("CASH_APP")
                     .setCashAppAccountPayload(bisq.account.protobuf.CashAppAccountPayload.newBuilder()
                             .setCashTag("cashTag")))
             .setCashAppAccount(bisq.account.protobuf.CashAppAccount.newBuilder())

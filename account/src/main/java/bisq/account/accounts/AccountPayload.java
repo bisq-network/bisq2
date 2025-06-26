@@ -34,17 +34,17 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 public abstract class AccountPayload implements NetworkProto {
     protected final String id;
-    protected final String paymentMethodName;
+    protected final String paymentRailName;
 
-    public AccountPayload(String id, String paymentMethodName) {
+    public AccountPayload(String id, String paymentRailName) {
         this.id = id;
-        this.paymentMethodName = paymentMethodName;
+        this.paymentRailName = paymentRailName;
     }
 
     @Override
     public void verify() {
         NetworkDataValidation.validateId(id);
-        NetworkDataValidation.validateText(paymentMethodName, 100);
+        NetworkDataValidation.validateText(paymentRailName, 100);
     }
 
     @Override
@@ -60,7 +60,7 @@ public abstract class AccountPayload implements NetworkProto {
     protected bisq.account.protobuf.AccountPayload.Builder getAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.AccountPayload.newBuilder()
                 .setId(id)
-                .setPaymentMethodName(paymentMethodName);
+                .setPaymentRailName(paymentRailName);
     }
 
     public static AccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
@@ -79,6 +79,6 @@ public abstract class AccountPayload implements NetworkProto {
     }
 
     public String getDefaultAccountName() {
-        return paymentMethodName + "-" + id.substring(0, 4);
+        return paymentRailName + "-" + id.substring(0, 4);
     }
 }

@@ -35,11 +35,11 @@ public class ZelleAccountPayload extends AccountPayload {
                 .setHolderName(holderName);
     }
 
-    public static ZelleAccountPayload fromProto(bisq.account.protobuf.AccountPayload accountPayload) {
-        var zelleProto = accountPayload.getZelleAccountPayload();
+    public static ZelleAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+        var zelleProto = proto.getZelleAccountPayload();
         return new ZelleAccountPayload(
-                accountPayload.getId(),
-                accountPayload.getPaymentMethodName(),
+                proto.getId(),
+                proto.getPaymentRailName(),
                 zelleProto.getEmailOrMobileNr(),
                 zelleProto.getHolderName()
         );

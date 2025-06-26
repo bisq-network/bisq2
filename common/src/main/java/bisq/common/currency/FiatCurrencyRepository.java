@@ -113,6 +113,10 @@ public class FiatCurrencyRepository {
         return currencyByCode.get(code);
     }
 
+    public static List<FiatCurrency> getCurrencyByCodes(List<String> codes) {
+        return codes.stream().map(e -> currencyByCode.get(e)).collect(Collectors.toList());
+    }
+
     public static Optional<String> findName(String code) {
         return Optional.ofNullable(currencyByCode.get(code)).map(TradeCurrency::getName);
     }
@@ -122,7 +126,9 @@ public class FiatCurrencyRepository {
     }
 
     public static List<String> getAllFiatCurrencyCodes() {
-        return getAllCurrencies().stream().map(e -> e.getCurrency().getCurrencyCode()).collect(Collectors.toList());
+        return getAllCurrencies().stream()
+                .map(e -> e.getCurrency().getCurrencyCode())
+                .collect(Collectors.toList());
     }
 
 

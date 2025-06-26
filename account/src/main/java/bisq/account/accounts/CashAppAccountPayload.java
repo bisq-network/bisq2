@@ -52,6 +52,6 @@ public final class CashAppAccountPayload extends AccountPayload {
     }
 
     public static CashAppAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        return new CashAppAccountPayload(proto.getId(), proto.getPaymentMethodName(), proto.getCashAppAccountPayload().getCashTag());
+        return new CashAppAccountPayload(proto.getId(), proto.getPaymentRailName(), proto.getCashAppAccountPayload().getCashTag());
     }
 }

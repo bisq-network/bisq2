@@ -41,7 +41,7 @@ public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPaylo
                 countryBasedAccountPayload.getAmazonGiftCardAccountPayload();
         return new AmazonGiftCardAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
+                proto.getPaymentRailName(),
                 countryBasedAccountPayload.getCountryCode(),
                 amazonGiftCardAccountPayload.getEmailOrMobileNr()
         );

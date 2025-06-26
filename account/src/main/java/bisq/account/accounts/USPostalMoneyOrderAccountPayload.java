@@ -40,7 +40,7 @@ public final class USPostalMoneyOrderAccountPayload extends AccountPayload {
         var usPostalOrderMoneyPayload = proto.getUsPostalMoneyOrderAccountPayload();
         return new USPostalMoneyOrderAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
+                proto.getPaymentRailName(),
                 usPostalOrderMoneyPayload.getPostalAddress(),
                 usPostalOrderMoneyPayload.getHolderName()
         );

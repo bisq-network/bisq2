@@ -26,7 +26,7 @@ class AchTransferAccountTest {
                     .setFiatPaymentMethod(FiatPaymentMethod.newBuilder()))
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("ACH_TRANSFER")
+                    .setPaymentRailName("ACH_TRANSFER")
                     .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
                             .setCountryCode("US")
                             .setBankAccountPayload(BankAccountPayload.newBuilder()

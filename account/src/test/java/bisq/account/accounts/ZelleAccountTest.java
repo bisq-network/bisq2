@@ -21,7 +21,7 @@ class ZelleAccountTest {
                             .build())
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("ZELLE")
+                    .setPaymentRailName("ZELLE")
                     .setZelleAccountPayload(ZelleAccountPayload.newBuilder()
                             .setEmailOrMobileNr("email")
                             .setHolderName("holderName")

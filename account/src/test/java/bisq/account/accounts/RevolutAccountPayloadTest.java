@@ -10,7 +10,7 @@ class RevolutAccountPayloadTest {
 
     private static final AccountPayload PROTO = AccountPayload.newBuilder()
             .setId("id")
-            .setPaymentMethodName("paymentMethodName")
+            .setPaymentRailName("paymentMethodName")
             .setRevolutAccountPayload(RevolutAccountPayload.newBuilder()
                     .setEmail("email"))
             .build();

@@ -67,7 +67,7 @@ public class PaymentSummaryController implements Controller {
 
         if (model.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
             model.setRisk(fiatPaymentRail.getChargebackRisk().getDisplayString());
-            model.setTradeLimit(getTradeLimit(fiatPaymentRail));
+            model.setTradeLimit(fiatPaymentRail.getTradeLimit());
             AccountDetailsGridPane accountDetailsGridPane = getAccountDetailsGridPane(accountPayload, fiatPaymentRail);
             model.setAccountDetailsGridPane(accountDetailsGridPane);
         }
@@ -182,21 +182,6 @@ public class PaymentSummaryController implements Controller {
             };*/
         } else {
             throw new UnsupportedOperationException("Unsupported paymentRail " + model.getPaymentMethod().getPaymentRail());
-        }
-    }
-
-    private String getTradeLimit(FiatPaymentRail fiatPaymentRail) {
-        //todo
-        switch (fiatPaymentRail.getChargebackRisk()) {
-            case VERY_LOW -> {
-                return "10000 USD";
-            }
-            case LOW -> {
-                return "5000 USD";
-            }
-            default -> {
-                return "2500 USD";
-            }
         }
     }
 }

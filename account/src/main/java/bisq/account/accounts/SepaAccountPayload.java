@@ -62,10 +62,10 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
         super.verify();
 
         NetworkDataValidation.validateRequiredText(holderName, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);
-        SepaPaymentAccountValidation.validateSepaIbanFormat(iban, FiatPaymentRailUtil.getAllSepaCountries());
+        SepaPaymentAccountValidation.validateSepaIbanFormat(iban, FiatPaymentRailUtil.getAllSepaCountryCodes());
         SepaPaymentAccountValidation.validateBicFormat(bic);
         PaymentAccountValidation.validateCountryCodes(acceptedCountryCodes,
-                FiatPaymentRailUtil.getAllSepaCountries(),
+                FiatPaymentRailUtil.getAllSepaCountryCodes(),
                 "SEPA payments");
         SepaPaymentAccountValidation.validateIbanCountryConsistency(iban, getCountryCode());
         acceptedCountryCodes.forEach(NetworkDataValidation::validateRequiredCode);
@@ -93,7 +93,7 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         bisq.account.protobuf.SepaAccountPayload sepaAccountPayload = countryBasedAccountPayload.getSepaAccountPayload();
         return new SepaAccountPayload(proto.getId(),
-                proto.getPaymentMethodName(),
+                proto.getPaymentRailName(),
                 sepaAccountPayload.getHolderName(),
                 sepaAccountPayload.getIban(),
                 sepaAccountPayload.getBic(),
@@ -103,6 +103,6 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
 
     @Override
     public String getDefaultAccountName() {
-        return paymentMethodName + "-" + StringUtils.truncate(iban, 8);
+        return paymentRailName + "-" + StringUtils.truncate(iban, 8);
     }
 }

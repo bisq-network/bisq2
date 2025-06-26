@@ -36,7 +36,7 @@ public final class BizumAccountPayload extends CountryBasedAccountPayload {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         return new BizumAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
+                proto.getPaymentRailName(),
                 countryBasedAccountPayload.getCountryCode(),
                 countryBasedAccountPayload.getBizumAccountPayload().getMobileNr());
     }

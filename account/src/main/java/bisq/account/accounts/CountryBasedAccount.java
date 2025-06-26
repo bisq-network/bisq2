@@ -18,12 +18,16 @@
 package bisq.account.accounts;
 
 import bisq.account.payment_method.PaymentMethod;
+import bisq.common.currency.TradeCurrency;
 import bisq.common.locale.Country;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Date;
+import java.util.List;
 
 @Getter
 @Slf4j
@@ -36,6 +40,22 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, 
                                M paymentMethod,
                                P payload) {
         super(accountName, paymentMethod, payload);
+        this.country = payload.getCountry();
+    }
+
+    public CountryBasedAccount(String accountName,
+                               M paymentMethod,
+                               P payload,
+                               TradeCurrency selectedCurrency) {
+        super(new Date().getTime(), accountName, paymentMethod, payload, selectedCurrency);
+        this.country = payload.getCountry();
+    }
+
+    public CountryBasedAccount(String accountName,
+                               M paymentMethod,
+                               P payload,
+                               List<? extends TradeCurrency> tradeCurrencies) {
+        super(new Date().getTime(), accountName, paymentMethod, payload, tradeCurrencies);
         this.country = payload.getCountry();
     }
 

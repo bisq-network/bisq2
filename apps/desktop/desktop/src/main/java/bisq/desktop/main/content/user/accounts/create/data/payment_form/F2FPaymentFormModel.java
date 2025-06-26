@@ -44,6 +44,7 @@ public class F2FPaymentFormModel extends PaymentFormModel {
     private final ObjectProperty<Country> selectedCountry = new SimpleObjectProperty<>();
     private final BooleanProperty countryErrorVisible = new SimpleBooleanProperty();
     private final BooleanProperty requireValidation = new SimpleBooleanProperty();
+    private final StringProperty selectedCurrencyCode = new SimpleStringProperty("USD"); //todo
     private final StringProperty city = new SimpleStringProperty();
     private final StringProperty contact = new SimpleStringProperty();
     private final StringProperty extraInfo = new SimpleStringProperty();

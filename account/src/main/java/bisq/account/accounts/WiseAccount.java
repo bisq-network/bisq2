@@ -29,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class WiseAccount extends CountryBasedAccount<WiseAccountPayload, FiatPaymentMethod> {
-
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.WISE);
 
     public WiseAccount(String accountName, WiseAccountPayload payload) {

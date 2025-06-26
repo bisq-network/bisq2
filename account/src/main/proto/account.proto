@@ -72,7 +72,7 @@ message StablecoinPaymentMethod {
 // AccountPayload
 message AccountPayload {
   string id = 1;
-  string paymentMethodName = 2;
+  string paymentRailName = 2;
   oneof message {
     ZelleAccountPayload zelleAccountPayload = 19;
     UserDefinedFiatAccountPayload userDefinedFiatAccountPayload = 20;
@@ -90,7 +90,8 @@ message UserDefinedFiatAccountPayload {
   string accountData = 2;
 }
 message RevolutAccountPayload {
-  string email = 2;
+  repeated string acceptedCurrencyCodes = 1;
+  string userName = 2;
 }
 message CountryBasedAccountPayload {
   string countryCode = 1;
@@ -122,15 +123,16 @@ message SepaInstantAccountPayload {
 }
 
 message WiseAccountPayload {
-  string email = 1;
-  string holderName = 2;
-  string beneficiaryAddress = 3;
+  repeated string currencyCodesForReceivingFunds = 1;
+  string email = 2;
+  string holderName = 3;
 }
 
 message F2FAccountPayload {
-  string contact = 1;
-  string city = 2;
-  string extra_info = 3;
+  string selectedCurrencyCode = 1;
+  string contact = 2;
+  string city = 3;
+  string extra_info = 4;
 }
 
 message AchTransferAccountPayload {
@@ -138,6 +140,7 @@ message AchTransferAccountPayload {
 }
 
 message NationalBankAccountPayload {
+  string selectedCurrencyCode = 1;
 }
 
 message SameBankAccountPayload {
@@ -190,9 +193,10 @@ message USPostalMoneyOrderAccountPayload {
 }
 
 message CashByMailAccountPayload {
-  string postal_address = 1;
-  string contact = 2;
-  string extra_info = 3;
+  string selectedCurrencyCode = 1;
+  string postal_address = 2;
+  string contact = 3;
+  string extra_info = 4;
 }
 
 message StrikeAccountPayload {
@@ -211,7 +215,8 @@ message AmazonGiftCardAccountPayload {
 }
 
 message CashDepositAccountPayload {
-  string requirements = 1;
+  string selectedCurrencyCode = 1;
+  string requirements = 2;
 }
 
 message UpiAccountPayload {
@@ -232,7 +237,6 @@ message Account {
   string accountName = 2;
   AccountPayload accountPayload = 3;
   PaymentMethod paymentMethod = 4;
-  common.TradeCurrency selectedTradeCurrency = 6;
 
   oneof message {
     ZelleAccount zelleAccount = 19;

@@ -21,7 +21,7 @@ class CashByMailAccountTest {
                                     FiatPaymentMethod.newBuilder()))
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("CASH_BY_MAIL")
+                    .setPaymentRailName("CASH_BY_MAIL")
                     .setCashByMailAccountPayload(CashByMailAccountPayload.newBuilder()
                             .setPostalAddress("postalAddress")
                             .setContact("contact")

@@ -22,16 +22,23 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class RevolutAccountPayload extends AccountPayload {
-    private final String email;
+    private final List<String> acceptedCurrencyCodes;
+    private final String userName;
 
-    public RevolutAccountPayload(String id, String paymentMethodName, String email) {
+    public RevolutAccountPayload(String id,
+                                 String paymentMethodName,
+                                 List<String> acceptedCurrencyCodes,
+                                 String userName) {
         super(id, paymentMethodName);
-        this.email = email;
+        this.acceptedCurrencyCodes = acceptedCurrencyCodes;
+        this.userName = userName;
     }
 
     @Override
@@ -46,10 +53,15 @@ public final class RevolutAccountPayload extends AccountPayload {
 
     private bisq.account.protobuf.RevolutAccountPayload.Builder getRevolutAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.RevolutAccountPayload.newBuilder()
-                .setEmail(email);
+                .addAllAcceptedCurrencyCodes(acceptedCurrencyCodes)
+                .setUserName(userName);
     }
 
     public static RevolutAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        return new RevolutAccountPayload(proto.getId(), proto.getPaymentMethodName(), proto.getRevolutAccountPayload().getEmail());
+        bisq.account.protobuf.RevolutAccountPayload revolutAccountPayload = proto.getRevolutAccountPayload();
+        return new RevolutAccountPayload(proto.getId(),
+                proto.getPaymentRailName(),
+                revolutAccountPayload.getAcceptedCurrencyCodesList(),
+                revolutAccountPayload.getUserName());
     }
 }

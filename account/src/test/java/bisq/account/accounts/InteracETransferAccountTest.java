@@ -21,7 +21,7 @@ class InteracETransferAccountTest {
                                     FiatPaymentMethod.newBuilder()))
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("INTERAC_E_TRANSFER")
+                    .setPaymentRailName("INTERAC_E_TRANSFER")
                     .setInteracETransferAccountPayload(InteracETransferAccountPayload.newBuilder()
                             .setEmail("email")
                             .setHolderName("holderName")

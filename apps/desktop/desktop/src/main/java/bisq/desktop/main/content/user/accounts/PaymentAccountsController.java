@@ -20,9 +20,9 @@ package bisq.desktop.main.content.user.accounts;
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.F2FAccountPayload;
-import bisq.account.accounts.SepaAccountPayload;
-import bisq.account.accounts.UserDefinedFiatAccountPayload;
+import bisq.account.accounts.F2FAccount;
+import bisq.account.accounts.SepaAccount;
+import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.observable.Pin;
@@ -167,22 +167,22 @@ public class PaymentAccountsController implements Controller {
 
         AccountPayload accountPayload = account.getAccountPayload();
         if (account.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
-            AccountDetailsVBox detailsVBox = getAccountDetailsVBox(accountPayload, fiatPaymentRail);
+            AccountDetailsVBox detailsVBox = getAccountDetailsVBox(account, fiatPaymentRail);
             model.getAccountDetailsGridPane().set(detailsVBox);
         }
     }
 
-    private AccountDetailsVBox getAccountDetailsVBox(AccountPayload accountPayload, FiatPaymentRail fiatPaymentRail) {
+    private AccountDetailsVBox getAccountDetailsVBox(Account<?, ? extends PaymentMethod<?>> account, FiatPaymentRail fiatPaymentRail) {
         return switch (fiatPaymentRail) {
-            case CUSTOM -> new UserDefinedAccountDetailsVBox((UserDefinedFiatAccountPayload) accountPayload);
-            case SEPA -> new SepaAccountDetailsVBox((SepaAccountPayload) accountPayload);
+            case CUSTOM -> new UserDefinedAccountDetailsVBox((UserDefinedFiatAccount) account);
+            case SEPA -> new SepaAccountDetailsVBox((SepaAccount) account);
             case SEPA_INSTANT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case ZELLE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case REVOLUT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case NATIONAL_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case F2F -> new F2FAccountDetailsVBox((F2FAccountPayload) accountPayload);
+            case F2F -> new F2FAccountDetailsVBox((F2FAccount) account);
             case ACH_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case PIX -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case FASTER_PAYMENTS -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);

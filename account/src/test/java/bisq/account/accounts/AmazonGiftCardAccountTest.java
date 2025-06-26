@@ -26,7 +26,7 @@ class AmazonGiftCardAccountTest {
                     .build())
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("AMAZON_GIFT_CARD")
+                    .setPaymentRailName("AMAZON_GIFT_CARD")
                     .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
                             .setCountryCode("US")
                             .setAmazonGiftCardAccountPayload(AmazonGiftCardAccountPayload.newBuilder()

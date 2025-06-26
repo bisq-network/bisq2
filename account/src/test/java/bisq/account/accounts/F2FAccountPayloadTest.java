@@ -29,7 +29,7 @@ class F2FAccountPayloadTest {
         AccountPayload proto = payload.toProto(false);
 
         assertEquals(VALID_ID, proto.getId());
-        assertEquals(VALID_PAYMENT_METHOD, proto.getPaymentMethodName());
+        assertEquals(VALID_PAYMENT_METHOD, proto.getPaymentRailName());
 
         CountryBasedAccountPayload countryBasedProto = proto.getCountryBasedAccountPayload();
         assertEquals(VALID_COUNTRY_CODE, countryBasedProto.getCountryCode());
@@ -44,7 +44,7 @@ class F2FAccountPayloadTest {
         AccountPayload roundTripProto = fromProto.toProto(false);
 
         assertEquals(proto.getId(), roundTripProto.getId());
-        assertEquals(proto.getPaymentMethodName(), roundTripProto.getPaymentMethodName());
+        assertEquals(proto.getPaymentRailName(), roundTripProto.getPaymentRailName());
 
         CountryBasedAccountPayload roundTripCountryProto = roundTripProto.getCountryBasedAccountPayload();
         assertEquals(countryBasedProto.getCountryCode(), roundTripCountryProto.getCountryCode());

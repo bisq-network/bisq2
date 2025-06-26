@@ -35,7 +35,7 @@ public final class StrikeAccountPayload extends CountryBasedAccountPayload {
     public static StrikeAccountPayload fromProto(AccountPayload proto) {
         return new StrikeAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
+                proto.getPaymentRailName(),
                 proto.getCountryBasedAccountPayload().getCountryCode(),
                 proto.getCountryBasedAccountPayload().getStrikeAccountPayload().getHolderName());
     }

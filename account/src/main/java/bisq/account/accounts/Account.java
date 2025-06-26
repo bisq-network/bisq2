@@ -26,9 +26,9 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
 import java.util.Date;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.List;
 
 /**
  * Account is only stored locally and never shared with the peer. It can contain sensitive data.
@@ -46,13 +46,29 @@ public abstract class Account<P extends AccountPayload, M extends PaymentMethod<
     public Account(String accountName,
                    M paymentMethod,
                    P accountPayload) {
-        this(new Date().getTime(), accountName, paymentMethod, accountPayload);
+        this(new Date().getTime(), accountName, paymentMethod, accountPayload, paymentMethod.getSupportedCurrencies());
     }
 
     public Account(long creationDate,
                    String accountName,
                    M paymentMethod,
                    P accountPayload) {
+        this(creationDate, accountName, paymentMethod, accountPayload, paymentMethod.getSupportedCurrencies());
+    }
+
+    public Account(long creationDate,
+                   String accountName,
+                   M paymentMethod,
+                   P accountPayload,
+                   TradeCurrency selectedCurrency) {
+        this(creationDate, accountName, paymentMethod, accountPayload, Collections.singletonList(selectedCurrency));
+    }
+
+    public Account(long creationDate,
+                   String accountName,
+                   M paymentMethod,
+                   P accountPayload,
+                   List<? extends TradeCurrency> selectedCurrencies) {
         this.creationDate = creationDate;
         this.accountName = accountName;
         this.accountPayload = accountPayload;
@@ -93,7 +109,24 @@ public abstract class Account<P extends AccountPayload, M extends PaymentMethod<
         };
     }
 
-    public Set<String> getTradeCurrencyCodes() {
-        return paymentMethod.getTradeCurrencies().stream().map(TradeCurrency::getCode).collect(Collectors.toSet());
+    // Delegates
+    public List<String> getSupportedCurrencyCodes() {
+        return paymentMethod.getSupportedCurrencyCodes();
+    }
+
+    public List<String> getSupportedCurrencyDisplayNameAndCode() {
+        return paymentMethod.getSupportedCurrencyDisplayNameAndCode();
+    }
+
+    public String getSupportedCurrencyCodesAsDisplayString() {
+        return paymentMethod.getSupportedCurrencyCodesAsDisplayString();
+    }
+
+    public String getSupportedCurrencyDisplayNameAndCodeAsDisplayString() {
+        return paymentMethod.getSupportedCurrencyDisplayNameAndCodeAsDisplayString();
+    }
+
+    public String getSupportedCurrencyDisplayNameAndCodeAsDisplayString(String delimiter) {
+        return paymentMethod.getSupportedCurrencyDisplayNameAndCodeAsDisplayString(", ");
     }
 }

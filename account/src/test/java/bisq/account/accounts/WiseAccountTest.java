@@ -44,7 +44,7 @@ class WiseAccountTest {
                     .setFiatPaymentMethod(FiatPaymentMethod.newBuilder()))
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("WISE")
+                    .setPaymentRailName("WISE")
                     .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
                             .setCountryCode("GB")
                             .setWiseAccountPayload(WiseAccountPayload.newBuilder()

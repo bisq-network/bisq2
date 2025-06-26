@@ -13,7 +13,7 @@ class NationalBankAccountPayloadTest {
 
     private static final bisq.account.protobuf.AccountPayload PROTO = bisq.account.protobuf.AccountPayload.newBuilder()
             .setId("id")
-            .setPaymentMethodName("paymentMethodName")
+            .setPaymentRailName("paymentMethodName")
             .setCountryBasedAccountPayload(bisq.account.protobuf.CountryBasedAccountPayload.newBuilder()
                     .setCountryCode("US")
                     .setBankAccountPayload(bisq.account.protobuf.BankAccountPayload.newBuilder()
@@ -30,7 +30,7 @@ class NationalBankAccountPayloadTest {
 
     private static final AccountPayload PROTO_OPTIONALS_NOT_SET = bisq.account.protobuf.AccountPayload.newBuilder()
             .setId("id")
-            .setPaymentMethodName("paymentMethodName")
+            .setPaymentRailName("paymentMethodName")
             .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
                     .setCountryCode("US")
                     .setBankAccountPayload(BankAccountPayload.newBuilder()

@@ -33,7 +33,7 @@ class WiseAccountPayloadTest {
 
     private static final AccountPayload PROTO = AccountPayload.newBuilder()
             .setId("id")
-            .setPaymentMethodName("WISE")
+            .setPaymentRailName("WISE")
             .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
                     .setCountryCode("GB")
                     .setWiseAccountPayload(WiseAccountPayload.newBuilder()
@@ -44,7 +44,7 @@ class WiseAccountPayloadTest {
 
     private static final AccountPayload PROTO_OPTIONAL_FIELDS_NOT_SET = AccountPayload.newBuilder()
             .setId("id")
-            .setPaymentMethodName("WISE")
+            .setPaymentRailName("WISE")
             .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
                     .setCountryCode("GB")
                     .setWiseAccountPayload(WiseAccountPayload.newBuilder()

@@ -24,7 +24,7 @@ class SepaAccountPayloadTest {
 
     private static final AccountPayload PROTO = AccountPayload.newBuilder()
             .setId(VALID_ID)
-            .setPaymentMethodName(VALID_PAYMENT_METHOD)
+            .setPaymentRailName(VALID_PAYMENT_METHOD)
             .setCountryBasedAccountPayload(
                     CountryBasedAccountPayload.newBuilder()
                             .setCountryCode(VALID_COUNTRY_CODE)
@@ -191,7 +191,7 @@ class SepaAccountPayloadTest {
     @Test
     void testGetters() {
         assertEquals(VALID_ID, PAYLOAD.getId());
-        assertEquals(VALID_PAYMENT_METHOD, PAYLOAD.getPaymentMethodName());
+        assertEquals(VALID_PAYMENT_METHOD, PAYLOAD.getPaymentRailName());
         assertEquals(VALID_HOLDER_NAME, PAYLOAD.getHolderName());
         assertEquals(VALID_IBAN, PAYLOAD.getIban());
         assertEquals(VALID_BIC, PAYLOAD.getBic());

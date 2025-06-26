@@ -44,7 +44,7 @@ public class SepaPaymentFormController extends PaymentFormController<SepaPayment
 
     @Override
     protected SepaPaymentFormModel createModel() {
-        List<Country> allSepaCountries = FiatPaymentRailUtil.getAllSepaCountries().stream()
+        List<Country> allSepaCountries = FiatPaymentRailUtil.getAllSepaCountryCodes().stream()
                 .map(CountryRepository::getCountry)
                 .sorted(Comparator.comparing(Country::getName))
                 .collect(Collectors.toList());

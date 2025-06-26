@@ -54,6 +54,6 @@ public final class UserDefinedFiatAccountPayload extends AccountPayload {
     }
 
     public static UserDefinedFiatAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        return new UserDefinedFiatAccountPayload(proto.getId(), proto.getPaymentMethodName(), proto.getUserDefinedFiatAccountPayload().getAccountData());
+        return new UserDefinedFiatAccountPayload(proto.getId(), proto.getPaymentRailName(), proto.getUserDefinedFiatAccountPayload().getAccountData());
     }
 }

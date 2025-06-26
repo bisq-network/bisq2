@@ -29,7 +29,7 @@ class CashDepositAccountTest {
                     .setFiatPaymentMethod(FiatPaymentMethod.newBuilder()))
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("CASH_DEPOSIT")
+                    .setPaymentRailName("CASH_DEPOSIT")
                     .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
                             .setCountryCode("US")
                             .setBankAccountPayload(BankAccountPayload.newBuilder()

@@ -21,7 +21,7 @@ class FasterPaymentsAccountTest {
                                     FiatPaymentMethod.newBuilder()))
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("FASTER_PAYMENTS")
+                    .setPaymentRailName("FASTER_PAYMENTS")
                     .setFasterPaymentsAccountPayload(FasterPaymentsAccountPayload.newBuilder()
                             .setSortCode("sortCode")
                             .setAccountNr("accountNr")))

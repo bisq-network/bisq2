@@ -24,7 +24,7 @@ class StrikeAccountTest {
                     .setFiatPaymentMethod(FiatPaymentMethod.newBuilder()))
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("STRIKE")
+                    .setPaymentRailName("STRIKE")
                     .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
                             .setCountryCode("US")
                             .setStrikeAccountPayload(StrikeAccountPayload.newBuilder()

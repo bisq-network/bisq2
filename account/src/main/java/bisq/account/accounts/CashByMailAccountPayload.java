@@ -43,7 +43,7 @@ public final class CashByMailAccountPayload extends AccountPayload {
         var cashByMailPayload = proto.getCashByMailAccountPayload();
         return new CashByMailAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
+                proto.getPaymentRailName(),
                 cashByMailPayload.getPostalAddress(),
                 cashByMailPayload.getContact(),
                 cashByMailPayload.getExtraInfo()

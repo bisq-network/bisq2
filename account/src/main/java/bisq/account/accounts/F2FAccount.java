@@ -12,12 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class F2FAccount extends CountryBasedAccount<F2FAccountPayload, FiatPaymentMethod> {
-
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.F2F);
-
-    public F2FAccount(F2FAccountPayload payload) {
-        this(payload.getDefaultAccountName(), payload);
-    }
 
     public F2FAccount(String accountName, F2FAccountPayload payload) {
         super(accountName, PAYMENT_METHOD, payload);

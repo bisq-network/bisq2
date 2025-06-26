@@ -17,15 +17,15 @@
 
 package bisq.desktop.main.content.user.accounts.details;
 
+import bisq.account.accounts.F2FAccount;
 import bisq.account.accounts.F2FAccountPayload;
-import bisq.common.locale.CountryRepository;
 import bisq.i18n.Res;
 
-public class F2FAccountDetailsVBox extends AccountDetailsVBox {
-    public F2FAccountDetailsVBox(F2FAccountPayload accountPayload) {
-        addDescriptionAndValue(Res.get("user.paymentAccounts.createAccount.accountData.country"),
-                CountryRepository.getNameByCode(accountPayload.getCountryCode()));
+public class F2FAccountDetailsVBox extends CountyBasedAccountDetailsVBox {
+    public F2FAccountDetailsVBox(F2FAccount account) {
+        super(account);
 
+        F2FAccountPayload accountPayload = account.getAccountPayload();
         addDescriptionAndValue(Res.get("user.paymentAccounts.createAccount.accountData.f2f.city"),
                 accountPayload.getCity());
 

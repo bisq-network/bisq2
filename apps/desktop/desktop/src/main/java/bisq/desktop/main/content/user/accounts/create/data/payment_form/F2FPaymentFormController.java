@@ -72,6 +72,7 @@ public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFo
         return new F2FAccountPayload(model.getId(),
                 FiatPaymentRail.F2F.name(),
                 model.getSelectedCountry().get().getCode(),
+                model.getSelectedCurrencyCode().get(),
                 model.getCity().get(),
                 model.getContact().get(),
                 model.getExtraInfo().get());

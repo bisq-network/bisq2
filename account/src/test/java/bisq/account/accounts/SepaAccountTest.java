@@ -26,7 +26,7 @@ class SepaAccountTest {
                     .setFiatPaymentMethod(FiatPaymentMethod.newBuilder()))
             .setAccountPayload(AccountPayload.newBuilder()
                     .setId("id")
-                    .setPaymentMethodName("SEPA")
+                    .setPaymentRailName("SEPA")
                     .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
                             .setCountryCode("DE")
                             .setSepaAccountPayload(SepaAccountPayload.newBuilder()

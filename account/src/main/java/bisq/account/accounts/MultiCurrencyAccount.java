@@ -15,16 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.details;
+package bisq.account.accounts;
 
-import bisq.account.accounts.UserDefinedFiatAccount;
-import bisq.i18n.Res;
-
-public class UserDefinedAccountDetailsVBox extends AccountDetailsVBox {
-    public UserDefinedAccountDetailsVBox(UserDefinedFiatAccount account) {
-        super(account);
-
-        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.createAccount.accountData.userDefined.accountData"),
-                account.getAccountPayload().getAccountData());
-    }
+public interface MultiCurrencyAccount {
 }

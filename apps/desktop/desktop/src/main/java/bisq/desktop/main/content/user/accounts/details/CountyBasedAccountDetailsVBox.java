@@ -17,14 +17,17 @@
 
 package bisq.desktop.main.content.user.accounts.details;
 
-import bisq.account.accounts.UserDefinedFiatAccount;
+import bisq.account.accounts.CountryBasedAccount;
+import bisq.common.locale.CountryRepository;
 import bisq.i18n.Res;
+import lombok.extern.slf4j.Slf4j;
 
-public class UserDefinedAccountDetailsVBox extends AccountDetailsVBox {
-    public UserDefinedAccountDetailsVBox(UserDefinedFiatAccount account) {
+@Slf4j
+public class CountyBasedAccountDetailsVBox extends AccountDetailsVBox {
+    public CountyBasedAccountDetailsVBox(CountryBasedAccount<?, ?> account) {
         super(account);
 
-        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.createAccount.accountData.userDefined.accountData"),
-                account.getAccountPayload().getAccountData());
+        addDescriptionAndValue(Res.get("user.paymentAccounts.createAccount.accountData.country"),
+                CountryRepository.getNameByCode(account.getAccountPayload().getCountryCode()));
     }
 }
