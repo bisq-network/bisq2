@@ -84,73 +84,7 @@ public class PaymentDataController implements Controller {
     public PaymentFormController<?, ?, ?> createController(PaymentMethod<?> paymentMethod) {
         PaymentRail paymentRail = paymentMethod.getPaymentRail();
         if (paymentRail instanceof FiatPaymentRail fiatPaymentRail) {
-            return switch (fiatPaymentRail) {
-                case CUSTOM -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                case SEPA -> new SepaPaymentFormController(serviceProvider);
-                case SEPA_INSTANT -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                case ZELLE -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                case REVOLUT -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                case WISE -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                case NATIONAL_BANK -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                case SWIFT -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                case F2F -> new F2FPaymentFormController(serviceProvider);
-                case ACH_TRANSFER -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                case PIX -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                case FASTER_PAYMENTS -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                case PAY_ID -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                case US_POSTAL_MONEY_ORDER -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                case CASH_BY_MAIL -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                case STRIKE -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                case INTERAC_E_TRANSFER -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                case AMAZON_GIFT_CARD -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                case CASH_DEPOSIT -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                case UPI -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                case BIZUM -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                case CASH_APP -> {
-                    throw new UnsupportedOperationException("Not implemented yet");
-                }
-                default -> {
-                    throw new UnsupportedOperationException("No implementation found for " + fiatPaymentRail);
-                }
-            };
+            return getFiatPaymentFormController(fiatPaymentRail);
         } else if (paymentRail instanceof CryptoPaymentRail cryptoPaymentRail) {
             {
                 throw new UnsupportedOperationException("CryptoPaymentRail not implemented yet");
@@ -158,5 +92,32 @@ public class PaymentDataController implements Controller {
         } else {
             throw new UnsupportedOperationException("No implementation found for " + paymentRail.name());
         }
+    }
+
+    private PaymentFormController<?, ?, ?> getFiatPaymentFormController(FiatPaymentRail fiatPaymentRail) {
+        return switch (fiatPaymentRail) {
+            case CUSTOM -> throw new UnsupportedOperationException("Not implemented yet");
+            case SEPA -> new SepaPaymentFormController(serviceProvider);
+            case SEPA_INSTANT -> throw new UnsupportedOperationException("Not implemented yet");
+            case ZELLE -> throw new UnsupportedOperationException("Not implemented yet");
+            case REVOLUT -> throw new UnsupportedOperationException("Not implemented yet");
+            case WISE -> throw new UnsupportedOperationException("Not implemented yet");
+            case NATIONAL_BANK -> throw new UnsupportedOperationException("Not implemented yet");
+            case SWIFT -> throw new UnsupportedOperationException("Not implemented yet");
+            case F2F -> new F2FPaymentFormController(serviceProvider);
+            case ACH_TRANSFER -> throw new UnsupportedOperationException("Not implemented yet");
+            case PIX -> throw new UnsupportedOperationException("Not implemented yet");
+            case FASTER_PAYMENTS -> throw new UnsupportedOperationException("Not implemented yet");
+            case PAY_ID -> throw new UnsupportedOperationException("Not implemented yet");
+            case US_POSTAL_MONEY_ORDER -> throw new UnsupportedOperationException("Not implemented yet");
+            case CASH_BY_MAIL -> throw new UnsupportedOperationException("Not implemented yet");
+            case STRIKE -> throw new UnsupportedOperationException("Not implemented yet");
+            case INTERAC_E_TRANSFER -> throw new UnsupportedOperationException("Not implemented yet");
+            case AMAZON_GIFT_CARD -> throw new UnsupportedOperationException("Not implemented yet");
+            case CASH_DEPOSIT -> throw new UnsupportedOperationException("Not implemented yet");
+            case UPI -> throw new UnsupportedOperationException("Not implemented yet");
+            case BIZUM -> throw new UnsupportedOperationException("Not implemented yet");
+            case CASH_APP -> throw new UnsupportedOperationException("Not implemented yet");
+        };
     }
 }

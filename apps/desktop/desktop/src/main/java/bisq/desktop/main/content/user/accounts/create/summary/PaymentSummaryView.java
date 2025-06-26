@@ -25,7 +25,6 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.HPos;
@@ -50,6 +49,7 @@ import javax.annotation.Nullable;
 @Slf4j
 public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, PaymentSummaryController> {
     private final static int FEEDBACK_WIDTH = 700;
+    private static final double TOP_PANE_HEIGHT = 55;
     private static final double HEIGHT = 61;
     private final Label paymentMethod, risk, tradeLimit;
     private final GridPane gridPane;
@@ -107,7 +107,7 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
         configAccountNameOverlay();
 
         VBox.setMargin(gridPane, new Insets(40));
-        StackPane.setMargin(accountNameOverlay, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
+        StackPane.setMargin(accountNameOverlay, new Insets(-TOP_PANE_HEIGHT, 0, 0, 0));
         root.getChildren().addAll(gridPane, accountNameOverlay);
     }
 

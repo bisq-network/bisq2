@@ -40,7 +40,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, PaymentAccountsController> {
     private final Label headline;
-    private final Button createButton2, createButton1, deletedButton;
+    private final Button createButtonWithAccounts, createButtonNoAccounts, deletedButton;
     private final AutoCompleteComboBox<Account<?, ?>> comboBox;
     private final HBox comboBoxAndCreateButtonHBox;
     private final VBox noAccountsVBox;
@@ -73,11 +73,11 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
         VBox.setMargin(whySetupNote, new Insets(10, 0, 15, 0));
         noAccountsVBox = new VBox(20, noAccountsInfo, whySetup, whySetupInfo, whySetupNote);
 
-        createButton1 = new Button(Res.get("user.paymentAccounts.createAccount"));
-        createButton1.setDefaultButton(true);
+        createButtonNoAccounts = new Button(Res.get("user.paymentAccounts.createAccount"));
+        createButtonNoAccounts.setDefaultButton(true);
 
-        createButton2 = new Button(Res.get("user.paymentAccounts.createAccount"));
-        createButton2.getStyleClass().add("outlined-button");
+        createButtonWithAccounts = new Button(Res.get("user.paymentAccounts.createAccount"));
+        createButtonWithAccounts.getStyleClass().add("outlined-button");
 
         comboBox = new AutoCompleteComboBox<>(model.getSortedAccounts(), Res.get("user.paymentAccounts.selectAccount"));
         comboBox.setPrefWidth(230);
@@ -93,7 +93,7 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
             }
         });
 
-        comboBoxAndCreateButtonHBox = new HBox(20, comboBox, Spacer.fillHBox(), createButton2);
+        comboBoxAndCreateButtonHBox = new HBox(20, comboBox, Spacer.fillHBox(), createButtonWithAccounts);
 
         deletedButton = new Button(Res.get("user.paymentAccounts.deleteAccount"));
 
@@ -103,7 +103,7 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
         contentBox.getChildren().addAll(headline,
                 SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()),
                 noAccountsVBox,
-                createButton1,
+                createButtonNoAccounts,
                 comboBoxAndCreateButtonHBox,
                 accountDisplayPane,
                 deletedButton);
@@ -118,8 +118,8 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
         headline.textProperty().bind(model.getHeadline());
         deletedButton.disableProperty().bind(model.getDeleteButtonDisabled());
 
-        createButton1.setOnAction(e -> controller.onCreateAccount());
-        createButton2.setOnAction(e -> controller.onCreateAccount());
+        createButtonNoAccounts.setOnAction(e -> controller.onCreateAccount());
+        createButtonWithAccounts.setOnAction(e -> controller.onCreateAccount());
         deletedButton.setOnAction(e -> controller.onDeleteAccount());
 
         comboBox.setOnChangeConfirmed(e -> {
@@ -135,8 +135,8 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
             headline.setManaged(!noAccountsSetup);
             noAccountsVBox.setVisible(noAccountsSetup);
             noAccountsVBox.setManaged(noAccountsSetup);
-            createButton1.setVisible(noAccountsSetup);
-            createButton1.setManaged(noAccountsSetup);
+            createButtonNoAccounts.setVisible(noAccountsSetup);
+            createButtonNoAccounts.setManaged(noAccountsSetup);
 
             boolean anyAccountSetup = !noAccountsSetup;
             comboBoxAndCreateButtonHBox.setVisible(anyAccountSetup);
@@ -160,8 +160,8 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
         headline.textProperty().unbind();
         deletedButton.disableProperty().unbind();
 
-        createButton1.setOnAction(null);
-        createButton2.setOnAction(null);
+        createButtonNoAccounts.setOnAction(null);
+        createButtonWithAccounts.setOnAction(null);
         deletedButton.setOnAction(null);
 
         comboBox.setOnChangeConfirmed(null);
