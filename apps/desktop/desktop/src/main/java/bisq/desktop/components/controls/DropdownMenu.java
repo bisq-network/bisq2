@@ -45,19 +45,19 @@ import java.util.Collection;
 public class DropdownMenu extends HBox {
     public static final Double INITIAL_WIDTH = 24.0;
 
-    private ImageView defaultIcon, activeIcon;
     @Getter
     private final BooleanProperty isMenuShowing = new SimpleBooleanProperty(false);
-    private final ContextMenu contextMenu = new ContextMenu();
     @Getter
     private final HBox hBox = new HBox();
-    private ImageView buttonIcon;
     private boolean isFirstRun = false;
     @Setter
     private boolean openUpwards = false;
     @Setter
     private boolean openToTheRight = false;
     private Double prefWidth = null;
+    protected ImageView defaultIcon, activeIcon;
+    protected ImageView buttonIcon;
+    protected final ContextMenu contextMenu = new ContextMenu();
 
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Window> windowListener;
@@ -141,18 +141,6 @@ public class DropdownMenu extends HBox {
         getChildren().setAll(hBox, Spacer.fillHBox(), buttonIcon);
     }
 
-    private void toggleContextMenu() {
-        if (!contextMenu.isShowing()) {
-            contextMenu.setAnchorLocation(getAnchorLocation());
-            Bounds bounds = localToScreen(getBoundsInLocal());
-            double x = openToTheRight ? bounds.getMinX() : bounds.getMaxX();
-            double y = openUpwards ? bounds.getMinY() - 3 : bounds.getMaxY() + 3;
-            contextMenu.show(this, x, y);
-        } else {
-            contextMenu.hide();
-        }
-    }
-
     public void addMenuItems(Collection<? extends MenuItem> items) {
         contextMenu.getItems().addAll(items);
     }
@@ -178,6 +166,26 @@ public class DropdownMenu extends HBox {
     public void setTooltip(Tooltip tooltip) {
         if (tooltip != null) {
             Tooltip.install(this, tooltip);
+        }
+    }
+
+    protected void toggleContextMenu() {
+        if (!contextMenu.isShowing()) {
+            contextMenu.setAnchorLocation(getAnchorLocation());
+            Bounds bounds = localToScreen(getBoundsInLocal());
+            double x = openToTheRight ? bounds.getMinX() : bounds.getMaxX();
+            double y = openUpwards ? bounds.getMinY() - 3 : bounds.getMaxY() + 3;
+            contextMenu.show(this, x, y);
+        } else {
+            contextMenu.hide();
+        }
+    }
+
+    protected void updateIcon(ImageView newIcon) {
+        if (buttonIcon != newIcon) {
+            getChildren().remove(buttonIcon);
+            buttonIcon = newIcon;
+            getChildren().add(buttonIcon);
         }
     }
 
@@ -213,14 +221,6 @@ public class DropdownMenu extends HBox {
             if (item instanceof DropdownMenuItem dropdownMenuItem) {
                 dropdownMenuItem.updateWidth(prefWidth);
             }
-        }
-    }
-
-    private void updateIcon(ImageView newIcon) {
-        if (buttonIcon != newIcon) {
-            getChildren().remove(buttonIcon);
-            buttonIcon = newIcon;
-            getChildren().add(buttonIcon);
         }
     }
 

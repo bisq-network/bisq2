@@ -324,7 +324,6 @@
 }
 
 /* OFFER LIST FILTERS */
-.dropdown-offer-list-direction-filter-menu,
 .dropdown-offer-list-payment-filter-menu {
     -fx-max-height: 20;
 }
