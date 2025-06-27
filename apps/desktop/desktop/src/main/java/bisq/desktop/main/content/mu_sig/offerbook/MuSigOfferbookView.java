@@ -688,7 +688,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         myOffersToggleButton.getStyleClass().add("offerlist-toggle-button-my-offers");
 
         offerFiltersToggleGroup = new ToggleGroup();
-        offerFiltersToggleGroup.getToggles().addAll(allOffersToggleButton, buyToggleButton, sellToggleButton, myOffersToggleButton);
+        offerFiltersToggleGroup.getToggles().addAll(buyToggleButton, sellToggleButton, allOffersToggleButton, myOffersToggleButton);
         HBox toggleButtonHBox = new HBox(3, buyToggleButton, sellToggleButton, allOffersToggleButton, myOffersToggleButton);
         toggleButtonHBox.getStyleClass().add("mu-sig-offerbook-offerlist-toggle-button-hbox");
 
