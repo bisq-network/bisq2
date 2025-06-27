@@ -1,5 +1,7 @@
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -15,7 +17,6 @@ import static bisq.common.util.OptionalUtils.toOptional;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class NationalBankAccountPayload extends BankAccountPayload {
-
     public NationalBankAccountPayload(String id,
                                       String countryCode,
                                       Optional<String> holderName,
@@ -66,5 +67,10 @@ public class NationalBankAccountPayload extends BankAccountPayload {
                 toOptional(bankAccountPayload.getHolderTaxId()),
                 toOptional(bankAccountPayload.getBankId()),
                 toOptional(bankAccountPayload.getNationalAccountId()));
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.NATIONAL_BANK);
     }
 }

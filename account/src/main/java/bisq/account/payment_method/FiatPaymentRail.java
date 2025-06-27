@@ -160,9 +160,19 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             allCurrencies(),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
+    //todo
+    SAME_BANK(allCountries(),
+            allCurrencies(),
+            FiatPaymentMethodChargebackRisk.MODERATE),
+
     SWIFT(allCountries(),
             allCurrencies(),
             FiatPaymentMethodChargebackRisk.LOW),
+
+    //todo
+    DOMESTIC_WIRE_TRANSFER(allCountries(),
+            allCurrencies(),
+            FiatPaymentMethodChargebackRisk.MODERATE),
 
     // Trans national
 

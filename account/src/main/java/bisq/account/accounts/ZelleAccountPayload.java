@@ -1,6 +1,7 @@
 package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -43,5 +44,10 @@ public class ZelleAccountPayload extends AccountPayload<FiatPaymentMethod> {
                 zelleProto.getEmailOrMobileNr(),
                 zelleProto.getHolderName()
         );
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ZELLE);
     }
 }

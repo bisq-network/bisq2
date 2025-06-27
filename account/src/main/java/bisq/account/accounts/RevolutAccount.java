@@ -32,8 +32,6 @@ import java.util.List;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class RevolutAccount extends Account<FiatPaymentMethod, RevolutAccountPayload> {
-    private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.REVOLUT);
-
     public RevolutAccount(String accountName,
                           List<String> acceptedCurrencyCodes,
                           String userName) {

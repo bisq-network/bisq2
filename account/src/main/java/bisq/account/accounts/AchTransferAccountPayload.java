@@ -1,5 +1,7 @@
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -16,7 +18,6 @@ import static bisq.common.util.OptionalUtils.toOptional;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class AchTransferAccountPayload extends BankAccountPayload {
-
     private final Optional<String> holderAddress;
 
     public AchTransferAccountPayload(String id,
@@ -77,5 +78,10 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
                 toOptional(bankAccountPayload.getAccountNr()),
                 toOptional(bankAccountPayload.getAccountType()),
                 toOptional(accountPayload.getHolderAddress()));
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER);
     }
 }

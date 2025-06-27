@@ -17,6 +17,8 @@
 
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -81,5 +83,10 @@ public final class SameBankAccountPayload extends NationalBankAccountPayload {
                 toOptional(bankAccountPayload.getHolderTaxId()),
                 toOptional(bankAccountPayload.getBankId()),
                 toOptional(bankAccountPayload.getNationalAccountId()));
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SAME_BANK);
     }
 }

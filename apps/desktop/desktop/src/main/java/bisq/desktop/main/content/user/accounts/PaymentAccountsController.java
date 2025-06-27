@@ -186,6 +186,7 @@ public class PaymentAccountsController implements Controller {
             case REVOLUT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case NATIONAL_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case SAME_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case F2F -> new F2FAccountDetailsVBox((F2FAccount) account);
             case ACH_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
@@ -204,6 +205,7 @@ public class PaymentAccountsController implements Controller {
             case UPI -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case BIZUM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case DOMESTIC_WIRE_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
         };
     }
 }

@@ -17,6 +17,8 @@
 
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -100,5 +102,10 @@ public final class DomesticWireTransferAccountPayload extends BankAccountPayload
         var builder = bisq.account.protobuf.DomesticWireTransferAccountPayload.newBuilder();
         holderAddress.ifPresent(builder::setHolderAddress);
         return builder;
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.DOMESTIC_WIRE_TRANSFER);
     }
 }

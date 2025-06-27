@@ -39,41 +39,12 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
     protected final long creationDate;
     protected final String accountName;
     protected final P accountPayload;
-    // protected final M paymentMethod;
-
-   /* public Account(String accountName,
-                   M paymentMethod,
-                   P accountPayload) {
-        this(new Date().getTime(), accountName, paymentMethod, accountPayload, paymentMethod.getSupportedCurrencies());
-    }*/
 
     public Account(String accountName,
                    P accountPayload) {
         this(new Date().getTime(), accountName, accountPayload);
     }
 
- /*   public Account(long creationDate,
-                   String accountName,
-                   P accountPayload) {
-        this(creationDate, accountName,  accountPayload, paymentMethod.getSupportedCurrencies());
-    }*/
-
-  /*  public Account(long creationDate,
-                   String accountName,
-                  *//* M paymentMethod,*//*
-                   P accountPayload,
-                   TradeCurrency selectedCurrency) {
-        this(creationDate, accountName, accountPayload, Collections.singletonList(selectedCurrency));
-    }*/
-
-    public Account(long creationDate,
-                   String accountName,
-                   M paymentMethod,
-                   P accountPayload) {
-        this.creationDate = creationDate;
-        this.accountName = accountName;
-        this.accountPayload = accountPayload;
-    }
 
     public Account(long creationDate,
                    String accountName,
@@ -121,7 +92,6 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
         return accountPayload.getPaymentMethod();
     }
 
-    // Delegates
     public List<String> getSupportedCurrencyCodes() {
         return getPaymentMethod().getSupportedCurrencyCodes();
     }

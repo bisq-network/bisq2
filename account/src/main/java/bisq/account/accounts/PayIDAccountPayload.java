@@ -1,6 +1,7 @@
 package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -11,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class PayIDAccountPayload extends AccountPayload<FiatPaymentMethod> {
-
     private final String bankAccountName;
     private final String payID;
 
@@ -43,5 +43,10 @@ public final class PayIDAccountPayload extends AccountPayload<FiatPaymentMethod>
                 proto.getId(),
                 payload.getBankAccountName(),
                 payload.getPayId());
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.PAY_ID);
     }
 }

@@ -18,6 +18,7 @@
 package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.PaymentAccountValidation;
 import lombok.EqualsAndHashCode;
@@ -32,7 +33,6 @@ import java.util.List;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class WiseAccountPayload extends CountryBasedAccountPayload implements MultiCurrencyAccountPayload {
-
     private final List<String> selectedCurrencyCodes;
     private final String email;
     private final String holderName;
@@ -86,5 +86,10 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
                 .addAllSelectedCurrencyCodes(selectedCurrencyCodes)
                 .setEmail(email)
                 .setHolderName(holderName);
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.WISE);
     }
 }

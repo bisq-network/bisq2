@@ -82,6 +82,6 @@ public class F2FAccountPayload extends CountryBasedAccountPayload implements Sel
 
     @Override
     public String getDefaultAccountName() {
-        return paymentRailName + "-" + countryCode + "/" + StringUtils.truncate(city, 5);
+        return getPaymentMethodName() + "-" + countryCode + "/" + StringUtils.truncate(city, 5);
     }
 }

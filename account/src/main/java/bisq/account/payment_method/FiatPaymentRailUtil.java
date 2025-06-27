@@ -177,7 +177,7 @@ public class FiatPaymentRailUtil {
     }
 
     public static List<Country> getAmazonGiftCardsCountries() {
-        return countriesFromCodes(getWiseCountryCodes());
+        return countriesFromCodes(getAmazonGiftCardsCountryCodes());
     }
 
     public static List<String> getAmazonGiftCardsCurrencyCodes() {

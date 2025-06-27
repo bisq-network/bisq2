@@ -37,17 +37,15 @@ import java.util.Optional;
 @EqualsAndHashCode
 public abstract class AccountPayload<M extends PaymentMethod<?>> implements NetworkProto {
     protected final String id;
-    protected transient final String paymentRailName;
 
     public AccountPayload(String id) {
         this.id = id;
-        this.paymentRailName = getPaymentMethod().getName();
     }
 
     @Override
     public void verify() {
         NetworkDataValidation.validateId(id);
-        NetworkDataValidation.validateText(paymentRailName, 100);
+        NetworkDataValidation.validateText(getPaymentMethodName(), 100);
     }
 
     @Override
@@ -81,13 +79,16 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
         };
     }
 
-    public M getPaymentMethod() {
-        return null;
+    public abstract M getPaymentMethod();
+
+    public String getPaymentMethodName() {
+        return getPaymentMethod().getName();
     }
 
     public String getDefaultAccountName() {
-        return paymentRailName + "-" + id.substring(0, 4);
+        return getPaymentMethodName() + "-" + id.substring(0, 4);
     }
+
     public Optional<String> getCurrencyCode() {
         if (this instanceof SelectableCurrencyAccountPayload selectableCurrencyAccountPayload) {
             return Optional.of(selectableCurrencyAccountPayload.getSelectedCurrencyCode());

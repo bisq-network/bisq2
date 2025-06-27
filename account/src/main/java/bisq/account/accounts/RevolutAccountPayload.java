@@ -18,6 +18,7 @@
 package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -62,5 +63,10 @@ public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMetho
         return new RevolutAccountPayload(proto.getId(),
                 revolutAccountPayload.getSelectedCurrencyCodesList(),
                 revolutAccountPayload.getUserName());
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.REVOLUT);
     }
 }

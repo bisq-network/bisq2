@@ -29,9 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class CashAppAccount extends Account<FiatPaymentMethod,CashAppAccountPayload> {
-
-    private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.CASH_APP);
-
     public CashAppAccount(String accountName, CashAppAccountPayload cashAppAccountPayload) {
         super(accountName, cashAppAccountPayload);
     }

@@ -1,5 +1,7 @@
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
@@ -16,7 +18,6 @@ import static bisq.common.util.OptionalUtils.toOptional;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class CashDepositAccountPayload extends BankAccountPayload {
-
     private final String requirements;
 
     public CashDepositAccountPayload(String id, String countryCode,
@@ -67,5 +68,10 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
                 toOptional(bankAccountPayload.getBankId()),
                 toOptional(bankAccountPayload.getNationalAccountId()),
                 bankAccountPayload.getCashDepositAccountPayload().getRequirements());
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.CASH_DEPOSIT);
     }
 }

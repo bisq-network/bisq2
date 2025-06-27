@@ -113,7 +113,7 @@ public class PaymentSummaryController implements Controller {
     public void onDeactivate() {
     }
 
-    private AccountDetailsGridPane getAccountDetailsGridPane(AccountPayload accountPayload,
+    private AccountDetailsGridPane<?,?> getAccountDetailsGridPane(AccountPayload<?> accountPayload,
                                                              FiatPaymentRail fiatPaymentRail) {
         return switch (fiatPaymentRail) {
             case CUSTOM -> throw new UnsupportedOperationException("FiatPaymentRail.CUSTOM is not supported");
@@ -123,6 +123,7 @@ public class PaymentSummaryController implements Controller {
             case REVOLUT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case NATIONAL_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case SAME_BANK ->throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case F2F -> new F2FAccountDetailsGridPane((F2FAccountPayload) accountPayload, fiatPaymentRail);
             case ACH_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
@@ -141,6 +142,7 @@ public class PaymentSummaryController implements Controller {
             case UPI -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case BIZUM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case DOMESTIC_WIRE_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
         };
     }
 
@@ -156,6 +158,7 @@ public class PaymentSummaryController implements Controller {
                 case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case NATIONAL_BANK ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case SAME_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case F2F -> new F2FAccount(accountName, (F2FAccountPayload) model.getAccountPayload());
                 case ACH_TRANSFER ->
@@ -178,6 +181,7 @@ public class PaymentSummaryController implements Controller {
                 case UPI -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case BIZUM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case DOMESTIC_WIRE_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             };
         } else if (model.getPaymentMethod().getPaymentRail() instanceof CryptoPaymentRail cryptoPaymentRail) {
             throw new UnsupportedOperationException("Unsupported paymentRail " + model.getPaymentMethod().getPaymentRail());

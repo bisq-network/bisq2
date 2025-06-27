@@ -1,14 +1,9 @@
 package bisq.account.accounts;
 
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
 public final class AchTransferAccount extends BankAccount<AchTransferAccountPayload> {
-
-    private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER);
-
     public AchTransferAccount(String accountName, AchTransferAccountPayload payload) {
         super(accountName, payload);
     }
