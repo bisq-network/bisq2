@@ -18,7 +18,6 @@
 package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.common.util.StringUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,22 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class UserDefinedFiatAccount extends Account<UserDefinedFiatAccountPayload, FiatPaymentMethod> {
-    private static FiatPaymentMethod PAYMENT_METHOD;
-
-    private static FiatPaymentMethod getPaymentMethod(String accountName) {
-        if (PAYMENT_METHOD == null) {
-            PAYMENT_METHOD = FiatPaymentMethod.fromCustomName(accountName);
-        }
-        return PAYMENT_METHOD;
-    }
-
-    public UserDefinedFiatAccount(String accountName, String accountData) {
-        this(accountName, new UserDefinedFiatAccountPayload(StringUtils.createUid(), getPaymentMethod(accountName).getName(), accountData));
-    }
-
-    private UserDefinedFiatAccount(String accountName, UserDefinedFiatAccountPayload userDefinedFiatAccountPayload) {
-        super(accountName, getPaymentMethod(accountName), userDefinedFiatAccountPayload);
+public final class UserDefinedFiatAccount extends Account<FiatPaymentMethod, UserDefinedFiatAccountPayload> {
+    public UserDefinedFiatAccount(String accountName, UserDefinedFiatAccountPayload accountPayload) {
+        super(accountName, accountPayload);
     }
 
     @Override

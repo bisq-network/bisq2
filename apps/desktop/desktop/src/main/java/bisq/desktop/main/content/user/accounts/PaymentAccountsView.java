@@ -83,12 +83,12 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
         comboBox.setPrefWidth(230);
         comboBox.setConverter(new StringConverter<>() {
             @Override
-            public String toString(Account<?, ? extends PaymentMethod<?>> account) {
+            public String toString(Account<? extends PaymentMethod<?>, ?> account) {
                 return account != null ? account.getAccountName() : "";
             }
 
             @Override
-            public Account<?, ? extends PaymentMethod<?>> fromString(String string) {
+            public Account<? extends PaymentMethod<?>, ?> fromString(String string) {
                 return null;
             }
         });

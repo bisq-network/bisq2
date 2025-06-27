@@ -11,12 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class CashByMailAccount extends Account<CashByMailAccountPayload, FiatPaymentMethod> {
-
-    private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.CASH_BY_MAIL);
-
+public final class CashByMailAccount extends Account<FiatPaymentMethod, CashByMailAccountPayload> {
     public CashByMailAccount(long creationDate, String accountName, CashByMailAccountPayload accountPayload) {
-        super(creationDate, accountName, PAYMENT_METHOD, accountPayload);
+        super(creationDate, accountName, accountPayload);
     }
 
     @Override

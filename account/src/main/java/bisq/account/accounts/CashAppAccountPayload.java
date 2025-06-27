@@ -17,6 +17,8 @@
 
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -26,12 +28,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class CashAppAccountPayload extends AccountPayload {
-
+public final class CashAppAccountPayload extends AccountPayload<FiatPaymentMethod> {
     private final String cashTag;
 
-    public CashAppAccountPayload(String id, String paymentMethodName, String cashTag) {
-        super(id, paymentMethodName);
+    public CashAppAccountPayload(String id, String cashTag) {
+        super(id);
         this.cashTag = cashTag;
     }
 
@@ -52,6 +53,11 @@ public final class CashAppAccountPayload extends AccountPayload {
     }
 
     public static CashAppAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        return new CashAppAccountPayload(proto.getId(), proto.getPaymentMethodName(), proto.getCashAppAccountPayload().getCashTag());
+        return new CashAppAccountPayload(proto.getId(), proto.getCashAppAccountPayload().getCashTag());
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.CASH_APP);
     }
 }

@@ -18,7 +18,6 @@
 package bisq.account.accounts;
 
 import bisq.account.payment_method.PaymentMethod;
-import bisq.common.currency.TradeCurrency;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
@@ -27,8 +26,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.List;
 
 /**
  * Account is only stored locally and never shared with the peer. It can contain sensitive data.
@@ -37,26 +35,23 @@ import java.util.stream.Collectors;
 @Slf4j
 @ToString
 @EqualsAndHashCode
-public abstract class Account<P extends AccountPayload, M extends PaymentMethod<?>> implements PersistableProto {
+public abstract class Account<M extends PaymentMethod<?>, P extends AccountPayload<M>> implements PersistableProto {
     protected final long creationDate;
     protected final String accountName;
     protected final P accountPayload;
-    protected final M paymentMethod;
 
     public Account(String accountName,
-                   M paymentMethod,
                    P accountPayload) {
-        this(new Date().getTime(), accountName, paymentMethod, accountPayload);
+        this(new Date().getTime(), accountName, accountPayload);
     }
+
 
     public Account(long creationDate,
                    String accountName,
-                   M paymentMethod,
                    P accountPayload) {
         this.creationDate = creationDate;
         this.accountName = accountName;
         this.accountPayload = accountPayload;
-        this.paymentMethod = paymentMethod;
     }
 
     @Override
@@ -73,7 +68,7 @@ public abstract class Account<P extends AccountPayload, M extends PaymentMethod<
         return bisq.account.protobuf.Account.newBuilder()
                 .setCreationDate(creationDate)
                 .setAccountName(accountName)
-                .setPaymentMethod(paymentMethod.toProto(serializeForHash))
+                //.setPaymentMethod(paymentMethod.toProto(serializeForHash))
                 .setAccountPayload(accountPayload.toProto(serializeForHash));
     }
 
@@ -93,7 +88,11 @@ public abstract class Account<P extends AccountPayload, M extends PaymentMethod<
         };
     }
 
-    public Set<String> getTradeCurrencyCodes() {
-        return paymentMethod.getTradeCurrencies().stream().map(TradeCurrency::getCode).collect(Collectors.toSet());
+    public M getPaymentMethod() {
+        return accountPayload.getPaymentMethod();
+    }
+
+    public List<String> getSupportedCurrencyCodes() {
+        return getPaymentMethod().getSupportedCurrencyCodes();
     }
 }

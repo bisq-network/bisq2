@@ -28,13 +28,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class SepaInstantAccount extends CountryBasedAccount<SepaInstantAccountPayload, FiatPaymentMethod> {
-
-    private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA_INSTANT);
-
+public final class SepaInstantAccount extends CountryBasedAccount<SepaInstantAccountPayload> {
     public SepaInstantAccount(String accountName,
-                              SepaInstantAccountPayload sepaInstantAccountPayload) {
-        super(accountName, PAYMENT_METHOD, sepaInstantAccountPayload);
+                              SepaInstantAccountPayload accountPayload) {
+        super(accountName, accountPayload);
     }
 
     public static SepaInstantAccount fromProto(bisq.account.protobuf.Account proto) {

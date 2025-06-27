@@ -17,39 +17,35 @@
 
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
-import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
-
-import static bisq.common.util.OptionalUtils.normalize;
-import static bisq.common.util.StringUtils.toOptional;
+import java.util.List;
 
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class WiseAccountPayload extends CountryBasedAccountPayload {
-
+public final class WiseAccountPayload extends CountryBasedAccountPayload implements MultiCurrencyAccountPayload {
+    private final List<String> selectedCurrencyCodes;
     private final String email;
-    private final Optional<String> holderName;
-    private final Optional<String> beneficiaryAddress;
+    private final String holderName;
 
     public WiseAccountPayload(String id,
-                              String paymentMethodName,
                               String countryCode,
+                              List<String> selectedCurrencyCodes,
                               String email,
-                              Optional<String> holderName,
-                              Optional<String> beneficiaryAddress) {
-        super(id, paymentMethodName, countryCode);
+                              String holderName) {
+        super(id, countryCode);
+        this.selectedCurrencyCodes = selectedCurrencyCodes;
         this.email = email;
-        this.holderName = normalize(holderName);
-        this.beneficiaryAddress = normalize(beneficiaryAddress);
+        this.holderName = holderName;
 
         verify();
     }
@@ -57,14 +53,9 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload {
     @Override
     public void verify() {
         super.verify();
+        PaymentAccountValidation.validateCurrencyCodes(selectedCurrencyCodes);
         PaymentAccountValidation.validateEmail(email);
-        NetworkDataValidation.validateText(holderName, 100);
-        NetworkDataValidation.validateText(beneficiaryAddress, 200);
-
-        // both fields must be either present or absent
-        if (holderName.isPresent() != beneficiaryAddress.isPresent()) {
-            throw new IllegalArgumentException("Both holder name and beneficiary address must be either present or absent");
-        }
+        PaymentAccountValidation.validateHolderName(holderName);
     }
 
     public static WiseAccountPayload fromProto(AccountPayload proto) {
@@ -73,11 +64,10 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload {
 
         return new WiseAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
                 countryBasedAccountPayload.getCountryCode(),
+                wisePayload.getSelectedCurrencyCodesList(),
                 wisePayload.getEmail(),
-                toOptional(wisePayload.getHolderName()),
-                toOptional(wisePayload.getBeneficiaryAddress())
+                wisePayload.getHolderName()
         );
     }
 
@@ -92,10 +82,14 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload {
     }
 
     private bisq.account.protobuf.WiseAccountPayload.Builder getWiseAccountPayloadBuilder(boolean serializeForHash) {
-        var builder = bisq.account.protobuf.WiseAccountPayload.newBuilder()
-                .setEmail(email);
-        holderName.ifPresent(builder::setHolderName);
-        beneficiaryAddress.ifPresent(builder::setBeneficiaryAddress);
-        return builder;
+        return bisq.account.protobuf.WiseAccountPayload.newBuilder()
+                .addAllSelectedCurrencyCodes(selectedCurrencyCodes)
+                .setEmail(email)
+                .setHolderName(holderName);
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.WISE);
     }
 }

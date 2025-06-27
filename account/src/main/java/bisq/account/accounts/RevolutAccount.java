@@ -25,19 +25,23 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class RevolutAccount extends Account<RevolutAccountPayload, FiatPaymentMethod> {
-    private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.REVOLUT);
-
-    public RevolutAccount(String accountName, String email) {
-        this(accountName, new RevolutAccountPayload(StringUtils.createUid(), PAYMENT_METHOD.getName(), email));
+public final class RevolutAccount extends Account<FiatPaymentMethod, RevolutAccountPayload> {
+    public RevolutAccount(String accountName,
+                          List<String> acceptedCurrencyCodes,
+                          String userName) {
+        this(accountName, new RevolutAccountPayload(StringUtils.createUid(),
+                acceptedCurrencyCodes,
+                userName));
     }
 
     private RevolutAccount(String accountName, RevolutAccountPayload revolutAccountPayload) {
-        super(accountName, PAYMENT_METHOD, revolutAccountPayload);
+        super(accountName, revolutAccountPayload);
     }
 
     @Override

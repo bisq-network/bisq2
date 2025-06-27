@@ -28,12 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class WiseAccount extends CountryBasedAccount<WiseAccountPayload, FiatPaymentMethod> {
-
-    private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.WISE);
-
+public final class WiseAccount extends CountryBasedAccount<WiseAccountPayload> {
     public WiseAccount(String accountName, WiseAccountPayload payload) {
-        super(accountName, PAYMENT_METHOD, payload);
+        super(accountName, payload);
     }
 
     public static WiseAccount fromProto(bisq.account.protobuf.Account proto) {

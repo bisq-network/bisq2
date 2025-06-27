@@ -1,5 +1,7 @@
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -9,15 +11,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class InteracETransferAccountPayload extends AccountPayload {
-
+public final class InteracETransferAccountPayload extends AccountPayload<FiatPaymentMethod> {
     private final String email;
     private final String holderName;
     private final String question;
     private final String answer;
 
-    public InteracETransferAccountPayload(String id, String paymentMethodName, String email, String holderName, String question, String answer) {
-        super(id, paymentMethodName);
+    public InteracETransferAccountPayload(String id, String email, String holderName, String question, String answer) {
+        super(id);
         this.email = email;
         this.holderName = holderName;
         this.question = question;
@@ -46,11 +47,15 @@ public final class InteracETransferAccountPayload extends AccountPayload {
         var interactETransferAccountPayload = proto.getInteracETransferAccountPayload();
         return new InteracETransferAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
                 interactETransferAccountPayload.getEmail(),
                 interactETransferAccountPayload.getHolderName(),
                 interactETransferAccountPayload.getQuestion(),
                 interactETransferAccountPayload.getAnswer()
         );
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.INTERAC_E_TRANSFER);
     }
 }

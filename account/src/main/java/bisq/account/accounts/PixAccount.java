@@ -11,12 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class PixAccount extends CountryBasedAccount<PixAccountPayload, FiatPaymentMethod> {
-
-    private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.PIX);
-
+public final class PixAccount extends CountryBasedAccount<PixAccountPayload> {
     public PixAccount(String accountName, PixAccountPayload payload) {
-        super(accountName, PAYMENT_METHOD, payload);
+        super(accountName, payload);
     }
 
     @Override

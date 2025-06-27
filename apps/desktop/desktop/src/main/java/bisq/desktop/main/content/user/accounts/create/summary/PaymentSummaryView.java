@@ -23,7 +23,6 @@ import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -51,7 +50,8 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
     private final static int FEEDBACK_WIDTH = 700;
     private static final double TOP_PANE_HEIGHT = 55;
     private static final double HEIGHT = 61;
-    private final Label paymentMethod, risk, tradeLimit;
+
+    private final Label paymentMethod, currency, country;
     private final GridPane gridPane;
     private final VBox accountNameOverlay;
     private final Button accountNameButton;
@@ -68,7 +68,7 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
         GridPaneUtil.setGridPaneMultiColumnsConstraints(gridPane, 3);
 
 
-        Label headline = new Label(Res.get("user.paymentAccounts.summary.review"));
+        Label headline = new Label(Res.get("user.paymentAccounts.summary.headline"));
         headline.getStyleClass().add("trade-wizard-review-headline");
         GridPane.setHalignment(headline, HPos.CENTER);
         GridPane.setMargin(headline, new Insets(10, 0, 30, 0));
@@ -78,20 +78,20 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
         gridPane.add(getLine(), 0, rowIndex, 3, 1);
 
         rowIndex++;
-        Triple<Text, Label, VBox> paymentMethodTriple = getDescriptionValueVBoxTriple(Res.get("user.paymentAccounts.summary.paymentMethod"));
+        Triple<Text, Label, VBox> paymentMethodTriple = getDescriptionValueVBoxTriple(Res.get("user.paymentAccounts.paymentMethod"));
         paymentMethod = paymentMethodTriple.getSecond();
         gridPane.add(paymentMethodTriple.getThird(), 0, rowIndex);
 
-        Triple<Text, Label, VBox> riskTriple = getDescriptionValueVBoxTriple(Res.get("user.paymentAccounts.summary.risk"));
-        risk = riskTriple.getSecond();
-        gridPane.add(riskTriple.getThird(), 1, rowIndex);
+        Triple<Text, Label, VBox> currencyTriple = getDescriptionValueVBoxTriple(Res.get("user.paymentAccounts.currency"));
+        currency = currencyTriple.getSecond();
+        gridPane.add(currencyTriple.getThird(), 1, rowIndex);
 
-        Triple<Text, Label, VBox> tradeLimitTriple = getDescriptionValueVBoxTriple(Res.get("user.paymentAccounts.summary.tradeLimit"));
-        tradeLimit = tradeLimitTriple.getSecond();
-        gridPane.add(tradeLimitTriple.getThird(), 2, rowIndex);
+        Triple<Text, Label, VBox> countryTriple = getDescriptionValueVBoxTriple(Res.get("user.paymentAccounts.country"));
+        country = countryTriple.getSecond();
+        gridPane.add(countryTriple.getThird(), 2, rowIndex);
 
         rowIndex++;
-        Label detailsHeadline = new Label(Res.get("user.paymentAccounts.summary.accountDetails").toUpperCase());
+        Label detailsHeadline = new Label(Res.get("user.paymentAccounts.accountDetails").toUpperCase());
         detailsHeadline.getStyleClass().add("trade-wizard-review-details-headline");
         gridPane.add(detailsHeadline, 0, rowIndex, 3, 1);
 
@@ -131,9 +131,8 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
 
         accountNameField.setText(model.getDefaultAccountName());
         paymentMethod.setText(model.getPaymentMethod().getDisplayString());
-        paymentMethod.setTooltip(new BisqTooltip(model.getPaymentMethod().getDisplayString()));
-        risk.setText(model.getRisk());
-        tradeLimit.setText(model.getTradeLimit());
+        currency.setText(model.getCurrency());
+        country.setText(model.getCountry());
 
         gridPane.add(model.getAccountDetailsGridPane(), 0, rowIndex, 3, 1);
     }

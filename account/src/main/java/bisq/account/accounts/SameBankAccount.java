@@ -25,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class SameBankAccount extends NationalBankAccount {
-
     public SameBankAccount(String accountName, SameBankAccountPayload payload) {
         super(accountName, payload);
     }

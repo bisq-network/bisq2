@@ -17,6 +17,8 @@
 
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,7 +39,6 @@ public final class DomesticWireTransferAccountPayload extends BankAccountPayload
     private final Optional<String> holderAddress;
 
     public DomesticWireTransferAccountPayload(String id,
-                                              String paymentMethodName,
                                               String countryCode,
                                               Optional<String> holderName,
                                               Optional<String> bankName,
@@ -48,10 +49,16 @@ public final class DomesticWireTransferAccountPayload extends BankAccountPayload
                                               Optional<String> bankId,
                                               Optional<String> nationalAccountId,
                                               Optional<String> holderAddress) {
-        super(id, paymentMethodName, countryCode,
-                holderName, bankName, branchId,
-                accountNr, accountType, holderTaxId,
-                bankId, nationalAccountId);
+        super(id,
+                countryCode,
+                holderName,
+                bankName,
+                branchId,
+                accountNr,
+                accountType,
+                holderTaxId,
+                bankId,
+                nationalAccountId);
         this.holderAddress = normalize(holderAddress);
         verify();
     }
@@ -68,7 +75,6 @@ public final class DomesticWireTransferAccountPayload extends BankAccountPayload
         var domesticWireTransferPayload = bankAccountPayload.getDomesticWireTransferAccountPayload();
         return new DomesticWireTransferAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 toOptional(bankAccountPayload.getHolderName()),
                 toOptional(bankAccountPayload.getBankName()),
@@ -96,5 +102,10 @@ public final class DomesticWireTransferAccountPayload extends BankAccountPayload
         var builder = bisq.account.protobuf.DomesticWireTransferAccountPayload.newBuilder();
         holderAddress.ifPresent(builder::setHolderAddress);
         return builder;
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.DOMESTIC_WIRE_TRANSFER);
     }
 }

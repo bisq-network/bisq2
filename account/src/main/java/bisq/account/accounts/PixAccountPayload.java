@@ -1,5 +1,7 @@
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -11,11 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class PixAccountPayload extends CountryBasedAccountPayload {
-
     private final String pixKey;
 
-    public PixAccountPayload(String id, String paymentMethodName, String countryCode, String pixKey) {
-        super(id, paymentMethodName, countryCode);
+    public PixAccountPayload(String id, String countryCode, String pixKey) {
+        super(id, countryCode);
         this.pixKey = pixKey;
     }
     @Override
@@ -37,9 +38,13 @@ public final class PixAccountPayload extends CountryBasedAccountPayload {
         bisq.account.protobuf.PixAccountPayload pixAccountPayload = countryBasedAccountPayload.getPixAccountPayload();
         return new PixAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
                 countryBasedAccountPayload.getCountryCode(),
                 pixAccountPayload.getPixKey()
         );
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.PIX);
     }
 }

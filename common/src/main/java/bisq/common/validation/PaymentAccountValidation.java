@@ -17,13 +17,19 @@
 
 package bisq.common.validation;
 
+import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.util.StringUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 public class PaymentAccountValidation {
+    public static final int HOLDER_NAME_MIN_LENGTH = 2;
+    public static final int HOLDER_NAME_MAX_LENGTH = 70;
+
     public static void validateEmail(String email) {
         checkArgument(StringUtils.isNotEmpty(email), "Email must not be empty");
         checkArgument(email.length() <= 100, "Email must not be longer than 100 characters. email=" + email);
@@ -32,6 +38,9 @@ public class PaymentAccountValidation {
         checkArgument(email.matches(emailRegex), "Invalid email format. email: " + email);
     }
 
+    public static void validateHolderName(String name) {
+        NetworkDataValidation.validateText(name, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);
+    }
 
     public static void validateCountryCodes(List<String> countryCodes,
                                             List<String> allowedCountryCodes,
@@ -45,6 +54,22 @@ public class PaymentAccountValidation {
         for (String countryCode : countryCodes) {
             checkArgument(allowedCountryCodes.contains(countryCode),
                     "Country code '" + countryCode + "' is not supported for " + contextDescription + ". Supported countries: " + allowedCountryCodes);
+        }
+    }
+
+    public static void validateCurrencyCodes(List<String> currencyCodes) {
+        try {
+            FiatCurrencyRepository.getCurrencyByCodes(currencyCodes);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid currencyCodes " + currencyCodes);
+        }
+    }
+
+    public static void validateCurrencyCode(String currencyCode) {
+        try {
+            FiatCurrencyRepository.getCurrencyByCode(currencyCode);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid currencyCode " + currencyCode);
         }
     }
 }

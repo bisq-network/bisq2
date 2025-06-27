@@ -1,7 +1,5 @@
 package bisq.account.accounts;
 
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.Account;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -12,12 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class AmazonGiftCardAccount extends CountryBasedAccount<AmazonGiftCardAccountPayload, FiatPaymentMethod> {
-
-    private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.AMAZON_GIFT_CARD);
-
+public final class AmazonGiftCardAccount extends CountryBasedAccount<AmazonGiftCardAccountPayload> {
     public AmazonGiftCardAccount(String accountName, AmazonGiftCardAccountPayload payload) {
-        super(accountName, PAYMENT_METHOD, payload);
+        super(accountName, payload);
     }
 
     @Override

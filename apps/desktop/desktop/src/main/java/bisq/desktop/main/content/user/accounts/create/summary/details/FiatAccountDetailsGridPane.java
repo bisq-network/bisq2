@@ -17,26 +17,22 @@
 
 package bisq.desktop.main.content.user.accounts.create.summary.details;
 
-import bisq.account.accounts.F2FAccountPayload;
+import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.i18n.Res;
 
-public class F2FAccountDetailsGridPane extends FiatAccountDetailsGridPane<F2FAccountPayload> {
-    public F2FAccountDetailsGridPane(F2FAccountPayload accountPayload, FiatPaymentRail fiatPaymentRail) {
+public abstract class FiatAccountDetailsGridPane<A extends AccountPayload<?>> extends AccountDetailsGridPane<A, FiatPaymentRail> {
+    public FiatAccountDetailsGridPane(A accountPayload, FiatPaymentRail fiatPaymentRail) {
         super(accountPayload, fiatPaymentRail);
     }
 
-    protected void addCustomFields(F2FAccountPayload accountPayload) {
-        addDescriptionAndValue(Res.get("user.paymentAccounts.f2f.city"),
-                accountPayload.getCity(),
+    @Override
+    protected void addGenericFields(FiatPaymentRail fiatPaymentRail) {
+        addDescriptionAndValue(Res.get("user.paymentAccounts.chargebackRisk"),
+                fiatPaymentRail.getChargebackRisk().getDisplayString(),
                 ++rowIndex);
-
-        addDescriptionAndValue(Res.get("user.paymentAccounts.f2f.contact"),
-                accountPayload.getContact(),
-                ++rowIndex);
-
-        addDescriptionAndValue(Res.get("user.paymentAccounts.f2f.extraInfo"),
-                accountPayload.getExtraInfo(),
+        addDescriptionAndValue(Res.get("user.paymentAccounts.tradeLimit"),
+                fiatPaymentRail.getTradeLimit(),
                 ++rowIndex);
     }
 }

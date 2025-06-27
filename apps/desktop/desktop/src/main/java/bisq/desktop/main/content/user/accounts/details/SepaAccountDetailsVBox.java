@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.accounts.details;
 
+import bisq.account.accounts.SepaAccount;
 import bisq.account.accounts.SepaAccountPayload;
 import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.locale.CountryRepository;
@@ -29,24 +30,29 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class SepaAccountDetailsVBox extends AccountDetailsVBox {
-    public SepaAccountDetailsVBox(SepaAccountPayload accountPayload) {
-        addDescriptionAndValue(Res.get("user.paymentAccounts.createAccount.accountData.country"),
-                CountryRepository.getNameByCode(accountPayload.getCountryCode()));
+public class SepaAccountDetailsVBox extends FiatAccountDetailsVBox<SepaAccount> {
+    public SepaAccountDetailsVBox(SepaAccount account) {
+        super(account);
 
-        addDescriptionAndValue(Res.get("user.paymentAccounts.createAccount.accountData.sepa.holderName"),
+    }
+
+    @Override
+    protected void addCustomFields(SepaAccount account) {
+        SepaAccountPayload accountPayload = account.getAccountPayload();
+
+        addDescriptionAndValue(Res.get("user.paymentAccounts.sepa.holderName"),
                 accountPayload.getHolderName());
 
-        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.createAccount.accountData.sepa.iban"),
+        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.sepa.iban"),
                 accountPayload.getIban());
 
-        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.createAccount.accountData.sepa.bic"),
+        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.sepa.bic"),
                 accountPayload.getBic());
 
         String countryName = CountryRepository.getNameByCode(accountPayload.getCountryCode());
         List<String> acceptedCountryCodes = new ArrayList<>(accountPayload.getAcceptedCountryCodes());
         Collections.sort(acceptedCountryCodes);
-        List<String> allSepaCountries = new ArrayList<>(FiatPaymentRailUtil.getAllSepaCountries());
+        List<String> allSepaCountries = new ArrayList<>(FiatPaymentRailUtil.getAllSepaCountryCodes());
         Collections.sort(allSepaCountries);
         String acceptCountries;
         if (acceptedCountryCodes.equals(allSepaCountries)) {

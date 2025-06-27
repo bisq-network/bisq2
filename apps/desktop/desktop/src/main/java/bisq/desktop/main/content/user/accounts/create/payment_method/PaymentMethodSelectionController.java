@@ -44,7 +44,11 @@ public class PaymentMethodSelectionController implements Controller {
     public PaymentMethodSelectionController() {
         List<PaymentMethodItem> items = FiatPaymentRailUtil.getPaymentRails().stream()
                 .filter(rail -> rail != FiatPaymentRail.CUSTOM)
-                .filter(FiatPaymentRail::isActive)
+                .filter(rail ->
+                        // TODO until others are implemented
+                        rail == FiatPaymentRail.F2F ||
+                                rail == FiatPaymentRail.SEPA
+                )
                 .map(FiatPaymentMethod::fromPaymentRail)
                 .map(PaymentMethodItem::new)
                 .collect(Collectors.toList());
@@ -72,7 +76,9 @@ public class PaymentMethodSelectionController implements Controller {
                     if (searchLowerCase.isEmpty()) {
                         return true;
                     } else {
-                        return item.getName().toLowerCase().contains(searchLowerCase);
+                        PaymentMethod<?> paymentMethod = item.getPaymentMethod();
+                        return paymentMethod.getDisplayString().toLowerCase().contains(searchLowerCase) ||
+                                paymentMethod.getShortDisplayString().toLowerCase().contains(searchLowerCase);
                     }
                 }
             });

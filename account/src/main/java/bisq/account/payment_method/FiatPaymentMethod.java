@@ -37,6 +37,9 @@ public class FiatPaymentMethod extends NationalCurrencyPaymentMethod<FiatPayment
     public static FiatPaymentMethod fromCustomName(String customName) {
         return new FiatPaymentMethod(customName);
     }
+    public static FiatPaymentMethod fromPaymentRailName(String paymentRailName) {
+        return new FiatPaymentMethod(FiatPaymentRail.valueOf(paymentRailName));
+    }
 
 
     private FiatPaymentMethod(FiatPaymentRail paymentRail) {
@@ -66,7 +69,7 @@ public class FiatPaymentMethod extends NationalCurrencyPaymentMethod<FiatPayment
     }
 
     @Override
-    public List<TradeCurrency> getTradeCurrencies() {
-        return paymentRail.getTradeCurrencies();
+    public List<? extends TradeCurrency> getSupportedCurrencies() {
+        return paymentRail.getSupportedCurrencies();
     }
 }

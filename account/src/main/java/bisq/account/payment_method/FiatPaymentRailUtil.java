@@ -18,8 +18,11 @@
 package bisq.account.payment_method;
 
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.common.currency.FiatCurrency;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.TradeCurrency;
+import bisq.common.locale.Country;
+import bisq.common.locale.CountryRepository;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,7 +32,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class FiatPaymentRailUtil {
-
     public static List<FiatPaymentRail> getPaymentRails() {
         return List.of(FiatPaymentRail.values());
     }
@@ -61,7 +63,7 @@ public class FiatPaymentRailUtil {
                 .collect(Collectors.toList());
     }
 
-    static public List<String> getAllSepaCountries() {
+    public static List<String> getAllSepaCountryCodes() {
         List<String> sepaEuroCountries = getSepaEuroCountries();
         List<String> sepaNonEuroCountries = getSepaNonEuroCountries();
         List<String> sepaCountries = new ArrayList<>(sepaEuroCountries);
@@ -70,15 +72,20 @@ public class FiatPaymentRailUtil {
         return sepaCountries;
     }
 
-    static public List<String> getSepaEuroCountries() {
+    public static List<String> getSepaEuroCountries() {
         return List.of("AT", "BE", "CY", "DE", "EE", "FI", "FR", "GR", "IE",
                 "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES", "AD", "SM", "VA");
     }
 
-    static public List<String> getSepaNonEuroCountries() {
+    public static List<String> getSepaNonEuroCountries() {
         return List.of("BG", "HR", "CZ", "DK", "GB", "HU", "PL", "RO",
                 "SE", "IS", "NO", "LI", "CH", "JE", "GI");
     }
+
+    public static List<Country> getAllSepaCountries() {
+        return countriesFromCodes(getAllSepaCountryCodes());
+    }
+
 
     static List<TradeCurrency> toTradeCurrencies(List<String> currencyCodes) {
         return currencyCodes.stream()
@@ -90,7 +97,7 @@ public class FiatPaymentRailUtil {
 
     // https://wise.com/help/articles/2571907/what-currencies-can-i-send-to-and-from?origin=related-article-2571942
     // https://github.com/bisq-network/proposals/issues/243
-    static List<String> getWiseCountries() {
+    public static List<String> getWiseCountryCodes() {
         List<String> list = new ArrayList<>(List.of("AR", "AU", "BD", "BR", "BG", "CA", "CL", "CN", "CO", "CR", "CZ", "DK", "EG",
                 "GE", "GH", "HK", "HU", "IN", "ID", "IL", "JP", "KE", "MY", "MX", "MA", "NP", "NZ", "NO",
                 "PK", "PH", "PL", "RO", "SG", "ZA", "KR", "LK", "SE", "CH", "TZ", "TH", "TR", "UG", "UA", "AE",
@@ -99,8 +106,12 @@ public class FiatPaymentRailUtil {
         return list;
     }
 
+    public static List<Country> getWiseCountries() {
+        return countriesFromCodes(getWiseCountryCodes());
+    }
+
     // Took all currencies from: https://wise.com/help/articles/2571907/what-currencies-can-i-send-to-and-from
-    static List<String> getWiseCurrencies() {
+    public static List<String> getWiseCurrencyCodes() {
         return List.of(
                 "AED",
                 "ARS",
@@ -156,15 +167,41 @@ public class FiatPaymentRailUtil {
         );
     }
 
+    public static List<FiatCurrency> getWiseCurrencies() {
+        return currenciesFromCodes(getWiseCurrencyCodes());
+    }
+
+    public static List<String> getAmazonGiftCardsCountryCodes() {
+        return new ArrayList<>(List.of("AU", "CA", "FR", "DE", "IT", "NL", "ES", "GB", "IN", "JP",
+                "SA", "SE", "SG", "TR", "US"));
+    }
+
+    public static List<Country> getAmazonGiftCardsCountries() {
+        return countriesFromCodes(getAmazonGiftCardsCountryCodes());
+    }
+
+    public static List<String> getAmazonGiftCardsCurrencyCodes() {
+        return List.of("AUD", "CAD", "EUR", "GBP", "INR", "JPY", "SAR", "SEK", "SGD", "TRY", "USD");
+    }
+
+    public static List<FiatCurrency> getAmazonGiftCardsCurrencies() {
+        return currenciesFromCodes(getAmazonGiftCardsCurrencyCodes());
+    }
+
+
     // https://help.revolut.com/help/wealth/exchanging-money/what-currencies-are-available/what-currencies-are-supported-for-holding-and-exchange/
-    static List<String> getRevolutCountries() {
+    static List<String> getRevolutCountryCodes() {
         return List.of("AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
                 "DE", "GR", "HU", "IS", "IE", "IT", "LV", "LI", "LT", "LU", "MT", "NL",
                 "NO", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "GB",
                 "AU", "CA", "SG", "CH", "US");
     }
 
-    static List<String> getRevolutCurrencies() {
+    public static List<Country> getRevolutCountries() {
+        return countriesFromCodes(getRevolutCountryCodes());
+    }
+
+    static List<String> getRevolutCurrencyCodes() {
         return List.of(
                 "AED",
                 "AUD",
@@ -198,6 +235,29 @@ public class FiatPaymentRailUtil {
                 "ZAR"
         );
     }
+
+    public static List<FiatCurrency> getRevolutCurrencies() {
+        return currenciesFromCodes(getRevolutCurrencyCodes());
+    }
+
+    private static List<Country> countriesFromCodes(List<String> countryCodes) {
+        return CountryRepository.getCountriesFromCodes(countryCodes);
+    }
+
+    private static Country countryFromCode(String countryCode) {
+        return CountryRepository.getCountry(countryCode);
+    }
+
+    private static List<Country> allCountries() {
+        return CountryRepository.getCountries();
+    }
+
+    private static List<FiatCurrency> currenciesFromCodes(List<String> currencyCodes) {
+        return currencyCodes.stream()
+                .map(FiatCurrencyRepository::getCurrencyByCode)
+                .collect(Collectors.toList());
+    }
+
 
     // Popularity scores based on historical snapshot of Bisq1 offers count
     // Higher scores indicate more commonly used payment methods

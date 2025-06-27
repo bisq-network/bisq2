@@ -1,5 +1,7 @@
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -9,12 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class ZelleAccountPayload extends AccountPayload {
+public class ZelleAccountPayload extends AccountPayload<FiatPaymentMethod> {
     private final String emailOrMobileNr;
     private final String holderName;
 
-    public ZelleAccountPayload(String id, String paymentMethodName, String emailOrMobileNr, String holderName) {
-        super(id, paymentMethodName);
+    public ZelleAccountPayload(String id, String emailOrMobileNr, String holderName) {
+        super(id);
         this.emailOrMobileNr = emailOrMobileNr;
         this.holderName = holderName;
     }
@@ -35,13 +37,17 @@ public class ZelleAccountPayload extends AccountPayload {
                 .setHolderName(holderName);
     }
 
-    public static ZelleAccountPayload fromProto(bisq.account.protobuf.AccountPayload accountPayload) {
-        var zelleProto = accountPayload.getZelleAccountPayload();
+    public static ZelleAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+        var zelleProto = proto.getZelleAccountPayload();
         return new ZelleAccountPayload(
-                accountPayload.getId(),
-                accountPayload.getPaymentMethodName(),
+                proto.getId(),
                 zelleProto.getEmailOrMobileNr(),
                 zelleProto.getHolderName()
         );
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ZELLE);
     }
 }

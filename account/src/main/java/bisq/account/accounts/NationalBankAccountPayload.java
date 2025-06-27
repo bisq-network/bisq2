@@ -1,5 +1,7 @@
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -15,22 +17,26 @@ import static bisq.common.util.OptionalUtils.toOptional;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class NationalBankAccountPayload extends BankAccountPayload {
-
     public NationalBankAccountPayload(String id,
-                                         String paymentMethodName,
-                                         String countryCode,
-                                         Optional<String> holderName,
-                                         Optional<String> bankName,
-                                         Optional<String> branchId,
-                                         Optional<String> accountNr,
-                                         Optional<String> accountType,
-                                         Optional<String> holderTaxId,
-                                         Optional<String> bankId,
-                                         Optional<String> nationalAccountId) {
-        super(id, paymentMethodName, countryCode,
-                holderName, bankName, branchId,
-                accountNr, accountType, holderTaxId,
-                bankId, nationalAccountId);
+                                      String countryCode,
+                                      Optional<String> holderName,
+                                      Optional<String> bankName,
+                                      Optional<String> branchId,
+                                      Optional<String> accountNr,
+                                      Optional<String> accountType,
+                                      Optional<String> holderTaxId,
+                                      Optional<String> bankId,
+                                      Optional<String> nationalAccountId) {
+        super(id,
+                countryCode,
+                holderName,
+                bankName,
+                branchId,
+                accountNr,
+                accountType,
+                holderTaxId,
+                bankId,
+                nationalAccountId);
     }
 
     @Override
@@ -52,7 +58,6 @@ public class NationalBankAccountPayload extends BankAccountPayload {
         var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
         return new NationalBankAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 toOptional(bankAccountPayload.getHolderName()),
                 toOptional(bankAccountPayload.getBankName()),
@@ -62,5 +67,10 @@ public class NationalBankAccountPayload extends BankAccountPayload {
                 toOptional(bankAccountPayload.getHolderTaxId()),
                 toOptional(bankAccountPayload.getBankId()),
                 toOptional(bankAccountPayload.getNationalAccountId()));
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.NATIONAL_BANK);
     }
 }

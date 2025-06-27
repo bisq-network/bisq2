@@ -1,5 +1,7 @@
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -9,13 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class USPostalMoneyOrderAccountPayload extends AccountPayload {
-
+public final class USPostalMoneyOrderAccountPayload extends AccountPayload<FiatPaymentMethod> {
     private final String postalAddress;
     private final String holderName;
 
-    public USPostalMoneyOrderAccountPayload(String id, String paymentMethodName, String postalAddress, String holderName) {
-        super(id, paymentMethodName);
+    public USPostalMoneyOrderAccountPayload(String id, String postalAddress, String holderName) {
+        super(id);
         this.postalAddress = postalAddress;
         this.holderName = holderName;
     }
@@ -40,9 +41,13 @@ public final class USPostalMoneyOrderAccountPayload extends AccountPayload {
         var usPostalOrderMoneyPayload = proto.getUsPostalMoneyOrderAccountPayload();
         return new USPostalMoneyOrderAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
                 usPostalOrderMoneyPayload.getPostalAddress(),
                 usPostalOrderMoneyPayload.getHolderName()
         );
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.US_POSTAL_MONEY_ORDER);
     }
 }

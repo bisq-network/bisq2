@@ -17,21 +17,29 @@
 
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class RevolutAccountPayload extends AccountPayload {
-    private final String email;
+public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMethod> implements MultiCurrencyAccountPayload {
+    private final List<String> selectedCurrencyCodes;
+    private final String userName;
 
-    public RevolutAccountPayload(String id, String paymentMethodName, String email) {
-        super(id, paymentMethodName);
-        this.email = email;
+    public RevolutAccountPayload(String id,
+                                 List<String> selectedCurrencyCodes,
+                                 String userName) {
+        super(id);
+        this.selectedCurrencyCodes = selectedCurrencyCodes;
+        this.userName = userName;
     }
 
     @Override
@@ -46,10 +54,19 @@ public final class RevolutAccountPayload extends AccountPayload {
 
     private bisq.account.protobuf.RevolutAccountPayload.Builder getRevolutAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.RevolutAccountPayload.newBuilder()
-                .setEmail(email);
+                .addAllSelectedCurrencyCodes(selectedCurrencyCodes)
+                .setUserName(userName);
     }
 
     public static RevolutAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        return new RevolutAccountPayload(proto.getId(), proto.getPaymentMethodName(), proto.getRevolutAccountPayload().getEmail());
+        bisq.account.protobuf.RevolutAccountPayload revolutAccountPayload = proto.getRevolutAccountPayload();
+        return new RevolutAccountPayload(proto.getId(),
+                revolutAccountPayload.getSelectedCurrencyCodesList(),
+                revolutAccountPayload.getUserName());
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.REVOLUT);
     }
 }

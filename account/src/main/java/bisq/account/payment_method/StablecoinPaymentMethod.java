@@ -69,7 +69,7 @@ public class StablecoinPaymentMethod extends NationalCurrencyPaymentMethod<Stabl
     }
 
     @Override
-    public List<TradeCurrency> getTradeCurrencies() {
+    public List<TradeCurrency> getSupportedCurrencies() {
         return paymentRail.getTradeCurrencies();
     }
 }

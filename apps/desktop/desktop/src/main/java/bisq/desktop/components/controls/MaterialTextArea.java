@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.controls;
 
+import bisq.common.util.StringUtils;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextInputControl;
@@ -62,7 +63,7 @@ public class MaterialTextArea extends MaterialTextField {
 
     @Override
     protected double getFieldLayoutY() {
-        return 18 + 5;
+        return 23; // 18 + 5 = 23;
     }
 
     public void setFixedHeight(double height) {

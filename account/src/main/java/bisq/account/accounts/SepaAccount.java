@@ -18,7 +18,6 @@
 package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,15 +27,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class SepaAccount extends CountryBasedAccount<SepaAccountPayload, FiatPaymentMethod> {
-    private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA);
-
+public final class SepaAccount extends CountryBasedAccount<SepaAccountPayload> {
     public SepaAccount(SepaAccountPayload payload) {
         this(payload.getDefaultAccountName(), payload);
     }
 
     public SepaAccount(String accountName, SepaAccountPayload sepaAccountPayload) {
-        super(accountName, PAYMENT_METHOD, sepaAccountPayload);
+        super(accountName, sepaAccountPayload);
     }
 
     @Override

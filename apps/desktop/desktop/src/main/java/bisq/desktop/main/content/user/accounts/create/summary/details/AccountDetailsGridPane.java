@@ -17,23 +17,34 @@
 
 package bisq.desktop.main.content.user.accounts.create.summary.details;
 
+import bisq.account.accounts.AccountPayload;
+import bisq.account.payment_method.PaymentRail;
 import bisq.desktop.common.utils.GridPaneUtil;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 
-public abstract class AccountDetailsGridPane extends GridPane {
+public abstract class AccountDetailsGridPane<A extends AccountPayload<?>, R extends PaymentRail> extends GridPane {
     protected static final String DESCRIPTION_STYLE = "trade-wizard-review-description";
     protected static final String VALUE_STYLE = "trade-wizard-review-value";
     protected static final String DETAILS_STYLE = "trade-wizard-review-details";
 
     int rowIndex = 0;
-    public AccountDetailsGridPane() {
+
+    public AccountDetailsGridPane(A accountPayload, R paymentRail) {
         super(10, 10);
 
         GridPaneUtil.setGridPaneMultiColumnsConstraints(this, 3);
+
+        addCustomFields(accountPayload);
+        add(getLine(), 0, ++rowIndex, 3, 1);
+        addGenericFields(paymentRail);
     }
+
+    protected abstract void addCustomFields(A accountPayload);
+
+    protected abstract void addGenericFields(R fiatPaymentRail);
 
     protected Label addDescriptionAndValue(String description, String value, int rowIndex) {
         addDescriptionLabel(description, rowIndex);

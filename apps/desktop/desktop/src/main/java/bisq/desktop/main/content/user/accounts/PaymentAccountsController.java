@@ -20,9 +20,9 @@ package bisq.desktop.main.content.user.accounts;
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.F2FAccountPayload;
-import bisq.account.accounts.SepaAccountPayload;
-import bisq.account.accounts.UserDefinedFiatAccountPayload;
+import bisq.account.accounts.F2FAccount;
+import bisq.account.accounts.SepaAccount;
+import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.observable.Pin;
@@ -70,16 +70,19 @@ public class PaymentAccountsController implements Controller {
     public void onActivate() {
         accountsPin = accountService.getAccounts().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(Account<?, ? extends PaymentMethod<?>> account) {
+            public void add(Account<? extends PaymentMethod<?>, ?> account) {
                 UIThread.run(() -> {
-                    model.getAccounts().add(account);
-                    accountService.setSelectedAccount(account);
+                    if (!model.getAccounts().contains(account)) {
+                        model.getAccounts().add(account);
+                        accountService.setSelectedAccount(account);
+                        updateNoAccountsState();
+                    }
                 });
             }
 
             @Override
             public void remove(Object element) {
-                if (element instanceof Account<?, ? extends PaymentMethod<?>> account) {
+                if (element instanceof Account<? extends PaymentMethod<?>, ?> account) {
                     UIThread.run(() -> {
                         model.getAccounts().remove(account);
                         maybeSelectFirstAccount();
@@ -124,9 +127,10 @@ public class PaymentAccountsController implements Controller {
         accountsPin.unbind();
         selectedAccountPin.unbind();
         selectedAccountSubscription.unsubscribe();
+        model.getAccounts().clear();
     }
 
-    void onSelectAccount(Account<?, ? extends PaymentMethod<?>> account) {
+    void onSelectAccount(Account<? extends PaymentMethod<?>, ?> account) {
         if (account != null) {
             accountService.setSelectedAccount(account);
             model.getSelectedAccount().set(account);
@@ -142,7 +146,7 @@ public class PaymentAccountsController implements Controller {
     }
 
     void onDeleteAccount() {
-        Account<?, ? extends PaymentMethod<?>> account = model.getSelectedAccount().get();
+        Account<? extends PaymentMethod<?>, ?> account = model.getSelectedAccount().get();
         accountService.removePaymentAccount(account);
         model.getAccounts().remove(account);
         maybeSelectFirstAccount();
@@ -154,35 +158,37 @@ public class PaymentAccountsController implements Controller {
 
     private void maybeSelectFirstAccount() {
         if (accountService.getSelectedAccount().isEmpty() && !model.getSortedAccounts().isEmpty()) {
-            Account<?, ? extends PaymentMethod<?>> account = model.getSortedAccounts().get(0);
+            Account<? extends PaymentMethod<?>, ?> account = model.getSortedAccounts().get(0);
             accountService.setSelectedAccount(account);
         }
     }
 
-    private void applyDataDisplay(Account<?, ? extends PaymentMethod<?>> account) {
+    private void applyDataDisplay(Account<? extends PaymentMethod<?>, ?> account) {
         if (account == null) {
             model.getAccountDetailsGridPane().set(null);
             return;
         }
 
-        AccountPayload accountPayload = account.getAccountPayload();
+        AccountPayload<? extends PaymentMethod<?>> accountPayload = account.getAccountPayload();
         if (account.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
-            AccountDetailsVBox detailsVBox = getAccountDetailsVBox(accountPayload, fiatPaymentRail);
+            AccountDetailsVBox<?,?> detailsVBox = getAccountDetailsVBox(account, fiatPaymentRail);
             model.getAccountDetailsGridPane().set(detailsVBox);
         }
     }
 
-    private AccountDetailsVBox getAccountDetailsVBox(AccountPayload accountPayload, FiatPaymentRail fiatPaymentRail) {
+    private AccountDetailsVBox<?, ?> getAccountDetailsVBox(Account<? extends PaymentMethod<?>, ?> account,
+                                                           FiatPaymentRail fiatPaymentRail) {
         return switch (fiatPaymentRail) {
-            case CUSTOM -> new UserDefinedAccountDetailsVBox((UserDefinedFiatAccountPayload) accountPayload);
-            case SEPA -> new SepaAccountDetailsVBox((SepaAccountPayload) accountPayload);
+            case CUSTOM -> new UserDefinedAccountDetailsVBox((UserDefinedFiatAccount) account);
+            case SEPA -> new SepaAccountDetailsVBox((SepaAccount) account);
             case SEPA_INSTANT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case ZELLE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case REVOLUT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case NATIONAL_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case SAME_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case F2F -> new F2FAccountDetailsVBox((F2FAccountPayload) accountPayload);
+            case F2F -> new F2FAccountDetailsVBox((F2FAccount) account);
             case ACH_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case PIX -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case FASTER_PAYMENTS -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
@@ -199,6 +205,7 @@ public class PaymentAccountsController implements Controller {
             case UPI -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case BIZUM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case DOMESTIC_WIRE_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
         };
     }
 }

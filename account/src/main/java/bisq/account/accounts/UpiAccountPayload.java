@@ -1,5 +1,7 @@
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -11,11 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class UpiAccountPayload extends CountryBasedAccountPayload {
-
     private final String virtualPaymentAddress;
 
-    public UpiAccountPayload(String id, String paymentMethodName, String countryCode, String virtualPaymentAddress) {
-        super(id, paymentMethodName, countryCode);
+    public UpiAccountPayload(String id, String countryCode, String virtualPaymentAddress) {
+        super(id, countryCode);
         this.virtualPaymentAddress = virtualPaymentAddress;
     }
     @Override
@@ -36,8 +37,13 @@ public final class UpiAccountPayload extends CountryBasedAccountPayload {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         return new UpiAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
+
                 countryBasedAccountPayload.getCountryCode(),
                 countryBasedAccountPayload.getUpiAccountPayload().getVirtualPaymentAddress());
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.UPI);
     }
 }

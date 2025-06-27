@@ -1,5 +1,7 @@
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
@@ -16,15 +18,14 @@ import static bisq.common.util.OptionalUtils.toOptional;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class CashDepositAccountPayload extends BankAccountPayload {
-
     private final String requirements;
 
-    public CashDepositAccountPayload(String id, String paymentMethodName, String countryCode,
+    public CashDepositAccountPayload(String id, String countryCode,
                                      Optional<String> holderName, Optional<String> bankName, Optional<String> branchId,
                                      Optional<String> accountNr, Optional<String> accountType,
                                      Optional<String> holderTaxId, Optional<String> bankId,
                                      Optional<String> nationalAccountId, String requirements) {
-        super(id, paymentMethodName, countryCode, holderName, bankName, branchId, accountNr, accountType, holderTaxId,
+        super(id, countryCode, holderName, bankName, branchId, accountNr, accountType, holderTaxId,
                 bankId, nationalAccountId);
         this.requirements = requirements;
 
@@ -57,7 +58,6 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
         var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
         return new CashDepositAccountPayload(
                 proto.getId(),
-                proto.getPaymentMethodName(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 toOptional(bankAccountPayload.getHolderName()),
                 toOptional(bankAccountPayload.getBankName()),
@@ -68,5 +68,10 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
                 toOptional(bankAccountPayload.getBankId()),
                 toOptional(bankAccountPayload.getNationalAccountId()),
                 bankAccountPayload.getCashDepositAccountPayload().getRequirements());
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.CASH_DEPOSIT);
     }
 }

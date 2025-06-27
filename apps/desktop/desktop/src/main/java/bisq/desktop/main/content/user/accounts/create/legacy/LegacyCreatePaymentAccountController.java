@@ -30,6 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.UUID;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -84,7 +86,8 @@ public class LegacyCreatePaymentAccountController implements Controller {
             checkNotNull(accountData);
             checkArgument(accountData.length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH,
                     "Account data must not be longer than 1000 characters");
-            UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(model.getAccountName(), accountData);
+            UserDefinedFiatAccountPayload accountPayload = new UserDefinedFiatAccountPayload(UUID.randomUUID().toString(), accountData);
+            UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(model.getAccountName(), accountPayload);
             accountService.addPaymentAccount(newAccount);
             accountService.setSelectedAccount(newAccount);
             close();

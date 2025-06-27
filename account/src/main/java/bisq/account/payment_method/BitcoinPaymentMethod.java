@@ -67,7 +67,7 @@ public class BitcoinPaymentMethod extends PaymentMethod<BitcoinPaymentRail> {
     }
 
     @Override
-    public List<TradeCurrency> getTradeCurrencies() {
+    public List<TradeCurrency> getSupportedCurrencies() {
         return Collections.singletonList(CryptoCurrencyRepository.BITCOIN);
     }
 }

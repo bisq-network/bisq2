@@ -30,7 +30,6 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
     protected Optional<String> nationalAccountId;
 
     protected BankAccountPayload(String id,
-                                 String paymentMethodName,
                                  String countryCode,
                                  Optional<String> holderName,
                                  Optional<String> bankName,
@@ -40,7 +39,7 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
                                  Optional<String> holderTaxId,
                                  Optional<String> bankId,
                                  Optional<String> nationalAccountId) {
-        super(id, paymentMethodName, countryCode);
+        super(id, countryCode);
 
         this.holderName = normalize(holderName);
         this.bankName = normalize(bankName);

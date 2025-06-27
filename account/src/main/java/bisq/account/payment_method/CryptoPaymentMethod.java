@@ -83,7 +83,7 @@ public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> 
     }
 
     @Override
-    public List<TradeCurrency> getTradeCurrencies() {
+    public List<TradeCurrency> getSupportedCurrencies() {
         return CryptoCurrencyRepository.find(currencyCode)
                 .map(e -> List.of((TradeCurrency) e))
                 .orElse(new ArrayList<>());

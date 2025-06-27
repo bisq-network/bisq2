@@ -1,5 +1,7 @@
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -10,13 +12,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class FasterPaymentsAccountPayload extends AccountPayload {
-
+public final class FasterPaymentsAccountPayload extends AccountPayload<FiatPaymentMethod> {
     private final String sortCode;
     private final String accountNr;
 
-    public FasterPaymentsAccountPayload(String id, String paymentMethodName, String sortCode, String accountNr) {
-        super(id, paymentMethodName);
+    public FasterPaymentsAccountPayload(String id, String sortCode, String accountNr) {
+        super(id);
         this.sortCode = sortCode;
         this.accountNr = accountNr;
 
@@ -45,12 +46,16 @@ public final class FasterPaymentsAccountPayload extends AccountPayload {
                 .setAccountNr(accountNr);
     }
 
-    public static FasterPaymentsAccountPayload fromProto(bisq.account.protobuf.AccountPayload account) {
-        var fasterPaymentsPayload = account.getFasterPaymentsAccountPayload();
+    public static FasterPaymentsAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+        var fasterPaymentsPayload = proto.getFasterPaymentsAccountPayload();
         return new FasterPaymentsAccountPayload(
-                account.getId(),
-                account.getPaymentMethodName(),
+                proto.getId(),
                 fasterPaymentsPayload.getSortCode(),
                 fasterPaymentsPayload.getAccountNr());
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.FASTER_PAYMENTS);
     }
 }

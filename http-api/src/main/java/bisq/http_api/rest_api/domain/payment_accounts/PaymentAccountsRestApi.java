@@ -20,7 +20,8 @@ package bisq.http_api.rest_api.domain.payment_accounts;
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.UserDefinedFiatAccount;
-import bisq.account.payment_method.*;
+import bisq.account.accounts.UserDefinedFiatAccountPayload;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.dto.DtoMappings;
 import bisq.dto.account.UserDefinedFiatAccountDto;
 import bisq.http_api.rest_api.domain.RestApiBase;
@@ -31,14 +32,23 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -93,7 +103,7 @@ public class PaymentAccountsRestApi extends RestApiBase {
     public Response getSelectedPaymentAccount() {
         try {
             if (accountService.getSelectedAccount().isPresent()) {
-                Account<?, ? extends PaymentMethod<?>> account = accountService.getSelectedAccount().get();
+                Account<? extends PaymentMethod<?>, ?> account = accountService.getSelectedAccount().get();
                 if (account instanceof UserDefinedFiatAccount castedAccount) {
                     UserDefinedFiatAccountDto userAccount = DtoMappings.UserDefinedFiatAccountMapping.fromBisq2Model(castedAccount);
                     return buildOkResponse(userAccount);
@@ -130,7 +140,8 @@ public class PaymentAccountsRestApi extends RestApiBase {
             response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
         });
         try {
-            accountService.addPaymentAccount(new UserDefinedFiatAccount(request.accountName(), request.accountData()));
+            UserDefinedFiatAccountPayload accountPayload = new UserDefinedFiatAccountPayload(UUID.randomUUID().toString(), request.accountData());
+            accountService.addPaymentAccount(new UserDefinedFiatAccount(request.accountName(), accountPayload));
             asyncResponse.resume(buildResponse(Response.Status.CREATED, new AddAccountResponse(request.accountName())));
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
@@ -156,9 +167,9 @@ public class PaymentAccountsRestApi extends RestApiBase {
             response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
         });
         try {
-            Optional<Account<?, ? extends PaymentMethod<?>>> result = accountService.findAccount(accountName);
+            Optional<Account<? extends PaymentMethod<?>, ?>> result = accountService.findAccount(accountName);
             if (result.isPresent()) {
-                Account<?, ? extends PaymentMethod<?>> toRemove = result.get();
+                Account<? extends PaymentMethod<?>, ?> toRemove = result.get();
                 accountService.removePaymentAccount(toRemove);
                 asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
             } else {
@@ -189,9 +200,9 @@ public class PaymentAccountsRestApi extends RestApiBase {
         try {
             UserDefinedFiatAccountDto account = request.selectedAccount();
             if (account != null) {
-                Optional<Account<?, ? extends PaymentMethod<?>>> result = accountService.findAccount(account.accountName());
+                Optional<Account<? extends PaymentMethod<?>, ?>> result = accountService.findAccount(account.accountName());
                 if (result.isPresent()) {
-                    Account<?, ? extends PaymentMethod<?>> foundAccount = result.get();
+                    Account<? extends PaymentMethod<?>, ?> foundAccount = result.get();
                     if (foundAccount instanceof UserDefinedFiatAccount castedAccount) {
                         accountService.setSelectedAccount(castedAccount);
                     } else {

@@ -20,7 +20,6 @@ package bisq.desktop.main.content.user.accounts.create.payment_method;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethodChargebackRisk;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.common.currency.TradeCurrency;
 import bisq.common.locale.Country;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
@@ -235,26 +234,16 @@ public class PaymentMethodSelectionView extends View<VBox, PaymentMethodSelectio
             this.paymentMethod = paymentMethod;
             name = paymentMethod.getDisplayString();
 
-            currencyCodes = String.join(", ",
-                    paymentMethod.getTradeCurrencies().stream()
-                            .map(TradeCurrency::getCode)
-                            .sorted()
-                            .toList());
-            currencyCodeAndDisplayNames = String.join(", ",
-                    paymentMethod.getTradeCurrencies().stream()
-                            .map(TradeCurrency::getCodeAndDisplayName)
-                            .sorted()
-                            .toList());
-
+            currencyCodes = paymentMethod.getSupportedCurrencyCodesAsDisplayString();
+            currencyCodeAndDisplayNames = paymentMethod.getSupportedCurrencyDisplayNameAndCodeAsDisplayString();
             countryCodes = String.join(", ", getCountryCodes(paymentMethod));
             countryNames = String.join(", ", getCountryNames(paymentMethod));
-
             chargebackRisk = getChargebackRiskEnum(paymentMethod).getDisplayString();
         }
 
         private List<String> getCountryCodes(PaymentMethod<?> method) {
             if (method instanceof FiatPaymentMethod fiatMethod) {
-                return fiatMethod.getPaymentRail().getCountries().stream()
+                return fiatMethod.getPaymentRail().getSupportedCountries().stream()
                         .map(Country::getCode)
                         .sorted()
                         .toList();
@@ -264,7 +253,7 @@ public class PaymentMethodSelectionView extends View<VBox, PaymentMethodSelectio
 
         private List<String> getCountryNames(PaymentMethod<?> method) {
             if (method instanceof FiatPaymentMethod fiatMethod) {
-                return fiatMethod.getPaymentRail().getCountries().stream()
+                return fiatMethod.getPaymentRail().getSupportedCountries().stream()
                         .map(Country::getName)
                         .sorted()
                         .toList();

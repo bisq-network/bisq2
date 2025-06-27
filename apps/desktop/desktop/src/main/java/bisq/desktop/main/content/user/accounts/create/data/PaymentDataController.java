@@ -103,6 +103,7 @@ public class PaymentDataController implements Controller {
             case REVOLUT -> throw new UnsupportedOperationException("Not implemented yet");
             case WISE -> throw new UnsupportedOperationException("Not implemented yet");
             case NATIONAL_BANK -> throw new UnsupportedOperationException("Not implemented yet");
+            case SAME_BANK -> throw new UnsupportedOperationException("Not implemented yet");
             case SWIFT -> throw new UnsupportedOperationException("Not implemented yet");
             case F2F -> new F2FPaymentFormController(serviceProvider);
             case ACH_TRANSFER -> throw new UnsupportedOperationException("Not implemented yet");
@@ -118,6 +119,7 @@ public class PaymentDataController implements Controller {
             case UPI -> throw new UnsupportedOperationException("Not implemented yet");
             case BIZUM -> throw new UnsupportedOperationException("Not implemented yet");
             case CASH_APP -> throw new UnsupportedOperationException("Not implemented yet");
+            case DOMESTIC_WIRE_TRANSFER -> throw new UnsupportedOperationException("Not implemented yet");
         };
     }
 }

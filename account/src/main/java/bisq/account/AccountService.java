@@ -47,7 +47,7 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
 
     private final AccountStore persistableStore = new AccountStore();
     private final Persistence<AccountStore> persistence;
-    private final transient ObservableSet<Account<?, ? extends PaymentMethod<?>>> accounts = new ObservableSet<>();
+    private final transient ObservableSet<Account<? extends PaymentMethod<?>, ?>> accounts = new ObservableSet<>();
 
     public AccountService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
@@ -77,7 +77,7 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
     // API
     /* --------------------------------------------------------------------- */
 
-    public Map<String, Account<?, ? extends PaymentMethod<?>>> getAccountByNameMap() {
+    public Map<String, Account<? extends PaymentMethod<?>, ?>> getAccountByNameMap() {
         return persistableStore.getAccountByName();
     }
 
@@ -85,13 +85,13 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
         return !getAccountByNameMap().isEmpty();
     }
 
-    public void addPaymentAccount(Account<?, ? extends PaymentMethod<?>> account) {
+    public void addPaymentAccount(Account<? extends PaymentMethod<?>, ?> account) {
         getAccountByNameMap().put(account.getAccountName(), account);
         accounts.add(account);
         persist();
     }
 
-    public void removePaymentAccount(Account<?, ? extends PaymentMethod<?>> account) {
+    public void removePaymentAccount(Account<? extends PaymentMethod<?>, ?> account) {
         getAccountByNameMap().remove(account.getAccountName());
         accounts.remove(account);
         getSelectedAccount().ifPresent(s -> {
@@ -102,30 +102,30 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
         persist();
     }
 
-    public Optional<Account<?, ? extends PaymentMethod<?>>> findAccount(String name) {
+    public Optional<Account<? extends PaymentMethod<?>, ?>> findAccount(String name) {
         return Optional.ofNullable(getAccountByNameMap().get(name));
     }
 
-    public Observable<Account<?, ? extends PaymentMethod<?>>> selectedAccountAsObservable() {
+    public Observable<Account<? extends PaymentMethod<?>, ?>> selectedAccountAsObservable() {
         return persistableStore.getSelectedAccount();
     }
 
-    public Optional<Account<?, ? extends PaymentMethod<?>>> getSelectedAccount() {
+    public Optional<Account<? extends PaymentMethod<?>, ?>> getSelectedAccount() {
         return Optional.ofNullable(selectedAccountAsObservable().get());
     }
 
-    public void setSelectedAccount(Account<?, ? extends PaymentMethod<?>> account) {
+    public void setSelectedAccount(Account<? extends PaymentMethod<?>, ?> account) {
         selectedAccountAsObservable().set(account);
         persist();
     }
 
-    public List<Account<?, ? extends PaymentMethod<?>>> getMatchingAccounts(TradeProtocolType protocolTyp,
+    public List<Account<? extends PaymentMethod<?>, ?>> getMatchingAccounts(TradeProtocolType protocolTyp,
                                                                             String currencyCode) {
         Set<? extends PaymentRail> paymentMethods =
                 new HashSet<>(PaymentMethodUtil.getPaymentRails(protocolTyp, currencyCode));
         return persistableStore.getAccountByName().values().stream()
-                .filter(account -> paymentMethods.contains(account.getPaymentMethod().getPaymentRail()))
-                .filter(account -> account.getTradeCurrencyCodes().contains(currencyCode))
+                .filter(account -> paymentMethods.contains(account.getAccountPayload().getPaymentMethod().getPaymentRail()))
+                .filter(account -> account.getSupportedCurrencyCodes().contains(currencyCode))
                 .collect(Collectors.toList());
     }
 }

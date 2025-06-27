@@ -17,6 +17,14 @@
 
 package bisq.desktop.main.content.user.accounts.details;
 
+import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.MultiCurrencyAccountPayload;
+import bisq.account.payment_method.FiatPaymentRail;
+import bisq.account.payment_method.PaymentRail;
+import bisq.common.currency.FiatCurrencyRepository;
+import bisq.common.data.Triple;
+import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.MaterialTextArea;
@@ -24,22 +32,95 @@ import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import lombok.extern.slf4j.Slf4j;
 
-public abstract class AccountDetailsVBox extends VBox {
+@Slf4j
+public abstract class AccountDetailsVBox<A extends Account<?, ?>, R extends PaymentRail> extends VBox {
     protected static final String DESCRIPTION_STYLE = "trade-wizard-review-description";
     protected static final String VALUE_STYLE = "trade-wizard-review-value";
     protected static final String DETAILS_STYLE = "trade-wizard-review-details";
     protected static final double DESCRIPTION_WIDTH = 200;
     protected static final double HBOX_SPACE = 10;
+    private static final double HEIGHT = 61;
 
-    public AccountDetailsVBox() {
+    protected final GridPane gridPane;
+    protected int rowIndex = 0;
+
+    public AccountDetailsVBox(A account) {
         super(10);
 
         setPadding(new Insets(20));
         getStyleClass().add("bisq-content-bg");
+
+        gridPane = new GridPane(10, 10);
+        GridPaneUtil.setGridPaneMultiColumnsConstraints(gridPane, 3);
+
+        addHeader(account);
+
+        rowIndex++;
+
+        Label detailsHeadline = new Label(Res.get("user.paymentAccounts.accountDetails").toUpperCase());
+        detailsHeadline.getStyleClass().add("trade-wizard-review-details-headline");
+        gridPane.add(detailsHeadline, 0, rowIndex, 3, 1);
+
+        rowIndex++;
+        Region line2 = getLine();
+        GridPane.setMargin(line2, new Insets(-10, 0, -5, 0));
+        gridPane.add(line2, 0, rowIndex, 3, 1);
+
+        getChildren().add(gridPane);
+
+        addCustomFields(account);
+
+        Region line3 = getLine();
+        VBox.setMargin(line3, new Insets(0, 0, 5, 0));
+        getChildren().add(line3);
+
+        addGenericFields(account);
+
+    }
+
+    protected abstract void addCustomFields(A account);
+
+    protected abstract void addGenericFields(A account);
+
+    protected void addHeader(Account<?, ?> account) {
+        if (account.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
+            Triple<Text, Label, VBox> paymentMethodTriple = getDescriptionValueVBoxTriple(Res.get("user.paymentAccounts.paymentMethod"),
+                    account.getPaymentMethod().getDisplayString());
+            gridPane.add(paymentMethodTriple.getThird(), 0, rowIndex);
+
+            String currency;
+            AccountPayload<?> accountPayload = account.getAccountPayload();
+            if (accountPayload instanceof MultiCurrencyAccountPayload multiCurrencyAccountPayload) {
+                currency = FiatCurrencyRepository.getFiatCurrencyDisplayNameAndCodes(multiCurrencyAccountPayload.getSelectedCurrencyCodes());
+            } else {
+                currency = FiatCurrencyRepository.getFiatCurrencyDisplayNameAndCode(accountPayload.getCurrencyCode().orElseThrow());
+            }
+
+            Triple<Text, Label, VBox> currencyTriple = getDescriptionValueVBoxTriple(Res.get("user.paymentAccounts.currency"),
+                    currency);
+            gridPane.add(currencyTriple.getThird(), 1, rowIndex);
+
+              /*
+            Triple<Text, Label, VBox> riskTriple = getDescriptionValueVBoxTriple(Res.get("user.paymentAccounts.summary.risk"),
+                    fiatPaymentRail.getChargebackRisk().getDisplayString());
+            Label risk = riskTriple.getSecond();
+            gridPane.add(riskTriple.getThird(), 1, rowIndex);
+
+            Triple<Text, Label, VBox> tradeLimitTriple = getDescriptionValueVBoxTriple(Res.get("user.paymentAccounts.summary.tradeLimit"),
+                    fiatPaymentRail.getTradeLimit());
+            Label tradeLimit = tradeLimitTriple.getSecond();
+            gridPane.add(tradeLimitTriple.getThird(), 2, rowIndex);*/
+        }
+
+
     }
 
     protected Label addDescriptionAndValue(String description, String value) {
@@ -59,14 +140,17 @@ public abstract class AccountDetailsVBox extends VBox {
         return valueLabel;
     }
 
-    protected MaterialTextArea addTextAreaValueWithCopyButton(String value) {
-        MaterialTextArea valueTextArea = new MaterialTextArea(Res.get("user.paymentAccounts.createAccount.accountData.userDefined.accountData"));
-        valueTextArea.setText(value);
-        valueTextArea.setFixedHeight(180);
-        valueTextArea.setEditable(false);
-        valueTextArea.showCopyIcon();
-        getChildren().add(valueTextArea);
-        return valueTextArea;
+    protected MaterialTextArea addTextAreaValueWithCopyButton(String description, String value) {
+        Label descriptionLabel = getDescriptionLabel(description);
+        MaterialTextArea valueLabel = new MaterialTextArea();
+        valueLabel.setText(value);
+        valueLabel.setFixedHeight(180);
+        valueLabel.setEditable(false);
+        valueLabel.showCopyIcon();
+        HBox hBox = new HBox(HBOX_SPACE, descriptionLabel, valueLabel);
+        hBox.setAlignment(Pos.BASELINE_LEFT);
+        getChildren().add(hBox);
+        return valueLabel;
     }
 
     protected Label getDescriptionLabel(String description) {
@@ -94,6 +178,23 @@ public abstract class AccountDetailsVBox extends VBox {
         return bisqMenuItem;
     }
 
+    protected Triple<Text, Label, VBox> getDescriptionValueVBoxTriple(String description, String value) {
+        Text descriptionLabel = description == null ? new Text() : new Text(description.toUpperCase());
+        descriptionLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-description");
+        Label valueLabel = new Label(value);
+        valueLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
+        valueLabel.setMaxWidth(250);
+
+        VBox.setVgrow(valueLabel, Priority.ALWAYS);
+        VBox.setMargin(valueLabel, new Insets(-2, 0, 0, 0));
+        VBox vBox = new VBox(0, descriptionLabel, valueLabel);
+        vBox.setFillWidth(true);
+        vBox.setAlignment(Pos.TOP_LEFT);
+        vBox.setMinHeight(HEIGHT);
+        vBox.setMaxHeight(HEIGHT);
+        return new Triple<>(descriptionLabel, valueLabel, vBox);
+    }
+
     protected Region getLine() {
         Region line = new Region();
         line.setMinHeight(1);
@@ -102,5 +203,4 @@ public abstract class AccountDetailsVBox extends VBox {
         line.setPadding(new Insets(9, 0, 8, 0));
         return line;
     }
-
 }

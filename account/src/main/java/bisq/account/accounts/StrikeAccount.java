@@ -12,12 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class StrikeAccount extends CountryBasedAccount<StrikeAccountPayload, FiatPaymentMethod> {
-
-    private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.STRIKE);
-
+public final class StrikeAccount extends CountryBasedAccount<StrikeAccountPayload> {
     public StrikeAccount(String accountName, StrikeAccountPayload accountPayload) {
-        super(accountName, PAYMENT_METHOD, accountPayload);
+        super(accountName, accountPayload);
     }
 
     @Override

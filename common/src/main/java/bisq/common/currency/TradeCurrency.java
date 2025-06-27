@@ -25,7 +25,9 @@ import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @EqualsAndHashCode
 @ToString
 @Getter
@@ -59,6 +61,16 @@ public abstract class TradeCurrency implements Comparable<TradeCurrency>, Persis
 
         NetworkDataValidation.validateCode(code);
         NetworkDataValidation.validateText(name, MAX_NAME_LENGTH);
+    }
+
+    @Override
+    public bisq.common.protobuf.TradeCurrency toProto(boolean serializeForHash) {
+        return switch (this) {
+            case FiatCurrency fiatCurrency -> fiatCurrency.toProto(serializeForHash);
+            case CryptoCurrency cryptoCurrency -> cryptoCurrency.toProto(serializeForHash);
+            case StableCoinCurrency stableCoinCurrency -> stableCoinCurrency.toProto(serializeForHash);
+            default -> throw new UnsupportedOperationException("Unsupported tradeCurrency at toProto {}" + name);
+        };
     }
 
     public bisq.common.protobuf.TradeCurrency.Builder getTradeCurrencyBuilder() {
