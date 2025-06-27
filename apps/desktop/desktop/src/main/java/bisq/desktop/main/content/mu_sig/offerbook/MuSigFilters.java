@@ -31,6 +31,7 @@ public class MuSigFilters {
     public enum MuSigOfferDirectionFilter {
         ALL,
         BUY,
-        SELL
+        SELL,
+        MINE
     }
 }

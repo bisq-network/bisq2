@@ -53,7 +53,8 @@
     -fx-border-color: transparent;
 }
 
-.mu-sig-offerbook-offerlist-toggle-button-hbox .offerlist-toggle-button-all-offers.toggle-button:selected {
+.mu-sig-offerbook-offerlist-toggle-button-hbox .offerlist-toggle-button-all-offers.toggle-button:selected,
+.mu-sig-offerbook-offerlist-toggle-button-hbox .offerlist-toggle-button-my-offers.toggle-button:selected {
     -fx-background-color: -bisq-mid-grey-10;
 }
 

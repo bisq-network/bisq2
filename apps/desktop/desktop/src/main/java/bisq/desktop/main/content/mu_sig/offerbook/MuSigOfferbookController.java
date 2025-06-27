@@ -47,6 +47,9 @@ import bisq.settings.SettingsService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.banned.RateLimitExceededException;
 import bisq.user.banned.UserProfileBannedException;
+import bisq.user.identity.UserIdentity;
+import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import com.google.common.base.Joiner;
 import lombok.Getter;
@@ -73,6 +76,7 @@ public class MuSigOfferbookController implements Controller {
     private final IdentityService identityService;
     private final BannedUserService bannedUserService;
     private final FavouriteMarketsService favouriteMarketsService;
+    private final UserIdentityService userIdentityService;
     private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin;
     private Subscription selectedMarketItemPin, marketsSearchBoxTextPin, selectedMarketFilterPin, selectedMarketSortTypePin,
             selectedOfferDirectionFilterPin, activeMarketPaymentsCountPin;
@@ -85,6 +89,7 @@ public class MuSigOfferbookController implements Controller {
         settingsService = serviceProvider.getSettingsService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         favouriteMarketsService = serviceProvider.getFavouriteMarketsService();
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
 
         model = new MuSigOfferbookModel();
         view = new MuSigOfferbookView(model, this);
@@ -250,8 +255,13 @@ public class MuSigOfferbookController implements Controller {
                    model.setMuSigOffersDirectionFilterPredicate(item -> true);
                } else if (filter == MuSigFilters.MuSigOfferDirectionFilter.BUY) {
                    model.setMuSigOffersDirectionFilterPredicate(item -> item.getDirection() == Direction.BUY);
-               } else {
+               } else if (filter == MuSigFilters.MuSigOfferDirectionFilter.SELL) {
                    model.setMuSigOffersDirectionFilterPredicate(item -> item.getDirection() == Direction.SELL);
+               } else if (filter == MuSigFilters.MuSigOfferDirectionFilter.MINE) {
+                   UserProfile selectedProfile = Optional.ofNullable(userIdentityService.getSelectedUserIdentity())
+                           .map(UserIdentity::getUserProfile)
+                           .orElse(null);
+                   model.setMuSigOffersDirectionFilterPredicate(item -> item.getMakerUserProfile().equals(selectedProfile));
                }
                settingsService.setCookie(CookieKey.MU_SIG_OFFER_DIRECTION_FILTER, filter.name());
                updateFilteredMuSigOfferListItems();

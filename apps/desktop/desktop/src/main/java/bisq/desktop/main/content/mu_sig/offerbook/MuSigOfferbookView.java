@@ -101,7 +101,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     private SortAndFilterDropdownMenuItem<MarketSortType> sortByMostOffers, sortByNameAZ, sortByNameZA;
     private SortAndFilterDropdownMenuItem<MuSigFilters.MarketFilter> filterShowAll, filterWithOffers, filterFavourites;
     private ToggleGroup offerFiltersToggleGroup;
-    private ToggleButton allOffersToggleButton, buyToggleButton, sellToggleButton;
+    private ToggleButton allOffersToggleButton, buyToggleButton, sellToggleButton, myOffersToggleButton;
     private ImageView withOffersRemoveFilterDefaultIcon, withOffersRemoveFilterActiveIcon,
             favouritesRemoveFilterDefaultIcon, favouritesRemoveFilterActiveIcon;
     private Subscription selectedMarketItemPin, marketListViewSelectionPin, favouritesListViewNeedsHeightUpdatePin,
@@ -239,6 +239,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         allOffersToggleButton.setOnAction(e -> model.getSelectedMuSigOfferDirectionFilter().set(MuSigFilters.MuSigOfferDirectionFilter.ALL));
         buyToggleButton.setOnAction(e -> model.getSelectedMuSigOfferDirectionFilter().set(MuSigFilters.MuSigOfferDirectionFilter.SELL));
         sellToggleButton.setOnAction(e -> model.getSelectedMuSigOfferDirectionFilter().set(MuSigFilters.MuSigOfferDirectionFilter.BUY));
+        myOffersToggleButton.setOnAction(e -> model.getSelectedMuSigOfferDirectionFilter().set(MuSigFilters.MuSigOfferDirectionFilter.MINE));
 
         model.getAvailablePaymentMethods().addListener(availablePaymentsChangeListener);
         updatePaymentsFilterMenu();
@@ -286,6 +287,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         allOffersToggleButton.setOnAction(null);
         buyToggleButton.setOnAction(null);
         sellToggleButton.setOnAction(null);
+        myOffersToggleButton.setOnAction(null);
 
         removeWithOffersFilter.setOnMouseClicked(null);
         withOffersDisplayHint.setOnMouseEntered(null);
@@ -682,9 +684,12 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         buyToggleButton.getStyleClass().add("offerlist-toggle-button-buy");
         sellToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerlistSubheader.offersToggleGroup.sell"));
         sellToggleButton.getStyleClass().add("offerlist-toggle-button-sell");
+        myOffersToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerlistSubheader.offersToggleGroup.myOffers"));
+        myOffersToggleButton.getStyleClass().add("offerlist-toggle-button-my-offers");
+
         offerFiltersToggleGroup = new ToggleGroup();
-        offerFiltersToggleGroup.getToggles().addAll(allOffersToggleButton, buyToggleButton, sellToggleButton);
-        HBox toggleButtonHBox = new HBox(3, allOffersToggleButton, buyToggleButton, sellToggleButton);
+        offerFiltersToggleGroup.getToggles().addAll(allOffersToggleButton, buyToggleButton, sellToggleButton, myOffersToggleButton);
+        HBox toggleButtonHBox = new HBox(3, buyToggleButton, sellToggleButton, allOffersToggleButton, myOffersToggleButton);
         toggleButtonHBox.getStyleClass().add("mu-sig-offerbook-offerlist-toggle-button-hbox");
 
         // Add payments filter menu to subheader
@@ -810,8 +815,10 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
             allOffersToggleButton.setSelected(true);
         } else if (offerDirectionFilter == MuSigFilters.MuSigOfferDirectionFilter.BUY) {
             sellToggleButton.setSelected(true);
-        } else {
+        } else if (offerDirectionFilter == MuSigFilters.MuSigOfferDirectionFilter.SELL) {
             buyToggleButton.setSelected(true);
+        } else if (offerDirectionFilter == MuSigFilters.MuSigOfferDirectionFilter.MINE) {
+            myOffersToggleButton.setSelected(true);
         }
     }
 
