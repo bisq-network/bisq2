@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class StrikeAccount extends CountryBasedAccount<StrikeAccountPayload, FiatPaymentMethod> {
+public final class StrikeAccount extends CountryBasedAccount<StrikeAccountPayload> {
 
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.STRIKE);
 

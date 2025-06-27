@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class BizumAccount extends CountryBasedAccount<BizumAccountPayload, FiatPaymentMethod> {
+public final class BizumAccount extends CountryBasedAccount<BizumAccountPayload> {
 
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.BIZUM);
 

@@ -83,8 +83,8 @@ public abstract class BaseSendAccountPayloadAndDepositTxMessage_Handler extends 
         //todo mock
         AccountPayload accountPayload = new F2FAccountPayload(
                 "id",
-                "paymentMethodName",
                 "countryCode",
+                "USD",
                 "city",
                 "contact",
                 "extraInfo");

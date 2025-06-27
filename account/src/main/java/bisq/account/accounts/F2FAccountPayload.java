@@ -1,12 +1,14 @@
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import lombok.Getter;
 
 @Getter
-public class F2FAccountPayload extends CountryBasedAccountPayload {
+public class F2FAccountPayload extends CountryBasedAccountPayload implements SelectableCurrencyAccountPayload {
     public static final int CITY_MIN_LENGTH = 2;
     public static final int CITY_MAX_LENGTH = 50;
     public static final int CONTACT_MIN_LENGTH = 5;
@@ -19,15 +21,13 @@ public class F2FAccountPayload extends CountryBasedAccountPayload {
     private final String contact;
     private final String extraInfo;
 
-
     public F2FAccountPayload(String id,
-                             String paymentMethodName,
                              String countryCode,
                              String selectedCurrencyCode,
                              String city,
                              String contact,
                              String extraInfo) {
-        super(id, paymentMethodName, countryCode);
+        super(id, countryCode);
         this.selectedCurrencyCode = selectedCurrencyCode;
         this.city = city;
         this.contact = contact;
@@ -67,13 +67,17 @@ public class F2FAccountPayload extends CountryBasedAccountPayload {
         bisq.account.protobuf.F2FAccountPayload f2fAccountPayload = countryBasedAccountPayload.getF2FAccountPayload();
         return new F2FAccountPayload(
                 proto.getId(),
-                proto.getPaymentRailName(),
                 countryBasedAccountPayload.getCountryCode(),
                 f2fAccountPayload.getSelectedCurrencyCode(),
                 f2fAccountPayload.getCity(),
                 f2fAccountPayload.getContact(),
                 f2fAccountPayload.getExtraInfo()
         );
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.F2F);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protobuf.AccountPayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -13,8 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 public final class StrikeAccountPayload extends CountryBasedAccountPayload {
     private final String holderName;
 
-    public StrikeAccountPayload(String id, String paymentMethodName, String countryCode, String holderName) {
-        super(id, paymentMethodName, countryCode);
+    public StrikeAccountPayload(String id, String countryCode, String holderName) {
+        super(id, countryCode);
         this.holderName = holderName;
     }
 
@@ -35,7 +36,6 @@ public final class StrikeAccountPayload extends CountryBasedAccountPayload {
     public static StrikeAccountPayload fromProto(AccountPayload proto) {
         return new StrikeAccountPayload(
                 proto.getId(),
-                proto.getPaymentRailName(),
                 proto.getCountryBasedAccountPayload().getCountryCode(),
                 proto.getCountryBasedAccountPayload().getStrikeAccountPayload().getHolderName());
     }

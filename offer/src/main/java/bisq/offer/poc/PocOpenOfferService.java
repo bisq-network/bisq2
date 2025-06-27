@@ -132,8 +132,8 @@ public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore>
                                                    Monetary baseSideAmount,
                                                    PriceQuote fixPrice,
                                                    TradeProtocolType selectedProtocolTyp,
-                                                   List<Account<?, BitcoinPaymentMethod>> selectedBaseSideAccounts,
-                                                   List<Account<?, FiatPaymentMethod>> selectedQuoteSideAccounts,
+                                                   List<Account<BitcoinPaymentMethod, ?>> selectedBaseSideAccounts,
+                                                   List<Account<FiatPaymentMethod, ?>> selectedQuoteSideAccounts,
                                                    List<BitcoinPaymentRail> selectedBaseSidePaymentPaymentRails,
                                                    List<FiatPaymentRail> selectedQuoteSidePaymentPaymentRails) {
         String offerId = StringUtils.createUid();

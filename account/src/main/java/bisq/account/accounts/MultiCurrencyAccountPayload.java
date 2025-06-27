@@ -17,5 +17,8 @@
 
 package bisq.account.accounts;
 
-public interface MultiCurrencyAccount {
+import java.util.List;
+
+public interface MultiCurrencyAccountPayload {
+    List<String> getSelectedCurrencyCodes();
 }

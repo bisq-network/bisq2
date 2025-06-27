@@ -17,6 +17,7 @@
 
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.NetworkDataValidation;
@@ -42,13 +43,12 @@ public final class SepaInstantAccountPayload extends CountryBasedAccountPayload 
     private final List<String> acceptedCountryCodes;
 
     public SepaInstantAccountPayload(String id,
-                                     String paymentMethodName,
                                      String holderName,
                                      String iban,
                                      String bic,
                                      String countryCode,
                                      List<String> acceptedCountryCodes) {
-        super(id, paymentMethodName, countryCode);
+        super(id, countryCode);
         this.holderName = holderName;
         this.iban = iban;
         this.bic = bic;
@@ -63,7 +63,6 @@ public final class SepaInstantAccountPayload extends CountryBasedAccountPayload 
 
         return new SepaInstantAccountPayload(
                 proto.getId(),
-                proto.getPaymentRailName(),
                 sepaInstantPayload.getHolderName(),
                 sepaInstantPayload.getIban(),
                 sepaInstantPayload.getBic(),

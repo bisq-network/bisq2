@@ -17,20 +17,25 @@ import static bisq.common.util.OptionalUtils.toOptional;
 public class NationalBankAccountPayload extends BankAccountPayload {
 
     public NationalBankAccountPayload(String id,
-                                         String paymentMethodName,
-                                         String countryCode,
-                                         Optional<String> holderName,
-                                         Optional<String> bankName,
-                                         Optional<String> branchId,
-                                         Optional<String> accountNr,
-                                         Optional<String> accountType,
-                                         Optional<String> holderTaxId,
-                                         Optional<String> bankId,
-                                         Optional<String> nationalAccountId) {
-        super(id, paymentMethodName, countryCode,
-                holderName, bankName, branchId,
-                accountNr, accountType, holderTaxId,
-                bankId, nationalAccountId);
+                                      String countryCode,
+                                      Optional<String> holderName,
+                                      Optional<String> bankName,
+                                      Optional<String> branchId,
+                                      Optional<String> accountNr,
+                                      Optional<String> accountType,
+                                      Optional<String> holderTaxId,
+                                      Optional<String> bankId,
+                                      Optional<String> nationalAccountId) {
+        super(id,
+                countryCode,
+                holderName,
+                bankName,
+                branchId,
+                accountNr,
+                accountType,
+                holderTaxId,
+                bankId,
+                nationalAccountId);
     }
 
     @Override
@@ -52,7 +57,6 @@ public class NationalBankAccountPayload extends BankAccountPayload {
         var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
         return new NationalBankAccountPayload(
                 proto.getId(),
-                proto.getPaymentRailName(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 toOptional(bankAccountPayload.getHolderName()),
                 toOptional(bankAccountPayload.getBankName()),

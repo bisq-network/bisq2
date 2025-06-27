@@ -15,19 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.details;
+package bisq.account.accounts;
 
-import bisq.account.accounts.CountryBasedAccount;
-import bisq.common.locale.CountryRepository;
-import bisq.i18n.Res;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
-public class CountyBasedAccountDetailsVBox extends AccountDetailsVBox {
-    public CountyBasedAccountDetailsVBox(CountryBasedAccount<?, ?> account) {
-        super(account);
-
-        addDescriptionAndValue(Res.get("user.paymentAccounts.createAccount.accountData.country"),
-                CountryRepository.getNameByCode(account.getAccountPayload().getCountryCode()));
-    }
+public interface SelectableCurrencyAccountPayload {
+    String getSelectedCurrencyCode();
 }

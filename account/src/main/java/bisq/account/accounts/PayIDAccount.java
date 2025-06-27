@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class PayIDAccount extends Account<PayIDAccountPayload, FiatPaymentMethod> {
+public final class PayIDAccount extends Account<FiatPaymentMethod, PayIDAccountPayload> {
 
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.PAY_ID);
 

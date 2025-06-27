@@ -17,6 +17,8 @@
 
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,12 +30,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class UserDefinedFiatAccountPayload extends AccountPayload {
+public final class UserDefinedFiatAccountPayload extends AccountPayload<FiatPaymentMethod> {
     public static final int MAX_DATA_LENGTH = 1000;
     private final String accountData;
 
-    public UserDefinedFiatAccountPayload(String id, String paymentMethodName, String accountData) {
-        super(id, paymentMethodName);
+    public UserDefinedFiatAccountPayload(String id, String accountData) {
+        super(id);
         checkArgument(accountData.length() <= MAX_DATA_LENGTH);
         this.accountData = accountData;
     }
@@ -54,6 +56,11 @@ public final class UserDefinedFiatAccountPayload extends AccountPayload {
     }
 
     public static UserDefinedFiatAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        return new UserDefinedFiatAccountPayload(proto.getId(), proto.getPaymentRailName(), proto.getUserDefinedFiatAccountPayload().getAccountData());
+        return new UserDefinedFiatAccountPayload(proto.getId(), proto.getUserDefinedFiatAccountPayload().getAccountData());
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.CUSTOM);
     }
 }

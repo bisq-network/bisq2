@@ -1,7 +1,5 @@
 package bisq.account.accounts;
 
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -11,11 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class F2FAccount extends CountryBasedAccount<F2FAccountPayload, FiatPaymentMethod> {
-    private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.F2F);
+public final class F2FAccount extends CountryBasedAccount<F2FAccountPayload> {
 
-    public F2FAccount(String accountName, F2FAccountPayload payload) {
-        super(accountName, PAYMENT_METHOD, payload);
+    public F2FAccount(String accountName, F2FAccountPayload accountPayload) {
+        super(accountName, accountPayload);
     }
 
     @Override

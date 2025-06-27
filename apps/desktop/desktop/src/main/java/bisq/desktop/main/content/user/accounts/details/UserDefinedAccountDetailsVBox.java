@@ -18,13 +18,23 @@
 package bisq.desktop.main.content.user.accounts.details;
 
 import bisq.account.accounts.UserDefinedFiatAccount;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.i18n.Res;
 
-public class UserDefinedAccountDetailsVBox extends AccountDetailsVBox {
+public class UserDefinedAccountDetailsVBox extends AccountDetailsVBox<UserDefinedFiatAccount, FiatPaymentRail> {
     public UserDefinedAccountDetailsVBox(UserDefinedFiatAccount account) {
         super(account);
+    }
 
-        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.createAccount.accountData.userDefined.accountData"),
+    @Override
+    protected void addCustomFields(UserDefinedFiatAccount account) {
+        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.userDefined.accountData"),
                 account.getAccountPayload().getAccountData());
+    }
+
+    @Override
+    protected void addGenericFields(UserDefinedFiatAccount account) {
+        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.userDefined.note"),
+                Res.get("user.paymentAccounts.userDefined.note.deprecated"));
     }
 }

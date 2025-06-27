@@ -63,7 +63,7 @@ public class MaterialTextArea extends MaterialTextField {
 
     @Override
     protected double getFieldLayoutY() {
-        return StringUtils.isEmpty(descriptionProperty().get()) ? 0 : 23; // 18 + 5 = 23;
+        return 23; // 18 + 5 = 23;
     }
 
     public void setFixedHeight(double height) {

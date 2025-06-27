@@ -31,20 +31,19 @@ import java.util.List;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class RevolutAccount extends Account<RevolutAccountPayload, FiatPaymentMethod> {
+public final class RevolutAccount extends Account<FiatPaymentMethod, RevolutAccountPayload> {
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.REVOLUT);
 
     public RevolutAccount(String accountName,
                           List<String> acceptedCurrencyCodes,
                           String userName) {
         this(accountName, new RevolutAccountPayload(StringUtils.createUid(),
-                PAYMENT_METHOD.getName(),
                 acceptedCurrencyCodes,
                 userName));
     }
 
     private RevolutAccount(String accountName, RevolutAccountPayload revolutAccountPayload) {
-        super(accountName, PAYMENT_METHOD, revolutAccountPayload);
+        super(accountName, revolutAccountPayload);
     }
 
     @Override

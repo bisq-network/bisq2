@@ -18,7 +18,9 @@
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
 import bisq.account.accounts.F2FAccountPayload;
-import bisq.account.payment_method.FiatPaymentRail;
+import bisq.common.currency.FiatCurrency;
+import bisq.common.currency.FiatCurrencyRepository;
+import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
@@ -38,13 +40,16 @@ public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFo
 
     @Override
     protected F2FPaymentFormModel createModel() {
-        return new F2FPaymentFormModel(UUID.randomUUID().toString(), CountryRepository.getCountries());
+        return new F2FPaymentFormModel(UUID.randomUUID().toString(),
+                CountryRepository.getCountries(),
+                FiatCurrencyRepository.getAllCurrencies());
     }
 
     @Override
     public void onActivate() {
         model.getRequireValidation().set(false);
         model.getCountryErrorVisible().set(false);
+        model.getCurrencyErrorVisible().set(false);
     }
 
     @Override
@@ -59,7 +64,10 @@ public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFo
     public boolean validate() {
         boolean isCountrySet = model.getSelectedCountry().get() != null;
         model.getCountryErrorVisible().set(!isCountrySet);
+        boolean isCurrencySet = model.getSelectedCurrency().get() != null;
+        model.getCurrencyErrorVisible().set(!isCurrencySet);
         boolean isValid = isCountrySet &&
+                isCurrencySet &&
                 model.getCityValidator().validateAndGet() &&
                 model.getContactValidator().validateAndGet() &&
                 model.getExtraInfoValidator().validateAndGet();
@@ -70,11 +78,40 @@ public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFo
     @Override
     public F2FAccountPayload getAccountPayload() {
         return new F2FAccountPayload(model.getId(),
-                FiatPaymentRail.F2F.name(),
                 model.getSelectedCountry().get().getCode(),
-                model.getSelectedCurrencyCode().get(),
+                model.getSelectedCurrency().get().getCode(),
                 model.getCity().get(),
                 model.getContact().get(),
                 model.getExtraInfo().get());
+    }
+
+    void onSelectCountry(Country selectedCountry) {
+        model.getSelectedCountry().set(selectedCountry);
+        model.getCountryErrorVisible().set(false);
+        model.getSelectedCurrency().set(FiatCurrencyRepository.getCurrencyByCountryCode(selectedCountry.getCode()));
+        checkCurrencyCountryMatch();
+    }
+
+    void onSelectCurrency(FiatCurrency selectedCurrency) {
+        model.getSelectedCurrency().set(selectedCurrency);
+        model.getCurrencyErrorVisible().set(false);
+        checkCurrencyCountryMatch();
+    }
+
+    void onCurrencyCountryMisMatchPopupClosed(boolean applyMatchingCurrency) {
+        model.getCurrencyCountryMismatch().set(false);
+        if (applyMatchingCurrency) {
+            model.getSelectedCurrency().set(FiatCurrencyRepository.getCurrencyByCountryCode(model.getSelectedCountry().get().getCode()));
+        }
+    }
+
+    private void checkCurrencyCountryMatch() {
+        if (model.getSelectedCountry().get() != null &&
+                model.getSelectedCurrency().get() != null &&
+                !FiatCurrencyRepository.getCurrencyByCountryCode(model.getSelectedCountry().get().getCode()).equals(model.getSelectedCurrency().get())) {
+            model.getCurrencyCountryMismatch().set(true);
+        } else {
+            model.getCurrencyCountryMismatch().set(false);
+        }
     }
 }

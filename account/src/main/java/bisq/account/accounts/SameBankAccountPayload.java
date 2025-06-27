@@ -31,7 +31,6 @@ import static bisq.common.util.OptionalUtils.toOptional;
 public final class SameBankAccountPayload extends NationalBankAccountPayload {
 
     public SameBankAccountPayload(String id,
-                                  String paymentMethodName,
                                   String countryCode,
                                   Optional<String> holderName,
                                   Optional<String> bankName,
@@ -41,10 +40,16 @@ public final class SameBankAccountPayload extends NationalBankAccountPayload {
                                   Optional<String> holderTaxId,
                                   Optional<String> bankId,
                                   Optional<String> nationalAccountId) {
-        super(id, paymentMethodName, countryCode,
-                holderName, bankName, branchId,
-                accountNr, accountType, holderTaxId,
-                bankId, nationalAccountId);
+        super(id,
+                countryCode,
+                holderName,
+                bankName,
+                branchId,
+                accountNr,
+                accountType,
+                holderTaxId,
+                bankId,
+                nationalAccountId);
         verify();
     }
 
@@ -67,7 +72,6 @@ public final class SameBankAccountPayload extends NationalBankAccountPayload {
         var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
         return new SameBankAccountPayload(
                 proto.getId(),
-                proto.getPaymentRailName(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 toOptional(bankAccountPayload.getHolderName()),
                 toOptional(bankAccountPayload.getBankName()),

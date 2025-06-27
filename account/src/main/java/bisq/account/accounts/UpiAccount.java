@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class UpiAccount extends CountryBasedAccount<UpiAccountPayload, FiatPaymentMethod> {
+public final class UpiAccount extends CountryBasedAccount<UpiAccountPayload> {
 
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.UPI);
 

@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class FasterPaymentsAccount extends Account<FasterPaymentsAccountPayload, FiatPaymentMethod> {
+public final class FasterPaymentsAccount extends Account<FiatPaymentMethod, FasterPaymentsAccountPayload> {
 
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.FASTER_PAYMENTS);
 

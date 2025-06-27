@@ -14,9 +14,8 @@ public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPaylo
 
     private final String emailOrMobileNr;
 
-    public AmazonGiftCardAccountPayload(String id, String paymentMethodName,
-                                        String countryCode, String emailOrMobileNr) {
-        super(id, paymentMethodName, countryCode);
+    public AmazonGiftCardAccountPayload(String id,    String countryCode, String emailOrMobileNr) {
+        super(id, countryCode);
         this.emailOrMobileNr = emailOrMobileNr;
     }
 
@@ -41,7 +40,6 @@ public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPaylo
                 countryBasedAccountPayload.getAmazonGiftCardAccountPayload();
         return new AmazonGiftCardAccountPayload(
                 proto.getId(),
-                proto.getPaymentRailName(),
                 countryBasedAccountPayload.getCountryCode(),
                 amazonGiftCardAccountPayload.getEmailOrMobileNr()
         );

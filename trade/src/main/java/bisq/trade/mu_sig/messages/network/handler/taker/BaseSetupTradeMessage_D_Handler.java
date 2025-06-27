@@ -84,8 +84,8 @@ public abstract class BaseSetupTradeMessage_D_Handler extends MuSigTradeMessageH
         //todo mock
         AccountPayload accountPayload = new F2FAccountPayload(
                 "id",
-                "paymentMethodName",
                 "countryCode",
+                "USD",
                 "city",
                 "contact",
                 "extraInfo");

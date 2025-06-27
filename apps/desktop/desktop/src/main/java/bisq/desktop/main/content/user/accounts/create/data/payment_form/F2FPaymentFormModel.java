@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
+import bisq.common.currency.FiatCurrency;
 import bisq.common.locale.Country;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import javafx.beans.property.BooleanProperty;
@@ -43,8 +44,13 @@ public class F2FPaymentFormModel extends PaymentFormModel {
     private final ObservableList<Country> allCountries;
     private final ObjectProperty<Country> selectedCountry = new SimpleObjectProperty<>();
     private final BooleanProperty countryErrorVisible = new SimpleBooleanProperty();
+
+    private final ObservableList<FiatCurrency> currencies;
+    private final ObjectProperty<FiatCurrency> selectedCurrency = new SimpleObjectProperty<>();
+    private final BooleanProperty currencyErrorVisible = new SimpleBooleanProperty();
+
+    private final BooleanProperty currencyCountryMismatch = new SimpleBooleanProperty();
     private final BooleanProperty requireValidation = new SimpleBooleanProperty();
-    private final StringProperty selectedCurrencyCode = new SimpleStringProperty("USD"); //todo
     private final StringProperty city = new SimpleStringProperty();
     private final StringProperty contact = new SimpleStringProperty();
     private final StringProperty extraInfo = new SimpleStringProperty();
@@ -53,8 +59,9 @@ public class F2FPaymentFormModel extends PaymentFormModel {
     private final TextMinMaxLengthValidator contactValidator = new TextMinMaxLengthValidator(CONTACT_MIN_LENGTH, CONTACT_MAX_LENGTH);
     private final TextMinMaxLengthValidator extraInfoValidator = new TextMinMaxLengthValidator(EXTRA_INFO_MIN_LENGTH, EXTRA_INFO_MAX_LENGTH);
 
-    public F2FPaymentFormModel(String id, List<Country> allCountries) {
+    public F2FPaymentFormModel(String id, List<Country> allCountries, List<FiatCurrency> allCurrencies) {
         super(id);
         this.allCountries = FXCollections.observableArrayList(allCountries);
+        this.currencies = FXCollections.observableArrayList(allCurrencies);
     }
 }

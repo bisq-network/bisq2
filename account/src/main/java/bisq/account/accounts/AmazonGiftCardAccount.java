@@ -12,12 +12,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class AmazonGiftCardAccount extends CountryBasedAccount<AmazonGiftCardAccountPayload, FiatPaymentMethod> {
+public final class AmazonGiftCardAccount extends CountryBasedAccount<AmazonGiftCardAccountPayload> {
 
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.AMAZON_GIFT_CARD);
 
     public AmazonGiftCardAccount(String accountName, AmazonGiftCardAccountPayload payload) {
-        super(accountName, PAYMENT_METHOD, payload);
+        super(accountName, payload);
     }
 
     @Override

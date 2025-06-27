@@ -37,16 +37,16 @@ import java.util.stream.Collectors;
 @Slf4j
 public final class AccountStore implements PersistableStore<AccountStore> {
     @Getter(AccessLevel.PACKAGE)
-    private final Map<String, Account<?, ? extends PaymentMethod<?>>> accountByName = new ConcurrentHashMap<>();
+    private final Map<String, Account<? extends PaymentMethod<?>, ?>> accountByName = new ConcurrentHashMap<>();
     @Getter(AccessLevel.PACKAGE)
-    private final Observable<Account<?, ? extends PaymentMethod<?>>> selectedAccount = new Observable<>();
+    private final Observable<Account<? extends PaymentMethod<?>, ?>> selectedAccount = new Observable<>();
 
     AccountStore() {
         this(new HashMap<>(), Optional.empty());
     }
 
-    AccountStore(Map<String, Account<?, ? extends PaymentMethod<?>>> accountByName,
-                        Optional<Account<?, ? extends PaymentMethod<?>>> selectedAccount) {
+    AccountStore(Map<String, Account<? extends PaymentMethod<?>, ?>> accountByName,
+                 Optional<Account<? extends PaymentMethod<?>, ?>> selectedAccount) {
         this.accountByName.putAll(accountByName);
         this.selectedAccount.set(selectedAccount.orElse(null));
     }

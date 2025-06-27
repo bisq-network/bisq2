@@ -1,5 +1,6 @@
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protobuf.AccountPayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -14,8 +15,8 @@ public final class BizumAccountPayload extends CountryBasedAccountPayload {
 
     private final String mobileNr;
 
-    public BizumAccountPayload(String id, String paymentMethodName, String countryCode, String mobileNr) {
-        super(id, paymentMethodName, countryCode);
+    public BizumAccountPayload(String id, String countryCode, String mobileNr) {
+        super(id, countryCode);
         this.mobileNr = mobileNr;
     }
     @Override
@@ -36,7 +37,6 @@ public final class BizumAccountPayload extends CountryBasedAccountPayload {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         return new BizumAccountPayload(
                 proto.getId(),
-                proto.getPaymentRailName(),
                 countryBasedAccountPayload.getCountryCode(),
                 countryBasedAccountPayload.getBizumAccountPayload().getMobileNr());
     }

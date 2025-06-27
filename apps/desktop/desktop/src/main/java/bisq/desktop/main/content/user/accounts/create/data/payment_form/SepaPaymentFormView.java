@@ -55,7 +55,7 @@ public class SepaPaymentFormView extends PaymentFormView<SepaPaymentFormModel, S
 
         country = new AutoCompleteComboBox<>(
                 model.getAllSepaCountries(),
-                Res.get("user.paymentAccounts.createAccount.accountData.countryOfBank"),
+                Res.get("user.paymentAccounts.createAccount.accountData.country"),
                 Res.get("user.paymentAccounts.createAccount.accountData.country.prompt")
         );
         country.setPrefWidth(830 / 4d);
@@ -84,7 +84,7 @@ public class SepaPaymentFormView extends PaymentFormView<SepaPaymentFormModel, S
         VBox countryVBox = new VBox(country, countryErrorLabel);
         countryVBox.setAlignment(Pos.TOP_LEFT);
 
-        holderName = new MaterialTextField(Res.get("user.paymentAccounts.createAccount.accountData.sepa.holderName"),
+        holderName = new MaterialTextField(Res.get("user.paymentAccounts.sepa.holderName"),
                 Res.get("user.paymentAccounts.createAccount.accountData.sepa.holderName.prompt"));
         holderName.setValidators(model.getHolderNameValidator());
         holderName.setMaxWidth(Double.MAX_VALUE);
@@ -92,12 +92,12 @@ public class SepaPaymentFormView extends PaymentFormView<SepaPaymentFormModel, S
         HBox.setHgrow(holderName, Priority.ALWAYS);
         HBox countryAndHolderNameHBox = new HBox(10, countryVBox, holderName);
 
-        iban = new MaterialTextField(Res.get("user.paymentAccounts.createAccount.accountData.sepa.iban"),
+        iban = new MaterialTextField(Res.get("user.paymentAccounts.sepa.iban"),
                 Res.get("user.paymentAccounts.createAccount.accountData.sepa.iban.prompt"));
         iban.setValidators(model.getSepaIbanValidator());
         iban.setMaxWidth(Double.MAX_VALUE);
 
-        bic = new MaterialTextField(Res.get("user.paymentAccounts.createAccount.accountData.sepa.bic"),
+        bic = new MaterialTextField(Res.get("user.paymentAccounts.sepa.bic"),
                 Res.get("user.paymentAccounts.createAccount.accountData.sepa.bic.prompt"));
         bic.setValidators(model.getSepaBicValidator());
         bic.setMaxWidth(Double.MAX_VALUE);

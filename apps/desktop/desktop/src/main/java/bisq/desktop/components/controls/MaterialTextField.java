@@ -579,7 +579,7 @@ public class MaterialTextField extends Pane {
     }
 
     protected double getFieldLayoutY() {
-        return StringUtils.isEmpty(descriptionProperty().get()) ? 0 : 19;
+        return 19;
     }
 
     @Override

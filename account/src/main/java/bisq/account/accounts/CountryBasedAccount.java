@@ -17,7 +17,7 @@
 
 package bisq.account.accounts;
 
-import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.locale.Country;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -33,33 +33,39 @@ import java.util.List;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, M extends PaymentMethod<?>> extends Account<P, M> {
+public abstract class CountryBasedAccount< P extends CountryBasedAccountPayload> extends Account<FiatPaymentMethod, P> {
     protected final Country country;
 
     public CountryBasedAccount(String accountName,
-                               M paymentMethod,
                                P payload) {
-        super(accountName, paymentMethod, payload);
+        super(accountName, payload);
         this.country = payload.getCountry();
     }
 
     public CountryBasedAccount(String accountName,
-                               M paymentMethod,
+                               FiatPaymentMethod paymentMethod,
+                               P payload) {
+        super(accountName, payload);
+        this.country = payload.getCountry();
+    }
+
+    public CountryBasedAccount(String accountName,
+                               FiatPaymentMethod paymentMethod,
                                P payload,
                                TradeCurrency selectedCurrency) {
-        super(new Date().getTime(), accountName, paymentMethod, payload, selectedCurrency);
+        super(new Date().getTime(), accountName, payload);
         this.country = payload.getCountry();
     }
 
     public CountryBasedAccount(String accountName,
-                               M paymentMethod,
+                               FiatPaymentMethod paymentMethod,
                                P payload,
                                List<? extends TradeCurrency> tradeCurrencies) {
-        super(new Date().getTime(), accountName, paymentMethod, payload, tradeCurrencies);
+        super(new Date().getTime(), accountName, payload);
         this.country = payload.getCountry();
     }
 
-    public static CountryBasedAccount<?, ?> fromProto(bisq.account.protobuf.Account proto) {
+    public static CountryBasedAccount<?> fromProto(bisq.account.protobuf.Account proto) {
         return switch (proto.getCountryBasedAccount().getMessageCase()) {
             case BANKACCOUNT -> BankAccount.fromProto(proto);
             case SEPAACCOUNT -> SepaAccount.fromProto(proto);

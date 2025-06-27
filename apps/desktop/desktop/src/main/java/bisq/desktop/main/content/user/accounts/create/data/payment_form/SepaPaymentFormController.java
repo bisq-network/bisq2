@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
 import bisq.account.accounts.SepaAccountPayload;
-import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
@@ -87,7 +86,6 @@ public class SepaPaymentFormController extends PaymentFormController<SepaPayment
                 .map(Country::getCode)
                 .collect(Collectors.toList());
         return new SepaAccountPayload(model.getId(),
-                FiatPaymentRail.SEPA.name(),
                 model.getHolderName().get(),
                 model.getIban().get(),
                 model.getBic().get(),

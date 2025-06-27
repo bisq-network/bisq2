@@ -14,8 +14,8 @@ public final class UpiAccountPayload extends CountryBasedAccountPayload {
 
     private final String virtualPaymentAddress;
 
-    public UpiAccountPayload(String id, String paymentMethodName, String countryCode, String virtualPaymentAddress) {
-        super(id, paymentMethodName, countryCode);
+    public UpiAccountPayload(String id, String countryCode, String virtualPaymentAddress) {
+        super(id, countryCode);
         this.virtualPaymentAddress = virtualPaymentAddress;
     }
     @Override
@@ -36,7 +36,7 @@ public final class UpiAccountPayload extends CountryBasedAccountPayload {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         return new UpiAccountPayload(
                 proto.getId(),
-                proto.getPaymentRailName(),
+
                 countryBasedAccountPayload.getCountryCode(),
                 countryBasedAccountPayload.getUpiAccountPayload().getVirtualPaymentAddress());
     }

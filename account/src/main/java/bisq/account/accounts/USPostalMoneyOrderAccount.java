@@ -11,12 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class USPostalMoneyOrderAccount extends Account<USPostalMoneyOrderAccountPayload, FiatPaymentMethod> {
+public final class USPostalMoneyOrderAccount extends Account<FiatPaymentMethod,USPostalMoneyOrderAccountPayload> {
 
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.US_POSTAL_MONEY_ORDER);
 
     public USPostalMoneyOrderAccount(long creationDate, String accountName, USPostalMoneyOrderAccountPayload accountPayload) {
-        super(creationDate, accountName, PAYMENT_METHOD, accountPayload);
+        super(creationDate, accountName, accountPayload);
     }
 
     @Override

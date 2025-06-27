@@ -15,7 +15,7 @@ public final class CashDepositAccount extends BankAccount<CashDepositAccountPayl
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.CASH_DEPOSIT);
 
     public CashDepositAccount(String accountName, CashDepositAccountPayload payload) {
-        super(accountName, PAYMENT_METHOD, payload);
+        super(accountName, payload);
     }
 
     @Override

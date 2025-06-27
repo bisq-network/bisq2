@@ -17,12 +17,16 @@
 
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
+import bisq.common.currency.FiatCurrency;
+import bisq.common.currency.TradeCurrency;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.overlay.Overlay;
+import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -41,22 +45,24 @@ import java.util.Optional;
 public class F2FPaymentFormView extends PaymentFormView<F2FPaymentFormModel, F2FPaymentFormController> {
     private final MaterialTextField city, contact;
     private final MaterialTextArea extraInfo;
-    private final AutoCompleteComboBox<Country> country;
-    private final Label countryErrorLabel;
-    private final VBox countryVBox;
-    private Subscription selectedCountryPin, requireValidationPin;
+    private final AutoCompleteComboBox<Country> countryComboBox;
+    private final AutoCompleteComboBox<FiatCurrency> currencyComboBox;
+    private final Label countryErrorLabel, currencyErrorLabel;
+    private final VBox countryVBox, currencyVBox;
+    private Subscription selectedCountryPin, selectedCurrencyPin, selectedCurrencyFromModelPin,
+            currencyCountryMismatchPin, requireValidationPin;
 
     public F2FPaymentFormView(F2FPaymentFormModel model, F2FPaymentFormController controller) {
         super(model, controller);
 
-        country = new AutoCompleteComboBox<>(
+        countryComboBox = new AutoCompleteComboBox<>(
                 model.getAllCountries(),
-                Res.get("user.paymentAccounts.createAccount.accountData.country"),
+                Res.get("user.paymentAccounts.country"),
                 Res.get("user.paymentAccounts.createAccount.accountData.country.prompt")
         );
-        country.setPrefWidth(830/4d);
+        countryComboBox.setPrefWidth(830 / 4d);
 
-        country.setConverter(new StringConverter<>() {
+        countryComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(Country country) {
                 return Optional.ofNullable(country)
@@ -78,28 +84,59 @@ public class F2FPaymentFormView extends PaymentFormView<F2FPaymentFormModel, F2F
         countryErrorLabel.getStyleClass().add("material-text-field-error");
 
         VBox.setMargin(countryErrorLabel, new Insets(3.5, 0, 0, 16));
-        countryVBox = new VBox(country, countryErrorLabel);
+        countryVBox = new VBox(countryComboBox, countryErrorLabel);
         countryVBox.setAlignment(Pos.TOP_LEFT);
 
-        city = new MaterialTextField(Res.get("user.paymentAccounts.createAccount.accountData.f2f.city"),
+
+        currencyComboBox = new AutoCompleteComboBox<>(
+                model.getCurrencies(),
+                Res.get("user.paymentAccounts.currency"),
+                Res.get("user.paymentAccounts.createAccount.accountData.currency.prompt")
+        );
+        currencyComboBox.setPrefWidth(830 / 4d);
+
+        currencyComboBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(FiatCurrency currency) {
+                return Optional.ofNullable(currency)
+                        .map(TradeCurrency::getDisplayNameAndCode)
+                        .orElse("");
+            }
+
+            @Override
+            public FiatCurrency fromString(String string) {
+                return null;
+            }
+        });
+
+        currencyErrorLabel = new Label(Res.get("user.paymentAccounts.createAccount.accountData.currency.error.noneSelected"));
+        currencyErrorLabel.setMouseTransparent(true);
+        currencyErrorLabel.getStyleClass().add("material-text-field-error");
+
+        VBox.setMargin(currencyErrorLabel, new Insets(3.5, 0, 0, 16));
+        currencyVBox = new VBox(currencyComboBox, currencyErrorLabel);
+        currencyVBox.setAlignment(Pos.TOP_LEFT);
+
+
+        city = new MaterialTextField(Res.get("user.paymentAccounts.f2f.city"),
                 Res.get("user.paymentAccounts.createAccount.accountData.f2f.city.prompt"));
         city.setMaxWidth(Double.MAX_VALUE);
         city.setValidators(model.getCityValidator());
 
         HBox.setHgrow(city, Priority.ALWAYS);
-        HBox countryAndCityBox = new HBox(10, countryVBox, city);
-        countryAndCityBox.setAlignment(Pos.TOP_LEFT);
+        HBox hBox = new HBox(10, countryVBox, currencyVBox, city);
+        hBox.setAlignment(Pos.TOP_LEFT);
 
-        contact = new MaterialTextField(Res.get("user.paymentAccounts.createAccount.accountData.f2f.contact"),
+        contact = new MaterialTextField(Res.get("user.paymentAccounts.f2f.contact"),
                 Res.get("user.paymentAccounts.createAccount.accountData.f2f.contact.prompt"));
         contact.setValidators(model.getContactValidator());
 
-        extraInfo = new MaterialTextArea(Res.get("user.paymentAccounts.createAccount.accountData.f2f.extraInfo"),
+        extraInfo = new MaterialTextArea(Res.get("user.paymentAccounts.f2f.extraInfo"),
                 Res.get("user.paymentAccounts.createAccount.accountData.f2f.extraInfo.prompt"));
         extraInfo.setFixedHeight(140);
         extraInfo.setValidators(model.getExtraInfoValidator());
 
-        root.getChildren().addAll(countryAndCityBox, contact, extraInfo);
+        root.getChildren().addAll(hBox, contact, extraInfo);
     }
 
     @Override
@@ -117,22 +154,46 @@ public class F2FPaymentFormView extends PaymentFormView<F2FPaymentFormModel, F2F
             extraInfo.validate();
         }
         if (model.getSelectedCountry().get() != null) {
-            country.getSelectionModel().select(model.getSelectedCountry().get());
+            countryComboBox.getSelectionModel().select(model.getSelectedCountry().get());
         }
 
         countryErrorLabel.visibleProperty().bind(model.getCountryErrorVisible());
         countryErrorLabel.managedProperty().bind(model.getCountryErrorVisible());
-
+        currencyErrorLabel.visibleProperty().bind(model.getCurrencyErrorVisible());
+        currencyErrorLabel.managedProperty().bind(model.getCurrencyErrorVisible());
         countryVBox.prefHeightProperty().bindBidirectional(city.prefHeightProperty());
-
+        currencyVBox.prefHeightProperty().bindBidirectional(city.prefHeightProperty());
         city.textProperty().bindBidirectional(model.getCity());
         contact.textProperty().bindBidirectional(model.getContact());
         extraInfo.textProperty().bindBidirectional(model.getExtraInfo());
 
-        selectedCountryPin = EasyBind.subscribe(country.getSelectionModel().selectedItemProperty(), selectedCountry -> {
+        selectedCountryPin = EasyBind.subscribe(countryComboBox.getSelectionModel().selectedItemProperty(), selectedCountry -> {
             if (selectedCountry != null) {
-                model.getSelectedCountry().set(selectedCountry);
-                model.getCountryErrorVisible().set(false);
+                controller.onSelectCountry(selectedCountry);
+            }
+        });
+
+        selectedCurrencyPin = EasyBind.subscribe(currencyComboBox.getSelectionModel().selectedItemProperty(), selectedCurrency -> {
+            if (selectedCurrency != null) {
+                controller.onSelectCurrency(selectedCurrency);
+            }
+        });
+        selectedCurrencyFromModelPin = EasyBind.subscribe(model.getSelectedCurrency(), selectedCurrency -> {
+            if (selectedCurrency != null) {
+                currencyComboBox.getSelectionModel().select(selectedCurrency);
+            }
+        });
+        currencyCountryMismatchPin = EasyBind.subscribe(model.getCurrencyCountryMismatch(), currencyCountryMismatch -> {
+            if (currencyCountryMismatch) {
+                new Popup().owner(root)
+                        //.type(Overlay.Type.FEEDBACK)
+                        .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
+                        .warning(Res.get("user.paymentAccounts.createAccount.accountData.currency.warn.currencyCountryMismatch"))
+                        .closeButtonText(Res.get("confirmation.yes"))
+                        .onClose(() -> controller.onCurrencyCountryMisMatchPopupClosed(false))
+                        .actionButtonText(Res.get("confirmation.no"))
+                        .onAction(() -> controller.onCurrencyCountryMisMatchPopupClosed(true))
+                        .show();
             }
         });
 
@@ -154,14 +215,18 @@ public class F2FPaymentFormView extends PaymentFormView<F2FPaymentFormModel, F2F
 
         countryErrorLabel.visibleProperty().unbind();
         countryErrorLabel.managedProperty().unbind();
-
+        currencyErrorLabel.visibleProperty().unbind();
+        currencyErrorLabel.managedProperty().unbind();
         countryVBox.prefHeightProperty().unbindBidirectional(city.prefHeightProperty());
-
+        currencyVBox.prefHeightProperty().unbindBidirectional(city.prefHeightProperty());
         city.textProperty().unbindBidirectional(model.getCity());
         contact.textProperty().unbindBidirectional(model.getContact());
         extraInfo.textProperty().unbindBidirectional(model.getExtraInfo());
 
         selectedCountryPin.unsubscribe();
+        selectedCurrencyPin.unsubscribe();
+        selectedCurrencyFromModelPin.unsubscribe();
+        currencyCountryMismatchPin.unsubscribe();
         requireValidationPin.unsubscribe();
     }
 }

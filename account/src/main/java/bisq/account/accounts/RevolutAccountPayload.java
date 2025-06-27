@@ -17,6 +17,7 @@
 
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,16 +29,15 @@ import java.util.List;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class RevolutAccountPayload extends AccountPayload {
-    private final List<String> acceptedCurrencyCodes;
+public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMethod> implements MultiCurrencyAccountPayload {
+    private final List<String> selectedCurrencyCodes;
     private final String userName;
 
     public RevolutAccountPayload(String id,
-                                 String paymentMethodName,
-                                 List<String> acceptedCurrencyCodes,
+                                 List<String> selectedCurrencyCodes,
                                  String userName) {
-        super(id, paymentMethodName);
-        this.acceptedCurrencyCodes = acceptedCurrencyCodes;
+        super(id);
+        this.selectedCurrencyCodes = selectedCurrencyCodes;
         this.userName = userName;
     }
 
@@ -53,15 +53,14 @@ public final class RevolutAccountPayload extends AccountPayload {
 
     private bisq.account.protobuf.RevolutAccountPayload.Builder getRevolutAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.RevolutAccountPayload.newBuilder()
-                .addAllAcceptedCurrencyCodes(acceptedCurrencyCodes)
+                .addAllSelectedCurrencyCodes(selectedCurrencyCodes)
                 .setUserName(userName);
     }
 
     public static RevolutAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         bisq.account.protobuf.RevolutAccountPayload revolutAccountPayload = proto.getRevolutAccountPayload();
         return new RevolutAccountPayload(proto.getId(),
-                proto.getPaymentRailName(),
-                revolutAccountPayload.getAcceptedCurrencyCodesList(),
+                revolutAccountPayload.getSelectedCurrencyCodesList(),
                 revolutAccountPayload.getUserName());
     }
 }

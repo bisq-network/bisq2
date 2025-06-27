@@ -37,7 +37,6 @@ public final class DomesticWireTransferAccountPayload extends BankAccountPayload
     private final Optional<String> holderAddress;
 
     public DomesticWireTransferAccountPayload(String id,
-                                              String paymentMethodName,
                                               String countryCode,
                                               Optional<String> holderName,
                                               Optional<String> bankName,
@@ -48,10 +47,16 @@ public final class DomesticWireTransferAccountPayload extends BankAccountPayload
                                               Optional<String> bankId,
                                               Optional<String> nationalAccountId,
                                               Optional<String> holderAddress) {
-        super(id, paymentMethodName, countryCode,
-                holderName, bankName, branchId,
-                accountNr, accountType, holderTaxId,
-                bankId, nationalAccountId);
+        super(id,
+                countryCode,
+                holderName,
+                bankName,
+                branchId,
+                accountNr,
+                accountType,
+                holderTaxId,
+                bankId,
+                nationalAccountId);
         this.holderAddress = normalize(holderAddress);
         verify();
     }
@@ -68,7 +73,6 @@ public final class DomesticWireTransferAccountPayload extends BankAccountPayload
         var domesticWireTransferPayload = bankAccountPayload.getDomesticWireTransferAccountPayload();
         return new DomesticWireTransferAccountPayload(
                 proto.getId(),
-                proto.getPaymentRailName(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 toOptional(bankAccountPayload.getHolderName()),
                 toOptional(bankAccountPayload.getBankName()),

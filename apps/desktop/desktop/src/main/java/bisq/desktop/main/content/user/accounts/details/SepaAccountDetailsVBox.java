@@ -30,19 +30,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class SepaAccountDetailsVBox extends CountyBasedAccountDetailsVBox {
+public class SepaAccountDetailsVBox extends FiatAccountDetailsVBox<SepaAccount> {
     public SepaAccountDetailsVBox(SepaAccount account) {
         super(account);
 
+    }
+
+    @Override
+    protected void addCustomFields(SepaAccount account) {
         SepaAccountPayload accountPayload = account.getAccountPayload();
 
-        addDescriptionAndValue(Res.get("user.paymentAccounts.createAccount.accountData.sepa.holderName"),
+        addDescriptionAndValue(Res.get("user.paymentAccounts.sepa.holderName"),
                 accountPayload.getHolderName());
 
-        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.createAccount.accountData.sepa.iban"),
+        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.sepa.iban"),
                 accountPayload.getIban());
 
-        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.createAccount.accountData.sepa.bic"),
+        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.sepa.bic"),
                 accountPayload.getBic());
 
         String countryName = CountryRepository.getNameByCode(accountPayload.getCountryCode());

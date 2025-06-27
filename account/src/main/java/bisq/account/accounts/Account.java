@@ -18,7 +18,6 @@
 package bisq.account.accounts;
 
 import bisq.account.payment_method.PaymentMethod;
-import bisq.common.currency.TradeCurrency;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
@@ -26,7 +25,6 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -37,42 +35,52 @@ import java.util.List;
 @Slf4j
 @ToString
 @EqualsAndHashCode
-public abstract class Account<P extends AccountPayload, M extends PaymentMethod<?>> implements PersistableProto {
+public abstract class Account<M extends PaymentMethod<?>, P extends AccountPayload<M>> implements PersistableProto {
     protected final long creationDate;
     protected final String accountName;
     protected final P accountPayload;
-    protected final M paymentMethod;
+    // protected final M paymentMethod;
 
-    public Account(String accountName,
+   /* public Account(String accountName,
                    M paymentMethod,
                    P accountPayload) {
         this(new Date().getTime(), accountName, paymentMethod, accountPayload, paymentMethod.getSupportedCurrencies());
+    }*/
+
+    public Account(String accountName,
+                   P accountPayload) {
+        this(new Date().getTime(), accountName, accountPayload);
     }
+
+ /*   public Account(long creationDate,
+                   String accountName,
+                   P accountPayload) {
+        this(creationDate, accountName,  accountPayload, paymentMethod.getSupportedCurrencies());
+    }*/
+
+  /*  public Account(long creationDate,
+                   String accountName,
+                  *//* M paymentMethod,*//*
+                   P accountPayload,
+                   TradeCurrency selectedCurrency) {
+        this(creationDate, accountName, accountPayload, Collections.singletonList(selectedCurrency));
+    }*/
 
     public Account(long creationDate,
                    String accountName,
                    M paymentMethod,
                    P accountPayload) {
-        this(creationDate, accountName, paymentMethod, accountPayload, paymentMethod.getSupportedCurrencies());
-    }
-
-    public Account(long creationDate,
-                   String accountName,
-                   M paymentMethod,
-                   P accountPayload,
-                   TradeCurrency selectedCurrency) {
-        this(creationDate, accountName, paymentMethod, accountPayload, Collections.singletonList(selectedCurrency));
-    }
-
-    public Account(long creationDate,
-                   String accountName,
-                   M paymentMethod,
-                   P accountPayload,
-                   List<? extends TradeCurrency> selectedCurrencies) {
         this.creationDate = creationDate;
         this.accountName = accountName;
         this.accountPayload = accountPayload;
-        this.paymentMethod = paymentMethod;
+    }
+
+    public Account(long creationDate,
+                   String accountName,
+                   P accountPayload) {
+        this.creationDate = creationDate;
+        this.accountName = accountName;
+        this.accountPayload = accountPayload;
     }
 
     @Override
@@ -89,7 +97,7 @@ public abstract class Account<P extends AccountPayload, M extends PaymentMethod<
         return bisq.account.protobuf.Account.newBuilder()
                 .setCreationDate(creationDate)
                 .setAccountName(accountName)
-                .setPaymentMethod(paymentMethod.toProto(serializeForHash))
+                //.setPaymentMethod(paymentMethod.toProto(serializeForHash))
                 .setAccountPayload(accountPayload.toProto(serializeForHash));
     }
 
@@ -109,24 +117,12 @@ public abstract class Account<P extends AccountPayload, M extends PaymentMethod<
         };
     }
 
+    public M getPaymentMethod() {
+        return accountPayload.getPaymentMethod();
+    }
+
     // Delegates
     public List<String> getSupportedCurrencyCodes() {
-        return paymentMethod.getSupportedCurrencyCodes();
-    }
-
-    public List<String> getSupportedCurrencyDisplayNameAndCode() {
-        return paymentMethod.getSupportedCurrencyDisplayNameAndCode();
-    }
-
-    public String getSupportedCurrencyCodesAsDisplayString() {
-        return paymentMethod.getSupportedCurrencyCodesAsDisplayString();
-    }
-
-    public String getSupportedCurrencyDisplayNameAndCodeAsDisplayString() {
-        return paymentMethod.getSupportedCurrencyDisplayNameAndCodeAsDisplayString();
-    }
-
-    public String getSupportedCurrencyDisplayNameAndCodeAsDisplayString(String delimiter) {
-        return paymentMethod.getSupportedCurrencyDisplayNameAndCodeAsDisplayString(", ");
+        return getPaymentMethod().getSupportedCurrencyCodes();
     }
 }

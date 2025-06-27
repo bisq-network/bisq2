@@ -1,5 +1,6 @@
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -10,13 +11,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class FasterPaymentsAccountPayload extends AccountPayload {
+public final class FasterPaymentsAccountPayload extends AccountPayload<FiatPaymentMethod> {
 
     private final String sortCode;
     private final String accountNr;
 
-    public FasterPaymentsAccountPayload(String id, String paymentMethodName, String sortCode, String accountNr) {
-        super(id, paymentMethodName);
+    public FasterPaymentsAccountPayload(String id, String sortCode, String accountNr) {
+        super(id);
         this.sortCode = sortCode;
         this.accountNr = accountNr;
 
@@ -49,7 +50,6 @@ public final class FasterPaymentsAccountPayload extends AccountPayload {
         var fasterPaymentsPayload = proto.getFasterPaymentsAccountPayload();
         return new FasterPaymentsAccountPayload(
                 proto.getId(),
-                proto.getPaymentRailName(),
                 fasterPaymentsPayload.getSortCode(),
                 fasterPaymentsPayload.getAccountNr());
     }

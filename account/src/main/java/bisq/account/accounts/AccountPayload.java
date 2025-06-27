@@ -17,6 +17,7 @@
 
 package bisq.account.accounts;
 
+import bisq.account.payment_method.PaymentMethod;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
@@ -25,6 +26,8 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 /**
  * AccountPayload is sent over the wire to the peer. It must not contain sensitive data.
  */
@@ -32,13 +35,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode
-public abstract class AccountPayload implements NetworkProto {
+public abstract class AccountPayload<M extends PaymentMethod<?>> implements NetworkProto {
     protected final String id;
-    protected final String paymentRailName;
+    protected transient final String paymentRailName;
 
-    public AccountPayload(String id, String paymentRailName) {
+    public AccountPayload(String id) {
         this.id = id;
-        this.paymentRailName = paymentRailName;
+        this.paymentRailName = getPaymentMethod().getName();
     }
 
     @Override
@@ -59,11 +62,11 @@ public abstract class AccountPayload implements NetworkProto {
 
     protected bisq.account.protobuf.AccountPayload.Builder getAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.AccountPayload.newBuilder()
-                .setId(id)
-                .setPaymentRailName(paymentRailName);
+                .setId(id)/*
+                .setPaymentRailName(paymentRailName)*/;
     }
 
-    public static AccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static AccountPayload<?> fromProto(bisq.account.protobuf.AccountPayload proto) {
         return switch (proto.getMessageCase()) {
             case ZELLEACCOUNTPAYLOAD -> ZelleAccountPayload.fromProto(proto);
             case COUNTRYBASEDACCOUNTPAYLOAD -> CountryBasedAccountPayload.fromProto(proto);
@@ -78,7 +81,20 @@ public abstract class AccountPayload implements NetworkProto {
         };
     }
 
+    public M getPaymentMethod() {
+        return null;
+    }
+
     public String getDefaultAccountName() {
         return paymentRailName + "-" + id.substring(0, 4);
+    }
+    public Optional<String> getCurrencyCode() {
+        if (this instanceof SelectableCurrencyAccountPayload selectableCurrencyAccountPayload) {
+            return Optional.of(selectableCurrencyAccountPayload.getSelectedCurrencyCode());
+        } else if (this instanceof MultiCurrencyAccountPayload selectedCurrencyAccountPayload) {
+            return Optional.empty();
+        } else {
+            return Optional.of(getPaymentMethod().getSupportedCurrencyCodes().get(0));
+        }
     }
 }

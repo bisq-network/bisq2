@@ -17,6 +17,7 @@
 
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.PaymentAccountValidation;
 import lombok.EqualsAndHashCode;
@@ -30,20 +31,19 @@ import java.util.List;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class WiseAccountPayload extends CountryBasedAccountPayload {
+public final class WiseAccountPayload extends CountryBasedAccountPayload implements MultiCurrencyAccountPayload {
 
-    private final List<String> currencyCodesForReceivingFunds;
+    private final List<String> selectedCurrencyCodes;
     private final String email;
     private final String holderName;
 
     public WiseAccountPayload(String id,
-                              String paymentMethodName,
                               String countryCode,
-                              List<String> currencyCodesForReceivingFunds,
+                              List<String> selectedCurrencyCodes,
                               String email,
                               String holderName) {
-        super(id, paymentMethodName, countryCode);
-        this.currencyCodesForReceivingFunds = currencyCodesForReceivingFunds;
+        super(id, countryCode);
+        this.selectedCurrencyCodes = selectedCurrencyCodes;
         this.email = email;
         this.holderName = holderName;
 
@@ -53,7 +53,7 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload {
     @Override
     public void verify() {
         super.verify();
-        PaymentAccountValidation.validateCurrencyCodes(currencyCodesForReceivingFunds);
+        PaymentAccountValidation.validateCurrencyCodes(selectedCurrencyCodes);
         PaymentAccountValidation.validateEmail(email);
         PaymentAccountValidation.validateHolderName(holderName);
     }
@@ -64,9 +64,8 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload {
 
         return new WiseAccountPayload(
                 proto.getId(),
-                proto.getPaymentRailName(),
                 countryBasedAccountPayload.getCountryCode(),
-                wisePayload.getCurrencyCodesForReceivingFundsList(),
+                wisePayload.getSelectedCurrencyCodesList(),
                 wisePayload.getEmail(),
                 wisePayload.getHolderName()
         );
@@ -84,7 +83,7 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload {
 
     private bisq.account.protobuf.WiseAccountPayload.Builder getWiseAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.WiseAccountPayload.newBuilder()
-                .addAllCurrencyCodesForReceivingFunds(currencyCodesForReceivingFunds)
+                .addAllSelectedCurrencyCodes(selectedCurrencyCodes)
                 .setEmail(email)
                 .setHolderName(holderName);
     }

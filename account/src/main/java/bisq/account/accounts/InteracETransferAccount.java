@@ -11,11 +11,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class InteracETransferAccount extends Account<InteracETransferAccountPayload, FiatPaymentMethod> {
+public final class InteracETransferAccount extends Account<FiatPaymentMethod, InteracETransferAccountPayload> {
 
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.INTERAC_E_TRANSFER);
 
-    public InteracETransferAccount(long creationDate, String accountName, InteracETransferAccountPayload accountPayload) {
+    public InteracETransferAccount(long creationDate,
+                                   String accountName,
+                                   InteracETransferAccountPayload accountPayload) {
         super(creationDate, accountName, PAYMENT_METHOD, accountPayload);
     }
 

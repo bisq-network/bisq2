@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.accounts.create.summary.details;
 
 import bisq.account.accounts.SepaAccountPayload;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.locale.CountryRepository;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -29,19 +30,22 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class SepaAccountDetailsGridPane extends CountryBasedAccountDetailsGridPane {
-    public SepaAccountDetailsGridPane(SepaAccountPayload accountPayload) {
-        super(accountPayload);
+public class SepaAccountDetailsGridPane extends FiatAccountDetailsGridPane<SepaAccountPayload> {
+    public SepaAccountDetailsGridPane(SepaAccountPayload accountPayload, FiatPaymentRail fiatPaymentRail) {
+        super(accountPayload, fiatPaymentRail);
+    }
 
-        addDescriptionAndValue(Res.get("user.paymentAccounts.createAccount.accountData.sepa.holderName"),
+    @Override
+    protected void addCustomFields(SepaAccountPayload accountPayload) {
+        addDescriptionAndValue(Res.get("user.paymentAccounts.sepa.holderName"),
                 accountPayload.getHolderName(),
                 ++rowIndex);
 
-        addDescriptionAndValue(Res.get("user.paymentAccounts.createAccount.accountData.sepa.iban"),
+        addDescriptionAndValue(Res.get("user.paymentAccounts.sepa.iban"),
                 accountPayload.getIban(),
                 ++rowIndex);
 
-        addDescriptionAndValue(Res.get("user.paymentAccounts.createAccount.accountData.sepa.bic"),
+        addDescriptionAndValue(Res.get("user.paymentAccounts.sepa.bic"),
                 accountPayload.getBic(),
                 ++rowIndex);
 

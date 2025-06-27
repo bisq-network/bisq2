@@ -21,18 +21,21 @@ import bisq.account.accounts.F2FAccount;
 import bisq.account.accounts.F2FAccountPayload;
 import bisq.i18n.Res;
 
-public class F2FAccountDetailsVBox extends CountyBasedAccountDetailsVBox {
+public class F2FAccountDetailsVBox extends FiatAccountDetailsVBox<F2FAccount> {
     public F2FAccountDetailsVBox(F2FAccount account) {
         super(account);
+    }
 
+    @Override
+    protected void addCustomFields(F2FAccount account) {
         F2FAccountPayload accountPayload = account.getAccountPayload();
-        addDescriptionAndValue(Res.get("user.paymentAccounts.createAccount.accountData.f2f.city"),
+        addDescriptionAndValue(Res.get("user.paymentAccounts.f2f.city"),
                 accountPayload.getCity());
 
-        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.createAccount.accountData.f2f.contact"),
+        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.f2f.contact"),
                 accountPayload.getContact());
 
-        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.createAccount.accountData.f2f.extraInfo"),
+        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.f2f.extraInfo"),
                 accountPayload.getExtraInfo());
     }
 }

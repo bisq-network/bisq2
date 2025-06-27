@@ -19,12 +19,12 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
 
     private final String requirements;
 
-    public CashDepositAccountPayload(String id, String paymentMethodName, String countryCode,
+    public CashDepositAccountPayload(String id, String countryCode,
                                      Optional<String> holderName, Optional<String> bankName, Optional<String> branchId,
                                      Optional<String> accountNr, Optional<String> accountType,
                                      Optional<String> holderTaxId, Optional<String> bankId,
                                      Optional<String> nationalAccountId, String requirements) {
-        super(id, paymentMethodName, countryCode, holderName, bankName, branchId, accountNr, accountType, holderTaxId,
+        super(id, countryCode, holderName, bankName, branchId, accountNr, accountType, holderTaxId,
                 bankId, nationalAccountId);
         this.requirements = requirements;
 
@@ -57,7 +57,6 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
         var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
         return new CashDepositAccountPayload(
                 proto.getId(),
-                proto.getPaymentRailName(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 toOptional(bankAccountPayload.getHolderName()),
                 toOptional(bankAccountPayload.getBankName()),

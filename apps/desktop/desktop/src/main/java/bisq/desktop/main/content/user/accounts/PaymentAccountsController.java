@@ -70,16 +70,19 @@ public class PaymentAccountsController implements Controller {
     public void onActivate() {
         accountsPin = accountService.getAccounts().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(Account<?, ? extends PaymentMethod<?>> account) {
+            public void add(Account<? extends PaymentMethod<?>, ?> account) {
                 UIThread.run(() -> {
-                    model.getAccounts().add(account);
-                    accountService.setSelectedAccount(account);
+                    if (!model.getAccounts().contains(account)) {
+                        model.getAccounts().add(account);
+                        accountService.setSelectedAccount(account);
+                        updateNoAccountsState();
+                    }
                 });
             }
 
             @Override
             public void remove(Object element) {
-                if (element instanceof Account<?, ? extends PaymentMethod<?>> account) {
+                if (element instanceof Account<? extends PaymentMethod<?>, ?> account) {
                     UIThread.run(() -> {
                         model.getAccounts().remove(account);
                         maybeSelectFirstAccount();
@@ -124,9 +127,10 @@ public class PaymentAccountsController implements Controller {
         accountsPin.unbind();
         selectedAccountPin.unbind();
         selectedAccountSubscription.unsubscribe();
+        model.getAccounts().clear();
     }
 
-    void onSelectAccount(Account<?, ? extends PaymentMethod<?>> account) {
+    void onSelectAccount(Account<? extends PaymentMethod<?>, ?> account) {
         if (account != null) {
             accountService.setSelectedAccount(account);
             model.getSelectedAccount().set(account);
@@ -142,7 +146,7 @@ public class PaymentAccountsController implements Controller {
     }
 
     void onDeleteAccount() {
-        Account<?, ? extends PaymentMethod<?>> account = model.getSelectedAccount().get();
+        Account<? extends PaymentMethod<?>, ?> account = model.getSelectedAccount().get();
         accountService.removePaymentAccount(account);
         model.getAccounts().remove(account);
         maybeSelectFirstAccount();
@@ -154,25 +158,26 @@ public class PaymentAccountsController implements Controller {
 
     private void maybeSelectFirstAccount() {
         if (accountService.getSelectedAccount().isEmpty() && !model.getSortedAccounts().isEmpty()) {
-            Account<?, ? extends PaymentMethod<?>> account = model.getSortedAccounts().get(0);
+            Account<? extends PaymentMethod<?>, ?> account = model.getSortedAccounts().get(0);
             accountService.setSelectedAccount(account);
         }
     }
 
-    private void applyDataDisplay(Account<?, ? extends PaymentMethod<?>> account) {
+    private void applyDataDisplay(Account<? extends PaymentMethod<?>, ?> account) {
         if (account == null) {
             model.getAccountDetailsGridPane().set(null);
             return;
         }
 
-        AccountPayload accountPayload = account.getAccountPayload();
+        AccountPayload<? extends PaymentMethod<?>> accountPayload = account.getAccountPayload();
         if (account.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
-            AccountDetailsVBox detailsVBox = getAccountDetailsVBox(account, fiatPaymentRail);
+            AccountDetailsVBox<?,?> detailsVBox = getAccountDetailsVBox(account, fiatPaymentRail);
             model.getAccountDetailsGridPane().set(detailsVBox);
         }
     }
 
-    private AccountDetailsVBox getAccountDetailsVBox(Account<?, ? extends PaymentMethod<?>> account, FiatPaymentRail fiatPaymentRail) {
+    private AccountDetailsVBox<?, ?> getAccountDetailsVBox(Account<? extends PaymentMethod<?>, ?> account,
+                                                           FiatPaymentRail fiatPaymentRail) {
         return switch (fiatPaymentRail) {
             case CUSTOM -> new UserDefinedAccountDetailsVBox((UserDefinedFiatAccount) account);
             case SEPA -> new SepaAccountDetailsVBox((SepaAccount) account);

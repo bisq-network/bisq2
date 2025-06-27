@@ -31,13 +31,13 @@ public class PaymentSummaryModel implements Model {
     @Setter
     private PaymentMethod<?> paymentMethod;
     @Setter
-    private AccountPayload accountPayload;
+    private AccountPayload<?> accountPayload;
     @Setter
     private AccountDetailsGridPane accountDetailsGridPane;
     @Setter
-    private String risk;
+    private String currency;
     @Setter
-    private String tradeLimit;
+    private String country;
     @Setter
     private String defaultAccountName;
     private final BooleanProperty showAccountNameOverlay = new SimpleBooleanProperty();

@@ -33,7 +33,7 @@ public final class DomesticWireTransferAccount extends BankAccount<DomesticWireT
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.NATIONAL_BANK);
 
     public DomesticWireTransferAccount(String accountName, DomesticWireTransferAccountPayload payload) {
-        super(accountName, PAYMENT_METHOD, payload);
+        super(accountName, payload);
     }
 
     public static DomesticWireTransferAccount fromProto(bisq.account.protobuf.Account proto) {

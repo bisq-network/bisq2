@@ -17,6 +17,8 @@
 
 package bisq.account.accounts;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -43,13 +45,12 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
     private final List<String> acceptedCountryCodes;
 
     public SepaAccountPayload(String id,
-                              String paymentMethodName,
                               String holderName,
                               String iban,
                               String bic,
                               String countryCode,
                               List<String> acceptedCountryCodes) {
-        super(id, paymentMethodName, countryCode);
+        super(id, countryCode);
         this.holderName = holderName;
         this.iban = iban;
         this.bic = bic;
@@ -93,12 +94,16 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         bisq.account.protobuf.SepaAccountPayload sepaAccountPayload = countryBasedAccountPayload.getSepaAccountPayload();
         return new SepaAccountPayload(proto.getId(),
-                proto.getPaymentRailName(),
                 sepaAccountPayload.getHolderName(),
                 sepaAccountPayload.getIban(),
                 sepaAccountPayload.getBic(),
                 countryBasedAccountPayload.getCountryCode(),
                 sepaAccountPayload.getAcceptedCountryCodesList());
+    }
+
+    @Override
+    public FiatPaymentMethod getPaymentMethod() {
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA);
     }
 
     @Override

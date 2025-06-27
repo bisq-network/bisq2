@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class ZelleAccount extends Account<ZelleAccountPayload, FiatPaymentMethod> {
+public class ZelleAccount extends Account<FiatPaymentMethod, ZelleAccountPayload> {
 
     private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ZELLE);
 

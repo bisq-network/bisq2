@@ -20,7 +20,6 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
     private final Optional<String> holderAddress;
 
     public AchTransferAccountPayload(String id,
-                                     String paymentMethodName,
                                      String countryCode,
                                      Optional<String> holderName,
                                      Optional<String> bankName,
@@ -28,9 +27,7 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
                                      Optional<String> accountNr,
                                      Optional<String> accountType,
                                      Optional<String> holderAddress) {
-        super(
-                id,
-                paymentMethodName,
+        super( id,
                 countryCode,
                 holderName,
                 bankName,
@@ -73,7 +70,6 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
         var accountPayload = bankAccountPayload.getAchTransferAccountPayload();
         return new AchTransferAccountPayload(
                 proto.getId(),
-                proto.getPaymentRailName(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 toOptional(bankAccountPayload.getHolderName()),
                 toOptional(bankAccountPayload.getBankName()),
