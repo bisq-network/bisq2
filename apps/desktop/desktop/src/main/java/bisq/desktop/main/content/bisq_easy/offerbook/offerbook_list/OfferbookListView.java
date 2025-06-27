@@ -29,6 +29,7 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownMenuItem;
+import bisq.desktop.components.controls.SplitButton;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
@@ -78,13 +79,14 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private final HBox showOnlyMyMessagesHBox, titleAndCollapseOfferListHBox, expandOfferListLabelBox;
     private final ImageView expandOfferListWhiteIcon, expandOfferListGreyIcon, collapseOfferListWhiteIcon, collapseOfferListGreyIcon,
             offerListGreyIcon, offerListCollapsedWhiteIcon, offerListGreenIcon, offerListExpandedWhiteIcon;
-    private final DropdownMenu offerDirectionFilterMenu, paymentsFilterMenu;
+    private final DropdownMenu paymentsFilterMenu;
+    private final SplitButton offerDirectionFilterMenu;
     private final ListChangeListener<FiatPaymentMethod> availablePaymentsChangeListener;
     private final SetChangeListener<FiatPaymentMethod> selectedPaymentsChangeListener;
     private final CheckBox showOnlyMyMessages;
     private final VBox content;
     private DropdownBisqMenuItem buyFromOffers, sellToOffers;
-    private Label offerDirectionFilterLabel, paymentsFilterLabel;
+    private Label paymentsFilterLabel;
     private Subscription showOfferListExpandedPin, showBuyFromOffersPin, showMyOffersOnlyPin,
             offerListTableViewSelectionPin, activeMarketPaymentsCountPin, isCustomPaymentsSelectedPin,
             widthPropertyPin;
@@ -199,13 +201,15 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
 
         showBuyFromOffersPin = EasyBind.subscribe(model.getShowBuyOffers(), showBuyFromOffers -> {
             if (showBuyFromOffers != null) {
-                offerDirectionFilterLabel.getStyleClass().clear();
+                String sellToLabelStyleClass = "sell-to-offers";
+                String buyFromLabelStyleClass = "buy-from-offers";
+                offerDirectionFilterMenu.getStyleClass().removeAll(sellToLabelStyleClass, buyFromLabelStyleClass);
                 if (showBuyFromOffers) {
-                    offerDirectionFilterLabel.setText(sellToOffers.getLabelText());
-                    offerDirectionFilterLabel.getStyleClass().add("sell-to-offers");
+                    offerDirectionFilterMenu.getLabel().setText(sellToOffers.getLabelText());
+                    offerDirectionFilterMenu.getStyleClass().add(sellToLabelStyleClass);
                 } else {
-                    offerDirectionFilterLabel.setText(buyFromOffers.getLabelText());
-                    offerDirectionFilterLabel.getStyleClass().add("buy-from-offers");
+                    offerDirectionFilterMenu.getLabel().setText(buyFromOffers.getLabelText());
+                    offerDirectionFilterMenu.getStyleClass().add(buyFromLabelStyleClass);
                 }
             }
         });
@@ -324,15 +328,13 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         VBox.setMargin(content, new Insets(0, 0, 0, 4.5));
     }
 
-    private DropdownMenu createAndGetOffersDirectionFilterMenu() {
-        DropdownMenu menu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
+    private SplitButton createAndGetOffersDirectionFilterMenu() {
+        SplitButton menu = new SplitButton("chevron-drop-menu-white", "chevron-drop-menu-white");
         menu.getStyleClass().add("dropdown-offer-list-direction-filter-menu");
-        menu.setOpenToTheRight(true);
-        offerDirectionFilterLabel = new Label();
-        menu.setContent(offerDirectionFilterLabel);
         buyFromOffers = new DropdownBisqMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.buyFrom"));
         sellToOffers = new DropdownBisqMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.sellTo"));
         menu.addMenuItems(buyFromOffers, sellToOffers);
+        HBox.setMargin(menu, new Insets(0, 0, 0, 6));
         return menu;
     }
 

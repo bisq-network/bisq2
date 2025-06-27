@@ -1128,6 +1128,7 @@
     -fx-padding: -2 2 -2 2;
 }
 
+
 /*******************************************************************************
  *                                                                             *
  * BitcoinAmountDisplay                                                        *
@@ -1172,6 +1173,7 @@
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-family: "IBM Plex Sans Light";
 }
+
 
 /*******************************************************************************
  *                                                                             *
@@ -1254,4 +1256,42 @@
 .carousel-container {
     -fx-spacing: 5;
     -fx-padding: 0;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Split Button                                                                *
+ *                                                                             *
+ ******************************************************************************/
+
+.split-button.dropdown-menu {
+    -fx-border-width: 0;
+    -fx-cursor: default;
+    -fx-padding: 0;
+    -fx-font-size: 0.96em;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-alignment: center;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-border-color: -fx-mid-text-color;
+}
+
+.split-button.dropdown-menu .split-button-dropdown-button {
+    -fx-background-radius: 0 9 9 0;
+    -fx-border-radius: 0 9 9 0;
+    -fx-padding: 0 10 0 5;
+    -fx-background-color: -bisq-dark-grey-50;
+    -fx-cursor: hand;
+}
+
+.split-button.dropdown-menu .split-button-dropdown-label-box {
+    -fx-background-radius: 9 0 0 9;
+    -fx-border-radius: 9 0 0 9;
+    -fx-padding: -1 5 1 10;
+    -fx-background-color: -bisq-dark-grey-50;
+}
+
+.split-button.dropdown-menu:hover .label,
+.split-button.dropdown-menu-active .label {
+    -fx-text-fill: -fx-mid-text-color;
 }

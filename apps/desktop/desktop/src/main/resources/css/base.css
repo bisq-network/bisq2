@@ -123,6 +123,10 @@
     -bisq-green-hover: -bisq2-green-dim-10;
     -bisq-green-pressed: -bisq2-green-dim-30;
 
+    -fx-default-red-button: -bisq2-red-lit-10;
+    -bisq-red-hover: -bisq2-red;
+    -bisq-red-pressed: -bisq2-red-dim-10;
+
     -fx-dark-text-color: -bisq-black;
     -fx-mid-text-color: -bisq-mid-grey-20;
     -fx-light-text-color: -bisq-white;
