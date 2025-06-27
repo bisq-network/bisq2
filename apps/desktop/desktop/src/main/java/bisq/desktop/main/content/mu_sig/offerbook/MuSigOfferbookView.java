@@ -106,7 +106,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
             favouritesRemoveFilterDefaultIcon, favouritesRemoveFilterActiveIcon;
     private Subscription selectedMarketItemPin, marketListViewSelectionPin, favouritesListViewNeedsHeightUpdatePin,
             favouritesListViewSelectionPin, selectedMarketFilterPin, selectedMarketSortTypePin, shouldShowAppliedFiltersPin,
-            selectedOfferDirectionFilterPin, activeMarketPaymentsCountPin, isCustomPaymentsSelectedPin;
+            selectedOffersFilterPin, activeMarketPaymentsCountPin, isCustomPaymentsSelectedPin;
     private Label paymentsFilterLabel;
 
     public MuSigOfferbookView(MuSigOfferbookModel model, MuSigOfferbookController controller) {
@@ -148,7 +148,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         favouriteItemsChangeListener = change -> selectedMarketItemChanged(model.getSelectedMarketItem().get());
         toggleChangeListener = (observable, oldValue, newValue) -> {
             if (newValue == null) {
-                updateSelectedOfferDirectionFilter(model.getSelectedMuSigOfferDirectionFilter().get());
+                updateSelectedOffersFilter(model.getSelectedMuSigOffersFilter().get());
             }
         };
         availablePaymentsChangeListener = change -> updatePaymentsFilterMenu();
@@ -204,7 +204,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         selectedMarketSortTypePin = EasyBind.subscribe(model.getSelectedMarketSortType(), this::updateMarketSortType);
         shouldShowAppliedFiltersPin = EasyBind.subscribe(model.getShouldShowAppliedFilters(),
                 this::updateAppliedFiltersSectionStyles);
-        selectedOfferDirectionFilterPin = EasyBind.subscribe(model.getSelectedMuSigOfferDirectionFilter(), this::updateSelectedOfferDirectionFilter);
+        selectedOffersFilterPin = EasyBind.subscribe(model.getSelectedMuSigOffersFilter(), this::updateSelectedOffersFilter);
 
         activeMarketPaymentsCountPin = EasyBind.subscribe(model.getActiveMarketPaymentsCount(), count -> {
             boolean hasActiveFilters = count.intValue() != 0;
@@ -236,10 +236,10 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         onlyFavouritesDisplayHint.setOnMouseEntered(e -> removeFavouritesFilter.setGraphic(favouritesRemoveFilterActiveIcon));
         onlyFavouritesDisplayHint.setOnMouseExited(e -> removeFavouritesFilter.setGraphic(favouritesRemoveFilterDefaultIcon));
 
-        allOffersToggleButton.setOnAction(e -> model.getSelectedMuSigOfferDirectionFilter().set(MuSigFilters.MuSigOfferDirectionFilter.ALL));
-        buyToggleButton.setOnAction(e -> model.getSelectedMuSigOfferDirectionFilter().set(MuSigFilters.MuSigOfferDirectionFilter.SELL));
-        sellToggleButton.setOnAction(e -> model.getSelectedMuSigOfferDirectionFilter().set(MuSigFilters.MuSigOfferDirectionFilter.BUY));
-        myOffersToggleButton.setOnAction(e -> model.getSelectedMuSigOfferDirectionFilter().set(MuSigFilters.MuSigOfferDirectionFilter.MINE));
+        allOffersToggleButton.setOnAction(e -> model.getSelectedMuSigOffersFilter().set(MuSigFilters.MuSigOffersFilter.ALL));
+        buyToggleButton.setOnAction(e -> model.getSelectedMuSigOffersFilter().set(MuSigFilters.MuSigOffersFilter.SELL));
+        sellToggleButton.setOnAction(e -> model.getSelectedMuSigOffersFilter().set(MuSigFilters.MuSigOffersFilter.BUY));
+        myOffersToggleButton.setOnAction(e -> model.getSelectedMuSigOffersFilter().set(MuSigFilters.MuSigOffersFilter.MINE));
 
         model.getAvailablePaymentMethods().addListener(availablePaymentsChangeListener);
         updatePaymentsFilterMenu();
@@ -273,7 +273,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         selectedMarketFilterPin.unsubscribe();
         selectedMarketSortTypePin.unsubscribe();
         shouldShowAppliedFiltersPin.unsubscribe();
-        selectedOfferDirectionFilterPin.unsubscribe();
+        selectedOffersFilterPin.unsubscribe();
         activeMarketPaymentsCountPin.unsubscribe();
         isCustomPaymentsSelectedPin.unsubscribe();
 
@@ -810,14 +810,14 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         return displayHintHBox;
     }
 
-    private void updateSelectedOfferDirectionFilter(MuSigFilters.MuSigOfferDirectionFilter offerDirectionFilter) {
-        if (offerDirectionFilter == MuSigFilters.MuSigOfferDirectionFilter.ALL) {
+    private void updateSelectedOffersFilter(MuSigFilters.MuSigOffersFilter offerDirectionFilter) {
+        if (offerDirectionFilter == MuSigFilters.MuSigOffersFilter.ALL) {
             allOffersToggleButton.setSelected(true);
-        } else if (offerDirectionFilter == MuSigFilters.MuSigOfferDirectionFilter.BUY) {
+        } else if (offerDirectionFilter == MuSigFilters.MuSigOffersFilter.BUY) {
             sellToggleButton.setSelected(true);
-        } else if (offerDirectionFilter == MuSigFilters.MuSigOfferDirectionFilter.SELL) {
+        } else if (offerDirectionFilter == MuSigFilters.MuSigOffersFilter.SELL) {
             buyToggleButton.setSelected(true);
-        } else if (offerDirectionFilter == MuSigFilters.MuSigOfferDirectionFilter.MINE) {
+        } else if (offerDirectionFilter == MuSigFilters.MuSigOffersFilter.MINE) {
             myOffersToggleButton.setSelected(true);
         }
     }

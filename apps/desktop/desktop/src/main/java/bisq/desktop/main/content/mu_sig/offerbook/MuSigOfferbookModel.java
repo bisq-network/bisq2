@@ -56,7 +56,7 @@ public class MuSigOfferbookModel implements Model {
     private final ObservableList<MuSigOfferListItem> muSigOfferListItems = FXCollections.observableArrayList();
     private final FilteredList<MuSigOfferListItem> filteredMuSigOfferListItems = new FilteredList<>(muSigOfferListItems);
     private final SortedList<MuSigOfferListItem> sortedMuSigOfferListItems = new SortedList<>(filteredMuSigOfferListItems);
-    private final ObjectProperty<MuSigFilters.MuSigOfferDirectionFilter> selectedMuSigOfferDirectionFilter = new SimpleObjectProperty<>();
+    private final ObjectProperty<MuSigFilters.MuSigOffersFilter> selectedMuSigOffersFilter = new SimpleObjectProperty<>();
     private final ObservableList<FiatPaymentMethod> availablePaymentMethods = FXCollections.observableArrayList();
     private final ObservableSet<FiatPaymentMethod> selectedPaymentMethods = FXCollections.observableSet();
     private final StringProperty paymentFilterTitle = new SimpleStringProperty("");
@@ -64,7 +64,7 @@ public class MuSigOfferbookModel implements Model {
     private final IntegerProperty activeMarketPaymentsCount = new SimpleIntegerProperty();
 
     private final Predicate<MuSigOfferListItem> muSigOfferListItemsPredicate = item ->
-            getMuSigOffersDirectionFilterPredicate().test(item)
+            getMuSigOffersFilterPredicate().test(item)
                     && getMuSigMarketFilterPredicate().test(item)
                     && getPaymentMethodFilterPredicate().test(item);
     private final Predicate<MuSigOfferListItem> muSigMarketFilterPredicate = item ->
@@ -72,7 +72,7 @@ public class MuSigOfferbookModel implements Model {
                     || getSelectedMarketItem().get().getMarket() == null
                     || getSelectedMarketItem().get().getMarket().equals(item.getMarket());
     @Setter
-    private Predicate<MuSigOfferListItem> muSigOffersDirectionFilterPredicate = item -> true;
+    private Predicate<MuSigOfferListItem> muSigOffersFilterPredicate = item -> true;
     @Setter
     private Predicate<MuSigOfferListItem> paymentMethodFilterPredicate = item -> true;
 
