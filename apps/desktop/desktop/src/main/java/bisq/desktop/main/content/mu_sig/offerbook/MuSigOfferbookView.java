@@ -47,7 +47,6 @@ import javafx.scene.CacheHint;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableCell;
@@ -70,7 +69,6 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -553,11 +551,11 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
             {
                 double prefWidth = 120;
-                double prefHeight = 32;
+                double prefHeight = 26;
                 takeOfferButton.setMinWidth(prefWidth);
                 takeOfferButton.setPrefWidth(prefWidth);
                 takeOfferButton.setMaxWidth(prefWidth);
-                takeOfferButton.getStyleClass().add("button-min-horizontal-padding");
+                takeOfferButton.getStyleClass().add("mu-sig-offerbook-offerlist-take-offer-button");
                 takeOfferButton.setMinHeight(prefHeight);
                 takeOfferButton.setPrefHeight(prefHeight);
                 takeOfferButton.setMaxHeight(prefHeight);

@@ -37,10 +37,6 @@
     -fx-text-fill: derive(-fx-light-text-color, -20%);
 }
 
-.button-min-horizontal-padding {
-    -fx-padding: 5 24 5 24;
-}
-
 .button:default,
 .default-button {
     -fx-background-color: -fx-default-button;
@@ -127,9 +123,8 @@
     -fx-text-fill: rgba(255, 255, 255, 0.3);
 }
 
-
 .buy-button {
-    -fx-background-color: -bisq2-green-dim-40;
+    -fx-background-color: -fx-default-button;
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-border-color: transparent;
@@ -139,19 +134,21 @@
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
 }
+
 .buy-button:hover {
-    -fx-background-color: derive(-bisq2-green-dim-40, 10%);
+    -fx-background-color: -bisq-green-hover;
 }
 
 .buy-button:pressed {
-    -fx-background-color: derive(-bisq2-green-dim-40, -10%);
+    -fx-background-color: -bisq-green-pressed;
 }
+
 .buy-button:disabled {
-    -fx-background-color: derive(-bisq2-green-dim-40, 30%);
+    -fx-background-color: -bisq-green-pressed;
 }
 
 .sell-button {
-    -fx-background-color: -bisq2-red-dim-30;
+    -fx-background-color: -bisq2-red-dim-20;
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-border-color: transparent;
@@ -163,14 +160,15 @@
 }
 
 .sell-button:hover {
-    -fx-background-color: derive(-bisq2-red-dim-30, 10%);
+    -fx-background-color:  -bisq2-red-dim-10;
 }
 
 .sell-button:pressed {
-    -fx-background-color: derive(-bisq2-red-dim-30, -10%);
+    -fx-background-color: -bisq2-red-dim-30;
 }
+
 .sell-button:disabled {
-    -fx-background-color: derive(-bisq2-red-dim-30, 30%);
+    -fx-background-color: -bisq2-red-dim-30;
 }
 
 

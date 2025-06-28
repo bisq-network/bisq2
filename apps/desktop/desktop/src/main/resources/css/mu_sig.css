@@ -71,6 +71,17 @@
     -fx-background-radius: 8;
     -fx-background-insets: 0;
     -fx-border-radius: 8;
-    -fx-font-size: 1em;
+}
+
+.mu-sig-offerbook-offerlist-myOffer-label-box > .label {
+    -fx-font-size: 0.98em;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+.mu-sig-offerbook-offerlist-take-offer-button {
+    -fx-padding: 0 24 0 24;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-font-size: 0.98em;
     -fx-font-family: "IBM Plex Sans";
 }
