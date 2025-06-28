@@ -38,7 +38,7 @@ public class F2FAccountPayload extends CountryBasedAccountPayload implements Sel
     @Override
     public void verify() {
         super.verify();
-        PaymentAccountValidation.isValidCurrencyCode(selectedCurrencyCode);
+        PaymentAccountValidation.validateCurrencyCode(selectedCurrencyCode);
         NetworkDataValidation.validateRequiredText(city, CITY_MIN_LENGTH, CITY_MAX_LENGTH);
         NetworkDataValidation.validateRequiredText(contact, CONTACT_MIN_LENGTH, CONTACT_MAX_LENGTH);
         NetworkDataValidation.validateText(extraInfo, EXTRA_INFO_MIN_LENGTH, EXTRA_INFO_MAX_LENGTH);

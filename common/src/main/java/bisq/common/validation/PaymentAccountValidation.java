@@ -29,13 +29,13 @@ public class PaymentAccountValidation {
     public static final int HOLDER_NAME_MIN_LENGTH = 2;
     public static final int HOLDER_NAME_MAX_LENGTH = 70;
 
-    public static void isValidHolderName(String name) {
+    public static void validateHolderName(String name) {
         NetworkDataValidation.validateText(name, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);
     }
 
-    public static void isValidCountryCodes(List<String> countryCodes,
-                                           List<String> allowedCountryCodes,
-                                           String contextDescription) {
+    public static void validateCountryCodes(List<String> countryCodes,
+                                            List<String> allowedCountryCodes,
+                                            String contextDescription) {
         checkArgument(countryCodes != null && !countryCodes.isEmpty(),
                 "Country codes list must not be null or empty for " + contextDescription);
 
@@ -48,7 +48,7 @@ public class PaymentAccountValidation {
         }
     }
 
-    public static void isValidCurrencyCodes(List<String> currencyCodes) {
+    public static void validateCurrencyCodes(List<String> currencyCodes) {
         try {
             FiatCurrencyRepository.getCurrencyByCodes(currencyCodes);
         } catch (Exception e) {
@@ -56,7 +56,7 @@ public class PaymentAccountValidation {
         }
     }
 
-    public static void isValidCurrencyCode(String currencyCode) {
+    public static void validateCurrencyCode(String currencyCode) {
         try {
             FiatCurrencyRepository.getCurrencyByCode(currencyCode);
         } catch (Exception e) {

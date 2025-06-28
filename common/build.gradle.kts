@@ -59,8 +59,8 @@ sourceSets["main"].java.srcDir(layout.buildDirectory.dir("generated/source/versi
 dependencies {
     implementation(libs.typesafe.config)
     implementation(libs.annotations)
+    implementation(libs.google.libphonenumber)
     implementation(libs.bundles.jackson)
     implementation(libs.swagger.jaxrs2.jakarta)
     implementation(libs.bundles.glassfish.jersey)
-    implementation("com.googlecode.libphonenumber:libphonenumber:8.13.33")
 }

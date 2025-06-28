@@ -29,7 +29,9 @@ public class PhoneNumberValidation {
     private static final Pattern VALID_PHONE_INPUT = Pattern.compile("^\\+?[0-9 ()-]*$");
 
     public static boolean isValid(String number, String regionCode) {
-        if (StringUtils.isEmpty(number) || StringUtils.isEmpty(regionCode)&& number.length() > 15 ) {
+        if (StringUtils.isEmpty(number) ||
+                StringUtils.isEmpty(regionCode) ||
+                number.length() > 15) {
             return false;
         }
         if (!PHONE_NUMBER_UTIL.getSupportedRegions().contains(regionCode)) {

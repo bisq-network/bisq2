@@ -35,10 +35,10 @@ public class SepaIbanValidator extends ValidatorBase {
         if (srcControl.get() instanceof TextInputControl textInputControl) {
             String iban = textInputControl.getText();
             try {
-                SepaPaymentAccountValidation.isValidIban(iban);
+                SepaPaymentAccountValidation.validateIban(iban);
 
                 if (!restrictedToCountryCode.isEmpty()) {
-                    SepaPaymentAccountValidation.isIbanMatchingCountryCode(iban, restrictedToCountryCode);
+                    SepaPaymentAccountValidation.validateIbanMatchesCountryCode(iban, restrictedToCountryCode);
                 }
                 hasErrors.set(false);
             } catch (Exception e) {

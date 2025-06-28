@@ -52,7 +52,8 @@ public class SepaPaymentFormModel extends PaymentFormModel {
     private final StringProperty bic = new SimpleStringProperty();
 
 
-    private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(SepaAccountPayload.HOLDER_NAME_MIN_LENGTH, SepaAccountPayload.HOLDER_NAME_MAX_LENGTH);
+    private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(SepaAccountPayload.HOLDER_NAME_MIN_LENGTH,
+            SepaAccountPayload.HOLDER_NAME_MAX_LENGTH);
     private final SepaIbanValidator sepaIbanValidator = new SepaIbanValidator();
     private final SepaBicValidator sepaBicValidator = new SepaBicValidator();
 

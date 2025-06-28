@@ -122,7 +122,6 @@ public class F2FPaymentFormView extends PaymentFormView<F2FPaymentFormModel, F2F
                 Res.get("user.paymentAccounts.createAccount.accountData.f2f.city.prompt"));
         city.setMaxWidth(Double.MAX_VALUE);
         city.setValidators(model.getCityValidator());
-        city.setHelpText("test");
 
         HBox.setHgrow(city, Priority.ALWAYS);
         HBox hBox = new HBox(10, countryVBox, currencyVBox, city);

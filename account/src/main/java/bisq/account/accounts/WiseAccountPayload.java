@@ -29,6 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @Slf4j
 @ToString
@@ -54,9 +56,9 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
     @Override
     public void verify() {
         super.verify();
-        PaymentAccountValidation.isValidCurrencyCodes(selectedCurrencyCodes);
-        EmailValidation.isValid(email);
-        PaymentAccountValidation.isValidHolderName(holderName);
+        PaymentAccountValidation.validateCurrencyCodes(selectedCurrencyCodes);
+        checkArgument(EmailValidation.isValid(email) );
+        PaymentAccountValidation.validateHolderName(holderName);
     }
 
     public static WiseAccountPayload fromProto(AccountPayload proto) {

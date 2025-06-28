@@ -240,7 +240,7 @@ public class FiatPaymentRailUtil {
         return currenciesFromCodes(getRevolutCurrencyCodes());
     }
 
-    public static List<FiatCurrency> currenciesFromCodes(List<String> currencyCodes) {
+    private static List<FiatCurrency> currenciesFromCodes(List<String> currencyCodes) {
         return currencyCodes.stream()
                 .map(FiatCurrencyRepository::getCurrencyByCode)
                 .collect(Collectors.toList());
