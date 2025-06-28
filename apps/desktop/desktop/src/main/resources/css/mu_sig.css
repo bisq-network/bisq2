@@ -65,3 +65,12 @@
 .mu-sig-offerbook-offerlist-toggle-button-hbox .offerlist-toggle-button-sell.toggle-button:selected {
     -fx-background-color: -bisq2-red;
 }
+
+.mu-sig-offerbook-offerlist-myOffer-label-box {
+    -fx-border-color: -bisq-mid-grey-20;
+    -fx-background-radius: 8;
+    -fx-background-insets: 0;
+    -fx-border-radius: 8;
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans";
+}
