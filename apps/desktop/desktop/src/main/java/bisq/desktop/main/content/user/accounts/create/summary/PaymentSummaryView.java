@@ -90,17 +90,6 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
         country = countryTriple.getSecond();
         gridPane.add(countryTriple.getThird(), 2, rowIndex);
 
-        rowIndex++;
-        Label detailsHeadline = new Label(Res.get("user.paymentAccounts.accountDetails").toUpperCase());
-        detailsHeadline.getStyleClass().add("trade-wizard-review-details-headline");
-        gridPane.add(detailsHeadline, 0, rowIndex, 3, 1);
-
-        rowIndex++;
-        Region line2 = getLine();
-        GridPane.setMargin(line2, new Insets(-10, 0, -5, 0));
-        gridPane.add(line2, 0, rowIndex, 3, 1);
-        rowIndex++;
-
         accountNameField = new MaterialTextField(Res.get("user.paymentAccounts.summary.accountNameOverlay.accountName.description"));
         accountNameButton = new Button(Res.get("user.paymentAccounts.summary.accountNameOverlay.button"));
         accountNameOverlay = new VBox(20);
@@ -134,7 +123,7 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
         currency.setText(model.getCurrency());
         country.setText(model.getCountry());
 
-        gridPane.add(model.getAccountDetailsGridPane(), 0, rowIndex, 3, 1);
+        gridPane.add(model.getAccountDetailsGridPane(), 0, ++rowIndex, 3, 1);
     }
 
     @Override

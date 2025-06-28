@@ -18,8 +18,10 @@
 package bisq.desktop.main.content.user.accounts.create.summary.details;
 
 import bisq.account.accounts.AccountPayload;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.PaymentRail;
 import bisq.desktop.common.utils.GridPaneUtil;
+import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
@@ -37,31 +39,51 @@ public abstract class AccountDetailsGridPane<A extends AccountPayload<?>, R exte
 
         GridPaneUtil.setGridPaneMultiColumnsConstraints(this, 3);
 
-        addCustomFields(accountPayload);
-        add(getLine(), 0, ++rowIndex, 3, 1);
-        addGenericFields(paymentRail);
+        Label detailsHeadline = new Label(Res.get("user.paymentAccounts.accountDetails").toUpperCase());
+        detailsHeadline.getStyleClass().add("trade-wizard-review-details-headline");
+        GridPane.setMargin(detailsHeadline, new Insets(10, 0, 0, 0));
+        add(detailsHeadline, 0, rowIndex, 3, 1);
+        Region detailsLine = getLine();
+        GridPane.setMargin(detailsLine, new Insets(-10, 0, -5, 0));
+        add(detailsLine, 0, ++rowIndex, 3, 1);
+
+        addDetails(accountPayload);
+
+        Region restrictionsLine = getLine();
+        GridPane.setMargin(restrictionsLine, new Insets(-10, 0, -5, 0));
+        add(restrictionsLine, 0, ++rowIndex, 3, 1);
+
+        addRestrictions(paymentRail);
     }
 
-    protected abstract void addCustomFields(A accountPayload);
+    protected abstract void addDetails(A accountPayload);
 
-    protected abstract void addGenericFields(R fiatPaymentRail);
-
-    protected Label addDescriptionAndValue(String description, String value, int rowIndex) {
-        addDescriptionLabel(description, rowIndex);
-        return addValueLabel(value, rowIndex);
+    protected void addRestrictions(FiatPaymentRail fiatPaymentRail) {
+        String restrictions = Res.get("user.paymentAccounts.summary.tradeLimit", fiatPaymentRail.getTradeLimit()) + " / " +
+                Res.get("user.paymentAccounts.summary.tradeDuration", fiatPaymentRail.getTradeDuration());
+        addDescriptionAndValue(Res.get("user.paymentAccounts.restrictions"), restrictions);
+    }
+    protected Label addDescriptionAndValue(String description, String value) {
+        addDescriptionLabel(description);
+        return addValueLabel(value);
     }
 
-    protected Label addDescriptionLabel(String description, int rowIndex) {
+    protected Label addDescriptionLabel(String description) {
         Label label = new Label(description);
         label.getStyleClass().add(DESCRIPTION_STYLE);
-        add(label, 0, rowIndex);
+        add(label, 0, ++rowIndex);
         return label;
     }
 
-    protected Label addValueLabel(String value, int rowIndex) {
+    protected Label addValueLabel(String value) {
+        Label label = getValueLabel(value);
+        add(label, 1, rowIndex, 2, 1);
+        return label;
+    }
+
+    protected static Label getValueLabel(String value) {
         Label label = new Label(value);
         label.getStyleClass().add(VALUE_STYLE);
-        add(label, 1, rowIndex, 2, 1);
         return label;
     }
 

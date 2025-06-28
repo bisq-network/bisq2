@@ -57,6 +57,17 @@ public enum StablecoinPaymentRail implements NationalCurrencyPaymentRail {
     public boolean supportsCurrency(String currencyCode) {
         return currencyCodes.contains(currencyCode);
     }
+
+    @Override
+    public String getTradeLimit() {
+        //todo
+        return "10000 USD";
+    }
+
+    @Override
+    public String getTradeDuration() {
+        return "24 hours";
+    }
 }
 
 

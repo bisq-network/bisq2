@@ -25,5 +25,16 @@ public enum CryptoPaymentRail implements PaymentRail {
     LIQUID,                             // Liquid side chain
     NATIVE_CHAIN,                       // The native chain of that cryptocurrency
     ATOMIC_SWAP_CAPABLE_CHAIN,          // A blockchain capable for atomic cross chain swaps
-    OTHER
+    OTHER;
+
+    @Override
+    public String getTradeLimit() {
+        //todo
+        return "10000 USD";
+    }
+
+    @Override
+    public String getTradeDuration() {
+        return "24 hours";
+    }
 }

@@ -27,12 +27,8 @@ public abstract class FiatAccountDetailsGridPane<A extends AccountPayload<?>> ex
     }
 
     @Override
-    protected void addGenericFields(FiatPaymentRail fiatPaymentRail) {
-        addDescriptionAndValue(Res.get("user.paymentAccounts.chargebackRisk"),
-                fiatPaymentRail.getChargebackRisk().getDisplayString(),
-                ++rowIndex);
-        addDescriptionAndValue(Res.get("user.paymentAccounts.tradeLimit"),
-                fiatPaymentRail.getTradeLimit(),
-                ++rowIndex);
+    protected void addRestrictions(FiatPaymentRail fiatPaymentRail) {
+        addDescriptionAndValue(Res.get("user.paymentAccounts.chargebackRisk"), fiatPaymentRail.getChargebackRisk().toString());
+        super.addRestrictions(fiatPaymentRail);
     }
 }

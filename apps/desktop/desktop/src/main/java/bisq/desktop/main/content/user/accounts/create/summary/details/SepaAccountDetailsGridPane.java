@@ -36,18 +36,15 @@ public class SepaAccountDetailsGridPane extends FiatAccountDetailsGridPane<SepaA
     }
 
     @Override
-    protected void addCustomFields(SepaAccountPayload accountPayload) {
+    protected void addDetails(SepaAccountPayload accountPayload) {
         addDescriptionAndValue(Res.get("user.paymentAccounts.sepa.holderName"),
-                accountPayload.getHolderName(),
-                ++rowIndex);
+                accountPayload.getHolderName());
 
         addDescriptionAndValue(Res.get("user.paymentAccounts.sepa.iban"),
-                accountPayload.getIban(),
-                ++rowIndex);
+                accountPayload.getIban());
 
         addDescriptionAndValue(Res.get("user.paymentAccounts.sepa.bic"),
-                accountPayload.getBic(),
-                ++rowIndex);
+                accountPayload.getBic());
 
         String countryName = CountryRepository.getNameByCode(accountPayload.getCountryCode());
         List<String> acceptedCountryCodes = new ArrayList<>(accountPayload.getAcceptedCountryCodes());
@@ -63,8 +60,7 @@ public class SepaAccountDetailsGridPane extends FiatAccountDetailsGridPane<SepaA
                     .collect(Collectors.joining(", "));
         }
         Label acceptCountriesLabel = addDescriptionAndValue(Res.get("user.paymentAccounts.createAccount.accountData.sepa.acceptCountries"),
-                acceptCountries,
-                ++rowIndex);
+                acceptCountries);
         if (acceptCountries.length() > 70) {
             acceptCountriesLabel.setTooltip(new BisqTooltip(acceptCountries));
         }

@@ -37,7 +37,7 @@ public class SepaAccountDetailsVBox extends FiatAccountDetailsVBox<SepaAccount> 
     }
 
     @Override
-    protected void addCustomFields(SepaAccount account) {
+    protected void addDetails(SepaAccount account) {
         SepaAccountPayload accountPayload = account.getAccountPayload();
 
         addDescriptionAndValue(Res.get("user.paymentAccounts.sepa.holderName"),
@@ -64,7 +64,7 @@ public class SepaAccountDetailsVBox extends FiatAccountDetailsVBox<SepaAccount> 
         }
         Label acceptCountriesLabel = addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.createAccount.accountData.sepa.acceptCountries"),
                 acceptCountries);
-        if (acceptCountries.length() > 70) {
+        if (acceptCountries.length() > 50) {
             acceptCountriesLabel.setTooltip(new BisqTooltip(acceptCountries));
         }
     }

@@ -238,7 +238,7 @@ public class PaymentMethodSelectionView extends View<VBox, PaymentMethodSelectio
             currencyCodeAndDisplayNames = paymentMethod.getSupportedCurrencyDisplayNameAndCodeAsDisplayString();
             countryCodes = String.join(", ", getCountryCodes(paymentMethod));
             countryNames = String.join(", ", getCountryNames(paymentMethod));
-            chargebackRisk = getChargebackRiskEnum(paymentMethod).getDisplayString();
+            chargebackRisk = getChargebackRiskEnum(paymentMethod).toString();
         }
 
         private List<String> getCountryCodes(PaymentMethod<?> method) {

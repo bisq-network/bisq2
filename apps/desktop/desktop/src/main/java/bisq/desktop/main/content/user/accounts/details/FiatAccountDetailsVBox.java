@@ -45,12 +45,11 @@ public abstract class FiatAccountDetailsVBox<A extends Account<?, ?>> extends Ac
     }
 
     @Override
-    protected void addGenericFields(A account) {
+    protected void addRestrictions(A account) {
         if (account.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
             addDescriptionAndValue(Res.get("user.paymentAccounts.chargebackRisk"),
-                    fiatPaymentRail.getChargebackRisk().getDisplayString());
-            addDescriptionAndValue(Res.get("user.paymentAccounts.tradeLimit"),
-                    fiatPaymentRail.getTradeLimit());
+                    fiatPaymentRail.getChargebackRisk().toString());
         }
+        super.addRestrictions(account);
     }
 }
