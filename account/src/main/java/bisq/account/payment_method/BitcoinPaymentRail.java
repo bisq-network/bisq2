@@ -24,5 +24,16 @@ public enum BitcoinPaymentRail implements PaymentRail {
     LBTC,               // BTC wrapped on the Liquid side chain
     RBTC,               // BTC wrapped on the RSK blockchain
     WBTC,               // BTC wrapped on ETH
-    OTHER
+    OTHER;
+
+    @Override
+    public String getTradeLimit() {
+        //todo
+        return "10000 USD";
+    }
+
+    @Override
+    public String getTradeDuration() {
+        return "24 hours";
+    }
 }

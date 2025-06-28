@@ -25,7 +25,6 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -39,12 +38,6 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
     protected final long creationDate;
     protected final String accountName;
     protected final P accountPayload;
-
-    public Account(String accountName,
-                   P accountPayload) {
-        this(new Date().getTime(), accountName, accountPayload);
-    }
-
 
     public Account(long creationDate,
                    String accountName,

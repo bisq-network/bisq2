@@ -5,12 +5,12 @@ import bisq.common.currency.TradeCurrency;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
 public abstract class BankAccount<P extends BankAccountPayload> extends CountryBasedAccount<P> {
-    public BankAccount(String accountName, P payload) {
-        super(accountName, payload);
+    public BankAccount(long creationDate, String accountName, P accountPayload) {
+        super(creationDate, accountName, accountPayload);
     }
 
-    public BankAccount(String accountName, P payload, TradeCurrency tradeCurrency) {
-        super(accountName, payload);
+    public BankAccount(long creationDate, String accountName, P accountPayload, TradeCurrency tradeCurrency) {
+        super(creationDate, accountName, accountPayload);
     }
 
     protected bisq.account.protobuf.BankAccount.Builder getBankAccountBuilder(boolean serializeForHash) {

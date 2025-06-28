@@ -20,6 +20,7 @@ package bisq.desktop.components.controls;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
+import bisq.desktop.common.formatter.SafeInputStringConverter;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.TooltipUtil;
@@ -41,6 +42,7 @@ import javafx.event.WeakEventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
@@ -72,7 +74,6 @@ public class MaterialTextField extends Pane {
     protected final ValidationControl validationControl;
     private final BooleanProperty isValid = new SimpleBooleanProperty(false);
     private Optional<StringConverter<Number>> stringConverter = Optional.empty();
-
     private ChangeListener<Number> iconButtonHeightListener;
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> onWidthChanged((double) newValue);
@@ -184,6 +185,7 @@ public class MaterialTextField extends Pane {
 
         validationControl = new ValidationControl(this.textInputControl);
 
+        cleanUserInput(true);
         doLayout();
         update();
     }
@@ -403,6 +405,18 @@ public class MaterialTextField extends Pane {
         textInputControl.deselect();
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Clean user input
+    /* --------------------------------------------------------------------- */
+
+    public void cleanUserInput(boolean value) {
+        if (value) {
+            textInputControl.setTextFormatter(new TextFormatter<>(new SafeInputStringConverter()));
+        } else {
+            textInputControl.setTextFormatter(null);
+        }
+    }
 
     /* --------------------------------------------------------------------- */
     // Event handlers

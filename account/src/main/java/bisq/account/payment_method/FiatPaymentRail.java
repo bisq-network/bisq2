@@ -22,6 +22,7 @@ import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -102,8 +103,8 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
 
     // Brazil
     PIX(countryFromCode("BR"),
-            FiatCurrencyRepository.getCurrencyByCode("BRL")
-            , FiatPaymentMethodChargebackRisk.MODERATE),
+            FiatCurrencyRepository.getCurrencyByCode("BRL"),
+            FiatPaymentMethodChargebackRisk.MODERATE),
 
     // China
     // ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
@@ -285,6 +286,7 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
         return CountryRepository.getCountries();
     }
 
+    @Override
     public String getTradeLimit() {
         //todo
         switch (getChargebackRisk()) {
@@ -298,6 +300,46 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
                 return "2500 USD";
             }
         }
+    }
+
+    private static final String HOURS_24 = Res.get("temporal.hour.*", 24);
+    private static final String DAYS_2 = Res.get("temporal.day.*", 2);
+    private static final String DAYS_3 = Res.get("temporal.day.*", 3);
+    private static final String DAYS_4 = Res.get("temporal.day.*", 4);
+    private static final String DAYS_5 = Res.get("temporal.day.*", 5);
+    private static final String DAYS_6 = Res.get("temporal.day.*", 6);
+    private static final String DAYS_7 = Res.get("temporal.day.*", 7);
+    private static final String DAYS_8 = Res.get("temporal.day.*", 8);
+
+    @Override
+    public String getTradeDuration() {
+        return switch (this) {
+            case ZELLE -> DAYS_4;
+            case STRIKE -> DAYS_4;
+            case ACH_TRANSFER -> DAYS_5;
+            case US_POSTAL_MONEY_ORDER -> DAYS_4;
+            case CASH_APP -> DAYS_4;
+            case SEPA -> DAYS_6;
+            case SEPA_INSTANT -> HOURS_24;
+            case BIZUM -> DAYS_4;
+            case FASTER_PAYMENTS -> DAYS_4;
+            case INTERAC_E_TRANSFER -> DAYS_4;
+            case PAY_ID -> DAYS_4;
+            case PIX -> HOURS_24;
+            case UPI -> DAYS_4;
+            case CUSTOM -> DAYS_4;
+            case F2F -> DAYS_4;
+            case CASH_BY_MAIL -> DAYS_8;
+            case CASH_DEPOSIT -> DAYS_4;
+            case NATIONAL_BANK -> DAYS_4;
+            case SAME_BANK -> DAYS_4;
+            case SWIFT -> DAYS_4;
+            case DOMESTIC_WIRE_TRANSFER -> DAYS_4;
+            case REVOLUT -> HOURS_24;
+            case WISE -> DAYS_4;
+            case AMAZON_GIFT_CARD -> DAYS_4;
+            default -> HOURS_24;
+        };
     }
 }
 

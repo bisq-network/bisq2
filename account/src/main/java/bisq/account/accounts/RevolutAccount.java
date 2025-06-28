@@ -18,30 +18,18 @@
 package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentRail;
-import bisq.common.util.StringUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
 
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class RevolutAccount extends Account<FiatPaymentMethod, RevolutAccountPayload> {
-    public RevolutAccount(String accountName,
-                          List<String> acceptedCurrencyCodes,
-                          String userName) {
-        this(accountName, new RevolutAccountPayload(StringUtils.createUid(),
-                acceptedCurrencyCodes,
-                userName));
-    }
-
-    private RevolutAccount(String accountName, RevolutAccountPayload revolutAccountPayload) {
-        super(accountName, revolutAccountPayload);
+    public RevolutAccount(long creationDate, String accountName, RevolutAccountPayload revolutAccountPayload) {
+        super(creationDate, accountName, revolutAccountPayload);
     }
 
     @Override
@@ -59,6 +47,8 @@ public final class RevolutAccount extends Account<FiatPaymentMethod, RevolutAcco
     }
 
     public static RevolutAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new RevolutAccount(proto.getAccountName(), RevolutAccountPayload.fromProto(proto.getAccountPayload()));
+        return new RevolutAccount(proto.getCreationDate(),
+                proto.getAccountName(),
+                RevolutAccountPayload.fromProto(proto.getAccountPayload()));
     }
 }

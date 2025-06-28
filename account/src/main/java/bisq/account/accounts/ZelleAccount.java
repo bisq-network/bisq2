@@ -1,6 +1,5 @@
 package bisq.account.accounts;
 
-import bisq.account.payment_method.FiatPaymentMethod;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -10,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class ZelleAccount extends Account<FiatPaymentMethod, ZelleAccountPayload> {
+public class ZelleAccount extends CountryBasedAccount<ZelleAccountPayload> {
     public ZelleAccount(long creationDate, String accountName, ZelleAccountPayload accountPayload) {
         super(creationDate, accountName, accountPayload);
     }
@@ -30,8 +29,7 @@ public class ZelleAccount extends Account<FiatPaymentMethod, ZelleAccountPayload
     }
 
     public static ZelleAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new ZelleAccount(
-                proto.getCreationDate(),
+        return new ZelleAccount(proto.getCreationDate(),
                 proto.getAccountName(),
                 ZelleAccountPayload.fromProto(proto.getAccountPayload()));
     }

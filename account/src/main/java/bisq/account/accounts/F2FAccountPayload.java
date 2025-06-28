@@ -65,8 +65,7 @@ public class F2FAccountPayload extends CountryBasedAccountPayload implements Sel
     public static F2FAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         bisq.account.protobuf.F2FAccountPayload f2fAccountPayload = countryBasedAccountPayload.getF2FAccountPayload();
-        return new F2FAccountPayload(
-                proto.getId(),
+        return new F2FAccountPayload(proto.getId(),
                 countryBasedAccountPayload.getCountryCode(),
                 f2fAccountPayload.getSelectedCurrencyCode(),
                 f2fAccountPayload.getCity(),

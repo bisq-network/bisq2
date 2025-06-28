@@ -32,7 +32,7 @@ public class SepaBicValidator extends ValidatorBase {
         if (srcControl.get() instanceof TextInputControl textInputControl) {
             String bic = textInputControl.getText();
             try {
-                SepaPaymentAccountValidation.validateBicFormat(bic);
+                SepaPaymentAccountValidation.validateBic(bic);
                 hasErrors.set(false);
             } catch (Exception e) {
                 setMessage(e.getMessage());

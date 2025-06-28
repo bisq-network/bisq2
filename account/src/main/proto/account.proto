@@ -90,8 +90,8 @@ message UserDefinedFiatAccountPayload {
   string accountData = 2;
 }
 message RevolutAccountPayload {
-  repeated string selectedCurrencyCodes = 1;
-  string userName = 2;
+  string userName = 1;
+  repeated string selectedCurrencyCodes = 2;
 }
 message CountryBasedAccountPayload {
   string countryCode = 1;
@@ -175,6 +175,7 @@ message ZelleAccountPayload {
 
 message PixAccountPayload {
   string pix_key = 1;
+  string holderName = 2;
 }
 
 message FasterPaymentsAccountPayload {

@@ -63,12 +63,12 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
         super.verify();
 
         NetworkDataValidation.validateRequiredText(holderName, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);
-        SepaPaymentAccountValidation.validateSepaIbanFormat(iban, FiatPaymentRailUtil.getAllSepaCountryCodes());
-        SepaPaymentAccountValidation.validateBicFormat(bic);
+        SepaPaymentAccountValidation.validateSepaIban(iban, FiatPaymentRailUtil.getAllSepaCountryCodes());
+        SepaPaymentAccountValidation.validateBic(bic);
         PaymentAccountValidation.validateCountryCodes(acceptedCountryCodes,
                 FiatPaymentRailUtil.getAllSepaCountryCodes(),
-                "SEPA payments");
-        SepaPaymentAccountValidation.validateIbanCountryConsistency(iban, getCountryCode());
+                "SEPA country codes");
+        SepaPaymentAccountValidation.validateIbanMatchesCountryCode(iban, getCountryCode());
         acceptedCountryCodes.forEach(NetworkDataValidation::validateRequiredCode);
     }
 

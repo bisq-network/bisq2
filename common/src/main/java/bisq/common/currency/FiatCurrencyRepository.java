@@ -131,13 +131,13 @@ public class FiatCurrencyRepository {
                 .collect(Collectors.toList());
     }
 
-    public static String getFiatCurrencyDisplayNameAndCode(String currencyCode) {
+    public static String getDisplayNameAndCode(String currencyCode) {
         return FiatCurrencyRepository.getCurrencyByCode(currencyCode).getDisplayNameAndCode();
     }
 
-    public static String getFiatCurrencyDisplayNameAndCodes(List<String> currencyCodes) {
+    public static String getDisplayNameAndCodes(List<String> currencyCodes) {
         return currencyCodes.stream()
-                .map(FiatCurrencyRepository::getFiatCurrencyDisplayNameAndCode)
+                .map(FiatCurrencyRepository::getDisplayNameAndCode)
                 .sorted()
                 .collect(Collectors.joining(", "));
     }

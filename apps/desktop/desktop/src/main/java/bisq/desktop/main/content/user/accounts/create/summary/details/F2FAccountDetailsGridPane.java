@@ -26,17 +26,14 @@ public class F2FAccountDetailsGridPane extends FiatAccountDetailsGridPane<F2FAcc
         super(accountPayload, fiatPaymentRail);
     }
 
-    protected void addCustomFields(F2FAccountPayload accountPayload) {
+    protected void addDetails(F2FAccountPayload accountPayload) {
         addDescriptionAndValue(Res.get("user.paymentAccounts.f2f.city"),
-                accountPayload.getCity(),
-                ++rowIndex);
+                accountPayload.getCity());
 
         addDescriptionAndValue(Res.get("user.paymentAccounts.f2f.contact"),
-                accountPayload.getContact(),
-                ++rowIndex);
+                accountPayload.getContact());
 
         addDescriptionAndValue(Res.get("user.paymentAccounts.f2f.extraInfo"),
-                accountPayload.getExtraInfo(),
-                ++rowIndex);
+                accountPayload.getExtraInfo());
     }
 }

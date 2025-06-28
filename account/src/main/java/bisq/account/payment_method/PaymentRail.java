@@ -19,4 +19,8 @@ package bisq.account.payment_method;
 
 public interface PaymentRail {
     String name();
+
+    String getTradeLimit();
+
+    String getTradeDuration();
 }

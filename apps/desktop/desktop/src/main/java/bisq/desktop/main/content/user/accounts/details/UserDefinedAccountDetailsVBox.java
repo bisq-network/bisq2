@@ -27,13 +27,13 @@ public class UserDefinedAccountDetailsVBox extends AccountDetailsVBox<UserDefine
     }
 
     @Override
-    protected void addCustomFields(UserDefinedFiatAccount account) {
+    protected void addDetails(UserDefinedFiatAccount account) {
         addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.userDefined.accountData"),
                 account.getAccountPayload().getAccountData());
     }
 
     @Override
-    protected void addGenericFields(UserDefinedFiatAccount account) {
+    protected void addRestrictions(UserDefinedFiatAccount account) {
         addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.userDefined.note"),
                 Res.get("user.paymentAccounts.userDefined.note.deprecated"));
     }

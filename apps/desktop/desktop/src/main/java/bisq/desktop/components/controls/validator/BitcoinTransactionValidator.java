@@ -36,7 +36,7 @@ public class BitcoinTransactionValidator extends ValidatorBase {
         TextInputControl textField = (TextInputControl) srcControl.get();
         String txId = textField.getText();
         if (txId != null && !txId.isEmpty()) {
-            hasErrors.set(!BitcoinTransactionValidation.validateTransactionId(txId));
+            hasErrors.set(!BitcoinTransactionValidation.isValid(txId));
         } else {
             hasErrors.set(false);
         }

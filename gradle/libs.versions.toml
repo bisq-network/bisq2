@@ -37,6 +37,7 @@ grizzly-websockets-server-lib = { strictly = '2.4.4' }
 
 google-gson-lib = { strictly = '2.10.1' }
 google-guava-lib = { strictly = '33.2.1-jre' }
+google-libphonenumber-lib = { strictly = '9.0.8' }
 
 grpc = { strictly = '1.61.0' }
 
@@ -114,6 +115,7 @@ glassfish-grizzly-websockets-server = { module = 'org.glassfish.grizzly:grizzly-
 
 google-gson = { module = 'com.google.code.gson:gson', version.ref = 'google-gson-lib' }
 google-guava = { module = 'com.google.guava:guava', version.ref = 'google-guava-lib' }
+google-libphonenumber = { module = 'com.googlecode.libphonenumber:libphonenumber', version.ref = 'google-libphonenumber-lib' }
 
 grpc-netty-shaded = { module = 'io.grpc:grpc-netty-shaded', version.ref = 'grpc' }
 grpc-protobuf = { module = 'io.grpc:grpc-protobuf', version.ref = 'grpc' }

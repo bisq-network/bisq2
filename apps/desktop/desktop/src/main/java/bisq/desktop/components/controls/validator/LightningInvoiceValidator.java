@@ -36,7 +36,7 @@ public class LightningInvoiceValidator extends ValidatorBase {
         TextInputControl textField = (TextInputControl) srcControl.get();
         String invoice = textField.getText();
         if (invoice != null && !invoice.isEmpty()) {
-            hasErrors.set(!LightningInvoiceValidation.validateInvoice(invoice));
+            hasErrors.set(!LightningInvoiceValidation.isValid(invoice));
         } else {
             hasErrors.set(false);
         }

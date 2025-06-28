@@ -36,7 +36,7 @@ public class LightningPreImageValidator extends ValidatorBase {
         TextInputControl textField = (TextInputControl) srcControl.get();
         String preImage = textField.getText();
         if (preImage != null && !preImage.isEmpty()) {
-            hasErrors.set(!LightningPreImageValidation.validatePreImage(preImage));
+            hasErrors.set(!LightningPreImageValidation.isValid(preImage));
         } else {
             hasErrors.set(false);
         }

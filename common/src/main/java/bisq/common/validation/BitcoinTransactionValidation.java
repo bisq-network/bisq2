@@ -37,7 +37,7 @@ public class BitcoinTransactionValidation {
      * @param txId The string to be checked.
      * @return True if it is a Bitcoin transaction ID, false otherwise.
      */
-    public static boolean validateTransactionId(@NotNull String txId) {
+    public static boolean isValid(@NotNull String txId) {
         return TXID_PATTERN.matcher(txId).matches();
     }
 }

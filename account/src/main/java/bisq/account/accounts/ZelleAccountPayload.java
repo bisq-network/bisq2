@@ -2,23 +2,40 @@ package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
+import bisq.common.validation.EmailValidation;
+import bisq.common.validation.NetworkDataValidation;
+import bisq.common.validation.PhoneNumberValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class ZelleAccountPayload extends AccountPayload<FiatPaymentMethod> {
+public class ZelleAccountPayload extends CountryBasedAccountPayload {
+    public static final int HOLDER_NAME_MIN_LENGTH = 2;
+    public static final int HOLDER_NAME_MAX_LENGTH = 70;
+
     private final String emailOrMobileNr;
     private final String holderName;
 
     public ZelleAccountPayload(String id, String emailOrMobileNr, String holderName) {
-        super(id);
+        super(id, "US");
         this.emailOrMobileNr = emailOrMobileNr;
         this.holderName = holderName;
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
+
+        NetworkDataValidation.validateRequiredText(holderName, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);
+        checkArgument(EmailValidation.isValid(emailOrMobileNr) ||
+                PhoneNumberValidation.isValid(emailOrMobileNr, "US"));
     }
 
     @Override

@@ -47,7 +47,10 @@ public class PaymentMethodSelectionController implements Controller {
                 .filter(rail ->
                         // TODO until others are implemented
                         rail == FiatPaymentRail.F2F ||
-                                rail == FiatPaymentRail.SEPA
+                                rail == FiatPaymentRail.SEPA ||
+                                rail == FiatPaymentRail.ZELLE ||
+                                rail == FiatPaymentRail.REVOLUT ||
+                                rail == FiatPaymentRail.PIX
                 )
                 .map(FiatPaymentMethod::fromPaymentRail)
                 .map(PaymentMethodItem::new)

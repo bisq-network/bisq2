@@ -18,7 +18,6 @@
 package bisq.common.validation;
 
 import bisq.common.currency.FiatCurrencyRepository;
-import bisq.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -29,14 +28,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class PaymentAccountValidation {
     public static final int HOLDER_NAME_MIN_LENGTH = 2;
     public static final int HOLDER_NAME_MAX_LENGTH = 70;
-
-    public static void validateEmail(String email) {
-        checkArgument(StringUtils.isNotEmpty(email), "Email must not be empty");
-        checkArgument(email.length() <= 100, "Email must not be longer than 100 characters. email=" + email);
-
-        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-        checkArgument(email.matches(emailRegex), "Invalid email format. email: " + email);
-    }
 
     public static void validateHolderName(String name) {
         NetworkDataValidation.validateText(name, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);

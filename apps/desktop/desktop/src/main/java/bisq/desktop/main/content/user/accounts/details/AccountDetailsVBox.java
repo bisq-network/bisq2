@@ -24,16 +24,16 @@ import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.PaymentRail;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.data.Triple;
+import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.GridPaneUtil;
-import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
-import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.i18n.Res;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.VPos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -63,32 +63,37 @@ public abstract class AccountDetailsVBox<A extends Account<?, ?>, R extends Paym
 
         addHeader(account);
 
-        rowIndex++;
-
         Label detailsHeadline = new Label(Res.get("user.paymentAccounts.accountDetails").toUpperCase());
         detailsHeadline.getStyleClass().add("trade-wizard-review-details-headline");
-        gridPane.add(detailsHeadline, 0, rowIndex, 3, 1);
+        gridPane.add(detailsHeadline, 0, ++rowIndex, 3, 1);
 
-        rowIndex++;
-        Region line2 = getLine();
-        GridPane.setMargin(line2, new Insets(-10, 0, -5, 0));
-        gridPane.add(line2, 0, rowIndex, 3, 1);
+        Region detailsLine = getLine();
+        GridPane.setMargin(detailsLine, new Insets(-10, 0, -5, 0));
+        gridPane.add(detailsLine, 0, ++rowIndex, 3, 1);
+
+        addDetails(account);
+
+        Label limitsHeadline = new Label(Res.get("user.paymentAccounts.restrictions").toUpperCase());
+        limitsHeadline.getStyleClass().add("trade-wizard-review-details-headline");
+        GridPane.setMargin(limitsHeadline, new Insets(20, 0, 0, 0));
+        gridPane.add(limitsHeadline, 0, ++rowIndex, 3, 1);
+        Region limitsLine = getLine();
+        GridPane.setMargin(limitsLine, new Insets(-10, 0, -5, 0));
+        gridPane.add(limitsLine, 0, ++rowIndex, 3, 1);
+
+        addRestrictions(account);
 
         getChildren().add(gridPane);
-
-        addCustomFields(account);
-
-        Region line3 = getLine();
-        VBox.setMargin(line3, new Insets(0, 0, 5, 0));
-        getChildren().add(line3);
-
-        addGenericFields(account);
-
     }
 
-    protected abstract void addCustomFields(A account);
+    protected abstract void addDetails(A account);
 
-    protected abstract void addGenericFields(A account);
+    protected void addRestrictions(A account) {
+        addDescriptionAndValue(Res.get("user.paymentAccounts.tradeLimit"),
+                account.getPaymentMethod().getPaymentRail().getTradeLimit());
+        addDescriptionAndValue(Res.get("user.paymentAccounts.tradeDuration"),
+                account.getPaymentMethod().getPaymentRail().getTradeDuration());
+    }
 
     protected void addHeader(Account<?, ?> account) {
         if (account.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
@@ -99,83 +104,59 @@ public abstract class AccountDetailsVBox<A extends Account<?, ?>, R extends Paym
             String currency;
             AccountPayload<?> accountPayload = account.getAccountPayload();
             if (accountPayload instanceof MultiCurrencyAccountPayload multiCurrencyAccountPayload) {
-                currency = FiatCurrencyRepository.getFiatCurrencyDisplayNameAndCodes(multiCurrencyAccountPayload.getSelectedCurrencyCodes());
+                currency = FiatCurrencyRepository.getDisplayNameAndCodes(multiCurrencyAccountPayload.getSelectedCurrencyCodes());
             } else {
-                currency = FiatCurrencyRepository.getFiatCurrencyDisplayNameAndCode(accountPayload.getCurrencyCode().orElseThrow());
+                currency = FiatCurrencyRepository.getDisplayNameAndCode(accountPayload.getCurrencyCode().orElseThrow());
             }
 
             Triple<Text, Label, VBox> currencyTriple = getDescriptionValueVBoxTriple(Res.get("user.paymentAccounts.currency"),
                     currency);
             gridPane.add(currencyTriple.getThird(), 1, rowIndex);
-
-              /*
-            Triple<Text, Label, VBox> riskTriple = getDescriptionValueVBoxTriple(Res.get("user.paymentAccounts.summary.risk"),
-                    fiatPaymentRail.getChargebackRisk().getDisplayString());
-            Label risk = riskTriple.getSecond();
-            gridPane.add(riskTriple.getThird(), 1, rowIndex);
-
-            Triple<Text, Label, VBox> tradeLimitTriple = getDescriptionValueVBoxTriple(Res.get("user.paymentAccounts.summary.tradeLimit"),
-                    fiatPaymentRail.getTradeLimit());
-            Label tradeLimit = tradeLimitTriple.getSecond();
-            gridPane.add(tradeLimitTriple.getThird(), 2, rowIndex);*/
         }
-
-
     }
 
     protected Label addDescriptionAndValue(String description, String value) {
-        Label descriptionLabel = getDescriptionLabel(description);
-        Label valueLabel = getValueLabel(value);
-        getChildren().add(new HBox(HBOX_SPACE, descriptionLabel, valueLabel));
-        return valueLabel;
+        addDescriptionLabel(description);
+        return addValueLabel(value);
     }
 
     protected Label addDescriptionAndValueWithCopyButton(String description, String value) {
-        Label descriptionLabel = getDescriptionLabel(description);
-        Label valueLabel = getValueLabel(value);
-        BisqMenuItem copyButton = getBisqMenuItem();
-        HBox hBox = new HBox(HBOX_SPACE, descriptionLabel, valueLabel, Spacer.fillHBox(), copyButton);
-        hBox.setAlignment(Pos.BASELINE_LEFT);
-        getChildren().add(hBox);
+        return addDescriptionAndValueWithCopyButton(description, value, value);
+    }
+
+    protected Label addDescriptionAndValueWithCopyButton(String description, String value, String valueForCopy) {
+        addDescriptionLabel(description);
+        Label valueLabel = addValueLabel(value);
+        GridPane.setMargin(valueLabel, new Insets(0, 20, 0, 0));
+        addCopyButton(valueForCopy);
         return valueLabel;
     }
 
-    protected MaterialTextArea addTextAreaValueWithCopyButton(String description, String value) {
-        Label descriptionLabel = getDescriptionLabel(description);
-        MaterialTextArea valueLabel = new MaterialTextArea();
-        valueLabel.setText(value);
-        valueLabel.setFixedHeight(180);
-        valueLabel.setEditable(false);
-        valueLabel.showCopyIcon();
-        HBox hBox = new HBox(HBOX_SPACE, descriptionLabel, valueLabel);
-        hBox.setAlignment(Pos.BASELINE_LEFT);
-        getChildren().add(hBox);
-        return valueLabel;
-    }
-
-    protected Label getDescriptionLabel(String description) {
+    protected Label addDescriptionLabel(String description) {
         Label label = new Label(description);
         label.getStyleClass().add(DESCRIPTION_STYLE);
         label.setMinWidth(DESCRIPTION_WIDTH);
         label.setMaxWidth(DESCRIPTION_WIDTH);
+        gridPane.add(label, 0, ++rowIndex);
         return label;
     }
 
-    protected Label getValueLabel(String value) {
+    private Label addValueLabel(String value) {
         Label label = new Label(value);
         label.getStyleClass().add(VALUE_STYLE);
+        gridPane.add(label, 1, rowIndex, 2, 1);
         return label;
     }
 
-    protected BisqMenuItem getBisqMenuItem() {
-        return getBisqMenuItem(Res.get("action.copyToClipboard"));
-    }
-
-    protected BisqMenuItem getBisqMenuItem(String tooltip) {
-        BisqMenuItem bisqMenuItem = new BisqMenuItem("copy-grey", "copy-white");
-        bisqMenuItem.setTooltip(tooltip);
-        bisqMenuItem.useIconOnly(17);
-        return bisqMenuItem;
+    private BisqMenuItem addCopyButton(String value) {
+        BisqMenuItem copyButton = new BisqMenuItem("copy-grey", "copy-white");
+        copyButton.setTooltip(Res.get("action.copyToClipboard"));
+        copyButton.useIconOnly(17);
+        copyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(value));
+        GridPane.setHalignment(copyButton, HPos.RIGHT);
+        GridPane.setValignment(copyButton, VPos.CENTER);
+        gridPane.add(copyButton, 1, rowIndex, 3, 1);
+        return copyButton;
     }
 
     protected Triple<Text, Label, VBox> getDescriptionValueVBoxTriple(String description, String value) {

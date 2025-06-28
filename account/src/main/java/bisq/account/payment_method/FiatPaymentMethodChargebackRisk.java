@@ -9,7 +9,8 @@ public enum FiatPaymentMethodChargebackRisk {
     LOW,
     MODERATE;
 
-    public String getDisplayString() {
+    @Override
+    public String toString() {
         return switch (this) {
             case VERY_LOW -> Res.get("user.paymentAccounts.createAccount.paymentMethod.risk.veryLow");
             case LOW -> Res.get("user.paymentAccounts.createAccount.paymentMethod.risk.low");

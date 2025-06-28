@@ -1,7 +1,6 @@
 package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -31,8 +30,7 @@ public final class CashByMailAccount extends Account<FiatPaymentMethod, CashByMa
     }
 
     public static CashByMailAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new CashByMailAccount(
-                proto.getCreationDate(),
+        return new CashByMailAccount(proto.getCreationDate(),
                 proto.getAccountName(),
                 CashByMailAccountPayload.fromProto(proto.getAccountPayload())
         );

@@ -150,7 +150,7 @@ public class PaymentMethodSelectionView extends View<VBox, PaymentMethodSelectio
         tableView.getColumns().add(new BisqTableColumn.Builder<PaymentMethodItem>()
                 .title(Res.get("user.paymentAccounts.createAccount.paymentMethod.table.countries"))
                 .minWidth(130)
-                .valueSupplier(PaymentMethodItem::getCountryCodes)
+                .valueSupplier(PaymentMethodItem::getCountryNames)
                 .tooltipSupplier(PaymentMethodItem::getCountryNames)
                 .build());
 
@@ -238,7 +238,7 @@ public class PaymentMethodSelectionView extends View<VBox, PaymentMethodSelectio
             currencyCodeAndDisplayNames = paymentMethod.getSupportedCurrencyDisplayNameAndCodeAsDisplayString();
             countryCodes = String.join(", ", getCountryCodes(paymentMethod));
             countryNames = String.join(", ", getCountryNames(paymentMethod));
-            chargebackRisk = getChargebackRiskEnum(paymentMethod).getDisplayString();
+            chargebackRisk = getChargebackRiskEnum(paymentMethod).toString();
         }
 
         private List<String> getCountryCodes(PaymentMethod<?> method) {

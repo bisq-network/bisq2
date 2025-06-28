@@ -20,6 +20,7 @@ package bisq.account.accounts;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
+import bisq.common.validation.EmailValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -27,6 +28,8 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
 @Slf4j
@@ -54,7 +57,7 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
     public void verify() {
         super.verify();
         PaymentAccountValidation.validateCurrencyCodes(selectedCurrencyCodes);
-        PaymentAccountValidation.validateEmail(email);
+        checkArgument(EmailValidation.isValid(email) );
         PaymentAccountValidation.validateHolderName(holderName);
     }
 

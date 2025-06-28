@@ -19,6 +19,9 @@ package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
+import bisq.account.payment_method.FiatPaymentRailUtil;
+import bisq.common.validation.NetworkDataValidation;
+import bisq.common.validation.PaymentAccountValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -31,15 +34,28 @@ import java.util.List;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMethod> implements MultiCurrencyAccountPayload {
-    private final List<String> selectedCurrencyCodes;
+    public static final int USER_NAME_MIN_LENGTH = 2;
+    public static final int USER_NAME_MAX_LENGTH = 70;
+
     private final String userName;
+    private final List<String> selectedCurrencyCodes;
 
     public RevolutAccountPayload(String id,
-                                 List<String> selectedCurrencyCodes,
-                                 String userName) {
+                                 String userName,
+                                 List<String> selectedCurrencyCodes) {
         super(id);
-        this.selectedCurrencyCodes = selectedCurrencyCodes;
         this.userName = userName;
+        this.selectedCurrencyCodes = selectedCurrencyCodes;
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
+
+        NetworkDataValidation.validateRequiredText(userName, USER_NAME_MIN_LENGTH, USER_NAME_MAX_LENGTH);
+        PaymentAccountValidation.validateCountryCodes(selectedCurrencyCodes,
+                FiatPaymentRailUtil.getRevolutCountryCodes(),
+                "Revolut country codes");
     }
 
     @Override
@@ -61,8 +77,8 @@ public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMetho
     public static RevolutAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         bisq.account.protobuf.RevolutAccountPayload revolutAccountPayload = proto.getRevolutAccountPayload();
         return new RevolutAccountPayload(proto.getId(),
-                revolutAccountPayload.getSelectedCurrencyCodesList(),
-                revolutAccountPayload.getUserName());
+                revolutAccountPayload.getUserName(),
+                revolutAccountPayload.getSelectedCurrencyCodesList());
     }
 
     @Override

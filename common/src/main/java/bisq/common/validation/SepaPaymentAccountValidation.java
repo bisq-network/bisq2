@@ -34,7 +34,7 @@ public class SepaPaymentAccountValidation {
      * 4. Character validation (alphanumeric only)
      * 5. MOD-97 checksum verification using the international standard algorithm
      */
-    public static void validateIbanFormat(String iban) {
+    public static void validateIban(String iban) {
         checkArgument(StringUtils.isNotEmpty(iban), "IBAN must not be null or empty");
 
         checkArgument(iban.matches("[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}"),
@@ -46,8 +46,8 @@ public class SepaPaymentAccountValidation {
         validateIbanChecksum(iban);
     }
 
-    public static void validateSepaIbanFormat(String iban, List<String> sepaCountryCodes) {
-        validateIbanFormat(iban);
+    public static void validateSepaIban(String iban, List<String> sepaCountryCodes) {
+        validateIban(iban);
 
         String countryCode = iban.substring(0, 2);
         checkArgument(sepaCountryCodes.contains(countryCode),
@@ -62,7 +62,7 @@ public class SepaPaymentAccountValidation {
      * 4. Business rule validation (location code restrictions, branch code patterns)
      * 5. Problematic BIC detection (Revolut blocking for SEPA)
      */
-    public static void validateBicFormat(String bic) {
+    public static void validateBic(String bic) {
         checkArgument(StringUtils.isNotEmpty(bic), "BIC must not be null or empty");
 
         checkArgument(bic.length() == 8 || bic.length() == 11,
@@ -104,7 +104,7 @@ public class SepaPaymentAccountValidation {
                 "Revolut BIC codes are not supported for traditional SEPA transfers.");
     }
 
-    public static void validateIbanCountryConsistency(String iban, String countryCode) {
+    public static void validateIbanMatchesCountryCode(String iban, String countryCode) {
         checkArgument(StringUtils.isNotEmpty(iban), "IBAN must not be empty for country consistency check");
         checkArgument(StringUtils.isNotEmpty(countryCode), "Country code must not be empty for IBAN consistency check");
         checkArgument(iban.length() >= 2, "IBAN too short for country code extraction.");

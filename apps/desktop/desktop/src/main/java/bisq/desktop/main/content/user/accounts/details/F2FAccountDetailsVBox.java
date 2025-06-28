@@ -27,7 +27,7 @@ public class F2FAccountDetailsVBox extends FiatAccountDetailsVBox<F2FAccount> {
     }
 
     @Override
-    protected void addCustomFields(F2FAccount account) {
+    protected void addDetails(F2FAccount account) {
         F2FAccountPayload accountPayload = account.getAccountPayload();
         addDescriptionAndValue(Res.get("user.paymentAccounts.f2f.city"),
                 accountPayload.getCity());
