@@ -28,8 +28,8 @@ import java.util.regex.Pattern;
 public class BitcoinAddressValidation {
     public static final int MIN_LENGTH = 25;
     public static final int MAX_LENGTH = 62;
-    private static final Pattern BASE_58_PATTERN = Pattern.compile("^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$");
-    private static final Pattern BECH32_PATTERN = Pattern.compile("^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,62}$");
+    private static final Pattern BASE58_PATTERN = Pattern.compile("^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$");
+    private static final Pattern BECH32_PATTERN = Pattern.compile("^(?i)bc1[0-9a-z]{6,87}$");
 
     /**
      * Checks if the given string is a Bitcoin address.
@@ -38,7 +38,7 @@ public class BitcoinAddressValidation {
      * @return True if it is a Bitcoin address, false otherwise.
      */
     public static boolean isValid(String address) {
-        return BASE_58_PATTERN.matcher(address).matches() ||
+        return BASE58_PATTERN.matcher(address).matches() ||
                 BECH32_PATTERN.matcher(address).matches();
     }
 }

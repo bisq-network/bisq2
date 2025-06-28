@@ -13,6 +13,10 @@ public class BitcoinAddressValidationTest {
         assertTrue(BitcoinAddressValidation.isValid("bc1qar0srrr7xw7b6gdk9w2v0du8gfpv4p2c5f9l5w")); // Bech32
         assertTrue(BitcoinAddressValidation.isValid("bc1qce2xmvr7h3lev3l3ecc2uxcsac7t26wppagkngat2s7x4ah7peesy4fz4q")); // Bech32
 
+        assertFalse(BitcoinAddressValidation.isValid("1bc1qce2xmvr7h3lev3l3ecc2uxcsac7t26wppagkngat2s7x4ah7peesy4fz4q"));
+        assertFalse(BitcoinAddressValidation.isValid("3bc1qce2xmvr7h3lev3l3ecc2uxcsac7t26wppagkngat2s7x4ah7peesy4fz4q"));
+
+        assertFalse(BitcoinAddressValidation.isValid("1IOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOI")); // Invalid address
         assertFalse(BitcoinAddressValidation.isValid("4A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa")); // Invalid address
         assertFalse(BitcoinAddressValidation.isValid("")); // Empty string
     }
