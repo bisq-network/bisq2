@@ -69,7 +69,6 @@ public class MuSigOfferListItem {
     private final String maker;
     private final Market market;
     private final String takeOfferButtonText;
-    private final String myOfferLabelText;
     private final Direction direction;
     private final List<FiatPaymentMethod> fiatPaymentMethods;
     private final UserProfile makerUserProfile;
@@ -101,7 +100,6 @@ public class MuSigOfferListItem {
         takeOfferButtonText = offer.getDirection().isBuy()
                 ? Res.get("muSig.offerbook.table.cell.offer.intent.sell")
                 : Res.get("muSig.offerbook.table.cell.offer.intent.buy");
-        myOfferLabelText = retrieveMyOfferLabelText();
         direction = offer.getDirection();
 
         // ImageUtil.getImageViewById(fiatPaymentMethod.getName());
@@ -166,15 +164,5 @@ public class MuSigOfferListItem {
         paymentMethods.sort(Comparator.comparing(FiatPaymentMethod::isCustomPaymentMethod)
                 .thenComparing(FiatPaymentMethod::getDisplayString));
         return paymentMethods;
-    }
-
-    private String retrieveMyOfferLabelText() {
-        if (isMyOffer) {
-            return offer.getDirection().isBuy()
-                    ? Res.get("muSig.offerbook.table.cell.myOffer.intent.buying")
-                    : Res.get("muSig.offerbook.table.cell.myOffer.intent.selling");
-        } else {
-            return "";
-        }
     }
 }
