@@ -69,7 +69,6 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -547,12 +546,29 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     private Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>, TableCell<MuSigOfferListItem, MuSigOfferListItem>> getActionButtonCellFactory() {
         return column -> new TableCell<>() {
             private final Button takeOfferButton = new Button();
+            private final HBox myOfferLabelBox = new HBox();
+            private final Label myOfferLabel = new Label(Res.get("muSig.offerbook.table.cell.myOffer"));
 
             {
-                takeOfferButton.setMinWidth(110);
-                takeOfferButton.setMaxWidth(takeOfferButton.getMinWidth());
-                takeOfferButton.getStyleClass().add("button-min-horizontal-padding");
-                takeOfferButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
+                double prefWidth = 120;
+                double prefHeight = 26;
+                takeOfferButton.setMinWidth(prefWidth);
+                takeOfferButton.setPrefWidth(prefWidth);
+                takeOfferButton.setMaxWidth(prefWidth);
+                takeOfferButton.getStyleClass().add("mu-sig-offerbook-offerlist-take-offer-button");
+                takeOfferButton.setMinHeight(prefHeight);
+                takeOfferButton.setPrefHeight(prefHeight);
+                takeOfferButton.setMaxHeight(prefHeight);
+
+                myOfferLabelBox.setMinWidth(prefWidth);
+                myOfferLabelBox.setPrefWidth(prefWidth);
+                myOfferLabelBox.setMaxWidth(prefWidth);
+                myOfferLabelBox.setMinHeight(prefHeight);
+                myOfferLabelBox.setPrefHeight(prefHeight);
+                myOfferLabelBox.setMaxHeight(prefHeight);
+                myOfferLabelBox.getChildren().add(myOfferLabel);
+                myOfferLabelBox.getStyleClass().add("mu-sig-offerbook-offerlist-myOffer-label-box");
+                myOfferLabelBox.setAlignment(Pos.CENTER);
             }
 
             @Override
@@ -561,13 +577,15 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
                 if (item != null && !empty) {
                     if (item.isMyOffer()) {
-                        takeOfferButton.setText(Res.get("muSig.offerbook.table.cell.intent.remove").toUpperCase(Locale.ROOT));
-                        resetStyles();
-                        // FIXME Label text always stays white independent of style class or even if setting style here directly.
-                        //  If using grey-transparent-outlined-button we have a white label. Quick fix is to use opacity with a while style...
-                        takeOfferButton.getStyleClass().add("white-transparent-outlined-button");
-                        takeOfferButton.setOpacity(0.5);
-                        takeOfferButton.setOnAction(e -> controller.onRemoveOffer(item.getOffer()));
+                        if (item.getOffer().getDirection().mirror().isBuy()) {
+                            myOfferLabelBox.getStyleClass().add("my-offer-to-buy");
+                            myOfferLabel.setStyle("-fx-text-fill: -bisq2-green-dim-10;");
+                        } else {
+                            myOfferLabelBox.getStyleClass().add("my-offer-to-sell");
+                            myOfferLabel.setStyle("-fx-text-fill: -bisq2-red-lit-10;");
+                        }
+                        setGraphic(myOfferLabelBox);
+//                        takeOfferButton.setOnAction(e -> controller.onRemoveOffer(item.getOffer()));
                     } else {
                         takeOfferButton.setText(item.getTakeOfferButtonText());
                         takeOfferButton.setOpacity(1);
@@ -578,8 +596,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                             takeOfferButton.getStyleClass().add("sell-button");
                         }
                         takeOfferButton.setOnAction(e -> controller.onTakeOffer(item.getOffer()));
+                        setGraphic(takeOfferButton);
                     }
-                    setGraphic(takeOfferButton);
                 } else {
                     resetStyles();
                     takeOfferButton.setOnAction(null);
@@ -591,6 +609,9 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 takeOfferButton.getStyleClass().remove("buy-button");
                 takeOfferButton.getStyleClass().remove("sell-button");
                 takeOfferButton.getStyleClass().remove("white-transparent-outlined-button");
+                myOfferLabelBox.getStyleClass().remove("my-offer-to-buy");
+                myOfferLabelBox.getStyleClass().remove("my-offer-to-sell");
+                myOfferLabel.getStyleClass().clear();
             }
         };
     }

@@ -98,8 +98,8 @@ public class MuSigOfferListItem {
         baseAmountAsString = OfferAmountFormatter.formatBaseAmount(marketPriceService, offer, false);
         quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, false);
         takeOfferButtonText = offer.getDirection().isBuy()
-                ? Res.get("muSig.offerbook.table.cell.intent.sell")
-                : Res.get("muSig.offerbook.table.cell.intent.buy");
+                ? Res.get("muSig.offerbook.table.cell.offer.intent.sell")
+                : Res.get("muSig.offerbook.table.cell.offer.intent.buy");
         direction = offer.getDirection();
 
         // ImageUtil.getImageViewById(fiatPaymentMethod.getName());
