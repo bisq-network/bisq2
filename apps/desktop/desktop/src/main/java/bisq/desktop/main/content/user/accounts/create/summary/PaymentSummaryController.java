@@ -24,6 +24,8 @@ import bisq.account.accounts.CountryBasedAccountPayload;
 import bisq.account.accounts.F2FAccount;
 import bisq.account.accounts.F2FAccountPayload;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
+import bisq.account.accounts.RevolutAccount;
+import bisq.account.accounts.RevolutAccountPayload;
 import bisq.account.accounts.SepaAccount;
 import bisq.account.accounts.SepaAccountPayload;
 import bisq.account.accounts.ZelleAccount;
@@ -37,6 +39,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.user.accounts.create.summary.details.AccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.create.summary.details.F2FAccountDetailsGridPane;
+import bisq.desktop.main.content.user.accounts.create.summary.details.RevolutAccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.create.summary.details.SepaAccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.create.summary.details.ZelleAccountDetailsGridPane;
 import bisq.desktop.overlay.OverlayController;
@@ -73,9 +76,9 @@ public class PaymentSummaryController implements Controller {
         model.setDefaultAccountName(accountPayload.getDefaultAccountName());
 
         if (accountPayload instanceof MultiCurrencyAccountPayload multiCurrencyAccountPayload) {
-            model.setCurrency(FiatCurrencyRepository.getFiatCurrencyDisplayNameAndCodes(multiCurrencyAccountPayload.getSelectedCurrencyCodes()));
+            model.setCurrency(FiatCurrencyRepository.getDisplayNameAndCodes(multiCurrencyAccountPayload.getSelectedCurrencyCodes()));
         } else {
-            model.setCurrency(FiatCurrencyRepository.getFiatCurrencyDisplayNameAndCode(accountPayload.getCurrencyCode().orElseThrow()));
+            model.setCurrency(FiatCurrencyRepository.getDisplayNameAndCode(accountPayload.getCurrencyCode().orElseThrow()));
         }
 
         if (accountPayload instanceof CountryBasedAccountPayload countryBasedAccountPayload) {
@@ -83,7 +86,7 @@ public class PaymentSummaryController implements Controller {
         }
 
         if (model.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
-            AccountDetailsGridPane accountDetailsGridPane = getAccountDetailsGridPane(accountPayload, fiatPaymentRail);
+            AccountDetailsGridPane<?,?> accountDetailsGridPane = getAccountDetailsGridPane(accountPayload, fiatPaymentRail);
             model.setAccountDetailsGridPane(accountDetailsGridPane);
         }
     }
@@ -124,7 +127,7 @@ public class PaymentSummaryController implements Controller {
             case SEPA -> new SepaAccountDetailsGridPane((SepaAccountPayload) accountPayload, fiatPaymentRail);
             case SEPA_INSTANT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case ZELLE -> new ZelleAccountDetailsGridPane((ZelleAccountPayload) accountPayload, fiatPaymentRail);
-            case REVOLUT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case REVOLUT -> new RevolutAccountDetailsGridPane((RevolutAccountPayload) accountPayload, fiatPaymentRail);
             case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case NATIONAL_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case SAME_BANK ->throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
@@ -158,7 +161,7 @@ public class PaymentSummaryController implements Controller {
                 case SEPA_INSTANT ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case ZELLE -> new ZelleAccount(new Date().getTime(), accountName, (ZelleAccountPayload) model.getAccountPayload());
-                case REVOLUT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case REVOLUT -> new RevolutAccount(new Date().getTime(), accountName, (RevolutAccountPayload) model.getAccountPayload());
                 case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case NATIONAL_BANK ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);

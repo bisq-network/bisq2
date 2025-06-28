@@ -24,6 +24,7 @@ import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.PaymentRail;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.data.Triple;
+import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.i18n.Res;
@@ -103,9 +104,9 @@ public abstract class AccountDetailsVBox<A extends Account<?, ?>, R extends Paym
             String currency;
             AccountPayload<?> accountPayload = account.getAccountPayload();
             if (accountPayload instanceof MultiCurrencyAccountPayload multiCurrencyAccountPayload) {
-                currency = FiatCurrencyRepository.getFiatCurrencyDisplayNameAndCodes(multiCurrencyAccountPayload.getSelectedCurrencyCodes());
+                currency = FiatCurrencyRepository.getDisplayNameAndCodes(multiCurrencyAccountPayload.getSelectedCurrencyCodes());
             } else {
-                currency = FiatCurrencyRepository.getFiatCurrencyDisplayNameAndCode(accountPayload.getCurrencyCode().orElseThrow());
+                currency = FiatCurrencyRepository.getDisplayNameAndCode(accountPayload.getCurrencyCode().orElseThrow());
             }
 
             Triple<Text, Label, VBox> currencyTriple = getDescriptionValueVBoxTriple(Res.get("user.paymentAccounts.currency"),
@@ -120,19 +121,24 @@ public abstract class AccountDetailsVBox<A extends Account<?, ?>, R extends Paym
     }
 
     protected Label addDescriptionAndValueWithCopyButton(String description, String value) {
+        return addDescriptionAndValueWithCopyButton(description, value, value);
+    }
+
+    protected Label addDescriptionAndValueWithCopyButton(String description, String value, String valueForCopy) {
         addDescriptionLabel(description);
         Label valueLabel = addValueLabel(value);
         GridPane.setMargin(valueLabel, new Insets(0, 20, 0, 0));
-        addCopyButton();
+        addCopyButton(valueForCopy);
         return valueLabel;
     }
 
-    protected void addDescriptionLabel(String description) {
+    protected Label addDescriptionLabel(String description) {
         Label label = new Label(description);
         label.getStyleClass().add(DESCRIPTION_STYLE);
         label.setMinWidth(DESCRIPTION_WIDTH);
         label.setMaxWidth(DESCRIPTION_WIDTH);
         gridPane.add(label, 0, ++rowIndex);
+        return label;
     }
 
     private Label addValueLabel(String value) {
@@ -142,23 +148,15 @@ public abstract class AccountDetailsVBox<A extends Account<?, ?>, R extends Paym
         return label;
     }
 
-    private void addCopyButton() {
-        BisqMenuItem copyButton = getBisqMenuItem();
+    private BisqMenuItem addCopyButton(String value) {
+        BisqMenuItem copyButton = new BisqMenuItem("copy-grey", "copy-white");
+        copyButton.setTooltip(Res.get("action.copyToClipboard"));
+        copyButton.useIconOnly(17);
+        copyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(value));
         GridPane.setHalignment(copyButton, HPos.RIGHT);
         GridPane.setValignment(copyButton, VPos.CENTER);
         gridPane.add(copyButton, 1, rowIndex, 3, 1);
-    }
-
-
-    protected BisqMenuItem getBisqMenuItem() {
-        return getBisqMenuItem(Res.get("action.copyToClipboard"));
-    }
-
-    protected BisqMenuItem getBisqMenuItem(String tooltip) {
-        BisqMenuItem bisqMenuItem = new BisqMenuItem("copy-grey", "copy-white");
-        bisqMenuItem.setTooltip(tooltip);
-        bisqMenuItem.useIconOnly(17);
-        return bisqMenuItem;
+        return copyButton;
     }
 
     protected Triple<Text, Label, VBox> getDescriptionValueVBoxTriple(String description, String value) {

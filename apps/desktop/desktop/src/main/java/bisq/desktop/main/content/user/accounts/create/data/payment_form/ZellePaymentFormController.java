@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.data.payment_form.aaa;
+package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
 import bisq.account.accounts.ZelleAccountPayload;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.main.content.user.accounts.create.data.payment_form.PaymentFormController;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.UUID;

@@ -52,20 +52,17 @@ public class SepaAccountDetailsVBox extends FiatAccountDetailsVBox<SepaAccount> 
         String countryName = CountryRepository.getNameByCode(accountPayload.getCountryCode());
         List<String> acceptedCountryCodes = new ArrayList<>(accountPayload.getAcceptedCountryCodes());
         Collections.sort(acceptedCountryCodes);
-        List<String> allSepaCountries = new ArrayList<>(FiatPaymentRailUtil.getAllSepaCountryCodes());
-        Collections.sort(allSepaCountries);
-        String acceptCountries;
-        if (acceptedCountryCodes.equals(allSepaCountries)) {
-            acceptCountries = Res.get("user.paymentAccounts.createAccount.accountData.sepa.allSepaCountries");
-        } else {
-            acceptCountries = acceptedCountryCodes.stream()
-                    .map(CountryRepository::getNameByCode)
-                    .collect(Collectors.joining(", "));
-        }
+        List<String> allSepaCountryCodes = new ArrayList<>(FiatPaymentRailUtil.getAllSepaCountryCodes());
+        Collections.sort(allSepaCountryCodes);
+        boolean matchAllCountries = acceptedCountryCodes.equals(allSepaCountryCodes);
+        String allSepaCountries = Res.get("user.paymentAccounts.createAccount.accountData.sepa.allSepaCountries");
+        String acceptedCountries = acceptedCountryCodes.stream()
+                .map(CountryRepository::getNameByCode)
+                .collect(Collectors.joining(", "));
         Label acceptCountriesLabel = addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.createAccount.accountData.sepa.acceptCountries"),
-                acceptCountries);
-        if (acceptCountries.length() > 50) {
-            acceptCountriesLabel.setTooltip(new BisqTooltip(acceptCountries));
+                matchAllCountries ? allSepaCountries : acceptedCountries, acceptedCountries);
+        if (matchAllCountries || acceptedCountries.length() > 70) {
+            acceptCountriesLabel.setTooltip(new BisqTooltip(acceptedCountries));
         }
     }
 }

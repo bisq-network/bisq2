@@ -83,7 +83,7 @@ public class FiatPaymentRailUtil {
     }
 
     public static List<Country> getAllSepaCountries() {
-        return countriesFromCodes(getAllSepaCountryCodes());
+        return CountryRepository.getCountriesFromCodes(getAllSepaCountryCodes());
     }
 
 
@@ -107,7 +107,7 @@ public class FiatPaymentRailUtil {
     }
 
     public static List<Country> getWiseCountries() {
-        return countriesFromCodes(getWiseCountryCodes());
+        return CountryRepository.getCountriesFromCodes(getWiseCountryCodes());
     }
 
     // Took all currencies from: https://wise.com/help/articles/2571907/what-currencies-can-i-send-to-and-from
@@ -177,7 +177,7 @@ public class FiatPaymentRailUtil {
     }
 
     public static List<Country> getAmazonGiftCardsCountries() {
-        return countriesFromCodes(getAmazonGiftCardsCountryCodes());
+        return CountryRepository.getCountriesFromCodes(getAmazonGiftCardsCountryCodes());
     }
 
     public static List<String> getAmazonGiftCardsCurrencyCodes() {
@@ -190,7 +190,7 @@ public class FiatPaymentRailUtil {
 
 
     // https://help.revolut.com/help/wealth/exchanging-money/what-currencies-are-available/what-currencies-are-supported-for-holding-and-exchange/
-    static List<String> getRevolutCountryCodes() {
+    public static List<String> getRevolutCountryCodes() {
         return List.of("AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
                 "DE", "GR", "HU", "IS", "IE", "IT", "LV", "LI", "LT", "LU", "MT", "NL",
                 "NO", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "GB",
@@ -198,10 +198,10 @@ public class FiatPaymentRailUtil {
     }
 
     public static List<Country> getRevolutCountries() {
-        return countriesFromCodes(getRevolutCountryCodes());
+        return CountryRepository.getCountriesFromCodes(getRevolutCountryCodes());
     }
 
-    static List<String> getRevolutCurrencyCodes() {
+    public static List<String> getRevolutCurrencyCodes() {
         return List.of(
                 "AED",
                 "AUD",
@@ -240,19 +240,7 @@ public class FiatPaymentRailUtil {
         return currenciesFromCodes(getRevolutCurrencyCodes());
     }
 
-    private static List<Country> countriesFromCodes(List<String> countryCodes) {
-        return CountryRepository.getCountriesFromCodes(countryCodes);
-    }
-
-    private static Country countryFromCode(String countryCode) {
-        return CountryRepository.getCountry(countryCode);
-    }
-
-    private static List<Country> allCountries() {
-        return CountryRepository.getCountries();
-    }
-
-    private static List<FiatCurrency> currenciesFromCodes(List<String> currencyCodes) {
+    public static List<FiatCurrency> currenciesFromCodes(List<String> currencyCodes) {
         return currencyCodes.stream()
                 .map(FiatCurrencyRepository::getCurrencyByCode)
                 .collect(Collectors.toList());

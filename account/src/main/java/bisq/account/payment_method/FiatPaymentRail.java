@@ -335,7 +335,7 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             case SAME_BANK -> DAYS_4;
             case SWIFT -> DAYS_4;
             case DOMESTIC_WIRE_TRANSFER -> DAYS_4;
-            case REVOLUT -> DAYS_4;
+            case REVOLUT -> HOURS_24;
             case WISE -> DAYS_4;
             case AMAZON_GIFT_CARD -> DAYS_4;
             default -> HOURS_24;

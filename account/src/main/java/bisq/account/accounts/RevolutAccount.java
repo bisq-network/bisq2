@@ -28,16 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class RevolutAccount extends Account<FiatPaymentMethod, RevolutAccountPayload> {
- /*   public RevolutAccount(String accountName,
-                          List<String> acceptedCurrencyCodes,
-                          String userName) {
-        this(accountName,
-                new RevolutAccountPayload(StringUtils.createUid(),
-                acceptedCurrencyCodes,
-                userName));
-    }*/
-
-    private RevolutAccount(long creationDate, String accountName, RevolutAccountPayload revolutAccountPayload) {
+    public RevolutAccount(long creationDate, String accountName, RevolutAccountPayload revolutAccountPayload) {
         super(creationDate, accountName, revolutAccountPayload);
     }
 

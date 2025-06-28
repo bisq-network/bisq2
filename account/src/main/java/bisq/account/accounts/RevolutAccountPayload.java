@@ -19,6 +19,9 @@ package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
+import bisq.account.payment_method.FiatPaymentRailUtil;
+import bisq.common.validation.NetworkDataValidation;
+import bisq.common.validation.PaymentAccountValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -31,6 +34,9 @@ import java.util.List;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMethod> implements MultiCurrencyAccountPayload {
+    public static final int USER_NAME_MIN_LENGTH = 2;
+    public static final int USER_NAME_MAX_LENGTH = 70;
+
     private final List<String> selectedCurrencyCodes;
     private final String userName;
 
@@ -40,6 +46,16 @@ public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMetho
         super(id);
         this.selectedCurrencyCodes = selectedCurrencyCodes;
         this.userName = userName;
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
+
+        NetworkDataValidation.validateRequiredText(userName, USER_NAME_MIN_LENGTH, USER_NAME_MAX_LENGTH);
+        PaymentAccountValidation.isValidCountryCodes(selectedCurrencyCodes,
+                FiatPaymentRailUtil.getRevolutCountryCodes(),
+                "Revolut country codes");
     }
 
     @Override

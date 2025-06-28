@@ -15,12 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.data.payment_form.aaa;
+package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.main.content.user.accounts.create.data.payment_form.PaymentFormView;
 import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;

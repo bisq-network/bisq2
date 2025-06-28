@@ -48,9 +48,9 @@ public abstract class AccountDetailsGridPane<A extends AccountPayload<?>, R exte
 
         addDetails(accountPayload);
 
-        Region restrictionsLine = getLine();
+       /* Region restrictionsLine = getLine();
         GridPane.setMargin(restrictionsLine, new Insets(-10, 0, -5, 0));
-        add(restrictionsLine, 0, ++rowIndex, 3, 1);
+        add(restrictionsLine, 0, ++rowIndex, 3, 1);*/
 
         addRestrictions(paymentRail);
     }
