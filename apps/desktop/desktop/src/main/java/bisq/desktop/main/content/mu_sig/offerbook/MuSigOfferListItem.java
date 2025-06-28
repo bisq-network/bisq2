@@ -71,6 +71,7 @@ public class MuSigOfferListItem {
     private final String takeOfferButtonText;
     private final Direction direction;
     private final List<FiatPaymentMethod> fiatPaymentMethods;
+    private final UserProfile makerUserProfile;
 
     private double priceSpecAsPercent = 0;
     private String formattedPercentagePrice = Res.get("data.na");
@@ -107,6 +108,10 @@ public class MuSigOfferListItem {
                         .map(PaymentMethod::getDisplayString)
                         .collect(Collectors.toList()));
         fiatPaymentMethods = retrieveAndSortFiatPaymentMethods();
+
+        makerUserProfile = userProfileService.findUserProfile(offer.getMakersUserProfileId())
+                .orElseThrow(() -> new RuntimeException("No maker user profile found for offer: " + offer.getId()));
+
         deposit = "15%";
         maker = userProfileService.findUserProfile(offer.getMakersUserProfileId())
                 .map(UserProfile::getUserName)

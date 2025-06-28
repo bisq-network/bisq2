@@ -47,6 +47,9 @@ import bisq.settings.SettingsService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.banned.RateLimitExceededException;
 import bisq.user.banned.UserProfileBannedException;
+import bisq.user.identity.UserIdentity;
+import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import com.google.common.base.Joiner;
 import lombok.Getter;
@@ -73,9 +76,10 @@ public class MuSigOfferbookController implements Controller {
     private final IdentityService identityService;
     private final BannedUserService bannedUserService;
     private final FavouriteMarketsService favouriteMarketsService;
+    private final UserIdentityService userIdentityService;
     private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin;
     private Subscription selectedMarketItemPin, marketsSearchBoxTextPin, selectedMarketFilterPin, selectedMarketSortTypePin,
-            selectedOfferDirectionFilterPin, activeMarketPaymentsCountPin;
+            selectedOffersFilterPin, activeMarketPaymentsCountPin;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
         muSigService = serviceProvider.getMuSigService();
@@ -85,6 +89,7 @@ public class MuSigOfferbookController implements Controller {
         settingsService = serviceProvider.getSettingsService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         favouriteMarketsService = serviceProvider.getFavouriteMarketsService();
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
 
         model = new MuSigOfferbookModel();
         view = new MuSigOfferbookView(model, this);
@@ -240,20 +245,25 @@ public class MuSigOfferbookController implements Controller {
         });
         model.getSortedMarketItems().setComparator(model.getSelectedMarketSortType().get().getComparator());
 
-        MuSigFilters.MuSigOfferDirectionFilter persistedOfferDirectionFilter = settingsService.getCookie().asString(CookieKey.MU_SIG_OFFER_DIRECTION_FILTER)
-                .map(name -> ProtobufUtils.enumFromProto(MuSigFilters.MuSigOfferDirectionFilter.class, name, MuSigFilters.MuSigOfferDirectionFilter.ALL))
-                .orElse(MuSigFilters.MuSigOfferDirectionFilter.ALL);
-        model.getSelectedMuSigOfferDirectionFilter().set(persistedOfferDirectionFilter);
-        selectedOfferDirectionFilterPin = EasyBind.subscribe(model.getSelectedMuSigOfferDirectionFilter(), filter -> {
+        MuSigFilters.MuSigOffersFilter persistedOffersFilter = settingsService.getCookie().asString(CookieKey.MU_SIG_OFFERS_FILTER)
+                .map(name -> ProtobufUtils.enumFromProto(MuSigFilters.MuSigOffersFilter.class, name, MuSigFilters.MuSigOffersFilter.ALL))
+                .orElse(MuSigFilters.MuSigOffersFilter.ALL);
+        model.getSelectedMuSigOffersFilter().set(persistedOffersFilter);
+        selectedOffersFilterPin = EasyBind.subscribe(model.getSelectedMuSigOffersFilter(), filter -> {
            if (filter != null) {
-               if (filter == MuSigFilters.MuSigOfferDirectionFilter.ALL) {
-                   model.setMuSigOffersDirectionFilterPredicate(item -> true);
-               } else if (filter == MuSigFilters.MuSigOfferDirectionFilter.BUY) {
-                   model.setMuSigOffersDirectionFilterPredicate(item -> item.getDirection() == Direction.BUY);
-               } else {
-                   model.setMuSigOffersDirectionFilterPredicate(item -> item.getDirection() == Direction.SELL);
+               if (filter == MuSigFilters.MuSigOffersFilter.ALL) {
+                   model.setMuSigOffersFilterPredicate(item -> true);
+               } else if (filter == MuSigFilters.MuSigOffersFilter.BUY) {
+                   model.setMuSigOffersFilterPredicate(item -> item.getDirection() == Direction.BUY);
+               } else if (filter == MuSigFilters.MuSigOffersFilter.SELL) {
+                   model.setMuSigOffersFilterPredicate(item -> item.getDirection() == Direction.SELL);
+               } else if (filter == MuSigFilters.MuSigOffersFilter.MINE) {
+                   UserProfile selectedProfile = Optional.ofNullable(userIdentityService.getSelectedUserIdentity())
+                           .map(UserIdentity::getUserProfile)
+                           .orElse(null);
+                   model.setMuSigOffersFilterPredicate(item -> item.getMakerUserProfile().equals(selectedProfile));
                }
-               settingsService.setCookie(CookieKey.MU_SIG_OFFER_DIRECTION_FILTER, filter.name());
+               settingsService.setCookie(CookieKey.MU_SIG_OFFERS_FILTER, filter.name());
                updateFilteredMuSigOfferListItems();
            }
         });
@@ -285,7 +295,7 @@ public class MuSigOfferbookController implements Controller {
         marketsSearchBoxTextPin.unsubscribe();
         selectedMarketFilterPin.unsubscribe();
         selectedMarketSortTypePin.unsubscribe();
-        selectedOfferDirectionFilterPin.unsubscribe();
+        selectedOffersFilterPin.unsubscribe();
         activeMarketPaymentsCountPin.unsubscribe();
     }
 

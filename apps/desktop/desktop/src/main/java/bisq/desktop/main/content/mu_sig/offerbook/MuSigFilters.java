@@ -28,9 +28,10 @@ public class MuSigFilters {
     }
 
     @Getter
-    public enum MuSigOfferDirectionFilter {
+    public enum MuSigOffersFilter {
         ALL,
         BUY,
-        SELL
+        SELL,
+        MINE
     }
 }
