@@ -160,7 +160,7 @@
 }
 
 .sell-button:hover {
-    -fx-background-color:  -bisq2-red-dim-10;
+    -fx-background-color: -bisq2-red-dim-10;
 }
 
 .sell-button:pressed {
