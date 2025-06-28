@@ -15,30 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.controls.validator;
+package bisq.desktop.main.content.user.accounts.details;
 
-import bisq.common.validation.BitcoinAddressValidation;
+import bisq.account.accounts.ZelleAccount;
+import bisq.account.accounts.ZelleAccountPayload;
 import bisq.i18n.Res;
-import javafx.scene.control.TextInputControl;
 
-public class BitcoinAddressValidator extends ValidatorBase {
-
-    public BitcoinAddressValidator(String message) {
-        super(message);
-    }
-
-    public BitcoinAddressValidator() {
-        super(Res.get("validation.invalidBitcoinAddress"));
+public class ZelleAccountDetailsVBox extends FiatAccountDetailsVBox<ZelleAccount> {
+    public ZelleAccountDetailsVBox(ZelleAccount account) {
+        super(account);
     }
 
     @Override
-    protected void eval() {
-        TextInputControl textField = (TextInputControl) srcControl.get();
-        String address = textField.getText();
-        if (address != null && !address.isEmpty()) {
-            hasErrors.set(!BitcoinAddressValidation.isValid(address));
-        } else {
-            hasErrors.set(false);
-        }
+    protected void addDetails(ZelleAccount account) {
+        ZelleAccountPayload accountPayload = account.getAccountPayload();
+
+        addDescriptionAndValue(Res.get("user.paymentAccounts.zelle.holderName"),
+                accountPayload.getHolderName());
+
+        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.zelle.emailOrMobileNr"),
+                accountPayload.getEmailOrMobileNr());
     }
 }

@@ -37,7 +37,7 @@ public class BitcoinAddressValidation {
      * @param address The string to be checked.
      * @return True if it is a Bitcoin address, false otherwise.
      */
-    public static boolean validateAddress(String address) {
+    public static boolean isValid(String address) {
         return BASE_58_PATTERN.matcher(address).matches() ||
                 BECH32_PATTERN.matcher(address).matches();
     }

@@ -27,6 +27,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.user.accounts.create.data.payment_form.F2FPaymentFormController;
 import bisq.desktop.main.content.user.accounts.create.data.payment_form.PaymentFormController;
 import bisq.desktop.main.content.user.accounts.create.data.payment_form.SepaPaymentFormController;
+import bisq.desktop.main.content.user.accounts.create.data.payment_form.aaa.ZellePaymentFormController;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -99,7 +100,7 @@ public class PaymentDataController implements Controller {
             case CUSTOM -> throw new UnsupportedOperationException("Not implemented yet");
             case SEPA -> new SepaPaymentFormController(serviceProvider);
             case SEPA_INSTANT -> throw new UnsupportedOperationException("Not implemented yet");
-            case ZELLE -> throw new UnsupportedOperationException("Not implemented yet");
+            case ZELLE -> new ZellePaymentFormController(serviceProvider);
             case REVOLUT -> throw new UnsupportedOperationException("Not implemented yet");
             case WISE -> throw new UnsupportedOperationException("Not implemented yet");
             case NATIONAL_BANK -> throw new UnsupportedOperationException("Not implemented yet");

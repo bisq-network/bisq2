@@ -46,6 +46,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -141,7 +142,7 @@ public class PaymentAccountsRestApi extends RestApiBase {
         });
         try {
             UserDefinedFiatAccountPayload accountPayload = new UserDefinedFiatAccountPayload(UUID.randomUUID().toString(), request.accountData());
-            accountService.addPaymentAccount(new UserDefinedFiatAccount(request.accountName(), accountPayload));
+            accountService.addPaymentAccount(new UserDefinedFiatAccount(new Date().getTime(), request.accountName(), accountPayload));
             asyncResponse.resume(buildResponse(Response.Status.CREATED, new AddAccountResponse(request.accountName())));
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));

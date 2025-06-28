@@ -15,29 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.controls.validator;
+package bisq.desktop.common.formatter;
 
-import bisq.common.validation.SepaPaymentAccountValidation;
-import javafx.scene.control.TextInputControl;
+import bisq.common.util.StringUtils;
+import javafx.util.StringConverter;
 
-public class SepaBicValidator extends ValidatorBase {
-
-    public SepaBicValidator() {
-        super();
+public class SafeInputStringConverter extends StringConverter<String> {
+    @Override
+    public String toString(String string) {
+        return string;
     }
 
-
     @Override
-    protected void eval() {
-        if (srcControl.get() instanceof TextInputControl textInputControl) {
-            String bic = textInputControl.getText();
-            try {
-                SepaPaymentAccountValidation.isValidBic(bic);
-                hasErrors.set(false);
-            } catch (Exception e) {
-                setMessage(e.getMessage());
-                hasErrors.set(true);
-            }
-        }
+    public String fromString(String string) {
+        return string == null ? null : StringUtils.cleanUserInput(string.trim());
     }
 }

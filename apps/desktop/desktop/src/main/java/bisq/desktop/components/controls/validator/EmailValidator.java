@@ -17,32 +17,24 @@
 
 package bisq.desktop.components.controls.validator;
 
-import bisq.common.validation.SepaPaymentAccountValidation;
+import bisq.common.validation.EmailValidation;
+import bisq.i18n.Res;
 import javafx.scene.control.TextInputControl;
-import lombok.Setter;
 
-public class SepaIbanValidator extends ValidatorBase {
-    // The country code which the Iban need to match
-    @Setter
-    private String restrictedToCountryCode = "";
-
-    public SepaIbanValidator() {
+public class EmailValidator extends ValidatorBase {
+    public EmailValidator() {
         super();
     }
+
 
     @Override
     protected void eval() {
         if (srcControl.get() instanceof TextInputControl textInputControl) {
-            String iban = textInputControl.getText();
-            try {
-                SepaPaymentAccountValidation.isValidIban(iban);
-
-                if (!restrictedToCountryCode.isEmpty()) {
-                    SepaPaymentAccountValidation.isIbanMatchingCountryCode(iban, restrictedToCountryCode);
-                }
+            String value = textInputControl.getText();
+            if (EmailValidation.isValid(value)) {
                 hasErrors.set(false);
-            } catch (Exception e) {
-                setMessage( e.getMessage());
+            } else {
+                setMessage(Res.get("validation.invalidEmail"));
                 hasErrors.set(true);
             }
         }

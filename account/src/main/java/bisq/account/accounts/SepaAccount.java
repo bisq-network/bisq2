@@ -17,7 +17,6 @@
 
 package bisq.account.accounts;
 
-import bisq.account.payment_method.FiatPaymentMethod;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,12 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class SepaAccount extends CountryBasedAccount<SepaAccountPayload> {
-    public SepaAccount(SepaAccountPayload payload) {
-        this(payload.getDefaultAccountName(), payload);
-    }
-
-    public SepaAccount(String accountName, SepaAccountPayload sepaAccountPayload) {
-        super(accountName, sepaAccountPayload);
+    public SepaAccount(long creationDate,
+                        String accountName,
+                        SepaAccountPayload accountPayload) {
+        super(creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -51,7 +48,8 @@ public final class SepaAccount extends CountryBasedAccount<SepaAccountPayload> {
     }
 
     public static SepaAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new SepaAccount(proto.getAccountName(),
+        return new SepaAccount(proto.getCreationDate(),
+                proto.getAccountName(),
                 SepaAccountPayload.fromProto(proto.getAccountPayload()));
     }
 }

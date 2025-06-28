@@ -17,33 +17,30 @@
 
 package bisq.desktop.components.controls.validator;
 
-import bisq.common.validation.SepaPaymentAccountValidation;
+import bisq.common.validation.EmailValidation;
+import bisq.common.validation.PhoneNumberValidation;
+import bisq.i18n.Res;
 import javafx.scene.control.TextInputControl;
-import lombok.Setter;
 
-public class SepaIbanValidator extends ValidatorBase {
-    // The country code which the Iban need to match
-    @Setter
-    private String restrictedToCountryCode = "";
+public class EmailOrPhoneNumberValidator extends ValidatorBase {
+    private final String regionCode;
 
-    public SepaIbanValidator() {
+    public EmailOrPhoneNumberValidator(String regionCode) {
         super();
+        this.regionCode = regionCode;
     }
 
     @Override
     protected void eval() {
         if (srcControl.get() instanceof TextInputControl textInputControl) {
-            String iban = textInputControl.getText();
-            try {
-                SepaPaymentAccountValidation.isValidIban(iban);
+            String value = textInputControl.getText();
+            boolean isPhoneValid = PhoneNumberValidation.isValid(value, regionCode);
+            boolean isEmailValid = EmailValidation.isValid(value);
+            boolean isValid = isPhoneValid || isEmailValid;
+            hasErrors.set(!isValid);
 
-                if (!restrictedToCountryCode.isEmpty()) {
-                    SepaPaymentAccountValidation.isIbanMatchingCountryCode(iban, restrictedToCountryCode);
-                }
-                hasErrors.set(false);
-            } catch (Exception e) {
-                setMessage( e.getMessage());
-                hasErrors.set(true);
+            if (!isValid) {
+                setMessage(Res.get("validation.invalidEmailOrPhoneNumber"));
             }
         }
     }

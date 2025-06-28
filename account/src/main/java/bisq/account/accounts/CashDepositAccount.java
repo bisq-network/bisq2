@@ -1,7 +1,5 @@
 package bisq.account.accounts;
 
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -12,8 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class CashDepositAccount extends BankAccount<CashDepositAccountPayload> {
-    public CashDepositAccount(String accountName, CashDepositAccountPayload payload) {
-        super(accountName, payload);
+    public CashDepositAccount(long creationDate, String accountName, CashDepositAccountPayload accountPayload) {
+        super(creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -31,7 +29,7 @@ public final class CashDepositAccount extends BankAccount<CashDepositAccountPayl
     }
 
     public static CashDepositAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new CashDepositAccount(
+        return new CashDepositAccount(proto.getCreationDate(),
                 proto.getAccountName(),
                 CashDepositAccountPayload.fromProto(proto.getAccountPayload()));
     }

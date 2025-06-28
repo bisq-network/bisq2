@@ -18,7 +18,6 @@
 package bisq.common.validation;
 
 import bisq.common.currency.FiatCurrencyRepository;
-import bisq.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -30,21 +29,13 @@ public class PaymentAccountValidation {
     public static final int HOLDER_NAME_MIN_LENGTH = 2;
     public static final int HOLDER_NAME_MAX_LENGTH = 70;
 
-    public static void validateEmail(String email) {
-        checkArgument(StringUtils.isNotEmpty(email), "Email must not be empty");
-        checkArgument(email.length() <= 100, "Email must not be longer than 100 characters. email=" + email);
-
-        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-        checkArgument(email.matches(emailRegex), "Invalid email format. email: " + email);
-    }
-
-    public static void validateHolderName(String name) {
+    public static void isValidHolderName(String name) {
         NetworkDataValidation.validateText(name, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);
     }
 
-    public static void validateCountryCodes(List<String> countryCodes,
-                                            List<String> allowedCountryCodes,
-                                            String contextDescription) {
+    public static void isValidCountryCodes(List<String> countryCodes,
+                                           List<String> allowedCountryCodes,
+                                           String contextDescription) {
         checkArgument(countryCodes != null && !countryCodes.isEmpty(),
                 "Country codes list must not be null or empty for " + contextDescription);
 
@@ -57,7 +48,7 @@ public class PaymentAccountValidation {
         }
     }
 
-    public static void validateCurrencyCodes(List<String> currencyCodes) {
+    public static void isValidCurrencyCodes(List<String> currencyCodes) {
         try {
             FiatCurrencyRepository.getCurrencyByCodes(currencyCodes);
         } catch (Exception e) {
@@ -65,7 +56,7 @@ public class PaymentAccountValidation {
         }
     }
 
-    public static void validateCurrencyCode(String currencyCode) {
+    public static void isValidCurrencyCode(String currencyCode) {
         try {
             FiatCurrencyRepository.getCurrencyByCode(currencyCode);
         } catch (Exception e) {

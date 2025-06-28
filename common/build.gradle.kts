@@ -62,4 +62,5 @@ dependencies {
     implementation(libs.bundles.jackson)
     implementation(libs.swagger.jaxrs2.jakarta)
     implementation(libs.bundles.glassfish.jersey)
+    implementation("com.googlecode.libphonenumber:libphonenumber:8.13.33")
 }

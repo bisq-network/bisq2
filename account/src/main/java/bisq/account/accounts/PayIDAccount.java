@@ -1,7 +1,6 @@
 package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -31,8 +30,7 @@ public final class PayIDAccount extends Account<FiatPaymentMethod, PayIDAccountP
     }
 
     public static PayIDAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new PayIDAccount(
-                proto.getCreationDate(),
+        return new PayIDAccount(proto.getCreationDate(),
                 proto.getAccountName(),
                 PayIDAccountPayload.fromProto(proto.getAccountPayload())
         );

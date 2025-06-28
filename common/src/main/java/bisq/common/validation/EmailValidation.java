@@ -17,16 +17,19 @@
 
 package bisq.common.validation;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.regex.Pattern;
 
-public class LightningInvoiceValidation {
-    public static final int MIN_LENGTH = 50;
-    public static final int MAX_LENGTH = 7089;
-    private static final Pattern LN_BECH32_PATTERN = Pattern.compile("^(lnbc|LNBC)(\\d*[munpMUNP]?)1[02-9a-zA-Z]{50,7089}$");
+public class EmailValidation {
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+            "^(?!.*\\.\\.)[A-Z0-9._%+-]+@" +                   // Local part, no consecutive dots
+                    "(?:[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?\\.)+" +         // Domain labels: no leading/trailing hyphens
+                    "[A-Z]{2,}$",                                       // TLD: at least 2 letters
+            Pattern.CASE_INSENSITIVE
+    );
 
-    public static boolean isValid(@NotNull String invoice) {
-        return LN_BECH32_PATTERN.matcher(invoice).matches();
+    public static boolean isValid(String email) {
+        return email != null &&
+                email.length() <= 254 &&
+                EMAIL_PATTERN.matcher(email).matches();
     }
 }

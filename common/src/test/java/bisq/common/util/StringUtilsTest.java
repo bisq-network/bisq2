@@ -7,7 +7,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SuppressWarnings("SpellCheckingInspection")
 @Slf4j
@@ -118,5 +119,56 @@ public class StringUtilsTest {
         assertEquals("camelcase", StringUtils.snakeCaseToKebapCase("camelcase"));
         assertEquals("camel-case", StringUtils.snakeCaseToKebapCase("camel-case"));
         assertEquals("", StringUtils.snakeCaseToKebapCase(""));
+    }
+
+    @Test
+    void testRemovesBiDiCharacters() {
+        String input = "\u202D+1 415 9604264\u202C"; // LRO ... PDF
+        String expected = "+1 415 9604264";
+        assertEquals(expected, StringUtils.cleanUserInput(input));
+    }
+
+    @Test
+    void testRemovesZeroWidthSpace() {
+        String input = "+1\u200B415\u200B9604264"; // zero-width spaces
+        String expected = "+14159604264";
+        assertEquals(expected, StringUtils.cleanUserInput(input));
+    }
+
+    @Test
+    void testRemovesRLMandLRM() {
+        String input = "\u200E+1 415\u200F 9604264"; // LRM and RLM
+        String expected = "+1 415 9604264";
+        assertEquals(expected, StringUtils.cleanUserInput(input));
+    }
+
+    @Test
+    void testCollapsesMultipleSpaces() {
+        String input = "  +1   415    9604264   ";
+        String expected = "+1 415 9604264";
+        assertEquals(expected, StringUtils.cleanUserInput(input));
+    }
+
+    @Test
+    void testReturnsNullOnNullInput() {
+        assertEquals("", StringUtils.cleanUserInput(null));
+    }
+
+    @Test
+    void testEmptyString() {
+        assertEquals("", StringUtils.cleanUserInput(""));
+    }
+
+    @Test
+    void testOnlyInvisibleCharacters() {
+        String input = "\u200E\u202D\u202C\u200F\u200B";
+        assertEquals("", StringUtils.cleanUserInput(input));
+    }
+
+    @Test
+    void testMixedValidAndInvisibleCharacters() {
+        String input = "  \u202Duser@example.com\u202C  ";
+        String expected = "user@example.com";
+        assertEquals(expected, StringUtils.cleanUserInput(input));
     }
 }

@@ -1,7 +1,6 @@
 package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -31,8 +30,7 @@ public final class USPostalMoneyOrderAccount extends Account<FiatPaymentMethod,U
     }
 
     public static USPostalMoneyOrderAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new USPostalMoneyOrderAccount(
-                proto.getCreationDate(),
+        return new USPostalMoneyOrderAccount(proto.getCreationDate(),
                 proto.getAccountName(),
                 USPostalMoneyOrderAccountPayload.fromProto(proto.getAccountPayload()));
     }

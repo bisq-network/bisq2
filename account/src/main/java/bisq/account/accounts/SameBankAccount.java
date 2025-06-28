@@ -25,8 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class SameBankAccount extends NationalBankAccount {
-    public SameBankAccount(String accountName, SameBankAccountPayload payload) {
-        super(accountName, payload);
+    public SameBankAccount(long creationDate, String accountName, SameBankAccountPayload accountPayload) {
+        super(creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -44,7 +44,7 @@ public final class SameBankAccount extends NationalBankAccount {
     }
 
     public static SameBankAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new SameBankAccount(
+        return new SameBankAccount(proto.getCreationDate(),
                 proto.getAccountName(),
                 SameBankAccountPayload.fromProto(proto.getAccountPayload()));
     }

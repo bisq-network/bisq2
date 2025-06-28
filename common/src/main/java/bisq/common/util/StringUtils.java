@@ -274,4 +274,19 @@ public class StringUtils {
     public static boolean isLetter(String value) {
         return value != null && value.chars().allMatch(Character::isLetter);
     }
+
+
+    public static String cleanUserInput(String input) {
+        if (input == null) return "";
+
+        // Remove common invisible/formatting characters (BiDi, ZW*, etc.)
+        // E.g. contact app on OSX surrounds use invisible directional formatting chars
+        String cleaned = input.replaceAll("[\\p{Cf}]", "");
+
+        // Optionally trim and normalize whitespace
+        cleaned = cleaned.trim().replaceAll("\\s+", " ");
+
+        return cleaned;
+       // return input.replaceAll("[\\u202A-\\u202E\\u200E\\u200F]", "");
+    }
 }

@@ -11,8 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class BizumAccount extends CountryBasedAccount<BizumAccountPayload> {
-    public BizumAccount(String accountName, BizumAccountPayload accountPayload) {
-        super(accountName, accountPayload);
+    public BizumAccount(long creationDate, String accountName, BizumAccountPayload accountPayload) {
+        super(creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -30,7 +30,7 @@ public final class BizumAccount extends CountryBasedAccount<BizumAccountPayload>
     }
 
     public static BizumAccount fromProto(Account proto) {
-        return new BizumAccount(
+        return new BizumAccount(proto.getCreationDate(),
                 proto.getAccountName(),
                 BizumAccountPayload.fromProto(proto.getAccountPayload()));
     }

@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.user.accounts.create.summary.details;
 
 import bisq.account.accounts.AccountPayload;
-import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.PaymentRail;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.i18n.Res;
@@ -58,7 +57,7 @@ public abstract class AccountDetailsGridPane<A extends AccountPayload<?>, R exte
 
     protected abstract void addDetails(A accountPayload);
 
-    protected void addRestrictions(FiatPaymentRail fiatPaymentRail) {
+    protected void addRestrictions(R fiatPaymentRail) {
         String restrictions = Res.get("user.paymentAccounts.summary.tradeLimit", fiatPaymentRail.getTradeLimit()) + " / " +
                 Res.get("user.paymentAccounts.summary.tradeDuration", fiatPaymentRail.getTradeDuration());
         addDescriptionAndValue(Res.get("user.paymentAccounts.restrictions"), restrictions);

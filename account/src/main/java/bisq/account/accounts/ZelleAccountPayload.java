@@ -11,12 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class ZelleAccountPayload extends AccountPayload<FiatPaymentMethod> {
+public class ZelleAccountPayload extends CountryBasedAccountPayload {
     private final String emailOrMobileNr;
     private final String holderName;
 
     public ZelleAccountPayload(String id, String emailOrMobileNr, String holderName) {
-        super(id);
+        super(id, "US");
         this.emailOrMobileNr = emailOrMobileNr;
         this.holderName = holderName;
     }

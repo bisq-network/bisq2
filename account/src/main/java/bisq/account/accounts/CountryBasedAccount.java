@@ -29,13 +29,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public abstract class CountryBasedAccount< P extends CountryBasedAccountPayload> extends Account<FiatPaymentMethod, P> {
+public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload> extends Account<FiatPaymentMethod, P> {
     protected final Country country;
 
-    public CountryBasedAccount(String accountName,
-                               P payload) {
-        super(accountName, payload);
-        this.country = payload.getCountry();
+    public CountryBasedAccount(long creationDate, String accountName, P accountPayload) {
+        super(creationDate, accountName, accountPayload);
+        this.country = accountPayload.getCountry();
     }
 
     public static CountryBasedAccount<?> fromProto(bisq.account.protobuf.Account proto) {

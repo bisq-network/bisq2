@@ -20,6 +20,7 @@ package bisq.account.accounts;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
+import bisq.common.validation.EmailValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -53,9 +54,9 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
     @Override
     public void verify() {
         super.verify();
-        PaymentAccountValidation.validateCurrencyCodes(selectedCurrencyCodes);
-        PaymentAccountValidation.validateEmail(email);
-        PaymentAccountValidation.validateHolderName(holderName);
+        PaymentAccountValidation.isValidCurrencyCodes(selectedCurrencyCodes);
+        EmailValidation.isValid(email);
+        PaymentAccountValidation.isValidHolderName(holderName);
     }
 
     public static WiseAccountPayload fromProto(AccountPayload proto) {

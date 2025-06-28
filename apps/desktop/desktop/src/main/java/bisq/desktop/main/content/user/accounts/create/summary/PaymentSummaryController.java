@@ -26,6 +26,8 @@ import bisq.account.accounts.F2FAccountPayload;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.SepaAccount;
 import bisq.account.accounts.SepaAccountPayload;
+import bisq.account.accounts.ZelleAccount;
+import bisq.account.accounts.ZelleAccountPayload;
 import bisq.account.payment_method.CryptoPaymentRail;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.PaymentMethod;
@@ -36,11 +38,13 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.user.accounts.create.summary.details.AccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.create.summary.details.F2FAccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.create.summary.details.SepaAccountDetailsGridPane;
+import bisq.desktop.main.content.user.accounts.create.summary.details.ZelleAccountDetailsGridPane;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -119,7 +123,7 @@ public class PaymentSummaryController implements Controller {
             case CUSTOM -> throw new UnsupportedOperationException("FiatPaymentRail.CUSTOM is not supported");
             case SEPA -> new SepaAccountDetailsGridPane((SepaAccountPayload) accountPayload, fiatPaymentRail);
             case SEPA_INSTANT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case ZELLE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case ZELLE -> new ZelleAccountDetailsGridPane((ZelleAccountPayload) accountPayload, fiatPaymentRail);
             case REVOLUT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case NATIONAL_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
@@ -150,17 +154,17 @@ public class PaymentSummaryController implements Controller {
         if (model.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
             return switch (fiatPaymentRail) {
                 case CUSTOM -> throw new UnsupportedOperationException("FiatPaymentRail.CUSTOM is not supported");
-                case SEPA -> new SepaAccount(accountName, (SepaAccountPayload) model.getAccountPayload());
+                case SEPA -> new SepaAccount(new Date().getTime(), accountName, (SepaAccountPayload) model.getAccountPayload());
                 case SEPA_INSTANT ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case ZELLE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case ZELLE -> new ZelleAccount(new Date().getTime(), accountName, (ZelleAccountPayload) model.getAccountPayload());
                 case REVOLUT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case NATIONAL_BANK ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case SAME_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case F2F -> new F2FAccount(accountName, (F2FAccountPayload) model.getAccountPayload());
+                case F2F -> new F2FAccount(new Date().getTime(), accountName, (F2FAccountPayload) model.getAccountPayload());
                 case ACH_TRANSFER ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case PIX -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);

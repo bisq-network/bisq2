@@ -17,8 +17,6 @@
 
 package bisq.account.accounts;
 
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -29,15 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class WiseAccount extends CountryBasedAccount<WiseAccountPayload> {
-    public WiseAccount(String accountName, WiseAccountPayload payload) {
-        super(accountName, payload);
-    }
-
-    public static WiseAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new WiseAccount(
-                proto.getAccountName(),
-                WiseAccountPayload.fromProto(proto.getAccountPayload())
-        );
+    public WiseAccount(long creationDate, String accountName, WiseAccountPayload accountPayload) {
+        super(creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -52,5 +43,12 @@ public final class WiseAccount extends CountryBasedAccount<WiseAccountPayload> {
 
     private bisq.account.protobuf.WiseAccount.Builder getWiseAccountBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.WiseAccount.newBuilder();
+    }
+
+    public static WiseAccount fromProto(bisq.account.protobuf.Account proto) {
+        return new WiseAccount(proto.getCreationDate(),
+                proto.getAccountName(),
+                WiseAccountPayload.fromProto(proto.getAccountPayload())
+        );
     }
 }

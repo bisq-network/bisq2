@@ -1,7 +1,5 @@
 package bisq.account.accounts;
 
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.Account;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -13,8 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class StrikeAccount extends CountryBasedAccount<StrikeAccountPayload> {
-    public StrikeAccount(String accountName, StrikeAccountPayload accountPayload) {
-        super(accountName, accountPayload);
+    public StrikeAccount(long creationDate, String accountName, StrikeAccountPayload accountPayload) {
+        super(creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -32,7 +30,7 @@ public final class StrikeAccount extends CountryBasedAccount<StrikeAccountPayloa
     }
 
     public static StrikeAccount fromProto(Account proto) {
-        return new StrikeAccount(
+        return new StrikeAccount(proto.getCreationDate(),
                 proto.getAccountName(),
                 StrikeAccountPayload.fromProto(proto.getAccountPayload()));
     }

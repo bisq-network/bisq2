@@ -39,7 +39,7 @@ class SepaPaymentAccountValidationTest {
         );
 
         for (String iban : validIbans) {
-            assertDoesNotThrow(() -> SepaPaymentAccountValidation.validateIbanFormat(iban),
+            assertDoesNotThrow(() -> SepaPaymentAccountValidation.isValidIban(iban),
                     "Valid IBAN should not throw: " + iban);
         }
     }
@@ -48,7 +48,7 @@ class SepaPaymentAccountValidationTest {
     void ibanWithInvalidChecksumShouldFail() {
         String invalidIban = "DE89370400440532013001"; // altered last digit to fail checksum
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                SepaPaymentAccountValidation.validateIbanFormat(invalidIban));
+                SepaPaymentAccountValidation.isValidIban(invalidIban));
         assertTrue(exception.getMessage().contains("checksum"), "Expected checksum error");
     }
 
@@ -56,7 +56,7 @@ class SepaPaymentAccountValidationTest {
     void ibanWithInvalidFormatShouldFail() {
         String invalidIban = "D189370400440532013000"; // 1st char is digit, invalid format
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                SepaPaymentAccountValidation.validateIbanFormat(invalidIban));
+                SepaPaymentAccountValidation.isValidIban(invalidIban));
         assertTrue(exception.getMessage().contains("Invalid IBAN format"), "Expected format error");
     }
 
@@ -64,24 +64,24 @@ class SepaPaymentAccountValidationTest {
     void ibanWithWrongLengthShouldFail() {
         String shortIban = "DE89370400"; // too short
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                SepaPaymentAccountValidation.validateIbanFormat(shortIban));
+                SepaPaymentAccountValidation.isValidIban(shortIban));
         assertTrue(exception.getMessage().contains("length"), "Expected length error");
     }
 
     @Test
     void nullOrEmptyIbanShouldFail() {
         assertThrows(IllegalArgumentException.class, () ->
-                SepaPaymentAccountValidation.validateIbanFormat(null));
+                SepaPaymentAccountValidation.isValidIban(null));
 
         assertThrows(IllegalArgumentException.class, () ->
-                SepaPaymentAccountValidation.validateIbanFormat(""));
+                SepaPaymentAccountValidation.isValidIban(""));
     }
 
     @Test
     void ibanWithSpecialCharactersShouldFail() {
         String invalidIban = "DE89-3704-0044-0532-0130-00"; // special characters
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                SepaPaymentAccountValidation.validateIbanFormat(invalidIban));
+                SepaPaymentAccountValidation.isValidIban(invalidIban));
         assertTrue(exception.getMessage().contains("invalid characters") || exception.getMessage().contains("Invalid IBAN format"));
     }
 }
