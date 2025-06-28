@@ -37,15 +37,15 @@ public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMetho
     public static final int USER_NAME_MIN_LENGTH = 2;
     public static final int USER_NAME_MAX_LENGTH = 70;
 
-    private final List<String> selectedCurrencyCodes;
     private final String userName;
+    private final List<String> selectedCurrencyCodes;
 
     public RevolutAccountPayload(String id,
-                                 List<String> selectedCurrencyCodes,
-                                 String userName) {
+                                 String userName,
+                                 List<String> selectedCurrencyCodes) {
         super(id);
-        this.selectedCurrencyCodes = selectedCurrencyCodes;
         this.userName = userName;
+        this.selectedCurrencyCodes = selectedCurrencyCodes;
     }
 
     @Override
@@ -77,8 +77,8 @@ public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMetho
     public static RevolutAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         bisq.account.protobuf.RevolutAccountPayload revolutAccountPayload = proto.getRevolutAccountPayload();
         return new RevolutAccountPayload(proto.getId(),
-                revolutAccountPayload.getSelectedCurrencyCodesList(),
-                revolutAccountPayload.getUserName());
+                revolutAccountPayload.getUserName(),
+                revolutAccountPayload.getSelectedCurrencyCodesList());
     }
 
     @Override

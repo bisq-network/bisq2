@@ -17,9 +17,7 @@
 
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
-import bisq.account.accounts.SepaAccountPayload;
-import bisq.account.accounts.ZelleAccountPayload;
-import bisq.desktop.components.controls.validator.EmailOrPhoneNumberValidator;
+import bisq.account.accounts.PixAccountPayload;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -28,17 +26,17 @@ import javafx.beans.property.StringProperty;
 import lombok.Getter;
 
 @Getter
-public class ZellePaymentFormModel extends PaymentFormModel {
+public class PixPaymentFormModel extends PaymentFormModel {
     private final BooleanProperty requireValidation = new SimpleBooleanProperty();
     private final StringProperty holderName = new SimpleStringProperty();
-    private final StringProperty emailOrMobileNr = new SimpleStringProperty();
+    private final StringProperty pixKey = new SimpleStringProperty();
 
+    private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(PixAccountPayload.HOLDER_NAME_MIN_LENGTH,
+            PixAccountPayload.HOLDER_NAME_MAX_LENGTH);
+    private final TextMinMaxLengthValidator pixKeyValidator = new TextMinMaxLengthValidator(PixAccountPayload.PIX_KEY_MIN_LENGTH,
+            PixAccountPayload.PIX_KEY_MAX_LENGTH);
 
-    private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(ZelleAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            SepaAccountPayload.HOLDER_NAME_MAX_LENGTH);
-    private final EmailOrPhoneNumberValidator emailOrPhoneNumberValidator = new EmailOrPhoneNumberValidator("US");
-
-    public ZellePaymentFormModel(String id) {
+    public PixPaymentFormModel(String id) {
         super(id);
     }
 }

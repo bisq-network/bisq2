@@ -21,6 +21,7 @@ import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.F2FAccount;
+import bisq.account.accounts.PixAccount;
 import bisq.account.accounts.RevolutAccount;
 import bisq.account.accounts.SepaAccount;
 import bisq.account.accounts.UserDefinedFiatAccount;
@@ -36,6 +37,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.user.accounts.details.AccountDetailsVBox;
 import bisq.desktop.main.content.user.accounts.details.F2FAccountDetailsVBox;
+import bisq.desktop.main.content.user.accounts.details.PixAccountDetailsVBox;
 import bisq.desktop.main.content.user.accounts.details.RevolutAccountDetailsVBox;
 import bisq.desktop.main.content.user.accounts.details.SepaAccountDetailsVBox;
 import bisq.desktop.main.content.user.accounts.details.UserDefinedAccountDetailsVBox;
@@ -194,7 +196,7 @@ public class PaymentAccountsController implements Controller {
             case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case F2F -> new F2FAccountDetailsVBox((F2FAccount) account);
             case ACH_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case PIX -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case PIX -> new PixAccountDetailsVBox((PixAccount) account);
             case FASTER_PAYMENTS -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case PAY_ID -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case US_POSTAL_MONEY_ORDER ->

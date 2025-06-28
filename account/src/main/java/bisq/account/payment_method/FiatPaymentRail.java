@@ -103,8 +103,8 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
 
     // Brazil
     PIX(countryFromCode("BR"),
-            FiatCurrencyRepository.getCurrencyByCode("BRL")
-            , FiatPaymentMethodChargebackRisk.MODERATE),
+            FiatCurrencyRepository.getCurrencyByCode("BRL"),
+            FiatPaymentMethodChargebackRisk.MODERATE),
 
     // China
     // ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
@@ -325,7 +325,7 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             case FASTER_PAYMENTS -> DAYS_4;
             case INTERAC_E_TRANSFER -> DAYS_4;
             case PAY_ID -> DAYS_4;
-            case PIX -> DAYS_4;
+            case PIX -> HOURS_24;
             case UPI -> DAYS_4;
             case CUSTOM -> DAYS_4;
             case F2F -> DAYS_4;

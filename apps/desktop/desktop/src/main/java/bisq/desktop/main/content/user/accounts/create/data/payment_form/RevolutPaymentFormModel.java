@@ -15,12 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.data.payment_form.aaa;
+package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
 import bisq.account.accounts.RevolutAccountPayload;
 import bisq.common.currency.FiatCurrency;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
-import bisq.desktop.main.content.user.accounts.create.data.payment_form.PaymentFormModel;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;

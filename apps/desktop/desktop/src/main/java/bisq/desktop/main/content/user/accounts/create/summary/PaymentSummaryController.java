@@ -24,6 +24,8 @@ import bisq.account.accounts.CountryBasedAccountPayload;
 import bisq.account.accounts.F2FAccount;
 import bisq.account.accounts.F2FAccountPayload;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
+import bisq.account.accounts.PixAccount;
+import bisq.account.accounts.PixAccountPayload;
 import bisq.account.accounts.RevolutAccount;
 import bisq.account.accounts.RevolutAccountPayload;
 import bisq.account.accounts.SepaAccount;
@@ -39,6 +41,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.user.accounts.create.summary.details.AccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.create.summary.details.F2FAccountDetailsGridPane;
+import bisq.desktop.main.content.user.accounts.create.summary.details.PixAccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.create.summary.details.RevolutAccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.create.summary.details.SepaAccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.create.summary.details.ZelleAccountDetailsGridPane;
@@ -134,7 +137,7 @@ public class PaymentSummaryController implements Controller {
             case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case F2F -> new F2FAccountDetailsGridPane((F2FAccountPayload) accountPayload, fiatPaymentRail);
             case ACH_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case PIX -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case PIX -> new PixAccountDetailsGridPane((PixAccountPayload) accountPayload, fiatPaymentRail);
             case FASTER_PAYMENTS -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case PAY_ID -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case US_POSTAL_MONEY_ORDER ->
@@ -170,7 +173,7 @@ public class PaymentSummaryController implements Controller {
                 case F2F -> new F2FAccount(new Date().getTime(), accountName, (F2FAccountPayload) model.getAccountPayload());
                 case ACH_TRANSFER ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case PIX -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case PIX -> new PixAccount(new Date().getTime(), accountName, (PixAccountPayload) model.getAccountPayload());
                 case FASTER_PAYMENTS ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case PAY_ID -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
