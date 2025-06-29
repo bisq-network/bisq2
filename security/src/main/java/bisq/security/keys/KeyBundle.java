@@ -14,6 +14,7 @@ public class KeyBundle implements PersistableProto {
     @ToString.Exclude
     private final KeyPair keyPair;
     private final TorKeyPair torKeyPair;
+    private final I2PKeyPair i2PKeyPair;
     private final String keyId;
     @ToString.Exclude
     // transient fields are excluded by default for EqualsAndHashCode
@@ -21,9 +22,8 @@ public class KeyBundle implements PersistableProto {
     @ToString.Exclude
     // transient fields are excluded by default for EqualsAndHashCode
     private transient final byte[] encodedPublicKey;
-     private final I2pKeyPair i2PKeyPair;
 
-    public KeyBundle(String keyId, KeyPair keyPair, TorKeyPair torKeyPair, I2pKeyPair i2PKeyPair) {
+    public KeyBundle(String keyId, KeyPair keyPair, TorKeyPair torKeyPair, I2PKeyPair i2PKeyPair) {
         this.keyId = keyId;
         encodedPrivateKey = keyPair.getPrivate().getEncoded();
         encodedPublicKey = keyPair.getPublic().getEncoded();
@@ -42,7 +42,7 @@ public class KeyBundle implements PersistableProto {
         return bisq.security.protobuf.KeyBundle.newBuilder()
                 .setKeyId(keyId)
                 .setKeyPair(KeyPairProtoUtil.toProto(getKeyPair()))
-                 .setI2PKeyPair(i2PKeyPair.toProto(serializeForHash))
+                .setI2PKeyPair(i2PKeyPair.toProto(serializeForHash))
                 .setTorKeyPair(torKeyPair.toProto(serializeForHash));
     }
 
@@ -50,7 +50,7 @@ public class KeyBundle implements PersistableProto {
         return new KeyBundle(proto.getKeyId(),
                 KeyPairProtoUtil.fromProto(proto.getKeyPair()),
                 TorKeyPair.fromProto(proto.getTorKeyPair()),
-                I2pKeyPair.fromProto(proto.getI2PKeyPair()));
+                I2PKeyPair.fromProto(proto.getI2PKeyPair()));
     }
 
     @Override

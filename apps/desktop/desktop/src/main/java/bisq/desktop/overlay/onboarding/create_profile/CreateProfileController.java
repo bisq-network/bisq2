@@ -39,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Optional;
 import java.util.Random;
@@ -116,22 +117,26 @@ public class CreateProfileController implements Controller {
             return;
         }
 
-        userIdentityService.createAndPublishNewUserProfile(
-                        nickName,
-                        model.getKeyPair().orElseThrow(),
-                        model.getPubKeyHash().orElseThrow(),
-                        model.getProofOfWork().orElseThrow(),
-                        CURRENT_AVATARS_VERSION,
-                        "",
-                        "")
-                .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
-                    if (throwable == null) {
-                        model.getCreateProfileProgress().set(0);
-                        next();
-                    } else {
-                        new Popup().error(throwable).show();
-                    }
-                }));
+        try {
+            userIdentityService.createAndPublishNewUserProfile(
+                            nickName,
+                            model.getKeyPair().orElseThrow(),
+                            model.getPubKeyHash().orElseThrow(),
+                            model.getProofOfWork().orElseThrow(),
+                            CURRENT_AVATARS_VERSION,
+                            "",
+                            "")
+                    .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
+                        if (throwable == null) {
+                            model.getCreateProfileProgress().set(0);
+                            next();
+                        } else {
+                            new Popup().error(throwable).show();
+                        }
+                    }));
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     void onRegenerate() {

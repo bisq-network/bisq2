@@ -40,6 +40,7 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Optional;
 import java.util.Set;
@@ -167,7 +168,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                                                                           ProofOfWork proofOfWork,
                                                                           int avatarVersion,
                                                                           String terms,
-                                                                          String statement) {
+                                                                          String statement) throws GeneralSecurityException {
         String identityTag = nickName + "-" + Hex.encode(pubKeyHash);
         return identityService.createNewActiveIdentity(identityTag, keyPair)
                 .thenApply(identity -> createUserIdentity(nickName, proofOfWork, avatarVersion, terms, statement, identity))
