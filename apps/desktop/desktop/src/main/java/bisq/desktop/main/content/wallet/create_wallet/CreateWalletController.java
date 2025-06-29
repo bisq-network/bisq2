@@ -9,10 +9,12 @@ import bisq.desktop.main.content.wallet.create_wallet.protect.CreateWalletProtec
 import bisq.desktop.main.content.wallet.create_wallet.backup.CreateWalletBackupController;
 import bisq.desktop.main.content.wallet.create_wallet.protect.CreateWalletProtectModel;
 import bisq.desktop.main.content.wallet.create_wallet.verify.CreateWalletVerifyController;
+import bisq.desktop.main.content.wallet.create_wallet.verify.CreateWalletVerifyModel;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.wallets.core.WalletService;
+import bisq.wallets.core.MockWalletService;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
 import lombok.Getter;
@@ -42,8 +44,8 @@ public class CreateWalletController extends NavigationController {
         model = new CreateWalletModel();
         view = new CreateWalletView(model, this);
 
-        createWalletProtectController = new CreateWalletProtectController(serviceProvider, this::setMainButtonsVisibleState);
-        createWalletBackupController = new CreateWalletBackupController(serviceProvider, this::setMainButtonsVisibleState);
+        createWalletProtectController = new CreateWalletProtectController(serviceProvider);
+        createWalletBackupController = new CreateWalletBackupController(serviceProvider);
         createWalletVerifyController = new CreateWalletVerifyController(serviceProvider, this::setMainButtonsVisibleState);
 
         this.walletService = serviceProvider.getWalletService().orElseThrow();
@@ -76,15 +78,13 @@ public class CreateWalletController extends NavigationController {
 
     @Override
     protected void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
-        model.getCloseButtonVisible().set(true);
-        model.getBackButtonVisible().set(true);
         String nextString = "";
         if (navigationTarget == NavigationTarget.CREATE_WALLET_PROTECT) {
             nextString = Res.get("wallet.protectWallet.button.nextStep");
         } else if (navigationTarget == NavigationTarget.CREATE_WALLET_BACKUP ) {
             nextString = Res.get("wallet.backupSeeds.button.verify");
         } else if (navigationTarget == NavigationTarget.CREATE_WALLET_VERIFY ) {
-            nextString = "Go to wallet";
+            nextString = "Next world";
         }
         model.getNextButtonText().set(nextString);
 
@@ -119,6 +119,8 @@ public class CreateWalletController extends NavigationController {
                 }
                 CreateWalletProtectModel protectModel = createWalletProtectController.getModel();
                 walletService.setEncryptionPassword(protectModel.getPassword().get());
+            } else if (model.getNavigationTarget() == NavigationTarget.CREATE_WALLET_BACKUP) {
+            } else if (model.getNavigationTarget() == NavigationTarget.CREATE_WALLET_VERIFY) {
             }
             model.setAnimateRightOut(false);
             model.getCurrentIndex().set(nextIndex);
@@ -164,6 +166,8 @@ public class CreateWalletController extends NavigationController {
     }
 
     private void setMainButtonsVisibleState(boolean value) {
+        model.getNextButtonVisible().set(value);
+        model.getBackButtonVisible().set(value);
 
     }
 }

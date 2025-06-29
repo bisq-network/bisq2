@@ -40,7 +40,7 @@ public class CreateWalletModel extends NavigationModel {
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
     private final StringProperty nextButtonText = new SimpleStringProperty();
     private final StringProperty backButtonText = new SimpleStringProperty();
-    private final BooleanProperty closeButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty closeButtonVisible = new SimpleBooleanProperty(true);
     private final BooleanProperty nextButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty();

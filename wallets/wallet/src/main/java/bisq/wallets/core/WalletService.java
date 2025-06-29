@@ -60,4 +60,6 @@ public interface WalletService extends Service {
     CompletableFuture<ObservableSet<Transaction>> requestTransactions();
 
     void setEncryptionPassword(String password);
+
+    List<String> getSeedWords();
 }

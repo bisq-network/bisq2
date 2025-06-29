@@ -27,6 +27,7 @@ import bisq.wallets.core.model.Utxo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -123,5 +124,10 @@ public class MockWalletService implements WalletService{
     public void setEncryptionPassword(String password) {
         log.debug("setEncryptionPassword: " + password);
         encryptionPassword = password;
+    }
+
+    @Override
+    public List<String> getSeedWords() {
+        return Arrays.asList("car", "van", "lion", "water", "bero", "cycle", "love", "key", "system", "wife", "husband", "trade");
     }
 }

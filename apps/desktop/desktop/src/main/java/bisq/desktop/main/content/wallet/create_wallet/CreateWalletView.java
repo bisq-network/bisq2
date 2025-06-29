@@ -69,7 +69,6 @@ public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, Cr
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(POPUP_HEIGHT);
 
-
         progressBox = new HBox(10);
         progressBox.setAlignment(Pos.CENTER);
         progressBox.setMinHeight(TOP_PANE_HEIGHT);

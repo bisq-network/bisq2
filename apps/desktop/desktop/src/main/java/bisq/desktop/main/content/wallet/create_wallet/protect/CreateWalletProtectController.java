@@ -21,9 +21,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.wallet.create_wallet.CreateWalletModel;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.wallets.core.WalletService;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import lombok.Getter;
@@ -36,29 +34,20 @@ import java.util.function.Consumer;
 @Slf4j
 public class CreateWalletProtectController implements Controller {
     private static final Logger log = LoggerFactory.getLogger(CreateWalletProtectController.class);
+
     private final CreateWalletProtectModel model;
     @Getter
     private final CreateWalletProtectView view;
-    private final Consumer<Boolean> navigationButtonsVisibleHandler;
 
-    public CreateWalletProtectController(ServiceProvider serviceProvider,
-                                         Consumer<Boolean> navigationButtonsVisibleHandler) {
-        this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
+    public CreateWalletProtectController(ServiceProvider serviceProvider) {
         model = new CreateWalletProtectModel();
         view = new CreateWalletProtectView(model, this);
-    }
-
-    public void init(BisqEasyOffer bisqEasyOffer) {
-
     }
 
     public boolean isValid() {
         String password = model.getPassword().get();
         String confirmPassword = model.getConfirmPassword().get();
 
-        log.error("model.getPassword().get(): ");
-        log.error(password);
-        log.error(confirmPassword);
         return !password.isEmpty() && password.equals(confirmPassword);
     }
 
@@ -88,16 +77,10 @@ public class CreateWalletProtectController implements Controller {
 
     @Override
     public void onDeactivate() {
-        navigationButtonsVisibleHandler.accept(true);
     }
 
     public CreateWalletProtectModel getModel() {
         return model;
-    }
-
-    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
-        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
-        });
     }
 
 }

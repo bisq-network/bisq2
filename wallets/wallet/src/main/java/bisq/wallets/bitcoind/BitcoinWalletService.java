@@ -25,6 +25,7 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -94,5 +95,11 @@ public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinW
     @Override
     public void setEncryptionPassword(String password) {
         log.debug("setEncryptionPassword: " + password);
+    }
+
+    // TODO
+    @Override
+    public List<String> getSeedWords() {
+        return List.of();
     }
 }

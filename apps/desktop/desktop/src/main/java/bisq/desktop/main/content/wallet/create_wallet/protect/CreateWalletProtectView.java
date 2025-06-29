@@ -81,12 +81,11 @@ public class CreateWalletProtectView extends View<StackPane, CreateWalletProtect
 
     @Override
     protected void onViewDetached() {
-        root.setOnKeyPressed(null);
-        passwordField.textProperty().unbindBidirectional(model.getPassword());
-        confirmPasswordField.textProperty().unbindBidirectional(model.getConfirmPassword());
-
         passwordField.resetValidation();
         confirmPasswordField.resetValidation();
+
+        passwordField.textProperty().unbindBidirectional(model.getPassword());
+        confirmPasswordField.textProperty().unbindBidirectional(model.getConfirmPassword());
     }
 
     private MaterialTextField addField(String description, @Nullable String prompt) {

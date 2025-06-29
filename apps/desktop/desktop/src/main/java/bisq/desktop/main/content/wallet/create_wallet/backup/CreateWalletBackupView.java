@@ -41,7 +41,7 @@ public class CreateWalletBackupView extends View<StackPane, CreateWalletBackupMo
         seedGrid.setAlignment(Pos.CENTER);
 
         for (int i = 0; i < 12; i++) {
-            Label wordLabel = new Label((i + 1) + ". Word " + (i + 1)); // Replace with actual seed word if available
+            Label wordLabel = new Label((i + 1) + ". " + model.getSeedWords()[i].get());
             wordLabel.setMinWidth(124);
             wordLabel.setMinHeight(40);
             wordLabel.setAlignment(Pos.CENTER);
@@ -69,6 +69,5 @@ public class CreateWalletBackupView extends View<StackPane, CreateWalletBackupMo
 
     @Override
     protected void onViewDetached() {
-        root.setOnKeyPressed(null);
     }
 }
