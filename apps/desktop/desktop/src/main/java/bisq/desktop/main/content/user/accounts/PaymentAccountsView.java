@@ -80,7 +80,7 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
         createButtonWithAccounts.getStyleClass().add("outlined-button");
 
         comboBox = new AutoCompleteComboBox<>(model.getSortedAccounts(), Res.get("user.paymentAccounts.selectAccount"));
-        comboBox.setPrefWidth(230);
+        comboBox.setPrefWidth(325);
         comboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(Account<? extends PaymentMethod<?>, ?> account) {

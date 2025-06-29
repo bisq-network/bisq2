@@ -271,6 +271,18 @@ public class StringUtils {
         return value != null && value.chars().allMatch(Character::isDigit);
     }
 
+    public static boolean isNumber(String value) {
+        if (isEmpty(value)) {
+            return false;
+        }
+        try {
+            MathUtils.parseToDouble(value);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public static boolean isLetter(String value) {
         return value != null && value.chars().allMatch(Character::isLetter);
     }
@@ -287,6 +299,6 @@ public class StringUtils {
         cleaned = cleaned.trim().replaceAll("\\s+", " ");
 
         return cleaned;
-       // return input.replaceAll("[\\u202A-\\u202E\\u200E\\u200F]", "");
+        // return input.replaceAll("[\\u202A-\\u202E\\u200E\\u200F]", "");
     }
 }

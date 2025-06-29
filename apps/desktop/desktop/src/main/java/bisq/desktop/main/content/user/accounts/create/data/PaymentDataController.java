@@ -25,6 +25,7 @@ import bisq.account.payment_method.PaymentRail;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.user.accounts.create.data.payment_form.F2FPaymentFormController;
+import bisq.desktop.main.content.user.accounts.create.data.payment_form.FasterPaymentsPaymentFormController;
 import bisq.desktop.main.content.user.accounts.create.data.payment_form.PaymentFormController;
 import bisq.desktop.main.content.user.accounts.create.data.payment_form.RevolutPaymentFormController;
 import bisq.desktop.main.content.user.accounts.create.data.payment_form.SepaPaymentFormController;
@@ -111,7 +112,7 @@ public class PaymentDataController implements Controller {
             case F2F -> new F2FPaymentFormController(serviceProvider);
             case ACH_TRANSFER -> throw new UnsupportedOperationException("Not implemented yet");
             case PIX -> new PixPaymentFormController(serviceProvider);
-            case FASTER_PAYMENTS -> throw new UnsupportedOperationException("Not implemented yet");
+            case FASTER_PAYMENTS -> new FasterPaymentsPaymentFormController(serviceProvider);
             case PAY_ID -> throw new UnsupportedOperationException("Not implemented yet");
             case US_POSTAL_MONEY_ORDER -> throw new UnsupportedOperationException("Not implemented yet");
             case CASH_BY_MAIL -> throw new UnsupportedOperationException("Not implemented yet");

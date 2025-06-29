@@ -76,13 +76,12 @@ public class NumberValidator extends ValidatorBase {
     @Override
     protected void eval() {
         hasErrors.set(false);
-        var textField = (TextInputControl) srcControl.get();
-        try {
-            String text = textField.getText();
-            if (allowEmptyString && StringUtils.isEmpty(text)) {
-                return;
-            }
+        var textField = (TextInputControl) srcControl.get(); String text = textField.getText();
+        if (allowEmptyString && StringUtils.isEmpty(text)) {
+            return;
+        }
 
+        try {
             double value = MathUtils.parseToDouble(text);
             numberValue = Optional.of(value);
 

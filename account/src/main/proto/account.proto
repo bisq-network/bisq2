@@ -179,8 +179,9 @@ message PixAccountPayload {
 }
 
 message FasterPaymentsAccountPayload {
-  string sort_code = 1;
-  string account_nr = 2;
+  string holderName = 1;
+  string sort_code = 2;
+  string account_nr = 3;
 }
 
 message PayIDAccountPayload {
