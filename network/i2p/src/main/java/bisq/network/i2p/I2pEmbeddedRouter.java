@@ -60,6 +60,7 @@ public class I2pEmbeddedRouter {
     private final int outboundKBytesPerSecond;
     private final int bandwidthSharePercentage;
     private final String dirPath;
+    private SystemSettings systemSettings;
     private File i2pDir;
     private final Integer restartAttempts = 0;
     private static boolean initialized = false;
@@ -97,6 +98,7 @@ public class I2pEmbeddedRouter {
         this.inboundKBytesPerSecond = inboundKBytesPerSecond;
         this.outboundKBytesPerSecond = outboundKBytesPerSecond;
         this.bandwidthSharePercentage = bandwidthSharePercentage;
+        this.systemSettings = new SystemSettings(i2pDirPath);
         this.i2pDir = new File(i2pDirPath);
 
         try {
@@ -151,7 +153,6 @@ public class I2pEmbeddedRouter {
 
     @SuppressWarnings("SpellCheckingInspection")
     private void startEmbeddedRouter(boolean extendedI2pLogging) throws IOException {
-        I2PSocketManager manager = null;
         System.setProperty("I2P_DISABLE_OUTPUT_OVERRIDE", "true");
 
         setupRouterDirectories();
@@ -191,24 +192,8 @@ public class I2pEmbeddedRouter {
     }
 
     private void setupRouterDirectories() throws IOException {
-        // Set up I2P base directory
-        if (System.getProperty("i2p.dir.base") == null) {
-            File homeDir = SystemSettings.getUserHomeDir();
-            File bisqDir = new File(homeDir, ".bisq2");
-            if (!bisqDir.exists() && !bisqDir.mkdir()) {
-                throw new IOException("Unable to create home/.bisq2 directory.");
-            }
-            File servicesDir = new File(bisqDir, "services");
-            if (!servicesDir.exists() && !servicesDir.mkdir()) {
-                throw new IOException("Unable to create services directory in home/.bisq2");
-            }
-            i2pDir = new File(servicesDir, I2pEmbeddedRouter.class.getName());
-            if (!i2pDir.exists() && !i2pDir.mkdir()) {
-                throw new IOException("Unable to create " + I2pEmbeddedRouter.class.getName() + " directory in home/.bisq2/services");
-            }
-        } else {
-            i2pDir = new File(System.getProperty("i2p.dir.base"));
-        }
+        i2pDir = systemSettings.getUserHomeDir();
+        System.setProperty("i2p.dir.base", i2pDir.getAbsolutePath());
 
         // Set up directory structure and system properties
         setupDirectory("config", "i2p.dir.config");
@@ -220,17 +205,14 @@ public class I2pEmbeddedRouter {
         // Set up client properties
         System.setProperty(I2PClient.PROP_TCP_HOST, "internal");
         System.setProperty(I2PClient.PROP_TCP_PORT, "internal");
-        System.setProperty("i2p.dir.base", i2pDir.getAbsolutePath());
 
         Properties p = new Properties();
-
-        //Parameters related to router size and bandwidth share
+        // Parameters related to router size and bandwidth share
         p.put("i2np.bandwidth.inboundKBytesPerSecond", String.valueOf(inboundKBytesPerSecond));
         p.put("i2np.bandwidth.inboundBurstKBytesPerSecond", String.valueOf(inboundKBytesPerSecond));
         p.put("i2np.bandwidth.outboundKBytesPerSecond", String.valueOf(outboundKBytesPerSecond));
         p.put("i2np.bandwidth.outboundBurstKBytesPerSecond", String.valueOf(outboundKBytesPerSecond));
         p.put("router.sharePercentage", String.valueOf(bandwidthSharePercentage));
-
         p.put("i2cp.disableInterface", "true");
         p.put("i2np.ntcp.nodelay", "true");
         p.put("router.encType", "4");
@@ -239,8 +221,8 @@ public class I2pEmbeddedRouter {
         // Set up configuration and certificates
         mergeRouterConfig(p);
         setupCertificatesDirectories();
-
     }
+
 
     private void setupDirectory(String dirName, String propertyName) throws IOException {
         File dir = new File(i2pDir, dirName);

@@ -26,7 +26,6 @@ import bisq.common.util.NetworkUtils;
 import bisq.network.NetworkService;
 import bisq.network.i2p.I2pClient;
 import bisq.network.i2p.I2pEmbeddedRouter;
-import bisq.network.i2p.util.PreventSleepService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.security.keys.I2PKeyPair;
@@ -104,7 +103,7 @@ public class I2PTransportService implements TransportService {
 
     private final String i2pDirPath;
     private I2pClient i2pClient;
-    private PreventSleepService preventSleepService;
+//    private PreventSleepService preventSleepService;
     private boolean initializeCalled;
     private String sessionId;
     private final I2PTransportService.Config config;
@@ -155,13 +154,13 @@ public class I2PTransportService implements TransportService {
         } else {
             i2pClient = getClient(false);
         }
-        preventSleepService = new PreventSleepService();
-        try {
-            log.info("Prevent from sleep service initialized");
-            preventSleepService.initialize();
-        } catch (IOException e) {
-            log.warn("Prevent-sleep service could not be started – continuing without it: {}", e.getMessage());
-        }
+    //    preventSleepService = new PreventSleepService();
+//        try {
+//            log.info("Prevent from sleep service initialized");
+//            preventSleepService.initialize();
+//        } catch (IOException e) {
+//            log.warn("Prevent-sleep service could not be started – continuing without it: {}", e.getMessage());
+//        }
         setTransportState(TransportState.INITIALIZED);
     }
 
@@ -180,9 +179,9 @@ public class I2PTransportService implements TransportService {
         if (i2pClient == null) {
             return CompletableFuture.completedFuture(true);
         }
-        if (preventSleepService != null) {
-            preventSleepService.shutdown();
-        }
+//        if (preventSleepService != null) {
+//            preventSleepService.shutdown();
+//        }
         return CompletableFuture.runAsync(i2pClient::shutdown, NetworkService.NETWORK_IO_POOL).thenApply(nil -> true).whenComplete((result, throwable) -> setTransportState(TransportState.TERMINATED));
     }
 
