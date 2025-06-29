@@ -19,49 +19,48 @@ package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
+import bisq.account.protobuf.AccountPayload;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-import static bisq.common.util.OptionalUtils.toOptional;
-
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class SameBankAccountPayload extends NationalBankAccountPayload {
-
+public final class SameBankAccountPayload extends BankAccountPayload {
     public SameBankAccountPayload(String id,
                                   String countryCode,
+                                  String selectedCurrencyCode,
                                   Optional<String> holderName,
-                                  Optional<String> bankName,
-                                  Optional<String> branchId,
-                                  Optional<String> accountNr,
-                                  Optional<String> accountType,
                                   Optional<String> holderTaxId,
+                                  Optional<String> bankName,
                                   Optional<String> bankId,
+                                  Optional<String> branchId,
+                                  String accountNr,
+                                  Optional<BankAccountType> bankAccountType,
                                   Optional<String> nationalAccountId) {
         super(id,
                 countryCode,
+                selectedCurrencyCode,
                 holderName,
+                holderTaxId,
                 bankName,
+                bankId,
                 branchId,
                 accountNr,
-                accountType,
-                holderTaxId,
-                bankId,
+                bankAccountType,
                 nationalAccountId);
-        verify();
     }
 
     @Override
     protected bisq.account.protobuf.BankAccountPayload.Builder getBankAccountPayloadBuilder(boolean serializeForHash) {
-        return super.getBankAccountPayloadBuilder(serializeForHash)
-                .setSameBankAccountPayload(buildSameBankAccountPayloadProto(serializeForHash));
+        return super.getBankAccountPayloadBuilder(serializeForHash).setSameBankAccountPayload(
+                toSameBankAccountPayloadProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.SameBankAccountPayload buildSameBankAccountPayloadProto(boolean serializeForHash) {
+    private bisq.account.protobuf.SameBankAccountPayload toSameBankAccountPayloadProto(boolean serializeForHash) {
         return resolveBuilder(getSameBankAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
@@ -69,20 +68,20 @@ public final class SameBankAccountPayload extends NationalBankAccountPayload {
         return bisq.account.protobuf.SameBankAccountPayload.newBuilder();
     }
 
-    public static SameBankAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static SameBankAccountPayload fromProto(AccountPayload proto) {
         var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
         var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
-        return new SameBankAccountPayload(
-                proto.getId(),
+        return new SameBankAccountPayload(proto.getId(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
-                toOptional(bankAccountPayload.getHolderName()),
-                toOptional(bankAccountPayload.getBankName()),
-                toOptional(bankAccountPayload.getBranchId()),
-                toOptional(bankAccountPayload.getAccountNr()),
-                toOptional(bankAccountPayload.getAccountType()),
-                toOptional(bankAccountPayload.getHolderTaxId()),
-                toOptional(bankAccountPayload.getBankId()),
-                toOptional(bankAccountPayload.getNationalAccountId()));
+                bankAccountPayload.getSelectedCurrencyCode(),
+                bankAccountPayload.hasHolderName() ? Optional.of(bankAccountPayload.getHolderName()) : Optional.empty(),
+                bankAccountPayload.hasHolderId() ? Optional.of(bankAccountPayload.getHolderId()) : Optional.empty(),
+                bankAccountPayload.hasBankName() ? Optional.of(bankAccountPayload.getBankName()) : Optional.empty(),
+                bankAccountPayload.hasBankId() ? Optional.of(bankAccountPayload.getBankId()) : Optional.empty(),
+                bankAccountPayload.hasBranchId() ? Optional.of(bankAccountPayload.getBranchId()) : Optional.empty(),
+                bankAccountPayload.getAccountNr(),
+                bankAccountPayload.hasBankAccountType() ? Optional.of(BankAccountType.fromProto(bankAccountPayload.getBankAccountType())) : Optional.empty(),
+                bankAccountPayload.hasNationalAccountId() ? Optional.of(bankAccountPayload.getNationalAccountId()) : Optional.empty());
     }
 
     @Override

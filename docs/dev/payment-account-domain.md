@@ -25,7 +25,7 @@ Subclasses of `CountryBasedAccountPayload`:
     protected Optional<String> bankName;
     protected Optional<String> branchId;
     protected Optional<String> accountNr;
-    protected Optional<String> accountType;
+    protected Optional<BankAccountType> bankAccountType;
     protected Optional<String> holderTaxId;
     protected Optional<String> bankId;
     protected Optional<String> nationalAccountId;

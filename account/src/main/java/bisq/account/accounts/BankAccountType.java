@@ -15,25 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.details;
+package bisq.account.accounts;
 
-import bisq.account.accounts.PixAccount;
-import bisq.account.accounts.PixAccountPayload;
+import bisq.account.protocol_type.ProtocolType;
+import bisq.common.proto.ProtobufUtils;
 import bisq.i18n.Res;
 
-public class PixAccountDetailsVBox extends FiatAccountDetailsVBox<PixAccount> {
-    public PixAccountDetailsVBox(PixAccount account) {
-        super(account);
+public enum BankAccountType implements ProtocolType {
+    CHECKINGS,
+    SAVINGS;
+
+    @Override
+    public bisq.account.protobuf.BankAccountType toProtoEnum() {
+        return bisq.account.protobuf.BankAccountType.valueOf(getProtobufEnumPrefix() + name());
+    }
+
+    public static BankAccountType fromProto(bisq.account.protobuf.BankAccountType proto) {
+        return ProtobufUtils.enumFromProto(BankAccountType.class, proto.name(), CHECKINGS);
     }
 
     @Override
-    protected void addDetails(PixAccount account) {
-        PixAccountPayload accountPayload = account.getAccountPayload();
-
-        addDescriptionAndValue(Res.get("user.paymentAccounts.holderName"),
-                accountPayload.getHolderName());
-
-        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.pix.pixKey"),
-                accountPayload.getPixKey());
+    public String toString() {
+        return Res.get("user.paymentAccounts.bank.bankAccountType." + name());
     }
 }
+
+  

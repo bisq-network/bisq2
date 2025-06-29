@@ -36,11 +36,14 @@ public class GridPaneUtil {
      * Set the grid pane with multiple column constraints and custom percent width.
      */
     public static void setGridPaneMultiColumnsConstraints(GridPane pane, int numColumns, double percentWidth) {
+        pane.getColumnConstraints().clear();
+       var dd= pane.getChildren();
         for (int i = 0; i < numColumns; i++) {
             ColumnConstraints col = new ColumnConstraints();
             col.setPercentWidth(percentWidth);
             pane.getColumnConstraints().add(col);
         }
+        pane.requestLayout();
     }
 
     /**
@@ -66,7 +69,7 @@ public class GridPaneUtil {
     }
 
     /**
-     *  Get icon and text as a label. See example at Dashboard, multiple trade protocols box.
+     * Get icon and text as a label. See example at Dashboard, multiple trade protocols box.
      */
     public static HBox getIconAndText(String labelStyleClass, String text, String imageId) {
         Label label = new Label(text);
@@ -80,7 +83,7 @@ public class GridPaneUtil {
     }
 
     /**
-     *  Get info as a Text wrapped on a TextFlow. This allows for correct wrapping of the text.
+     * Get info as a Text wrapped on a TextFlow. This allows for correct wrapping of the text.
      */
     public static TextFlow getInfoLabel(String info, String infoLabelStyleClass) {
         Text infoLabelText = new Text(info);
@@ -89,7 +92,7 @@ public class GridPaneUtil {
     }
 
     /**
-     *  Get headline label. If no icon is passed, outputs a simple headline.
+     * Get headline label. If no icon is passed, outputs a simple headline.
      */
     public static Label getHeadline(String headline,
                                     String headlineStyleClass,

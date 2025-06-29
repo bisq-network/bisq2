@@ -10,35 +10,37 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-import static bisq.common.util.OptionalUtils.normalize;
-import static bisq.common.util.OptionalUtils.toOptional;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @ToString
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class AchTransferAccountPayload extends BankAccountPayload {
-    private final Optional<String> holderAddress;
+    public static final int HOLDER_ADDRESS_MIN_LENGTH = 5;
+    public static final int HOLDER_ADDRESS_MAX_LENGTH = 150;
+
+    private final String holderAddress;
 
     public AchTransferAccountPayload(String id,
-                                     String countryCode,
-                                     Optional<String> holderName,
-                                     Optional<String> bankName,
-                                     Optional<String> branchId,
-                                     Optional<String> accountNr,
-                                     Optional<String> accountType,
-                                     Optional<String> holderAddress) {
-        super( id,
-                countryCode,
-                holderName,
-                bankName,
-                branchId,
+                                     String holderName,
+                                     String holderAddress,
+                                     String bankName,
+                                     String routingNr,
+                                     String accountNr,
+                                     BankAccountType bankAccountType) {
+        super(id,
+                "US",
+                "USD",
+                Optional.of(holderName),
+                Optional.empty(),
+                Optional.of(bankName),
+                Optional.of(routingNr),
+                Optional.empty(),
                 accountNr,
-                accountType,
-                null,
-                null,
-                null);
-        this.holderAddress = normalize(holderAddress);
+                Optional.of(bankAccountType),
+                Optional.empty());
+        this.holderAddress = holderAddress;
 
         verify();
     }
@@ -46,7 +48,8 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
     @Override
     public void verify() {
         super.verify();
-        holderAddress.ifPresent(holderAddress -> NetworkDataValidation.validateRequiredText(holderAddress, 100));
+
+        NetworkDataValidation.validateRequiredText(holderAddress, HOLDER_ADDRESS_MIN_LENGTH, HOLDER_ADDRESS_MAX_LENGTH);
     }
 
     @Override
@@ -60,24 +63,24 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
     }
 
     private bisq.account.protobuf.AchTransferAccountPayload.Builder getAchTransferAccountPayloadBuilder(boolean serializeForHash) {
-        var builder = bisq.account.protobuf.AchTransferAccountPayload.newBuilder();
-        this.holderAddress.ifPresent(builder::setHolderAddress);
-        return builder;
+        return bisq.account.protobuf.AchTransferAccountPayload.newBuilder()
+                .setHolderAddress(holderAddress);
     }
 
     public static AchTransferAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
         var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
-        var accountPayload = bankAccountPayload.getAchTransferAccountPayload();
-        return new AchTransferAccountPayload(
-                proto.getId(),
-                countryBasedPaymentAccountPayload.getCountryCode(),
-                toOptional(bankAccountPayload.getHolderName()),
-                toOptional(bankAccountPayload.getBankName()),
-                toOptional(bankAccountPayload.getBranchId()),
-                toOptional(bankAccountPayload.getAccountNr()),
-                toOptional(bankAccountPayload.getAccountType()),
-                toOptional(accountPayload.getHolderAddress()));
+        var achAccountPayload = bankAccountPayload.getAchTransferAccountPayload();
+        checkArgument(bankAccountPayload.hasBankName(), "Bank name for ACH must be present");
+        checkArgument(bankAccountPayload.hasBankId(), "BankId (Routing number) for ACH must be present");
+        checkArgument(bankAccountPayload.hasBankAccountType(), "AccountType for ACH must be present");
+        return new AchTransferAccountPayload(proto.getId(),
+                bankAccountPayload.getHolderName(),
+                achAccountPayload.getHolderAddress(),
+                bankAccountPayload.getBankName(),
+                bankAccountPayload.getBankId(),
+                bankAccountPayload.getAccountNr(),
+                BankAccountType.fromProto(bankAccountPayload.getBankAccountType()));
     }
 
     @Override

@@ -29,11 +29,11 @@ public class FasterPaymentsAccountDetailsVBox extends FiatAccountDetailsVBox<Fas
     @Override
     protected void addDetails(FasterPaymentsAccount account) {
         FasterPaymentsAccountPayload accountPayload = account.getAccountPayload();
-        addDescriptionAndValue(Res.get("user.paymentAccounts.fasterPayments.holderName"),
+        addDescriptionAndValue(Res.get("user.paymentAccounts.holderName"),
                 accountPayload.getHolderName());
         addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.fasterPayments.sortCode"),
                 accountPayload.getSortCode());
-        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.fasterPayments.accountNr"),
+        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.accountNr"),
                 accountPayload.getAccountNr());
     }
 }

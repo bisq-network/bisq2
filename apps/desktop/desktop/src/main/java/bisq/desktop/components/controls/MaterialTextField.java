@@ -218,6 +218,11 @@ public class MaterialTextField extends Pane {
         // validator.hasErrorsProperty().addListener((observable, oldValue, newValue) -> validate());
     }
 
+    public void clearValidators() {
+        resetValidation();
+        validationControl.clearValidators();
+    }
+
     public boolean validate() {
         resetValidation();
         boolean valid = validationControl.validate();

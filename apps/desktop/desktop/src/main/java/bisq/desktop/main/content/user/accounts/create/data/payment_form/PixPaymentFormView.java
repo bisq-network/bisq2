@@ -33,13 +33,13 @@ public class PixPaymentFormView extends PaymentFormView<PixPaymentFormModel, Pix
     public PixPaymentFormView(PixPaymentFormModel model, PixPaymentFormController controller) {
         super(model, controller);
 
-        holderName = new MaterialTextField(Res.get("user.paymentAccounts.pix.holderName"),
-                Res.get("user.paymentAccounts.createAccount.accountData.pix.holderName.prompt"));
+        holderName = new MaterialTextField(Res.get("user.paymentAccounts.holderName"),
+                Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("user.paymentAccounts.holderName"))));
         holderName.setValidators(model.getHolderNameValidator());
         holderName.setMaxWidth(Double.MAX_VALUE);
 
         pixKey = new MaterialTextField(Res.get("user.paymentAccounts.pix.pixKey"),
-                Res.get("user.paymentAccounts.createAccount.accountData.pix.pixKey.prompt"));
+                Res.get("user.paymentAccounts.createAccount.prompt", Res.get("user.paymentAccounts.pix.pixKey")));
         pixKey.setValidators(model.getPixKeyValidator());
         pixKey.setMaxWidth(Double.MAX_VALUE);
 

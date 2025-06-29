@@ -28,7 +28,7 @@ public class PixAccountDetailsGridPane extends FiatAccountDetailsGridPane<PixAcc
 
     @Override
     protected void addDetails(PixAccountPayload accountPayload) {
-        addDescriptionAndValue(Res.get("user.paymentAccounts.pix.holderName"),
+        addDescriptionAndValue(Res.get("user.paymentAccounts.holderName"),
                 accountPayload.getHolderName());
 
         addDescriptionAndValue(Res.get("user.paymentAccounts.pix.pixKey"),

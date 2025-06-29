@@ -111,6 +111,15 @@ public class StringUtils {
             return value.substring(0, 1).toUpperCase() + value.substring(1);
         }
     }
+    public static String unCapitalize(String value) {
+        if (value == null || value.isEmpty()) {
+            return value;
+        } else if (value.length() == 1) {
+            return value.toLowerCase();
+        } else {
+            return value.substring(0, 1).toLowerCase() + value.substring(1);
+        }
+    }
 
     public static String capitalizeAll(String value) {
         if (value == null || value.isEmpty()) {

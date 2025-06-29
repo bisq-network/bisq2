@@ -34,19 +34,19 @@ public class FasterPaymentsPaymentFormView extends PaymentFormView<FasterPayment
                                          FasterPaymentsPaymentFormController controller) {
         super(model, controller);
 
-        holderName = new MaterialTextField(Res.get("user.paymentAccounts.fasterPayments.holderName"),
-                Res.get("user.paymentAccounts.createAccount.accountData.fasterPayments.holderName.prompt"));
+        holderName = new MaterialTextField(Res.get("user.paymentAccounts.holderName"),
+                Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("user.paymentAccounts.holderName"))));
         holderName.setValidators(model.getHolderNameValidator());
         holderName.setMaxWidth(Double.MAX_VALUE);
 
         sortCode = new MaterialTextField(Res.get("user.paymentAccounts.fasterPayments.sortCode"),
-                Res.get("user.paymentAccounts.createAccount.accountData.fasterPayments.sortCode.prompt"));
+                Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("user.paymentAccounts.fasterPayments.sortCode"))));
         sortCode.setValidators(model.getSortCodeValidator());
         sortCode.setValidators(model.getSortCodeNumberValidator());
         sortCode.setMaxWidth(Double.MAX_VALUE);
 
-        accountNr = new MaterialTextField(Res.get("user.paymentAccounts.fasterPayments.accountNr"),
-                Res.get("user.paymentAccounts.createAccount.accountData.fasterPayments.accountNr.prompt"));
+        accountNr = new MaterialTextField(Res.get("user.paymentAccounts.accountNr"),
+                Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("user.paymentAccounts.accountNr"))));
         accountNr.setValidators(model.getAccountNrValidator());
         accountNr.setValidators(model.getAccountNrNumberValidator());
         accountNr.setMaxWidth(Double.MAX_VALUE);

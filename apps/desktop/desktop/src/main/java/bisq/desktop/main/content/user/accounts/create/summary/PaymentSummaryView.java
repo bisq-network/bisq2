@@ -69,11 +69,10 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
         gridPane.setVgap(10);
         GridPaneUtil.setGridPaneMultiColumnsConstraints(gridPane, 3);
 
-
         Label headline = new Label(Res.get("user.paymentAccounts.summary.headline"));
         headline.getStyleClass().add("trade-wizard-review-headline");
         GridPane.setHalignment(headline, HPos.CENTER);
-        GridPane.setMargin(headline, new Insets(10, 0, 30, 0));
+        GridPane.setMargin(headline, new Insets(20, 0, 20, 0));
         gridPane.add(headline, 0, rowIndex, 3, 1);
 
         rowIndex++;
@@ -130,7 +129,7 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
         countryVBox.setVisible(isCountryBasedAccountPayload);
         countryVBox.setManaged(isCountryBasedAccountPayload);
 
-        gridPane.add(model.getAccountDetailsGridPane(), 0, ++rowIndex, 3, 1);
+        gridPane.add(model.getAccountDetailsGridPane(), 0, gridPane.getRowCount() + 1, 3, 1);
     }
 
     @Override

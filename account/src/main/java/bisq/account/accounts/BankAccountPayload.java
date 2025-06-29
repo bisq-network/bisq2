@@ -2,6 +2,8 @@ package bisq.account.accounts;
 
 import bisq.account.protobuf.AccountPayload;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
+import bisq.common.validation.PaymentAccountValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,58 +12,82 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-import static bisq.common.util.OptionalUtils.normalize;
-import static bisq.common.validation.NetworkDataValidation.validateText;
-
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Setter
 @ToString
 @Slf4j
-public abstract class BankAccountPayload extends CountryBasedAccountPayload {
+public abstract class BankAccountPayload extends CountryBasedAccountPayload implements SelectableCurrencyAccountPayload {
+    public static final int HOLDER_NAME_MIN_LENGTH = 2;
+    public static final int HOLDER_NAME_MAX_LENGTH = 70;
+    public static final int HOLDER_ID_MIN_LENGTH = 2;
+    public static final int HOLDER_ID_MAX_LENGTH = 50;
+    public static final int BANK_NAME_MIN_LENGTH = 2;
+    public static final int BANK_NAME_MAX_LENGTH = 70;
+    public static final int BANK_ID_MIN_LENGTH = 1;
+    public static final int BANK_ID_MAX_LENGTH = 50;
+    public static final int BRANCH_ID_MIN_LENGTH = 1;
+    public static final int BRANCH_ID_MAX_LENGTH = 50;
+    public static final int ACCOUNT_NR_MIN_LENGTH = 1;
+    public static final int ACCOUNT_NR_MAX_LENGTH = 50;
+    public static final int NATIONAL_ACCOUNT_ID_MIN_LENGTH = 1;
+    public static final int NATIONAL_ACCOUNT_ID_MAX_LENGTH = 50;
 
-    protected Optional<String> holderName;
-    protected Optional<String> bankName;
-    protected Optional<String> branchId;
-    protected Optional<String> accountNr;
-    protected Optional<String> accountType;
-    protected Optional<String> holderTaxId;
-    protected Optional<String> bankId;
-    protected Optional<String> nationalAccountId;
+    protected final String selectedCurrencyCode;
+    protected final Optional<String> holderName;
+    protected final Optional<String> holderId;
+    protected final Optional<String> bankName;
+    protected final Optional<String> bankId;
+    protected final Optional<String> branchId;
+    protected final String accountNr;
+    protected final Optional<BankAccountType> bankAccountType;
+    protected final Optional<String> nationalAccountId;
 
     protected BankAccountPayload(String id,
                                  String countryCode,
+                                 String selectedCurrencyCode,
                                  Optional<String> holderName,
+                                 Optional<String> holderId,
                                  Optional<String> bankName,
-                                 Optional<String> branchId,
-                                 Optional<String> accountNr,
-                                 Optional<String> accountType,
-                                 Optional<String> holderTaxId,
                                  Optional<String> bankId,
+                                 Optional<String> branchId,
+                                 String accountNr,
+                                 Optional<BankAccountType> bankAccountType,
                                  Optional<String> nationalAccountId) {
         super(id, countryCode);
 
-        this.holderName = normalize(holderName);
-        this.bankName = normalize(bankName);
-        this.branchId = normalize(branchId);
-        this.accountNr = normalize(accountNr);
-        this.accountType = normalize(accountType);
-        this.holderTaxId = normalize(holderTaxId);
-        this.bankId = normalize(bankId);
-        this.nationalAccountId = normalize(nationalAccountId);
+        this.selectedCurrencyCode = selectedCurrencyCode;
+        this.holderName = holderName;
+        this.holderId = holderId;
+        this.bankName = bankName;
+        this.bankId = bankId;
+        this.branchId = branchId;
+        this.accountNr = accountNr;
+        this.bankAccountType = bankAccountType;
+        this.nationalAccountId = nationalAccountId;
     }
 
     @Override
     public void verify() {
         super.verify();
-        validateText(holderName, 100);
-        validateText(bankName, 100);
-        validateText(branchId, 30);
-        validateText(accountNr, 30);
-        validateText(accountType, 20);
-        validateText(holderTaxId, 50);
-        validateText(bankId, 50);
-        validateText(nationalAccountId, 50);
+
+        PaymentAccountValidation.validateCurrencyCode(selectedCurrencyCode);
+        holderName.ifPresent(holderName -> NetworkDataValidation.validateRequiredText(holderName,
+                HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH));
+        holderId.ifPresent(holderId -> NetworkDataValidation.validateRequiredText(holderId,
+                HOLDER_ID_MIN_LENGTH, HOLDER_ID_MAX_LENGTH));
+        bankName.ifPresent(bankName -> NetworkDataValidation.validateRequiredText(bankName,
+                BANK_NAME_MIN_LENGTH, BANK_NAME_MAX_LENGTH));
+        bankId.ifPresent(bankId -> NetworkDataValidation.validateRequiredText(bankId,
+                BANK_ID_MIN_LENGTH, BANK_ID_MAX_LENGTH));
+        branchId.ifPresent(branchId -> NetworkDataValidation.validateRequiredText(branchId,
+                BRANCH_ID_MIN_LENGTH, BRANCH_ID_MAX_LENGTH));
+        NetworkDataValidation.validateRequiredText(accountNr,
+                ACCOUNT_NR_MIN_LENGTH, ACCOUNT_NR_MAX_LENGTH);
+        nationalAccountId.ifPresent(nationalAccountId -> NetworkDataValidation.validateRequiredText(nationalAccountId,
+                NATIONAL_ACCOUNT_ID_MIN_LENGTH, NATIONAL_ACCOUNT_ID_MAX_LENGTH));
+        nationalAccountId.ifPresent(nationalAccountId -> NetworkDataValidation.validateRequiredText(nationalAccountId,
+                NATIONAL_ACCOUNT_ID_MIN_LENGTH, NATIONAL_ACCOUNT_ID_MAX_LENGTH));
     }
 
     @Override
@@ -75,14 +101,15 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
     }
 
     protected bisq.account.protobuf.BankAccountPayload.Builder getBankAccountPayloadBuilder(boolean serializeForHash) {
-        var builder = bisq.account.protobuf.BankAccountPayload.newBuilder();
+        var builder = bisq.account.protobuf.BankAccountPayload.newBuilder()
+                .setSelectedCurrencyCode(selectedCurrencyCode)
+                .setAccountNr(accountNr);
         holderName.ifPresent(builder::setHolderName);
+        holderId.ifPresent(builder::setHolderId);
         bankName.ifPresent(builder::setBankName);
-        branchId.ifPresent(builder::setBranchId);
-        accountNr.ifPresent(builder::setAccountNr);
-        accountType.ifPresent(builder::setAccountType);
-        holderTaxId.ifPresent(builder::setHolderTaxId);
         bankId.ifPresent(builder::setBankId);
+        branchId.ifPresent(builder::setBranchId);
+        bankAccountType.ifPresent(BankAccountType::toProtoEnum);
         nationalAccountId.ifPresent(builder::setNationalAccountId);
         return builder;
     }

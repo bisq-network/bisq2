@@ -26,6 +26,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.user.accounts.create.data.payment_form.F2FPaymentFormController;
 import bisq.desktop.main.content.user.accounts.create.data.payment_form.FasterPaymentsPaymentFormController;
+import bisq.desktop.main.content.user.accounts.create.data.payment_form.NationalBankPaymentFormController;
 import bisq.desktop.main.content.user.accounts.create.data.payment_form.PaymentFormController;
 import bisq.desktop.main.content.user.accounts.create.data.payment_form.RevolutPaymentFormController;
 import bisq.desktop.main.content.user.accounts.create.data.payment_form.SepaPaymentFormController;
@@ -106,7 +107,7 @@ public class PaymentDataController implements Controller {
             case ZELLE -> new ZellePaymentFormController(serviceProvider);
             case REVOLUT -> new RevolutPaymentFormController(serviceProvider);
             case WISE -> throw new UnsupportedOperationException("Not implemented yet");
-            case NATIONAL_BANK -> throw new UnsupportedOperationException("Not implemented yet");
+            case NATIONAL_BANK -> new NationalBankPaymentFormController(serviceProvider);
             case SAME_BANK -> throw new UnsupportedOperationException("Not implemented yet");
             case SWIFT -> throw new UnsupportedOperationException("Not implemented yet");
             case F2F -> new F2FPaymentFormController(serviceProvider);

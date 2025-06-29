@@ -10,32 +10,32 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-import static bisq.common.util.OptionalUtils.toOptional;
-
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class NationalBankAccountPayload extends BankAccountPayload {
+public class NationalBankAccountPayload extends BankAccountPayload implements SelectableCurrencyAccountPayload {
     public NationalBankAccountPayload(String id,
                                       String countryCode,
+                                      String selectedCurrencyCode,
                                       Optional<String> holderName,
+                                      Optional<String> holderId,
                                       Optional<String> bankName,
-                                      Optional<String> branchId,
-                                      Optional<String> accountNr,
-                                      Optional<String> accountType,
-                                      Optional<String> holderTaxId,
                                       Optional<String> bankId,
+                                      Optional<String> branchId,
+                                      String accountNr,
+                                      Optional<BankAccountType> bankAccountType,
                                       Optional<String> nationalAccountId) {
         super(id,
                 countryCode,
+                selectedCurrencyCode,
                 holderName,
+                holderId,
                 bankName,
+                bankId,
                 branchId,
                 accountNr,
-                accountType,
-                holderTaxId,
-                bankId,
+                bankAccountType,
                 nationalAccountId);
     }
 
@@ -59,14 +59,15 @@ public class NationalBankAccountPayload extends BankAccountPayload {
         return new NationalBankAccountPayload(
                 proto.getId(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
-                toOptional(bankAccountPayload.getHolderName()),
-                toOptional(bankAccountPayload.getBankName()),
-                toOptional(bankAccountPayload.getBranchId()),
-                toOptional(bankAccountPayload.getAccountNr()),
-                toOptional(bankAccountPayload.getAccountType()),
-                toOptional(bankAccountPayload.getHolderTaxId()),
-                toOptional(bankAccountPayload.getBankId()),
-                toOptional(bankAccountPayload.getNationalAccountId()));
+                bankAccountPayload.getSelectedCurrencyCode(),
+                bankAccountPayload.hasHolderName() ? Optional.of(bankAccountPayload.getHolderName()) : Optional.empty(),
+                bankAccountPayload.hasHolderId() ? Optional.of(bankAccountPayload.getHolderId()) : Optional.empty(),
+                bankAccountPayload.hasBankName() ? Optional.of(bankAccountPayload.getBankName()) : Optional.empty(),
+                bankAccountPayload.hasBankId() ? Optional.of(bankAccountPayload.getBankId()) : Optional.empty(),
+                bankAccountPayload.hasBranchId() ? Optional.of(bankAccountPayload.getBranchId()) : Optional.empty(),
+                bankAccountPayload.getAccountNr(),
+                bankAccountPayload.hasBankAccountType() ? Optional.of(BankAccountType.fromProto(bankAccountPayload.getBankAccountType())) : Optional.empty(),
+                bankAccountPayload.hasNationalAccountId() ? Optional.of(bankAccountPayload.getNationalAccountId()) : Optional.empty());
     }
 
     @Override

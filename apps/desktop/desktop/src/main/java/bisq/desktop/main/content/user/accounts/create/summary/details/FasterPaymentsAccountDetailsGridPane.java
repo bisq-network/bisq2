@@ -28,11 +28,11 @@ public class FasterPaymentsAccountDetailsGridPane extends FiatAccountDetailsGrid
 
     @Override
     protected void addDetails(FasterPaymentsAccountPayload accountPayload) {
-        addDescriptionAndValue(Res.get("user.paymentAccounts.fasterPayments.holderName"),
+        addDescriptionAndValue(Res.get("user.paymentAccounts.holderName"),
                 accountPayload.getHolderName());
         addDescriptionAndValue(Res.get("user.paymentAccounts.fasterPayments.sortCode"),
                 accountPayload.getSortCode());
-        addDescriptionAndValue(Res.get("user.paymentAccounts.fasterPayments.accountNr"),
+        addDescriptionAndValue(Res.get("user.paymentAccounts.accountNr"),
                 accountPayload.getAccountNr());
     }
 }

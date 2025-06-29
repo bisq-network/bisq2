@@ -27,64 +27,45 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-import static bisq.common.util.OptionalUtils.normalize;
-import static bisq.common.util.OptionalUtils.toOptional;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @ToString
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class DomesticWireTransferAccountPayload extends BankAccountPayload {
+    public static final int HOLDER_ADDRESS_MIN_LENGTH = 5;
+    public static final int HOLDER_ADDRESS_MAX_LENGTH = 150;
 
-    private final Optional<String> holderAddress;
+    private final String holderAddress;
 
     public DomesticWireTransferAccountPayload(String id,
-                                              String countryCode,
-                                              Optional<String> holderName,
-                                              Optional<String> bankName,
-                                              Optional<String> branchId,
-                                              Optional<String> accountNr,
-                                              Optional<String> accountType,
-                                              Optional<String> holderTaxId,
-                                              Optional<String> bankId,
-                                              Optional<String> nationalAccountId,
-                                              Optional<String> holderAddress) {
+                                              String holderName,
+                                              String holderAddress,
+                                              String bankName,
+                                              String routingNr,
+                                              String accountNr) {
         super(id,
-                countryCode,
-                holderName,
-                bankName,
-                branchId,
+                "US",
+                "USD",
+                Optional.of(holderName),
+                Optional.empty(),
+                Optional.of(bankName),
+                Optional.of(routingNr),
+                Optional.empty(),
                 accountNr,
-                accountType,
-                holderTaxId,
-                bankId,
-                nationalAccountId);
-        this.holderAddress = normalize(holderAddress);
+                Optional.empty(),
+                Optional.empty());
+        this.holderAddress = holderAddress;
+
         verify();
     }
 
     @Override
     public void verify() {
         super.verify();
-        holderAddress.ifPresent(address -> NetworkDataValidation.validateRequiredText(address, 100));
-    }
 
-    public static DomesticWireTransferAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
-        var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
-        var domesticWireTransferPayload = bankAccountPayload.getDomesticWireTransferAccountPayload();
-        return new DomesticWireTransferAccountPayload(
-                proto.getId(),
-                countryBasedPaymentAccountPayload.getCountryCode(),
-                toOptional(bankAccountPayload.getHolderName()),
-                toOptional(bankAccountPayload.getBankName()),
-                toOptional(bankAccountPayload.getBranchId()),
-                toOptional(bankAccountPayload.getAccountNr()),
-                toOptional(bankAccountPayload.getAccountType()),
-                toOptional(bankAccountPayload.getHolderTaxId()),
-                toOptional(bankAccountPayload.getBankId()),
-                toOptional(bankAccountPayload.getNationalAccountId()),
-                toOptional(domesticWireTransferPayload.getHolderAddress()));
+        NetworkDataValidation.validateRequiredText(holderAddress, HOLDER_ADDRESS_MIN_LENGTH, HOLDER_ADDRESS_MAX_LENGTH);
     }
 
     @Override
@@ -99,9 +80,22 @@ public final class DomesticWireTransferAccountPayload extends BankAccountPayload
 
     private bisq.account.protobuf.DomesticWireTransferAccountPayload.Builder getDomesticWireTransferAccountPayloadBuilder(
             boolean serializeForHash) {
-        var builder = bisq.account.protobuf.DomesticWireTransferAccountPayload.newBuilder();
-        holderAddress.ifPresent(builder::setHolderAddress);
-        return builder;
+        return bisq.account.protobuf.DomesticWireTransferAccountPayload.newBuilder()
+                .setHolderAddress(holderAddress);
+    }
+
+    public static DomesticWireTransferAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+        var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
+        var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
+        var domesticWireAccountPayload = bankAccountPayload.getDomesticWireTransferAccountPayload();
+        checkArgument(bankAccountPayload.hasBankName(), "Bank name for DomesticWireTransfer must be present");
+        checkArgument(bankAccountPayload.hasBankId(), "BankId (Routing number) for DomesticWireTransfer must be present");
+        return new DomesticWireTransferAccountPayload(proto.getId(),
+                bankAccountPayload.getHolderName(),
+                domesticWireAccountPayload.getHolderAddress(),
+                bankAccountPayload.getBankName(),
+                bankAccountPayload.getBankId(),
+                bankAccountPayload.getAccountNr());
     }
 
     @Override

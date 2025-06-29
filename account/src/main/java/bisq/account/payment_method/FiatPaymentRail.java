@@ -283,7 +283,7 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
     }
 
     private static List<Country> allCountries() {
-        return CountryRepository.getCountries();
+        return CountryRepository.getAllCountries();
     }
 
     @Override
@@ -349,9 +349,9 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
     [Altcoins] => 43308
     x[Revolut] => 37752
     x[Pix] => 18478
-    [Faster Payment System (UK)] => 18269
+    x[Faster Payment System (UK)] => 18269
     [Altcoins Instant] => 16097
-    [National bank transfer] => 14963
+    x[National bank transfer] => 14963
     [BSQ Swap] => 10063
     [SEPA Instant Payments] => 8991
     [Interac e-Transfer] => 8579

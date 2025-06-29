@@ -104,9 +104,9 @@ public abstract class AccountDetailsVBox<A extends Account<?, ?>, R extends Paym
             String currency;
             AccountPayload<?> accountPayload = account.getAccountPayload();
             if (accountPayload instanceof MultiCurrencyAccountPayload multiCurrencyAccountPayload) {
-                currency = FiatCurrencyRepository.getDisplayNameAndCodes(multiCurrencyAccountPayload.getSelectedCurrencyCodes());
+                currency = FiatCurrencyRepository.getCodeAndDisplayNames(multiCurrencyAccountPayload.getSelectedCurrencyCodes());
             } else {
-                currency = FiatCurrencyRepository.getDisplayNameAndCode(accountPayload.getCurrencyCode().orElseThrow());
+                currency = FiatCurrencyRepository.getCodeAndDisplayName(accountPayload.getCurrencyCode().orElseThrow());
             }
 
             Triple<Text, Label, VBox> currencyTriple = getDescriptionValueVBoxTriple(Res.get("user.paymentAccounts.currency"),

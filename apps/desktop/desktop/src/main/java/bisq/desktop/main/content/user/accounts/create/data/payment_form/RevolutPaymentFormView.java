@@ -46,8 +46,8 @@ public class RevolutPaymentFormView extends PaymentFormView<RevolutPaymentFormMo
     public RevolutPaymentFormView(RevolutPaymentFormModel model, RevolutPaymentFormController controller) {
         super(model, controller);
 
-        userName = new MaterialTextField(Res.get("user.paymentAccounts.revolut.userName"),
-                Res.get("user.paymentAccounts.createAccount.accountData.revolut.userName.prompt"));
+        userName = new MaterialTextField(Res.get("user.paymentAccounts.userName"),
+                Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("user.paymentAccounts.userName"))));
         userName.setValidators(model.getUserNameValidator());
         userName.setMaxWidth(Double.MAX_VALUE);
 
