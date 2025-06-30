@@ -134,7 +134,7 @@ public class I2pClient {
             try {
                 mgr.getSession().destroySession();
             } catch (I2PSessionException e) {
-                throw new RuntimeException(e);
+                log.error("Failed to destroy I2P session during shutdown", e);
             }
             mgr.destroySocketManager();
         });
