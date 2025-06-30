@@ -65,3 +65,30 @@
 .mu-sig-offerbook-offerlist-toggle-button-hbox .offerlist-toggle-button-sell.toggle-button:selected {
     -fx-background-color: -bisq2-red;
 }
+
+.mu-sig-offerbook-offerlist-myOffer-label-box {
+    -fx-background-radius: 8;
+    -fx-background-insets: 0;
+    -fx-border-radius: 8;
+}
+
+.mu-sig-offerbook-offerlist-myOffer-label-box.my-offer-to-buy {
+    -fx-border-color: -bisq2-green-dim-10;
+}
+
+.mu-sig-offerbook-offerlist-myOffer-label-box.my-offer-to-sell {
+    -fx-border-color: -bisq2-red-lit-10;
+}
+
+.mu-sig-offerbook-offerlist-myOffer-label-box > .label {
+    -fx-font-size: 0.98em;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+.mu-sig-offerbook-offerlist-take-offer-button {
+    -fx-padding: 0 24 0 24;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-font-size: 0.98em;
+    -fx-font-family: "IBM Plex Sans";
+}
