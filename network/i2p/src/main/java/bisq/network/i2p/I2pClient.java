@@ -59,6 +59,7 @@ public class I2pClient {
     private final Map<String, I2PSocketManager> sessionMap = new ConcurrentHashMap<>();
     private final ScheduledExecutorService keepAliveExecutor = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> keepAliveTask;
+    private final Map<String, Object> sessionLocks = new ConcurrentHashMap<>();
 
     public static I2pClient getI2pClient(String dirPath,
                                          String host,
@@ -97,8 +98,10 @@ public class I2pClient {
             i2pSession = manager.getSession();
             i2pSession.connect();
 
-            if (keepAliveTask == null || keepAliveTask.isCancelled()) {
-                keepAliveTask = keepAliveExecutor.scheduleAtFixedRate(() -> manager.ping(destination, 6000), 90, 90, TimeUnit.SECONDS);
+            synchronized (this) {
+                if (keepAliveTask == null || keepAliveTask.isCancelled()) {
+                    keepAliveTask = keepAliveExecutor.scheduleAtFixedRate(() -> manager.ping(destination, 6000), 90, 90, TimeUnit.SECONDS);
+                }
             }
 
             Socket socket = manager.connectToSocket(destination, Math.toIntExact(socketTimeout));
@@ -172,40 +175,51 @@ public class I2pClient {
                                                       String sessionId,
                                                       String host,
                                                       int port) throws IOException {
-        if (sessionMap.containsKey(sessionId)) {
-            return sessionMap.get(sessionId);
+
+        I2PSocketManager existing = sessionMap.get(sessionId);
+        if (existing != null) {
+            return existing;
         }
 
-        synchronized (sessionId.intern()) {
-            if (sessionMap.containsKey(sessionId)) {
-                return sessionMap.get(sessionId);
+        Object lock = sessionLocks.computeIfAbsent(sessionId, k -> new Object());
+        try {
+            synchronized (lock) {
+                existing = sessionMap.get(sessionId);
+                if (existing != null) {
+                    return existing;
+                }
+
+                long ts = System.currentTimeMillis();
+                log.info("Creating server socket manager for session {} on port {}", sessionId, port);
+
+                byte[] rawDestBytes = i2PKeyPair.getDestination();
+                I2PSocketManager manager;
+                try (ByteArrayInputStream privKeyStream = new ByteArrayInputStream(rawDestBytes)) {
+                    manager = I2PSocketManagerFactory.createDisconnectedManager(privKeyStream, host, port, null);
+                } catch (I2PSessionException e) {
+                    throw new RuntimeException(e);
+                }
+
+                I2PSocketOptions options = manager.getDefaultOptions();
+                options.setLocalPort(port);
+                options.setConnectTimeout(Math.toIntExact(socketTimeout));
+                options.setReadTimeout((int) TimeUnit.MINUTES.toMillis(10));
+                options.setWriteTimeout((int) TimeUnit.MINUTES.toMillis(10));
+                options.setMaxBufferSize(256 * 1024);
+                manager.setDefaultOptions(options);
+
+                i2pSession = manager.getSession();
+                sessionMap.put(sessionId, manager);
+
+                log.info("Server socket manager ready for session {}. Took {} ms.", sessionId, System.currentTimeMillis() - ts);
+
+                return manager;
             }
-
-            long ts = System.currentTimeMillis();
-            log.info("Creating server socket manager for session {} using port {}", sessionId, port);
-
-            byte[] rawDestBytes = i2PKeyPair.getDestination();
-            I2PSocketManager manager;
-            try (ByteArrayInputStream privKeyStream = new ByteArrayInputStream(rawDestBytes)) {
-                manager = I2PSocketManagerFactory.createDisconnectedManager(privKeyStream, host, port, null);
-            } catch (I2PSessionException e) {
-                throw new RuntimeException(e);
-            }
-
-            I2PSocketOptions options = manager.getDefaultOptions();
-            options.setLocalPort(port);
-            options.setConnectTimeout(Math.toIntExact(socketTimeout));
-            options.setReadTimeout((int) TimeUnit.MINUTES.toMillis(10));
-            options.setWriteTimeout((int) TimeUnit.MINUTES.toMillis(10));
-            options.setMaxBufferSize(256 * 1024);
-            manager.setDefaultOptions(options);
-
-            i2pSession = manager.getSession();
-            sessionMap.put(sessionId, manager);
-            log.info("Server socket manager ready for session {}. Took {} ms.", sessionId, System.currentTimeMillis() - ts);
-            return manager;
+        } finally {
+            sessionLocks.remove(sessionId);
         }
     }
+
 
     private Destination getDestinationFor(String peer) throws IOException {
         try {

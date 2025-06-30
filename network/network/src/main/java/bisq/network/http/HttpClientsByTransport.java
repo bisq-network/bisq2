@@ -28,7 +28,6 @@ import java.net.Socket;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -39,9 +38,19 @@ public class HttpClientsByTransport {
     private static final Duration CACHE_TTL = Duration.ofSeconds(60);
 
     private final List<I2PTransportService.ProxyEndpoint> proxyList;
-    private volatile I2PTransportService.ProxyEndpoint cachedEndpoint;
-    private volatile Instant cacheExpiry = Instant.EPOCH;
     private final AtomicInteger counter = new AtomicInteger();
+
+    private static final class CacheEntry {
+        final I2PTransportService.ProxyEndpoint endpoint;
+        final Instant expiry;
+
+        CacheEntry(I2PTransportService.ProxyEndpoint ep, Instant expiry) {
+            this.endpoint = ep;
+            this.expiry = expiry;
+        }
+    }
+
+    private volatile CacheEntry cache = null;
 
     /**
      * @param i2pConfig loaded from NetworkServiceConfig for TransportType.I2P
@@ -82,9 +91,9 @@ public class HttpClientsByTransport {
 
     private I2PTransportService.ProxyEndpoint getHealthyEndpoint() {
         Instant now = Instant.now();
-        I2PTransportService.ProxyEndpoint ep = cachedEndpoint;
-        if (ep != null && now.isBefore(cacheExpiry)) {
-            return ep;
+        CacheEntry entry = cache;
+        if (entry != null && now.isBefore(entry.expiry)) {
+            return entry.endpoint;
         }
         // TTL expired or not set: probe next endpoints in round-robin order
         int size = proxyList.size();
@@ -92,8 +101,7 @@ public class HttpClientsByTransport {
             int idx = Math.floorMod(counter.getAndIncrement(), size);
             I2PTransportService.ProxyEndpoint candidate = proxyList.get(idx);
             if (isReachable(candidate, 500)) {
-                cachedEndpoint = candidate;
-                cacheExpiry = now.plus(CACHE_TTL);
+                cache = new CacheEntry(candidate, now.plus(CACHE_TTL));
                 return candidate;
             }
         }
