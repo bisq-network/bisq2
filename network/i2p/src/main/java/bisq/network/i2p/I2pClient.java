@@ -257,9 +257,17 @@ public class I2pClient {
         try {
             destination = getDestinationFor(peer);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            log.warn("Failed to resolve destination for peer: {}", peer, e);
+            return false;
         }
-        return destination != null && i2pRouter != null && i2pRouter.isPeerOnline(destination);
+        if (destination == null) {
+            return false;
+        }
+        if (i2pRouter == null) {
+            log.warn("I2P router not yet initialized, cannot check peer status for: {}", peer);
+            return false;
+        }
+        return i2pRouter.isPeerOnline(destination);
     }
 
     public Destination lookupDest(String address) {
