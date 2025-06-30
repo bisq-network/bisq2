@@ -11,32 +11,47 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-import static bisq.common.util.OptionalUtils.toOptional;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class CashDepositAccountPayload extends BankAccountPayload {
-    private final String requirements;
+    public static final int REQUIREMENTS_MAX_LENGTH = 150;
+    private final Optional<String> requirements;
 
-    public CashDepositAccountPayload(String id, String countryCode,
-                                     Optional<String> holderName, Optional<String> bankName, Optional<String> branchId,
-                                     Optional<String> accountNr, Optional<String> accountType,
-                                     Optional<String> holderTaxId, Optional<String> bankId,
-                                     Optional<String> nationalAccountId, String requirements) {
-        super(id, countryCode, holderName, bankName, branchId, accountNr, accountType, holderTaxId,
-                bankId, nationalAccountId);
+    public CashDepositAccountPayload(String id,
+                                     String countryCode,
+                                     String selectedCurrencyCode,
+                                     String holderName,
+                                     Optional<String> holderTaxId,
+                                     String bankName,
+                                     Optional<String> bankId,
+                                     Optional<String> branchId,
+                                     String accountNr,
+                                     Optional<BankAccountType> bankAccountType,
+                                     Optional<String> nationalAccountId,
+                                     Optional<String> requirements) {
+        super(id,
+                countryCode,
+                selectedCurrencyCode,
+                Optional.of(holderName),
+                holderTaxId,
+                Optional.of(bankName),
+                bankId,
+                branchId,
+                accountNr,
+                bankAccountType,
+                nationalAccountId);
         this.requirements = requirements;
-
-        verify();
     }
 
     @Override
     public void verify() {
         super.verify();
 
-        NetworkDataValidation.validateText(requirements, 500);
+        NetworkDataValidation.validateText(requirements, REQUIREMENTS_MAX_LENGTH);
     }
 
     @Override
@@ -50,24 +65,28 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
     }
 
     private bisq.account.protobuf.CashDepositAccountPayload.Builder getCashDepositAccountPayloadBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.CashDepositAccountPayload.newBuilder().setRequirements(requirements);
+        bisq.account.protobuf.CashDepositAccountPayload.Builder builder = bisq.account.protobuf.CashDepositAccountPayload.newBuilder();
+        requirements.ifPresent(builder::setRequirements);
+        return builder;
     }
 
     public static CashDepositAccountPayload fromProto(AccountPayload proto) {
         var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
         var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
-        return new CashDepositAccountPayload(
-                proto.getId(),
+        var cashDepositAccountPayload = bankAccountPayload.getCashDepositAccountPayload();
+        checkArgument(bankAccountPayload.hasBankName(), "Bank name for Cash Deposit must be present");
+        return new CashDepositAccountPayload(proto.getId(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
-                toOptional(bankAccountPayload.getHolderName()),
-                toOptional(bankAccountPayload.getBankName()),
-                toOptional(bankAccountPayload.getBranchId()),
-                toOptional(bankAccountPayload.getAccountNr()),
-                toOptional(bankAccountPayload.getAccountType()),
-                toOptional(bankAccountPayload.getHolderTaxId()),
-                toOptional(bankAccountPayload.getBankId()),
-                toOptional(bankAccountPayload.getNationalAccountId()),
-                bankAccountPayload.getCashDepositAccountPayload().getRequirements());
+                bankAccountPayload.getSelectedCurrencyCode(),
+                bankAccountPayload.getHolderName(),
+                bankAccountPayload.hasHolderId() ? Optional.of(bankAccountPayload.getHolderId()) : Optional.empty(),
+                bankAccountPayload.getBankName(),
+                bankAccountPayload.hasBankId() ? Optional.of(bankAccountPayload.getBankId()) : Optional.empty(),
+                bankAccountPayload.hasBranchId() ? Optional.of(bankAccountPayload.getBranchId()) : Optional.empty(),
+                bankAccountPayload.getAccountNr(),
+                bankAccountPayload.hasBankAccountType() ? Optional.of(BankAccountType.fromProto(bankAccountPayload.getBankAccountType())) : Optional.empty(),
+                bankAccountPayload.hasNationalAccountId() ? Optional.of(bankAccountPayload.getNationalAccountId()) : Optional.empty(),
+                cashDepositAccountPayload.hasRequirements() ? Optional.of(cashDepositAccountPayload.getRequirements()) : Optional.empty());
     }
 
     @Override

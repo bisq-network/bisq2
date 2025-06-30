@@ -52,7 +52,7 @@ public class FiatCurrencyRepository {
 
     // Need to be called at application setup with user locale
     public static void setLocale(Locale locale) {
-        currencyByCode = CountryRepository.getCountries().stream()
+        currencyByCode = CountryRepository.getAllCountries().stream()
                 .map(country -> getCurrencyByCountryCode(country.getCode(), locale))
                 .distinct()
                 .collect(Collectors.toMap(FiatCurrency::getCode, Function.identity(), (x, y) -> x, HashMap::new));
@@ -134,10 +134,20 @@ public class FiatCurrencyRepository {
     public static String getDisplayNameAndCode(String currencyCode) {
         return FiatCurrencyRepository.getCurrencyByCode(currencyCode).getDisplayNameAndCode();
     }
+    public static String getCodeAndDisplayName(String currencyCode) {
+        return FiatCurrencyRepository.getCurrencyByCode(currencyCode).getCodeAndDisplayName();
+    }
 
     public static String getDisplayNameAndCodes(List<String> currencyCodes) {
         return currencyCodes.stream()
                 .map(FiatCurrencyRepository::getDisplayNameAndCode)
+                .sorted()
+                .collect(Collectors.joining(", "));
+    }
+
+    public static String getCodeAndDisplayNames(List<String> currencyCodes) {
+        return currencyCodes.stream()
+                .map(FiatCurrencyRepository::getCodeAndDisplayName)
                 .sorted()
                 .collect(Collectors.joining(", "));
     }

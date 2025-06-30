@@ -19,7 +19,12 @@ package bisq.desktop.main.content.user.accounts.details;
 
 import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.account.payment_method.FiatPaymentRail;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.i18n.Res;
+import javafx.geometry.Insets;
+import javafx.geometry.VPos;
+import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
 
 public class UserDefinedAccountDetailsVBox extends AccountDetailsVBox<UserDefinedFiatAccount, FiatPaymentRail> {
     public UserDefinedAccountDetailsVBox(UserDefinedFiatAccount account) {
@@ -28,8 +33,13 @@ public class UserDefinedAccountDetailsVBox extends AccountDetailsVBox<UserDefine
 
     @Override
     protected void addDetails(UserDefinedFiatAccount account) {
-        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.userDefined.accountData"),
-                account.getAccountPayload().getAccountData());
+        Label descriptionLabel = addDescriptionLabel(Res.get("user.paymentAccounts.userDefined.accountData"));
+        GridPane.setValignment(descriptionLabel, VPos.TOP);
+        String accountData = account.getAccountPayload().getAccountData();
+        Label valueLabel = addValueLabel(accountData);
+        GridPane.setMargin(valueLabel, new Insets(0, 20, 0, 0));
+        BisqMenuItem copyButton = addCopyButton(accountData);
+        GridPane.setValignment(copyButton, VPos.TOP);
     }
 
     @Override

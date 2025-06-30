@@ -15,23 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.summary.details;
+package bisq.desktop.main.content.user.accounts.details;
 
-import bisq.account.accounts.ZelleAccountPayload;
-import bisq.account.payment_method.FiatPaymentRail;
+import bisq.account.accounts.FasterPaymentsAccount;
+import bisq.account.accounts.FasterPaymentsAccountPayload;
 import bisq.i18n.Res;
 
-public class ZelleAccountDetailsGridPane extends FiatAccountDetailsGridPane<ZelleAccountPayload> {
-    public ZelleAccountDetailsGridPane(ZelleAccountPayload accountPayload, FiatPaymentRail fiatPaymentRail) {
-        super(accountPayload, fiatPaymentRail);
+public class FasterPaymentsAccountDetailsVBox extends FiatAccountDetailsVBox<FasterPaymentsAccount> {
+    public FasterPaymentsAccountDetailsVBox(FasterPaymentsAccount account) {
+        super(account);
     }
 
     @Override
-    protected void addDetails(ZelleAccountPayload accountPayload) {
+    protected void addDetails(FasterPaymentsAccount account) {
+        FasterPaymentsAccountPayload accountPayload = account.getAccountPayload();
         addDescriptionAndValue(Res.get("user.paymentAccounts.holderName"),
                 accountPayload.getHolderName());
-
-        addDescriptionAndValue(Res.get("user.paymentAccounts.zelle.emailOrMobileNr"),
-                accountPayload.getEmailOrMobileNr());
+        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.fasterPayments.sortCode"),
+                accountPayload.getSortCode());
+        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.accountNr"),
+                accountPayload.getAccountNr());
     }
 }

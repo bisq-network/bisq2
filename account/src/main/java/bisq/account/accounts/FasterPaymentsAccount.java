@@ -1,7 +1,5 @@
 package bisq.account.accounts;
 
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -11,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class FasterPaymentsAccount extends Account<FiatPaymentMethod, FasterPaymentsAccountPayload> {
+public final class FasterPaymentsAccount extends CountryBasedAccount<FasterPaymentsAccountPayload> {
     public FasterPaymentsAccount(long creationDate, String accountName, FasterPaymentsAccountPayload accountPayload) {
         super(creationDate, accountName, accountPayload);
     }

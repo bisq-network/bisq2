@@ -15,25 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.details;
+package bisq.desktop.components.controls.validator;
 
-import bisq.account.accounts.PixAccount;
-import bisq.account.accounts.PixAccountPayload;
 import bisq.i18n.Res;
+import javafx.scene.control.TextInputControl;
 
-public class PixAccountDetailsVBox extends FiatAccountDetailsVBox<PixAccount> {
-    public PixAccountDetailsVBox(PixAccount account) {
-        super(account);
+public class TextFixLengthValidator extends ValidatorBase {
+    private final int length;
+
+    public TextFixLengthValidator(int length) {
+        this(Res.get("validation.notCorrectLength", length), length);
+    }
+
+    public TextFixLengthValidator(String message, int length) {
+        super(message);
+        this.length = length;
     }
 
     @Override
-    protected void addDetails(PixAccount account) {
-        PixAccountPayload accountPayload = account.getAccountPayload();
-
-        addDescriptionAndValue(Res.get("user.paymentAccounts.holderName"),
-                accountPayload.getHolderName());
-
-        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.pix.pixKey"),
-                accountPayload.getPixKey());
+    protected void eval() {
+        if (srcControl.get() instanceof TextInputControl textInputControl && textInputControl.getText()!=null) {
+            hasErrors.set(textInputControl.getText().length() != length);
+        }
     }
 }

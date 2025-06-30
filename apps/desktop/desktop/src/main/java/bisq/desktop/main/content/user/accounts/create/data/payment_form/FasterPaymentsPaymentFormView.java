@@ -26,11 +26,12 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class PixPaymentFormView extends PaymentFormView<PixPaymentFormModel, PixPaymentFormController> {
-    private final MaterialTextField holderName, pixKey;
+public class FasterPaymentsPaymentFormView extends PaymentFormView<FasterPaymentsPaymentFormModel, FasterPaymentsPaymentFormController> {
+    private final MaterialTextField holderName, sortCode, accountNr;
     private Subscription requireValidationPin;
 
-    public PixPaymentFormView(PixPaymentFormModel model, PixPaymentFormController controller) {
+    public FasterPaymentsPaymentFormView(FasterPaymentsPaymentFormModel model,
+                                         FasterPaymentsPaymentFormController controller) {
         super(model, controller);
 
         holderName = new MaterialTextField(Res.get("user.paymentAccounts.holderName"),
@@ -38,12 +39,17 @@ public class PixPaymentFormView extends PaymentFormView<PixPaymentFormModel, Pix
         holderName.setValidators(model.getHolderNameValidator());
         holderName.setMaxWidth(Double.MAX_VALUE);
 
-        pixKey = new MaterialTextField(Res.get("user.paymentAccounts.pix.pixKey"),
-                Res.get("user.paymentAccounts.createAccount.prompt", Res.get("user.paymentAccounts.pix.pixKey")));
-        pixKey.setValidators(model.getPixKeyValidator());
-        pixKey.setMaxWidth(Double.MAX_VALUE);
+        sortCode = new MaterialTextField(Res.get("user.paymentAccounts.fasterPayments.sortCode"),
+                Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("user.paymentAccounts.fasterPayments.sortCode"))));
+        sortCode.setValidators(model.getSortCodeValidator(), model.getSortCodeNumberValidator());
+        sortCode.setMaxWidth(Double.MAX_VALUE);
 
-        root.getChildren().addAll(holderName, pixKey, Spacer.height(100));
+        accountNr = new MaterialTextField(Res.get("user.paymentAccounts.accountNr"),
+                Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("user.paymentAccounts.accountNr"))));
+        accountNr.setValidators(model.getAccountNrValidator(), model.getAccountNrNumberValidator());
+        accountNr.setMaxWidth(Double.MAX_VALUE);
+
+        root.getChildren().addAll(holderName, sortCode, accountNr, Spacer.height(100));
     }
 
     @Override
@@ -52,18 +58,24 @@ public class PixPaymentFormView extends PaymentFormView<PixPaymentFormModel, Pix
             holderName.setText(model.getHolderName().get());
             holderName.validate();
         }
-        if (StringUtils.isNotEmpty(model.getPixKey().get())) {
-            pixKey.setText(model.getPixKey().get());
-            pixKey.validate();
+        if (StringUtils.isNotEmpty(model.getSortCode().get())) {
+            sortCode.setText(model.getSortCode().get());
+            sortCode.validate();
+        }
+        if (StringUtils.isNotEmpty(model.getAccountNr().get())) {
+            accountNr.setText(model.getAccountNr().get());
+            accountNr.validate();
         }
 
         holderName.textProperty().bindBidirectional(model.getHolderName());
-        pixKey.textProperty().bindBidirectional(model.getPixKey());
+        sortCode.textProperty().bindBidirectional(model.getSortCode());
+        accountNr.textProperty().bindBidirectional(model.getAccountNr());
 
         requireValidationPin = EasyBind.subscribe(model.getRequireValidation(), requireValidation -> {
             if (requireValidation) {
                 holderName.validate();
-                pixKey.validate();
+                sortCode.validate();
+                accountNr.validate();
                 controller.onValidationDone();
             }
         });
@@ -72,10 +84,12 @@ public class PixPaymentFormView extends PaymentFormView<PixPaymentFormModel, Pix
     @Override
     protected void onViewDetached() {
         holderName.resetValidation();
-        pixKey.resetValidation();
+        sortCode.resetValidation();
+        accountNr.resetValidation();
 
         holderName.textProperty().unbindBidirectional(model.getHolderName());
-        pixKey.textProperty().unbindBidirectional(model.getPixKey());
+        sortCode.textProperty().unbindBidirectional(model.getSortCode());
+        accountNr.textProperty().unbindBidirectional(model.getAccountNr());
 
         requireValidationPin.unsubscribe();
     }

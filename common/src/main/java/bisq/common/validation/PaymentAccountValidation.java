@@ -18,6 +18,7 @@
 package bisq.common.validation;
 
 import bisq.common.currency.FiatCurrencyRepository;
+import bisq.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -62,5 +63,18 @@ public class PaymentAccountValidation {
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid currencyCode " + currencyCode);
         }
+    }
+
+    public static void validateFasterPaymentsSortCode(String sortCode) {
+        checkArgument(StringUtils.isNotEmpty(sortCode) && sortCode.length() == 6,
+                "UK sort code must consist of 6 numbers.");
+        checkArgument(StringUtils.isNumber(sortCode), "UK sort code must consist of numbers.");
+    }
+
+    public static void validateFasterPaymentsAccountNr(String accountNr) {
+        checkArgument(StringUtils.isNotEmpty(accountNr) && accountNr.length() == 8,
+                "Account number must consist of 8 numbers.");
+
+        checkArgument(StringUtils.isNumber(accountNr), "Account number must consist of numbers.");
     }
 }

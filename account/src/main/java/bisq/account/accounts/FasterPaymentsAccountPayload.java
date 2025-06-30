@@ -3,6 +3,7 @@ package bisq.account.accounts;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.common.validation.PaymentAccountValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -12,12 +13,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class FasterPaymentsAccountPayload extends AccountPayload<FiatPaymentMethod> {
+public final class FasterPaymentsAccountPayload extends CountryBasedAccountPayload {
+    public static final int HOLDER_NAME_MIN_LENGTH = 2;
+    public static final int HOLDER_NAME_MAX_LENGTH = 70;
+
+    private final String holderName;
     private final String sortCode;
     private final String accountNr;
 
-    public FasterPaymentsAccountPayload(String id, String sortCode, String accountNr) {
-        super(id);
+    public FasterPaymentsAccountPayload(String id, String holderName, String sortCode, String accountNr) {
+        super(id, "UK");
+        this.holderName = holderName;
         this.sortCode = sortCode;
         this.accountNr = accountNr;
 
@@ -26,8 +32,9 @@ public final class FasterPaymentsAccountPayload extends AccountPayload<FiatPayme
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateText(sortCode, 50);
-        NetworkDataValidation.validateText(accountNr, 50);
+        NetworkDataValidation.validateRequiredText(holderName, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);
+        PaymentAccountValidation.validateFasterPaymentsSortCode(sortCode);
+        PaymentAccountValidation.validateFasterPaymentsAccountNr(accountNr);
     }
 
     @Override
@@ -42,14 +49,15 @@ public final class FasterPaymentsAccountPayload extends AccountPayload<FiatPayme
 
     private bisq.account.protobuf.FasterPaymentsAccountPayload.Builder getFasterPaymentsAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.FasterPaymentsAccountPayload.newBuilder()
+                .setHolderName(holderName)
                 .setSortCode(sortCode)
                 .setAccountNr(accountNr);
     }
 
     public static FasterPaymentsAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         var fasterPaymentsPayload = proto.getFasterPaymentsAccountPayload();
-        return new FasterPaymentsAccountPayload(
-                proto.getId(),
+        return new FasterPaymentsAccountPayload(proto.getId(),
+                fasterPaymentsPayload.getHolderName(),
                 fasterPaymentsPayload.getSortCode(),
                 fasterPaymentsPayload.getAccountNr());
     }

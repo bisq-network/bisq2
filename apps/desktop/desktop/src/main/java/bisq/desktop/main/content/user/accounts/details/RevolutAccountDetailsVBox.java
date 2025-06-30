@@ -37,7 +37,7 @@ public class RevolutAccountDetailsVBox extends FiatAccountDetailsVBox<RevolutAcc
     protected void addDetails(RevolutAccount account) {
         RevolutAccountPayload accountPayload = account.getAccountPayload();
 
-        addDescriptionAndValue(Res.get("user.paymentAccounts.revolut.userName"),
+        addDescriptionAndValue(Res.get("user.paymentAccounts.userName"),
                 accountPayload.getUserName());
 
         List<String> allRevolutCurrencyCodes = FiatPaymentRailUtil.getRevolutCurrencyCodes().stream()

@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.accounts.create.summary;
 
+import bisq.account.accounts.CountryBasedAccountPayload;
 import bisq.common.data.Triple;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.GridPaneUtil;
@@ -56,6 +57,7 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
     private final VBox accountNameOverlay;
     private final Button accountNameButton;
     private final MaterialTextField accountNameField;
+    private final VBox countryVBox;
     private int rowIndex = 0;
     private Subscription showAccountNameOverlayPin;
 
@@ -67,11 +69,10 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
         gridPane.setVgap(10);
         GridPaneUtil.setGridPaneMultiColumnsConstraints(gridPane, 3);
 
-
         Label headline = new Label(Res.get("user.paymentAccounts.summary.headline"));
         headline.getStyleClass().add("trade-wizard-review-headline");
         GridPane.setHalignment(headline, HPos.CENTER);
-        GridPane.setMargin(headline, new Insets(10, 0, 30, 0));
+        GridPane.setMargin(headline, new Insets(20, 0, 20, 0));
         gridPane.add(headline, 0, rowIndex, 3, 1);
 
         rowIndex++;
@@ -88,7 +89,8 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
 
         Triple<Text, Label, VBox> countryTriple = getDescriptionValueVBoxTriple(Res.get("user.paymentAccounts.country"));
         country = countryTriple.getSecond();
-        gridPane.add(countryTriple.getThird(), 2, rowIndex);
+        countryVBox = countryTriple.getThird();
+        gridPane.add(countryVBox, 2, rowIndex);
 
         accountNameField = new MaterialTextField(Res.get("user.paymentAccounts.summary.accountNameOverlay.accountName.description"));
         accountNameButton = new Button(Res.get("user.paymentAccounts.summary.accountNameOverlay.button"));
@@ -123,7 +125,11 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
         currency.setText(model.getCurrency());
         country.setText(model.getCountry());
 
-        gridPane.add(model.getAccountDetailsGridPane(), 0, ++rowIndex, 3, 1);
+        boolean isCountryBasedAccountPayload = model.getAccountPayload() instanceof CountryBasedAccountPayload;
+        countryVBox.setVisible(isCountryBasedAccountPayload);
+        countryVBox.setManaged(isCountryBasedAccountPayload);
+
+        gridPane.add(model.getAccountDetailsGridPane(), 0, gridPane.getRowCount() + 1, 3, 1);
     }
 
     @Override

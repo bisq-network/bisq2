@@ -72,7 +72,7 @@ public class F2FPaymentFormView extends PaymentFormView<F2FPaymentFormModel, F2F
 
             @Override
             public Country fromString(String string) {
-                return CountryRepository.getCountries().stream()
+                return CountryRepository.getAllCountries().stream()
                         .filter(country -> country.getName().equals(string))
                         .findFirst()
                         .orElse(null);
@@ -186,7 +186,6 @@ public class F2FPaymentFormView extends PaymentFormView<F2FPaymentFormModel, F2F
         currencyCountryMismatchPin = EasyBind.subscribe(model.getCurrencyCountryMismatch(), currencyCountryMismatch -> {
             if (currencyCountryMismatch) {
                 new Popup().owner(root)
-                        //.type(Overlay.Type.FEEDBACK)
                         .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
                         .warning(Res.get("user.paymentAccounts.createAccount.accountData.currency.warn.currencyCountryMismatch"))
                         .closeButtonText(Res.get("confirmation.yes"))

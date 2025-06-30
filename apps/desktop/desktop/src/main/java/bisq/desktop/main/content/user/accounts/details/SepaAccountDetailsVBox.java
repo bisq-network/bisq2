@@ -40,7 +40,7 @@ public class SepaAccountDetailsVBox extends FiatAccountDetailsVBox<SepaAccount> 
     protected void addDetails(SepaAccount account) {
         SepaAccountPayload accountPayload = account.getAccountPayload();
 
-        addDescriptionAndValue(Res.get("user.paymentAccounts.sepa.holderName"),
+        addDescriptionAndValue(Res.get("user.paymentAccounts.holderName"),
                 accountPayload.getHolderName());
 
         addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.sepa.iban"),

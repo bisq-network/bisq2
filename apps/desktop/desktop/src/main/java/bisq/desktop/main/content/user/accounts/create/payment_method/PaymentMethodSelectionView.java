@@ -21,6 +21,7 @@ import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethodChargebackRisk;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.locale.Country;
+import bisq.common.locale.CountryRepository;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
@@ -228,7 +229,7 @@ public class PaymentMethodSelectionView extends View<VBox, PaymentMethodSelectio
     @Getter
     public static class PaymentMethodItem {
         private final PaymentMethod<?> paymentMethod;
-        private final String name, currencyCodes, currencyCodeAndDisplayNames, countryCodes, countryNames, chargebackRisk;
+        private final String name, currencyCodes, currencyCodeAndDisplayNames, countryNames, chargebackRisk;
 
         public PaymentMethodItem(PaymentMethod<?> paymentMethod) {
             this.paymentMethod = paymentMethod;
@@ -236,21 +237,22 @@ public class PaymentMethodSelectionView extends View<VBox, PaymentMethodSelectio
 
             currencyCodes = paymentMethod.getSupportedCurrencyCodesAsDisplayString();
             currencyCodeAndDisplayNames = paymentMethod.getSupportedCurrencyDisplayNameAndCodeAsDisplayString();
-            countryCodes = String.join(", ", getCountryCodes(paymentMethod));
-            countryNames = String.join(", ", getCountryNames(paymentMethod));
+            List<String> countryCodesList = getCountryCodes(paymentMethod);
+            boolean isAllCountries = CountryRepository.matchesAllCountries(countryCodesList);
+            countryNames = isAllCountries ? Res.get("user.paymentAccounts.allCountries") : String.join(", ", getCountryNames(paymentMethod));
             chargebackRisk = getChargebackRiskEnum(paymentMethod).toString();
         }
 
         private List<String> getCountryCodes(PaymentMethod<?> method) {
             if (method instanceof FiatPaymentMethod fiatMethod) {
-                return fiatMethod.getPaymentRail().getSupportedCountries().stream()
+                List<Country> supportedCountries = fiatMethod.getPaymentRail().getSupportedCountries();
+                return supportedCountries.stream()
                         .map(Country::getCode)
                         .sorted()
                         .toList();
             }
             return List.of();
         }
-
         private List<String> getCountryNames(PaymentMethod<?> method) {
             if (method instanceof FiatPaymentMethod fiatMethod) {
                 return fiatMethod.getPaymentRail().getSupportedCountries().stream()

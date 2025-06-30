@@ -60,6 +60,11 @@ public class ValidationControl {
         this.validators.forEach(validator -> validator.setSrcControl(control));
     }
 
+    public void clearValidators() {
+        validators.clear();
+        activeValidator.set(null);
+    }
+
     /**
      * validates the text value using the list of validators provided by the user
      * {{@link #setValidators(ValidatorBase...)}

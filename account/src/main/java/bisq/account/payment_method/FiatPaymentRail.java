@@ -283,7 +283,7 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
     }
 
     private static List<Country> allCountries() {
-        return CountryRepository.getCountries();
+        return CountryRepository.getAllCountries();
     }
 
     @Override
@@ -322,8 +322,8 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             case SEPA -> DAYS_6;
             case SEPA_INSTANT -> HOURS_24;
             case BIZUM -> DAYS_4;
-            case FASTER_PAYMENTS -> DAYS_4;
-            case INTERAC_E_TRANSFER -> DAYS_4;
+            case FASTER_PAYMENTS -> HOURS_24;
+            case INTERAC_E_TRANSFER -> HOURS_24;
             case PAY_ID -> DAYS_4;
             case PIX -> HOURS_24;
             case UPI -> DAYS_4;
@@ -332,11 +332,11 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             case CASH_BY_MAIL -> DAYS_8;
             case CASH_DEPOSIT -> DAYS_4;
             case NATIONAL_BANK -> DAYS_4;
-            case SAME_BANK -> DAYS_4;
+            case SAME_BANK -> HOURS_24;
             case SWIFT -> DAYS_4;
             case DOMESTIC_WIRE_TRANSFER -> DAYS_4;
             case REVOLUT -> HOURS_24;
-            case WISE -> DAYS_4;
+            case WISE -> HOURS_24;
             case AMAZON_GIFT_CARD -> DAYS_4;
             default -> HOURS_24;
         };
@@ -344,14 +344,14 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
 }
 
 /*
-    [SEPA] => 66417
-    [Zelle (ClearXchange)] => 62403
+    x[SEPA] => 66417
+    x[Zelle (ClearXchange)] => 62403
     [Altcoins] => 43308
-    [Revolut] => 37752
-    [Pix] => 18478
-    [Faster Payment System (UK)] => 18269
+    x[Revolut] => 37752
+    x[Pix] => 18478
+    x[Faster Payment System (UK)] => 18269
     [Altcoins Instant] => 16097
-    [National bank transfer] => 14963
+    x[National bank transfer] => 14963
     [BSQ Swap] => 10063
     [SEPA Instant Payments] => 8991
     [Interac e-Transfer] => 8579

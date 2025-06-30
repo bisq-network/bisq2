@@ -41,7 +41,7 @@ public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFo
     @Override
     protected F2FPaymentFormModel createModel() {
         return new F2FPaymentFormModel(UUID.randomUUID().toString(),
-                CountryRepository.getCountries(),
+                CountryRepository.getAllCountries(),
                 FiatCurrencyRepository.getAllCurrencies());
     }
 

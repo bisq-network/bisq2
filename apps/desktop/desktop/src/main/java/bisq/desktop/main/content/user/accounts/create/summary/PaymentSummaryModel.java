@@ -33,7 +33,7 @@ public class PaymentSummaryModel implements Model {
     @Setter
     private AccountPayload<?> accountPayload;
     @Setter
-    private AccountDetailsGridPane accountDetailsGridPane;
+    private AccountDetailsGridPane<?, ?> accountDetailsGridPane;
     @Setter
     private String currency;
     @Setter

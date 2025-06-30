@@ -33,14 +33,14 @@ public class ZellePaymentFormView extends PaymentFormView<ZellePaymentFormModel,
     public ZellePaymentFormView(ZellePaymentFormModel model, ZellePaymentFormController controller) {
         super(model, controller);
 
-        holderName = new MaterialTextField(Res.get("user.paymentAccounts.zelle.holderName"),
-                Res.get("user.paymentAccounts.createAccount.accountData.zelle.holderName.prompt"));
+        holderName = new MaterialTextField(Res.get("user.paymentAccounts.holderName"),
+                Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("user.paymentAccounts.holderName"))));
         holderName.setValidators(model.getHolderNameValidator());
         holderName.setMaxWidth(Double.MAX_VALUE);
 
 
         emailOrMobileNr = new MaterialTextField(Res.get("user.paymentAccounts.zelle.emailOrMobileNr"),
-                Res.get("user.paymentAccounts.createAccount.accountData.zelle.emailOrMobileNr.prompt"));
+                Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("user.paymentAccounts.zelle.emailOrMobileNr"))));
         emailOrMobileNr.setValidators(model.getEmailOrPhoneNumberValidator());
         emailOrMobileNr.setMaxWidth(Double.MAX_VALUE);
 

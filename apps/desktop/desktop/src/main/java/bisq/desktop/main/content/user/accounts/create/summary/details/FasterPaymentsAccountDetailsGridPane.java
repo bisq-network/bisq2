@@ -17,21 +17,22 @@
 
 package bisq.desktop.main.content.user.accounts.create.summary.details;
 
-import bisq.account.accounts.ZelleAccountPayload;
+import bisq.account.accounts.FasterPaymentsAccountPayload;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.i18n.Res;
 
-public class ZelleAccountDetailsGridPane extends FiatAccountDetailsGridPane<ZelleAccountPayload> {
-    public ZelleAccountDetailsGridPane(ZelleAccountPayload accountPayload, FiatPaymentRail fiatPaymentRail) {
+public class FasterPaymentsAccountDetailsGridPane extends FiatAccountDetailsGridPane<FasterPaymentsAccountPayload> {
+    public FasterPaymentsAccountDetailsGridPane(FasterPaymentsAccountPayload accountPayload, FiatPaymentRail fiatPaymentRail) {
         super(accountPayload, fiatPaymentRail);
     }
 
     @Override
-    protected void addDetails(ZelleAccountPayload accountPayload) {
+    protected void addDetails(FasterPaymentsAccountPayload accountPayload) {
         addDescriptionAndValue(Res.get("user.paymentAccounts.holderName"),
                 accountPayload.getHolderName());
-
-        addDescriptionAndValue(Res.get("user.paymentAccounts.zelle.emailOrMobileNr"),
-                accountPayload.getEmailOrMobileNr());
+        addDescriptionAndValue(Res.get("user.paymentAccounts.fasterPayments.sortCode"),
+                accountPayload.getSortCode());
+        addDescriptionAndValue(Res.get("user.paymentAccounts.accountNr"),
+                accountPayload.getAccountNr());
     }
 }

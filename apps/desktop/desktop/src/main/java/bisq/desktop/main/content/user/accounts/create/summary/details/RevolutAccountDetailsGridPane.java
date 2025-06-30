@@ -35,7 +35,7 @@ public class RevolutAccountDetailsGridPane extends FiatAccountDetailsGridPane<Re
 
     @Override
     protected void addDetails(RevolutAccountPayload accountPayload) {
-        addDescriptionAndValue(Res.get("user.paymentAccounts.revolut.userName"),
+        addDescriptionAndValue(Res.get("user.paymentAccounts.userName"),
                 accountPayload.getUserName());
 
 

@@ -47,7 +47,7 @@ public abstract class AccountDetailsVBox<A extends Account<?, ?>, R extends Paym
     protected static final String DETAILS_STYLE = "trade-wizard-review-details";
     protected static final double DESCRIPTION_WIDTH = 200;
     protected static final double HBOX_SPACE = 10;
-    private static final double HEIGHT = 61;
+    protected static final double HEIGHT = 61;
 
     protected final GridPane gridPane;
     protected int rowIndex = 0;
@@ -104,9 +104,9 @@ public abstract class AccountDetailsVBox<A extends Account<?, ?>, R extends Paym
             String currency;
             AccountPayload<?> accountPayload = account.getAccountPayload();
             if (accountPayload instanceof MultiCurrencyAccountPayload multiCurrencyAccountPayload) {
-                currency = FiatCurrencyRepository.getDisplayNameAndCodes(multiCurrencyAccountPayload.getSelectedCurrencyCodes());
+                currency = FiatCurrencyRepository.getCodeAndDisplayNames(multiCurrencyAccountPayload.getSelectedCurrencyCodes());
             } else {
-                currency = FiatCurrencyRepository.getDisplayNameAndCode(accountPayload.getCurrencyCode().orElseThrow());
+                currency = FiatCurrencyRepository.getCodeAndDisplayName(accountPayload.getCurrencyCode().orElseThrow());
             }
 
             Triple<Text, Label, VBox> currencyTriple = getDescriptionValueVBoxTriple(Res.get("user.paymentAccounts.currency"),
@@ -141,14 +141,14 @@ public abstract class AccountDetailsVBox<A extends Account<?, ?>, R extends Paym
         return label;
     }
 
-    private Label addValueLabel(String value) {
+    protected Label addValueLabel(String value) {
         Label label = new Label(value);
         label.getStyleClass().add(VALUE_STYLE);
         gridPane.add(label, 1, rowIndex, 2, 1);
         return label;
     }
 
-    private BisqMenuItem addCopyButton(String value) {
+    protected BisqMenuItem addCopyButton(String value) {
         BisqMenuItem copyButton = new BisqMenuItem("copy-grey", "copy-white");
         copyButton.setTooltip(Res.get("action.copyToClipboard"));
         copyButton.useIconOnly(17);

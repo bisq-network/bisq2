@@ -31,6 +31,9 @@ public abstract class AccountDetailsGridPane<A extends AccountPayload<?>, R exte
     protected static final String VALUE_STYLE = "trade-wizard-review-value";
     protected static final String DETAILS_STYLE = "trade-wizard-review-details";
 
+    protected final Label detailsHeadline;
+    protected final Region detailsLine;
+
     int rowIndex = 0;
 
     public AccountDetailsGridPane(A accountPayload, R paymentRail) {
@@ -38,11 +41,11 @@ public abstract class AccountDetailsGridPane<A extends AccountPayload<?>, R exte
 
         GridPaneUtil.setGridPaneMultiColumnsConstraints(this, 3);
 
-        Label detailsHeadline = new Label(Res.get("user.paymentAccounts.accountDetails").toUpperCase());
+        detailsHeadline = new Label(Res.get("user.paymentAccounts.accountDetails").toUpperCase());
         detailsHeadline.getStyleClass().add("trade-wizard-review-details-headline");
         GridPane.setMargin(detailsHeadline, new Insets(10, 0, 0, 0));
         add(detailsHeadline, 0, rowIndex, 3, 1);
-        Region detailsLine = getLine();
+        detailsLine = getLine();
         GridPane.setMargin(detailsLine, new Insets(-10, 0, -5, 0));
         add(detailsLine, 0, ++rowIndex, 3, 1);
 
@@ -62,6 +65,7 @@ public abstract class AccountDetailsGridPane<A extends AccountPayload<?>, R exte
                 Res.get("user.paymentAccounts.summary.tradeDuration", fiatPaymentRail.getTradeDuration());
         addDescriptionAndValue(Res.get("user.paymentAccounts.restrictions"), restrictions);
     }
+
     protected Label addDescriptionAndValue(String description, String value) {
         addDescriptionLabel(description);
         return addValueLabel(value);

@@ -37,7 +37,7 @@ public class SepaAccountDetailsGridPane extends FiatAccountDetailsGridPane<SepaA
 
     @Override
     protected void addDetails(SepaAccountPayload accountPayload) {
-        addDescriptionAndValue(Res.get("user.paymentAccounts.sepa.holderName"),
+        addDescriptionAndValue(Res.get("user.paymentAccounts.holderName"),
                 accountPayload.getHolderName());
 
         addDescriptionAndValue(Res.get("user.paymentAccounts.sepa.iban"),
