@@ -75,8 +75,13 @@ public class PreventStandbyModeService {
     private static class SleepInhibitor {
         private Process inhibitorProcess;
         private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        private boolean initialized = false;
 
         public void initialize() throws IOException {
+            if (initialized) {
+                return;
+            }
+            initialized = true;
             if (OS.isWindows()) {
                 initWindows();
             } else if (OS.isMacOs()) {
@@ -127,6 +132,7 @@ public class PreventStandbyModeService {
         }
 
         public void shutdown() {
+            initialized = false;
             if (OS.isWindows()) {
                 Kernel32.INSTANCE.SetThreadExecutionState(Kernel32.ES_CONTINUOUS);
                 log.info("Windows sleep/display prevention cleared.");
