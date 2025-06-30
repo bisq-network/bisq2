@@ -86,8 +86,6 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
                 ACCOUNT_NR_MIN_LENGTH, ACCOUNT_NR_MAX_LENGTH);
         nationalAccountId.ifPresent(nationalAccountId -> NetworkDataValidation.validateRequiredText(nationalAccountId,
                 NATIONAL_ACCOUNT_ID_MIN_LENGTH, NATIONAL_ACCOUNT_ID_MAX_LENGTH));
-        nationalAccountId.ifPresent(nationalAccountId -> NetworkDataValidation.validateRequiredText(nationalAccountId,
-                NATIONAL_ACCOUNT_ID_MIN_LENGTH, NATIONAL_ACCOUNT_ID_MAX_LENGTH));
     }
 
     @Override
@@ -109,7 +107,7 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
         bankName.ifPresent(builder::setBankName);
         bankId.ifPresent(builder::setBankId);
         branchId.ifPresent(builder::setBranchId);
-        bankAccountType.ifPresent(BankAccountType::toProtoEnum);
+        bankAccountType.ifPresent(type -> builder.setBankAccountType(type.toProtoEnum()));
         nationalAccountId.ifPresent(builder::setNationalAccountId);
         return builder;
     }

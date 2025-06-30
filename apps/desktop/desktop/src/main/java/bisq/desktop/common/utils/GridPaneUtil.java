@@ -36,14 +36,11 @@ public class GridPaneUtil {
      * Set the grid pane with multiple column constraints and custom percent width.
      */
     public static void setGridPaneMultiColumnsConstraints(GridPane pane, int numColumns, double percentWidth) {
-        pane.getColumnConstraints().clear();
-       var dd= pane.getChildren();
         for (int i = 0; i < numColumns; i++) {
             ColumnConstraints col = new ColumnConstraints();
             col.setPercentWidth(percentWidth);
             pane.getColumnConstraints().add(col);
         }
-        pane.requestLayout();
     }
 
     /**

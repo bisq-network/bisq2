@@ -21,7 +21,6 @@ import bisq.account.accounts.BankAccountUtils;
 import bisq.account.accounts.NationalBankAccountPayload;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.common.data.Pair;
-import bisq.common.locale.Country;
 import bisq.i18n.Res;
 
 import java.util.List;
@@ -100,11 +99,5 @@ public class NationalBankAccountDetailsGridPane extends FiatAccountDetailsGridPa
                 .map(Pair::getSecond)
                 .collect(Collectors.joining(" / "));
         addDescriptionAndValue(description, value);
-    }
-
-    private void applySelectCountry(Country selectedCountry) {
-        if (selectedCountry != null) {
-            String countryCode = selectedCountry.getCode();
-        }
     }
 }

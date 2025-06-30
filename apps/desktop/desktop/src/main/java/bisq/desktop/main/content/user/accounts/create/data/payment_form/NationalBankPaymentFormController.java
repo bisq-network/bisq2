@@ -12,7 +12,7 @@
  * License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Bisq. If not, see <http:www.gnu.org/licenses/>.
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
@@ -46,7 +46,7 @@ public class NationalBankPaymentFormController extends PaymentFormController<Nat
 
     @Override
     protected NationalBankPaymentFormModel createModel() {
-        List<String> nationBankAccountCountryCodes = FiatPaymentRailUtil.getNationBankAccountCountries();
+        List<String> nationBankAccountCountryCodes = FiatPaymentRailUtil.getNationalBankAccountCountries();
         List<Country> nationBankAccountCountries = CountryRepository.getCountriesFromCodes(nationBankAccountCountryCodes);
         List<FiatCurrency> nationBankAccountCurrencies = nationBankAccountCountryCodes.stream()
                 .map(FiatCurrencyRepository::getCurrencyByCountryCode)

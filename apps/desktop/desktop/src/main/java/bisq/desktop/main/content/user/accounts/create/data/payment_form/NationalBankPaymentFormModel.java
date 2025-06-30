@@ -64,44 +64,44 @@ public class NationalBankPaymentFormModel extends PaymentFormModel {
     private final BooleanProperty isHolderIdVisible = new SimpleBooleanProperty();
     private final StringProperty holderIdDescription = new SimpleStringProperty();
     private final StringProperty holderIdPrompt = new SimpleStringProperty();
-    private final TextMinMaxLengthValidator holderIdValidator = new TextMinMaxLengthValidator(BankAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            BankAccountPayload.HOLDER_NAME_MAX_LENGTH);
+    private final TextMinMaxLengthValidator holderIdValidator = new TextMinMaxLengthValidator(BankAccountPayload.HOLDER_ID_MIN_LENGTH,
+            BankAccountPayload.HOLDER_ID_MAX_LENGTH);
 
     // Optional
     private final StringProperty bankName = new SimpleStringProperty();
     private final BooleanProperty isBankNameVisible = new SimpleBooleanProperty();
-    private final TextMinMaxLengthValidator bankNameValidator = new TextMinMaxLengthValidator(BankAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            BankAccountPayload.HOLDER_NAME_MAX_LENGTH);
+    private final TextMinMaxLengthValidator bankNameValidator = new TextMinMaxLengthValidator(BankAccountPayload.BANK_NAME_MIN_LENGTH,
+            BankAccountPayload.BANK_NAME_MAX_LENGTH);
 
     // Optional
     private final StringProperty bankId = new SimpleStringProperty();
     private final BooleanProperty isBankIdVisible = new SimpleBooleanProperty();
     private final StringProperty bankIdDescription = new SimpleStringProperty();
     private final StringProperty bankIdPrompt = new SimpleStringProperty();
-    private final TextMinMaxLengthValidator bankIdValidator = new TextMinMaxLengthValidator(BankAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            BankAccountPayload.HOLDER_NAME_MAX_LENGTH);
+    private final TextMinMaxLengthValidator bankIdValidator = new TextMinMaxLengthValidator(BankAccountPayload.BANK_ID_MIN_LENGTH,
+            BankAccountPayload.BANK_ID_MAX_LENGTH);
 
     // Optional
     private final StringProperty branchId = new SimpleStringProperty();
     private final BooleanProperty isBranchIdVisible = new SimpleBooleanProperty();
     private final StringProperty branchIdDescription = new SimpleStringProperty();
     private final StringProperty branchIdPrompt = new SimpleStringProperty();
-    private final TextMinMaxLengthValidator branchIdValidator = new TextMinMaxLengthValidator(BankAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            BankAccountPayload.HOLDER_NAME_MAX_LENGTH);
+    private final TextMinMaxLengthValidator branchIdValidator = new TextMinMaxLengthValidator(BankAccountPayload.BRANCH_ID_MIN_LENGTH,
+            BankAccountPayload.BRANCH_ID_MAX_LENGTH);
 
     private final StringProperty accountNr = new SimpleStringProperty();
     private final StringProperty accountNrDescription = new SimpleStringProperty(Res.get("user.paymentAccounts.accountNr"));
     private final StringProperty accountNrPrompt = new SimpleStringProperty(Res.get("user.paymentAccounts.createAccount.prompt", Res.get("user.paymentAccounts.accountNr")));
-    private final TextMinMaxLengthValidator accountNrValidator = new TextMinMaxLengthValidator(BankAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            BankAccountPayload.HOLDER_NAME_MAX_LENGTH);
+    private final TextMinMaxLengthValidator accountNrValidator = new TextMinMaxLengthValidator(BankAccountPayload.ACCOUNT_NR_MIN_LENGTH,
+            BankAccountPayload.ACCOUNT_NR_MAX_LENGTH);
 
     // Optional
     private final StringProperty nationalAccountId = new SimpleStringProperty();
     private final BooleanProperty isNationalAccountIdVisible = new SimpleBooleanProperty();
     private final StringProperty nationalAccountIdDescription = new SimpleStringProperty();
     private final StringProperty nationalAccountIdPrompt = new SimpleStringProperty();
-    private final TextMinMaxLengthValidator nationalAccountIdValidator = new TextMinMaxLengthValidator(BankAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            BankAccountPayload.HOLDER_NAME_MAX_LENGTH);
+    private final TextMinMaxLengthValidator nationalAccountIdValidator = new TextMinMaxLengthValidator(BankAccountPayload.NATIONAL_ACCOUNT_ID_MIN_LENGTH,
+            BankAccountPayload.NATIONAL_ACCOUNT_ID_MAX_LENGTH);
 
     public NationalBankPaymentFormModel(String id,
                                         List<Country> allCountries,

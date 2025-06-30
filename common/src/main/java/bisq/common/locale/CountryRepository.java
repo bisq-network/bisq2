@@ -99,16 +99,13 @@ public class CountryRepository {
                     }
                     return country;
                 })
-                .collect(Collectors.toList());
-        ALL_COUNTRIES.add(new Country("GE", "Georgia", new Region("AS", RegionRepository.getRegionName("AS"))));
-        ALL_COUNTRIES.add(new Country("BW", "Botswana", new Region("AF", RegionRepository.getRegionName("AF"))));
-        ALL_COUNTRIES.add(new Country("IR", "Iran", new Region("AS", RegionRepository.getRegionName("AS"))));
-        ALL_COUNTRIES.sort(Comparator.comparing(Country::getName));
+                .sorted(Comparator.comparing(Country::getName))
+                .collect(Collectors.toUnmodifiableList());
 
         ALL_COUNTRY_CODES = ALL_COUNTRIES.stream()
                 .map(Country::getCode)
                 .sorted()
-                .collect(Collectors.toList());
+                .collect(Collectors.toUnmodifiableList());
     }
 
 

@@ -86,8 +86,8 @@ public class FiatPaymentRailUtil {
         return CountryRepository.getCountriesFromCodes(getAllSepaCountryCodes());
     }
 
-    public static List<String> getNationBankAccountCountries() {
-        List<String> list = CountryRepository.getAllCountyCodes();
+    public static List<String> getNationalBankAccountCountries() {
+        List<String> list = new ArrayList<>(CountryRepository.getAllCountyCodes());
         list.removeAll(getSepaEuroCountries());
         Collections.sort(list);
         return list;

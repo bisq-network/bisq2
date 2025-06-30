@@ -36,8 +36,6 @@ public class UserDefinedAccountDetailsVBox extends AccountDetailsVBox<UserDefine
         Label descriptionLabel = addDescriptionLabel(Res.get("user.paymentAccounts.userDefined.accountData"));
         GridPane.setValignment(descriptionLabel, VPos.TOP);
         String accountData = account.getAccountPayload().getAccountData();
-       /* Label accountDataLabel = addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.userDefined.accountData"),
-                accountData);*/
         Label valueLabel = addValueLabel(accountData);
         GridPane.setMargin(valueLabel, new Insets(0, 20, 0, 0));
         BisqMenuItem copyButton = addCopyButton(accountData);

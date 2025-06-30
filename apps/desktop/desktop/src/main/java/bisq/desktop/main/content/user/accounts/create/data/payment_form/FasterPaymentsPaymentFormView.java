@@ -41,14 +41,12 @@ public class FasterPaymentsPaymentFormView extends PaymentFormView<FasterPayment
 
         sortCode = new MaterialTextField(Res.get("user.paymentAccounts.fasterPayments.sortCode"),
                 Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("user.paymentAccounts.fasterPayments.sortCode"))));
-        sortCode.setValidators(model.getSortCodeValidator());
-        sortCode.setValidators(model.getSortCodeNumberValidator());
+        sortCode.setValidators(model.getSortCodeValidator(), model.getSortCodeNumberValidator());
         sortCode.setMaxWidth(Double.MAX_VALUE);
 
         accountNr = new MaterialTextField(Res.get("user.paymentAccounts.accountNr"),
                 Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("user.paymentAccounts.accountNr"))));
-        accountNr.setValidators(model.getAccountNrValidator());
-        accountNr.setValidators(model.getAccountNrNumberValidator());
+        accountNr.setValidators(model.getAccountNrValidator(), model.getAccountNrNumberValidator());
         accountNr.setMaxWidth(Double.MAX_VALUE);
 
         root.getChildren().addAll(holderName, sortCode, accountNr, Spacer.height(100));
@@ -91,7 +89,7 @@ public class FasterPaymentsPaymentFormView extends PaymentFormView<FasterPayment
 
         holderName.textProperty().unbindBidirectional(model.getHolderName());
         sortCode.textProperty().unbindBidirectional(model.getSortCode());
-        accountNr.textProperty().unbindBidirectional(model.getSortCode());
+        accountNr.textProperty().unbindBidirectional(model.getAccountNr());
 
         requireValidationPin.unsubscribe();
     }
