@@ -89,7 +89,7 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
 
         removeOffer = new BisqMenuItem("delete-t-grey", "delete-t-red");
         removeOffer.useIconOnly();
-        removeOffer.setTooltip(Res.get("offer.deleteOffer"));
+        removeOffer.setTooltip(Res.get("offer.delete"));
         HBox.setMargin(removeOffer, ACTION_ITEMS_MARGIN);
     }
 

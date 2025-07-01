@@ -595,7 +595,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 myOfferActionsMenuBox.setAlignment(Pos.CENTER);
 
                 removeOfferMenuItem.useIconOnly();
-                removeOfferMenuItem.setTooltip(Res.get("offer.deleteOffer"));
+                removeOfferMenuItem.setTooltip(Res.get("offer.delete"));
 
                 copyOfferMenuItem.useIconOnly();
                 copyOfferMenuItem.setTooltip(Res.get("offer.copy"));
@@ -766,7 +766,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     }
 
     private Button createAndGetCreateOfferButton() {
-        Button createOfferButton = new Button(Res.get("offer.createOffer"));
+        Button createOfferButton = new Button(Res.get("offer.create"));
         createOfferButton.getStyleClass().addAll("create-offer-button", "normal-text");
         return createOfferButton;
     }
