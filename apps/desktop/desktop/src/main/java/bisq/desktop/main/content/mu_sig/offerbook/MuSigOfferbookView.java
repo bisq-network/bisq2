@@ -613,6 +613,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
                 resetRowEventHandlers();
                 resetVisibilities();
+                resetStyles();
 
                 if (item != null && !empty) {
                     if (item.isMyOffer()) {
@@ -629,7 +630,6 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                     } else {
                         takeOfferButton.setText(item.getTakeOfferButtonText());
                         takeOfferButton.setOpacity(1);
-                        resetStyles();
                         if (item.getOffer().getDirection().mirror().isBuy()) {
                             takeOfferButton.getStyleClass().add("buy-button");
                         } else {
