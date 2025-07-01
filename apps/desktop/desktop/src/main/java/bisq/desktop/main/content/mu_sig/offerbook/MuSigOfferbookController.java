@@ -51,6 +51,7 @@ import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -77,6 +78,7 @@ public class MuSigOfferbookController implements Controller {
     private final BannedUserService bannedUserService;
     private final FavouriteMarketsService favouriteMarketsService;
     private final UserIdentityService userIdentityService;
+    private final ReputationService reputationService;
     private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin;
     private Subscription selectedMarketItemPin, marketsSearchBoxTextPin, selectedMarketFilterPin, selectedMarketSortTypePin,
             selectedOffersFilterPin, activeMarketPaymentsCountPin;
@@ -90,6 +92,7 @@ public class MuSigOfferbookController implements Controller {
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         favouriteMarketsService = serviceProvider.getFavouriteMarketsService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        reputationService = serviceProvider.getUserService().getReputationService();
 
         model = new MuSigOfferbookModel();
         view = new MuSigOfferbookView(model, this);
@@ -114,7 +117,7 @@ public class MuSigOfferbookController implements Controller {
                 UIThread.run(() -> {
                     String offerId = muSigOffer.getId();
                     if (!model.getMuSigOfferIds().contains(offerId)) {
-                        model.getMuSigOfferListItems().add(new MuSigOfferListItem(muSigOffer, marketPriceService, userProfileService, identityService));
+                        model.getMuSigOfferListItems().add(new MuSigOfferListItem(muSigOffer, marketPriceService, userProfileService, identityService, reputationService));
                         model.getMuSigOfferIds().add(offerId);
                         updateFilteredMuSigOfferListItems();
                     }
