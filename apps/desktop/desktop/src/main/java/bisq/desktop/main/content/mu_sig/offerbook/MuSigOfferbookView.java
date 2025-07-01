@@ -825,6 +825,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         subheader.setAlignment(Pos.CENTER);
 
         VBox.setMargin(subheader, new Insets(0, 0, 5, 0));
+        VBox.setMargin(muSigOfferListView, new Insets(0, 10, 0, 10));
         offersVBox.getChildren().addAll(headerHBox, Layout.hLine(), subheader, muSigOfferListView);
         offersVBox.getStyleClass().add("bisq-easy-container");
         VBox.setVgrow(muSigOfferListView, Priority.ALWAYS);
