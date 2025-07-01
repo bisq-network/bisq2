@@ -702,7 +702,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    userProfileDisplay = new UserProfileDisplay(item.getMakerUserProfile(), false, true);
+                    userProfileDisplay = new UserProfileDisplay(item.getMakerUserProfile(), true, true);
                     userProfileDisplay.setReputationScore(item.getReputationScore());
                     setGraphic(userProfileDisplay);
                 } else {
