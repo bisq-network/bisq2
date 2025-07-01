@@ -24,6 +24,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.components.controls.DropdownMenu;
@@ -545,30 +546,53 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
     private Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>, TableCell<MuSigOfferListItem, MuSigOfferListItem>> getActionButtonCellFactory() {
         return column -> new TableCell<>() {
+            private static final double PREF_WIDTH = 120;
+            private static final double PREF_HEIGHT = 26;
+
             private final Button takeOfferButton = new Button();
+            private final HBox myOfferMainBox = new HBox();
             private final HBox myOfferLabelBox = new HBox();
             private final Label myOfferLabel = new Label(Res.get("muSig.offerbook.table.cell.myOffer"));
+            private final HBox myOfferActionsMenuBox = new HBox();
+            private final BisqMenuItem removeOfferMenuItem = new BisqMenuItem("delete-t-grey", "delete-t-red");
 
             {
-                double prefWidth = 120;
-                double prefHeight = 26;
-                takeOfferButton.setMinWidth(prefWidth);
-                takeOfferButton.setPrefWidth(prefWidth);
-                takeOfferButton.setMaxWidth(prefWidth);
+                takeOfferButton.setMinWidth(PREF_WIDTH);
+                takeOfferButton.setPrefWidth(PREF_WIDTH);
+                takeOfferButton.setMaxWidth(PREF_WIDTH);
                 takeOfferButton.getStyleClass().add("mu-sig-offerbook-offerlist-take-offer-button");
-                takeOfferButton.setMinHeight(prefHeight);
-                takeOfferButton.setPrefHeight(prefHeight);
-                takeOfferButton.setMaxHeight(prefHeight);
+                takeOfferButton.setMinHeight(PREF_HEIGHT);
+                takeOfferButton.setPrefHeight(PREF_HEIGHT);
+                takeOfferButton.setMaxHeight(PREF_HEIGHT);
 
-                myOfferLabelBox.setMinWidth(prefWidth);
-                myOfferLabelBox.setPrefWidth(prefWidth);
-                myOfferLabelBox.setMaxWidth(prefWidth);
-                myOfferLabelBox.setMinHeight(prefHeight);
-                myOfferLabelBox.setPrefHeight(prefHeight);
-                myOfferLabelBox.setMaxHeight(prefHeight);
+                myOfferMainBox.setMinWidth(PREF_WIDTH);
+                myOfferMainBox.setPrefWidth(PREF_WIDTH);
+                myOfferMainBox.setMaxWidth(PREF_WIDTH);
+                myOfferMainBox.setMinHeight(PREF_HEIGHT);
+                myOfferMainBox.setPrefHeight(PREF_HEIGHT);
+                myOfferMainBox.setMaxHeight(PREF_HEIGHT);
+                myOfferMainBox.getChildren().addAll(myOfferLabelBox, myOfferActionsMenuBox);
+
+                myOfferLabelBox.setMinWidth(PREF_WIDTH);
+                myOfferLabelBox.setPrefWidth(PREF_WIDTH);
+                myOfferLabelBox.setMaxWidth(PREF_WIDTH);
+                myOfferLabelBox.setMinHeight(PREF_HEIGHT);
+                myOfferLabelBox.setPrefHeight(PREF_HEIGHT);
+                myOfferLabelBox.setMaxHeight(PREF_HEIGHT);
                 myOfferLabelBox.getChildren().add(myOfferLabel);
                 myOfferLabelBox.getStyleClass().add("mu-sig-offerbook-offerlist-myOffer-label-box");
                 myOfferLabelBox.setAlignment(Pos.CENTER);
+
+                myOfferActionsMenuBox.setMinWidth(PREF_WIDTH);
+                myOfferActionsMenuBox.setPrefWidth(PREF_WIDTH);
+                myOfferActionsMenuBox.setMaxWidth(PREF_WIDTH);
+                myOfferActionsMenuBox.setMinHeight(PREF_HEIGHT);
+                myOfferActionsMenuBox.setPrefHeight(PREF_HEIGHT);
+                myOfferActionsMenuBox.setMaxHeight(PREF_HEIGHT);
+                myOfferActionsMenuBox.getChildren().add(removeOfferMenuItem);
+
+                removeOfferMenuItem.useIconOnly();
+                removeOfferMenuItem.setTooltip(Res.get("offer.deleteOffer"));
             }
 
             @Override
@@ -577,6 +601,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
                 if (item != null && !empty) {
                     if (item.isMyOffer()) {
+                        resetVisibilities();
+                        setUpEventHandlers();
                         if (item.getOffer().getDirection().mirror().isBuy()) {
                             myOfferLabelBox.getStyleClass().add("my-offer-to-buy");
                             myOfferLabel.setStyle("-fx-text-fill: -bisq2-green-dim-10;");
@@ -584,8 +610,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                             myOfferLabelBox.getStyleClass().add("my-offer-to-sell");
                             myOfferLabel.setStyle("-fx-text-fill: -bisq2-red-lit-10;");
                         }
-                        setGraphic(myOfferLabelBox);
-//                        takeOfferButton.setOnAction(e -> controller.onRemoveOffer(item.getOffer()));
+                        setGraphic(myOfferMainBox);
+                        removeOfferMenuItem.setOnAction(e -> controller.onRemoveOffer(item.getOffer()));
                     } else {
                         takeOfferButton.setText(item.getTakeOfferButtonText());
                         takeOfferButton.setOpacity(1);
@@ -600,7 +626,10 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                     }
                 } else {
                     resetStyles();
+                    resetEventHandlers();
+                    resetVisibilities();
                     takeOfferButton.setOnAction(null);
+                    removeOfferMenuItem.setOnAction(null);
                     setGraphic(null);
                 }
             }
@@ -612,6 +641,33 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 myOfferLabelBox.getStyleClass().remove("my-offer-to-buy");
                 myOfferLabelBox.getStyleClass().remove("my-offer-to-sell");
                 myOfferLabel.getStyleClass().clear();
+            }
+
+            private void setUpEventHandlers() {
+                myOfferMainBox.setOnMouseEntered(e -> {
+                    myOfferLabelBox.setVisible(false);
+                    myOfferLabelBox.setManaged(false);
+                    myOfferActionsMenuBox.setVisible(true);
+                    myOfferActionsMenuBox.setManaged(true);
+                });
+                myOfferMainBox.setOnMouseExited(e -> {
+                    myOfferLabelBox.setVisible(true);
+                    myOfferLabelBox.setManaged(true);
+                    myOfferActionsMenuBox.setVisible(false);
+                    myOfferActionsMenuBox.setManaged(false);
+                });
+            }
+
+            private void resetEventHandlers() {
+                myOfferMainBox.setOnMouseEntered(null);
+                myOfferMainBox.setOnMouseExited(null);
+            }
+
+            private void resetVisibilities() {
+                myOfferLabelBox.setVisible(true);
+                myOfferLabelBox.setManaged(true);
+                myOfferActionsMenuBox.setVisible(false);
+                myOfferActionsMenuBox.setManaged(false);
             }
         };
     }
