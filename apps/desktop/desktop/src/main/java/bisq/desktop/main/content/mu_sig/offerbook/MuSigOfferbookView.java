@@ -36,6 +36,7 @@ import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.components.MarketImageComposition;
+import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
@@ -308,9 +309,10 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     private void configMuSigOfferListView() {
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title(Res.get("muSig.offerbook.table.header.peerProfile"))
-                .comparator(Comparator.comparing(MuSigOfferListItem::getMaker))
-                .valueSupplier(MuSigOfferListItem::getMaker)
-                .minWidth(200)
+                .left()
+                .comparator(Comparator.comparingLong(MuSigOfferListItem::getTotalScore).reversed())
+                .setCellFactory(getUserProfileCellFactory())
+                .minWidth(100)
                 .build());
 
         BisqTableColumn<MuSigOfferListItem> priceColumn = new BisqTableColumn.Builder<MuSigOfferListItem>()
@@ -319,6 +321,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 .comparator(Comparator.comparing(MuSigOfferListItem::getPrice))
                 .valueSupplier(MuSigOfferListItem::getPrice)
                 .tooltipSupplier(MuSigOfferListItem::getPriceTooltip)
+                .minWidth(200)
                 .build();
         muSigOfferListView.getColumns().add(priceColumn);
         muSigOfferListView.getSortOrder().add(priceColumn);
@@ -610,6 +613,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
                 resetRowEventHandlers();
                 resetVisibilities();
+                resetStyles();
 
                 if (item != null && !empty) {
                     if (item.isMyOffer()) {
@@ -626,7 +630,6 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                     } else {
                         takeOfferButton.setText(item.getTakeOfferButtonText());
                         takeOfferButton.setOpacity(1);
-                        resetStyles();
                         if (item.getOffer().getDirection().mirror().isBuy()) {
                             takeOfferButton.getStyleClass().add("buy-button");
                         } else {
@@ -685,6 +688,30 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 myOfferLabelBox.setManaged(true);
                 myOfferActionsMenuBox.setVisible(false);
                 myOfferActionsMenuBox.setManaged(false);
+            }
+        };
+    }
+
+    private Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>,
+            TableCell<MuSigOfferListItem, MuSigOfferListItem>> getUserProfileCellFactory() {
+        return column -> new TableCell<>() {
+            private UserProfileDisplay userProfileDisplay;
+
+            @Override
+            protected void updateItem(MuSigOfferListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    userProfileDisplay = new UserProfileDisplay(item.getMakerUserProfile(), true, true);
+                    userProfileDisplay.setReputationScore(item.getReputationScore());
+                    setGraphic(userProfileDisplay);
+                } else {
+                    if (userProfileDisplay != null) {
+                        userProfileDisplay.dispose();
+                        userProfileDisplay = null;
+                    }
+                    setGraphic(null);
+                }
             }
         };
     }
@@ -782,8 +809,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         myOffersToggleButton.getStyleClass().add("offerlist-toggle-button-my-offers");
 
         offerFiltersToggleGroup = new ToggleGroup();
-        offerFiltersToggleGroup.getToggles().addAll(buyToggleButton, sellToggleButton, allOffersToggleButton, myOffersToggleButton);
-        HBox toggleButtonHBox = new HBox(3, buyToggleButton, sellToggleButton, allOffersToggleButton, myOffersToggleButton);
+        offerFiltersToggleGroup.getToggles().addAll(allOffersToggleButton, buyToggleButton, sellToggleButton, myOffersToggleButton);
+        HBox toggleButtonHBox = new HBox(3, allOffersToggleButton, buyToggleButton, sellToggleButton, myOffersToggleButton);
         toggleButtonHBox.getStyleClass().add("mu-sig-offerbook-offerlist-toggle-button-hbox");
 
         // Add payments filter menu to subheader
@@ -798,6 +825,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         subheader.setAlignment(Pos.CENTER);
 
         VBox.setMargin(subheader, new Insets(0, 0, 5, 0));
+        VBox.setMargin(muSigOfferListView, new Insets(0, 10, 0, 10));
         offersVBox.getChildren().addAll(headerHBox, Layout.hLine(), subheader, muSigOfferListView);
         offersVBox.getStyleClass().add("bisq-easy-container");
         VBox.setVgrow(muSigOfferListView, Priority.ALWAYS);

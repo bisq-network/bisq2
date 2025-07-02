@@ -35,8 +35,7 @@ import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookView;
 import bisq.desktop.main.content.chat.BaseChatView;
-import bisq.desktop.main.content.components.ReputationScoreDisplay;
-import bisq.desktop.main.content.components.UserProfileIcon;
+import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import com.google.common.base.Joiner;
 import javafx.collections.ListChangeListener;
@@ -454,32 +453,21 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
             TableCell<OfferbookListItem, OfferbookListItem>> getUserProfileCellFactory() {
         return column -> new TableCell<>() {
-            private final Label userNameLabel = new Label();
-            private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
-            private final VBox nameAndReputationBox = new VBox(userNameLabel, reputationScoreDisplay);
-            private final UserProfileIcon userProfileIcon = new UserProfileIcon();
-            private final HBox userProfileBox = new HBox(10, userProfileIcon, nameAndReputationBox);
-
-            {
-                userNameLabel.setId("chat-user-name");
-                HBox.setMargin(userProfileIcon, new Insets(0, 0, 0, -1));
-                nameAndReputationBox.setAlignment(Pos.CENTER_LEFT);
-                userProfileBox.setAlignment(Pos.CENTER_LEFT);
-            }
+            private UserProfileDisplay userProfileDisplay;
 
             @Override
             protected void updateItem(OfferbookListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    userNameLabel.setText(item.getUserNickname());
-                    reputationScoreDisplay.setReputationScore(item.getReputationScore());
-                    userProfileIcon.setUserProfile(item.getSenderUserProfile(), false);
-                    setGraphic(userProfileBox);
+                    userProfileDisplay = new UserProfileDisplay(item.getSenderUserProfile(), false, true);
+                    userProfileDisplay.setReputationScore(item.getReputationScore());
+                    setGraphic(userProfileDisplay);
                 } else {
-                    userNameLabel.setText("");
-                    reputationScoreDisplay.setReputationScore(null);
-                    userProfileIcon.dispose();
+                    if (userProfileDisplay != null) {
+                        userProfileDisplay.dispose();
+                        userProfileDisplay = null;
+                    }
                     setGraphic(null);
                 }
             }

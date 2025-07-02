@@ -41,6 +41,8 @@ import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.ReputationScore;
+import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -72,6 +74,8 @@ public class MuSigOfferListItem {
     private final Direction direction;
     private final List<FiatPaymentMethod> fiatPaymentMethods;
     private final UserProfile makerUserProfile;
+    private final ReputationScore reputationScore;
+    private final long totalScore;
 
     private double priceSpecAsPercent = 0;
     private String formattedPercentagePrice = Res.get("data.na");
@@ -84,7 +88,8 @@ public class MuSigOfferListItem {
     MuSigOfferListItem(MuSigOffer offer,
                        MarketPriceService marketPriceService,
                        UserProfileService userProfileService,
-                       IdentityService identityService) {
+                       IdentityService identityService,
+                       ReputationService reputationService) {
         this.offer = offer;
         this.marketPriceService = marketPriceService;
 
@@ -111,6 +116,9 @@ public class MuSigOfferListItem {
 
         makerUserProfile = userProfileService.findUserProfile(offer.getMakersUserProfileId())
                 .orElseThrow(() -> new RuntimeException("No maker user profile found for offer: " + offer.getId()));
+
+        reputationScore = reputationService.getReputationScore(makerUserProfile);
+        totalScore = reputationScore.getTotalScore();
 
         deposit = "15%";
         maker = userProfileService.findUserProfile(offer.getMakersUserProfileId())
