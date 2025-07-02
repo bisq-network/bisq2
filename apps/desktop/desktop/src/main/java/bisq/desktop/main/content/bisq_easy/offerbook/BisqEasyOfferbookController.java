@@ -80,7 +80,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private Pin bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin, marketPriceByCurrencyMapPin,
             favouriteMarketsPin, showMarketSelectionListCollapsedSettingsPin,
             changedNotificationPin, bisqEasyOfferbookMessageTypeFilterPin;
-    private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedMarketSortTypePin;
+    private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedMarketSortTypePin, selectedMarketPricePin;
     private final ListChangeListener<? super MarketChannelItem> marketChannelItemListener = c -> updateFilteredMarketChannelItems();
     private final Map<MarketChannelItem, ChangeListener<Number>> marketNumOffersListeners = new HashMap<>();
 
@@ -168,11 +168,23 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         });
 
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
-                UIThread.run(() -> {
-                    model.setMarketPricePredicate(item -> marketPriceService.getMarketPriceByCurrencyMap().isEmpty() ||
-                            marketPriceService.getMarketPriceByCurrencyMap().containsKey(item.getMarket()));
-                    updateFilteredMarketChannelItems();
-                }));
+            UIThread.run(() -> {
+                model.setMarketPricePredicate(item -> marketPriceService.getMarketPriceByCurrencyMap().isEmpty() ||
+                        marketPriceService.getMarketPriceByCurrencyMap().containsKey(item.getMarket()));
+                updateFilteredMarketChannelItems();
+
+                if (selectedMarketPricePin != null) {
+                    selectedMarketPricePin.unsubscribe();
+                }
+                if (getModel().getSelectedMarketChannelItem() != null) {
+                    selectedMarketPricePin = EasyBind.subscribe(model.getSelectedMarketChannelItem(), selectedMarketChannelItem -> {
+                        if (selectedMarketChannelItem != null) {
+                            UIThread.run(this::updateMarketPrice);
+                        }
+                    });
+                }
+            })
+        );
 
         model.getMarketChannelItems().addListener(marketChannelItemListener);
 
@@ -279,6 +291,9 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         favouriteMarketsPin.unbind();
         changedNotificationPin.unbind();
         bisqEasyOfferbookMessageTypeFilterPin.unbind();
+        if (selectedMarketPricePin != null) {
+            selectedMarketPricePin.unsubscribe();
+        }
 
         model.getMarketChannelItems().removeListener(marketChannelItemListener);
         marketNumOffersListeners.forEach((item, changeListener) -> item.getNumOffers().removeListener(changeListener));

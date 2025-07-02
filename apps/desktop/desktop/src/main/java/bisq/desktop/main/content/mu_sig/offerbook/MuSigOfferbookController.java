@@ -208,7 +208,8 @@ public class MuSigOfferbookController implements Controller {
                         }
                     });
                 }
-            }));
+            })
+        );
 
         selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarketItem -> {
             if (selectedMarketItem != null) {
