@@ -48,6 +48,19 @@ public class CreateWalletController extends NavigationController {
         createWalletBackupController = new CreateWalletBackupController(serviceProvider);
         createWalletVerifyController = new CreateWalletVerifyController(serviceProvider, this::setMainButtonsVisibleState);
 
+        // Listen for changes in the verify model's screen state
+        createWalletVerifyController.getModel().getCurrentScreenState().addListener((obs, oldState, newState) -> {
+            if (newState == CreateWalletVerifyModel.ScreenState.QUIZ) {
+                setMainButtonsVisibleState(false);
+            } else if (newState == CreateWalletVerifyModel.ScreenState.SUCCESS) {
+                model.getNextButtonVisible().set(true);
+                model.getNextButtonText().set("Go to wallet");
+            } else if (newState == CreateWalletVerifyModel.ScreenState.WRONG) {
+                model.getNextButtonVisible().set(true);
+                model.getNextButtonText().set("View seed words");
+            }
+        });
+
         this.walletService = serviceProvider.getWalletService().orElseThrow();
     }
 
@@ -119,8 +132,6 @@ public class CreateWalletController extends NavigationController {
                 }
                 CreateWalletProtectModel protectModel = createWalletProtectController.getModel();
                 walletService.setEncryptionPassword(protectModel.getPassword().get());
-            } else if (model.getNavigationTarget() == NavigationTarget.CREATE_WALLET_BACKUP) {
-            } else if (model.getNavigationTarget() == NavigationTarget.CREATE_WALLET_VERIFY) {
             }
             model.setAnimateRightOut(false);
             model.getCurrentIndex().set(nextIndex);
@@ -128,8 +139,15 @@ public class CreateWalletController extends NavigationController {
             model.getSelectedChildTarget().set(nextTarget);
             Navigation.navigateTo(nextTarget);
         } else if (nextIndex == model.getChildTargets().size()) {
-            walletService.initializeWallet(null, Optional.empty());
-            OverlayController.hide();
+            if (model.getNavigationTarget() == NavigationTarget.CREATE_WALLET_VERIFY) {
+                CreateWalletVerifyModel.ScreenState state = createWalletVerifyController.getModel().getCurrentScreenState().get();
+                if (state == CreateWalletVerifyModel.ScreenState.SUCCESS) {
+                    walletService.initializeWallet(null, Optional.empty());
+                    OverlayController.hide();
+                } else if (state == CreateWalletVerifyModel.ScreenState.WRONG) {
+                    onBack();
+                }
+            }
         }
     }
 

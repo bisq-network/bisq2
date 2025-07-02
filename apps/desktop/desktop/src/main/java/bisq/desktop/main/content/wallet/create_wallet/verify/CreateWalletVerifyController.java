@@ -33,7 +33,6 @@ public class CreateWalletVerifyController implements Controller {
             model.getSeedWords()[i].set(seedWords.get(i));
         }
         model.setupQuestions(seedWords);
-        model.getCurrentQuestionIndex().set(0);
     }
 
     public void onAnswerSelected(int idx) {
@@ -49,7 +48,11 @@ public class CreateWalletVerifyController implements Controller {
         }
         int correctIdx = model.getCorrectAnswerIndices().get(qIdx);
         if (selectedIdx == correctIdx) {
+            if (qIdx == 5) {
+                model.getCurrentScreenState().set(CreateWalletVerifyModel.ScreenState.SUCCESS);
+            } else {
             model.getCurrentQuestionIndex().set(qIdx + 1);
+            }
         } else {
             model.getCurrentScreenState().set(CreateWalletVerifyModel.ScreenState.WRONG);
         }
@@ -57,12 +60,15 @@ public class CreateWalletVerifyController implements Controller {
 
     @Override
     public void onActivate() {
+        model.getCurrentQuestionIndex().set(0);
+        model.getSelectedAnswerIndex().set(-1);
+        model.getCurrentScreenState().set(CreateWalletVerifyModel.ScreenState.QUIZ);
         navigationButtonsVisibleHandler.accept(false);
     }
 
     @Override
     public void onDeactivate() {
-        navigationButtonsVisibleHandler.accept(true);
+        // navigationButtonsVisibleHandler.accept(true);
     }
 
     void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
