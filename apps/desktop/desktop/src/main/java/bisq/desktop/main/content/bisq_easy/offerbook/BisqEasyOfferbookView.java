@@ -537,7 +537,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private Button createAndGetCreateOfferButton() {
-        Button createOfferButton = new Button(Res.get("offer.createOffer"));
+        Button createOfferButton = new Button(Res.get("offer.create"));
         createOfferButton.getStyleClass().addAll("create-offer-button", "normal-text");
         return createOfferButton;
     }
