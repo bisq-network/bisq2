@@ -23,7 +23,6 @@ public class CreateWalletVerifyModel implements Model {
     private final List<Integer> correctAnswerIndices = new ArrayList<>();
     private final StringProperty[] seedWords = new StringProperty[12];
 
-    // Quiz selection and error state
     private final IntegerProperty selectedAnswerIndex = new SimpleIntegerProperty(-1);
 
     public enum ScreenState {

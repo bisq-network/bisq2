@@ -19,6 +19,8 @@ import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 
 import java.util.Optional;
 
@@ -36,6 +38,8 @@ public class CreateWalletController extends NavigationController {
     private final WalletService walletService;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
 
+    private ChangeListener<CreateWalletVerifyModel.ScreenState> verifyScreenStateListener;
+
     public CreateWalletController(ServiceProvider serviceProvider) {
         super(NavigationTarget.CREATE_WALLET);
 
@@ -48,8 +52,7 @@ public class CreateWalletController extends NavigationController {
         createWalletBackupController = new CreateWalletBackupController(serviceProvider);
         createWalletVerifyController = new CreateWalletVerifyController(serviceProvider, this::setMainButtonsVisibleState);
 
-        // Listen for changes in the verify model's screen state
-        createWalletVerifyController.getModel().getCurrentScreenState().addListener((obs, oldState, newState) -> {
+        verifyScreenStateListener = (obs, oldState, newState) -> {
             if (newState == CreateWalletVerifyModel.ScreenState.QUIZ) {
                 setMainButtonsVisibleState(false);
             } else if (newState == CreateWalletVerifyModel.ScreenState.SUCCESS) {
@@ -59,7 +62,8 @@ public class CreateWalletController extends NavigationController {
                 model.getNextButtonVisible().set(true);
                 model.getNextButtonText().set("View seed words");
             }
-        });
+        };
+        createWalletVerifyController.getModel().getCurrentScreenState().addListener(verifyScreenStateListener);
 
         this.walletService = serviceProvider.getWalletService().orElseThrow();
     }
@@ -87,6 +91,7 @@ public class CreateWalletController extends NavigationController {
     public void onDeactivate() {
         overlayController.setUseEscapeKeyHandler(true);
         overlayController.getApplicationRoot().removeEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
+        createWalletVerifyController.getModel().getCurrentScreenState().removeListener(verifyScreenStateListener);
     }
 
     @Override
@@ -97,7 +102,7 @@ public class CreateWalletController extends NavigationController {
         } else if (navigationTarget == NavigationTarget.CREATE_WALLET_BACKUP ) {
             nextString = Res.get("wallet.backupSeeds.button.verify");
         } else if (navigationTarget == NavigationTarget.CREATE_WALLET_VERIFY ) {
-            nextString = "Next world";
+            nextString = "Next word";
         }
         model.getNextButtonText().set(nextString);
 
@@ -125,28 +130,43 @@ public class CreateWalletController extends NavigationController {
     void onNext() {
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
-            if (model.getNavigationTarget() == NavigationTarget.CREATE_WALLET_PROTECT) {
-                if (!createWalletProtectController.isValid()) {
-                    createWalletProtectController.handleInvalidInput();
-                    return;
-                }
-                CreateWalletProtectModel protectModel = createWalletProtectController.getModel();
-                walletService.setEncryptionPassword(protectModel.getPassword().get());
-            }
-            model.setAnimateRightOut(false);
-            model.getCurrentIndex().set(nextIndex);
-            NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
-            model.getSelectedChildTarget().set(nextTarget);
-            Navigation.navigateTo(nextTarget);
+            handleStepTransition(nextIndex);
         } else if (nextIndex == model.getChildTargets().size()) {
-            if (model.getNavigationTarget() == NavigationTarget.CREATE_WALLET_VERIFY) {
-                CreateWalletVerifyModel.ScreenState state = createWalletVerifyController.getModel().getCurrentScreenState().get();
-                if (state == CreateWalletVerifyModel.ScreenState.SUCCESS) {
-                    walletService.initializeWallet(null, Optional.empty());
-                    OverlayController.hide();
-                } else if (state == CreateWalletVerifyModel.ScreenState.WRONG) {
-                    onBack();
-                }
+            handleFinalStep();
+        }
+    }
+
+    private void handleStepTransition(int nextIndex) {
+        NavigationTarget currentTarget = model.getNavigationTarget();
+        log.info("Navigating from {} to index {}", currentTarget, nextIndex);
+        if (currentTarget == NavigationTarget.CREATE_WALLET_PROTECT) {
+            if (!createWalletProtectController.isValid()) {
+                log.warn("Protect step invalid input");
+                createWalletProtectController.handleInvalidInput();
+                return;
+            }
+            CreateWalletProtectModel protectModel = createWalletProtectController.getModel();
+            walletService.setEncryptionPassword(protectModel.getPassword().get());
+        }
+        model.setAnimateRightOut(false);
+        model.getCurrentIndex().set(nextIndex);
+        NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
+        model.getSelectedChildTarget().set(nextTarget);
+        Navigation.navigateTo(nextTarget);
+    }
+
+    private void handleFinalStep() {
+        NavigationTarget currentTarget = model.getNavigationTarget();
+        log.info("Handling final step for {}", currentTarget);
+        if (currentTarget == NavigationTarget.CREATE_WALLET_VERIFY) {
+            CreateWalletVerifyModel.ScreenState state = createWalletVerifyController.getModel().getCurrentScreenState().get();
+            if (state == CreateWalletVerifyModel.ScreenState.SUCCESS) {
+                log.info("Wallet verified successfully, initializing wallet");
+                walletService.initializeWallet(null, Optional.empty());
+                OverlayController.hide();
+            } else if (state == CreateWalletVerifyModel.ScreenState.WRONG) {
+                log.warn("Verification failed, returning to previous step");
+                onBack();
             }
         }
     }
@@ -154,19 +174,29 @@ public class CreateWalletController extends NavigationController {
     void onBack() {
         int prevIndex = model.getCurrentIndex().get() - 1;
         if (prevIndex == -1) { // Handling 'Skip this step' in Protect your wallet
-            int nextIndex = model.getCurrentIndex().get() + 1;
-            model.setAnimateRightOut(false);
-            model.getCurrentIndex().set(nextIndex);
-            NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
-            model.getSelectedChildTarget().set(nextTarget);
-            Navigation.navigateTo(nextTarget);
+            handleSkipProtectStep();
         } else if (prevIndex >= 0) {
-            model.setAnimateRightOut(true);
-            model.getCurrentIndex().set(prevIndex);
-            NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
-            model.getSelectedChildTarget().set(nextTarget);
-            Navigation.navigateTo(nextTarget);
+            handleStepBack(prevIndex);
         }
+    }
+
+    private void handleSkipProtectStep() {
+        int nextIndex = model.getCurrentIndex().get() + 1;
+        log.info("Skipping protect step, moving to index {}", nextIndex);
+        model.setAnimateRightOut(false);
+        model.getCurrentIndex().set(nextIndex);
+        NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
+        model.getSelectedChildTarget().set(nextTarget);
+        Navigation.navigateTo(nextTarget);
+    }
+
+    private void handleStepBack(int prevIndex) {
+        log.info("Navigating back to index {}", prevIndex);
+        model.setAnimateRightOut(true);
+        model.getCurrentIndex().set(prevIndex);
+        NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
+        model.getSelectedChildTarget().set(nextTarget);
+        Navigation.navigateTo(nextTarget);
     }
 
     void onClose() {

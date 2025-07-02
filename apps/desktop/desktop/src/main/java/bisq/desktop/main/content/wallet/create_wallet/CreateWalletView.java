@@ -61,7 +61,6 @@ public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, Cr
     private final VBox content;
     private final ChangeListener<Number> currentIndexListener;
     private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
-    private Subscription showProgressBoxPin;
 
     public CreateWalletView(CreateWalletModel model, CreateWalletController controller) {
         super(new VBox(), model, controller);
@@ -69,27 +68,7 @@ public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, Cr
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(POPUP_HEIGHT);
 
-        progressBox = new HBox(10);
-        progressBox.setAlignment(Pos.CENTER);
-        progressBox.setMinHeight(TOP_PANE_HEIGHT);
-        progressBox.setMaxHeight(TOP_PANE_HEIGHT);
-        progressBox.setPadding(new Insets(0, 20, 0, 50));
-
-        Label paymentMethod = createAndGetProgressLabel(Res.get("wallet.protectWallet"));
-        progressLabelList.add(paymentMethod);
-        progressBox.getChildren().add(paymentMethod);
-
-        progressBox.getChildren().add(getHLine());
-
-        Label amount = createAndGetProgressLabel(Res.get("wallet.backupSeeds"));
-        progressLabelList.add(amount);
-        progressBox.getChildren().add(amount);
-
-        progressBox.getChildren().add(getHLine());
-
-        Label review = createAndGetProgressLabel(Res.get("wallet.verifySeeds"));
-        progressLabelList.add(review);
-        progressBox.getChildren().add(review);
+        progressBox = createProgressBox();
 
         closeButton = BisqIconButton.createIconButton("close");
 
@@ -128,7 +107,7 @@ public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, Cr
                 childRoot.setMaxHeight(CONTENT_HEIGHT);
                 content.getChildren().setAll(childRoot);
                 if (oldValue != null) {
-                    if (true) { // if (model.isAnimateRightOut()) {
+                    if (model.isAnimateRightOut()) {
                         Transitions.transitRightOut(childRoot, oldValue.getRoot());
                     } else {
                         Transitions.transitLeftOut(childRoot, oldValue.getRoot());
@@ -146,7 +125,6 @@ public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, Cr
 
     @Override
     protected void onViewAttached() {
-
         nextButton.textProperty().bind(model.getNextButtonText());
         nextButton.visibleProperty().bind(model.getNextButtonVisible());
         nextButton.managedProperty().bind(model.getNextButtonVisible());
@@ -160,22 +138,6 @@ public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, Cr
 
         model.getCurrentIndex().addListener(currentIndexListener);
         model.getView().addListener(viewChangeListener);
-
-      /*  if (!model.getShowProgressBox().get()) {
-            progressBox.setOpacity(0);
-            topPane.setStyle("-fx-background-color: transparent");
-        }*/
-        showProgressBoxPin = EasyBind.subscribe(model.getShowProgressBox(), showProgressBox -> {
-           /* if (showProgressBox) {
-                // VBox.setMargin(content, new Insets(0, 0, 0, 0));
-                Transitions.fadeIn(progressBox, 200);
-                topPane.setStyle("-fx-background-color: -bisq-dark-grey-20");
-            } else {
-                // VBox.setMargin(content, new Insets(0, 40, 0, 40));
-                Transitions.fadeOut(progressBox, 200);
-                topPane.setStyle("-fx-background-color: transparent");
-            }*/
-        });
 
         nextButton.setOnAction(e -> controller.onNext());
         backButton.setOnAction(evt -> controller.onBack());
@@ -201,8 +163,6 @@ public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, Cr
 
         model.getCurrentIndex().removeListener(currentIndexListener);
         model.getView().removeListener(viewChangeListener);
-
-        showProgressBoxPin.unsubscribe();
 
         nextButton.setOnAction(null);
         backButton.setOnAction(null);
@@ -236,5 +196,32 @@ public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, Cr
                 label.setOpacity(1);
             }
         }
+    }
+
+    private HBox createProgressBox() {
+        HBox progressBox = new HBox(10);
+        progressBox.setAlignment(Pos.CENTER);
+        progressBox.setMinHeight(TOP_PANE_HEIGHT);
+        progressBox.setMaxHeight(TOP_PANE_HEIGHT);
+        progressBox.setPadding(new Insets(0, 20, 0, 50));
+        progressLabelList.clear();
+
+        Label paymentMethod = createAndGetProgressLabel(Res.get("wallet.protectWallet"));
+        progressLabelList.add(paymentMethod);
+        progressBox.getChildren().add(paymentMethod);
+
+        progressBox.getChildren().add(getHLine());
+
+        Label amount = createAndGetProgressLabel(Res.get("wallet.backupSeeds"));
+        progressLabelList.add(amount);
+        progressBox.getChildren().add(amount);
+
+        progressBox.getChildren().add(getHLine());
+
+        Label review = createAndGetProgressLabel(Res.get("wallet.verifySeeds"));
+        progressLabelList.add(review);
+        progressBox.getChildren().add(review);
+
+        return progressBox;
     }
 }

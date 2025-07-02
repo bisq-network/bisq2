@@ -18,22 +18,16 @@
 package bisq.desktop.main.content.wallet.create_wallet.protect;
 
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
-import bisq.offer.bisq_easy.BisqEasyOffer;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.function.Consumer;
 
 @Slf4j
 public class CreateWalletProtectController implements Controller {
-    private static final Logger log = LoggerFactory.getLogger(CreateWalletProtectController.class);
 
     private final CreateWalletProtectModel model;
     @Getter

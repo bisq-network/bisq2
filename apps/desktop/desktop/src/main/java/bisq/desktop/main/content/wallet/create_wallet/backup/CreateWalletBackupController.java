@@ -10,9 +10,6 @@ import javafx.scene.input.KeyEvent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-import java.util.function.Consumer;
-
 @Slf4j
 public class CreateWalletBackupController implements Controller {
     private final CreateWalletBackupModel model;
@@ -35,7 +32,7 @@ public class CreateWalletBackupController implements Controller {
 
     @Override
     public void onActivate() {
-        // Activation logic for backup step
+        
     }
 
     @Override

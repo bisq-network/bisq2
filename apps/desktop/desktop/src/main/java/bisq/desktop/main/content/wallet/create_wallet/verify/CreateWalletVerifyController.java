@@ -68,15 +68,13 @@ public class CreateWalletVerifyController implements Controller {
 
     @Override
     public void onDeactivate() {
-        // navigationButtonsVisibleHandler.accept(true);
+        
     }
 
     void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
         KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
         });
     }
-
-    // Optionally: handle answer selection and scoring here
 
     public CreateWalletVerifyModel getModel() {
         return model;

@@ -42,9 +42,8 @@ public class CreateWalletModel extends NavigationModel {
     private final StringProperty backButtonText = new SimpleStringProperty();
     private final BooleanProperty closeButtonVisible = new SimpleBooleanProperty(true);
     private final BooleanProperty nextButtonDisabled = new SimpleBooleanProperty();
-    private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty();
-    private final BooleanProperty backButtonVisible = new SimpleBooleanProperty();
-    private final BooleanProperty showProgressBox = new SimpleBooleanProperty();
+    private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty(true);
+    private final BooleanProperty backButtonVisible = new SimpleBooleanProperty(true);
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     private final List<NavigationTarget> childTargets = new ArrayList<>();
     @Setter
