@@ -49,7 +49,7 @@ public class CreateWalletController extends NavigationController {
         view = new CreateWalletView(model, this);
 
         createWalletProtectController = new CreateWalletProtectController(serviceProvider);
-        createWalletBackupController = new CreateWalletBackupController(serviceProvider);
+        createWalletBackupController = new CreateWalletBackupController(serviceProvider, this::setMainButtonsVisibleState);
         createWalletVerifyController = new CreateWalletVerifyController(serviceProvider, this::setMainButtonsVisibleState);
 
         verifyScreenStateListener = (obs, oldState, newState) -> {

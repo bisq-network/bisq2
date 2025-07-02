@@ -24,7 +24,7 @@ public class CreateWalletVerifyController implements Controller {
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         model = new CreateWalletVerifyModel();
         WalletService walletService = serviceProvider.getWalletService().orElseThrow();
-        setSeedWords(walletService.getSeedWords());
+        // setSeedWords(walletService.getSeedWords());
         view = new CreateWalletVerifyView(model, this);
     }
 

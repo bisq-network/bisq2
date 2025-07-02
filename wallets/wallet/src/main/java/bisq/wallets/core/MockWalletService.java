@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
  * The Bitcoin and Electrum wallet implementations are not maintained, and we will use the BDK wallet for MuSig, thus
  * work to get those working again would be wasted effort.
  */
-public class MockWalletService implements WalletService{
+public class MockWalletService implements WalletService {
     private static final Logger log = LoggerFactory.getLogger(MockWalletService.class);
 
     public Observable<Boolean> isWalletInitialized = new Observable<>(false);
@@ -48,11 +48,12 @@ public class MockWalletService implements WalletService{
     @Override
     public CompletableFuture<Boolean> initializeWallet(RpcConfig rpcConfig, Optional<String> walletPassphrase) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
-        CompletableFuture.runAsync(() -> {}, CompletableFuture.delayedExecutor(200, TimeUnit.MILLISECONDS))
-            .thenRun(() -> {
-                isWalletInitialized.set(true);
-                future.complete(true);
-            });
+        CompletableFuture.runAsync(() -> {
+                }, CompletableFuture.delayedExecutor(200, TimeUnit.MILLISECONDS))
+                .thenRun(() -> {
+                    isWalletInitialized.set(true);
+                    future.complete(true);
+                });
         return future;
     }
 
@@ -73,17 +74,17 @@ public class MockWalletService implements WalletService{
 
     @Override
     public CompletableFuture<ObservableSet<String>> requestWalletAddresses() {
-        return  CompletableFuture.completedFuture(new ObservableSet<>(Set.of("mock address 1", "mock address 2")));
+        return CompletableFuture.completedFuture(new ObservableSet<>(Set.of("mock address 1", "mock address 2")));
     }
 
     @Override
     public CompletableFuture<List<? extends TransactionInfo>> listTransactions() {
-        return  CompletableFuture.completedFuture(List.of());
+        return CompletableFuture.completedFuture(List.of());
     }
 
     @Override
     public CompletableFuture<List<? extends Utxo>> listUnspent() {
-        return  CompletableFuture.completedFuture(List.of());
+        return CompletableFuture.completedFuture(List.of());
     }
 
     @Override
@@ -126,8 +127,34 @@ public class MockWalletService implements WalletService{
         encryptionPassword = password;
     }
 
+    private boolean shouldFailSeedWords = true;
+    private List<String> seedWords = null;
+
     @Override
-    public List<String> getSeedWords() {
-        return Arrays.asList("car", "van", "lion", "water", "bero", "cycle", "love", "key", "system", "wife", "husband", "trade");
+    public CompletableFuture<List<String>> getSeedWords() {
+        if (shouldFailSeedWords) {
+            shouldFailSeedWords = false;
+            return CompletableFuture.failedFuture(new WalletException("Simulated failure: cannot fetch seed words"));
+        }
+
+        shouldFailSeedWords = true;
+//        if (seedWords != null) {
+//            return CompletableFuture.completedFuture(seedWords);
+//        }
+
+        return CompletableFuture.supplyAsync(() -> {
+                    List<String> words = Arrays.asList("car", "van", "lion", "water", "bero", "cycle",
+                            "love", "key", "system", "wife", "husband", "trade");
+                    seedWords = words;
+                    return words;
+                },
+                CompletableFuture.delayedExecutor(1000, TimeUnit.MILLISECONDS)
+        );
+    }
+
+    @Override
+    public void purgeSeedWords() {
+        seedWords.clear();
+        seedWords = null;
     }
 }

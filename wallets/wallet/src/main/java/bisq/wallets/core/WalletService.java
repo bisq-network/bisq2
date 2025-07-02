@@ -61,5 +61,6 @@ public interface WalletService extends Service {
 
     void setEncryptionPassword(String password);
 
-    List<String> getSeedWords();
+    CompletableFuture<List<String>> getSeedWords();
+    void purgeSeedWords();
 }

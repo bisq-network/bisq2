@@ -25,9 +25,11 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Getter
@@ -99,7 +101,16 @@ public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinW
 
     // TODO
     @Override
-    public List<String> getSeedWords() {
-        return List.of();
+    public CompletableFuture<List<String>> getSeedWords() {
+        return CompletableFuture.supplyAsync(() ->
+                        Arrays.asList("car", "van", "lion", "water", "bero", "cycle",
+                                "love", "key", "system", "wife", "husband", "trade"),
+                CompletableFuture.delayedExecutor(400, TimeUnit.MILLISECONDS)
+        );
+    }
+
+    @Override
+    public void purgeSeedWords() {
+
     }
 }
