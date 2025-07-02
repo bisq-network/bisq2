@@ -72,8 +72,8 @@ public class UserProfileSelection {
         controller = new Controller(serviceProvider, 30, false, false);
     }
 
-    public UserProfileSelection(ServiceProvider serviceProvider, int iconSize, boolean useMaterialStyle) {
-        controller = new Controller(serviceProvider, iconSize, useMaterialStyle, false);
+    public UserProfileSelection(ServiceProvider serviceProvider, boolean useMaterialStyle, boolean useCatHashImageAsMenuItem) {
+        controller = new Controller(serviceProvider, 30, useMaterialStyle, useCatHashImageAsMenuItem);
     }
 
     public UserProfileSelection(ServiceProvider serviceProvider, boolean useCatHashImageAsMenuItem) {
@@ -280,7 +280,6 @@ public class UserProfileSelection {
 
             dropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
             dropdownMenu.setContent(model.useCatHashImageAsMenuItem ? myProfileCatHashImageView : userProfileDisplay);
-            dropdownMenu.useSpaceBetweenContentAndIcon();
 
             singleUserProfileDisplay = new UserProfileDisplay(iconSize, true);
             singleUserProfileHBox = new HBox(singleUserProfileDisplay);
@@ -292,6 +291,7 @@ public class UserProfileSelection {
                 dropdownMenu.setOpenToTheRight(true);
             } else {
                 root.getStyleClass().add("user-profile-selection");
+                dropdownMenu.useSpaceBetweenContentAndIcon();
             }
 
             if (model.useCatHashImageAsMenuItem) {

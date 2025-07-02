@@ -157,8 +157,9 @@
 .user-profile-selection-material-design .single-user-profile {
     -fx-padding: 0 10 !important;
     -fx-min-height: 35;
-    -fx-alignment: center;
+    -fx-alignment: center-left;
 }
+
 
 /*******************************************************************************
  * Profile Card                                                                *
