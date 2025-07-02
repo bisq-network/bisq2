@@ -83,10 +83,6 @@ public class WalletController extends ContentTabController<WalletModel> {
         };
     }
 
-    // public void onInitWallet() {
-        // walletService.initializeWallet(null, Optional.empty());
-    // }
-
     void onCreateWallet() {
         Navigation.navigateTo(NavigationTarget.CREATE_WALLET);
     }

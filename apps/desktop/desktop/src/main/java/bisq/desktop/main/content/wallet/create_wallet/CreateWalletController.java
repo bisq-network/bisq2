@@ -63,7 +63,6 @@ public class CreateWalletController extends NavigationController {
                 model.getNextButtonText().set("View seed words");
             }
         };
-        createWalletVerifyController.getModel().getCurrentScreenState().addListener(verifyScreenStateListener);
 
         this.walletService = serviceProvider.getWalletService().orElseThrow();
     }
@@ -85,6 +84,8 @@ public class CreateWalletController extends NavigationController {
         model.getSelectedChildTarget().set(model.getChildTargets().get(0));
         model.getBackButtonText().set(Res.get("action.back"));
         model.getNextButtonVisible().set(true);
+
+        createWalletVerifyController.getModel().getCurrentScreenState().addListener(verifyScreenStateListener);
     }
 
     @Override

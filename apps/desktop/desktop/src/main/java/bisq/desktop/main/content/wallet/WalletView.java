@@ -17,15 +17,12 @@
 
 package bisq.desktop.main.content.wallet;
 
-import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookController;
-import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookModel;
+import bisq.desktop.components.containers.VerticalCard;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.main.content.ContentTabView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import lombok.extern.slf4j.Slf4j;
@@ -57,30 +54,6 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
 
         notInitializedBox = createNotInitializedUI();
 
-
-        /*
-        ProtectWalletView overflowBox1 = new ProtectWalletView(model, controller);
-        BackupSeedsView overflowBox2 = new BackupSeedsView(model, controller);
-
-        createWalletButton.setOnAction(e -> {
-            if(!root.getChildren().contains(overflowBox1.getRoot())) {
-                root.getChildren().add(overflowBox1.getRoot());
-                notInitializedBox.setEffect(new GaussianBlur(7));
-            }
-        });
-
-        overflowBox1.setOnClose(() -> {
-            root.getChildren().remove(overflowBox1.getRoot());
-            notInitializedBox.setEffect(null);
-        });
-
-        overflowBox1.setOnNext(() -> {
-            root.getChildren().remove(overflowBox1.getRoot());
-            root.getChildren().add(overflowBox2.getRoot());
-        });
-         */
-
-
     }
 
     @Override
@@ -103,6 +76,7 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
     }
 
     private void setContentToTabs() {
+        root.setPadding(new Insets(0));
         root.getChildren().setAll(topBox, lineAndMarker, scrollPane);
         if (model.getView().get() != null) {
             scrollPane.setContent(model.getView().get().getRoot());
@@ -110,7 +84,7 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
     }
 
     private void setContentToNotInitialized() {
-        root.setPadding(new Insets(40, 40, 20, 40));
+        root.setPadding(new Insets(40));
         root.getChildren().setAll(notInitializedBox);
 
         createWalletButton.setOnAction(e -> getController().onCreateWallet());
@@ -125,54 +99,6 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
         }
     }
 
-    // TODO: This should be a component
-    public VBox createInstructionCard(String step, VBox imageContainer, String caption) {
-        Label stepNumber = new Label(step);
-        stepNumber.getStyleClass().add("very-large-text");
-
-        Label stepCaption = new Label(caption);
-
-        VBox card = new VBox(10);
-        card.getChildren().addAll(stepNumber, imageContainer, stepCaption);
-        card.setAlignment(Pos.TOP_CENTER);
-        card.getStyleClass().add("bisq-card-bg");
-        card.setPadding(new Insets(30, 48, 44, 48));
-
-        return card;
-    }
-
-    public ImageView createImageView(String src, int width, int height) {
-        Image image = new Image(getClass().getResourceAsStream(src));
-        ImageView imageView = new ImageView(image);
-        imageView.setFitWidth(width);
-        imageView.setFitHeight(height);
-        return imageView;
-    }
-
-
-    public HBox createHorizontalStars() {
-        String starImageSrc = "/images/icons/stars/star-white@2x.png";
-        HBox horizontalStarsContainer = new HBox(5);
-        horizontalStarsContainer.setAlignment(Pos.CENTER);
-        horizontalStarsContainer.getChildren().addAll(createImageView(starImageSrc, 9, 9), createImageView(starImageSrc, 9, 9), createImageView(starImageSrc, 9, 9), createImageView(starImageSrc, 9, 9), createImageView(starImageSrc, 9, 9));
-
-        return horizontalStarsContainer;
-    }
-
-    public VBox createImageContainer(ImageView imageView, HBox horizontalStarsContainer) {
-        VBox imageContainer;
-        if(horizontalStarsContainer != null) {
-            imageContainer = new VBox(10, imageView, horizontalStarsContainer);
-        } else {
-            imageContainer = new VBox(10, imageView);
-        }
-        imageContainer.setMargin(imageView, new Insets(0, 0, 0, 7));
-        imageContainer.setAlignment(Pos.CENTER);
-        VBox.setVgrow(imageContainer, Priority.ALWAYS);
-
-        return imageContainer;
-    }
-
     public VBox createNotInitializedUI() {
         Label headlineLabel = new Label(Res.get("wallet.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-5");
@@ -180,23 +106,9 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
         Label descriptionLabel = new Label(Res.get("wallet.description"));
         descriptionLabel.getStyleClass().add("bisq-text-1");
 
-        String lockImageSrc = "/images/learn/old/security@2x.png";
-        ImageView lockImageView1 = createImageView(lockImageSrc, 80, 80);
-        ImageView lockImageView2 = createImageView(lockImageSrc, 80, 80);
-
-        String plantImageSrc = "/images/learn/old/security@2x.png";
-        ImageView plantImageView = createImageView(plantImageSrc, 80, 80);
-
-        HBox horizontalStarsContainer1 = createHorizontalStars();
-        HBox horizontalStarsContainer2 = createHorizontalStars();
-
-        VBox lockImageContainer1 = createImageContainer(lockImageView1, horizontalStarsContainer1);
-        VBox lockImageContainer2 = createImageContainer(lockImageView2, horizontalStarsContainer2);
-        VBox plantImageContainer = createImageContainer(plantImageView, null);
-
-        VBox card1 = createInstructionCard("1", lockImageContainer1, Res.get("wallet.instruction.caption1"));
-        VBox card2 = createInstructionCard("2", plantImageContainer, Res.get("wallet.instruction.caption2"));
-        VBox card3 = createInstructionCard("3", lockImageContainer2, Res.get("wallet.instruction.caption3"));
+        VBox card1 = new VerticalCard("1", "/images/learn/old/security@2x.png", Res.get("wallet.instruction.caption1"));
+        VBox card2 = new VerticalCard("2", "/images/learn/old/wallets@2x.png", Res.get("wallet.instruction.caption2"));
+        VBox card3 = new VerticalCard("3", "/images/learn/old/privacy@2x.png", Res.get("wallet.instruction.caption3"));
 
         HBox cardContainer = new HBox(25);
         cardContainer.setAlignment(Pos.CENTER);
