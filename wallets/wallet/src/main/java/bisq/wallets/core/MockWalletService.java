@@ -137,10 +137,10 @@ public class MockWalletService implements WalletService {
             return CompletableFuture.failedFuture(new WalletException("Simulated failure: cannot fetch seed words"));
         }
 
-        shouldFailSeedWords = true;
-//        if (seedWords != null) {
-//            return CompletableFuture.completedFuture(seedWords);
-//        }
+        // shouldFailSeedWords = true;
+        if (seedWords != null) {
+            return CompletableFuture.completedFuture(seedWords);
+        }
 
         return CompletableFuture.supplyAsync(() -> {
                     List<String> words = Arrays.asList("car", "van", "lion", "water", "bero", "cycle",
@@ -152,6 +152,10 @@ public class MockWalletService implements WalletService {
         );
     }
 
+    // Seed words are to be in memory, only when required like
+    //  * Initializing wallet
+    //  * Showing to user
+    // Once the usage is over, it is to be removed from memory.
     @Override
     public void purgeSeedWords() {
         seedWords.clear();

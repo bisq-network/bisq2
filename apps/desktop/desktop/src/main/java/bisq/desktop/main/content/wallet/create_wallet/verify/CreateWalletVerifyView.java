@@ -2,6 +2,7 @@ package bisq.desktop.main.content.wallet.create_wallet.verify;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.main.content.wallet.create_wallet.SeedState;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -15,6 +16,8 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.function.Consumer;
+
 @Slf4j
 public class CreateWalletVerifyView extends View<StackPane, CreateWalletVerifyModel, CreateWalletVerifyController> {
     private final VBox content;
@@ -22,7 +25,8 @@ public class CreateWalletVerifyView extends View<StackPane, CreateWalletVerifyMo
     private final HBox answerButtonsRow;
     private final Button nextWordButton;
     private final Button[] answerButtons = new Button[3];
-    private final ChangeListener<Number> questionIndexListener;
+    private final ChangeListener<Number> questionIndexListener, answerIndexListener;
+    private final ChangeListener<CreateWalletVerifyModel.ScreenState> screenStateListener;
 
     public CreateWalletVerifyView(CreateWalletVerifyModel model,
                                   CreateWalletVerifyController controller) {
@@ -55,27 +59,29 @@ public class CreateWalletVerifyView extends View<StackPane, CreateWalletVerifyMo
         nextWordButton.setDefaultButton(true);
         nextWordButton.setOnAction(e -> controller.onNextWordSelected());
 
+        questionIndexListener = (obs, oldVal, newVal) -> updateQuestion();
+        answerIndexListener = (obs, oldVal, newVal) -> updateButtonStylesAndNextState();
+        screenStateListener = (obs, oldVal, newVal) -> onScreenStateChanged(newVal);
+
         content.getChildren().addAll(Spacer.fillVBox(), questionLabel, answerButtonsRow, nextWordButton, Spacer.fillVBox());
 
         root.getChildren().add(content);
-
-        questionIndexListener = (obs, oldVal, newVal) -> updateQuestion();
     }
 
     @Override
     protected void onViewAttached() {
         model.getCurrentQuestionIndex().addListener(questionIndexListener);
-        model.getSelectedAnswerIndex().addListener((obs, oldVal, newVal) -> updateButtonStylesAndNextState());
-        model.getCurrentScreenState().addListener((obs, oldState, newState) -> onScreenStateChanged(newState));
+        model.getSelectedAnswerIndex().addListener(answerIndexListener);
+        model.getCurrentScreenState().addListener(screenStateListener);
         updateQuestion();
-        // Ensure correct UI for current state
-        // onScreenStateChanged(model.getCurrentScreenState().get());
+        onScreenStateChanged(model.getCurrentScreenState().get());
     }
 
     @Override
     protected void onViewDetached() {
         model.getCurrentQuestionIndex().removeListener(questionIndexListener);
-        root.setOnKeyPressed(null);
+        model.getSelectedAnswerIndex().removeListener(answerIndexListener);
+        model.getCurrentScreenState().removeListener(screenStateListener);
     }
 
     private void updateQuestion() {
@@ -133,12 +139,24 @@ public class CreateWalletVerifyView extends View<StackPane, CreateWalletVerifyMo
                 content.getChildren().clear();
                 content.getChildren().addAll(Spacer.fillVBox(), successLabel, successInstruct, Spacer.fillVBox());
                 break;
+
             case QUIZ:
-            default:
                 // Restore quiz UI
                 content.getChildren().clear();
                 content.getChildren().addAll(Spacer.fillVBox(), questionLabel, answerButtonsRow, nextWordButton, Spacer.fillVBox());
                 updateQuestion();
+                break;
+
+            case LOADING:
+                Label loadingLabel = new Label("Loading...");
+                loadingLabel.getStyleClass().add("bisq-text-1");
+                root.getChildren().add(loadingLabel);
+                break;
+
+            case ERROR:
+                Label errorLabel = new Label("Failed to load seedwords");
+                errorLabel.getStyleClass().add("bisq-text-error");
+                root.getChildren().addAll(errorLabel);
                 break;
         }
     }

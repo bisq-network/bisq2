@@ -30,11 +30,11 @@ public class CreateWalletBackupController implements Controller {
         view = new CreateWalletBackupView(model, this, navigationButtonsVisibleHandler);
 
         walletService = serviceProvider.getWalletService().orElseThrow();
-        loadSeedWordsAsync(walletService);
     }
 
     @Override
     public void onActivate() {
+        loadSeedWordsAsync(walletService);
     }
 
     @Override
@@ -59,6 +59,7 @@ public class CreateWalletBackupController implements Controller {
                         UIThread.run(() -> {
                             setSeedWords(seedWords);
                             model.getSeedState().set(SeedState.SUCCESS);
+                            log.error("loadSeedWordsAsync :: Backup :: Loaded seed words");
                         }))
                 .exceptionally(ex -> {
                     Throwable cause = ex.getCause() != null ? ex.getCause() : ex;

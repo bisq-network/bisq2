@@ -1,12 +1,15 @@
 package bisq.desktop.main.content.wallet.create_wallet.verify;
 
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.wallet.create_wallet.verify.CreateWalletVerifyModel;
-import bisq.desktop.main.content.wallet.create_wallet.verify.CreateWalletVerifyView;
+import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.wallet.create_wallet.SeedState;
 import bisq.wallets.core.WalletService;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Region;
+import javafx.stage.Screen;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import java.util.List;
@@ -18,21 +21,28 @@ public class CreateWalletVerifyController implements Controller {
     @Getter
     private final CreateWalletVerifyView view;
     private final Consumer<Boolean> navigationButtonsVisibleHandler;
+    WalletService walletService;
 
     public CreateWalletVerifyController(ServiceProvider serviceProvider,
                                          Consumer<Boolean> navigationButtonsVisibleHandler) {
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         model = new CreateWalletVerifyModel();
-        WalletService walletService = serviceProvider.getWalletService().orElseThrow();
-        // setSeedWords(walletService.getSeedWords());
         view = new CreateWalletVerifyView(model, this);
+
+        walletService = serviceProvider.getWalletService().orElseThrow();
     }
 
-    public void setSeedWords(List<String> seedWords) {
-        for (int i = 0; i < 12; i++) {
-            model.getSeedWords()[i].set(seedWords.get(i));
-        }
-        model.setupQuestions(seedWords);
+    @Override
+    public void onActivate() {
+        navigationButtonsVisibleHandler.accept(false);
+        model.getCurrentQuestionIndex().set(0);
+        model.getSelectedAnswerIndex().set(-1);
+        loadSeedWordsAsync(walletService);
+    }
+
+    @Override
+    public void onDeactivate() {
+        
     }
 
     public void onAnswerSelected(int idx) {
@@ -51,32 +61,45 @@ public class CreateWalletVerifyController implements Controller {
             if (qIdx == 5) {
                 model.getCurrentScreenState().set(CreateWalletVerifyModel.ScreenState.SUCCESS);
             } else {
-            model.getCurrentQuestionIndex().set(qIdx + 1);
+                model.getCurrentQuestionIndex().set(qIdx + 1);
             }
         } else {
             model.getCurrentScreenState().set(CreateWalletVerifyModel.ScreenState.WRONG);
         }
     }
 
-    @Override
-    public void onActivate() {
-        model.getCurrentQuestionIndex().set(0);
-        model.getSelectedAnswerIndex().set(-1);
-        model.getCurrentScreenState().set(CreateWalletVerifyModel.ScreenState.QUIZ);
-        navigationButtonsVisibleHandler.accept(false);
-    }
-
-    @Override
-    public void onDeactivate() {
-        
-    }
-
-    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
-        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
-        });
-    }
-
     public CreateWalletVerifyModel getModel() {
         return model;
     }
+
+    public void setSeedWords(List<String> seedWords) {
+        for (int i = 0; i < 12; i++) {
+            model.getSeedWords()[i].set(seedWords.get(i));
+        }
+        model.setupQuestions(seedWords);
+    }
+
+    private void loadSeedWordsAsync(WalletService walletService) {
+        model.getCurrentScreenState().set(CreateWalletVerifyModel.ScreenState.LOADING);
+        walletService.getSeedWords()
+                .thenAccept(seedWords ->
+                        UIThread.run(() -> {
+                            setSeedWords(seedWords);
+                            model.getCurrentScreenState().set(CreateWalletVerifyModel.ScreenState.QUIZ);
+                            log.error("loadSeedWordsAsync :: Verify :: Loaded seed words");
+                        }))
+                .exceptionally(ex -> {
+                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+
+                    log.error("loadSeedWordsAsync :: Failed to load seed words", cause);
+                    UIThread.run(() -> model.getCurrentScreenState().set(CreateWalletVerifyModel.ScreenState.ERROR));
+
+                    new Popup().invalid("Error loading seed. Try again")
+                            .owner((Region) view.getRoot().getParent().getParent())
+                            .show();
+
+                    return null;
+                });
+    }
+
 } 

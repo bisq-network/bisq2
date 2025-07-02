@@ -1,6 +1,7 @@
 package bisq.desktop.main.content.wallet.create_wallet.verify;
 
 import bisq.desktop.common.view.Model;
+import bisq.desktop.main.content.wallet.create_wallet.SeedState;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -26,6 +27,8 @@ public class CreateWalletVerifyModel implements Model {
     private final IntegerProperty selectedAnswerIndex = new SimpleIntegerProperty(-1);
 
     public enum ScreenState {
+        LOADING,
+        ERROR,
         QUIZ,
         WRONG,
         SUCCESS

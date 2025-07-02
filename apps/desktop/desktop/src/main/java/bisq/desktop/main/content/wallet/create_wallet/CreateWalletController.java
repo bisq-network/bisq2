@@ -84,8 +84,6 @@ public class CreateWalletController extends NavigationController {
         model.getSelectedChildTarget().set(model.getChildTargets().get(0));
         model.getBackButtonText().set(Res.get("action.back"));
         model.getNextButtonVisible().set(true);
-
-        createWalletVerifyController.getModel().getCurrentScreenState().addListener(verifyScreenStateListener);
     }
 
     @Override
@@ -97,24 +95,20 @@ public class CreateWalletController extends NavigationController {
 
     @Override
     protected void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
-        String nextString = "";
-        if (navigationTarget == NavigationTarget.CREATE_WALLET_PROTECT) {
-            nextString = Res.get("wallet.protectWallet.button.nextStep");
-        } else if (navigationTarget == NavigationTarget.CREATE_WALLET_BACKUP ) {
-            nextString = Res.get("wallet.backupSeeds.button.verify");
-        } else if (navigationTarget == NavigationTarget.CREATE_WALLET_VERIFY ) {
-            nextString = "Next word";
-        }
-        model.getNextButtonText().set(nextString);
-
-        String backString = "";
+        String nextString = "", backString = "";
         if (navigationTarget == NavigationTarget.CREATE_WALLET_PROTECT) {
             backString = Res.get("wallet.protectWallet.button.skipStep");
-        } else if (navigationTarget == NavigationTarget.CREATE_WALLET_BACKUP) {
+            nextString = Res.get("wallet.protectWallet.button.nextStep");
+        } else if (navigationTarget == NavigationTarget.CREATE_WALLET_BACKUP ) {
             backString = Res.get("action.back");
-        } else if (navigationTarget == NavigationTarget.CREATE_WALLET_VERIFY) {
+            nextString = Res.get("wallet.backupSeeds.button.verify");
+        } else if (navigationTarget == NavigationTarget.CREATE_WALLET_VERIFY ) {
+            createWalletVerifyController.getModel().getCurrentScreenState().addListener(verifyScreenStateListener);
             backString = Res.get("action.back");
+            nextString = "Next word";
         }
+
+        model.getNextButtonText().set(nextString);
         model.getBackButtonText().set(backString);
     }
 
@@ -163,6 +157,7 @@ public class CreateWalletController extends NavigationController {
             CreateWalletVerifyModel.ScreenState state = createWalletVerifyController.getModel().getCurrentScreenState().get();
             if (state == CreateWalletVerifyModel.ScreenState.SUCCESS) {
                 log.info("Wallet verified successfully, initializing wallet");
+                walletService.purgeSeedWords();
                 walletService.initializeWallet(null, Optional.empty());
                 OverlayController.hide();
             } else if (state == CreateWalletVerifyModel.ScreenState.WRONG) {
