@@ -105,18 +105,18 @@ public class MarketPriceComponent {
                             selectedMarketPin.unbind();
                         }
                         selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket ->
-                                UIThread.run(() -> {
-                                    if (selectedMarket != null) {
-                                        model.items.stream()
-                                                .filter(item -> item.marketPrice.getMarket().equals(selectedMarket))
-                                                .findAny()
-                                                .ifPresent(listItem -> {
-                                                    model.price.set(listItem.price);
-                                                    model.codes.set(listItem.codes);
-                                                    model.selected.set(listItem);
-                                                });
-                                    }
-                                }));
+                            UIThread.run(() -> {
+                                if (selectedMarket != null) {
+                                    model.items.stream()
+                                            .filter(item -> item.marketPrice.getMarket().equals(selectedMarket))
+                                            .findAny()
+                                            .ifPresent(listItem -> {
+                                                model.price.set(listItem.price);
+                                                model.codes.set(listItem.codes);
+                                                model.selected.set(listItem);
+                                            });
+                                }
+                            }));
                     }));
         }
 

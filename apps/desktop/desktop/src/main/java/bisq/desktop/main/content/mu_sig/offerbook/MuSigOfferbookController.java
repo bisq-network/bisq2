@@ -81,7 +81,7 @@ public class MuSigOfferbookController implements Controller {
     private final ReputationService reputationService;
     private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin;
     private Subscription selectedMarketItemPin, marketsSearchBoxTextPin, selectedMarketFilterPin, selectedMarketSortTypePin,
-            selectedOffersFilterPin, activeMarketPaymentsCountPin;
+            selectedOffersFilterPin, activeMarketPaymentsCountPin, selectedMarketPricePin;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
         muSigService = serviceProvider.getMuSigService();
@@ -193,11 +193,22 @@ public class MuSigOfferbookController implements Controller {
         });
 
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
-                UIThread.run(() -> {
-                    model.setMarketPricePredicate(item -> marketPriceService.getMarketPriceByCurrencyMap().isEmpty() ||
-                            marketPriceService.getMarketPriceByCurrencyMap().containsKey(item.getMarket()));
-                    updateFilteredMarketItems();
-                }));
+            UIThread.run(() -> {
+                model.setMarketPricePredicate(item -> marketPriceService.getMarketPriceByCurrencyMap().isEmpty() ||
+                        marketPriceService.getMarketPriceByCurrencyMap().containsKey(item.getMarket()));
+                updateFilteredMarketItems();
+
+                if (selectedMarketPricePin != null) {
+                    selectedMarketPricePin.unsubscribe();
+                }
+                if (model.getSelectedMarketItem() != null) {
+                    selectedMarketPricePin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarketItem -> {
+                        if (selectedMarketItem != null) {
+                            UIThread.run(() -> updateMarketPrice(selectedMarketItem));
+                        }
+                    });
+                }
+            }));
 
         selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarketItem -> {
             if (selectedMarketItem != null) {
@@ -300,6 +311,9 @@ public class MuSigOfferbookController implements Controller {
         selectedMarketSortTypePin.unsubscribe();
         selectedOffersFilterPin.unsubscribe();
         activeMarketPaymentsCountPin.unsubscribe();
+        if (selectedMarketPricePin != null) {
+            selectedMarketPricePin.unsubscribe();
+        }
     }
 
     void onSelectMarketItem(MarketItem marketItem) {
