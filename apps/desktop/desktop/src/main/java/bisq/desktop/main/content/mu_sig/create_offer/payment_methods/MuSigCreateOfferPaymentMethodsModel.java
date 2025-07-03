@@ -17,7 +17,9 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.payment_methods;
 
+import bisq.account.accounts.Account;
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
@@ -33,12 +35,17 @@ import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Map;
+import java.util.Set;
+
 @Getter
 public class MuSigCreateOfferPaymentMethodsModel implements Model {
+    private final Map<PaymentMethod<?>, Set<Account<?, ?>>> accountsByPaymentMethod;
     @Setter
     private Direction direction;
     @Setter
     private String subtitleLabel;
+
     private final ObservableList<FiatPaymentMethod> paymentMethods = FXCollections.observableArrayList();
     private final SortedList<FiatPaymentMethod> sortedPaymentMethods = new SortedList<>(paymentMethods);
     private final ObservableList<FiatPaymentMethod> selectedPaymentMethods = FXCollections.observableArrayList();
@@ -47,6 +54,14 @@ public class MuSigCreateOfferPaymentMethodsModel implements Model {
     private final BooleanProperty isPaymentMethodsEmpty = new SimpleBooleanProperty();
     private final BooleanProperty canAddCustomPaymentMethod = new SimpleBooleanProperty();
     private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
+
+    private final BooleanProperty showMultipleAccountsOverlay = new SimpleBooleanProperty();
+    private final ObjectProperty<FiatPaymentMethod> noAccountForPaymentMethod = new SimpleObjectProperty<>();
+
+
+    public MuSigCreateOfferPaymentMethodsModel(Map<PaymentMethod<?>, Set<Account<?, ?>>> accountsByPaymentMethod) {
+        this.accountsByPaymentMethod = accountsByPaymentMethod;
+    }
 
     void reset() {
         direction = null;

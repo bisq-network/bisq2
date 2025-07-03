@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.mu_sig.create_offer.payment_methods;
 
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.utils.ImageUtil;
@@ -26,23 +27,30 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.ChipButton;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
+import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferView;
 import bisq.i18n.Res;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @Slf4j
-public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOfferPaymentMethodsModel, MuSigCreateOfferPaymentMethodsController> {
+public class MuSigCreateOfferPaymentMethodsView extends View<StackPane, MuSigCreateOfferPaymentMethodsModel, MuSigCreateOfferPaymentMethodsController> {
+    private final static int FEEDBACK_WIDTH = 700;
     private static final double TWO_COLUMN_WIDTH = 20.75;
 
     private final ListChangeListener<FiatPaymentMethod> paymentMethodListener;
@@ -50,10 +58,15 @@ public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOf
     private final MuSigCreateOfferAddCustomPaymentMethodBox muSigCreateOfferAddCustomPaymentMethodBox;
     private final GridPane gridPane;
     private final Set<ImageView> closeIcons = new HashSet<>();
+    private final VBox overlay;
+    private final Button closeOverlayButton, createAccountButton;
+    private final Label overlayHeadlineLabel;
+    private final VBox content;
+    private Subscription hasNoAccountForPaymentMethodPin;
 
     public MuSigCreateOfferPaymentMethodsView(MuSigCreateOfferPaymentMethodsModel model,
                                               MuSigCreateOfferPaymentMethodsController controller) {
-        super(new VBox(), model, controller);
+        super(new StackPane(), model, controller);
 
         root.setAlignment(Pos.CENTER);
         root.getStyleClass().add("bisq-easy-trade-wizard-payment-methods-step");
@@ -77,13 +90,26 @@ public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOf
 
         muSigCreateOfferAddCustomPaymentMethodBox = new MuSigCreateOfferAddCustomPaymentMethodBox();
 
-
         VBox vBox = new VBox(20, subtitleLabel, nonFoundLabel, gridPane);
         vBox.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(headlineLabel, new Insets(0, 0, -5, 0));
-        VBox.setMargin(gridPane, new Insets(0, 60, 0, 60));
-        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, Spacer.fillVBox(), vBox, Spacer.fillVBox());
+         content = new VBox(20);
+        content.setAlignment(Pos.CENTER);
+        VBox.setMargin(vBox, new Insets(0, 60, 0, 60));
+        VBox.setVgrow(headlineLabel, Priority.ALWAYS);
+        VBox.setVgrow(vBox, Priority.ALWAYS);
+        content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, vBox, Spacer.fillVBox());
+
+        // Overlay
+        overlayHeadlineLabel = new Label();
+        closeOverlayButton = new Button(Res.get("muSig.offerbook.createOffer.paymentMethod.closeOverlay"));
+        createAccountButton = new Button(Res.get("muSig.offerbook.createOffer.paymentMethod.createAccount"));
+        overlay = new VBox(20);
+        configOverlay();
+
+        StackPane.setMargin(content, new Insets(40));
+        StackPane.setMargin(overlay, new Insets(-MuSigCreateOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
+        root.getChildren().addAll(content, overlay);
 
         paymentMethodListener = c -> setUpAndFillPaymentMethods();
     }
@@ -97,12 +123,28 @@ public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOf
         gridPane.visibleProperty().bind(model.getIsPaymentMethodsEmpty().not());
         gridPane.managedProperty().bind(model.getIsPaymentMethodsEmpty().not());
 
+        hasNoAccountForPaymentMethodPin = EasyBind.subscribe(model.getNoAccountForPaymentMethod(),
+                paymentMethod -> {
+                    if (paymentMethod != null) {
+                        overlay.setVisible(true);
+                        overlayHeadlineLabel.setText(Res.get("muSig.offerbook.createOffer.paymentMethod.headline", paymentMethod.getShortDisplayString()));
+                        Transitions.blurStrong(content, 0);
+                        Transitions.slideInTop(overlay, 450);
+                    } else {
+                        overlay.setVisible(false);
+                        Transitions.removeEffect(content);
+                    }
+                });
+
         model.getPaymentMethods().addListener(paymentMethodListener);
 
+        createAccountButton.setOnAction(e -> controller.onCreateAccount());
+        closeOverlayButton.setOnAction(e -> controller.onCloseOverlay());
+
         muSigCreateOfferAddCustomPaymentMethodBox.getAddIconButton().setOnAction(e -> controller.onAddCustomPaymentMethod());
-        muSigCreateOfferAddCustomPaymentMethodBox.initialize();
         root.setOnMousePressed(e -> root.requestFocus());
 
+        muSigCreateOfferAddCustomPaymentMethodBox.initialize();
         setUpAndFillPaymentMethods();
     }
 
@@ -114,6 +156,8 @@ public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOf
         gridPane.visibleProperty().unbind();
         gridPane.managedProperty().unbind();
 
+        hasNoAccountForPaymentMethodPin.unsubscribe();
+
         gridPane.getChildren().stream()
                 .filter(e -> e instanceof ChipButton)
                 .map(e -> (ChipButton) e)
@@ -121,6 +165,8 @@ public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOf
 
         model.getPaymentMethods().removeListener(paymentMethodListener);
 
+        createAccountButton.setOnAction(null);
+        closeOverlayButton.setOnAction(null);
         muSigCreateOfferAddCustomPaymentMethodBox.getAddIconButton().setOnAction(null);
         muSigCreateOfferAddCustomPaymentMethodBox.dispose();
 
@@ -186,5 +232,33 @@ public class MuSigCreateOfferPaymentMethodsView extends View<VBox, MuSigCreateOf
             row = i / numColumns;
             gridPane.add(muSigCreateOfferAddCustomPaymentMethodBox, col, row);
         }
+    }
+
+    private void configOverlay() {
+        VBox overlayContent = new VBox(20);
+        overlayContent.setAlignment(Pos.TOP_CENTER);
+        overlayContent.getStyleClass().setAll("trade-wizard-feedback-bg");
+        overlayContent.setPadding(new Insets(30));
+        overlayContent.setMaxWidth(FEEDBACK_WIDTH);
+
+        overlay.setVisible(false);
+        overlay.setAlignment(Pos.TOP_CENTER);
+
+        overlayHeadlineLabel.getStyleClass().add("bisq-text-headline-2");
+
+        Label subtitleLabel = new Label(Res.get("muSig.offerbook.createOffer.paymentMethod.subTitle"));
+        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
+        subtitleLabel.setAlignment(Pos.CENTER);
+        subtitleLabel.setMinWidth(FEEDBACK_WIDTH - 200);
+        subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
+        subtitleLabel.setWrapText(true);
+        subtitleLabel.getStyleClass().add("bisq-text-21");
+
+        createAccountButton.setDefaultButton(true);
+        HBox buttonsBox = new HBox(10, closeOverlayButton, createAccountButton);
+        buttonsBox.setAlignment(Pos.CENTER);
+        VBox.setMargin(buttonsBox, new Insets(10, 0, 0, 0));
+        overlayContent.getChildren().addAll(overlayHeadlineLabel, subtitleLabel, buttonsBox);
+        overlay.getChildren().addAll(overlayContent, Spacer.fillVBox());
     }
 }
