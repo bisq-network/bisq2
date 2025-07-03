@@ -108,26 +108,26 @@ public class MuSigTakeOfferReviewController implements Controller {
         view = new MuSigTakeOfferReviewView(model, this, muSigReviewDataDisplay.getRoot());
     }
 
-    public void init(MuSigOffer bisqEasyOffer) {
-        model.setMuSigOffer(bisqEasyOffer);
-        Market market = bisqEasyOffer.getMarket();
+    public void init(MuSigOffer muSigOffer) {
+        model.setMuSigOffer(muSigOffer);
+        Market market = muSigOffer.getMarket();
         priceInput.setMarket(market);
 
         String marketCodes = market.getMarketCodes();
         priceInput.setDescription(Res.get("bisqEasy.takeOffer.review.price.price", marketCodes));
 
-        if (bisqEasyOffer.getAmountSpec() instanceof FixedAmountSpec) {
-            OfferAmountUtil.findBaseSideFixedAmount(marketPriceService, bisqEasyOffer)
+        if (muSigOffer.getAmountSpec() instanceof FixedAmountSpec) {
+            OfferAmountUtil.findBaseSideFixedAmount(marketPriceService, muSigOffer)
                     .ifPresent(model::setTakersBaseSideAmount);
-            OfferAmountUtil.findQuoteSideFixedAmount(marketPriceService, bisqEasyOffer)
+            OfferAmountUtil.findQuoteSideFixedAmount(marketPriceService, muSigOffer)
                     .ifPresent(model::setTakersQuoteSideAmount);
         }
 
-        Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService, bisqEasyOffer);
+        Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService, muSigOffer);
         priceQuote.ifPresent(priceInput::setQuote);
 
         applyPriceQuote(priceQuote);
-        applyPriceDetails(bisqEasyOffer.getPriceSpec(), market);
+        applyPriceDetails(muSigOffer.getPriceSpec(), market);
     }
 
     public void setTakersBaseSideAmount(Monetary amount) {

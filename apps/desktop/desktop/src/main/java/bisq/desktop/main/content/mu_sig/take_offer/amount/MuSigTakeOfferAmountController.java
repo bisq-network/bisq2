@@ -68,18 +68,18 @@ public class MuSigTakeOfferAmountController implements Controller {
         view = new MuSigTakeOfferAmountView(model, this, amountSelectionController.getView().getRoot());
     }
 
-    public void init(MuSigOffer bisqEasyOffer) {
-        model.setMuSigOffer(bisqEasyOffer);
+    public void init(MuSigOffer muSigOffer) {
+        model.setMuSigOffer(muSigOffer);
 
-        Direction takersDirection = bisqEasyOffer.getTakersDirection();
+        Direction takersDirection = muSigOffer.getTakersDirection();
         model.setHeadline(takersDirection.isBuy()
                 ? Res.get("bisqEasy.takeOffer.amount.headline.buyer")
                 : Res.get("bisqEasy.takeOffer.amount.headline.seller"));
         amountSelectionController.setDirection(takersDirection);
-        Market market = bisqEasyOffer.getMarket();
+        Market market = muSigOffer.getMarket();
         amountSelectionController.setMarket(market);
 
-        PriceUtil.findQuote(marketPriceService, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket())
+        PriceUtil.findQuote(marketPriceService, muSigOffer.getPriceSpec(), muSigOffer.getMarket())
                 .ifPresent(amountSelectionController::setQuote);
 
         applyQuoteSideMinMaxRange();
@@ -154,20 +154,20 @@ public class MuSigTakeOfferAmountController implements Controller {
     }
 
     private void applyQuoteSideMinMaxRange() {
-        MuSigOffer bisqEasyOffer = model.getMuSigOffer();
-        if (bisqEasyOffer == null) {
+        MuSigOffer muSigOffer = model.getMuSigOffer();
+        if (muSigOffer == null) {
             return;
         }
-        Optional<Monetary> OptionalQuoteSideMinAmount = OfferAmountUtil.findQuoteSideMinAmount(marketPriceService, bisqEasyOffer);
+        Optional<Monetary> OptionalQuoteSideMinAmount = OfferAmountUtil.findQuoteSideMinAmount(marketPriceService, muSigOffer);
         if (OptionalQuoteSideMinAmount.isEmpty()) {
             return;
         }
 
-        Market market = bisqEasyOffer.getMarket();
+        Market market = muSigOffer.getMarket();
         String myProfileId = userIdentityService.getSelectedUserIdentity().getUserProfile().getId();
-        String makersUserProfileId = bisqEasyOffer.getMakersUserProfileId();
+        String makersUserProfileId = muSigOffer.getMakersUserProfileId();
         if (model.getSellersReputationBasedQuoteSideAmount() == null) {
-            String sellersProfileId = bisqEasyOffer.getDirection().isSell() ? makersUserProfileId : myProfileId;
+            String sellersProfileId = muSigOffer.getDirection().isSell() ? makersUserProfileId : myProfileId;
             long sellersReputationScore = reputationService.getReputationScore(sellersProfileId).getTotalScore();
             model.setSellersReputationScore(sellersReputationScore);
             Monetary reputationBasedQuoteSideAmount = BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, market, sellersReputationScore)
@@ -177,7 +177,7 @@ public class MuSigTakeOfferAmountController implements Controller {
         }
         long sellersReputationScore = model.getSellersReputationScore();
         Monetary reputationBasedQuoteSideAmount = model.getSellersReputationBasedQuoteSideAmount().round(0);
-        Monetary offersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow().round(0);
+        Monetary offersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, muSigOffer).orElseThrow().round(0);
         Monetary minRangeValue = OptionalQuoteSideMinAmount.get().round(0);
         Monetary maxAmount = reputationBasedQuoteSideAmount.isLessThan(offersQuoteSideMaxOrFixedAmount)
                 ? reputationBasedQuoteSideAmount
@@ -186,7 +186,7 @@ public class MuSigTakeOfferAmountController implements Controller {
         amountSelectionController.setRightMarkerQuoteSideValue(maxAmount);
         amountSelectionController.setMinMaxRange(minRangeValue, maxAmount);
 
-        boolean isBuyer = bisqEasyOffer.getTakersDirection().isBuy();
+        boolean isBuyer = muSigOffer.getTakersDirection().isBuy();
         if (isBuyer) {
             // Buyer case
             model.setAmountLimitInfoLink(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.learnMore"));

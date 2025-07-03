@@ -90,14 +90,14 @@ public class MuSigTakeOfferController extends NavigationController implements In
 
     @Override
     public void initWithData(InitData initData) {
-        MuSigOffer bisqEasyOffer = initData.getMuSigOffer();
-        muSigTakeOfferAmountController.init(bisqEasyOffer);
-        muSigTakeOfferPaymentController.init(bisqEasyOffer);
-        muSigTakeOfferReviewController.init(bisqEasyOffer);
+        MuSigOffer muSigOffer = initData.getMuSigOffer();
+        muSigTakeOfferAmountController.init(muSigOffer);
+        muSigTakeOfferPaymentController.init(muSigOffer);
+        muSigTakeOfferReviewController.init(muSigOffer);
 
-        model.setAmountVisible(bisqEasyOffer.hasAmountRange());
-        List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = bisqEasyOffer.getBaseSidePaymentMethodSpecs();
-        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = bisqEasyOffer.getQuoteSidePaymentMethodSpecs();
+        model.setAmountVisible(muSigOffer.hasAmountRange());
+        List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = muSigOffer.getBaseSidePaymentMethodSpecs();
+        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = muSigOffer.getQuoteSidePaymentMethodSpecs();
         model.setPaymentMethodVisible(baseSidePaymentMethodSpecs.size() > 1 || quoteSidePaymentMethodSpecs.size() > 1);
 
         model.getChildTargets().clear();
