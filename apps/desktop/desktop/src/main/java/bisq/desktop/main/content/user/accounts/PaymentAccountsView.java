@@ -41,7 +41,7 @@ import org.fxmisc.easybind.Subscription;
 public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, PaymentAccountsController> {
     private final Label headline;
     private final Button createButtonWithAccounts, createButtonNoAccounts, deletedButton;
-    private final AutoCompleteComboBox<Account<?, ?>> comboBox;
+    private final AutoCompleteComboBox<Account<?, ?>> accountsComboBox;
     private final HBox comboBoxAndCreateButtonHBox;
     private final VBox noAccountsVBox;
     private final Pane accountDisplayPane;
@@ -79,9 +79,9 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
         createButtonWithAccounts = new Button(Res.get("user.paymentAccounts.createAccount"));
         createButtonWithAccounts.getStyleClass().add("outlined-button");
 
-        comboBox = new AutoCompleteComboBox<>(model.getSortedAccounts(), Res.get("user.paymentAccounts.selectAccount"));
-        comboBox.setPrefWidth(325);
-        comboBox.setConverter(new StringConverter<>() {
+        accountsComboBox = new AutoCompleteComboBox<>(model.getSortedAccounts(), Res.get("user.paymentAccounts.selectAccount"));
+        accountsComboBox.setPrefWidth(325);
+        accountsComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(Account<? extends PaymentMethod<?>, ?> account) {
                 return account != null ? account.getAccountName() : "";
@@ -93,7 +93,7 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
             }
         });
 
-        comboBoxAndCreateButtonHBox = new HBox(20, comboBox, Spacer.fillHBox(), createButtonWithAccounts);
+        comboBoxAndCreateButtonHBox = new HBox(20, accountsComboBox, Spacer.fillHBox(), createButtonWithAccounts);
 
         deletedButton = new Button(Res.get("user.paymentAccounts.deleteAccount"));
 
@@ -122,12 +122,12 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
         createButtonWithAccounts.setOnAction(e -> controller.onCreateAccount());
         deletedButton.setOnAction(e -> controller.onDeleteAccount());
 
-        comboBox.setOnChangeConfirmed(e -> {
-            if (comboBox.getSelectionModel().getSelectedItem() == null) {
-                comboBox.getSelectionModel().select(model.getSelectedAccount().get());
+        accountsComboBox.setOnChangeConfirmed(e -> {
+            if (accountsComboBox.getSelectionModel().getSelectedItem() == null) {
+                accountsComboBox.getSelectionModel().select(model.getSelectedAccount().get());
                 return;
             }
-            controller.onSelectAccount(comboBox.getSelectionModel().getSelectedItem());
+            controller.onSelectAccount(accountsComboBox.getSelectionModel().getSelectedItem());
         });
 
         noAccountsSetupPin = EasyBind.subscribe(model.getNoAccountsSetup(), noAccountsSetup -> {
@@ -144,7 +144,7 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
         });
 
         selectedAccountPin = EasyBind.subscribe(model.getSelectedAccount(),
-                account -> comboBox.getSelectionModel().select(account));
+                account -> accountsComboBox.getSelectionModel().select(account));
 
         accountDisplayPin = EasyBind.subscribe(model.getAccountDetailsGridPane(), accountDisplay -> {
             if (accountDisplay != null) {
@@ -164,7 +164,7 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
         createButtonWithAccounts.setOnAction(null);
         deletedButton.setOnAction(null);
 
-        comboBox.setOnChangeConfirmed(null);
+        accountsComboBox.setOnChangeConfirmed(null);
 
         selectedAccountPin.unsubscribe();
         noAccountsSetupPin.unsubscribe();

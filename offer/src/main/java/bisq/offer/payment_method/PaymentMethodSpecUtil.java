@@ -20,9 +20,11 @@ package bisq.offer.payment_method;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentMethodUtil;
 import bisq.account.payment_method.BitcoinPaymentRail;
+import bisq.account.payment_method.CryptoPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethodUtil;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.common.currency.TradeCurrency;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -76,5 +78,24 @@ public class PaymentMethodSpecUtil {
 
     public static List<String> getPaymentMethodNames(Collection<? extends PaymentMethodSpec<?>> paymentMethodSpecs) {
         return paymentMethodSpecs.stream().map(PaymentMethodSpec::getPaymentMethodName).collect(Collectors.toList());
+    }
+
+    public static List<PaymentMethodSpec<?>> createPaymentMethodSpecs(List<PaymentMethod<?>> paymentMethods,
+                                                                      String currencyCode) {
+        if (TradeCurrency.isFiat(currencyCode)) {
+            return paymentMethods.stream()
+                    .filter(e -> e instanceof FiatPaymentMethod)
+                    .map(e -> (FiatPaymentMethod) e)
+                    .map(FiatPaymentMethodSpec::new)
+                    .collect(Collectors.toList());
+        } else if (TradeCurrency.isAltcoin(currencyCode)) {
+            return paymentMethods.stream()
+                    .filter(e -> e instanceof CryptoPaymentMethod)
+                    .map(e -> (CryptoPaymentMethod) e)
+                    .map(CryptoPaymentMethodSpec::new)
+                    .collect(Collectors.toList());
+        } else {
+            throw new UnsupportedOperationException("createPaymentMethodSpecs only supports fiat and altcoins. CurrencyCode: " + currencyCode);
+        }
     }
 }

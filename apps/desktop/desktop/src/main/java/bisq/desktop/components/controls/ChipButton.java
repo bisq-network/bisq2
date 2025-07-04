@@ -92,6 +92,10 @@ public class ChipButton extends HBox {
         });
     }
 
+    public void setText(String value) {
+        toggleButton.setText(value);
+    }
+
     private void removeStyles() {
         getStyleClass().remove("chips-button-pressed");
         getStyleClass().remove("chips-button-selected-pressed");

@@ -114,6 +114,7 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
         return Optional.ofNullable(selectedAccountAsObservable().get());
     }
 
+    //todo do we need that?
     public void setSelectedAccount(Account<? extends PaymentMethod<?>, ?> account) {
         selectedAccountAsObservable().set(account);
         persist();

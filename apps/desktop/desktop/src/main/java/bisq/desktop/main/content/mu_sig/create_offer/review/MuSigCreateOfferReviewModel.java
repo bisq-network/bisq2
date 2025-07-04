@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.review;
 
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.monetary.Monetary;
@@ -43,7 +43,7 @@ class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private MuSigOffer offer;
     @Setter
-    private FiatPaymentMethod takersSelectedFiatPaymentMethod;
+    private PaymentMethod<?> takersSelectedFiatPaymentMethod;
     @Setter
     private Monetary minBaseSideAmount;
     @Setter
@@ -59,7 +59,7 @@ class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private PriceSpec priceSpec;
     @Setter
-    private List<FiatPaymentMethod> paymentMethods;
+    private List<PaymentMethod<?>> paymentMethods;
     @Setter
     private String headline;
     @Setter
@@ -82,7 +82,7 @@ class MuSigCreateOfferReviewModel implements Model {
     private String fee;
     @Setter
     private String feeDetails;
-    private final ObservableList<FiatPaymentMethod> takersFiatPaymentMethods = FXCollections.observableArrayList();
+    private final ObservableList<PaymentMethod<?>> takersFiatPaymentMethods = FXCollections.observableArrayList();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
     @Setter
     private long marketPrice;

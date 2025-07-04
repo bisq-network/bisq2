@@ -18,9 +18,9 @@
 package bisq.desktop.main.content.mu_sig.create_offer.payment_methods;
 
 import bisq.account.accounts.Account;
-import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.currency.Market;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import javafx.beans.property.BooleanProperty;
@@ -35,32 +35,35 @@ import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Getter
 public class MuSigCreateOfferPaymentMethodsModel implements Model {
-    private final Map<PaymentMethod<?>, Set<Account<?, ?>>> accountsByPaymentMethod;
+    private final Map<PaymentMethod<?>, List<Account<?, ?>>> accountsByPaymentMethod= new HashMap<>();
     @Setter
     private Direction direction;
     @Setter
     private String subtitleLabel;
 
-    private final ObservableList<FiatPaymentMethod> paymentMethods = FXCollections.observableArrayList();
-    private final SortedList<FiatPaymentMethod> sortedPaymentMethods = new SortedList<>(paymentMethods);
-    private final ObservableList<FiatPaymentMethod> selectedPaymentMethods = FXCollections.observableArrayList();
-    private final ObservableList<FiatPaymentMethod> addedCustomPaymentMethods = FXCollections.observableArrayList();
+    private final ObservableList< PaymentMethod<?>> paymentMethods = FXCollections.observableArrayList();
+    private final SortedList< PaymentMethod<?>> sortedPaymentMethods = new SortedList<>(paymentMethods);
+    private final ObservableList< PaymentMethod<?>> selectedPaymentMethods = FXCollections.observableArrayList();
+    private final ObservableList< PaymentMethod<?>> addedCustomPaymentMethods = FXCollections.observableArrayList();
     private final StringProperty customPaymentMethodName = new SimpleStringProperty("");
     private final BooleanProperty isPaymentMethodsEmpty = new SimpleBooleanProperty();
     private final BooleanProperty canAddCustomPaymentMethod = new SimpleBooleanProperty();
     private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
 
-    private final BooleanProperty showMultipleAccountsOverlay = new SimpleBooleanProperty();
-    private final ObjectProperty<FiatPaymentMethod> noAccountForPaymentMethod = new SimpleObjectProperty<>();
+    private final ObjectProperty< PaymentMethod<?>> paymentMethodWithoutAccount = new SimpleObjectProperty<>();
+    private final ObjectProperty< PaymentMethod<?>> paymentMethodWithMultipleAccounts = new SimpleObjectProperty<>();
 
+    private final ObservableList<Account<? extends PaymentMethod<?>, ?>> accountsForPaymentMethod = FXCollections.observableArrayList();
+    private final SortedList<Account<? extends PaymentMethod<?>, ?>> sortedAccountsForPaymentMethod = new SortedList<>(accountsForPaymentMethod);
+    private final ObservableHashMap<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethod = new ObservableHashMap<>();
 
-    public MuSigCreateOfferPaymentMethodsModel(Map<PaymentMethod<?>, Set<Account<?, ?>>> accountsByPaymentMethod) {
-        this.accountsByPaymentMethod = accountsByPaymentMethod;
+    public MuSigCreateOfferPaymentMethodsModel() {
     }
 
     void reset() {

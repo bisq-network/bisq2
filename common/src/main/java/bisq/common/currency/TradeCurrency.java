@@ -47,6 +47,15 @@ public abstract class TradeCurrency implements Comparable<TradeCurrency>, Persis
         return "BTC".equals(code);
     }
 
+    public static boolean isBsq(String code) {
+        return "BSQ".equals(code);
+    }
+
+    // Should also exclude stable coins
+    public static boolean isAltcoin(String code) {
+        return !isFiat(code) && !isBtc(code) && !isBsq(code);
+    }
+
     /**
      * We only can check if the currency is not fiat and if the code matches the format, but we do not maintain a list
      * of cryptocurrencies to be flexible with any newly added one.

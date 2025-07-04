@@ -43,5 +43,5 @@ public class PaymentAccountsModel implements Model {
     private final ObservableList<Account<? extends PaymentMethod<?>, ?>> accounts = FXCollections.observableArrayList();
     private final SortedList<Account<? extends PaymentMethod<?>, ?>> sortedAccounts = new SortedList<>(accounts);
     private final ObjectProperty<Account<? extends PaymentMethod<?>, ?>> selectedAccount = new SimpleObjectProperty<>();
-    private final ObjectProperty<AccountDetailsVBox> accountDetailsGridPane = new SimpleObjectProperty<>();
+    private final ObjectProperty<AccountDetailsVBox<?, ?>> accountDetailsGridPane = new SimpleObjectProperty<>();
 }

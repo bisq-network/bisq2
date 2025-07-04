@@ -23,12 +23,13 @@ import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethodUtil;
-import bisq.account.payment_method.NationalCurrencyPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentMethodUtil;
 import bisq.common.currency.Market;
+import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
@@ -40,15 +41,13 @@ import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import com.google.common.base.Joiner;
 import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -66,7 +65,7 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
     private final Runnable onNextHandler;
     private final Region owner;
     private final AccountService accountService;
-    private ListChangeListener<NationalCurrencyPaymentMethod<?>> addedCustomPaymentMethodsListener;
+    private final ListChangeListener<PaymentMethod<?>> addedCustomPaymentMethodsListener;
 
     public MuSigCreateOfferPaymentMethodsController(ServiceProvider serviceProvider,
                                                     Region owner,
@@ -76,22 +75,22 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
         this.onNextHandler = onNextHandler;
         this.owner = owner;
 
-
-        Map<PaymentMethod<?>, Set<Account<?, ?>>> accountsByPaymentMethod =
-                accountService.getAccounts().stream()
-                        .collect(Collectors.groupingBy(
-                                Account::getPaymentMethod,
-                                Collectors.toSet()
-                        ));
-
-
-        model = new MuSigCreateOfferPaymentMethodsModel(accountsByPaymentMethod);
+        model = new MuSigCreateOfferPaymentMethodsModel();
         view = new MuSigCreateOfferPaymentMethodsView(model, this);
+        model.getSortedAccountsForPaymentMethod().setComparator(Comparator.comparing(Account::getAccountName));
+
+        addedCustomPaymentMethodsListener = change -> updateCanAddCustomPaymentMethod();
     }
 
-    public ObservableList<FiatPaymentMethod> getPaymentMethods() {
+  /*  public ObservableList<PaymentMethod<?>> getPaymentMethods() {
         return model.getSelectedPaymentMethods();
+    }*/
+
+    public ReadOnlyObservableMap<PaymentMethod<?>, Account<?, ?>> getSelectedAccountByPaymentMethod() {
+        return model.getSelectedAccountByPaymentMethod();
     }
+
+    //ObservableHashMap<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethod
 
     public boolean validate() {
         if (getCustomPaymentMethodNameNotEmpty()) {
@@ -144,13 +143,17 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
 
     @Override
     public void onActivate() {
+        model.getAccountsByPaymentMethod().putAll(accountService.getAccounts().stream()
+                .collect(Collectors.groupingBy(
+                        Account::getPaymentMethod,
+                        Collectors.toList()
+                )));
         model.setSubtitleLabel(model.getDirection().isBuy()
                 ? Res.get("bisqEasy.tradeWizard.paymentMethods.fiat.subTitle.buyer", model.getMarket().get().getQuoteCurrencyCode())
                 : Res.get("bisqEasy.tradeWizard.paymentMethods.fiat.subTitle.seller", model.getMarket().get().getQuoteCurrencyCode()));
         model.getCustomPaymentMethodName().set("");
         model.getSortedPaymentMethods().setComparator(Comparator.comparing(PaymentMethod::getShortDisplayString));
 
-        addedCustomPaymentMethodsListener = change -> updateCanAddCustomPaymentMethod();
         model.getAddedCustomPaymentMethods().addListener(addedCustomPaymentMethodsListener);
         updateCanAddCustomPaymentMethod();
 
@@ -164,7 +167,7 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
 
                     //todo
                     // Optional<StablecoinPaymentMethod> stablecoinPaymentMethod = StablecoinPaymentMethodUtil.findPaymentMethod(name);
-                    FiatPaymentMethod paymentMethod;
+                    PaymentMethod<?> paymentMethod;
                     paymentMethod = FiatPaymentMethodUtil.getPaymentMethod(name);
                   /*  if (stablecoinPaymentMethod.isEmpty()) {
                         paymentMethod = FiatPaymentMethodUtil.getPaymentMethod(name);
@@ -173,7 +176,7 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
                     }*/
                     boolean isCustomPaymentMethod = paymentMethod.isCustomPaymentMethod();
                     if (!isCustomPaymentMethod && isPredefinedPaymentMethodsContainName(name)) {
-                        maybeAddPaymentMethod(paymentMethod);
+                        // maybeAddPaymentMethod(paymentMethod);
                     } else if (isCustomPaymentMethod) {
                         maybeAddCustomPaymentMethod(paymentMethod);
                     }
@@ -182,64 +185,92 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
 
     @Override
     public void onDeactivate() {
+        model.getAccountsByPaymentMethod().clear();
         model.getAddedCustomPaymentMethods().removeListener(addedCustomPaymentMethodsListener);
     }
 
-    boolean onTogglePaymentMethod(FiatPaymentMethod paymentMethod, boolean isSelected) {
+    void onTogglePaymentMethod(PaymentMethod<?> paymentMethod, boolean isSelected) {
         if (isSelected) {
             if (model.getSelectedPaymentMethods().size() >= MAX_ALLOWED_SELECTED_PAYMENT_METHODS) {
                 new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.maxMethodsReached")).show();
-                return false;
+                return;
             }
+
             if (paymentMethod.isCustomPaymentMethod()) {
                 maybeAddCustomPaymentMethod(paymentMethod);
             } else {
                 maybeAddPaymentMethod(paymentMethod);
             }
         } else {
+            model.getSelectedAccountByPaymentMethod().remove(paymentMethod);
             model.getSelectedPaymentMethods().remove(paymentMethod);
             setCreateOfferMethodsCookie();
         }
-        return true;
     }
 
 
-    private void maybeAddPaymentMethod(FiatPaymentMethod paymentMethod) {
+    private void maybeAddPaymentMethod(PaymentMethod<?> paymentMethod) {
         if (!model.getSelectedPaymentMethods().contains(paymentMethod)) {
-
+            model.getSelectedPaymentMethods().add(paymentMethod);
             if (model.getAccountsByPaymentMethod().containsKey(paymentMethod)) {
-                Set<Account<?, ?>> accounts = model.getAccountsByPaymentMethod().get(paymentMethod);
-                checkArgument(!accounts.isEmpty());
-                if (accounts.size() == 1) {
-                    model.getSelectedPaymentMethods().add(paymentMethod);
+                List<Account<?, ?>> accountsForPaymentMethod = model.getAccountsByPaymentMethod().get(paymentMethod);
+                checkArgument(!accountsForPaymentMethod.isEmpty());
+
+                if (accountsForPaymentMethod.size() == 1) {
+                    model.getSelectedAccountByPaymentMethod().put(paymentMethod, accountsForPaymentMethod.get(0));
                     //setCreateOfferMethodsCookie();
                 } else {
-                    model.getShowMultipleAccountsOverlay().set(true);
+                    model.getAccountsForPaymentMethod().setAll(accountsForPaymentMethod);
+                    model.getPaymentMethodWithMultipleAccounts().set(paymentMethod);
                 }
             } else {
-                onRemoveCustomMethod(paymentMethod);
-                model.getNoAccountForPaymentMethod().set(paymentMethod);
+                model.getPaymentMethodWithoutAccount().set(paymentMethod);
             }
         }
-        //todo why?
+        /*//todo why?
         if (!model.getPaymentMethods().contains(paymentMethod)) {
             model.getPaymentMethods().add(paymentMethod);
+        }*/
+    }
+
+    void onSelectAccount(Account<? extends PaymentMethod<?>, ?> account, PaymentMethod<?> paymentMethod) {
+        if (account != null) {
+            //accountService.setSelectedAccount(account);
+            model.getSelectedAccountByPaymentMethod().put(paymentMethod, account);
+            model.getPaymentMethodWithMultipleAccounts().set(null);
         }
     }
 
-    void onCreateAccount() {
-        model.getNoAccountForPaymentMethod().set(null);
+    void onOpenCreateAccountScreen(PaymentMethod<?> paymentMethod) {
+        model.getPaymentMethodWithoutAccount().set(null);
+        model.getSelectedPaymentMethods().remove(paymentMethod);
         OverlayController.hide();
         Navigation.navigateTo(NavigationTarget.PAYMENT_ACCOUNTS);
     }
 
-    void onCloseOverlay() {
-        model.getNoAccountForPaymentMethod().set(null);
+    void onCloseNoAccountOverlay(PaymentMethod<?> paymentMethod) {
+        model.getPaymentMethodWithoutAccount().set(null);
+        model.getSelectedPaymentMethods().remove(paymentMethod);
     }
 
-    /////////////////////
+    void onCloseMultipleAccountsOverlay(PaymentMethod<?> paymentMethod) {
+        model.getPaymentMethodWithMultipleAccounts().set(null);
+        model.getSelectedPaymentMethods().remove(paymentMethod);
 
-    private boolean maybeAddCustomPaymentMethod(FiatPaymentMethod paymentMethod) {
+    }
+
+    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+        });
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, () -> {
+            model.getPaymentMethodWithoutAccount().set(null);
+            model.getPaymentMethodWithMultipleAccounts().set(null);
+        });
+    }
+
+    /// //////////////////
+
+    private boolean maybeAddCustomPaymentMethod(PaymentMethod<?> paymentMethod) {
         if (paymentMethod != null) {
             if (!model.getAddedCustomPaymentMethods().contains(paymentMethod)) {
                 String customName = paymentMethod.getName().toUpperCase().strip();
@@ -264,7 +295,7 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
         // To ensure backwards compatibility we need to drop custom payment methods if the user has more than 3,
         // which is the max allowed number of custom payment methods per market
         while (model.getAddedCustomPaymentMethods().size() > MAX_ALLOWED_CUSTOM_PAYMENT_METHODS) {
-            FiatPaymentMethod toRemove = model.getAddedCustomPaymentMethods().remove(model.getAddedCustomPaymentMethods().size() - 1);
+            PaymentMethod<?> toRemove = model.getAddedCustomPaymentMethods().remove(model.getAddedCustomPaymentMethods().size() - 1);
             onRemoveCustomMethod(toRemove);
         }
     }
@@ -290,7 +321,7 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
             new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.tooLong")).show();
             return false;
         }
-        FiatPaymentMethod customPaymentMethod = FiatPaymentMethod.fromCustomName(customName);
+        PaymentMethod<?> customPaymentMethod = FiatPaymentMethod.fromCustomName(customName);
         if (model.getAddedCustomPaymentMethods().contains(customPaymentMethod)) {
             new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.customPaymentMethodAlreadyExists", customPaymentMethod.getName())).show();
             return false;
@@ -308,7 +339,7 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
                 .anyMatch(e -> e.equals(name));
     }
 
-    void onRemoveCustomMethod(FiatPaymentMethod paymentMethod) {
+    void onRemoveCustomMethod(PaymentMethod<?> paymentMethod) {
         model.getAddedCustomPaymentMethods().remove(paymentMethod);
         model.getSelectedPaymentMethods().remove(paymentMethod);
         model.getPaymentMethods().remove(paymentMethod);

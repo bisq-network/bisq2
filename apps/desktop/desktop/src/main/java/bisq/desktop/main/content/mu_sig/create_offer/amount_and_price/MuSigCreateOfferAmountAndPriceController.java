@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.amount_and_price;
 
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.common.currency.Market;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -105,7 +105,7 @@ public class MuSigCreateOfferAmountAndPriceController implements Controller {
         return muSigCreateOfferAmountController.getBaseSideAmountSpec();
     }
 
-    public void setPaymentMethods(List<FiatPaymentMethod> paymentMethods) {
+    public void setPaymentMethods(List<PaymentMethod<?>> paymentMethods) {
         muSigCreateOfferAmountController.setPaymentMethods(paymentMethods);
     }
 

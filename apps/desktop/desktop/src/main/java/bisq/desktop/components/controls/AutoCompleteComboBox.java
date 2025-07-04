@@ -449,11 +449,13 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
 
                 listBackground.setLayoutX(0);
                 buttonPane.setLayoutX(0);
-                listView.setLayoutX(listWidthOffset / 2);
-                listView.setLayoutY(y + listOffset);
-                listView.setPrefWidth(width);
-                listView.setPrefHeight(height - listOffset + 2);
-                listView.autosize();
+                if (listView != null) {
+                    listView.setLayoutX(listWidthOffset / 2);
+                    listView.setLayoutY(y + listOffset);
+                    listView.setPrefWidth(width);
+                    listView.setPrefHeight(height - listOffset + 2);
+                    listView.autosize();
+                }
             }
         }
 

@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.review;
 
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
@@ -58,7 +58,7 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
     private final TextFlow price;
     private final HBox reviewDataDisplay;
     @Nullable
-    private ComboBox<FiatPaymentMethod> paymentMethodsComboBox;
+    private ComboBox<PaymentMethod<?>> paymentMethodsComboBox;
     private Subscription showCreateOfferSuccessPin;
 
     MuSigCreateOfferReviewView(MuSigCreateOfferReviewModel model,
@@ -198,12 +198,12 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
             paymentMethodValuePane.getChildren().setAll(paymentMethodsComboBox);
             paymentMethodsComboBox.setConverter(new StringConverter<>() {
                 @Override
-                public String toString(FiatPaymentMethod method) {
+                public String toString(PaymentMethod<?> method) {
                     return method != null ? method.getDisplayString() : "";
                 }
 
                 @Override
-                public FiatPaymentMethod fromString(String string) {
+                public PaymentMethod<?> fromString(String string) {
                     return null;
                 }
             });

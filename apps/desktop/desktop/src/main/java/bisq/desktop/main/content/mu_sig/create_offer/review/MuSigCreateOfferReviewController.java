@@ -17,13 +17,16 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.review;
 
+import bisq.account.accounts.Account;
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
+import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
@@ -61,6 +64,7 @@ import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -107,7 +111,7 @@ public class MuSigCreateOfferReviewController implements Controller {
         view = new MuSigCreateOfferReviewView(model, this, muSigReviewDataDisplay.getRoot());
     }
 
-    public void setPaymentMethods(List<FiatPaymentMethod> paymentMethods) {
+    public void setPaymentMethods(List<PaymentMethod<?>> paymentMethods) {
         if (paymentMethods != null) {
             resetSelectedPaymentMethod();
             model.setPaymentMethods(paymentMethods);
@@ -130,12 +134,18 @@ public class MuSigCreateOfferReviewController implements Controller {
 
     public void setDataForCreateOffer(Direction direction,
                                       Market market,
-                                      List<FiatPaymentMethod> fiatPaymentMethods,
+                                      ReadOnlyObservableMap<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethod,
                                       AmountSpec amountSpec,
                                       PriceSpec priceSpec) {
+        List<PaymentMethod<?>> paymentMethods = new ArrayList<>(selectedAccountByPaymentMethod.keySet());
+        List<FiatPaymentMethod> fiatPaymentMethods = paymentMethods.stream()
+                .filter(e -> e instanceof FiatPaymentMethod)
+                .map(e -> (FiatPaymentMethod) e)
+                .collect(Collectors.toList());
         checkArgument(!fiatPaymentMethods.isEmpty(), "fiatPaymentMethods must not be empty");
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         List<OfferOption> offerOptions = List.of();
+
         MuSigOffer offer = muSigService.createAndGetMuSigOffer(direction,
                 market,
                 amountSpec,
@@ -146,7 +156,7 @@ public class MuSigCreateOfferReviewController implements Controller {
 
         applyData(direction,
                 market,
-                fiatPaymentMethods,
+                paymentMethods,
                 amountSpec,
                 priceSpec);
     }
@@ -183,12 +193,12 @@ public class MuSigCreateOfferReviewController implements Controller {
     // direction is from user perspective not offer direction
     private void applyData(Direction direction,
                            Market market,
-                           List<FiatPaymentMethod> fiatPaymentMethods,
+                           List<PaymentMethod<?>> paymentMethods,
                            AmountSpec amountSpec,
                            PriceSpec priceSpec) {
         String marketCodes = market.getMarketCodes();
 
-        model.setPaymentMethods(fiatPaymentMethods);
+        model.setPaymentMethods(paymentMethods);
         model.setPriceSpec(priceSpec);
         priceInput.setMarket(market);
         priceInput.setDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.taker", marketCodes));
@@ -264,11 +274,11 @@ public class MuSigCreateOfferReviewController implements Controller {
         model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.maker"));
         model.setDetailsHeadline(Res.get("bisqEasy.tradeWizard.review.detailsHeadline.maker").toUpperCase());
         model.setPaymentMethodDescription(
-                fiatPaymentMethods.size() == 1
-                        ? Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription.fiat")
-                        : Res.get("bisqEasy.tradeWizard.review.paymentMethodDescriptions.fiat.maker")
+                paymentMethods.size() == 1
+                        ? Res.get("muSig.createOffer.review.paymentMethod")
+                        : Res.get("muSig.createOffer.review.paymentMethods")
         );
-        model.setPaymentMethod(PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods));
+        model.setPaymentMethod(PaymentMethodSpecFormatter.fromPaymentMethods(paymentMethods));
         model.setPriceDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.maker"));
         if (direction.isSell()) {
             toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toSend");
@@ -326,7 +336,7 @@ public class MuSigCreateOfferReviewController implements Controller {
         closeAndNavigateToHandler.accept(NavigationTarget.MU_SIG_OFFERBOOK);
     }
 
-    void onSelectFiatPaymentMethod(FiatPaymentMethod paymentMethod) {
+    void onSelectFiatPaymentMethod(PaymentMethod<?> paymentMethod) {
         model.setTakersSelectedFiatPaymentMethod(paymentMethod);
         applyHeaderFiatPaymentMethod();
     }
@@ -336,14 +346,14 @@ public class MuSigCreateOfferReviewController implements Controller {
     }
 
     private void applyHeaderFiatPaymentMethod() {
-        List<FiatPaymentMethod> bitcoinPaymentMethods = model.getPaymentMethods();
+        List<PaymentMethod<?>> paymentMethods = model.getPaymentMethods();
         String bitcoinPaymentMethodsString;
-        if (bitcoinPaymentMethods.size() > 2) {
-            bitcoinPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(bitcoinPaymentMethods.stream()
+        if (paymentMethods.size() > 2) {
+            bitcoinPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(paymentMethods.stream()
                     .limit(2)
                     .collect(Collectors.toList())) + ",...";
         } else {
-            bitcoinPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(bitcoinPaymentMethods);
+            bitcoinPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(paymentMethods);
         }
         bitcoinPaymentMethodsString = StringUtils.truncate(bitcoinPaymentMethodsString, 40);
         model.setHeaderFiatPaymentMethod(bitcoinPaymentMethodsString);

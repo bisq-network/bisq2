@@ -429,6 +429,16 @@
 }
 
 
+.payment-account-in-chips-button {
+    -fx-background-color: -bisq2-yellow-dim-20;
+    -fx-background-radius: 2;
+    -fx-text-fill: -fx-dark-text-color;
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-border-width: 0;
+}
+
+
 /*******************************************************************************
  *                                                                             *
  * Large Buttons                                                               *
