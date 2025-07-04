@@ -514,7 +514,7 @@ public class MuSigOfferbookController implements Controller {
     }
 
     private void updatePaymentFilterTitle(int count) {
-        String hint = count == 0 ? Res.get("muSig.offerbook.offerlistSubheader.paymentMethods.all") : String.valueOf(count);
-        model.getPaymentFilterTitle().set(Res.get("muSig.offerbook.offerlistSubheader.paymentMethods", hint));
+        String hint = count == 0 ? Res.get("muSig.offerbook.offerListSubheader.paymentMethods.all") : String.valueOf(count);
+        model.getPaymentFilterTitle().set(Res.get("muSig.offerbook.offerListSubheader.paymentMethods", hint));
     }
 }

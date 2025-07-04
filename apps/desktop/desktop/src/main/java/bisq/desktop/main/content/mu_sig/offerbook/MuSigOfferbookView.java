@@ -799,13 +799,13 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     }
 
     private void setupOffersVBox() {
-        allOffersToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerlistSubheader.offersToggleGroup.allOffers"));
+        allOffersToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerListSubheader.offersToggleGroup.allOffers"));
         allOffersToggleButton.getStyleClass().add("offerlist-toggle-button-all-offers");
-        buyToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerlistSubheader.offersToggleGroup.buy"));
+        buyToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerListSubheader.offersToggleGroup.buy"));
         buyToggleButton.getStyleClass().add("offerlist-toggle-button-buy");
-        sellToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerlistSubheader.offersToggleGroup.sell"));
+        sellToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerListSubheader.offersToggleGroup.sell"));
         sellToggleButton.getStyleClass().add("offerlist-toggle-button-sell");
-        myOffersToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerlistSubheader.offersToggleGroup.myOffers"));
+        myOffersToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerListSubheader.offersToggleGroup.myOffers"));
         myOffersToggleButton.getStyleClass().add("offerlist-toggle-button-my-offers");
 
         offerFiltersToggleGroup = new ToggleGroup();
@@ -959,7 +959,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
         StackPane customPaymentIcon = BisqEasyViewUtils.getCustomPaymentMethodIcon("C");
         Label customPaymentLabel = new Label(
-                Res.get("muSig.offerbook.offerlistSubheader.paymentMethods.customPayments"), customPaymentIcon);
+                Res.get("muSig.offerbook.offerListSubheader.paymentMethods.customPayments"), customPaymentIcon);
         customPaymentLabel.setGraphicTextGap(10);
         PaymentMenuItem customItem = new PaymentMenuItem(null, customPaymentLabel);
         customItem.setHideOnClick(false);
@@ -968,7 +968,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
         SeparatorMenuItem separator = new SeparatorMenuItem();
         DropdownBisqMenuItem clearFilters = new DropdownBisqMenuItem("delete-t-grey", "delete-t-white",
-                Res.get("muSig.offerbook.offerlistSubheader.paymentMethods.clearFilters"));
+                Res.get("muSig.offerbook.offerListSubheader.paymentMethods.clearFilters"));
         clearFilters.setHideOnClick(false);
         clearFilters.setOnAction(e -> controller.onClearPaymentFilters());
         paymentsFilterMenu.addMenuItems(separator, clearFilters);

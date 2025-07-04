@@ -102,8 +102,8 @@ public class MuSigCreateOfferPaymentMethodsView extends View<StackPane, MuSigCre
 
         // Overlay
         overlayHeadlineLabel = new Label();
-        closeOverlayButton = new Button(Res.get("muSig.offerbook.createOffer.paymentMethod.closeOverlay"));
-        createAccountButton = new Button(Res.get("muSig.offerbook.createOffer.paymentMethod.createAccount"));
+        closeOverlayButton = new Button(Res.get("muSig.createOffer.paymentMethod.noAccountOverlay.close"));
+        createAccountButton = new Button(Res.get("muSig.createOffer.paymentMethod.noAccountOverlay.createAccount"));
         overlay = new VBox(20);
         configOverlay();
 
@@ -127,7 +127,7 @@ public class MuSigCreateOfferPaymentMethodsView extends View<StackPane, MuSigCre
                 paymentMethod -> {
                     if (paymentMethod != null) {
                         overlay.setVisible(true);
-                        overlayHeadlineLabel.setText(Res.get("muSig.offerbook.createOffer.paymentMethod.headline", paymentMethod.getShortDisplayString()));
+                        overlayHeadlineLabel.setText(Res.get("muSig.createOffer.paymentMethod.noAccountOverlay.headline", paymentMethod.getShortDisplayString()));
                         Transitions.blurStrong(content, 0);
                         Transitions.slideInTop(overlay, 450);
                     } else {
@@ -246,7 +246,7 @@ public class MuSigCreateOfferPaymentMethodsView extends View<StackPane, MuSigCre
 
         overlayHeadlineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("muSig.offerbook.createOffer.paymentMethod.subTitle"));
+        Label subtitleLabel = new Label(Res.get("muSig.createOffer.paymentMethod.noAccountOverlay.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.setMinWidth(FEEDBACK_WIDTH - 200);
