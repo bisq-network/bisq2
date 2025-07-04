@@ -17,6 +17,7 @@
 
 package bisq.trade;
 
+import bisq.account.AccountService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
@@ -62,6 +63,7 @@ public class TradeService implements Service, ServiceProvider {
     private final BondedRolesService bondedRolesService;
     private final UserService userService;
     private final SettingsService settingsService;
+    private final AccountService accountService;
     private final MuSigTradeService muSigTradeService;
 
     public TradeService(Config config,
@@ -74,7 +76,8 @@ public class TradeService implements Service, ServiceProvider {
                         ChatService chatService,
                         BondedRolesService bondedRolesService,
                         UserService userService,
-                        SettingsService settingsService) {
+                        SettingsService settingsService,
+                        AccountService accountService) {
         this.networkService = networkService;
         this.identityService = identityService;
         this.persistenceService = persistenceService;
@@ -85,6 +88,7 @@ public class TradeService implements Service, ServiceProvider {
         this.bondedRolesService = bondedRolesService;
         this.userService = userService;
         this.settingsService = settingsService;
+        this.accountService = accountService;
 
         bisqEasyTradeService = new BisqEasyTradeService(this);
         muSigTradeService = new MuSigTradeService(MuSigTradeService.Config.from(config.getMuSigConfig()),

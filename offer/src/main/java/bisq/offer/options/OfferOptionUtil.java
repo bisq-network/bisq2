@@ -17,15 +17,25 @@
 
 package bisq.offer.options;
 
-import bisq.offer.Offer;
+import bisq.account.accounts.Account;
+import bisq.account.payment_method.PaymentMethod;
+import bisq.common.encoding.Hex;
+import bisq.common.observable.collection.ObservableSet;
+import bisq.security.DigestUtil;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 public class OfferOptionUtil {
-    public static List<OfferOption> fromTradeTermsAndReputationScore(String makersTradeTerms, long requiredTotalReputationScore) {
+    public static List<OfferOption> fromTradeTermsAndReputationScore(String makersTradeTerms,
+                                                                     long requiredTotalReputationScore) {
         List<OfferOption> offerOptions = new ArrayList<>();
         if (makersTradeTerms != null && !makersTradeTerms.isEmpty()) {
             offerOptions.add(new TradeTermsOption(makersTradeTerms));
@@ -79,8 +89,33 @@ public class OfferOptionUtil {
                 .findAny();
     }
 
-    public static Optional<String> findMakersTradeTerms(Offer<?, ?> offer) {
-        return OfferOptionUtil.findTradeTermsOption(offer.getOfferOptions()).stream().findAny()
+    public static Optional<String> findMakersTradeTerms(Collection<OfferOption> offerOptions) {
+        return OfferOptionUtil.findTradeTermsOption(offerOptions).stream().findAny()
                 .map(TradeTermsOption::getMakersTradeTerms);
+    }
+
+    public static Set<AccountOption> findAccountOptions(Collection<OfferOption> offerOptions) {
+        return offerOptions.stream()
+                .filter(offerOption -> offerOption instanceof AccountOption)
+                .map(offerOption -> (AccountOption) offerOption)
+                .collect(Collectors.toSet());
+    }
+
+    // Account ID stays private to user. We use offerId for hashing so that it's always a new string in each offer.
+    // The account ID is added to the offer so that maker knows which account was assigned once a taker takes the offer.
+    public static String createdSaltedAccountId(String accountId, String offerId) {
+        String input = accountId + offerId;
+        byte[] hash = DigestUtil.hash(input.getBytes(StandardCharsets.UTF_8));
+        return Hex.encode(hash);
+    }
+
+    public static Optional<Account<? extends PaymentMethod<?>, ?>> findAccountFromSaltedAccountId(ObservableSet<Account<? extends PaymentMethod<?>, ?>> accounts,
+                                                                                                  String saltedAccountId,
+                                                                                                  String offerId) {
+        Set<Account<? extends PaymentMethod<?>, ?>> accountSet = accounts.stream()
+                .filter(account -> saltedAccountId.equals(createdSaltedAccountId(account.getId(), offerId)))
+                .collect(Collectors.toSet());
+        checkArgument(accountSet.size() <= 1, "findAccountFromSaltedAccountId is expected to return 0 or 1 accounts");
+        return accountSet.stream().findAny();
     }
 }

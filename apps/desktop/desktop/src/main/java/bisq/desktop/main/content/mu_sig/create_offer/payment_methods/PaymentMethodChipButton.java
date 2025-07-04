@@ -53,7 +53,7 @@ public class PaymentMethodChipButton extends StackPane {
     }
 
     public void setActive(boolean value) {
-        chipButton.setOpacity(value ? 1 : 0.4);
+        chipButton.setOpacity(value ? 1 : 0.3);
     }
 
     public void dispose() {

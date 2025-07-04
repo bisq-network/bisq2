@@ -93,10 +93,10 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
     //ObservableHashMap<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethod
 
     public boolean validate() {
-        if (getCustomPaymentMethodNameNotEmpty()) {
+       /* if (getCustomPaymentMethodNameNotEmpty()) {
             return tryAddCustomPaymentMethodAndNavigateNext();
-        }
-        if (model.getSelectedPaymentMethods().isEmpty()) {
+        }*/
+        if (model.getSelectedAccountByPaymentMethod().isEmpty()) {
             new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.noFiatPaymentMethodSelected"))
                     .owner(owner)
                     .show();

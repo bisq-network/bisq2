@@ -47,6 +47,7 @@ import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.options.AccountOption;
+import bisq.offer.options.OfferOptionUtil;
 import bisq.offer.payment_method.PaymentMethodSpecFormatter;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FloatPriceSpec;
@@ -151,7 +152,7 @@ public class MuSigCreateOfferReviewController implements Controller {
         List<AccountOption> offerOptions = selectedAccountByPaymentMethod.entrySet().stream().map(entry -> {
             Account<?, ?> account = entry.getValue();
             AccountPayload<?> accountPayload = account.getAccountPayload();
-            String saltedAccountId = AccountOption.createdSaltedAccountId(accountPayload.getId(), offerId);
+            String saltedAccountId = OfferOptionUtil.createdSaltedAccountId(accountPayload.getId(), offerId);
             Optional<String> countryCode = AccountUtils.getCountryCode(accountPayload);
             List<String> acceptedCountryCodes = AccountUtils.getAcceptedCountryCodes(accountPayload);
             Optional<String> bankId = AccountUtils.getBankId(accountPayload);

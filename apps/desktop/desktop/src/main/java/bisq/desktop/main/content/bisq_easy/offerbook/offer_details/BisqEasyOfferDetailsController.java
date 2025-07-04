@@ -118,7 +118,7 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
         model.getId().set(bisqEasyOffer.getId());
         model.getDate().set(DateFormatter.formatDateTime(bisqEasyOffer.getDate()));
 
-        Optional<String> tradeTerms = OfferOptionUtil.findMakersTradeTerms(bisqEasyOffer);
+        Optional<String> tradeTerms = OfferOptionUtil.findMakersTradeTerms(bisqEasyOffer.getOfferOptions());
         model.getMakersTradeTermsVisible().set(tradeTerms.isPresent());
         tradeTerms.ifPresent(makersTradeTerms ->
                 model.getMakersTradeTerms().set(makersTradeTerms));

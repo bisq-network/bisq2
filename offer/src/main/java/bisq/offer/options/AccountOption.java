@@ -20,14 +20,11 @@ package bisq.offer.options;
 import bisq.account.accounts.BankAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentRail;
-import bisq.common.encoding.Hex;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.security.DigestUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,14 +34,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 @EqualsAndHashCode
 public final class AccountOption implements OfferOption {
-    // Account ID stays private to user. We use offerId for hashing so that it's always a new string in each offer.
-    // The account ID is added to the offer so that maker knows which account was assigned once a taker takes the offer.
-    public static String createdSaltedAccountId(String accountId, String offerId) {
-        String input = accountId + offerId;
-        byte[] hash = DigestUtil.hash(input.getBytes(StandardCharsets.UTF_8));
-        return Hex.encode(hash);
-    }
-
     private final PaymentMethod<? extends PaymentRail> paymentMethod;
     private final String saltedAccountId;
     private final Optional<String> countryCode;

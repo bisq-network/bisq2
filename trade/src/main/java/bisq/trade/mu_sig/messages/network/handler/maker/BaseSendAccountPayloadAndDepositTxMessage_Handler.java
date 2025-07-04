@@ -17,17 +17,26 @@
 
 package bisq.trade.mu_sig.messages.network.handler.maker;
 
+import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.F2FAccountPayload;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.common.data.ByteArray;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.util.StringUtils;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.offer.options.AccountOption;
+import bisq.offer.options.OfferOptionUtil;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.handler.MuSigTradeMessageHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.network.SendAccountPayloadAndDepositTxMessage;
 import bisq.trade.mu_sig.messages.network.SendAccountPayloadMessage;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
+import java.util.Set;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public abstract class BaseSendAccountPayloadAndDepositTxMessage_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, SendAccountPayloadAndDepositTxMessage> {
@@ -80,20 +89,26 @@ public abstract class BaseSendAccountPayloadAndDepositTxMessage_Handler extends 
         // we send our payment account data.
         // We require that both peers exchange the account data to allow verification
         // that the buyer used the account defined in the contract to avoid fraud.
-        //todo mock
-        AccountPayload accountPayload = new F2FAccountPayload(
-                "id",
-                "countryCode",
-                "USD",
-                "city",
-                "contact",
-                "extraInfo");
+
+        // The maker has added the salted account id to the AccountOptions.
+        // We will use the payment method chosen by the taker to determine which account we had assigned to that offer.
+        MuSigOffer offer = trade.getOffer();
+        String offerId = offer.getId();
+        PaymentMethod<?> selectedPaymentMethod = trade.getContract().getQuoteSidePaymentMethodSpec().getPaymentMethod();
+        ObservableSet<Account<? extends PaymentMethod<?>, ?>> accounts = serviceProvider.getAccountService().getAccounts();
+        Set<AccountOption> accountOptions = OfferOptionUtil.findAccountOptions(offer.getOfferOptions());
+        Optional<Account<? extends PaymentMethod<?>, ?>> account = accountOptions.stream()
+                .filter(accountOption -> accountOption.getPaymentMethod().equals(selectedPaymentMethod))
+                .map(AccountOption::getSaltedAccountId)
+                .flatMap(saltedAccountId -> OfferOptionUtil.findAccountFromSaltedAccountId(accounts, saltedAccountId, offerId).stream())
+                .findAny();
+        checkArgument(account.isPresent(), "No account found for the saltedAccountIds from the accountOptions");
         send(new SendAccountPayloadMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
-                accountPayload));
+                account.get().getAccountPayload()));
     }
 
     @Override

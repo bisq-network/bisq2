@@ -150,7 +150,7 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
 
         TradeService.Config tradeConfig = TradeService.Config.from(getConfig("trade"));
         tradeService = new TradeService(tradeConfig, networkService, identityService, persistenceService, offerService,
-                contractService, supportService, chatService, bondedRolesService, userService, settingsService);
+                contractService, supportService, chatService, bondedRolesService, userService, settingsService, accountService);
 
         bisqEasyService = new BisqEasyService(persistenceService,
                 securityService,

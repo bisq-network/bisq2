@@ -180,7 +180,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
 
         TradeService.Config tradeConfig = TradeService.Config.from(getConfig("trade"));
         tradeService = new TradeService(tradeConfig, networkService, identityService, persistenceService, offerService,
-                contractService, supportService, chatService, bondedRolesService, userService, settingsService);
+                contractService, supportService, chatService, bondedRolesService, userService, settingsService, accountService);
 
         updaterService = new UpdaterService(getConfig(),
                 settingsService,
