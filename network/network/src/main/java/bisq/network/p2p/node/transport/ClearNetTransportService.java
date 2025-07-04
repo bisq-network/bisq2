@@ -1,6 +1,11 @@
 package bisq.network.p2p.node.transport;
 
+import bisq.common.facades.FacadeProvider;
 import bisq.common.network.Address;
+import bisq.common.network.clear_net_address_types.ClearNetAddressType;
+import bisq.common.network.clear_net_address_types.AndroidEmulatorAddressTypeFacade;
+import bisq.common.network.clear_net_address_types.LANAddressTypeFacade;
+import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
@@ -21,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 
-import static bisq.common.facades.FacadeProvider.getLocalhostFacade;
+import static bisq.common.facades.FacadeProvider.getClearNetAddressTypeFacade;
 
 
 @Slf4j
@@ -32,7 +37,6 @@ public class ClearNetTransportService implements TransportService {
     @EqualsAndHashCode
     public static final class Config implements TransportConfig {
         public static Config from(Path dataDir, com.typesafe.config.Config config) {
-
             return new Config(dataDir,
                     config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("defaultNodeSocketTimeout")),
@@ -40,7 +44,8 @@ public class ClearNetTransportService implements TransportService {
                     config.getInt("devModeDelayInMs"),
                     config.getInt("sendMessageThrottleTime"),
                     config.getInt("receiveMessageThrottleTime"),
-                    config.getInt("connectTimeoutMs")
+                    config.getInt("connectTimeoutMs"),
+                    config.getEnum(ClearNetAddressType.class, "clearNetAddressType")
             );
         }
 
@@ -52,6 +57,7 @@ public class ClearNetTransportService implements TransportService {
         private final int sendMessageThrottleTime;
         private final int receiveMessageThrottleTime;
         private final int connectTimeoutMs;
+        private final ClearNetAddressType clearNetAddressType;
 
         public Config(Path dataDir,
                       int defaultNodePort,
@@ -60,7 +66,8 @@ public class ClearNetTransportService implements TransportService {
                       int devModeDelayInMs,
                       int sendMessageThrottleTime,
                       int receiveMessageThrottleTime,
-                      int connectTimeoutMs) {
+                      int connectTimeoutMs,
+                      ClearNetAddressType clearNetAddressType) {
             this.dataDir = dataDir;
             this.defaultNodePort = defaultNodePort;
             this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
@@ -69,6 +76,7 @@ public class ClearNetTransportService implements TransportService {
             this.sendMessageThrottleTime = sendMessageThrottleTime;
             this.receiveMessageThrottleTime = receiveMessageThrottleTime;
             this.connectTimeoutMs = connectTimeoutMs;
+            this.clearNetAddressType = clearNetAddressType;
         }
     }
 
@@ -88,6 +96,18 @@ public class ClearNetTransportService implements TransportService {
         devModeDelayInMs = config.getDevModeDelayInMs();
         connectTimeoutMs = ((Config) config).getConnectTimeoutMs();
         setTransportState(TransportState.NEW);
+
+        switch (((Config) config).getClearNetAddressType()) {
+            case LOCAL_HOST -> {
+                FacadeProvider.setClearNetAddressTypeFacade(new LocalHostAddressTypeFacade());
+            }
+            case ANDROID_EMULATOR -> {
+                FacadeProvider.setClearNetAddressTypeFacade(new AndroidEmulatorAddressTypeFacade());
+            }
+            case LAN -> {
+                FacadeProvider.setClearNetAddressTypeFacade(new LANAddressTypeFacade());
+            }
+        }
     }
 
     @Override
@@ -118,7 +138,7 @@ public class ClearNetTransportService implements TransportService {
         maybeSimulateDelay();
         try {
             ServerSocket serverSocket = new ServerSocket(port);
-            Address address = getLocalhostFacade().toMyLocalhost(port);
+            Address address = getClearNetAddressTypeFacade().toMyLocalAddress(port);
             log.debug("ServerSocket created at port {}", port);
             initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
             return new ServerSocketResult(serverSocket, address);
@@ -130,7 +150,7 @@ public class ClearNetTransportService implements TransportService {
 
     @Override
     public Socket getSocket(Address address) throws IOException {
-        address = getLocalhostFacade().toPeersLocalhost(address);
+        address = getClearNetAddressTypeFacade().toPeersLocalAddress(address);
 
         log.debug("Create new Socket to {}", address);
         maybeSimulateDelay();
