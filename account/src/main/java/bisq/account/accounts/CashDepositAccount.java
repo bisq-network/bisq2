@@ -10,8 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class CashDepositAccount extends BankAccount<CashDepositAccountPayload> {
-    public CashDepositAccount(long creationDate, String accountName, CashDepositAccountPayload accountPayload) {
-        super(creationDate, accountName, accountPayload);
+    public CashDepositAccount(String id, long creationDate, String accountName, CashDepositAccountPayload accountPayload) {
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -29,7 +29,8 @@ public final class CashDepositAccount extends BankAccount<CashDepositAccountPayl
     }
 
     public static CashDepositAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new CashDepositAccount(proto.getCreationDate(),
+        return new CashDepositAccount(proto.getId(),
+                proto.getCreationDate(),
                 proto.getAccountName(),
                 CashDepositAccountPayload.fromProto(proto.getAccountPayload()));
     }

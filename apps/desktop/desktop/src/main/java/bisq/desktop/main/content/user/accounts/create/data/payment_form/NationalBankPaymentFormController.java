@@ -25,12 +25,12 @@ import bisq.common.currency.FiatCurrency;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -51,7 +51,7 @@ public class NationalBankPaymentFormController extends PaymentFormController<Nat
         List<FiatCurrency> nationBankAccountCurrencies = nationBankAccountCountryCodes.stream()
                 .map(FiatCurrencyRepository::getCurrencyByCountryCode)
                 .collect(Collectors.toList());
-        return new NationalBankPaymentFormModel(UUID.randomUUID().toString(),
+        return new NationalBankPaymentFormModel(StringUtils.createUid(),
                 nationBankAccountCountries,
                 nationBankAccountCurrencies,
                 List.of(BankAccountType.CHECKINGS, BankAccountType.SAVINGS));

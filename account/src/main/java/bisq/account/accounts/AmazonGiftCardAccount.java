@@ -11,8 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class AmazonGiftCardAccount extends CountryBasedAccount<AmazonGiftCardAccountPayload> {
-    public AmazonGiftCardAccount(long creationDate, String accountName, AmazonGiftCardAccountPayload accountPayload) {
-        super(creationDate, accountName, accountPayload);
+    public AmazonGiftCardAccount(String id, long creationDate, String accountName, AmazonGiftCardAccountPayload accountPayload) {
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -37,7 +37,8 @@ public final class AmazonGiftCardAccount extends CountryBasedAccount<AmazonGiftC
     }
 
     public static AmazonGiftCardAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new AmazonGiftCardAccount(proto.getCreationDate(),
+        return new AmazonGiftCardAccount(proto.getId(),
+                proto.getCreationDate(),
                 proto.getAccountName(),
                 AmazonGiftCardAccountPayload.fromProto(proto.getAccountPayload()));
     }

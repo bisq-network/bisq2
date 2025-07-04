@@ -28,8 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class CashAppAccount extends Account<FiatPaymentMethod,CashAppAccountPayload> {
-    public CashAppAccount(long creationDate, String accountName, CashAppAccountPayload accountPayload) {
-        super(creationDate, accountName, accountPayload);
+    public CashAppAccount(String id, long creationDate, String accountName, CashAppAccountPayload accountPayload) {
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -47,7 +47,8 @@ public final class CashAppAccount extends Account<FiatPaymentMethod,CashAppAccou
     }
 
     public static CashAppAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new CashAppAccount(proto.getCreationDate(),
+        return new CashAppAccount(proto.getId(),
+                proto.getCreationDate(),
                 proto.getAccountName(),
                 CashAppAccountPayload.fromProto(proto.getAccountPayload()));
     }

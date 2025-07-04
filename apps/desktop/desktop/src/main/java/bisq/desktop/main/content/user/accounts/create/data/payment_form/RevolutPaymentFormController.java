@@ -21,12 +21,12 @@ import bisq.account.accounts.RevolutAccountPayload;
 import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.currency.FiatCurrency;
 import bisq.common.currency.TradeCurrency;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -45,7 +45,7 @@ public class RevolutPaymentFormController extends PaymentFormController<RevolutP
         List<FiatCurrency> revolutCurrencies = FiatPaymentRailUtil.getRevolutCurrencies().stream()
                 .sorted(Comparator.comparing(TradeCurrency::getName))
                 .collect(Collectors.toList());
-        return new RevolutPaymentFormModel(UUID.randomUUID().toString(), revolutCurrencies);
+        return new RevolutPaymentFormModel(StringUtils.createUid(), revolutCurrencies);
     }
 
     @Override

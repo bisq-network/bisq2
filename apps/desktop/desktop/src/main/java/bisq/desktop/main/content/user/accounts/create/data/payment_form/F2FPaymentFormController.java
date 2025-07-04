@@ -22,10 +22,9 @@ import bisq.common.currency.FiatCurrency;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.UUID;
 
 @Slf4j
 public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFormView, F2FPaymentFormModel, F2FAccountPayload> {
@@ -40,7 +39,7 @@ public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFo
 
     @Override
     protected F2FPaymentFormModel createModel() {
-        return new F2FPaymentFormModel(UUID.randomUUID().toString(),
+        return new F2FPaymentFormModel(StringUtils.createUid(),
                 CountryRepository.getAllCountries(),
                 FiatCurrencyRepository.getAllCurrencies());
     }

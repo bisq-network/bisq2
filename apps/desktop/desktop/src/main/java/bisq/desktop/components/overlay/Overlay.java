@@ -218,7 +218,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     };
 
     public Overlay() {
-        id = UUID.randomUUID().toString();
+        id = StringUtils.createUid();
         TypeToken<T> typeToken = new TypeToken<>(getClass()) {
         };
         if (!typeToken.isSupertypeOf(getClass())) {

@@ -18,10 +18,9 @@
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
 import bisq.account.accounts.ZelleAccountPayload;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.UUID;
 
 @Slf4j
 public class ZellePaymentFormController extends PaymentFormController<ZellePaymentFormView, ZellePaymentFormModel, ZelleAccountPayload> {
@@ -36,7 +35,7 @@ public class ZellePaymentFormController extends PaymentFormController<ZellePayme
 
     @Override
     protected ZellePaymentFormModel createModel() {
-        return new ZellePaymentFormModel(UUID.randomUUID().toString());
+        return new ZellePaymentFormModel(StringUtils.createUid());
     }
 
     @Override

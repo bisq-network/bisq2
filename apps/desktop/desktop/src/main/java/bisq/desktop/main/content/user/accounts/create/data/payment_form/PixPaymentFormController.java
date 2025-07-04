@@ -18,10 +18,9 @@
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
 import bisq.account.accounts.PixAccountPayload;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.UUID;
 
 @Slf4j
 public class PixPaymentFormController extends PaymentFormController<PixPaymentFormView, PixPaymentFormModel, PixAccountPayload> {
@@ -36,7 +35,7 @@ public class PixPaymentFormController extends PaymentFormController<PixPaymentFo
 
     @Override
     protected PixPaymentFormModel createModel() {
-        return new PixPaymentFormModel(UUID.randomUUID().toString());
+        return new PixPaymentFormModel(StringUtils.createUid());
     }
 
     @Override

@@ -246,6 +246,7 @@ message Account {
   string accountName = 2;
   AccountPayload accountPayload = 3;
   PaymentMethod paymentMethod = 4;
+  string id = 5;
 
   oneof message {
     ZelleAccount zelleAccount = 19;

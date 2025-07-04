@@ -35,13 +35,25 @@ import java.util.List;
 @ToString
 @EqualsAndHashCode
 public abstract class Account<M extends PaymentMethod<?>, P extends AccountPayload<M>> implements PersistableProto {
+    protected final String id;
     protected final long creationDate;
     protected final String accountName;
     protected final P accountPayload;
 
-    public Account(long creationDate,
+   /* public Account(long creationDate,
                    String accountName,
                    P accountPayload) {
+        this(StringUtils.createUid(),
+                creationDate,
+                accountName,
+                accountPayload);
+    }*/
+
+    public Account(String id,
+                   long creationDate,
+                   String accountName,
+                   P accountPayload) {
+        this.id = id;
         this.creationDate = creationDate;
         this.accountName = accountName;
         this.accountPayload = accountPayload;
@@ -59,6 +71,7 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
 
     protected bisq.account.protobuf.Account.Builder getAccountBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.Account.newBuilder()
+                .setId(id)
                 .setCreationDate(creationDate)
                 .setAccountName(accountName)
                 //.setPaymentMethod(paymentMethod.toProto(serializeForHash))

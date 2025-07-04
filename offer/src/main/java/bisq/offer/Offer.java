@@ -81,7 +81,7 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
                  List<TradeProtocolType> protocolTypes,
                  List<B> baseSidePaymentMethodSpecs,
                  List<Q> quoteSidePaymentMethodSpecs,
-                 List<OfferOption> offerOptions,
+                 List<? extends OfferOption> offerOptions,
                  int version,
                  String tradeProtocolVersion,
                  String appVersion) {

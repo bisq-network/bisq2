@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 /**
- * AccountPayload is sent over the wire to the peer. It must not contain sensitive data.
+ * AccountPayload is sent over the wire to the peer during the trade process. It is not used in teh offer.
  */
 @Getter
 @Slf4j

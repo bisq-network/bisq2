@@ -116,7 +116,14 @@ message FiatPaymentOption {
 message LanguageOption {
   repeated string supportedLanguageCodes = 1;
 }
-
+message AccountOption {
+  account.PaymentMethod paymentMethod = 1;
+  string saltedAccountId = 2;
+  optional string countryCode = 3;
+  repeated string acceptedCountryCodes = 4;
+  optional string bankId = 5;
+  repeated string acceptedBanks = 6;
+}
 message OfferOption {
   oneof message {
     TradeTermsOption tradeTermsOption = 1;
@@ -125,6 +132,7 @@ message OfferOption {
     FiatPaymentOption fiatPaymentOption = 5;
     FeeOption feeOption = 6;
     LanguageOption languageOption = 7;
+    AccountOption accountOption = 8;
   }
 }
 

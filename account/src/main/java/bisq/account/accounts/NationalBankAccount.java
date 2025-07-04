@@ -10,8 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class NationalBankAccount extends BankAccount<NationalBankAccountPayload> {
-    public NationalBankAccount(long creationDate, String accountName, NationalBankAccountPayload accountPayload) {
-        super(creationDate, accountName, accountPayload);
+    public NationalBankAccount(String id, long creationDate, String accountName, NationalBankAccountPayload accountPayload) {
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -29,7 +29,8 @@ public class NationalBankAccount extends BankAccount<NationalBankAccountPayload>
     }
 
     public static NationalBankAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new NationalBankAccount(proto.getCreationDate(),
+        return new NationalBankAccount(proto.getId(),
+                proto.getCreationDate(),
                 proto.getAccountName(),
                 NationalBankAccountPayload.fromProto(proto.getAccountPayload()));
     }

@@ -11,8 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class UpiAccount extends CountryBasedAccount<UpiAccountPayload> {
-    public UpiAccount(long creationDate, String accountName, UpiAccountPayload accountPayload) {
-        super(creationDate, accountName, accountPayload);
+    public UpiAccount(String id, long creationDate, String accountName, UpiAccountPayload accountPayload) {
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -30,7 +30,8 @@ public final class UpiAccount extends CountryBasedAccount<UpiAccountPayload> {
     }
 
     public static UpiAccount fromProto(Account proto) {
-        return new UpiAccount(proto.getCreationDate(),
+        return new UpiAccount(proto.getId(),
+                proto.getCreationDate(),
                 proto.getAccountName(),
                 UpiAccountPayload.fromProto(proto.getAccountPayload()));
     }

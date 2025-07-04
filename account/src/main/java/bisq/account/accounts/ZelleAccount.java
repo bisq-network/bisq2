@@ -10,8 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class ZelleAccount extends CountryBasedAccount<ZelleAccountPayload> {
-    public ZelleAccount(long creationDate, String accountName, ZelleAccountPayload accountPayload) {
-        super(creationDate, accountName, accountPayload);
+    public ZelleAccount(String id, long creationDate, String accountName, ZelleAccountPayload accountPayload) {
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -29,7 +29,8 @@ public class ZelleAccount extends CountryBasedAccount<ZelleAccountPayload> {
     }
 
     public static ZelleAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new ZelleAccount(proto.getCreationDate(),
+        return new ZelleAccount(proto.getId(),
+                proto.getCreationDate(),
                 proto.getAccountName(),
                 ZelleAccountPayload.fromProto(proto.getAccountPayload()));
     }

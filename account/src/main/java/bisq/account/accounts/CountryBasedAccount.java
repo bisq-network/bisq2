@@ -32,8 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload> extends Account<FiatPaymentMethod, P> {
     protected final Country country;
 
-    public CountryBasedAccount(long creationDate, String accountName, P accountPayload) {
-        super(creationDate, accountName, accountPayload);
+    public CountryBasedAccount(String id, long creationDate, String accountName, P accountPayload) {
+        super(id, creationDate, accountName, accountPayload);
         this.country = accountPayload.getCountry();
     }
 

@@ -27,10 +27,11 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class SepaInstantAccount extends CountryBasedAccount<SepaInstantAccountPayload> {
-    public SepaInstantAccount(long creationDate,
+    public SepaInstantAccount(String id,
+                              long creationDate,
                               String accountName,
                               SepaInstantAccountPayload accountPayload) {
-        super(creationDate, accountName, accountPayload);
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -48,7 +49,8 @@ public final class SepaInstantAccount extends CountryBasedAccount<SepaInstantAcc
     }
 
     public static SepaInstantAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new SepaInstantAccount(proto.getCreationDate(),
+        return new SepaInstantAccount(proto.getId(),
+                proto.getCreationDate(),
                 proto.getAccountName(),
                 SepaInstantAccountPayload.fromProto(proto.getAccountPayload()));
     }

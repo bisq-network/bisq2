@@ -10,8 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class PixAccount extends CountryBasedAccount<PixAccountPayload> {
-    public PixAccount(long creationDate, String accountName, PixAccountPayload accountPayload) {
-        super(creationDate, accountName, accountPayload);
+    public PixAccount(String id, long creationDate, String accountName, PixAccountPayload accountPayload) {
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -29,7 +29,8 @@ public final class PixAccount extends CountryBasedAccount<PixAccountPayload> {
     }
 
     public static PixAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new PixAccount(proto.getCreationDate(),
+        return new PixAccount(proto.getId(),
+                proto.getCreationDate(),
                 proto.getAccountName(),
                 PixAccountPayload.fromProto(proto.getAccountPayload()));
     }

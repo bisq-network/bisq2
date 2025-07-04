@@ -11,8 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class StrikeAccount extends CountryBasedAccount<StrikeAccountPayload> {
-    public StrikeAccount(long creationDate, String accountName, StrikeAccountPayload accountPayload) {
-        super(creationDate, accountName, accountPayload);
+    public StrikeAccount(String id, long creationDate, String accountName, StrikeAccountPayload accountPayload) {
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -30,7 +30,8 @@ public final class StrikeAccount extends CountryBasedAccount<StrikeAccountPayloa
     }
 
     public static StrikeAccount fromProto(Account proto) {
-        return new StrikeAccount(proto.getCreationDate(),
+        return new StrikeAccount(proto.getId(),
+                proto.getCreationDate(),
                 proto.getAccountName(),
                 StrikeAccountPayload.fromProto(proto.getAccountPayload()));
     }

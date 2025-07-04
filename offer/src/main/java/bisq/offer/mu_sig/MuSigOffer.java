@@ -21,7 +21,6 @@ import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.application.BuildVersion;
 import bisq.common.currency.Market;
-import bisq.common.util.StringUtils;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
@@ -47,16 +46,17 @@ import java.util.stream.Collectors;
 public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymentMethodSpec> {
     private static final int VERSION = 0;
 
-    public MuSigOffer(NetworkId makerNetworkId,
+    public MuSigOffer(String id,
+                      NetworkId makerNetworkId,
                       Direction direction,
                       Market market,
                       AmountSpec amountSpec,
                       PriceSpec priceSpec,
                       List<FiatPaymentMethod> fiatPaymentMethods,
-                      List<OfferOption> offerOptions,
+                      List<? extends OfferOption> offerOptions,
                       String tradeProtocolVersion
     ) {
-        this(StringUtils.createUid(),
+        this(id,
                 System.currentTimeMillis(),
                 makerNetworkId,
                 direction,
@@ -83,7 +83,7 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                        List<TradeProtocolType> protocolTypes,
                        List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
                        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs,
-                       List<OfferOption> offerOptions,
+                       List<? extends OfferOption> offerOptions,
                        int version,
                        String tradeProtocolVersion,
                        String appVersion

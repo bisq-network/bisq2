@@ -206,15 +206,17 @@ public class MuSigService extends LifecycleService {
     // Offer API
     /* --------------------------------------------------------------------- */
 
-    public MuSigOffer createAndGetMuSigOffer(Direction direction,
+    public MuSigOffer createAndGetMuSigOffer(String id,
+                                             Direction direction,
                                              Market market,
                                              AmountSpec amountSpec,
                                              PriceSpec priceSpec,
                                              List<FiatPaymentMethod> fiatPaymentMethods,
-                                             List<OfferOption> offerOptions) {
+                                             List<? extends OfferOption> offerOptions) {
         checkArgument(isActivated());
         NetworkId makerNetworkId = userIdentityService.getSelectedUserIdentity().getUserProfile().getNetworkId();
-        return new MuSigOffer(makerNetworkId,
+        return new MuSigOffer(id,
+                makerNetworkId,
                 direction,
                 market,
                 amountSpec,

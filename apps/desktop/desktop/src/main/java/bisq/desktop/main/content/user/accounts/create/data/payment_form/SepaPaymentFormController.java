@@ -21,13 +21,13 @@ import bisq.account.accounts.SepaAccountPayload;
 import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -55,7 +55,7 @@ public class SepaPaymentFormController extends PaymentFormController<SepaPayment
                 .map(CountryRepository::getCountry)
                 .sorted(Comparator.comparing(Country::getName))
                 .collect(Collectors.toList());
-        return new SepaPaymentFormModel(UUID.randomUUID().toString(),
+        return new SepaPaymentFormModel(StringUtils.createUid(),
                 allSepaCountries,
                 allEuroCountries,
                 allNonEuroCountries);

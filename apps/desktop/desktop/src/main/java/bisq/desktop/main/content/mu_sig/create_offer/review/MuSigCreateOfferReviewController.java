@@ -18,6 +18,8 @@
 package bisq.desktop.main.content.mu_sig.create_offer.review;
 
 import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.AccountUtils;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPrice;
@@ -44,7 +46,7 @@ import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.offer.options.OfferOption;
+import bisq.offer.options.AccountOption;
 import bisq.offer.payment_method.PaymentMethodSpecFormatter;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FloatPriceSpec;
@@ -144,9 +146,22 @@ public class MuSigCreateOfferReviewController implements Controller {
                 .collect(Collectors.toList());
         checkArgument(!fiatPaymentMethods.isEmpty(), "fiatPaymentMethods must not be empty");
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        List<OfferOption> offerOptions = List.of();
 
-        MuSigOffer offer = muSigService.createAndGetMuSigOffer(direction,
+        String offerId = StringUtils.createUid();
+        List<AccountOption> offerOptions = selectedAccountByPaymentMethod.entrySet().stream().map(entry -> {
+            Account<?, ?> account = entry.getValue();
+            AccountPayload<?> accountPayload = account.getAccountPayload();
+            String saltedAccountId = AccountOption.createdSaltedAccountId(accountPayload.getId(), offerId);
+            Optional<String> countryCode = AccountUtils.getCountryCode(accountPayload);
+            List<String> acceptedCountryCodes = AccountUtils.getAcceptedCountryCodes(accountPayload);
+            Optional<String> bankId = AccountUtils.getBankId(accountPayload);
+            List<String> acceptedBanks = AccountUtils.getAcceptedBanks(accountPayload);
+
+            return new AccountOption(account.getPaymentMethod(), saltedAccountId, countryCode, acceptedCountryCodes, bankId, acceptedBanks);
+        }).collect(Collectors.toList());
+
+        MuSigOffer offer = muSigService.createAndGetMuSigOffer(offerId,
+                direction,
                 market,
                 amountSpec,
                 priceSpec,

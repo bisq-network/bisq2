@@ -28,8 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class UserDefinedFiatAccount extends Account<FiatPaymentMethod, UserDefinedFiatAccountPayload> {
-    public UserDefinedFiatAccount(long creationDate, String accountName, UserDefinedFiatAccountPayload accountPayload) {
-        super(creationDate, accountName, accountPayload);
+    public UserDefinedFiatAccount(String id, long creationDate, String accountName, UserDefinedFiatAccountPayload accountPayload) {
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -47,7 +47,8 @@ public final class UserDefinedFiatAccount extends Account<FiatPaymentMethod, Use
     }
 
     public static UserDefinedFiatAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new UserDefinedFiatAccount(proto.getCreationDate(),
+        return new UserDefinedFiatAccount(proto.getId(),
+                proto.getCreationDate(),
                 proto.getAccountName(),
                 UserDefinedFiatAccountPayload.fromProto(proto.getAccountPayload()));
     }

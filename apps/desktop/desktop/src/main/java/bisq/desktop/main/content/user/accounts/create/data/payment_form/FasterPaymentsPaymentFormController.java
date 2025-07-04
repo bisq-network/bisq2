@@ -18,10 +18,9 @@
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
 import bisq.account.accounts.FasterPaymentsAccountPayload;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.UUID;
 
 @Slf4j
 public class FasterPaymentsPaymentFormController extends PaymentFormController<FasterPaymentsPaymentFormView, FasterPaymentsPaymentFormModel, FasterPaymentsAccountPayload> {
@@ -36,7 +35,7 @@ public class FasterPaymentsPaymentFormController extends PaymentFormController<F
 
     @Override
     protected FasterPaymentsPaymentFormModel createModel() {
-        return new FasterPaymentsPaymentFormModel(UUID.randomUUID().toString());
+        return new FasterPaymentsPaymentFormModel(StringUtils.createUid());
     }
 
     @Override
