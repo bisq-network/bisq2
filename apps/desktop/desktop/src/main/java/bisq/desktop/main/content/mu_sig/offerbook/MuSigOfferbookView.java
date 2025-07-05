@@ -520,8 +520,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                     setGraphic(container);
                 } else {
                     favouritesLabel.setOnMouseClicked(null);
-                    setGraphic(null);
                     numOffers.textProperty().unbind();
+                    setGraphic(null);
                 }
             }
         };
