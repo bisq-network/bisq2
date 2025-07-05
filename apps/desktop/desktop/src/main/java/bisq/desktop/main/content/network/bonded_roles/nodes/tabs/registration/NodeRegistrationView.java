@@ -37,6 +37,7 @@ public class NodeRegistrationView extends BondedRolesRegistrationView<NodeRegist
                                 NodeRegistrationController controller,
                                 UserProfileSelection userProfileSelection) {
         super(model, controller, userProfileSelection);
+
         addressInfoJson = new MaterialTextArea(Res.get("user.bondedRoles.registration.node.addressInfo"), Res.get("user.bondedRoles.registration.node.addressInfo.prompt"));
 
         pubKey = new MaterialTextField(Res.get("user.bondedRoles.registration.node.pubKey"));

@@ -334,11 +334,11 @@ public class MaterialUserProfileSelection extends Pane {
     }
 
     protected double getBgHeight() {
-        return 56;
+        return 67;
     }
 
     protected double getFieldLayoutY() {
-        return 19;
+        return 26;
     }
 
     @Override
