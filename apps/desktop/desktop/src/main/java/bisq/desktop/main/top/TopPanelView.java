@@ -30,6 +30,7 @@ import javafx.scene.layout.Pane;
 
 public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> {
     public static final int HEIGHT = 57;
+
     private BitcoinAmountDisplay balanceBitcoinAmountDisplay;
 
     public TopPanelView(TopPanelModel model,

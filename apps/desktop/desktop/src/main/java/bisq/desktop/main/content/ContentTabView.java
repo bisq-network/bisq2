@@ -33,6 +33,7 @@ import org.fxmisc.easybind.Subscription;
 
 public abstract class ContentTabView<M extends ContentTabModel, C extends ContentTabController<M>> extends TabView<M, C> {
     private static final Insets NOTIFICATION_PADDING = new Insets(0, 40, 0, 40);
+
     private Subscription isNotificationVisiblePin;
 
     public ContentTabView(M model, C controller) {
