@@ -138,9 +138,9 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         offerMessagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
             public void add(BisqEasyOfferbookMessage offerbookMessage) {
-                if (!model.getChatMessageIds().contains(offerbookMessage.getId()) &&
-                        offerbookMessage.hasBisqEasyOffer()) {
-                    UIThread.runOnNextRenderFrame(() -> {
+                UIThread.runOnNextRenderFrame(() -> {
+                    if (!model.getChatMessageIds().contains(offerbookMessage.getId()) &&
+                            offerbookMessage.hasBisqEasyOffer()) {
                         if (bisqEasyOfferbookMessageService.isValid(offerbookMessage)) {
                             userProfileService.findUserProfile(offerbookMessage.getAuthorUserProfileId())
                                     .ifPresent(authorUserProfile -> {
@@ -152,14 +152,14 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
                                         model.getChatMessageIds().add(offerbookMessage.getId());
                                     });
                         }
-                    });
-                }
+                    }
+                });
             }
 
             @Override
             public void remove(Object element) {
-                if (element instanceof BisqEasyOfferbookMessage && ((BisqEasyOfferbookMessage) element).hasBisqEasyOffer()) {
-                    UIThread.runOnNextRenderFrame(() -> {
+                UIThread.runOnNextRenderFrame(() -> {
+                    if (element instanceof BisqEasyOfferbookMessage && ((BisqEasyOfferbookMessage) element).hasBisqEasyOffer()) {
                         BisqEasyOfferbookMessage offerMessage = (BisqEasyOfferbookMessage) element;
                         Optional<OfferbookListItem> toRemove = model.getOfferbookListItems().stream()
                                 .filter(item -> item.getBisqEasyOfferbookMessage().getId().equals(offerMessage.getId()))
@@ -169,8 +169,8 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
                             model.getOfferbookListItems().remove(item);
                             model.getChatMessageIds().remove(offerMessage.getId());
                         });
-                    });
-                }
+                    }
+                });
             }
 
             @Override
