@@ -26,6 +26,7 @@ import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
+import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.CacheHint;
@@ -126,7 +127,10 @@ public class BisqEasyOfferbookUtil {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    numOffers.setText(BisqEasyOfferbookUtil.getFormattedOfferNumber(item.getNumOffers().get()));
+                    numOffers.textProperty().bind(Bindings.createStringBinding(
+                            () -> getFormattedOfferNumber(item.getNumOffers().get()),
+                            item.getNumOffers()
+                    ));
                     String quoteCurrencyDisplayName = StringUtils.capitalize(item.getMarket().getQuoteCurrencyDisplayName());
                     marketDetailsTooltip.setText(BisqEasyOfferbookUtil.getFormattedTooltip(item.getNumOffers().get(), quoteCurrencyDisplayName));
                     marketName.setText(quoteCurrencyDisplayName);
@@ -135,6 +139,7 @@ public class BisqEasyOfferbookUtil {
                     setGraphic(container);
                 } else {
                     favouritesLabel.setOnMouseClicked(null);
+                    numOffers.textProperty().unbind();
                     setGraphic(null);
                 }
             }
