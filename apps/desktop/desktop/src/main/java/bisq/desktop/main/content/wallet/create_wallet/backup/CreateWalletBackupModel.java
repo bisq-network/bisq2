@@ -11,11 +11,12 @@ import lombok.Setter;
 
 @Getter
 public class CreateWalletBackupModel implements Model {
-    private final StringProperty[] seedWords = new StringProperty[12];
+    private final int SEED_WORD_COUNT = 12;
+    private final StringProperty[] seedWords = new StringProperty[SEED_WORD_COUNT];
     private final ObjectProperty<SeedState> seedState = new SimpleObjectProperty<>(SeedState.LOADING);
 
     public CreateWalletBackupModel() {
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < SEED_WORD_COUNT; i++) {
             seedWords[i] = new SimpleStringProperty("");
         }
     }

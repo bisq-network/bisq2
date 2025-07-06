@@ -57,10 +57,10 @@ public class CreateWalletController extends NavigationController {
                 setMainButtonsVisibleState(false);
             } else if (newState == CreateWalletVerifyModel.ScreenState.SUCCESS) {
                 model.getNextButtonVisible().set(true);
-                model.getNextButtonText().set("Go to wallet");
+                model.getNextButtonText().set(Res.get("wallet.verifySeeds.button.success.nextStep"));
             } else if (newState == CreateWalletVerifyModel.ScreenState.WRONG) {
                 model.getNextButtonVisible().set(true);
-                model.getNextButtonText().set("View seed words");
+                model.getNextButtonText().set(Res.get("wallet.backupSeeds.button.verify"));
             }
         };
 
@@ -72,11 +72,6 @@ public class CreateWalletController extends NavigationController {
 
     @Override
     public void onActivate() {
-        model.getChildTargets().clear();
-        model.getChildTargets().add(NavigationTarget.CREATE_WALLET_PROTECT);
-        model.getChildTargets().add(NavigationTarget.CREATE_WALLET_BACKUP);
-        model.getChildTargets().add(NavigationTarget.CREATE_WALLET_VERIFY);
-
         overlayController.setUseEscapeKeyHandler(false);
         overlayController.setEnterKeyHandler(null);
         overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
@@ -103,6 +98,7 @@ public class CreateWalletController extends NavigationController {
             backString = Res.get("action.back");
             nextString = Res.get("wallet.backupSeeds.button.verify");
         } else if (navigationTarget == NavigationTarget.CREATE_WALLET_VERIFY ) {
+            createWalletVerifyController.getModel().getCurrentScreenState().removeListener(verifyScreenStateListener);
             createWalletVerifyController.getModel().getCurrentScreenState().addListener(verifyScreenStateListener);
             backString = Res.get("action.back");
             nextString = "Next word";

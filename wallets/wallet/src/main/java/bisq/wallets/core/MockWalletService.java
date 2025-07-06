@@ -158,7 +158,6 @@ public class MockWalletService implements WalletService {
     // Once the usage is over, it is to be removed from memory.
     @Override
     public void purgeSeedWords() {
-        seedWords.clear();
         seedWords = null;
     }
 }

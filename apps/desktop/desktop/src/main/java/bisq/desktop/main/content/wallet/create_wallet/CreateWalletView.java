@@ -134,15 +134,13 @@ public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, Cr
         backButton.visibleProperty().bind(model.getBackButtonVisible());
         backButton.managedProperty().bind(model.getBackButtonVisible());
 
-        closeButton.visibleProperty().bind(model.getCloseButtonVisible());
-
         model.getCurrentIndex().addListener(currentIndexListener);
         model.getView().addListener(viewChangeListener);
 
         nextButton.setOnAction(e -> controller.onNext());
         backButton.setOnAction(evt -> controller.onBack());
         closeButton.setOnAction(e -> controller.onClose());
-        root.setOnKeyPressed(controller::onKeyPressed);
+        root.setOnKeyPressed(controller::onKeyPressed); // To handle Enter, Esc
 
         applyProgress(model.getCurrentIndex().get(), false);
     }
@@ -157,9 +155,6 @@ public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, Cr
         backButton.textProperty().unbind();
         backButton.visibleProperty().unbind();
         backButton.managedProperty().unbind();
-        backButton.prefWidthProperty().unbind();
-
-        closeButton.visibleProperty().unbind();
 
         model.getCurrentIndex().removeListener(currentIndexListener);
         model.getView().removeListener(viewChangeListener);
@@ -170,6 +165,7 @@ public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, Cr
         root.setOnKeyPressed(null);
     }
 
+    // TODO: Generalise
     private Region getHLine() {
         Region line = Layout.hLine();
         line.setPrefWidth(30);

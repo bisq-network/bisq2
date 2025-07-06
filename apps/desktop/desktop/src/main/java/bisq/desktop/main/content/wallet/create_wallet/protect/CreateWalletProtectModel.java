@@ -26,6 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class CreateWalletProtectModel implements Model {
-    private final StringProperty password = new SimpleStringProperty("abc");
-    private final StringProperty confirmPassword = new SimpleStringProperty("abc");
+    private final StringProperty password = new SimpleStringProperty("");
+    private final StringProperty confirmPassword = new SimpleStringProperty("");
 }

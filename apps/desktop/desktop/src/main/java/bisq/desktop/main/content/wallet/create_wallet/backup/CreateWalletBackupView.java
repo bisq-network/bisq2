@@ -23,13 +23,16 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class CreateWalletBackupView extends View<StackPane, CreateWalletBackupModel, CreateWalletBackupController> {
-    private static final Logger log = LoggerFactory.getLogger(CreateWalletBackupView.class);
     VBox content;
     private final List<Label> seedLabelList = new ArrayList<>();
     private final List<ChangeListener<String>> seedWordListeners = new ArrayList<>();
-    private ChangeListener<SeedState> seedStateListener;
+    private final ChangeListener<SeedState> seedStateListener;
 
     private final Consumer<Boolean> navigationButtonsVisibleHandler;
+
+    private static final int GRID_COLUMNS = 4;
+    private static final int WORD_LABEL_WIDTH = 124;
+    private static final int WORD_LABEL_HEIGHT = 40;
 
     public CreateWalletBackupView(CreateWalletBackupModel model,
                                   CreateWalletBackupController controller,
@@ -60,15 +63,15 @@ public class CreateWalletBackupView extends View<StackPane, CreateWalletBackupMo
         seedGrid.setPadding(new Insets(0, 0, 20, 0));
         seedGrid.setAlignment(Pos.CENTER);
 
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < model.getSEED_WORD_COUNT(); i++) {
             Label wordLabel = new Label();
             seedLabelList.add(wordLabel);
-            wordLabel.setMinWidth(124);
-            wordLabel.setMinHeight(40);
+            wordLabel.setMinWidth(WORD_LABEL_WIDTH);
+            wordLabel.setMinHeight(WORD_LABEL_HEIGHT);
             wordLabel.setAlignment(Pos.CENTER);
             wordLabel.getStyleClass().add("bisq-box-1");
-            int row = i / 4;
-            int col = i % 4;
+            int row = i / GRID_COLUMNS;
+            int col = i % GRID_COLUMNS;
             seedGrid.add(wordLabel, col, row);
 
             int finalI = i;
@@ -86,7 +89,7 @@ public class CreateWalletBackupView extends View<StackPane, CreateWalletBackupMo
 
     @Override
     protected void onViewAttached() {
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < model.getSEED_WORD_COUNT(); i++) {
             model.getSeedWords()[i].addListener(seedWordListeners.get(i));
 
             // Initial state
@@ -105,32 +108,31 @@ public class CreateWalletBackupView extends View<StackPane, CreateWalletBackupMo
         if (seedStateListener != null) {
             model.getSeedState().removeListener(seedStateListener);
         }
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < model.getSEED_WORD_COUNT(); i++) {
             model.getSeedWords()[i].removeListener(seedWordListeners.get(i));
         }
     }
 
     private void updateUI(SeedState state) {
-        log.error("loadSeedWordsAsync :: updateUI :: " + state);
         root.getChildren().clear();
 
         switch (state) {
             case LOADING -> {
                 this.navigationButtonsVisibleHandler.accept(false);
-                Label loadingLabel = new Label("Loading...");
+                Label loadingLabel = new Label(Res.get("wallet.loading"));
                 loadingLabel.getStyleClass().add("bisq-text-1");
                 root.getChildren().add(loadingLabel);
             }
             case ERROR -> {
                 this.navigationButtonsVisibleHandler.accept(false);
-                Label errorLabel = new Label("Failed to load seedwords");
-                errorLabel.getStyleClass().add("bisq-text-error");
+                Label errorLabel = new Label(Res.get("wallet.backupSeeds.error.failedToLoad"));
+                errorLabel.getStyleClass().addAll("bisq-text-error", "font-size-16");
 
-                Button retryButton = new Button("Retry");
+                Button retryButton = new Button(Res.get("wallet.retry"));
                 retryButton.setDefaultButton(true);
                 retryButton.setOnAction(e -> controller.onRetrySeed());
 
-                VBox container = new VBox(10);
+                VBox container = new VBox(40);
                 container.getChildren().addAll(errorLabel, retryButton);
                 container.setAlignment(Pos.CENTER);
                 root.getChildren().addAll(container);

@@ -20,6 +20,7 @@ package bisq.desktop.main.content.wallet.create_wallet.protect;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
+import bisq.i18n.Res;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,16 @@ public class CreateWalletProtectController implements Controller {
         view = new CreateWalletProtectView(model, this);
     }
 
+    @Override
+    public void onActivate() {
+
+    }
+
+    @Override
+    public void onDeactivate() {
+
+    }
+
     public boolean isValid() {
         String password = model.getPassword().get();
         String confirmPassword = model.getConfirmPassword().get();
@@ -48,27 +59,18 @@ public class CreateWalletProtectController implements Controller {
         String confirmPassword = model.getConfirmPassword().get();
 
         if (password.isEmpty()) {
-            new Popup().invalid("Please enter password")
+            new Popup().invalid(Res.get("wallet.protectWallet.error.passwordRequired"))
                     .owner((Region) view.getRoot().getParent().getParent())
                     .show();
         } else if (confirmPassword.isEmpty()) {
-            new Popup().invalid("Please enter password again")
+            new Popup().invalid(Res.get("wallet.protectWallet.error.confirmPasswordRequired"))
                     .owner((Region) view.getRoot().getParent().getParent())
                     .show();
         } else if (!password.equals(confirmPassword)) {
-            new Popup().invalid("Passwords don't match")
+            new Popup().invalid(Res.get("wallet.protectWallet.error.passwordsDontMatch"))
                     .owner((Region) view.getRoot().getParent().getParent())
                     .show();
         }
-    }
-
-    @Override
-    public void onActivate() {
-
-    }
-
-    @Override
-    public void onDeactivate() {
     }
 
     public CreateWalletProtectModel getModel() {

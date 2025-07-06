@@ -40,12 +40,15 @@ public class CreateWalletModel extends NavigationModel {
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
     private final StringProperty nextButtonText = new SimpleStringProperty();
     private final StringProperty backButtonText = new SimpleStringProperty();
-    private final BooleanProperty closeButtonVisible = new SimpleBooleanProperty(true);
     private final BooleanProperty nextButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty(true);
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty(true);
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
-    private final List<NavigationTarget> childTargets = new ArrayList<>();
+    private final List<NavigationTarget> childTargets = List.of(
+        NavigationTarget.CREATE_WALLET_PROTECT,
+        NavigationTarget.CREATE_WALLET_BACKUP,
+        NavigationTarget.CREATE_WALLET_VERIFY
+    );
     @Setter
     private boolean animateRightOut = true;
 

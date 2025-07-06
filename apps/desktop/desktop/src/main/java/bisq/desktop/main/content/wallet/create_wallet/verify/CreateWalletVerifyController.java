@@ -2,14 +2,10 @@ package bisq.desktop.main.content.wallet.create_wallet.verify;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.wallet.create_wallet.SeedState;
 import bisq.wallets.core.WalletService;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
-import javafx.stage.Screen;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import java.util.List;

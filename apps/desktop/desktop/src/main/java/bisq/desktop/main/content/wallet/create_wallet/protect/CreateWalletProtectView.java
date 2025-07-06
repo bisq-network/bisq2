@@ -19,12 +19,15 @@ package bisq.desktop.main.content.wallet.create_wallet.protect;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.MaterialPasswordField;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.PasswordFieldWithCopyEnabled;
 import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
@@ -35,8 +38,9 @@ import javax.annotation.Nullable;
 @Slf4j
 public class CreateWalletProtectView extends View<StackPane, CreateWalletProtectModel, CreateWalletProtectController> {
     private final MaterialTextField passwordField, confirmPasswordField;
+    private static final int PASSWORD_MAX_LENGTH = 100;
     private static final TextMaxLengthValidator PASSWORD_MAX_LENGTH_VALIDATOR =
-            new TextMaxLengthValidator(100, Res.get("wallet.protectWallet.password.tooLong", 100));
+            new TextMaxLengthValidator(PASSWORD_MAX_LENGTH, Res.get("wallet.protectWallet.password.tooLong", PASSWORD_MAX_LENGTH));
 
     public CreateWalletProtectView(CreateWalletProtectModel model,
                                CreateWalletProtectController controller) {
@@ -58,13 +62,11 @@ public class CreateWalletProtectView extends View<StackPane, CreateWalletProtect
         VBox.setMargin(descriptionLabel, new Insets(0, 0, 40, 0));
 
         passwordField = addField(Res.get("wallet.protectWallet.password.setPassword"), Res.get("wallet.protectWallet.password.setPassword.placeholder"));
-        passwordField.setEditable(true);
         passwordField.setMaxWidth(500);
         passwordField.setValidators(PASSWORD_MAX_LENGTH_VALIDATOR);
         VBox.setMargin(passwordField, new Insets(0, 0, 10, 0));
 
         confirmPasswordField = addField(Res.get("wallet.protectWallet.password.confirmPassword"), Res.get("wallet.protectWallet.password.confirmPassword.placeholder"));
-        confirmPasswordField.setEditable(true);
         confirmPasswordField.setMaxWidth(500);
         confirmPasswordField.setValidators(PASSWORD_MAX_LENGTH_VALIDATOR);
 
@@ -89,8 +91,7 @@ public class CreateWalletProtectView extends View<StackPane, CreateWalletProtect
     }
 
     private MaterialTextField addField(String description, @Nullable String prompt) {
-        MaterialTextField field = new MaterialTextField(description, prompt);
-        field.setEditable(false);
+        MaterialPasswordField field = new MaterialPasswordField(description, prompt);
         return field;
     }
 
