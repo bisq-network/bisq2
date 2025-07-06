@@ -310,14 +310,14 @@ public class AmountSelectionController implements Controller {
 
         maxOrFixedQuoteAmountFromModelPin = EasyBind.subscribe(model.getMaxOrFixedQuoteSideAmount(), amount -> {
             // Only apply value from component to slider if we have no focus on slider (not used)
-            if (amount != null && !model.getMaxOrFixedAmountSliderFocus().get()) {
+            if (amount != null && (!model.getRangeSliderFocus().get() || !model.getMaxOrFixedAmountSliderFocus().get())) {
                 UIThread.run(() -> model.getMaxOrFixedAmountSliderValue().set(getSliderValue(amount.getValue())));
             }
         });
 
         minQuoteAmountFromModelPin = EasyBind.subscribe(model.getMinQuoteSideAmount(), amount -> {
             // Only apply value from component to slider if we have no focus on slider (not used)
-            if (amount != null && !model.getMinAmountSliderFocus().get()) {
+            if (amount != null && !model.getRangeSliderFocus().get()) {
                 UIThread.run(() -> model.getMinAmountSliderValue().set(getSliderValue(amount.getValue())));
             }
         });

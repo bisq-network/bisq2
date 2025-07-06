@@ -1134,19 +1134,6 @@
     -fx-max-height: 2.5;
 }
 
-.slider.min-amount-slider .thumb {
-    -fx-background-color: -bisq-white;
-    -fx-background-insets: 2.5;
-    -fx-shape: "M 0 4 h 7 l -3.5 -4 z";
-    -fx-translate-y: -9;
-}
-
-.slider.min-amount-slider .track {
-    -fx-min-height: 0;
-    -fx-max-height: 0;
-    -fx-pref-height: 0;
-}
-
 .slider.price-slider-seller .track {
     -fx-background-color: linear-gradient(to right, -bisq2-green 25%, -bisq2-yellow 58.3%, -bisq2-red 100%);
     -fx-background-insets: 0, 1;
