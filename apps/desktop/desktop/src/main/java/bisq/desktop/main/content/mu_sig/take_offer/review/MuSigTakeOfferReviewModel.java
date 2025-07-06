@@ -17,10 +17,11 @@
 
 package bisq.desktop.main.content.mu_sig.take_offer.review;
 
+import bisq.account.accounts.Account;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.offer.payment_method.FiatPaymentMethodSpec;
+import bisq.offer.payment_method.PaymentMethodSpec;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.ObjectProperty;
@@ -32,6 +33,12 @@ import java.util.List;
 
 @Getter
 class MuSigTakeOfferReviewModel implements Model {
+    enum TakeOfferStatus {
+        NOT_STARTED,
+        SENT,
+        SUCCESS
+    }
+
     @Setter
     private MuSigOffer muSigOffer;
     @Setter
@@ -41,28 +48,42 @@ class MuSigTakeOfferReviewModel implements Model {
     @Setter
     private List<String> paymentMethodNames;
     @Setter
-    private FiatPaymentMethodSpec fiatPaymentMethodSpec;
+    private PaymentMethodSpec<?> takersPaymentMethodSpec;
+    @Setter
+    private Account<?, ?> takersAccount;
     @Setter
     private Monetary takersBaseSideAmount;
     @Setter
     private Monetary takersQuoteSideAmount;
-    private final ObjectProperty<TakeOfferStatus> takeOfferStatus = new SimpleObjectProperty<>(TakeOfferStatus.NOT_STARTED);
     @Setter
     private String price;
     @Setter
     private String priceDetails;
     @Setter
-    private String fiatPaymentMethod;
+    private String paymentMethod;
     @Setter
     private String fee;
     @Setter
     private String feeDetails;
     @Setter
     private long marketPrice;
+    private final ObjectProperty<TakeOfferStatus> takeOfferStatus = new SimpleObjectProperty<>(TakeOfferStatus.NOT_STARTED);
 
-    enum TakeOfferStatus {
-        NOT_STARTED,
-        SENT,
-        SUCCESS
+    void reset() {
+        muSigOffer = null;
+        muSigTrade = null;
+        peersUserProfile = null;
+        paymentMethodNames = null;
+        takersPaymentMethodSpec = null;
+        takersAccount = null;
+        takersBaseSideAmount = null;
+        takersQuoteSideAmount = null;
+        price = null;
+        priceDetails = null;
+        paymentMethod = null;
+        fee = null;
+        feeDetails = null;
+        marketPrice = 0;
+        takeOfferStatus.set(null);
     }
 }

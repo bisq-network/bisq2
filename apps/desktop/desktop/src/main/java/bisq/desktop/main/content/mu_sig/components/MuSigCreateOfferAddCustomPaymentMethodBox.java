@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.create_offer.payment_methods;
+package bisq.desktop.main.content.mu_sig.components;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.i18n.Res;

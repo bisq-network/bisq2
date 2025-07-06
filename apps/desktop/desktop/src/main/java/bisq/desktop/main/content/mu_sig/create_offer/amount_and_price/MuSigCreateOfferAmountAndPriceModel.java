@@ -36,7 +36,7 @@ public class MuSigCreateOfferAmountAndPriceModel implements Model {
     private final BooleanProperty isAmountOverlayVisible = new SimpleBooleanProperty();
     private final BooleanProperty isPriceOverlayVisible = new SimpleBooleanProperty();
 
-    public void reset() {
+    void reset() {
         headline = "";
         direction = null;
         market = null;

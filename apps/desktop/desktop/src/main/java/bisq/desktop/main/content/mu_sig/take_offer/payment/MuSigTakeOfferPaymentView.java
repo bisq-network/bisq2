@@ -15,22 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.create_offer.payment_methods;
+package bisq.desktop.main.content.mu_sig.take_offer.payment;
 
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.GridPaneUtil;
-import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
+import bisq.desktop.main.content.mu_sig.components.PaymentMethodChipButton;
 import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferView;
 import bisq.i18n.Res;
-import javafx.collections.ListChangeListener;
+import bisq.offer.payment_method.PaymentMethodSpec;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -54,31 +53,28 @@ import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
-public class MuSigCreateOfferPaymentMethodsView extends View<StackPane, MuSigCreateOfferPaymentMethodsModel, MuSigCreateOfferPaymentMethodsController> {
+public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPaymentModel, MuSigTakeOfferPaymentController> {
     private final static int FEEDBACK_WIDTH = 700;
     private static final double TWO_COLUMN_WIDTH = 20.75;
 
     private final GridPane gridPane;
-    private final Label subtitleLabel, nonFoundLabel, noAccountOverlayHeadline, multipleAccountOverlayHeadline;
-    private final MuSigCreateOfferAddCustomPaymentMethodBox muSigCreateOfferAddCustomPaymentMethodBox;
+    private final Label headlineLabel, noAccountOverlayHeadline, subtitleLabel, multipleAccountOverlayHeadline;
     private final VBox noAccountOverlay, multipleAccountOverlay, content;
     private final Button noAccountOverlayCloseButton, createAccountButton, multipleAccountOverlayCloseButton;
-    private final AutoCompleteComboBox<Account<?, ?>> accountsComboBox;
+    private final AutoCompleteComboBox<Account<?, ?>> singlePaymentMethodAccountSelection, accountSelection;
     private final Set<ImageView> closeIcons = new HashSet<>();
     private final List<PaymentMethodChipButton> paymentMethodChipButtons = new ArrayList<>();
 
-    private final ListChangeListener<PaymentMethod<?>> paymentMethodListener;
-    private Subscription paymentMethodWithoutAccountPin, paymentMethodWithMultipleAccountsPin;
-    private final ListChangeListener<PaymentMethod<?>> selectedPaymentMethodsListener;
+    private Subscription paymentMethodWithoutAccountPin, paymentMethodWithMultipleAccountsPin, selectedPaymentMethodPin, selectedTogglePin;
 
-    public MuSigCreateOfferPaymentMethodsView(MuSigCreateOfferPaymentMethodsModel model,
-                                              MuSigCreateOfferPaymentMethodsController controller) {
+    public MuSigTakeOfferPaymentView(MuSigTakeOfferPaymentModel model,
+                                     MuSigTakeOfferPaymentController controller) {
         super(new StackPane(), model, controller);
 
         root.setAlignment(Pos.CENTER);
         root.getStyleClass().add("bisq-easy-trade-wizard-payment-methods-step");
 
-        Label headlineLabel = new Label(Res.get("muSig.createOffer.paymentMethods.headline"));
+        headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         subtitleLabel = new Label();
@@ -86,18 +82,14 @@ public class MuSigCreateOfferPaymentMethodsView extends View<StackPane, MuSigCre
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().add("bisq-text-3");
         subtitleLabel.setWrapText(true);
-        subtitleLabel.setMaxWidth(600);
-
-        nonFoundLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethods.noneFound"));
-        nonFoundLabel.getStyleClass().add("bisq-text-6");
-        nonFoundLabel.setAlignment(Pos.CENTER);
+        subtitleLabel.setMaxWidth(700);
 
         gridPane = GridPaneUtil.getGridPane(10, 10, new Insets(0));
         gridPane.getStyleClass().add("fiat-methods-grid-pane");
 
-        muSigCreateOfferAddCustomPaymentMethodBox = new MuSigCreateOfferAddCustomPaymentMethodBox();
+        singlePaymentMethodAccountSelection = createComboBox();
 
-        VBox vBox = new VBox(20, subtitleLabel, nonFoundLabel, gridPane);
+        VBox vBox = new VBox(20, subtitleLabel, gridPane, singlePaymentMethodAccountSelection);
         vBox.setAlignment(Pos.CENTER);
 
         content = new VBox(20);
@@ -117,27 +109,17 @@ public class MuSigCreateOfferPaymentMethodsView extends View<StackPane, MuSigCre
         multipleAccountOverlayHeadline = new Label();
         multipleAccountOverlayCloseButton = new Button(Res.get("action.close"));
         multipleAccountOverlay = new VBox(20);
-        accountsComboBox = new AutoCompleteComboBox<>(model.getAccountsForPaymentMethod(), Res.get("user.paymentAccounts.selectAccount"));
+        accountSelection = createComboBox();
         configMultipleAccountOverlay();
 
         StackPane.setMargin(content, new Insets(40));
         StackPane.setMargin(noAccountOverlay, new Insets(-MuSigCreateOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
         StackPane.setMargin(multipleAccountOverlay, new Insets(-MuSigCreateOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
         root.getChildren().addAll(content, noAccountOverlay, multipleAccountOverlay);
-
-        paymentMethodListener = c -> setUpAndFillPaymentMethods();
-        selectedPaymentMethodsListener = change -> updateSelectionsState();
     }
 
     @Override
     protected void onViewAttached() {
-        subtitleLabel.setText(model.getSubtitleLabel());
-        muSigCreateOfferAddCustomPaymentMethodBox.getCustomPaymentMethodField().textProperty().bindBidirectional(model.getCustomPaymentMethodName());
-        nonFoundLabel.visibleProperty().bind(model.getIsPaymentMethodsEmpty());
-        nonFoundLabel.managedProperty().bind(model.getIsPaymentMethodsEmpty());
-        gridPane.visibleProperty().bind(model.getIsPaymentMethodsEmpty().not());
-        gridPane.managedProperty().bind(model.getIsPaymentMethodsEmpty().not());
-
         paymentMethodWithoutAccountPin = EasyBind.subscribe(model.getPaymentMethodWithoutAccount(),
                 paymentMethod -> {
                     noAccountOverlayCloseButton.setOnAction(null);
@@ -159,21 +141,21 @@ public class MuSigCreateOfferPaymentMethodsView extends View<StackPane, MuSigCre
 
         paymentMethodWithMultipleAccountsPin = EasyBind.subscribe(model.getPaymentMethodWithMultipleAccounts(),
                 paymentMethod -> {
-                    accountsComboBox.setOnChangeConfirmed(null);
+                    accountSelection.setOnChangeConfirmed(null);
                     multipleAccountOverlayCloseButton.setOnAction(null);
                     if (paymentMethod != null) {
                         multipleAccountOverlay.setVisible(true);
                         multipleAccountOverlayHeadline.setText(Res.get("muSig.createOffer.paymentMethod.multipleAccountOverlay.headline", paymentMethod.getShortDisplayString()));
-                        accountsComboBox.setOnChangeConfirmed(e -> {
-                            Account<?, ?> account = accountsComboBox.getSelectionModel().getSelectedItem();
+                        accountSelection.setOnChangeConfirmed(e -> {
+                            Account<?, ?> account = accountSelection.getSelectionModel().getSelectedItem();
                             if (account != null) {
                                 findPaymentMethodChipButton(paymentMethod)
                                         .ifPresent(button -> button.setAccountName(account.getAccountName()));
-                                controller.onSelectAccount(account, paymentMethod);
-                                UIThread.runOnNextRenderFrame(() -> accountsComboBox.getSelectionModel().select(null));
+                                controller.onSelectAccount(account);
+                                UIThread.runOnNextRenderFrame(() -> accountSelection.getSelectionModel().select(null));
                             }
                         });
-                        multipleAccountOverlayCloseButton.setOnAction(e -> controller.onCloseMultipleAccountsOverlay(paymentMethod));
+                        multipleAccountOverlayCloseButton.setOnAction(e -> controller.onCloseMultipleAccountsOverlay());
                         root.setOnKeyPressed(controller::onKeyPressedWhileShowingOverlay);
                         Transitions.blurStrong(content, 0);
                         Transitions.slideInTop(multipleAccountOverlay, 450);
@@ -184,40 +166,56 @@ public class MuSigCreateOfferPaymentMethodsView extends View<StackPane, MuSigCre
                     }
                 });
 
+        selectedPaymentMethodPin = EasyBind.subscribe(model.getSelectedPaymentMethodSpec(),
+                paymentMethodSpec -> {
+                    if (paymentMethodSpec != null) {
+                        updateSelectionsState();
+                    }
+                });
+        selectedTogglePin = EasyBind.subscribe(model.getToggleGroup().selectedToggleProperty(), selectedToggle -> {
+            if (selectedToggle == null) {
+                paymentMethodChipButtons.forEach(button -> button.setAccountName(null));
+            }
+        });
 
-        model.getSelectedPaymentMethods().addListener(selectedPaymentMethodsListener);
-
-        model.getPaymentMethods().addListener(paymentMethodListener);
-
-        muSigCreateOfferAddCustomPaymentMethodBox.getAddIconButton().setOnAction(e -> controller.onAddCustomPaymentMethod());
         root.setOnMousePressed(e -> root.requestFocus());
 
-        muSigCreateOfferAddCustomPaymentMethodBox.initialize();
+        if (model.isSinglePaymentMethod()) {
+            singlePaymentMethodAccountSelection.setDescription(model.getSinglePaymentMethodAccountSelectionDescription());
+            singlePaymentMethodAccountSelection.getSelectionModel().select(model.getSelectedAccount().get());
+            singlePaymentMethodAccountSelection.setOnChangeConfirmed(e -> {
+                Account<?, ?> account = singlePaymentMethodAccountSelection.getSelectionModel().getSelectedItem();
+                if (account != null) {
+                    findPaymentMethodChipButton(account.getPaymentMethod())
+                            .ifPresent(button -> button.setAccountName(account.getAccountName()));
+                    controller.onSelectAccount(account);
+                }
+            });
+        }
+        singlePaymentMethodAccountSelection.setVisible(model.isSinglePaymentMethod());
+        singlePaymentMethodAccountSelection.setManaged(model.isSinglePaymentMethod());
+        gridPane.setVisible(!model.isSinglePaymentMethod());
+        gridPane.setManaged(!model.isSinglePaymentMethod());
+
+        headlineLabel.setText(model.getHeadline());
+        subtitleLabel.setText(model.getSubtitle());
         setUpAndFillPaymentMethods();
-        updateSelectionsState();
     }
 
     @Override
     protected void onViewDetached() {
-        muSigCreateOfferAddCustomPaymentMethodBox.getCustomPaymentMethodField().textProperty().unbindBidirectional(model.getCustomPaymentMethodName());
-        nonFoundLabel.visibleProperty().unbind();
-        nonFoundLabel.managedProperty().unbind();
-        gridPane.visibleProperty().unbind();
-        gridPane.managedProperty().unbind();
-
         paymentMethodWithoutAccountPin.unsubscribe();
         paymentMethodWithMultipleAccountsPin.unsubscribe();
+        selectedPaymentMethodPin.unsubscribe();
+        selectedTogglePin.unsubscribe();
 
         paymentMethodChipButtons.forEach(PaymentMethodChipButton::dispose);
-
-        model.getPaymentMethods().removeListener(paymentMethodListener);
 
         createAccountButton.setOnAction(null);
         noAccountOverlayCloseButton.setOnAction(null);
         multipleAccountOverlayCloseButton.setOnAction(null);
-        accountsComboBox.setOnChangeConfirmed(null);
-        muSigCreateOfferAddCustomPaymentMethodBox.getAddIconButton().setOnAction(null);
-        muSigCreateOfferAddCustomPaymentMethodBox.dispose();
+        singlePaymentMethodAccountSelection.setOnChangeConfirmed(null);
+        accountSelection.setOnChangeConfirmed(null);
 
         closeIcons.forEach(imageView -> imageView.setOnMousePressed(null));
         closeIcons.clear();
@@ -244,45 +242,32 @@ public class MuSigCreateOfferPaymentMethodsView extends View<StackPane, MuSigCre
 
             // enum name or custom name
             PaymentMethodChipButton button = new PaymentMethodChipButton(paymentMethod);
+            button.setToggleGroup(model.getToggleGroup());
+            PaymentMethodSpec<?> paymentMethodSpec = model.getSelectedPaymentMethodSpec().get();
+            boolean isSelected = paymentMethodSpec != null && paymentMethod.equals(paymentMethodSpec.getPaymentMethod());
+            button.setSelected(isSelected);
             if (!paymentMethod.getShortDisplayString().equals(paymentMethod.getDisplayString())) {
                 button.setTooltip(new BisqTooltip(paymentMethod.getDisplayString()));
             }
 
             boolean hasAccounts = model.getAccountsByPaymentMethod().containsKey(paymentMethod);
             button.setActive(hasAccounts);
-            button.setNumAccounts(hasAccounts ? model.getAccountsByPaymentMethod().get(paymentMethod).size() : 0);
+            List<Account<?, ?>> accounts = model.getAccountsByPaymentMethod().get(paymentMethod);
+            button.setNumAccounts(hasAccounts ? accounts.size() : 0);
 
-            Optional.ofNullable(model.getSelectedAccountByPaymentMethod().get(paymentMethod))
-                    .ifPresent(account -> button.setAccountName(account.getAccountName()));
+            Account<?, ?> account = model.getSelectedAccount().get();
+            if (accounts != null && account != null && accounts.size() > 1 && account.getPaymentMethod().equals(paymentMethod)) {
+                button.setAccountName(account.getAccountName());
+            } else {
+                button.setAccountName(null);
+            }
 
             button.setOnAction(() -> controller.onTogglePaymentMethod(paymentMethod, button.isSelected()));
-            model.getAddedCustomPaymentMethods().stream()
-                    .filter(customMethod -> customMethod.equals(paymentMethod))
-                    .findAny()
-                    .ifPresentOrElse(
-                            customMethod -> {
-                                ImageView closeIcon = button.setRightIcon("remove-white");
-                                closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(paymentMethod));
-                                closeIcons.add(closeIcon);
-                                StackPane icon = BisqEasyViewUtils.getCustomPaymentMethodIcon(customMethod.getDisplayString());
-                                button.setLeftIcon(icon);
-                            },
-                            () -> {
-                                // Lookup for an image with the id of the enum name (REVOLUT)
-                                ImageView icon = ImageUtil.getImageViewById(paymentMethod.getName());
-                                button.setLeftIcon(icon);
-                            });
 
             col = i % numColumns;
             row = i / numColumns;
             gridPane.add(button, col, row);
             paymentMethodChipButtons.add(button);
-        }
-
-        if (model.getCanAddCustomPaymentMethod().get()) {
-            col = i % numColumns;
-            row = i / numColumns;
-            gridPane.add(muSigCreateOfferAddCustomPaymentMethodBox, col, row);
         }
     }
 
@@ -294,12 +279,29 @@ public class MuSigCreateOfferPaymentMethodsView extends View<StackPane, MuSigCre
 
     private void updateSelectionsState() {
         paymentMethodChipButtons.forEach(button -> {
-            boolean isSelected = model.getSelectedPaymentMethods().contains(button.getPaymentMethod());
-            button.setSelected(isSelected);
+            PaymentMethodSpec<?> paymentMethodSpec = model.getSelectedPaymentMethodSpec().get();
+            boolean isSelected = paymentMethodSpec != null && button.getPaymentMethod().equals(paymentMethodSpec.getPaymentMethod());
             if (!isSelected) {
                 button.setAccountName(null);
             }
         });
+    }
+
+    private AutoCompleteComboBox<Account<?, ?>> createComboBox() {
+        AutoCompleteComboBox<Account<?, ?>> comboBox = new AutoCompleteComboBox<>(model.getSortedAccountsForPaymentMethod(), Res.get("user.paymentAccounts.selectAccount"));
+        comboBox.setPrefWidth(325);
+        comboBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(Account<? extends PaymentMethod<?>, ?> account) {
+                return account != null ? account.getAccountName() : "";
+            }
+
+            @Override
+            public Account<? extends PaymentMethod<?>, ?> fromString(String string) {
+                return null;
+            }
+        });
+        return comboBox;
     }
 
     private void configNoAccountOverlay() {
@@ -350,21 +352,8 @@ public class MuSigCreateOfferPaymentMethodsView extends View<StackPane, MuSigCre
         subtitleLabel.setWrapText(true);
         subtitleLabel.getStyleClass().add("bisq-text-21");
 
-        accountsComboBox.setPrefWidth(325);
-        accountsComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(Account<? extends PaymentMethod<?>, ?> account) {
-                return account != null ? account.getAccountName() : "";
-            }
-
-            @Override
-            public Account<? extends PaymentMethod<?>, ?> fromString(String string) {
-                return null;
-            }
-        });
-
         VBox.setMargin(multipleAccountOverlayCloseButton, new Insets(10, 0, 20, 0));
-        overlayContent.getChildren().addAll(multipleAccountOverlayHeadline, subtitleLabel, accountsComboBox, multipleAccountOverlayCloseButton);
+        overlayContent.getChildren().addAll(multipleAccountOverlayHeadline, subtitleLabel, accountSelection, multipleAccountOverlayCloseButton);
         multipleAccountOverlay.getChildren().addAll(overlayContent, Spacer.fillVBox());
     }
 }

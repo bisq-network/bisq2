@@ -100,6 +100,10 @@ public class MuSigTakeOfferAmountController implements Controller {
         return model.getTakersBaseSideAmount();
     }
 
+    public void reset() {
+        model.reset();
+    }
+
     @Override
     public void onActivate() {
         amountSelectionController.setAllowInvertingBaseAndQuoteCurrencies(true);

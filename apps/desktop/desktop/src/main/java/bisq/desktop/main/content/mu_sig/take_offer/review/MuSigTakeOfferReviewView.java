@@ -174,7 +174,7 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
         TextFlowUtils.updateTextFlow(price, model.getPrice());
         priceDetails.setText(model.getPriceDetails());
 
-        fiatPaymentMethod.setText(model.getFiatPaymentMethod());
+        fiatPaymentMethod.setText(model.getPaymentMethod());
 
         fee.setText(model.getFee());
         feeDetails.setText(model.getFeeDetails());

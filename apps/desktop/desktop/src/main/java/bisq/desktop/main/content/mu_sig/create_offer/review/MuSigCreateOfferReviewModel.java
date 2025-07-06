@@ -82,12 +82,14 @@ class MuSigCreateOfferReviewModel implements Model {
     private String fee;
     @Setter
     private String feeDetails;
-    private final ObservableList<PaymentMethod<?>> takersFiatPaymentMethods = FXCollections.observableArrayList();
-    private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
     @Setter
     private long marketPrice;
+    private final ObservableList<PaymentMethod<?>> takersFiatPaymentMethods = FXCollections.observableArrayList();
+    private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
 
-    public void reset() {
+    void reset() {
+        direction = null;
+        market = null;
         offer = null;
         takersSelectedFiatPaymentMethod = null;
         minBaseSideAmount = null;
@@ -99,16 +101,18 @@ class MuSigCreateOfferReviewModel implements Model {
         priceSpec = null;
         paymentMethods = null;
         headline = null;
+        headerFiatPaymentMethod = null;
         detailsHeadline = null;
+        isRangeAmount = false;
+        paymentMethodDescription = null;
+        paymentMethod = null;
         priceDescription = null;
         price = null;
         priceDetails = null;
-        paymentMethodDescription = null;
-        paymentMethod = null;
         fee = null;
         feeDetails = null;
+        marketPrice = 0;
         takersFiatPaymentMethods.clear();
         showCreateOfferSuccess.set(false);
-        marketPrice = 0;
     }
 }

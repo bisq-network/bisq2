@@ -33,15 +33,6 @@ import lombok.Setter;
 public class MuSigTakeOfferAmountModel implements Model {
     @Setter
     private MuSigOffer muSigOffer;
-    private final ObjectProperty<Monetary> takersQuoteSideAmount = new SimpleObjectProperty<>();
-    private final ObjectProperty<Monetary> takersBaseSideAmount = new SimpleObjectProperty<>();
-    private final StringProperty amountLimitInfo = new SimpleStringProperty();
-    private final StringProperty amountLimitInfoAmount = new SimpleStringProperty();
-    private final StringProperty amountLimitInfoOverlayInfo = new SimpleStringProperty();
-    private final BooleanProperty isWarningIconVisible = new SimpleBooleanProperty();
-    private final BooleanProperty isAmountHyperLinkDisabled = new SimpleBooleanProperty();
-    private final BooleanProperty isAmountLimitInfoOverlayVisible = new SimpleBooleanProperty();
-    private final BooleanProperty isAmountLimitInfoVisible = new SimpleBooleanProperty();
     @Setter
     private Monetary sellersReputationBasedQuoteSideAmount;
     @Setter
@@ -52,4 +43,30 @@ public class MuSigTakeOfferAmountModel implements Model {
     private String linkToWikiText;
     @Setter
     private String headline;
+    private final ObjectProperty<Monetary> takersQuoteSideAmount = new SimpleObjectProperty<>();
+    private final ObjectProperty<Monetary> takersBaseSideAmount = new SimpleObjectProperty<>();
+    private final StringProperty amountLimitInfo = new SimpleStringProperty();
+    private final StringProperty amountLimitInfoAmount = new SimpleStringProperty();
+    private final StringProperty amountLimitInfoOverlayInfo = new SimpleStringProperty();
+    private final BooleanProperty isWarningIconVisible = new SimpleBooleanProperty();
+    private final BooleanProperty isAmountHyperLinkDisabled = new SimpleBooleanProperty();
+    private final BooleanProperty isAmountLimitInfoOverlayVisible = new SimpleBooleanProperty();
+    private final BooleanProperty isAmountLimitInfoVisible = new SimpleBooleanProperty();
+
+    void reset() {
+        muSigOffer = null;
+        sellersReputationBasedQuoteSideAmount = null;
+        sellersReputationScore = 0;
+        amountLimitInfoLink = null;
+        linkToWikiText = null;
+        headline = null;
+        takersQuoteSideAmount.set(null);
+        takersBaseSideAmount.set(null);
+        amountLimitInfo.set(null);
+        amountLimitInfoOverlayInfo.set(null);
+        isWarningIconVisible.set(false);
+        isAmountHyperLinkDisabled.set(false);
+        isAmountLimitInfoOverlayVisible.set(false);
+        isAmountLimitInfoVisible.set(false);
+    }
 }

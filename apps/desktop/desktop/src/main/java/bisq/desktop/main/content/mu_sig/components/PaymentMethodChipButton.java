@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.create_offer.payment_methods;
+package bisq.desktop.main.content.mu_sig.components;
 
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.util.StringUtils;
@@ -25,6 +25,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
@@ -34,7 +35,7 @@ import javax.annotation.Nullable;
 
 public class PaymentMethodChipButton extends StackPane {
     private final static int TRUNCATION_LENGTH = 18;
-
+    @Getter
     private final ChipButton chipButton;
     @Getter
     private final PaymentMethod<?> paymentMethod;
@@ -124,5 +125,9 @@ public class PaymentMethodChipButton extends StackPane {
 
     public void setOnAction(Runnable onActionHandler) {
         chipButton.setOnAction(onActionHandler);
+    }
+
+    public void setToggleGroup(ToggleGroup value) {
+        chipButton.setToggleGroup(value);
     }
 }

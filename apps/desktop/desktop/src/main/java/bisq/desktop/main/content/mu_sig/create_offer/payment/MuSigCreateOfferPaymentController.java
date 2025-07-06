@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.create_offer.payment_methods;
+package bisq.desktop.main.content.mu_sig.create_offer.payment;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
@@ -53,30 +53,30 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class MuSigCreateOfferPaymentMethodsController implements Controller {
+public class MuSigCreateOfferPaymentController implements Controller {
     private static final BitcoinPaymentMethod MAIN_CHAIN_PAYMENT_METHOD = BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN);
     private static final int MAX_ALLOWED_CUSTOM_PAYMENT_METHODS = 3;
     private static final int MAX_ALLOWED_SELECTED_PAYMENT_METHODS = 4;
 
-    private final MuSigCreateOfferPaymentMethodsModel model;
+    private final MuSigCreateOfferPaymentModel model;
     @Getter
-    private final MuSigCreateOfferPaymentMethodsView view;
+    private final MuSigCreateOfferPaymentView view;
     private final SettingsService settingsService;
     private final Runnable onNextHandler;
     private final Region owner;
     private final AccountService accountService;
     private final ListChangeListener<PaymentMethod<?>> addedCustomPaymentMethodsListener;
 
-    public MuSigCreateOfferPaymentMethodsController(ServiceProvider serviceProvider,
-                                                    Region owner,
-                                                    Runnable onNextHandler) {
+    public MuSigCreateOfferPaymentController(ServiceProvider serviceProvider,
+                                             Region owner,
+                                             Runnable onNextHandler) {
         settingsService = serviceProvider.getSettingsService();
         accountService = serviceProvider.getAccountService();
         this.onNextHandler = onNextHandler;
         this.owner = owner;
 
-        model = new MuSigCreateOfferPaymentMethodsModel();
-        view = new MuSigCreateOfferPaymentMethodsView(model, this);
+        model = new MuSigCreateOfferPaymentModel();
+        view = new MuSigCreateOfferPaymentView(model, this);
         model.getSortedAccountsForPaymentMethod().setComparator(Comparator.comparing(Account::getAccountName));
 
         addedCustomPaymentMethodsListener = change -> updateCanAddCustomPaymentMethod();
@@ -204,7 +204,7 @@ public class MuSigCreateOfferPaymentMethodsController implements Controller {
         } else {
             model.getSelectedAccountByPaymentMethod().remove(paymentMethod);
             model.getSelectedPaymentMethods().remove(paymentMethod);
-            setCreateOfferMethodsCookie();
+           // setCreateOfferMethodsCookie();
         }
     }
 

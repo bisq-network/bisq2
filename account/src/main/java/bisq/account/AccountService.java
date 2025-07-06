@@ -129,4 +129,10 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
                 .filter(account -> account.getSupportedCurrencyCodes().contains(currencyCode))
                 .collect(Collectors.toList());
     }
+
+    public Set<Account<? extends PaymentMethod<?>, ?>> getAccounts(PaymentMethod<?> paymentMethod) {
+        return accounts.stream()
+                .filter(account -> account.getPaymentMethod().equals(paymentMethod))
+                .collect(Collectors.toSet());
+    }
 }

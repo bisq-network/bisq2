@@ -17,6 +17,10 @@
 
 package bisq.desktop.main.content.mu_sig.take_offer;
 
+import bisq.account.AccountService;
+import bisq.account.accounts.Account;
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
@@ -24,7 +28,7 @@ import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.mu_sig.take_offer.amount.MuSigTakeOfferAmountController;
-import bisq.desktop.main.content.mu_sig.take_offer.payment_methods.MuSigTakeOfferPaymentController;
+import bisq.desktop.main.content.mu_sig.take_offer.payment.MuSigTakeOfferPaymentController;
 import bisq.desktop.main.content.mu_sig.take_offer.review.MuSigTakeOfferReviewController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
@@ -43,11 +47,15 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class MuSigTakeOfferController extends NavigationController implements InitWithDataController<MuSigTakeOfferController.InitData> {
+    private final AccountService accountService;
+
     @Getter
     @EqualsAndHashCode
     @ToString
@@ -68,18 +76,19 @@ public class MuSigTakeOfferController extends NavigationController implements In
     private final MuSigTakeOfferPaymentController muSigTakeOfferPaymentController;
     private final MuSigTakeOfferReviewController muSigTakeOfferReviewController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
-    private Subscription takersBaseSideAmountPin, takersQuoteSideAmountPin, selectedFiatPaymentMethodSpecPin;
+    private Subscription takersBaseSideAmountPin, takersQuoteSideAmountPin, selectedAccountPin, paymentMethodSpecPin;
 
     public MuSigTakeOfferController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MU_SIG_TAKE_OFFER);
 
+        accountService = serviceProvider.getAccountService();
         overlayController = OverlayController.getInstance();
 
         model = new MuSigTakeOfferModel();
         view = new MuSigTakeOfferView(model, this);
 
         muSigTakeOfferAmountController = new MuSigTakeOfferAmountController(serviceProvider, this::setMainButtonsVisibleState);
-        muSigTakeOfferPaymentController = new MuSigTakeOfferPaymentController(serviceProvider);
+        muSigTakeOfferPaymentController = new MuSigTakeOfferPaymentController(serviceProvider, view.getRoot());
         muSigTakeOfferReviewController = new MuSigTakeOfferReviewController(serviceProvider, this::setMainButtonsVisibleState, this::closeAndNavigateTo);
     }
 
@@ -98,7 +107,16 @@ public class MuSigTakeOfferController extends NavigationController implements In
         model.setAmountVisible(muSigOffer.hasAmountRange());
         List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = muSigOffer.getBaseSidePaymentMethodSpecs();
         List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = muSigOffer.getQuoteSidePaymentMethodSpecs();
-        model.setPaymentMethodVisible(baseSidePaymentMethodSpecs.size() > 1 || quoteSidePaymentMethodSpecs.size() > 1);
+
+        boolean isSingleAccountForSinglePaymentMethod = false;
+        boolean isSinglePaymentMethod = baseSidePaymentMethodSpecs.size() == 1 && quoteSidePaymentMethodSpecs.size() == 1;
+        Set<Account<? extends PaymentMethod<?>, ?>> accountsForPaymentMethod = null;
+        if (isSinglePaymentMethod) {
+            FiatPaymentMethod paymentMethod = quoteSidePaymentMethodSpecs.get(0).getPaymentMethod();
+            accountsForPaymentMethod = accountService.getAccounts(paymentMethod);
+            isSingleAccountForSinglePaymentMethod = accountsForPaymentMethod.size() == 1;
+        }
+        model.setPaymentMethodVisible(!isSingleAccountForSinglePaymentMethod);
 
         model.getChildTargets().clear();
         if (model.isAmountVisible()) {
@@ -109,7 +127,12 @@ public class MuSigTakeOfferController extends NavigationController implements In
         } else {
             checkArgument(baseSidePaymentMethodSpecs.size() == 1);
             checkArgument(quoteSidePaymentMethodSpecs.size() == 1);
-            muSigTakeOfferReviewController.setFiatPaymentMethodSpec(quoteSidePaymentMethodSpecs.get(0));
+            checkNotNull(accountsForPaymentMethod);
+            checkArgument(accountsForPaymentMethod.size() == 1,
+                    "In case we have not displayed the payment method screen we expect that there exist " +
+                            "only one account fro that single payment method.");
+            muSigTakeOfferReviewController.setTakersAccount(accountsForPaymentMethod.iterator().next());
+            muSigTakeOfferReviewController.setTakersPaymentMethodSpec(quoteSidePaymentMethodSpecs.get(0));
         }
         model.getChildTargets().add(NavigationTarget.MU_SIG_TAKE_OFFER_REVIEW);
     }
@@ -127,8 +150,11 @@ public class MuSigTakeOfferController extends NavigationController implements In
                 muSigTakeOfferReviewController::setTakersBaseSideAmount);
         takersQuoteSideAmountPin = EasyBind.subscribe(muSigTakeOfferAmountController.getTakersQuoteSideAmount(),
                 muSigTakeOfferReviewController::setTakersQuoteSideAmount);
-        selectedFiatPaymentMethodSpecPin = EasyBind.subscribe(muSigTakeOfferPaymentController.getSelectedFiatPaymentMethodSpec(),
-                muSigTakeOfferReviewController::setFiatPaymentMethodSpec);
+
+        selectedAccountPin = EasyBind.subscribe(muSigTakeOfferPaymentController.getSelectedAccount(),
+                muSigTakeOfferReviewController::setTakersAccount);
+        paymentMethodSpecPin = EasyBind.subscribe(muSigTakeOfferPaymentController.getPaymentMethodSpec(),
+                muSigTakeOfferReviewController::setTakersPaymentMethodSpec);
     }
 
     @Override
@@ -137,7 +163,9 @@ public class MuSigTakeOfferController extends NavigationController implements In
         overlayController.getApplicationRoot().removeEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
         takersBaseSideAmountPin.unsubscribe();
         takersQuoteSideAmountPin.unsubscribe();
-        selectedFiatPaymentMethodSpecPin.unsubscribe();
+        selectedAccountPin.unsubscribe();
+        paymentMethodSpecPin.unsubscribe();
+        reset();
     }
 
     @Override
@@ -180,8 +208,7 @@ public class MuSigTakeOfferController extends NavigationController implements In
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
             if (model.getSelectedChildTarget().get() == NavigationTarget.MU_SIG_TAKE_OFFER_PAYMENT) {
-                if (!muSigTakeOfferPaymentController.isValid()) {
-                    muSigTakeOfferPaymentController.handleInvalidInput();
+                if (!muSigTakeOfferPaymentController.validate()) {
                     return;
                 }
             }
@@ -227,6 +254,15 @@ public class MuSigTakeOfferController extends NavigationController implements In
                 onNext();
             }
         });
+    }
+
+    private void reset() {
+        resetSelectedChildTarget();
+        muSigTakeOfferAmountController.reset();
+        muSigTakeOfferPaymentController.reset();
+        muSigTakeOfferReviewController.reset();
+
+        model.reset();
     }
 
     private void closeAndNavigateTo(NavigationTarget navigationTarget) {

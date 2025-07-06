@@ -29,6 +29,7 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -143,5 +144,9 @@ public class ChipButton extends HBox {
 
     public void setOnAction(Runnable onActionHandler) {
         this.onActionHandler = onActionHandler;
+    }
+
+    public void setToggleGroup(ToggleGroup value) {
+        toggleButton.setToggleGroup(value);
     }
 }

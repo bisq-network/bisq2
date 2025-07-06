@@ -98,4 +98,15 @@ public class PaymentMethodSpecUtil {
             throw new UnsupportedOperationException("createPaymentMethodSpecs only supports fiat and altcoins. CurrencyCode: " + currencyCode);
         }
     }
+
+    public static PaymentMethodSpec<?> createPaymentMethodSpec(PaymentMethod<?> paymentMethod,
+                                                                String currencyCode) {
+        if (TradeCurrency.isFiat(currencyCode) && paymentMethod instanceof FiatPaymentMethod fiatPaymentMethod) {
+            return new FiatPaymentMethodSpec(fiatPaymentMethod);
+        } else if (TradeCurrency.isAltcoin(currencyCode) && paymentMethod instanceof CryptoPaymentMethod cryptoPaymentMethod) {
+            return new CryptoPaymentMethodSpec(cryptoPaymentMethod);
+        } else {
+            throw new UnsupportedOperationException("createPaymentMethodSpecs only supports fiat and altcoins. CurrencyCode: " + currencyCode);
+        }
+    }
 }
