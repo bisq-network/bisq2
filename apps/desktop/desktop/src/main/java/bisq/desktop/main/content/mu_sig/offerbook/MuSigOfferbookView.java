@@ -343,7 +343,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 .title(Res.get("muSig.offerbook.table.header.paymentMethod"))
                 .setCellFactory(getPaymentCellFactory())
                 .minWidth(105)
-                .comparator(Comparator.comparing(MuSigOfferListItem::getFiatPaymentMethodsAsString))
+                .comparator(Comparator.comparing(MuSigOfferListItem::getPaymentMethodsAsString))
                 .build());
 
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
@@ -629,13 +629,18 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                         removeOfferMenuItem.setOnAction(e -> controller.onRemoveOffer(item.getOffer()));
                     } else {
                         takeOfferButton.setText(item.getTakeOfferButtonText());
-                        takeOfferButton.setOpacity(1);
+                        boolean canTakeOffer = item.isCanTakeOffer();
+                        takeOfferButton.setOpacity(canTakeOffer ? 1 : 0.2);
                         if (item.getOffer().getDirection().mirror().isBuy()) {
                             takeOfferButton.getStyleClass().add("buy-button");
                         } else {
                             takeOfferButton.getStyleClass().add("sell-button");
                         }
-                        takeOfferButton.setOnAction(e -> controller.onTakeOffer(item.getOffer()));
+                        if (canTakeOffer) {
+                            takeOfferButton.setOnAction(e -> controller.onTakeOffer(item.getOffer()));
+                        } else {
+                            takeOfferButton.setOnAction(e -> controller.onHandleCannotTakeOfferCase(item.getCannotTakeOfferReason().get()));
+                        }
                         setGraphic(takeOfferButton);
                     }
                 } else {
@@ -732,13 +737,20 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
                 if (item != null && !empty) {
                     hbox.getChildren().clear();
-                    for (FiatPaymentMethod fiatPaymentMethod : item.getFiatPaymentMethods()) {
-                        Node icon = !fiatPaymentMethod.isCustomPaymentMethod()
-                                ? ImageUtil.getImageViewById(fiatPaymentMethod.getName())
-                                : BisqEasyViewUtils.getCustomPaymentMethodIcon(fiatPaymentMethod.getDisplayString());
+                    for (FiatPaymentMethod paymentMethod : item.getPaymentMethods()) {
+                        Node icon = !paymentMethod.isCustomPaymentMethod()
+                                ? ImageUtil.getImageViewById(paymentMethod.getName())
+                                : BisqEasyViewUtils.getCustomPaymentMethodIcon(paymentMethod.getDisplayString());
+                        Optional<Double> opacity = Optional.ofNullable(item.getAccountAvailableByPaymentMethod().get(paymentMethod))
+                                .map(isAccountAvailable -> isAccountAvailable ? 1 : 0.2);
+                        if (opacity.isPresent()) {
+                            icon.setOpacity(opacity.get());
+                        } else {
+                            log.error("Unexpected state: accountAvailableByPaymentMethod={}", item.getAccountAvailableByPaymentMethod());
+                        }
                         hbox.getChildren().add(icon);
                     }
-                    tooltip.setText(item.getFiatPaymentMethodsAsString());
+                    tooltip.setText(item.getPaymentMethodsAsString());
                     Tooltip.install(hbox, tooltip);
                     setGraphic(hbox);
                 } else {

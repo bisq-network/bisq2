@@ -57,5 +57,4 @@ public class PaymentMethodUtil {
     public static PaymentRail getPaymentRail(String name, String currencyCode) {
         return getPaymentMethod(name, currencyCode).getPaymentRail();
     }
-
 }

@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.offerbook;
 
+import bisq.account.AccountService;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -51,6 +52,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -66,16 +69,20 @@ public class MuSigOfferListItem {
     private final String quoteCurrencyCode;
     private final String baseAmountAsString;
     private final String quoteAmountAsString;
-    private final String fiatPaymentMethodsAsString;
+    private final String paymentMethodsAsString;
     private final String deposit;
     private final String maker;
     private final Market market;
     private final String takeOfferButtonText;
     private final Direction direction;
-    private final List<FiatPaymentMethod> fiatPaymentMethods;
+    private final List<FiatPaymentMethod> paymentMethods;
     private final UserProfile makerUserProfile;
     private final ReputationScore reputationScore;
     private final long totalScore;
+    private final boolean noAccountForOfferPaymentMethods;
+    private final boolean canTakeOffer;
+    private Optional<String> cannotTakeOfferReason = Optional.empty();
+    private final Map<FiatPaymentMethod, Boolean> accountAvailableByPaymentMethod;
 
     private double priceSpecAsPercent = 0;
     private String formattedPercentagePrice = Res.get("data.na");
@@ -89,7 +96,8 @@ public class MuSigOfferListItem {
                        MarketPriceService marketPriceService,
                        UserProfileService userProfileService,
                        IdentityService identityService,
-                       ReputationService reputationService) {
+                       ReputationService reputationService,
+                       AccountService accountService) {
         this.offer = offer;
         this.marketPriceService = marketPriceService;
 
@@ -108,11 +116,20 @@ public class MuSigOfferListItem {
         direction = offer.getDirection();
 
         // ImageUtil.getImageViewById(fiatPaymentMethod.getName());
-        fiatPaymentMethodsAsString = Joiner.on("\n")
+        paymentMethodsAsString = Joiner.on("\n")
                 .join(PaymentMethodSpecUtil.getPaymentMethods(offer.getQuoteSidePaymentMethodSpecs()).stream()
                         .map(PaymentMethod::getDisplayString)
                         .collect(Collectors.toList()));
-        fiatPaymentMethods = retrieveAndSortFiatPaymentMethods();
+        paymentMethods = retrieveAndSortFiatPaymentMethods();
+
+        accountAvailableByPaymentMethod = paymentMethods.stream().collect(Collectors.toMap(paymentMethod -> paymentMethod,
+                paymentMethod -> !accountService.getAccounts(paymentMethod).isEmpty()));
+        noAccountForOfferPaymentMethods = paymentMethods.stream()
+                .allMatch(paymentMethod -> accountService.getAccounts(paymentMethod).isEmpty());
+        if (noAccountForOfferPaymentMethods) {
+            cannotTakeOfferReason = Optional.of(Res.get("muSig.offerbook..table.cell.takeOffer.cannotTakeOfferReason.noAccountForOfferPaymentMethods"));
+        }
+        canTakeOffer = !noAccountForOfferPaymentMethods;
 
         makerUserProfile = userProfileService.findUserProfile(offer.getMakersUserProfileId())
                 .orElseThrow(() -> new RuntimeException("No maker user profile found for offer: " + offer.getId()));
