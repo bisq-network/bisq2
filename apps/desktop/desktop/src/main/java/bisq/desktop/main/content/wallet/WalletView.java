@@ -106,6 +106,7 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
         Label descriptionLabel = new Label(Res.get("wallet.description"));
         descriptionLabel.getStyleClass().add("bisq-text-1");
 
+        // TODO: Update with right images
         VBox card1 = new VerticalCard("1", "/images/learn/old/security@2x.png", Res.get("wallet.instruction.caption1"));
         VBox card2 = new VerticalCard("2", "/images/learn/old/wallets@2x.png", Res.get("wallet.instruction.caption2"));
         VBox card3 = new VerticalCard("3", "/images/learn/old/privacy@2x.png", Res.get("wallet.instruction.caption3"));

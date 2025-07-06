@@ -14,13 +14,11 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.wallets.core.WalletService;
-import bisq.wallets.core.MockWalletService;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 
 import java.util.Optional;
 
@@ -127,6 +125,7 @@ public class CreateWalletController extends NavigationController {
         }
     }
 
+    // TODO: Generalise into OverlayWizardController
     private void handleStepTransition(int nextIndex) {
         NavigationTarget currentTarget = model.getNavigationTarget();
         log.info("Navigating from {} to index {}", currentTarget, nextIndex);
@@ -175,6 +174,7 @@ public class CreateWalletController extends NavigationController {
     private void handleSkipProtectStep() {
         int nextIndex = model.getCurrentIndex().get() + 1;
         log.info("Skipping protect step, moving to index {}", nextIndex);
+        walletService.setNoEncryption();
         model.setAnimateRightOut(false);
         model.getCurrentIndex().set(nextIndex);
         NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
@@ -182,6 +182,7 @@ public class CreateWalletController extends NavigationController {
         Navigation.navigateTo(nextTarget);
     }
 
+    // TODO: Generalise into OverlayWizardController
     private void handleStepBack(int prevIndex) {
         log.info("Navigating back to index {}", prevIndex);
         model.setAnimateRightOut(true);

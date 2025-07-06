@@ -43,7 +43,25 @@ public class MockWalletService implements WalletService {
     private static final Logger log = LoggerFactory.getLogger(MockWalletService.class);
 
     public Observable<Boolean> isWalletInitialized = new Observable<>(false);
+    public Observable<Boolean> isWalletBackedup = new Observable<>(false);
     private String encryptionPassword = "";
+
+    private boolean shouldFailSeedWords = true;
+    private List<String> seedWords = null;
+
+    public Observable<Boolean> getIsWalletInitialized() {
+        return isWalletInitialized;
+    }
+
+    @Override
+    public Observable<Boolean> getIsWalletBackedup() {
+        return isWalletBackedup;
+    }
+
+    @Override
+    public void setIsWalletBackedup(Boolean value) {
+        isWalletBackedup.set(value);
+    }
 
     @Override
     public CompletableFuture<Boolean> initializeWallet(RpcConfig rpcConfig, Optional<String> walletPassphrase) {
@@ -117,8 +135,9 @@ public class MockWalletService implements WalletService {
         return CompletableFuture.completedFuture(new ObservableSet<>(Set.of()));
     }
 
-    public Observable<Boolean> getIsWalletInitialized() {
-        return isWalletInitialized;
+    @Override
+    public void setNoEncryption() {
+        // TODO: Set a flag for No encryption
     }
 
     @Override
@@ -126,9 +145,6 @@ public class MockWalletService implements WalletService {
         log.debug("setEncryptionPassword: " + password);
         encryptionPassword = password;
     }
-
-    private boolean shouldFailSeedWords = true;
-    private List<String> seedWords = null;
 
     @Override
     public CompletableFuture<List<String>> getSeedWords() {

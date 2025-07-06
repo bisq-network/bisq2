@@ -128,9 +128,9 @@ public class CreateWalletVerifyView extends View<StackPane, CreateWalletVerifyMo
         switch (newState) {
             case WRONG:
                 Label wrongLabel = new Label(Res.get("wallet.verifySeeds.wrongWord.title"));
-                wrongLabel.getStyleClass().addAll("font-size-16");
+                wrongLabel.getStyleClass().add("bisq-text-1");
                 Label instructLabel = new Label(Res.get("wallet.verifySeeds.wrongWord.description"));
-                instructLabel.getStyleClass().addAll("font-size-16");
+                instructLabel.getStyleClass().add("bisq-text-3");
                 instructLabel.setWrapText(true);
                 instructLabel.setTextAlignment(TextAlignment.CENTER);
                 content.getChildren().clear();
@@ -138,9 +138,9 @@ public class CreateWalletVerifyView extends View<StackPane, CreateWalletVerifyMo
                 break;
             case SUCCESS:
                 Label successLabel = new Label(Res.get("wallet.verifySeeds.success.title"));
-                successLabel.getStyleClass().addAll("font-size-16");
+                successLabel.getStyleClass().add("bisq-text-1");
                 Label successInstruct = new Label(Res.get("wallet.verifySeeds.success.description"));
-                successInstruct.getStyleClass().addAll("font-size-16");
+                successInstruct.getStyleClass().add("bisq-text-3");
                 successInstruct.setWrapText(true);
                 successInstruct.setTextAlignment(TextAlignment.CENTER);
                 content.getChildren().clear();

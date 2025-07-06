@@ -60,7 +60,6 @@ public class CreateWalletBackupView extends View<StackPane, CreateWalletBackupMo
         GridPane seedGrid = new GridPane();
         seedGrid.setHgap(10);
         seedGrid.setVgap(10);
-        seedGrid.setPadding(new Insets(0, 0, 20, 0));
         seedGrid.setAlignment(Pos.CENTER);
 
         for (int i = 0; i < model.getSEED_WORD_COUNT(); i++) {

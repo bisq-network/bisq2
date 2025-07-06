@@ -165,13 +165,14 @@ public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, Cr
         root.setOnKeyPressed(null);
     }
 
-    // TODO: Generalise
+    // TODO: Generalise into OverlayWizardView
     private Region getHLine() {
         Region line = Layout.hLine();
         line.setPrefWidth(30);
         return line;
     }
 
+    // TODO: Generalise into OverlayWizardView
     private Label createAndGetProgressLabel(String text) {
         Label label = new Label(text.toUpperCase());
         label.setTextAlignment(TextAlignment.CENTER);
@@ -181,6 +182,7 @@ public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, Cr
         return label;
     }
 
+    // TODO: Generalise into OverlayWizardView
     private void applyProgress(int progressIndex, boolean delay) {
         if (progressIndex < progressLabelList.size()) {
             progressLabelList.forEach(label -> label.setOpacity(OPACITY));
@@ -194,6 +196,7 @@ public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, Cr
         }
     }
 
+    // TODO: Generalise into OverlayWizardView
     private HBox createProgressBox() {
         HBox progressBox = new HBox(10);
         progressBox.setAlignment(Pos.CENTER);

@@ -56,6 +56,7 @@ public class CreateWalletVerifyController implements Controller {
         if (selectedIdx == correctIdx) {
             if (qIdx == 5) {
                 model.getCurrentScreenState().set(CreateWalletVerifyModel.ScreenState.SUCCESS);
+                walletService.setIsWalletBackedup(true);
             } else {
                 model.getCurrentQuestionIndex().set(qIdx + 1);
             }
