@@ -143,13 +143,6 @@ public class StringUtilsTest {
     }
 
     @Test
-    void testCollapsesMultipleSpaces() {
-        String input = "  +1   415    9604264   ";
-        String expected = "+1 415 9604264";
-        assertEquals(expected, StringUtils.cleanUserInput(input));
-    }
-
-    @Test
     void testReturnsNullOnNullInput() {
         assertEquals("", StringUtils.cleanUserInput(null));
     }

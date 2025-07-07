@@ -1,10 +1,12 @@
 package bisq.account.accounts;
 
+import bisq.account.accounts.util.CompactDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
+import bisq.i18n.Res;
 import lombok.Getter;
 
 @Getter
@@ -82,5 +84,14 @@ public class F2FAccountPayload extends CountryBasedAccountPayload implements Sel
     @Override
     public String getDefaultAccountName() {
         return getPaymentMethodName() + "-" + countryCode + "/" + StringUtils.truncate(city, 5);
+    }
+
+    @Override
+    public String toCompactDisplayString() {
+        return new CompactDisplayStringBuilder(
+                Res.get("user.paymentAccounts.f2f.city"), city,
+                Res.get("user.paymentAccounts.f2f.contact"), contact,
+                Res.get("user.paymentAccounts.f2f.extraInfo"), extraInfo
+        ).toString();
     }
 }

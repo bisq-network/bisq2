@@ -17,14 +17,11 @@
 
 package bisq.trade.mu_sig.messages.network.handler.maker;
 
-import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.data.ByteArray;
 import bisq.common.util.StringUtils;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.offer.options.AccountOption;
-import bisq.offer.options.OfferOptionUtil;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.handler.MuSigTradeMessageHandlerAsMessageSender;
@@ -32,15 +29,10 @@ import bisq.trade.mu_sig.messages.network.SendAccountPayloadAndDepositTxMessage;
 import bisq.trade.mu_sig.messages.network.SendAccountPayloadMessage;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
-import java.util.Set;
-
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
 public abstract class BaseSendAccountPayloadAndDepositTxMessage_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, SendAccountPayloadAndDepositTxMessage> {
     private ByteArray depositTx;
-    private AccountPayload peersAccountPayload;
+    private AccountPayload<?> accountPayload;
 
     public BaseSendAccountPayloadAndDepositTxMessage_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -54,7 +46,7 @@ public abstract class BaseSendAccountPayloadAndDepositTxMessage_Handler extends 
     @Override
     protected void process(SendAccountPayloadAndDepositTxMessage message) {
         depositTx = message.getDepositTx();
-        peersAccountPayload = message.getAccountPayload();
+        accountPayload = message.getAccountPayload();
 
         // We observe the txConfirmationStatus to get informed once the deposit tx is confirmed (gets published by the
         // buyer when they receive the MuSigSetupTradeMessage_D).
@@ -79,7 +71,7 @@ public abstract class BaseSendAccountPayloadAndDepositTxMessage_Handler extends 
     @Override
     protected void commit() {
         trade.getPeer().setDepositTx(depositTx);
-        trade.getPeer().setPeersAccountPayload(peersAccountPayload);
+        trade.getPeer().setAccountPayload(accountPayload);
     }
 
     @Override
@@ -89,26 +81,13 @@ public abstract class BaseSendAccountPayloadAndDepositTxMessage_Handler extends 
         // We require that both peers exchange the account data to allow verification
         // that the buyer used the account defined in the contract to avoid fraud.
 
-        // The maker has added the salted account id to the AccountOptions.
-        // We will use the payment method chosen by the taker to determine which account we had assigned to that offer.
-        MuSigOffer offer = trade.getOffer();
-        String offerId = offer.getId();
-        PaymentMethod<?> selectedPaymentMethod = trade.getContract().getQuoteSidePaymentMethodSpec().getPaymentMethod();
-        Set<Account<? extends PaymentMethod<?>, ?>> matchingAccounts = serviceProvider.getAccountService().getAccounts(selectedPaymentMethod);
-        Set<AccountOption> accountOptions = OfferOptionUtil.findAccountOptions(offer.getOfferOptions());
-        Optional<Account<? extends PaymentMethod<?>, ?>> matchingAccount = accountOptions.stream()
-                .filter(accountOption -> accountOption.getPaymentMethod().equals(selectedPaymentMethod))
-                .map(AccountOption::getSaltedAccountId)
-                .flatMap(saltedAccountId -> OfferOptionUtil.findAccountFromSaltedAccountId(matchingAccounts, saltedAccountId, offerId).stream())
-                .findAny();
-        checkArgument(matchingAccount.isPresent(), "No account found for the saltedAccountIds from the accountOptions");
-        AccountPayload<? extends PaymentMethod<?>> accountPayload = matchingAccount.get().getAccountPayload();
+        AccountPayload<? extends PaymentMethod<?>> myAccountPayload = trade.getMaker().getAccountPayload().orElseThrow();
         send(new SendAccountPayloadMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
-                accountPayload));
+                myAccountPayload));
     }
 
     @Override

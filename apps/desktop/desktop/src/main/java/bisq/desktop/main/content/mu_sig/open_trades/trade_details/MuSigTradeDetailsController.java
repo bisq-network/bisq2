@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.open_trades.trade_details;
 
+import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.contract.mu_sig.MuSigContract;
@@ -110,13 +111,16 @@ public class MuSigTradeDetailsController extends NavigationController implements
         model.setTradeId(trade.getId());
         model.setPeerNetworkAddress(channel.getPeer().getAddressByTransportDisplayString(50));
 
-        model.setPaymentAccountDataEmpty(trade.getPaymentAccountData() == null);
+        //todo add also my account by account name
+        Optional<AccountPayload<?>> peersAccountPayload = trade.getPeer().getAccountPayload();
+        model.setPaymentAccountDataEmpty(peersAccountPayload.isEmpty());
         model.setAssignedMediator(channel.getMediator().map(UserProfile::getUserName).orElse(""));
         model.setHasMediatorBeenAssigned(channel.getMediator().isPresent());
 
-        model.setPaymentAccountData(trade.getPaymentAccountData() == null
+        //todo toCompactDisplayString would require text area
+        model.setPeersAccountPayloadDisplayString(peersAccountPayload.isEmpty()
                 ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
-                : trade.getPaymentAccountData());
+                : peersAccountPayload.get().toCompactDisplayString());
 
         model.setDepositTxId(trade.getDepositTxId() == null
                 ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")

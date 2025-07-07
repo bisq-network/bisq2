@@ -93,8 +93,8 @@ public class BankAccountUtils {
             case "AU" -> "BSB code"; // do not translate as it is used in English only
             case "CA" -> "Transit Number"; // do not translate as it is used in English only
             default -> isBranchIdRequired(countryCode) ?
-                    Res.get("user.paymentAccounts.bank.branchNr") :
-                    Res.get("user.paymentAccounts.bank.branchNrOptional");
+                    Res.get("user.paymentAccounts.bank.branchId") :
+                    Res.get("user.paymentAccounts.bank.branchIdOptional");
         };
     }
     public static String getBranchIdDescriptionShort(String countryCode) {
@@ -104,8 +104,8 @@ public class BankAccountUtils {
             case "AU" -> "BSB"; // do not translate as it is used in English only
             case "CA" -> "Transit No."; // do not translate as it is used in English only
             default -> isBranchIdRequired(countryCode) ?
-                    Res.get("user.paymentAccounts.bank.branchNr") :
-                    Res.get("user.paymentAccounts.bank.branchNrOptional");
+                    Res.get("user.paymentAccounts.bank.branchId") :
+                    Res.get("user.paymentAccounts.bank.branchIdOptional");
         };
     }
 

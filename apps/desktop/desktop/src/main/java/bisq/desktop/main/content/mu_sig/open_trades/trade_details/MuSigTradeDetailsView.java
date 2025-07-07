@@ -44,7 +44,7 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
             fiatCurrencyLabel, btcAmountLabel, priceLabel, priceCodesLabel, priceSpecLabel, paymentMethodLabel,
             settlementMethodLabel, tradeIdLabel, peerNetworkAddressLabel,
            depositTxTitleLabel, depositTxDetailsLabel,
-            paymentAccountDataLabel, assignedMediatorLabel;
+            peersAccountPayloadDisplayString, assignedMediatorLabel;
     private final HBox assignedMediatorBox;
     private final BisqMenuItem tradersAndRoleCopyButton, tradeIdCopyButton, peerNetworkAddressCopyButton,
             depositTxCopyButton, paymentAccountDataCopyButton;
@@ -146,10 +146,10 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
                 peerNetworkAddressLabel, peerNetworkAddressCopyButton);
 
         // Payment account data
-        paymentAccountDataLabel = getValueLabel();
+        peersAccountPayloadDisplayString = getValueLabel();
         paymentAccountDataCopyButton = getTradeIdCopyButton(Res.get("bisqEasy.openTrades.tradeDetails.paymentAccountData.copy"));
         HBox paymentAccountDataBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.paymentAccountData",
-                paymentAccountDataLabel, paymentAccountDataCopyButton);
+                peersAccountPayloadDisplayString, paymentAccountDataCopyButton);
 
         // DepositTx
         depositTxTitleLabel = getDescriptionLabel("");
@@ -240,7 +240,8 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         depositTxBox.setVisible(model.isDepositTxIdVisible());
         depositTxBox.setManaged(model.isDepositTxIdVisible());
 
-        paymentAccountDataLabel.setText(model.getPaymentAccountData());
+        // todo requires text area
+        peersAccountPayloadDisplayString.setText(model.getPeersAccountPayloadDisplayString());
         assignedMediatorLabel.setText(model.getAssignedMediator());
         assignedMediatorBox.setVisible(model.isHasMediatorBeenAssigned());
         assignedMediatorBox.setManaged(model.isHasMediatorBeenAssigned());
@@ -249,11 +250,11 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         depositTxCopyButton.setVisible(!model.isDepositTxIdEmpty());
         depositTxCopyButton.setManaged(!model.isDepositTxIdEmpty());
 
-        paymentAccountDataLabel.getStyleClass().clear();
-        paymentAccountDataLabel.getStyleClass().add(model.isPaymentAccountDataEmpty()
+        peersAccountPayloadDisplayString.getStyleClass().clear();
+        peersAccountPayloadDisplayString.getStyleClass().add(model.isPaymentAccountDataEmpty()
                 ? "text-fill-grey-dimmed"
                 : "text-fill-white");
-        paymentAccountDataLabel.getStyleClass().add("normal-text");
+        peersAccountPayloadDisplayString.getStyleClass().add("normal-text");
 
         depositTxDetailsLabel.getStyleClass().clear();
         depositTxDetailsLabel.getStyleClass().add(model.isDepositTxIdEmpty()
@@ -265,7 +266,7 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         tradersAndRoleCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeer()));
         tradeIdCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getTradeId()));
         peerNetworkAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeerNetworkAddress()));
-        paymentAccountDataCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPaymentAccountData()));
+        paymentAccountDataCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeersAccountPayloadDisplayString()));
         depositTxCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getDepositTxId()));
     }
 

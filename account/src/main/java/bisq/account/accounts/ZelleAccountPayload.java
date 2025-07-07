@@ -1,32 +1,32 @@
 package bisq.account.accounts;
 
+import bisq.account.accounts.util.CompactDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.common.validation.EmailValidation;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PhoneNumberValidation;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
 @Slf4j
-@ToString
 @EqualsAndHashCode(callSuper = true)
 public class ZelleAccountPayload extends CountryBasedAccountPayload {
     public static final int HOLDER_NAME_MIN_LENGTH = 2;
     public static final int HOLDER_NAME_MAX_LENGTH = 70;
 
-    private final String emailOrMobileNr;
     private final String holderName;
+    private final String emailOrMobileNr;
 
-    public ZelleAccountPayload(String id, String emailOrMobileNr, String holderName) {
+    public ZelleAccountPayload(String id,  String holderName,String emailOrMobileNr) {
         super(id, "US");
-        this.emailOrMobileNr = emailOrMobileNr;
         this.holderName = holderName;
+        this.emailOrMobileNr = emailOrMobileNr;
     }
 
     @Override
@@ -50,21 +50,29 @@ public class ZelleAccountPayload extends CountryBasedAccountPayload {
 
     private bisq.account.protobuf.ZelleAccountPayload.Builder getZelleAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.ZelleAccountPayload.newBuilder()
-                .setEmailOrMobileNr(emailOrMobileNr)
-                .setHolderName(holderName);
+                .setHolderName(holderName)
+                .setEmailOrMobileNr(emailOrMobileNr);
     }
 
     public static ZelleAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         var zelleProto = proto.getZelleAccountPayload();
         return new ZelleAccountPayload(
                 proto.getId(),
-                zelleProto.getEmailOrMobileNr(),
-                zelleProto.getHolderName()
+                zelleProto.getHolderName(),
+                zelleProto.getEmailOrMobileNr()
         );
     }
 
     @Override
     public FiatPaymentMethod getPaymentMethod() {
         return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ZELLE);
+    }
+
+    @Override
+    public String toCompactDisplayString() {
+        return new CompactDisplayStringBuilder(
+                Res.get("user.paymentAccounts.holderName"), holderName,
+                Res.get("user.paymentAccounts.zelle.emailOrMobileNr"), emailOrMobileNr
+        ).toString();
     }
 }

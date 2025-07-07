@@ -40,7 +40,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class MuSigContract extends TwoPartyContract<MuSigOffer> {
-    private String takersSaltedAccountId;
 
     private static BitcoinPaymentMethodSpec getBitcoinPaymentMethodSpec(MuSigOffer offer) {
         checkArgument(offer.getBaseSidePaymentMethodSpecs().size() == 1,
@@ -62,7 +61,6 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                          long baseSideAmount,
                          long quoteSideAmount,
                          FiatPaymentMethodSpec quoteSidePaymentMethodSpec,
-                         String takersSaltedAccountId,
                          Optional<UserProfile> mediator,
                          PriceSpec priceSpec,
                          long marketPrice) {
@@ -74,7 +72,6 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                 quoteSideAmount,
                 getBitcoinPaymentMethodSpec(offer),
                 quoteSidePaymentMethodSpec,
-                takersSaltedAccountId,
                 mediator,
                 priceSpec,
                 marketPrice);
@@ -88,7 +85,6 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                          long quoteSideAmount,
                          BitcoinPaymentMethodSpec baseSidePaymentMethodSpec,
                          FiatPaymentMethodSpec quoteSidePaymentMethodSpec,
-                         String takersSaltedAccountId,
                          Optional<UserProfile> mediator,
                          PriceSpec priceSpec,
                          long marketPrice) {
@@ -97,7 +93,6 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
         this.quoteSideAmount = quoteSideAmount;
         this.baseSidePaymentMethodSpec = baseSidePaymentMethodSpec;
         this.quoteSidePaymentMethodSpec = quoteSidePaymentMethodSpec;
-        this.takersSaltedAccountId = takersSaltedAccountId;
         this.mediator = mediator;
         this.priceSpec = priceSpec;
         this.marketPrice = marketPrice;
@@ -131,7 +126,6 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                 .setQuoteSideAmount(quoteSideAmount)
                 .setBaseSidePaymentMethodSpec(baseSidePaymentMethodSpec.toProto(serializeForHash))
                 .setQuoteSidePaymentMethodSpec(quoteSidePaymentMethodSpec.toProto(serializeForHash))
-                .setTakersSaltedAccountId(takersSaltedAccountId)
                 .setPriceSpec(priceSpec.toProto(serializeForHash))
                 .setMarketPrice(marketPrice);
         mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto(serializeForHash)));
@@ -154,7 +148,6 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                 muSigContractProto.getQuoteSideAmount(),
                 PaymentMethodSpec.protoToBitcoinPaymentMethodSpec(muSigContractProto.getBaseSidePaymentMethodSpec()),
                 PaymentMethodSpec.protoToFiatPaymentMethodSpec(muSigContractProto.getQuoteSidePaymentMethodSpec()),
-                muSigContractProto.getTakersSaltedAccountId(),
                 muSigContractProto.hasMediator() ?
                         Optional.of(UserProfile.fromProto(muSigContractProto.getMediator())) :
                         Optional.empty(),

@@ -111,6 +111,7 @@ public class StringUtils {
             return value.substring(0, 1).toUpperCase() + value.substring(1);
         }
     }
+
     public static String unCapitalize(String value) {
         if (value == null || value.isEmpty()) {
             return value;
@@ -298,16 +299,14 @@ public class StringUtils {
 
 
     public static String cleanUserInput(String input) {
-        if (input == null) return "";
+        if (input == null) {
+            return "";
+        }
 
         // Remove common invisible/formatting characters (BiDi, ZW*, etc.)
         // E.g. contact app on OSX surrounds use invisible directional formatting chars
         String cleaned = input.replaceAll("[\\p{Cf}]", "");
-
-        // Optionally trim and normalize whitespace
-        cleaned = cleaned.trim().replaceAll("\\s+", " ");
-
+        cleaned = cleaned.trim();
         return cleaned;
-        // return input.replaceAll("[\\u202A-\\u202E\\u200E\\u200F]", "");
     }
 }

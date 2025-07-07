@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.open_trades.trade_state.states;
 
+import bisq.account.accounts.AccountPayload;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -36,6 +37,7 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -80,8 +82,9 @@ public class State2BuyerSendPayment extends BaseState {
             super.onActivate();
 
             MuSigTrade trade = model.getTrade();
-            String sellersAccountData = trade.getPaymentAccountData();
-            if (sellersAccountData != null && muSigService.isAccountDataBanned(sellersAccountData)) {
+            model.setPaymentMethodName(trade.getContract().getQuoteSidePaymentMethodSpec().getShortDisplayString());
+            AccountPayload<?> peersAccountPayload = trade.getBuyer().getAccountPayload().orElseThrow();
+            if (muSigService.isAccountDataBanned(peersAccountPayload)) {
                 model.getConfirmFiatSentButtonDisabled().set(true);
                 model.getAccountDataBannedValidator().setIsInvalid(true);
 
@@ -89,7 +92,7 @@ public class State2BuyerSendPayment extends BaseState {
                 String peerUserName = peer.getUserName();
 
                 // Report to moderator
-                String message = "Account data of " + peerUserName + " is banned: " + sellersAccountData;
+                String message = "Account data of " + peerUserName + " is banned: " + peersAccountPayload;
                 moderationRequestService.reportUserProfile(peer, message);
 
                 new Popup().warning(Res.get("bisqEasy.tradeState.info.buyer.phase2a.accountDataBanned.popup.warning")).show();
@@ -115,7 +118,8 @@ public class State2BuyerSendPayment extends BaseState {
     private static class Model extends BaseState.Model {
         private final BooleanProperty confirmFiatSentButtonDisabled = new SimpleBooleanProperty();
         private final SettableErrorValidator accountDataBannedValidator = new SettableErrorValidator(Res.get("bisqEasy.tradeState.info.buyer.phase2a.accountDataBannedError"));
-
+        @Setter
+        private String paymentMethodName;
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
         }
@@ -153,12 +157,12 @@ public class State2BuyerSendPayment extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
-            headline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2a.headline", model.getFormattedQuoteAmount()));
+            headline.setText(Res.get("muSig.tradeState.info.buyer.phase2a.headline", model.getFormattedQuoteAmount(), model.getPaymentMethodName()));
             quoteAmount.setText(model.getFormattedQuoteAmount());
             quoteAmount.getIconButton().setOnAction(e -> ClipboardUtil.copyToClipboard(model.getQuoteAmount()));
             paymentReason.setText(model.getTrade().getShortId());
             paymentReason.getIconButton().setOnAction(e -> ClipboardUtil.copyToClipboard(model.getTrade().getShortId()));
-            account.setText(model.getTrade().getPaymentAccountData());
+            account.setText(model.getTrade().getPeer().getAccountPayload().orElseThrow().toCompactDisplayString());
             account.validate();
             confirmFiatSentButton.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2a.confirmFiatSent", model.getFormattedQuoteAmount()));
             confirmFiatSentButton.setOnAction(e -> controller.onConfirmFiatSent());

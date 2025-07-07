@@ -1,9 +1,11 @@
 package bisq.account.accounts;
 
+import bisq.account.accounts.util.CompactDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -65,5 +67,13 @@ public final class PixAccountPayload extends CountryBasedAccountPayload {
     @Override
     public FiatPaymentMethod getPaymentMethod() {
         return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.PIX);
+    }
+
+    @Override
+    public String toCompactDisplayString() {
+        return new CompactDisplayStringBuilder(
+                Res.get("user.paymentAccounts.pix.holderName"), holderName,
+                Res.get("user.paymentAccounts.pix.pixKey"), pixKey
+        ).toString();
     }
 }

@@ -17,11 +17,13 @@
 
 package bisq.account.accounts;
 
+import bisq.account.accounts.util.CompactDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -84,5 +86,12 @@ public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMetho
     @Override
     public FiatPaymentMethod getPaymentMethod() {
         return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.REVOLUT);
+    }
+
+    @Override
+    public String toCompactDisplayString() {
+        return new CompactDisplayStringBuilder(
+                Res.get("user.paymentAccounts.userName"), userName
+        ).toString();
     }
 }

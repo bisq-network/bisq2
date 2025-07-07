@@ -17,7 +17,6 @@
 
 package bisq.desktop.components.controls;
 
-import bisq.common.util.StringUtils;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextInputControl;

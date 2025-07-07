@@ -93,8 +93,7 @@ message MuSigContract {
   uint64 quoteSideAmount = 2;
   offer.PaymentMethodSpec baseSidePaymentMethodSpec = 3;
   offer.PaymentMethodSpec quoteSidePaymentMethodSpec = 4;
-  string takersSaltedAccountId = 5;
-  optional user.UserProfile mediator = 6;
-  offer.PriceSpec priceSpec = 7;
-  uint64 marketPrice = 8;
+  optional user.UserProfile mediator = 5;
+  offer.PriceSpec priceSpec =6;
+  uint64 marketPrice =7;
 }

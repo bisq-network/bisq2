@@ -17,6 +17,9 @@
 
 package bisq.trade.mu_sig;
 
+import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountPayload;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
@@ -38,6 +41,8 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.offer.options.AccountOption;
+import bisq.offer.options.OfferOptionUtil;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.DbSubDirectory;
@@ -49,17 +54,17 @@ import bisq.trade.Trade;
 import bisq.trade.mu_sig.events.MuSigTradeEvent;
 import bisq.trade.mu_sig.events.blockchain.DepositTxConfirmedEvent;
 import bisq.trade.mu_sig.events.buyer.PaymentInitiatedEvent;
-import bisq.trade.mu_sig.events.taker.MuSigTakeOfferEvent;
 import bisq.trade.mu_sig.events.seller.PaymentReceiptConfirmedEvent;
+import bisq.trade.mu_sig.events.taker.MuSigTakeOfferEvent;
 import bisq.trade.mu_sig.grpc.MusigGrpcClient;
 import bisq.trade.mu_sig.messages.grpc.DepositPsbt;
 import bisq.trade.mu_sig.messages.grpc.TxConfirmationStatus;
-import bisq.trade.mu_sig.messages.network.SetupTradeMessage_A;
 import bisq.trade.mu_sig.messages.network.MuSigTradeMessage;
+import bisq.trade.mu_sig.messages.network.SetupTradeMessage_A;
+import bisq.trade.mu_sig.protocol.MuSigBuyerAsMakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigBuyerAsTakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigProtocol;
 import bisq.trade.mu_sig.protocol.MuSigSellerAsMakerProtocol;
-import bisq.trade.mu_sig.protocol.MuSigBuyerAsMakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigSellerAsTakerProtocol;
 import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protobuf.SubscribeTxConfirmationStatusRequest;
@@ -266,7 +271,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
 
     private void handleMuSigTakeOfferMessage(SetupTradeMessage_A message) {
         MuSigContract muSigContract = message.getContract();
-        MuSigProtocol protocol = createProtocol(muSigContract, message.getSender(), message.getReceiver());
+        MuSigProtocol protocol = makerCreatesProtocol(muSigContract, message.getSender(), message.getReceiver());
         handleMuSigTradeMessage(message, protocol);
     }
 
@@ -349,7 +354,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
                                               Monetary baseSideAmount,
                                               Monetary quoteSideAmount,
                                               FiatPaymentMethodSpec fiatPaymentMethodSpec,
-                                              String takersSaltedAccountId,
+                                              AccountPayload<?> takersAccountPayload,
                                               Optional<UserProfile> mediator,
                                               PriceSpec priceSpec,
                                               long marketPrice) {
@@ -364,7 +369,6 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
                 baseSideAmount.getValue(),
                 quoteSideAmount.getValue(),
                 fiatPaymentMethodSpec,
-                takersSaltedAccountId,
                 mediator,
                 priceSpec,
                 marketPrice);
@@ -373,6 +377,8 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         MuSigTrade muSigTrade = new MuSigTrade(contract, isBuyer, true, takerIdentity, muSigOffer, takerNetworkId, makerNetworkId);
         checkArgument(findProtocol(muSigTrade.getId()).isEmpty(),
                 "We received the MuSigTakeOfferRequest for an already existing protocol");
+
+        muSigTrade.getMyself().setAccountPayload(takersAccountPayload);
 
         checkArgument(!tradeExists(muSigTrade.getId()), "A trade with that ID exists already");
         persistableStore.addTrade(muSigTrade);
@@ -490,24 +496,43 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         return musigGrpcClient.getAsyncStub();
     }
 
+    // The maker has added the salted account id to the AccountOptions.
+    // We will use the payment method chosen by the taker to determine which account we had assigned to that offer.
+    public Optional<Account<? extends PaymentMethod<?>, ?>> findMyAccount(MuSigTrade trade) {
+        MuSigContract contract = trade.getContract();
+        MuSigOffer offer = contract.getOffer();
+        PaymentMethod<?> selectedPaymentMethod = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod();
+        Set<Account<? extends PaymentMethod<?>, ?>> matchingAccounts = serviceProvider.getAccountService().getAccounts(selectedPaymentMethod);
+        Set<AccountOption> accountOptions = OfferOptionUtil.findAccountOptions(offer.getOfferOptions());
+        return accountOptions.stream()
+                .filter(accountOption -> accountOption.getPaymentMethod().equals(selectedPaymentMethod))
+                .map(AccountOption::getSaltedAccountId)
+                .flatMap(saltedAccountId -> OfferOptionUtil.findAccountFromSaltedAccountId(matchingAccounts, saltedAccountId, offer.getId()).stream())
+                .findAny();
+    }
+
     /* --------------------------------------------------------------------- */
     // TradeProtocol factory
     /* --------------------------------------------------------------------- */
 
-    private MuSigProtocol createProtocol(MuSigContract contract, NetworkId sender, NetworkId receiver) {
+    private MuSigProtocol makerCreatesProtocol(MuSigContract contract, NetworkId sender, NetworkId receiver) {
         // We only create the data required for the protocol creation.
         // Verification will happen in the MuSigTakeOfferRequestHandler
         MuSigOffer offer = contract.getOffer();
         boolean isBuyer = offer.getMakersDirection().isBuy();
         Identity myIdentity = identityService.findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
-        MuSigTrade muSigTrade = new MuSigTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);
-        String tradeId = muSigTrade.getId();
+        MuSigTrade trade = new MuSigTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);
+
+        AccountPayload<? extends PaymentMethod<?>> accountPayload = findMyAccount(trade).orElseThrow().getAccountPayload();
+        trade.getMyself().setAccountPayload(accountPayload);
+
+        String tradeId = trade.getId();
         checkArgument(findProtocol(tradeId).isEmpty(), "We received the MuSigTakeOfferRequest for an already existing protocol");
         checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
-        persistableStore.addTrade(muSigTrade);
+        persistableStore.addTrade(trade);
         persist();
 
-        return createAndAddTradeProtocol(muSigTrade);
+        return createAndAddTradeProtocol(trade);
     }
 
     private MuSigProtocol createAndAddTradeProtocol(MuSigTrade trade) {

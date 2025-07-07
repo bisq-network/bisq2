@@ -98,4 +98,9 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
             return Optional.of(getPaymentMethod().getSupportedCurrencyCodes().get(0));
         }
     }
+
+    //todo make abstract once impl for all
+    public String toCompactDisplayString() {
+        throw new UnsupportedOperationException("Not implemented for " + getPaymentMethod().getName());
+    }
 }

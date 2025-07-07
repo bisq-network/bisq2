@@ -19,6 +19,7 @@ package bisq.account;
 
 
 import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentMethodUtil;
 import bisq.account.payment_method.PaymentRail;
@@ -104,6 +105,12 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
 
     public Optional<Account<? extends PaymentMethod<?>, ?>> findAccount(String name) {
         return Optional.ofNullable(getAccountByNameMap().get(name));
+    }
+
+    public Optional<Account<? extends PaymentMethod<?>, ?>> findAccount(AccountPayload<?> accountPayload) {
+        return getAccountByNameMap().values().stream()
+                .filter(account -> account.getAccountPayload().equals(accountPayload))
+                .findAny();
     }
 
     public Observable<Account<? extends PaymentMethod<?>, ?>> selectedAccountAsObservable() {

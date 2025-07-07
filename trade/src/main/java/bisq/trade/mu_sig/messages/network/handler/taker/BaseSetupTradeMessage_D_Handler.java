@@ -17,14 +17,9 @@
 
 package bisq.trade.mu_sig.messages.network.handler.taker;
 
-import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
-import bisq.account.payment_method.PaymentMethod;
 import bisq.common.data.ByteArray;
 import bisq.common.util.StringUtils;
-import bisq.contract.mu_sig.MuSigContract;
-import bisq.offer.mu_sig.MuSigOffer;
-import bisq.offer.options.OfferOptionUtil;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
@@ -37,11 +32,6 @@ import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
 import bisq.trade.protobuf.DepositTxSignatureRequest;
 import bisq.trade.protobuf.PublishDepositTxRequest;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Optional;
-import java.util.Set;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public abstract class BaseSetupTradeMessage_D_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, SetupTradeMessage_D> {
@@ -91,18 +81,7 @@ public abstract class BaseSetupTradeMessage_D_Handler extends MuSigTradeMessageH
         // We require that both peers exchange the account data to allow verification
         // that the buyer used the account defined in the contract to avoid fraud.
 
-        //todo
-
-        // The maker has added the salted account id to the AccountOptions.
-        // We will use the payment method chosen by the taker to determine which account we had assigned to that offer.
-        MuSigOffer offer = trade.getOffer();
-        String offerId = offer.getId();
-        MuSigContract contract = trade.getContract();
-        PaymentMethod<?> selectedPaymentMethod = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod();
-        Set<Account<? extends PaymentMethod<?>, ?>> matchingAccounts = serviceProvider.getAccountService().getAccounts(selectedPaymentMethod);
-        Optional<Account<? extends PaymentMethod<?>, ?>> matchingAccount =  OfferOptionUtil.findAccountFromSaltedAccountId(matchingAccounts, contract.getTakersSaltedAccountId(), offerId);
-        checkArgument(matchingAccount.isPresent(), "No account found for the saltedAccountIds from the accountOptions");
-        AccountPayload<? extends PaymentMethod<?>> accountPayload = matchingAccount.get().getAccountPayload();
+        AccountPayload<?> accountPayload = trade.getTaker().getAccountPayload().orElseThrow();
         send(new SendAccountPayloadAndDepositTxMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
