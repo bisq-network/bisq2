@@ -20,8 +20,8 @@ package bisq.offer.options;
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.encoding.Hex;
-import bisq.common.observable.collection.ObservableSet;
 import bisq.security.DigestUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 public class OfferOptionUtil {
     public static List<OfferOption> fromTradeTermsAndReputationScore(String makersTradeTerms,
                                                                      long requiredTotalReputationScore) {
@@ -105,15 +106,23 @@ public class OfferOptionUtil {
     // The account ID is added to the offer so that maker knows which account was assigned once a taker takes the offer.
     public static String createdSaltedAccountId(String accountId, String offerId) {
         String input = accountId + offerId;
+        log.error("createdSaltedAccountId accountId={}; offerId={}", accountId, offerId);
         byte[] hash = DigestUtil.hash(input.getBytes(StandardCharsets.UTF_8));
+        log.error("createdSaltedAccountId Hex.encode(hash)={}", Hex.encode(hash));
         return Hex.encode(hash);
     }
 
-    public static Optional<Account<? extends PaymentMethod<?>, ?>> findAccountFromSaltedAccountId(ObservableSet<Account<? extends PaymentMethod<?>, ?>> accounts,
+    public static Optional<Account<? extends PaymentMethod<?>, ?>> findAccountFromSaltedAccountId(Set<Account<? extends PaymentMethod<?>, ?>> accounts,
                                                                                                   String saltedAccountId,
                                                                                                   String offerId) {
         Set<Account<? extends PaymentMethod<?>, ?>> accountSet = accounts.stream()
-                .filter(account -> saltedAccountId.equals(createdSaltedAccountId(account.getId(), offerId)))
+                .filter(account -> {
+                    String salted = createdSaltedAccountId(account.getId(), offerId);
+                    log.error("findAccountFromSaltedAccountId accountId={}; offerId={}", account.getId(), offerId);
+                    log.error("findAccountFromSaltedAccountId \n{}\n{}", salted, saltedAccountId);
+
+                    return saltedAccountId.equals(salted);
+                })
                 .collect(Collectors.toSet());
         checkArgument(accountSet.size() <= 1, "findAccountFromSaltedAccountId is expected to return 0 or 1 accounts");
         return accountSet.stream().findAny();

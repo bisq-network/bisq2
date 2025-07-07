@@ -90,6 +90,8 @@ public class MuSigTakeOfferPaymentController implements Controller {
         model.setSinglePaymentMethod(isSinglePaymentMethod);
         if (isSinglePaymentMethod) {
             FiatPaymentMethod paymentMethod = offeredPaymentMethodSpecs.get(0).getPaymentMethod();
+            model.getSelectedPaymentMethodSpec().set(PaymentMethodSpecUtil.createPaymentMethodSpec(paymentMethod, model.getMarket().getQuoteCurrencyCode()));
+
             List<Account<?, ?>> accountsForPaymentMethod = model.getAccountsByPaymentMethod().get(paymentMethod);
             checkNotNull(accountsForPaymentMethod, "There must be a account list for paymentMethod " + paymentMethod);
             model.getAccountsForPaymentMethod().setAll(accountsForPaymentMethod);

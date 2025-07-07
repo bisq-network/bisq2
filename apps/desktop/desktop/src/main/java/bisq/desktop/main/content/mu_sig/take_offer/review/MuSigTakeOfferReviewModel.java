@@ -60,7 +60,7 @@ class MuSigTakeOfferReviewModel implements Model {
     @Setter
     private String priceDetails;
     @Setter
-    private String paymentMethod;
+    private String paymentMethodDisplayString;
     @Setter
     private String fee;
     @Setter
@@ -80,7 +80,7 @@ class MuSigTakeOfferReviewModel implements Model {
         takersQuoteSideAmount = null;
         price = null;
         priceDetails = null;
-        paymentMethod = null;
+        paymentMethodDisplayString = null;
         fee = null;
         feeDetails = null;
         marketPrice = 0;

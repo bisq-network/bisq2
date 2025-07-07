@@ -79,7 +79,7 @@ public class MuSigReviewDataDisplay {
     }
 
     public void setFiatPaymentMethodDescription(String value) {
-        controller.model.getFiatPaymentMethodDescription().set(value);
+        controller.model.getPaymentMethodDescription().set(value);
     }
 
     public void setToSendMinAmount(String value) {
@@ -99,7 +99,7 @@ public class MuSigReviewDataDisplay {
     }
 
     public void setFiatPaymentMethod(String value) {
-        controller.model.getFiatPaymentMethod().set(value);
+        controller.model.getPaymentMethodDisplayString().set(value);
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -129,8 +129,8 @@ public class MuSigReviewDataDisplay {
         private final StringProperty toSendCode = new SimpleStringProperty();
         private final StringProperty toReceiveAmountDescription = new SimpleStringProperty();
         private final StringProperty toReceiveCode = new SimpleStringProperty();
-        private final StringProperty fiatPaymentMethodDescription = new SimpleStringProperty();
-        private final StringProperty fiatPaymentMethod = new SimpleStringProperty();
+        private final StringProperty paymentMethodDescription = new SimpleStringProperty();
+        private final StringProperty paymentMethodDisplayString = new SimpleStringProperty();
         private final BooleanProperty isSendBtc = new SimpleBooleanProperty(false);
         private final BooleanProperty isReceiveBtc = new SimpleBooleanProperty(false);
         private final StringProperty toSendMinAmount = new SimpleStringProperty();
@@ -197,8 +197,8 @@ public class MuSigReviewDataDisplay {
             toReceiveMaxOrFixedAmount.getFirst().getSecond().textProperty().bind(model.getToReceiveMaxOrFixedAmount());
             toReceiveMaxOrFixedAmount.getFirst().getThird().textProperty().bind(model.getToReceiveCode());
             toReceiveMinAmount.textProperty().bind(model.getToReceiveMinAmount());
-            paymentMethod.getFirst().textProperty().bind(model.getFiatPaymentMethodDescription());
-            paymentMethod.getSecond().textProperty().bind(model.getFiatPaymentMethod());
+            paymentMethod.getFirst().textProperty().bind(model.getPaymentMethodDescription());
+            paymentMethod.getSecond().textProperty().bind(model.getPaymentMethodDisplayString());
 
             toSendBitcoinMinAmountDisplay.getBtcAmount().bind(model.getToSendMinAmount());
             toSendBitcoinMaxOrFixedAmountDisplay.getBtcAmount().bind(model.getToSendMaxOrFixedAmount());

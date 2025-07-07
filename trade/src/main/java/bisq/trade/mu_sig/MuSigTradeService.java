@@ -344,14 +344,15 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
     // Setup
     /* --------------------------------------------------------------------- */
 
-    public MuSigProtocol createMuSigProtocol(Identity takerIdentity,
-                                             MuSigOffer muSigOffer,
-                                             Monetary baseSideAmount,
-                                             Monetary quoteSideAmount,
-                                             FiatPaymentMethodSpec fiatPaymentMethodSpec,
-                                             Optional<UserProfile> mediator,
-                                             PriceSpec priceSpec,
-                                             long marketPrice) {
+    public MuSigProtocol takerCreatesProtocol(Identity takerIdentity,
+                                              MuSigOffer muSigOffer,
+                                              Monetary baseSideAmount,
+                                              Monetary quoteSideAmount,
+                                              FiatPaymentMethodSpec fiatPaymentMethodSpec,
+                                              String takersSaltedAccountId,
+                                              Optional<UserProfile> mediator,
+                                              PriceSpec priceSpec,
+                                              long marketPrice) {
         verifyTradingNotOnHalt();
         verifyMinVersionForTrading();
 
@@ -363,6 +364,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
                 baseSideAmount.getValue(),
                 quoteSideAmount.getValue(),
                 fiatPaymentMethodSpec,
+                takersSaltedAccountId,
                 mediator,
                 priceSpec,
                 marketPrice);

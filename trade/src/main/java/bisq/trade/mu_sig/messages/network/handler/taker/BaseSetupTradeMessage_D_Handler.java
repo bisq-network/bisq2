@@ -18,12 +18,12 @@
 package bisq.trade.mu_sig.messages.network.handler.taker;
 
 import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.data.ByteArray;
-import bisq.common.observable.collection.ObservableSet;
 import bisq.common.util.StringUtils;
+import bisq.contract.mu_sig.MuSigContract;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.offer.options.AccountOption;
 import bisq.offer.options.OfferOptionUtil;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -97,23 +97,19 @@ public abstract class BaseSetupTradeMessage_D_Handler extends MuSigTradeMessageH
         // We will use the payment method chosen by the taker to determine which account we had assigned to that offer.
         MuSigOffer offer = trade.getOffer();
         String offerId = offer.getId();
-        PaymentMethod<?> selectedPaymentMethod = trade.getContract().getQuoteSidePaymentMethodSpec().getPaymentMethod();
-        ObservableSet<Account<? extends PaymentMethod<?>, ?>> accounts = serviceProvider.getAccountService().getAccounts();
-        Set<AccountOption> accountOptions = OfferOptionUtil.findAccountOptions(offer.getOfferOptions());
-        Optional<Account<? extends PaymentMethod<?>, ?>> account = accountOptions.stream()
-                .filter(accountOption -> accountOption.getPaymentMethod().equals(selectedPaymentMethod))
-                .map(AccountOption::getSaltedAccountId)
-                .flatMap(saltedAccountId -> OfferOptionUtil.findAccountFromSaltedAccountId(accounts, saltedAccountId, offerId).stream())
-                .findAny();
-        checkArgument(account.isPresent(), "No account found for the saltedAccountIds from the accountOptions");
-
+        MuSigContract contract = trade.getContract();
+        PaymentMethod<?> selectedPaymentMethod = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod();
+        Set<Account<? extends PaymentMethod<?>, ?>> matchingAccounts = serviceProvider.getAccountService().getAccounts(selectedPaymentMethod);
+        Optional<Account<? extends PaymentMethod<?>, ?>> matchingAccount =  OfferOptionUtil.findAccountFromSaltedAccountId(matchingAccounts, contract.getTakersSaltedAccountId(), offerId);
+        checkArgument(matchingAccount.isPresent(), "No account found for the saltedAccountIds from the accountOptions");
+        AccountPayload<? extends PaymentMethod<?>> accountPayload = matchingAccount.get().getAccountPayload();
         send(new SendAccountPayloadAndDepositTxMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyself().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 depositTx,
-                account.get().getAccountPayload()));
+                accountPayload));
     }
 
     @Override

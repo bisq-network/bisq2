@@ -69,8 +69,14 @@ public final class AccountOption implements OfferOption {
     }
 
     public bisq.offer.protobuf.OfferOption.Builder getBuilder(boolean serializeForHash) {
-        return getOfferOptionBuilder(serializeForHash)
-                .setCollateralOption(bisq.offer.protobuf.CollateralOption.newBuilder());
+        bisq.offer.protobuf.AccountOption.Builder builder = bisq.offer.protobuf.AccountOption.newBuilder()
+                .setPaymentMethod(paymentMethod.toProto(serializeForHash))
+                .setSaltedAccountId(saltedAccountId)
+                .addAllAcceptedCountryCodes(acceptedCountryCodes)
+                .addAllAcceptedBanks(acceptedBanks);
+        countryCode.ifPresent(builder::setCountryCode);
+        bankId.ifPresent(builder::setBankId);
+        return getOfferOptionBuilder(serializeForHash).setAccountOption(builder);
     }
 
     @Override

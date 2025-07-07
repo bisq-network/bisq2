@@ -152,7 +152,7 @@ public class MuSigCreateOfferReviewController implements Controller {
         List<AccountOption> offerOptions = selectedAccountByPaymentMethod.entrySet().stream().map(entry -> {
             Account<?, ?> account = entry.getValue();
             AccountPayload<?> accountPayload = account.getAccountPayload();
-            String saltedAccountId = OfferOptionUtil.createdSaltedAccountId(accountPayload.getId(), offerId);
+            String saltedAccountId = OfferOptionUtil.createdSaltedAccountId(account.getId(), offerId);
             Optional<String> countryCode = AccountUtils.getCountryCode(accountPayload);
             List<String> acceptedCountryCodes = AccountUtils.getAcceptedCountryCodes(accountPayload);
             Optional<String> bankId = AccountUtils.getBankId(accountPayload);

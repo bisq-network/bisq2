@@ -54,7 +54,7 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
 
     private final VBox takeOfferStatus, sendTakeOfferMessageFeedback, takeOfferSuccess;
     private final Button takeOfferSuccessButton;
-    private final Label priceDetails, fiatPaymentMethod, fee, feeDetails;
+    private final Label priceDetails, paymentMethod, fee, feeDetails;
     private final GridPane content;
     private final TextFlow price;
     private final MuSigProtocolWaitingAnimation takeOfferSendMessageWaitingAnimation;
@@ -125,13 +125,13 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
         content.add(priceDetails, 2, rowIndex);
 
         rowIndex++;
-        Label fiatPaymentMethodDescription = new Label(Res.get("bisqEasy.takeOffer.review.method.fiat"));
-        fiatPaymentMethodDescription.getStyleClass().add(DESCRIPTION_STYLE);
-        content.add(fiatPaymentMethodDescription, 0, rowIndex);
+        Label paymentMethodDescription = new Label(Res.get("muSig.takeOffer.review.paymentMethod"));
+        paymentMethodDescription.getStyleClass().add(DESCRIPTION_STYLE);
+        content.add(paymentMethodDescription, 0, rowIndex);
 
-        fiatPaymentMethod = new Label();
-        fiatPaymentMethod.getStyleClass().add(VALUE_STYLE);
-        content.add(fiatPaymentMethod, 1, rowIndex);
+        paymentMethod = new Label();
+        paymentMethod.getStyleClass().add(VALUE_STYLE);
+        content.add(paymentMethod, 1, rowIndex);
 
         rowIndex++;
         Label feeInfoDescription = new Label(Res.get("bisqEasy.tradeWizard.review.feeDescription"));
@@ -174,7 +174,7 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
         TextFlowUtils.updateTextFlow(price, model.getPrice());
         priceDetails.setText(model.getPriceDetails());
 
-        fiatPaymentMethod.setText(model.getPaymentMethod());
+        paymentMethod.setText(model.getPaymentMethodDisplayString());
 
         fee.setText(model.getFee());
         feeDetails.setText(model.getFeeDetails());
