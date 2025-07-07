@@ -52,7 +52,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class MuSigTakeOfferPaymentController implements Controller {
     private static final BitcoinPaymentMethod MAIN_CHAIN_PAYMENT_METHOD = BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN);
-    private static final int MAX_ALLOWED_CUSTOM_PAYMENT_METHODS = 3;
 
     private final MuSigTakeOfferPaymentModel model;
     @Getter

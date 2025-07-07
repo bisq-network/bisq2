@@ -62,6 +62,8 @@ class MuSigTakeOfferReviewModel implements Model {
     @Setter
     private String paymentMethodDisplayString;
     @Setter
+    private String paymentMethodDetails;
+    @Setter
     private String fee;
     @Setter
     private String feeDetails;

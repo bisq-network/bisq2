@@ -22,6 +22,7 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.TextFlowUtils;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.mu_sig.components.MuSigProtocolWaitingAnimation;
@@ -54,8 +55,10 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
 
     private final VBox takeOfferStatus, sendTakeOfferMessageFeedback, takeOfferSuccess;
     private final Button takeOfferSuccessButton;
-    private final Label priceDetails, paymentMethod, fee, feeDetails;
-    private final GridPane content;
+    private final Label priceDetails,
+            paymentMethod, paymentMethodDetails,
+            fee, feeDetails;
+    private final GridPane gridPane;
     private final TextFlow price;
     private final MuSigProtocolWaitingAnimation takeOfferSendMessageWaitingAnimation;
     private Subscription takeOfferStatusPin;
@@ -66,10 +69,10 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
                              HBox reviewDataDisplay) {
         super(new StackPane(), model, controller);
 
-        content = new GridPane();
-        content.setHgap(10);
-        content.setVgap(10);
-        content.setMouseTransparent(true);
+        gridPane = new GridPane();
+        gridPane.setHgap(10);
+        gridPane.setVgap(10);
+        gridPane.setMouseTransparent(true);
         ColumnConstraints col1 = new ColumnConstraints();
         col1.setPercentWidth(25);
         ColumnConstraints col2 = new ColumnConstraints();
@@ -78,79 +81,75 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
         col3.setPercentWidth(25);
         ColumnConstraints col4 = new ColumnConstraints();
         col4.setPercentWidth(25);
-        content.getColumnConstraints().addAll(col1, col2, col3, col4);
+        gridPane.getColumnConstraints().addAll(col1, col2, col3, col4);
 
         int rowIndex = 0;
         Label headline = new Label(Res.get("bisqEasy.takeOffer.review.headline"));
         headline.getStyleClass().add("trade-wizard-review-headline");
         GridPane.setHalignment(headline, HPos.CENTER);
         GridPane.setMargin(headline, new Insets(10, 0, 30, 0));
-        GridPane.setColumnSpan(headline, 4);
-        content.add(headline, 0, rowIndex);
+        gridPane.add(headline, 0, rowIndex, 4, 1);
 
         rowIndex++;
         Region line1 = getLine();
-        GridPane.setColumnSpan(line1, 4);
-        content.add(line1, 0, rowIndex);
+        gridPane.add(line1, 0, rowIndex, 4, 1);
 
         rowIndex++;
-        GridPane.setColumnSpan(reviewDataDisplay, 4);
         GridPane.setMargin(reviewDataDisplay, new Insets(0, 0, 10, 0));
-        content.add(reviewDataDisplay, 0, rowIndex);
+        gridPane.add(reviewDataDisplay, 0, rowIndex, 4, 1);
 
         rowIndex++;
         Label detailsHeadline = new Label(Res.get("bisqEasy.takeOffer.review.detailsHeadline").toUpperCase());
         detailsHeadline.getStyleClass().add("trade-wizard-review-details-headline");
-        GridPane.setColumnSpan(detailsHeadline, 4);
-        content.add(detailsHeadline, 0, rowIndex);
+        gridPane.add(detailsHeadline, 0, rowIndex, 4, 1);
 
         rowIndex++;
         Region line2 = getLine();
         GridPane.setMargin(line2, new Insets(-10, 0, -5, 0));
-        GridPane.setColumnSpan(line2, 4);
-        content.add(line2, 0, rowIndex);
+        gridPane.add(line2, 0, rowIndex, 4, 1);
 
         rowIndex++;
         Label priceDescription = new Label(Res.get("bisqEasy.takeOffer.review.price.price"));
         priceDescription.getStyleClass().add(DESCRIPTION_STYLE);
-        content.add(priceDescription, 0, rowIndex);
+        gridPane.add(priceDescription, 0, rowIndex);
 
         price = new TextFlow();
         price.getStyleClass().add(VALUE_STYLE);
-        content.add(price, 1, rowIndex);
+        gridPane.add(price, 1, rowIndex);
 
         priceDetails = new Label();
         priceDetails.getStyleClass().add(DETAILS_STYLE);
-        GridPane.setColumnSpan(priceDetails, 2);
-        content.add(priceDetails, 2, rowIndex);
+        gridPane.add(priceDetails, 2, rowIndex, 2, 1);
 
         rowIndex++;
-        Label paymentMethodDescription = new Label(Res.get("muSig.takeOffer.review.paymentMethod"));
+        Label paymentMethodDescription = new Label(Res.get("muSig.takeOffer.review.paymentMethod.description"));
         paymentMethodDescription.getStyleClass().add(DESCRIPTION_STYLE);
-        content.add(paymentMethodDescription, 0, rowIndex);
+        gridPane.add(paymentMethodDescription, 0, rowIndex);
 
         paymentMethod = new Label();
         paymentMethod.getStyleClass().add(VALUE_STYLE);
-        content.add(paymentMethod, 1, rowIndex);
+        gridPane.add(paymentMethod, 1, rowIndex);
+
+        paymentMethodDetails = new Label();
+        paymentMethodDetails.getStyleClass().add(DETAILS_STYLE);
+        gridPane.add(paymentMethodDetails, 2, rowIndex, 2, 1);
 
         rowIndex++;
         Label feeInfoDescription = new Label(Res.get("bisqEasy.tradeWizard.review.feeDescription"));
         feeInfoDescription.getStyleClass().add(DESCRIPTION_STYLE);
-        content.add(feeInfoDescription, 0, rowIndex);
+        gridPane.add(feeInfoDescription, 0, rowIndex);
 
         fee = new Label();
         fee.getStyleClass().add(VALUE_STYLE);
-        content.add(fee, 1, rowIndex);
+        gridPane.add(fee, 1, rowIndex);
 
         feeDetails = new Label();
         feeDetails.getStyleClass().add(DETAILS_STYLE);
-        GridPane.setColumnSpan(feeDetails, 2);
-        content.add(feeDetails, 2, rowIndex);
+        gridPane.add(feeDetails, 2, rowIndex, 2, 1);
 
         rowIndex++;
         Region line3 = getLine();
-        GridPane.setColumnSpan(line3, 4);
-        content.add(line3, 0, rowIndex);
+        gridPane.add(line3, 0, rowIndex, 4, 1);
 
         // Feedback overlay
         takeOfferStatus = new VBox();
@@ -164,9 +163,9 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
         takeOfferSuccess = new VBox(20);
         configTakeOfferSuccess();
 
-        StackPane.setMargin(content, new Insets(40));
+        StackPane.setMargin(gridPane, new Insets(40));
         StackPane.setMargin(takeOfferStatus, new Insets(-MuSigTakeOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
-        root.getChildren().addAll(content, takeOfferStatus);
+        root.getChildren().addAll(gridPane, takeOfferStatus);
     }
 
     @Override
@@ -175,6 +174,11 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
         priceDetails.setText(model.getPriceDetails());
 
         paymentMethod.setText(model.getPaymentMethodDisplayString());
+        String paymentMethodDetailsValue = model.getPaymentMethodDetails();
+        paymentMethodDetails.setText(paymentMethodDetailsValue);
+        if (paymentMethodDetailsValue.length() > 50) {
+            paymentMethodDetails.setTooltip(new BisqTooltip(paymentMethodDetailsValue));
+        }
 
         fee.setText(model.getFee());
         feeDetails.setText(model.getFeeDetails());
@@ -184,9 +188,9 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
         takeOfferStatusPin = EasyBind.subscribe(model.getTakeOfferStatus(), this::showTakeOfferStatusFeedback);
     }
 
-
     @Override
     protected void onViewDetached() {
+        paymentMethodDetails.setTooltip(null);
         takeOfferSuccessButton.setOnAction(null);
         takeOfferStatusPin.unsubscribe();
         takeOfferSendMessageWaitingAnimation.stop();
@@ -197,7 +201,7 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
             takeOfferStatus.getChildren().setAll(sendTakeOfferMessageFeedback, Spacer.fillVBox());
             takeOfferStatus.setVisible(true);
 
-            Transitions.blurStrong(content, 0);
+            Transitions.blurStrong(gridPane, 0);
             Transitions.slideInTop(takeOfferStatus, 450);
             takeOfferSendMessageWaitingAnimation.playIndefinitely();
 
@@ -214,7 +218,7 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
         } else if (status == MuSigTakeOfferReviewModel.TakeOfferStatus.NOT_STARTED) {
             takeOfferStatus.getChildren().clear();
             takeOfferStatus.setVisible(false);
-            Transitions.removeEffect(content);
+            Transitions.removeEffect(gridPane);
         }
     }
 

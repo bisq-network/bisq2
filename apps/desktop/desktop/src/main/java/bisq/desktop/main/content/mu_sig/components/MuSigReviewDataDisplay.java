@@ -21,6 +21,7 @@ import bisq.common.currency.TradeCurrency;
 import bisq.common.data.Pair;
 import bisq.common.data.Triple;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
@@ -199,6 +200,9 @@ public class MuSigReviewDataDisplay {
             toReceiveMinAmount.textProperty().bind(model.getToReceiveMinAmount());
             paymentMethod.getFirst().textProperty().bind(model.getPaymentMethodDescription());
             paymentMethod.getSecond().textProperty().bind(model.getPaymentMethodDisplayString());
+            if (model.getPaymentMethodDisplayString().get().length() > 20) {
+                paymentMethod.getSecond().setTooltip(new BisqTooltip(model.getPaymentMethodDisplayString().get()));
+            }
 
             toSendBitcoinMinAmountDisplay.getBtcAmount().bind(model.getToSendMinAmount());
             toSendBitcoinMaxOrFixedAmountDisplay.getBtcAmount().bind(model.getToSendMaxOrFixedAmount());
@@ -292,6 +296,7 @@ public class MuSigReviewDataDisplay {
             toReceiveMinAmount.textProperty().unbind();
             paymentMethod.getFirst().textProperty().unbind();
             paymentMethod.getSecond().textProperty().unbind();
+            paymentMethod.getSecond().setTooltip(null);
 
             isRangeAmountPin.unsubscribe();
             isSendBtcPin.unsubscribe();

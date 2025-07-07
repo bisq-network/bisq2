@@ -23,12 +23,8 @@ import bisq.common.currency.Market;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -50,10 +46,6 @@ public class MuSigCreateOfferPaymentModel implements Model {
     private final ObservableList<PaymentMethod<?>> paymentMethods = FXCollections.observableArrayList();
     private final SortedList<PaymentMethod<?>> sortedPaymentMethods = new SortedList<>(paymentMethods);
     private final ObservableList<PaymentMethod<?>> selectedPaymentMethods = FXCollections.observableArrayList();
-    private final ObservableList<PaymentMethod<?>> addedCustomPaymentMethods = FXCollections.observableArrayList();
-    private final StringProperty customPaymentMethodName = new SimpleStringProperty("");
-    private final BooleanProperty isPaymentMethodsEmpty = new SimpleBooleanProperty();
-    private final BooleanProperty canAddCustomPaymentMethod = new SimpleBooleanProperty();
     private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
 
     private final ObjectProperty<PaymentMethod<?>> paymentMethodWithoutAccount = new SimpleObjectProperty<>();
@@ -72,10 +64,6 @@ public class MuSigCreateOfferPaymentModel implements Model {
         accountsByPaymentMethod.clear();
         paymentMethods.clear();
         selectedPaymentMethods.clear();
-        addedCustomPaymentMethods.clear();
-        customPaymentMethodName.set("");
-        isPaymentMethodsEmpty.set(false);
-        canAddCustomPaymentMethod.set(false);
         market.set(null);
         paymentMethodWithoutAccount.set(null);
         paymentMethodWithMultipleAccounts.set(null);

@@ -98,7 +98,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
@@ -225,8 +224,6 @@ public abstract class Overlay<T extends Overlay<T>> {
             throw new RuntimeException("Subclass of Overlay<T> should be castable to T");
         }
         owner = primaryStageOwner;
-
-
     }
 
 

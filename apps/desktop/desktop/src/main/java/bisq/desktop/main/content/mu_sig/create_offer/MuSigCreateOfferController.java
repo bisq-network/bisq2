@@ -90,7 +90,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
                 view.getRoot(),
                 this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo);
-        muSigCreateOfferPaymentController = new MuSigCreateOfferPaymentController(serviceProvider, view.getRoot(), this::onNext);
+        muSigCreateOfferPaymentController = new MuSigCreateOfferPaymentController(serviceProvider, view.getRoot());
         muSigCreateOfferReviewController = new MuSigCreateOfferReviewController(serviceProvider,
                 this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo);

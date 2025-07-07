@@ -106,6 +106,12 @@ public class PaymentSummaryController implements Controller {
     }
 
     public void onCreateAccount(String accountName) {
+        if (model.getAccountNameValidator().hasErrors()) {
+            new Popup().invalid(model.getAccountNameValidator().getMessage())
+                    .owner(view.getRoot())
+                    .show();
+            return;
+        }
         Set<String> existingNames = accountService.getAccounts().stream()
                 .map(Account::getAccountName)
                 .collect(Collectors.toSet());

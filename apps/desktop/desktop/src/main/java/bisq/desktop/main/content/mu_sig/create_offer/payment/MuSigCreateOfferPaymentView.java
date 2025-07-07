@@ -27,8 +27,6 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
-import bisq.desktop.main.content.mu_sig.components.MuSigCreateOfferAddCustomPaymentMethodBox;
 import bisq.desktop.main.content.mu_sig.components.PaymentMethodChipButton;
 import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferView;
 import bisq.i18n.Res;
@@ -61,8 +59,7 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
     private static final double TWO_COLUMN_WIDTH = 20.75;
 
     private final GridPane gridPane;
-    private final Label subtitleLabel, nonFoundLabel, noAccountOverlayHeadline, multipleAccountOverlayHeadline;
-    private final MuSigCreateOfferAddCustomPaymentMethodBox muSigCreateOfferAddCustomPaymentMethodBox;
+    private final Label subtitleLabel, noAccountOverlayHeadline, multipleAccountOverlayHeadline;
     private final VBox noAccountOverlay, multipleAccountOverlay, content;
     private final Button noAccountOverlayCloseButton, createAccountButton, multipleAccountOverlayCloseButton;
     private final AutoCompleteComboBox<Account<?, ?>> accountSelection;
@@ -90,16 +87,10 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
         subtitleLabel.setWrapText(true);
         subtitleLabel.setMaxWidth(600);
 
-        nonFoundLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethods.noneFound"));
-        nonFoundLabel.getStyleClass().add("bisq-text-6");
-        nonFoundLabel.setAlignment(Pos.CENTER);
-
         gridPane = GridPaneUtil.getGridPane(10, 10, new Insets(0));
         gridPane.getStyleClass().add("fiat-methods-grid-pane");
 
-        muSigCreateOfferAddCustomPaymentMethodBox = new MuSigCreateOfferAddCustomPaymentMethodBox();
-
-        VBox vBox = new VBox(20, subtitleLabel, nonFoundLabel, gridPane);
+        VBox vBox = new VBox(20, subtitleLabel, gridPane);
         vBox.setAlignment(Pos.CENTER);
 
         content = new VBox(20);
@@ -134,11 +125,6 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
     @Override
     protected void onViewAttached() {
         subtitleLabel.setText(model.getSubtitleLabel());
-        muSigCreateOfferAddCustomPaymentMethodBox.getCustomPaymentMethodField().textProperty().bindBidirectional(model.getCustomPaymentMethodName());
-        nonFoundLabel.visibleProperty().bind(model.getIsPaymentMethodsEmpty());
-        nonFoundLabel.managedProperty().bind(model.getIsPaymentMethodsEmpty());
-        gridPane.visibleProperty().bind(model.getIsPaymentMethodsEmpty().not());
-        gridPane.managedProperty().bind(model.getIsPaymentMethodsEmpty().not());
 
         paymentMethodWithoutAccountPin = EasyBind.subscribe(model.getPaymentMethodWithoutAccount(),
                 paymentMethod -> {
@@ -191,22 +177,14 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
 
         model.getPaymentMethods().addListener(paymentMethodListener);
 
-        muSigCreateOfferAddCustomPaymentMethodBox.getAddIconButton().setOnAction(e -> controller.onAddCustomPaymentMethod());
         root.setOnMousePressed(e -> root.requestFocus());
 
-        muSigCreateOfferAddCustomPaymentMethodBox.initialize();
         setUpAndFillPaymentMethods();
         updateSelectionsState();
     }
 
     @Override
     protected void onViewDetached() {
-        muSigCreateOfferAddCustomPaymentMethodBox.getCustomPaymentMethodField().textProperty().unbindBidirectional(model.getCustomPaymentMethodName());
-        nonFoundLabel.visibleProperty().unbind();
-        nonFoundLabel.managedProperty().unbind();
-        gridPane.visibleProperty().unbind();
-        gridPane.managedProperty().unbind();
-
         paymentMethodWithoutAccountPin.unsubscribe();
         paymentMethodWithMultipleAccountsPin.unsubscribe();
 
@@ -218,8 +196,6 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
         noAccountOverlayCloseButton.setOnAction(null);
         multipleAccountOverlayCloseButton.setOnAction(null);
         accountSelection.setOnChangeConfirmed(null);
-        muSigCreateOfferAddCustomPaymentMethodBox.getAddIconButton().setOnAction(null);
-        muSigCreateOfferAddCustomPaymentMethodBox.dispose();
 
         closeIcons.forEach(imageView -> imageView.setOnMousePressed(null));
         closeIcons.clear();
@@ -244,7 +220,6 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
         for (; i < paymentMethodsCount; ++i) {
             PaymentMethod<?> paymentMethod = model.getSortedPaymentMethods().get(i);
 
-            // enum name or custom name
             PaymentMethodChipButton button = new PaymentMethodChipButton(paymentMethod);
             if (!paymentMethod.getShortDisplayString().equals(paymentMethod.getDisplayString())) {
                 button.setTooltip(new BisqTooltip(paymentMethod.getDisplayString()));
@@ -257,34 +232,15 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
             Optional.ofNullable(model.getSelectedAccountByPaymentMethod().get(paymentMethod))
                     .ifPresent(account -> button.setAccountName(account.getAccountName()));
 
-            button.setOnAction(() -> controller.onTogglePaymentMethod(paymentMethod, button.isSelected()));
-            model.getAddedCustomPaymentMethods().stream()
-                    .filter(customMethod -> customMethod.equals(paymentMethod))
-                    .findAny()
-                    .ifPresentOrElse(
-                            customMethod -> {
-                                ImageView closeIcon = button.setRightIcon("remove-white");
-                                closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(paymentMethod));
-                                closeIcons.add(closeIcon);
-                                StackPane icon = BisqEasyViewUtils.getCustomPaymentMethodIcon(customMethod.getDisplayString());
-                                button.setLeftIcon(icon);
-                            },
-                            () -> {
-                                // Lookup for an image with the id of the enum name (REVOLUT)
-                                ImageView icon = ImageUtil.getImageViewById(paymentMethod.getName());
-                                button.setLeftIcon(icon);
-                            });
+            button.setOnAction(() -> controller.onTogglePaymentMethod(paymentMethod, button));
+
+            ImageView icon = ImageUtil.getImageViewById(paymentMethod.getName());
+            button.setLeftIcon(icon);
 
             col = i % numColumns;
             row = i / numColumns;
             gridPane.add(button, col, row);
             paymentMethodChipButtons.add(button);
-        }
-
-        if (model.getCanAddCustomPaymentMethod().get()) {
-            col = i % numColumns;
-            row = i / numColumns;
-            gridPane.add(muSigCreateOfferAddCustomPaymentMethodBox, col, row);
         }
     }
 

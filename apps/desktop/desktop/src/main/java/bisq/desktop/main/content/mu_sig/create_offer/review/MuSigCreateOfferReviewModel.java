@@ -27,8 +27,6 @@ import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -71,7 +69,9 @@ class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private String paymentMethodDescription;
     @Setter
-    private String paymentMethod;
+    private String paymentMethodsDisplayString;
+    @Setter
+    private String paymentMethodDetails;
     @Setter
     private String priceDescription;
     @Setter
@@ -84,7 +84,6 @@ class MuSigCreateOfferReviewModel implements Model {
     private String feeDetails;
     @Setter
     private long marketPrice;
-    private final ObservableList<PaymentMethod<?>> takersFiatPaymentMethods = FXCollections.observableArrayList();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
 
     void reset() {
@@ -105,14 +104,13 @@ class MuSigCreateOfferReviewModel implements Model {
         detailsHeadline = null;
         isRangeAmount = false;
         paymentMethodDescription = null;
-        paymentMethod = null;
+        paymentMethodsDisplayString = null;
         priceDescription = null;
         price = null;
         priceDetails = null;
         fee = null;
         feeDetails = null;
         marketPrice = 0;
-        takersFiatPaymentMethods.clear();
         showCreateOfferSuccess.set(false);
     }
 }
