@@ -240,9 +240,6 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         maxOrFixedAmountSlider.valueProperty().bindBidirectional(model.getMaxOrFixedAmountSliderValue());
         maxOrFixedAmountSlider.valueProperty().addListener(maxOrFixedAmountSliderValueListener);
         model.getMaxOrFixedAmountSliderFocus().bind(maxOrFixedAmountSlider.focusedProperty());
-//        minAmountSlider.valueProperty().bindBidirectional(model.getMinAmountSliderValue());
-//        minAmountSlider.valueProperty().addListener(minAmountSliderValueListener);
-//        model.getMinAmountSliderFocus().bind(minAmountSlider.focusedProperty());
         description.textProperty().bind(model.getDescription());
         minRangeValue.textProperty().bind(model.getMinRangeValueAsString());
         minRangeCode.textProperty().bind(model.getMinRangeCodeAsString());
@@ -303,9 +300,6 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         maxOrFixedAmountSlider.valueProperty().unbindBidirectional(model.getMaxOrFixedAmountSliderValue());
         maxOrFixedAmountSlider.valueProperty().removeListener(maxOrFixedAmountSliderValueListener);
         model.getMaxOrFixedAmountSliderFocus().unbind();
-//        minAmountSlider.valueProperty().unbindBidirectional(model.getMinAmountSliderValue());
-//        minAmountSlider.valueProperty().removeListener(minAmountSliderValueListener);
-//        model.getMinAmountSliderFocus().unbind();
         description.textProperty().unbind();
         minRangeValue.textProperty().unbind();
         minRangeCode.textProperty().unbind();
