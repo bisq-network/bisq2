@@ -26,6 +26,8 @@ import javafx.scene.input.MouseEvent;
 
 public class RangeSliderSkin extends SkinBase<RangeSlider> {
     private static final double TRACK_PADDING = 5;
+    private static final double EDGE_OFFSET = 2;
+    private static final double THUMB_SIZE = 16;
 
     private final RangeSlider rangeSlider;
     private final StackPane track, lowThumb, highThumb;
@@ -103,7 +105,6 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
     private void updateUI() {
         RangeSlider slider = getSkinnable();
         double w = slider.getWidth() > 0 ? slider.getWidth() : 200;
-        double h = slider.getHeight() > 0 ? slider.getHeight() : 40;
         double min = slider.getMin();
         double max = slider.getMax();
         double range = max - min;
@@ -112,10 +113,9 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
         double trackWidth = trackEnd - trackStart;
         track.setLayoutX(trackStart);
         track.setPrefWidth(trackWidth);
-        double lowX = trackStart + ((slider.getLowValue() - min) / range) * trackWidth;
-        double highX = trackStart + ((slider.getHighValue() - min) / range) * trackWidth;
-        double thumbSize = 16; // Use a default size for layout
-        lowThumb.setLayoutX(lowX - thumbSize);
+        double lowX = trackStart + EDGE_OFFSET + ((slider.getLowValue() - min) / range) * trackWidth;
+        double highX = trackStart - EDGE_OFFSET + ((slider.getHighValue() - min) / range) * trackWidth;
+        lowThumb.setLayoutX(lowX - THUMB_SIZE);
         highThumb.setLayoutX(highX);
     }
 
