@@ -919,21 +919,19 @@
 .range-slider .range-slider-high-thumb {
     -fx-background-color: -bisq-white;
     -fx-background-insets: 2.5;
-    -fx-translate-y: -9;
-    -fx-min-width: 16px;
-    -fx-max-width: 16px;
-    -fx-min-height: 16px;
-    -fx-max-height: 16px;
+    -fx-translate-y: -8;
+    -fx-scale-x: 0.75;
+    -fx-scale-y: 1.2;
     -fx-background-radius: 1.0em; /* makes sure this remains circular */
     -fx-padding: 0.583333em;  /* 7 */
 }
 
 .range-slider .range-slider-low-thumb {
-    -fx-shape: "M0,0 L16,0 L16,16 Z";
+    -fx-shape: "M255.12,0H28.35C12.69,0,0,12.69,0,28.35v170.08H0l255.12,226.77V0Z";
 }
 
 .range-slider .range-slider-high-thumb {
-    -fx-shape: "M0,0 L0,16 L16,0 Z";
+    -fx-shape: "M481.89,0h-226.77v425.2l255.12-226.77V28.35C510.24,12.69,497.55,0,481.89,0Z";
 }
 
 

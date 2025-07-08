@@ -26,7 +26,7 @@ import javafx.scene.input.MouseEvent;
 
 public class RangeSliderSkin extends SkinBase<RangeSlider> {
     private static final double TRACK_PADDING = 5;
-    private static final double EDGE_OFFSET = 2;
+    private static final double EDGE_OFFSET = 4;
     private static final double THUMB_SIZE = 16;
 
     private final RangeSlider rangeSlider;
