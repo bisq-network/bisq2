@@ -628,8 +628,18 @@
 
 /* Fiat payment methods based on enum names from FiatPaymentRailUtil */
 
+/* TODO  create icons*/
+#DOMESTIC_WIRE_TRANSFER {
+    -fx-image: url("/images/payment/undefined.png");
+}
+
+#SAME_BANK {
+    -fx-image: url("/images/payment/undefined.png");
+}
+
+
 #SEPA {
-    -fx-image: url("/images/payment/sepa-.png");
+    -fx-image: url("/images/payment/sepa.png");
 }
 
 #SEPA_INSTANT {
@@ -637,15 +647,15 @@
 }
 
 #ZELLE {
-    -fx-image: url("/images/payment/zelle-.png");
+    -fx-image: url("/images/payment/zelle.png");
 }
 
 #REVOLUT {
-    -fx-image: url("/images/payment/revolut-.png");
+    -fx-image: url("/images/payment/revolut.png");
 }
 
 #WISE {
-    -fx-image: url("/images/payment/wise-.png");
+    -fx-image: url("/images/payment/wise.png");
 }
 
 #NATIONAL_BANK {
@@ -657,15 +667,15 @@
 }
 
 #F2F {
-    -fx-image: url("/images/payment/f2f-.png");
+    -fx-image: url("/images/payment/f2f.png");
 }
 
 #ACH_TRANSFER {
-    -fx-image: url("/images/payment/ach-.png");
+    -fx-image: url("/images/payment/ach.png");
 }
 
 #PIX {
-    -fx-image: url("/images/payment/pix-.png");
+    -fx-image: url("/images/payment/pix.png");
 }
 
 #FASTER_PAYMENTS {
@@ -685,7 +695,7 @@
 }
 
 #STRIKE {
-    -fx-image: url("/images/payment/strike-.png");
+    -fx-image: url("/images/payment/strike.png");
 }
 
 #INTERAC_E_TRANSFER {
@@ -693,7 +703,7 @@
 }
 
 #AMAZON_GIFT_CARD {
-    -fx-image: url("/images/payment/amazon-.png");
+    -fx-image: url("/images/payment/amazon.png");
 }
 
 #CASH_DEPOSIT {
@@ -701,15 +711,15 @@
 }
 
 #UPI {
-    -fx-image: url("/images/payment/upi-.png");
+    -fx-image: url("/images/payment/upi.png");
 }
 
 #BIZUM {
-    -fx-image: url("/images/payment/bizum-.png");
+    -fx-image: url("/images/payment/bizum.png");
 }
 
 #CASH_APP {
-    -fx-image: url("/images/payment/cashapp-.png");
+    -fx-image: url("/images/payment/cashapp.png");
 }
 
 #CUSTOM_PAYMENT_1 {
