@@ -73,7 +73,6 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
             case FASTERPAYMENTSACCOUNTPAYLOAD -> FasterPaymentsAccountPayload.fromProto(proto);
             case CASHBYMAILACCOUNTPAYLOAD -> CashByMailAccountPayload.fromProto(proto);
             case INTERACETRANSFERACCOUNTPAYLOAD -> InteracETransferAccountPayload.fromProto(proto);
-            case CASHAPPACCOUNTPAYLOAD -> CashAppAccountPayload.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);
         };

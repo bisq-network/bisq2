@@ -165,7 +165,6 @@ public class PaymentSummaryController implements Controller {
             case CASH_DEPOSIT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case UPI -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case BIZUM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case DOMESTIC_WIRE_TRANSFER ->
                     throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
         };
@@ -210,7 +209,6 @@ public class PaymentSummaryController implements Controller {
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case UPI -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case BIZUM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case DOMESTIC_WIRE_TRANSFER ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             };
