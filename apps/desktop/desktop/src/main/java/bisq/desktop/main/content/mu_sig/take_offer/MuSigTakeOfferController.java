@@ -48,6 +48,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -113,7 +114,10 @@ public class MuSigTakeOfferController extends NavigationController implements In
         Set<Account<? extends PaymentMethod<?>, ?>> accountsForPaymentMethod = null;
         if (isSinglePaymentMethod) {
             FiatPaymentMethod paymentMethod = quoteSidePaymentMethodSpecs.get(0).getPaymentMethod();
-            accountsForPaymentMethod = accountService.getAccounts(paymentMethod);
+            String quoteCurrencyCode = muSigOffer.getMarket().getQuoteCurrencyCode();
+            accountsForPaymentMethod = accountService.getAccounts(paymentMethod).stream()
+                    .filter(account -> account.getAccountPayload().getSelectedCurrencyCodes().contains(quoteCurrencyCode))
+                    .collect(Collectors.toSet());
             isSingleAccountForSinglePaymentMethod = accountsForPaymentMethod.size() == 1;
         }
         model.setPaymentMethodVisible(!isSingleAccountForSinglePaymentMethod);
@@ -130,7 +134,7 @@ public class MuSigTakeOfferController extends NavigationController implements In
             checkNotNull(accountsForPaymentMethod);
             checkArgument(accountsForPaymentMethod.size() == 1,
                     "In case we have not displayed the payment method screen we expect that there exist " +
-                            "only one account fro that single payment method.");
+                            "only one account for that single payment method.");
             muSigTakeOfferReviewController.setTakersAccount(accountsForPaymentMethod.iterator().next());
             muSigTakeOfferReviewController.setTakersPaymentMethodSpec(quoteSidePaymentMethodSpecs.get(0));
         }
