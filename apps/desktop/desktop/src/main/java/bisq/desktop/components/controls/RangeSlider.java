@@ -26,8 +26,10 @@ import javafx.scene.control.Skin;
 import lombok.Getter;
 
 public class RangeSlider extends Control {
+    // TODO: These do not need to be properties
     private final DoubleProperty min = new SimpleDoubleProperty(this, "min", 0);
     private final DoubleProperty max = new SimpleDoubleProperty(this, "max", 100);
+
     private final DoubleProperty lowValue = new SimpleDoubleProperty(this, "lowValue", 25);
     private final DoubleProperty highValue = new SimpleDoubleProperty(this, "highValue", 75);
     @Getter
@@ -86,13 +88,6 @@ public class RangeSlider extends Control {
 
     public DoubleProperty highValueProperty() {
         return highValue;
-    }
-
-    public BooleanProperty lowThumbFocusedProperty() {
-        return lowThumbFocused;
-    }
-    public BooleanProperty highThumbFocusedProperty() {
-        return highThumbFocused;
     }
 
     @Override

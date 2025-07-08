@@ -129,7 +129,16 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
         }
 
         RangeSlider slider = getSkinnable();
-        slider.setLowValue(getValue(slider, e));
+        double newLow = getValue(slider, e);
+        double high = slider.getHighValue();
+        // Clamp newLow to not exceed high
+        if (newLow > high) {
+            newLow = high;
+        }
+        if (newLow < slider.getMin()) {
+            newLow = slider.getMin();
+        }
+        slider.setLowValue(newLow);
         e.consume();
     }
 
@@ -139,7 +148,16 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
         }
 
         RangeSlider slider = getSkinnable();
-        slider.setHighValue(getValue(slider, e));
+        double newHigh = getValue(slider, e);
+        double low = slider.getLowValue();
+        // Clamp newHigh to not go below low
+        if (newHigh < low) {
+            newHigh = low;
+        }
+        if (newHigh > slider.getMax()) {
+            newHigh = slider.getMax();
+        }
+        slider.setHighValue(newHigh);
         e.consume();
     }
 
