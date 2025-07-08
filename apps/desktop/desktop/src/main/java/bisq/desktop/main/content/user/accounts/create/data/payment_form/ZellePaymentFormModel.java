@@ -28,7 +28,7 @@ import lombok.Getter;
 
 @Getter
 public class ZellePaymentFormModel extends PaymentFormModel {
-    private final BooleanProperty requireValidation = new SimpleBooleanProperty();
+    private final BooleanProperty runValidation = new SimpleBooleanProperty();
     private final StringProperty holderName = new SimpleStringProperty();
     private final StringProperty emailOrMobileNr = new SimpleStringProperty();
 

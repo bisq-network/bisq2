@@ -28,7 +28,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class ZellePaymentFormView extends PaymentFormView<ZellePaymentFormModel, ZellePaymentFormController> {
     private final MaterialTextField holderName, emailOrMobileNr;
-    private Subscription requireValidationPin;
+    private Subscription runValidationPin;
 
     public ZellePaymentFormView(ZellePaymentFormModel model, ZellePaymentFormController controller) {
         super(model, controller);
@@ -61,8 +61,8 @@ public class ZellePaymentFormView extends PaymentFormView<ZellePaymentFormModel,
         holderName.textProperty().bindBidirectional(model.getHolderName());
         emailOrMobileNr.textProperty().bindBidirectional(model.getEmailOrMobileNr());
 
-        requireValidationPin = EasyBind.subscribe(model.getRequireValidation(), requireValidation -> {
-            if (requireValidation) {
+        runValidationPin = EasyBind.subscribe(model.getRunValidation(), runValidation -> {
+            if (runValidation) {
                 holderName.validate();
                 emailOrMobileNr.validate();
                 controller.onValidationDone();
@@ -78,6 +78,6 @@ public class ZellePaymentFormView extends PaymentFormView<ZellePaymentFormModel,
         holderName.textProperty().unbindBidirectional(model.getHolderName());
         emailOrMobileNr.textProperty().unbindBidirectional(model.getEmailOrMobileNr());
 
-        requireValidationPin.unsubscribe();
+        runValidationPin.unsubscribe();
     }
 }

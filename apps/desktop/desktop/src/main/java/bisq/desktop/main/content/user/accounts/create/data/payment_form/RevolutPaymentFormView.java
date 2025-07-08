@@ -41,7 +41,7 @@ public class RevolutPaymentFormView extends PaymentFormView<RevolutPaymentFormMo
     private final MaterialTextField userName;
     private final Label selectedCountriesErrorLabel;
     private final FlowPane selectedCurrenciesFlowPane;
-    private Subscription requireValidationPin;
+    private Subscription runValidationPin;
 
     public RevolutPaymentFormView(RevolutPaymentFormModel model, RevolutPaymentFormController controller) {
         super(model, controller);
@@ -79,8 +79,8 @@ public class RevolutPaymentFormView extends PaymentFormView<RevolutPaymentFormMo
 
         userName.textProperty().bindBidirectional(model.getUserName());
 
-        requireValidationPin = EasyBind.subscribe(model.getRequireValidation(), requireValidation -> {
-            if (requireValidation) {
+        runValidationPin = EasyBind.subscribe(model.getRunValidation(), runValidation -> {
+            if (runValidation) {
                 userName.validate();
                 controller.onValidationDone();
             }
@@ -98,7 +98,7 @@ public class RevolutPaymentFormView extends PaymentFormView<RevolutPaymentFormMo
 
         userName.textProperty().unbindBidirectional(model.getUserName());
 
-        requireValidationPin.unsubscribe();
+        runValidationPin.unsubscribe();
 
         selectedCurrenciesFlowPane.getChildren().stream()
                 .map(e -> (CheckBox) e)

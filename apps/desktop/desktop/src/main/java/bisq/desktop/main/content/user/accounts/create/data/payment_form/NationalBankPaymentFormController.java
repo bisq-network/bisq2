@@ -59,7 +59,7 @@ public class NationalBankPaymentFormController extends PaymentFormController<Nat
 
     @Override
     public void onActivate() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
         model.getCountryErrorVisible().set(false);
         model.getCurrencyErrorVisible().set(false);
         model.getBankAccountTypeErrorVisible().set(false);
@@ -78,18 +78,18 @@ public class NationalBankPaymentFormController extends PaymentFormController<Nat
         boolean isCountrySet = selectedCountry != null;
         model.getCountryErrorVisible().set(!isCountrySet);
         if (!isCountrySet) {
-            model.getRequireValidation().set(true);
+            model.getRunValidation().set(true);
             return false;
         }
         boolean isAccountNrValid = model.getAccountNrValidator().validateAndGet();
         if (!isAccountNrValid) {
-            model.getRequireValidation().set(true);
+            model.getRunValidation().set(true);
             return false;
         }
 
         String countryCode = selectedCountry.getCode();
         if (!model.getUseValidation().get()) {
-            model.getRequireValidation().set(true);
+            model.getRunValidation().set(true);
             return true;
         }
 
@@ -117,12 +117,12 @@ public class NationalBankPaymentFormController extends PaymentFormController<Nat
                 isBranchIdValid &&
                 isBankAccountTypeSet &&
                 isNationalAccountIdValid;
-        model.getRequireValidation().set(true);
+        model.getRunValidation().set(true);
         return isValid;
     }
 
     @Override
-    public NationalBankAccountPayload getAccountPayload() {
+    public NationalBankAccountPayload createAccountPayload() {
         return new NationalBankAccountPayload(model.getId(),
                 model.getSelectedCountry().get().getCode(),
                 model.getSelectedCurrency().get().getCode(),
@@ -137,7 +137,7 @@ public class NationalBankPaymentFormController extends PaymentFormController<Nat
     }
 
     void onValidationDone() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
     }
 
     void onSelectCountry(Country selectedCountry) {
@@ -165,7 +165,7 @@ public class NationalBankPaymentFormController extends PaymentFormController<Nat
     void onSelectCurrency(FiatCurrency selectedCurrency) {
         model.getSelectedCurrency().set(selectedCurrency);
         model.getCurrencyErrorVisible().set(false);
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
         checkCurrencyCountryMatch();
     }
 

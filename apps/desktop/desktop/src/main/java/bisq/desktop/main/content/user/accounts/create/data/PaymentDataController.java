@@ -53,8 +53,8 @@ public class PaymentDataController implements Controller {
         view = new PaymentDataView(model, this);
     }
 
-    public AccountPayload getAccountPayload() {
-        return paymentFormController.getAccountPayload();
+    public AccountPayload<?> getAccountPayload() {
+        return paymentFormController.createAccountPayload();
     }
 
     public void setPaymentMethod(PaymentMethod<?> paymentMethod) {

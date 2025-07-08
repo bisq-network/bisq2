@@ -38,5 +38,5 @@ public abstract class PaymentFormController<V extends PaymentFormView<?, ?>, M e
 
     public abstract boolean validate();
 
-    public abstract P getAccountPayload();
+    public abstract P createAccountPayload();
 }

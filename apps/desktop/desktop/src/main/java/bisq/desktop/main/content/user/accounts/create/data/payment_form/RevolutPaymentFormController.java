@@ -50,7 +50,7 @@ public class RevolutPaymentFormController extends PaymentFormController<RevolutP
 
     @Override
     public void onActivate() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
         model.getSelectedCurrenciesErrorVisible().set(false);
     }
 
@@ -59,7 +59,7 @@ public class RevolutPaymentFormController extends PaymentFormController<RevolutP
     }
 
     @Override
-    public RevolutAccountPayload getAccountPayload() {
+    public RevolutAccountPayload createAccountPayload() {
         return new RevolutAccountPayload(model.getId(),
                 model.getUserName().get(),
                 model.getSelectedCurrencies().stream()
@@ -73,12 +73,12 @@ public class RevolutPaymentFormController extends PaymentFormController<RevolutP
         model.getSelectedCurrenciesErrorVisible().set(!selectedCurrenciesValid);
         boolean holderNameValid = model.getUserNameValidator().validateAndGet();
         boolean isValid = selectedCurrenciesValid && holderNameValid;
-        model.getRequireValidation().set(true);
+        model.getRunValidation().set(true);
         return isValid;
     }
 
     void onValidationDone() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
     }
 
     void onSelectCurrency(FiatCurrency currency, boolean selected) {

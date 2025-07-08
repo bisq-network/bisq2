@@ -63,7 +63,7 @@ public class SepaPaymentFormController extends PaymentFormController<SepaPayment
 
     @Override
     public void onActivate() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
         model.getCountryErrorVisible().set(false);
         model.getAcceptedCountriesErrorVisible().set(false);
 
@@ -80,7 +80,7 @@ public class SepaPaymentFormController extends PaymentFormController<SepaPayment
     }
 
     @Override
-    public SepaAccountPayload getAccountPayload() {
+    public SepaAccountPayload createAccountPayload() {
         List<Country> acceptedCountries = getAcceptedCountries();
         List<String> acceptedCountryCodes = acceptedCountries.stream()
                 .map(Country::getCode)
@@ -110,12 +110,12 @@ public class SepaPaymentFormController extends PaymentFormController<SepaPayment
                 holderNameValid &&
                 ibanValid &&
                 bicValid;
-        model.getRequireValidation().set(true);
+        model.getRunValidation().set(true);
         return isValid;
     }
 
     void onValidationDone() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
     }
 
     void onCountryOfBankSelected(Country selectedCountry) {

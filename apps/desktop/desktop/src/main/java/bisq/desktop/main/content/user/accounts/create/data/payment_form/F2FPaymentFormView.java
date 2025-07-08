@@ -50,7 +50,7 @@ public class F2FPaymentFormView extends PaymentFormView<F2FPaymentFormModel, F2F
     private final Label countryErrorLabel, currencyErrorLabel;
     private final VBox countryVBox, currencyVBox;
     private Subscription selectedCountryPin, selectedCurrencyPin, selectedCurrencyFromModelPin,
-            currencyCountryMismatchPin, requireValidationPin;
+            currencyCountryMismatchPin, runValidationPin;
 
     public F2FPaymentFormView(F2FPaymentFormModel model, F2FPaymentFormController controller) {
         super(model, controller);
@@ -196,8 +196,8 @@ public class F2FPaymentFormView extends PaymentFormView<F2FPaymentFormModel, F2F
             }
         });
 
-        requireValidationPin = EasyBind.subscribe(model.getRequireValidation(), requireValidation -> {
-            if (requireValidation) {
+        runValidationPin = EasyBind.subscribe(model.getRunValidation(), runValidation -> {
+            if (runValidation) {
                 city.validate();
                 contact.validate();
                 extraInfo.validate();
@@ -226,6 +226,6 @@ public class F2FPaymentFormView extends PaymentFormView<F2FPaymentFormModel, F2F
         selectedCurrencyPin.unsubscribe();
         selectedCurrencyFromModelPin.unsubscribe();
         currencyCountryMismatchPin.unsubscribe();
-        requireValidationPin.unsubscribe();
+        runValidationPin.unsubscribe();
     }
 }

@@ -50,7 +50,7 @@ public class F2FPaymentFormModel extends PaymentFormModel {
     private final BooleanProperty currencyErrorVisible = new SimpleBooleanProperty();
 
     private final BooleanProperty currencyCountryMismatch = new SimpleBooleanProperty();
-    private final BooleanProperty requireValidation = new SimpleBooleanProperty();
+    private final BooleanProperty runValidation = new SimpleBooleanProperty();
     private final StringProperty city = new SimpleStringProperty();
     private final StringProperty contact = new SimpleStringProperty();
     private final StringProperty extraInfo = new SimpleStringProperty();

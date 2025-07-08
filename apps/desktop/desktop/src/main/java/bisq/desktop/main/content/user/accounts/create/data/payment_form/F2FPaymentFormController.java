@@ -46,7 +46,7 @@ public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFo
 
     @Override
     public void onActivate() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
         model.getCountryErrorVisible().set(false);
         model.getCurrencyErrorVisible().set(false);
     }
@@ -56,7 +56,7 @@ public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFo
     }
 
     void onValidationDone() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
     }
 
     @Override
@@ -70,12 +70,12 @@ public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFo
                 model.getCityValidator().validateAndGet() &&
                 model.getContactValidator().validateAndGet() &&
                 model.getExtraInfoValidator().validateAndGet();
-        model.getRequireValidation().set(true);
+        model.getRunValidation().set(true);
         return isValid;
     }
 
     @Override
-    public F2FAccountPayload getAccountPayload() {
+    public F2FAccountPayload createAccountPayload() {
         return new F2FAccountPayload(model.getId(),
                 model.getSelectedCountry().get().getCode(),
                 model.getSelectedCurrency().get().getCode(),

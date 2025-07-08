@@ -60,7 +60,7 @@ public class NationalBankPaymentFormView extends PaymentFormView<NationalBankPay
     private final VBox bankAccountTypeVBox;
     private final HBox countryAndCurrencyBox, holderHBox, bankHBox, accountHBox;
     private Subscription selectedCountryPin, selectedCurrencyPin, selectedCurrencyFromModelPin,
-            currencyCountryMismatchPin, selectedAccountTypePin, requireValidationPin;
+            currencyCountryMismatchPin, selectedAccountTypePin, runValidationPin;
 
     public NationalBankPaymentFormView(NationalBankPaymentFormModel model,
                                        NationalBankPaymentFormController controller) {
@@ -277,8 +277,8 @@ public class NationalBankPaymentFormView extends PaymentFormView<NationalBankPay
                     }
                 });
 
-        requireValidationPin = EasyBind.subscribe(model.getRequireValidation(), requireValidation -> {
-            if (requireValidation) {
+        runValidationPin = EasyBind.subscribe(model.getRunValidation(), runValidation -> {
+            if (runValidation) {
                 holderName.clearValidators();
                 holderId.clearValidators();
                 bankName.clearValidators();
@@ -370,7 +370,7 @@ public class NationalBankPaymentFormView extends PaymentFormView<NationalBankPay
         selectedCurrencyFromModelPin.unsubscribe();
         currencyCountryMismatchPin.unsubscribe();
         selectedAccountTypePin.unsubscribe();
-        requireValidationPin.unsubscribe();
+        runValidationPin.unsubscribe();
     }
 
     private void layoutHBoxes() {

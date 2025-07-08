@@ -40,7 +40,7 @@ public class PixPaymentFormController extends PaymentFormController<PixPaymentFo
 
     @Override
     public void onActivate() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
     }
 
     @Override
@@ -48,7 +48,7 @@ public class PixPaymentFormController extends PaymentFormController<PixPaymentFo
     }
 
     @Override
-    public PixAccountPayload getAccountPayload() {
+    public PixAccountPayload createAccountPayload() {
         return new PixAccountPayload(model.getId(),
                 "BR",
                 model.getHolderName().get(),
@@ -59,11 +59,11 @@ public class PixPaymentFormController extends PaymentFormController<PixPaymentFo
     public boolean validate() {
         boolean holderNameValid = model.getHolderNameValidator().validateAndGet();
         boolean pixKeyValidatorValid = model.getPixKeyValidator().validateAndGet();
-        model.getRequireValidation().set(true);
+        model.getRunValidation().set(true);
         return holderNameValid && pixKeyValidatorValid;
     }
 
     void onValidationDone() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
     }
 }

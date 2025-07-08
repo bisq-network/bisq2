@@ -40,7 +40,7 @@ public class ZellePaymentFormController extends PaymentFormController<ZellePayme
 
     @Override
     public void onActivate() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
     }
 
     @Override
@@ -48,7 +48,7 @@ public class ZellePaymentFormController extends PaymentFormController<ZellePayme
     }
 
     @Override
-    public ZelleAccountPayload getAccountPayload() {
+    public ZelleAccountPayload createAccountPayload() {
         return new ZelleAccountPayload(model.getId(),
                 model.getHolderName().get(),
                 model.getEmailOrMobileNr().get());
@@ -58,11 +58,11 @@ public class ZellePaymentFormController extends PaymentFormController<ZellePayme
     public boolean validate() {
         boolean holderNameValid = model.getHolderNameValidator().validateAndGet();
         boolean emailOrPhoneNumberValid = model.getEmailOrPhoneNumberValidator().validateAndGet();
-        model.getRequireValidation().set(true);
+        model.getRunValidation().set(true);
         return holderNameValid && emailOrPhoneNumberValid;
     }
 
     void onValidationDone() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
     }
 }
