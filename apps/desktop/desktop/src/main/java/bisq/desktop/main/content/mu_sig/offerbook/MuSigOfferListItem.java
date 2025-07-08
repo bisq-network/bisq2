@@ -65,30 +65,25 @@ public class MuSigOfferListItem {
     private final MuSigOffer offer;
     private final MarketPriceService marketPriceService;
 
-    private final boolean isMyOffer;
-    private final String quoteCurrencyCode;
-    private final String baseAmountAsString;
-    private final String quoteAmountAsString;
-    private final String paymentMethodsAsString;
-    private final String deposit;
-    private final String maker;
+    private final String quoteCurrencyCode, baseAmountAsString, quoteAmountAsString, paymentMethodsAsString,
+            maker, takeOfferButtonText;
+    private final boolean isMyOffer, noAccountForOfferPaymentMethods, canTakeOffer;
     private final Market market;
-    private final String takeOfferButtonText;
     private final Direction direction;
     private final List<FiatPaymentMethod> paymentMethods;
     private final UserProfile makerUserProfile;
     private final ReputationScore reputationScore;
     private final long totalScore;
-    private final boolean noAccountForOfferPaymentMethods;
-    private final boolean canTakeOffer;
-    private Optional<String> cannotTakeOfferReason = Optional.empty();
     private final Map<FiatPaymentMethod, Boolean> accountAvailableByPaymentMethod;
 
+    private Optional<String> cannotTakeOfferReason = Optional.empty();
+
     private double priceSpecAsPercent = 0;
-    private String formattedPercentagePrice = Res.get("data.na");
+    private String formattedPercentagePrice = Res.get("data.na"),
+            price = Res.get("data.na"),
+            priceTooltip = Res.get("data.na");
     private long priceAsLong = 0;
-    private String price = Res.get("data.na");
-    private String priceTooltip = Res.get("data.na");
+
 
     private final Pin marketPriceByCurrencyMapPin;
 
@@ -108,7 +103,7 @@ public class MuSigOfferListItem {
         PriceSpec priceSpec = offer.getPriceSpec();
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         market = offer.getMarket();
-        baseAmountAsString = OfferAmountFormatter.formatBaseAmount(marketPriceService, offer, false);
+        baseAmountAsString = OfferAmountFormatter.formatBaseAmount(marketPriceService, offer, false, false);
         quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, false);
         takeOfferButtonText = offer.getDirection().isBuy()
                 ? Res.get("muSig.offerbook.table.cell.offer.intent.sell")
@@ -137,7 +132,6 @@ public class MuSigOfferListItem {
         reputationScore = reputationService.getReputationScore(makerUserProfile);
         totalScore = reputationScore.getTotalScore();
 
-        deposit = "15%";
         maker = userProfileService.findUserProfile(offer.getMakersUserProfileId())
                 .map(UserProfile::getUserName)
                 .orElse(Res.get("data.na"));
@@ -174,10 +168,9 @@ public class MuSigOfferListItem {
                     this.priceSpecAsPercent = priceSpecAsPercent;
                     formattedPercentagePrice = PercentageFormatter.formatToPercentWithSignAndSymbol(priceSpecAsPercent);
                     String offerPrice = OfferPriceFormatter.formatQuote(marketPriceService, offer);
-                    priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(offer.getPriceSpec(), offerPrice);
-
                     PriceSpec priceSpec = offer.getPriceSpec();
-                    price = PriceSpecFormatter.getFormattedPrice(priceSpec, marketPriceService);
+                    priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(priceSpec, offerPrice);
+                    price = PriceSpecFormatter.getFormattedPrice(priceSpec, marketPriceService, offer.getMarket());
 
                     priceAsLong = PriceUtil.findQuote(marketPriceService, priceSpec, offer.getMarket()).map(PriceQuote::getValue).orElse(0L);
                 });

@@ -60,7 +60,6 @@ public class MuSigOfferbookModel implements Model {
     private final ObservableList<FiatPaymentMethod> availablePaymentMethods = FXCollections.observableArrayList();
     private final ObservableSet<FiatPaymentMethod> selectedPaymentMethods = FXCollections.observableSet();
     private final StringProperty paymentFilterTitle = new SimpleStringProperty("");
-    private final BooleanProperty isCustomPaymentsSelected = new SimpleBooleanProperty();
     private final IntegerProperty activeMarketPaymentsCount = new SimpleIntegerProperty();
 
     private final Predicate<MuSigOfferListItem> muSigOfferListItemsPredicate = item ->

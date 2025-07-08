@@ -378,27 +378,14 @@ public class MuSigOfferbookController implements Controller {
                         .map(payment -> payment.getPaymentRail().name()).collect(Collectors.toList())));
     }
 
-    void onToggleCustomPaymentFilter(boolean isSelected) {
-        boolean newValue = !isSelected;
-        model.getIsCustomPaymentsSelected().set(newValue);
-        updateActiveMarketPaymentsCount();
-        settingsService.setCookie(CookieKey.MU_SIG_OFFER_CUSTOM_PAYMENT_FILTER, getCookieSubKey(), newValue);
-    }
-
     void onClearPaymentFilters() {
         model.getSelectedPaymentMethods().clear();
-        model.getIsCustomPaymentsSelected().set(false);
         updateActiveMarketPaymentsCount();
         settingsService.removeCookie(CookieKey.MU_SIG_OFFER_PAYMENT_FILTERS, getCookieSubKey());
-        settingsService.removeCookie(CookieKey.MU_SIG_OFFER_CUSTOM_PAYMENT_FILTER, getCookieSubKey());
     }
 
     private void updateActiveMarketPaymentsCount() {
-        int count = model.getSelectedPaymentMethods().size();
-        if (model.getIsCustomPaymentsSelected().get()) {
-            ++count;
-        }
-        model.getActiveMarketPaymentsCount().set(count);
+        model.getActiveMarketPaymentsCount().set(model.getSelectedPaymentMethods().size());
     }
 
     private String getCookieSubKey() {
@@ -446,8 +433,8 @@ public class MuSigOfferbookController implements Controller {
                         .ifPresentOrElse(
                                 marketPrice -> model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true)),
                                 () -> model.getMarketPrice().set(""));
-                model.getBaseCodeTitle().set(selectedMarket.getBaseCurrencyCode());
-                model.getQuoteCodeTitle().set(selectedMarket.getQuoteCurrencyCode());
+                model.getBaseCodeTitle().set(Res.get("muSig.offerbook.table.header.amount", selectedMarket.getBaseCurrencyCode()).toUpperCase());
+                model.getQuoteCodeTitle().set(Res.get("muSig.offerbook.table.header.amount", selectedMarket.getQuoteCurrencyCode()).toUpperCase());
                 model.getPriceTitle().set(Res.get("muSig.offerbook.table.header.price", selectedMarket.getMarketCodes()).toUpperCase());
                 model.getMarketIconId().set(selectedMarket.getBaseCurrencyCode());
             }
@@ -510,10 +497,6 @@ public class MuSigOfferbookController implements Controller {
                     }
                 });
 
-        model.getIsCustomPaymentsSelected().set(false);
-        settingsService.getCookie().asBoolean(CookieKey.MU_SIG_OFFER_CUSTOM_PAYMENT_FILTER, getCookieSubKey())
-                .ifPresent(cookie -> model.getIsCustomPaymentsSelected().set(cookie));
-
         updateActiveMarketPaymentsCount();
     }
 
@@ -522,8 +505,7 @@ public class MuSigOfferbookController implements Controller {
         if (paymentFiltersApplied) {
             model.setPaymentMethodFilterPredicate(item ->
                     item.getPaymentMethods().stream()
-                            .anyMatch(payment -> model.getSelectedPaymentMethods().contains(payment)
-                                    || (payment.isCustomPaymentMethod() && model.getIsCustomPaymentsSelected().get())));
+                            .anyMatch(payment -> model.getSelectedPaymentMethods().contains(payment)));
         } else {
             model.setPaymentMethodFilterPredicate(item -> true);
         }

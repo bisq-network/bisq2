@@ -52,8 +52,7 @@ public enum CookieKey {
     MU_SIG_MARKETS_FILTER,
     MU_SIG_MARKET_SORT_TYPE,
     MU_SIG_OFFERS_FILTER,
-    MU_SIG_OFFER_PAYMENT_FILTERS(true),
-    MU_SIG_OFFER_CUSTOM_PAYMENT_FILTER(true);
+    MU_SIG_OFFER_PAYMENT_FILTERS(true);
 
     @Getter
     private final boolean useSubKey;
