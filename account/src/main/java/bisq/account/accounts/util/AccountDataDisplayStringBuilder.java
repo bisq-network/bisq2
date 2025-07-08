@@ -17,10 +17,10 @@
 
 package bisq.account.accounts.util;
 
-public class CompactDisplayStringBuilder {
+public class AccountDataDisplayStringBuilder {
     StringBuilder stringBuilder = new StringBuilder();
 
-    public CompactDisplayStringBuilder(String... values) {
+    public AccountDataDisplayStringBuilder(String... values) {
         for (int i = 0; i < values.length; i++) {
             String value = values[i];
             stringBuilder.append(value).append(": ");

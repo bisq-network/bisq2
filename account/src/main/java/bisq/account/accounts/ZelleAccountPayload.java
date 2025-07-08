@@ -1,6 +1,6 @@
 package bisq.account.accounts;
 
-import bisq.account.accounts.util.CompactDisplayStringBuilder;
+import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.common.validation.EmailValidation;
@@ -69,8 +69,8 @@ public class ZelleAccountPayload extends CountryBasedAccountPayload {
     }
 
     @Override
-    public String toCompactDisplayString() {
-        return new CompactDisplayStringBuilder(
+    public String getAccountDataDisplayString() {
+        return new AccountDataDisplayStringBuilder(
                 Res.get("user.paymentAccounts.holderName"), holderName,
                 Res.get("user.paymentAccounts.zelle.emailOrMobileNr"), emailOrMobileNr
         ).toString();

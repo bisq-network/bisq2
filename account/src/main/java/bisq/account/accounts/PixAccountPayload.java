@@ -1,6 +1,6 @@
 package bisq.account.accounts;
 
-import bisq.account.accounts.util.CompactDisplayStringBuilder;
+import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
@@ -70,8 +70,8 @@ public final class PixAccountPayload extends CountryBasedAccountPayload {
     }
 
     @Override
-    public String toCompactDisplayString() {
-        return new CompactDisplayStringBuilder(
+    public String getAccountDataDisplayString() {
+        return new AccountDataDisplayStringBuilder(
                 Res.get("user.paymentAccounts.pix.holderName"), holderName,
                 Res.get("user.paymentAccounts.pix.pixKey"), pixKey
         ).toString();

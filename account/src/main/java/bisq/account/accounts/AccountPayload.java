@@ -100,7 +100,7 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
     }
 
     //todo make abstract once impl for all
-    public String toCompactDisplayString() {
+    public String getAccountDataDisplayString() {
         throw new UnsupportedOperationException("Not implemented for " + getPaymentMethod().getName());
     }
 }

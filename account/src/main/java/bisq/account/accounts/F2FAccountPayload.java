@@ -1,6 +1,6 @@
 package bisq.account.accounts;
 
-import bisq.account.accounts.util.CompactDisplayStringBuilder;
+import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.common.util.StringUtils;
@@ -87,8 +87,8 @@ public class F2FAccountPayload extends CountryBasedAccountPayload implements Sel
     }
 
     @Override
-    public String toCompactDisplayString() {
-        return new CompactDisplayStringBuilder(
+    public String getAccountDataDisplayString() {
+        return new AccountDataDisplayStringBuilder(
                 Res.get("user.paymentAccounts.f2f.city"), city,
                 Res.get("user.paymentAccounts.f2f.contact"), contact,
                 Res.get("user.paymentAccounts.f2f.extraInfo"), extraInfo

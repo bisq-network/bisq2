@@ -120,7 +120,7 @@ public class MuSigTradeDetailsController extends NavigationController implements
         //todo toCompactDisplayString would require text area
         model.setPeersAccountPayloadDisplayString(peersAccountPayload.isEmpty()
                 ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
-                : peersAccountPayload.get().toCompactDisplayString());
+                : peersAccountPayload.get().getAccountDataDisplayString());
 
         model.setDepositTxId(trade.getDepositTxId() == null
                 ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")

@@ -1,6 +1,6 @@
 package bisq.account.accounts;
 
-import bisq.account.accounts.util.CompactDisplayStringBuilder;
+import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.common.validation.NetworkDataValidation;
@@ -70,8 +70,8 @@ public final class FasterPaymentsAccountPayload extends CountryBasedAccountPaylo
     }
 
     @Override
-    public String toCompactDisplayString() {
-        return new CompactDisplayStringBuilder(
+    public String getAccountDataDisplayString() {
+        return new AccountDataDisplayStringBuilder(
                 Res.get("user.paymentAccounts.holderName"), holderName,
                 Res.get("user.paymentAccounts.fasterPayments.sortCode"), sortCode,
                 Res.get("user.paymentAccounts.fasterPayments.accountNr"), accountNr

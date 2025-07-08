@@ -162,7 +162,7 @@ public class State2BuyerSendPayment extends BaseState {
             quoteAmount.getIconButton().setOnAction(e -> ClipboardUtil.copyToClipboard(model.getQuoteAmount()));
             paymentReason.setText(model.getTrade().getShortId());
             paymentReason.getIconButton().setOnAction(e -> ClipboardUtil.copyToClipboard(model.getTrade().getShortId()));
-            account.setText(model.getTrade().getPeer().getAccountPayload().orElseThrow().toCompactDisplayString());
+            account.setText(model.getTrade().getPeer().getAccountPayload().orElseThrow().getAccountDataDisplayString());
             account.validate();
             confirmFiatSentButton.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2a.confirmFiatSent", model.getFormattedQuoteAmount()));
             confirmFiatSentButton.setOnAction(e -> controller.onConfirmFiatSent());

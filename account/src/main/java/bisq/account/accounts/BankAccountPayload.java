@@ -1,6 +1,6 @@
 package bisq.account.accounts;
 
-import bisq.account.accounts.util.CompactDisplayStringBuilder;
+import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.protobuf.AccountPayload;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
@@ -126,8 +126,8 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
     }
 
     @Override
-    public String toCompactDisplayString() {
-        CompactDisplayStringBuilder builder = new CompactDisplayStringBuilder();
+    public String getAccountDataDisplayString() {
+        AccountDataDisplayStringBuilder builder = new AccountDataDisplayStringBuilder();
         holderName.ifPresent(value -> builder.add(Res.get("user.paymentAccounts.holderName"), value));
         holderId.ifPresent(value -> builder.add(BankAccountUtils.getHolderIdDescription(countryCode), value));
         bankName.ifPresent(value -> builder.add(Res.get("user.paymentAccounts.bank.bankName"), value));
