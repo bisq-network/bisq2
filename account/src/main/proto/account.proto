@@ -123,8 +123,8 @@ message SepaInstantAccountPayload {
 
 message WiseAccountPayload {
   repeated string selectedCurrencyCodes = 1;
-  string email = 2;
-  string holderName = 3;
+  string holderName = 2;
+  string email = 3;
 }
 
 message F2FAccountPayload {
@@ -181,8 +181,8 @@ message ZelleAccountPayload {
 }
 
 message PixAccountPayload {
-  string pixKey = 1;
-  string holderName = 2;
+  string holderName = 1;
+  string pixKey = 2;
 }
 
 message FasterPaymentsAccountPayload {
@@ -197,8 +197,8 @@ message PayIDAccountPayload {
 }
 
 message USPostalMoneyOrderAccountPayload {
-  string postalAddress = 1;
-  string holderName = 2;
+  string holderName = 1;
+  string postalAddress = 2;
 }
 
 message CashByMailAccountPayload {
@@ -213,8 +213,8 @@ message StrikeAccountPayload {
 }
 
 message InteracETransferAccountPayload {
-  string email = 1;
-  string holderName = 2;
+  string holderName = 1;
+  string email = 2;
   string question = 3;
   string answer = 4;
 }

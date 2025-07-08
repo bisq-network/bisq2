@@ -21,13 +21,13 @@ public final class PixAccountPayload extends CountryBasedAccountPayload {
     public static final int PIX_KEY_MIN_LENGTH = 2;
     public static final int PIX_KEY_MAX_LENGTH = 100;
 
-    private final String pixKey;
     private final String holderName;
+    private final String pixKey;
 
-    public PixAccountPayload(String id, String countryCode, String pixKey, String holderName) {
+    public PixAccountPayload(String id, String countryCode, String holderName, String pixKey) {
         super(id, countryCode);
-        this.pixKey = pixKey;
         this.holderName = holderName;
+        this.pixKey = pixKey;
     }
 
     @Override
@@ -50,8 +50,8 @@ public final class PixAccountPayload extends CountryBasedAccountPayload {
 
     private bisq.account.protobuf.PixAccountPayload.Builder getPixAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.PixAccountPayload.newBuilder()
-                .setPixKey(pixKey)
-                .setHolderName(holderName);
+                .setHolderName(holderName)
+                .setPixKey(pixKey);
     }
 
     public static PixAccountPayload fromProto(AccountPayload proto) {
@@ -59,8 +59,8 @@ public final class PixAccountPayload extends CountryBasedAccountPayload {
         bisq.account.protobuf.PixAccountPayload pixAccountPayload = countryBasedAccountPayload.getPixAccountPayload();
         return new PixAccountPayload(proto.getId(),
                 countryBasedAccountPayload.getCountryCode(),
-                pixAccountPayload.getPixKey(),
-                pixAccountPayload.getHolderName()
+                pixAccountPayload.getHolderName(),
+                pixAccountPayload.getPixKey()
         );
     }
 

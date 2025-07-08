@@ -14,15 +14,15 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class InteracETransferAccountPayload extends AccountPayload<FiatPaymentMethod> {
-    private final String email;
     private final String holderName;
+    private final String email;
     private final String question;
     private final String answer;
 
-    public InteracETransferAccountPayload(String id, String email, String holderName, String question, String answer) {
+    public InteracETransferAccountPayload(String id, String holderName, String email, String question, String answer) {
         super(id);
-        this.email = email;
         this.holderName = holderName;
+        this.email = email;
         this.question = question;
         this.answer = answer;
     }
@@ -39,8 +39,8 @@ public final class InteracETransferAccountPayload extends AccountPayload<FiatPay
 
     private bisq.account.protobuf.InteracETransferAccountPayload.Builder getInteracETransferAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.InteracETransferAccountPayload.newBuilder()
-                .setEmail(email)
                 .setHolderName(holderName)
+                .setEmail(email)
                 .setQuestion(question)
                 .setAnswer(answer);
     }
@@ -49,8 +49,8 @@ public final class InteracETransferAccountPayload extends AccountPayload<FiatPay
         var interactETransferAccountPayload = proto.getInteracETransferAccountPayload();
         return new InteracETransferAccountPayload(
                 proto.getId(),
-                interactETransferAccountPayload.getEmail(),
                 interactETransferAccountPayload.getHolderName(),
+                interactETransferAccountPayload.getEmail(),
                 interactETransferAccountPayload.getQuestion(),
                 interactETransferAccountPayload.getAnswer()
         );

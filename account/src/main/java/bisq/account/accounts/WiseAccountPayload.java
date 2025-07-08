@@ -39,18 +39,19 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode(callSuper = true)
 public final class WiseAccountPayload extends CountryBasedAccountPayload implements MultiCurrencyAccountPayload {
     private final List<String> selectedCurrencyCodes;
-    private final String email;
     private final String holderName;
+    private final String email;
 
     public WiseAccountPayload(String id,
                               String countryCode,
                               List<String> selectedCurrencyCodes,
-                              String email,
-                              String holderName) {
+                              String holderName,
+                              String email
+    ) {
         super(id, countryCode);
         this.selectedCurrencyCodes = selectedCurrencyCodes;
-        this.email = email;
         this.holderName = holderName;
+        this.email = email;
 
         verify();
     }
@@ -71,8 +72,8 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
                 proto.getId(),
                 countryBasedAccountPayload.getCountryCode(),
                 wisePayload.getSelectedCurrencyCodesList(),
-                wisePayload.getEmail(),
-                wisePayload.getHolderName()
+                wisePayload.getHolderName(),
+                wisePayload.getEmail()
         );
     }
 
@@ -89,8 +90,8 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
     private bisq.account.protobuf.WiseAccountPayload.Builder getWiseAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.WiseAccountPayload.newBuilder()
                 .addAllSelectedCurrencyCodes(selectedCurrencyCodes)
-                .setEmail(email)
-                .setHolderName(holderName);
+                .setHolderName(holderName)
+                .setEmail(email);
     }
 
     @Override
