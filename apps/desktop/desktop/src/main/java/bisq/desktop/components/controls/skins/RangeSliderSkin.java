@@ -123,19 +123,9 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
         if (!draggingLow) {
             return;
         }
+
         RangeSlider slider = getSkinnable();
-        double w = slider.getWidth() > 0 ? slider.getWidth() : 200;
-        double min = slider.getMin();
-        double max = slider.getMax();
-        double range = max - min;
-        double trackStart = TRACK_PADDING;
-        double trackEnd = w - TRACK_PADDING;
-        double trackWidth = trackEnd - trackStart;
-        double mouseX = e.getSceneX() - container.localToScene(0, 0).getX();
-        double anchorX = mouseX - dragOffsetX;
-        double value = min + ((anchorX - trackStart) / trackWidth) * range;
-        value = Math.max(min, Math.min(value, slider.getHighValue()));
-        slider.setLowValue(value);
+        slider.setLowValue(getValue(slider, e));
         e.consume();
     }
 
@@ -143,7 +133,13 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
         if (!draggingHigh) {
             return;
         }
+
         RangeSlider slider = getSkinnable();
+        slider.setHighValue(getValue(slider, e));
+        e.consume();
+    }
+
+    private double getValue(RangeSlider slider, MouseEvent e) {
         double w = slider.getWidth() > 0 ? slider.getWidth() : 200;
         double min = slider.getMin();
         double max = slider.getMax();
@@ -154,8 +150,6 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
         double mouseX = e.getSceneX() - container.localToScene(0, 0).getX();
         double anchorX = mouseX - dragOffsetX;
         double value = min + ((anchorX - trackStart) / trackWidth) * range;
-        value = Math.max(slider.getLowValue(), Math.min(value, max));
-        slider.setHighValue(value);
-        e.consume();
+        return Math.max(min, Math.min(value, max));
     }
 }
