@@ -1,8 +1,10 @@
 package bisq.account.accounts;
 
+import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

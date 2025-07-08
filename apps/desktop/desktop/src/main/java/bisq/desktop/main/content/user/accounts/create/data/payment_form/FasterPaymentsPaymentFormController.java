@@ -18,10 +18,9 @@
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
 import bisq.account.accounts.FasterPaymentsAccountPayload;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.UUID;
 
 @Slf4j
 public class FasterPaymentsPaymentFormController extends PaymentFormController<FasterPaymentsPaymentFormView, FasterPaymentsPaymentFormModel, FasterPaymentsAccountPayload> {
@@ -36,12 +35,12 @@ public class FasterPaymentsPaymentFormController extends PaymentFormController<F
 
     @Override
     protected FasterPaymentsPaymentFormModel createModel() {
-        return new FasterPaymentsPaymentFormModel(UUID.randomUUID().toString());
+        return new FasterPaymentsPaymentFormModel(StringUtils.createUid());
     }
 
     @Override
     public void onActivate() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
     }
 
     @Override
@@ -49,7 +48,7 @@ public class FasterPaymentsPaymentFormController extends PaymentFormController<F
     }
 
     @Override
-    public FasterPaymentsAccountPayload getAccountPayload() {
+    public FasterPaymentsAccountPayload createAccountPayload() {
         return new FasterPaymentsAccountPayload(model.getId(),
                 model.getHolderName().get(),
                 model.getSortCode().get(),
@@ -61,11 +60,11 @@ public class FasterPaymentsPaymentFormController extends PaymentFormController<F
         boolean holderNameValid = model.getHolderNameValidator().validateAndGet();
         boolean sortCodeValid = model.getSortCodeValidator().validateAndGet() && model.getSortCodeNumberValidator().validateAndGet();
         boolean accountNrValid = model.getAccountNrValidator().validateAndGet() && model.getAccountNrNumberValidator().validateAndGet();
-        model.getRequireValidation().set(true);
+        model.getRunValidation().set(true);
         return holderNameValid && sortCodeValid && accountNrValid;
     }
 
     void onValidationDone() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
     }
 }

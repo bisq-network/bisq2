@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class BaseSendAccountPayloadMessage_Handler extends MuSigTradeMessageHandler<MuSigTrade, SendAccountPayloadMessage> {
-    private AccountPayload peersAccountPayload;
+    private AccountPayload<?> accountPayload;
 
     public BaseSendAccountPayloadMessage_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -38,7 +38,7 @@ public abstract class BaseSendAccountPayloadMessage_Handler extends MuSigTradeMe
 
     @Override
     protected void process(SendAccountPayloadMessage message) {
-        peersAccountPayload = message.getAccountPayload();
+        accountPayload = message.getAccountPayload();
 
         // We observe the txConfirmationStatus to get informed once the deposit tx is confirmed.
         tradeService.observeDepositTxConfirmationStatus(trade);
@@ -46,7 +46,7 @@ public abstract class BaseSendAccountPayloadMessage_Handler extends MuSigTradeMe
 
     @Override
     protected void commit() {
-        trade.getPeer().setPeersAccountPayload(peersAccountPayload);
+        trade.getPeer().setAccountPayload(accountPayload);
     }
 
     @Override

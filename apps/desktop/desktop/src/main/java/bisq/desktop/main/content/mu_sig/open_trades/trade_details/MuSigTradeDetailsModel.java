@@ -54,7 +54,7 @@ public class MuSigTradeDetailsModel extends NavigationModel {
     private String depositTxId;
     private boolean isDepositTxIdEmpty;
     private boolean isDepositTxIdVisible;
-    private String paymentAccountData;
+    private String peersAccountPayloadDisplayString;
     private boolean isPaymentAccountDataEmpty;
     private String assignedMediator;
     private boolean hasMediatorBeenAssigned;

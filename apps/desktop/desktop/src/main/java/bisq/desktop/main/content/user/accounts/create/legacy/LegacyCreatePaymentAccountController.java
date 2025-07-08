@@ -20,6 +20,7 @@ package bisq.desktop.main.content.user.accounts.create.legacy;
 import bisq.account.AccountService;
 import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.account.accounts.UserDefinedFiatAccountPayload;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
@@ -31,7 +32,6 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Date;
-import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -87,8 +87,8 @@ public class LegacyCreatePaymentAccountController implements Controller {
             checkNotNull(accountData);
             checkArgument(accountData.length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH,
                     "Account data must not be longer than 1000 characters");
-            UserDefinedFiatAccountPayload accountPayload = new UserDefinedFiatAccountPayload(UUID.randomUUID().toString(), accountData);
-            UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(new Date().getTime(), model.getAccountName(), accountPayload);
+            UserDefinedFiatAccountPayload accountPayload = new UserDefinedFiatAccountPayload(StringUtils.createUid(), accountData);
+            UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(StringUtils.createUid(), new Date().getTime(), model.getAccountName(), accountPayload);
             accountService.addPaymentAccount(newAccount);
             accountService.setSelectedAccount(newAccount);
             close();

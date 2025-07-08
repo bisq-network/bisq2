@@ -1,7 +1,9 @@
 package bisq.account.accounts;
 
+import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -12,13 +14,13 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class USPostalMoneyOrderAccountPayload extends AccountPayload<FiatPaymentMethod> {
-    private final String postalAddress;
     private final String holderName;
+    private final String postalAddress;
 
-    public USPostalMoneyOrderAccountPayload(String id, String postalAddress, String holderName) {
+    public USPostalMoneyOrderAccountPayload(String id, String holderName, String postalAddress) {
         super(id);
-        this.postalAddress = postalAddress;
         this.holderName = holderName;
+        this.postalAddress = postalAddress;
     }
 
     @Override
@@ -33,21 +35,29 @@ public final class USPostalMoneyOrderAccountPayload extends AccountPayload<FiatP
 
     private bisq.account.protobuf.USPostalMoneyOrderAccountPayload.Builder getUSPostalMoneyOrderAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.USPostalMoneyOrderAccountPayload.newBuilder()
-                .setPostalAddress(postalAddress)
-                .setHolderName(holderName);
+                .setHolderName(holderName)
+                .setPostalAddress(postalAddress);
     }
 
     public static USPostalMoneyOrderAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         var usPostalOrderMoneyPayload = proto.getUsPostalMoneyOrderAccountPayload();
         return new USPostalMoneyOrderAccountPayload(
                 proto.getId(),
-                usPostalOrderMoneyPayload.getPostalAddress(),
-                usPostalOrderMoneyPayload.getHolderName()
+                usPostalOrderMoneyPayload.getHolderName(),
+                usPostalOrderMoneyPayload.getPostalAddress()
         );
     }
 
     @Override
     public FiatPaymentMethod getPaymentMethod() {
         return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.US_POSTAL_MONEY_ORDER);
+    }
+
+    @Override
+    public String getAccountDataDisplayString() {
+        return new AccountDataDisplayStringBuilder(
+                Res.get("user.paymentAccounts.holderName"), holderName,
+                Res.get("user.paymentAccounts.postalAddress"), postalAddress
+        ).toString();
     }
 }

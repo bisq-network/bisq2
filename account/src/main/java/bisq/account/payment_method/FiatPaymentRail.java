@@ -53,11 +53,6 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             FiatCurrencyRepository.getCurrencyByCode("USD"),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
-    //todo remove
-    CASH_APP(countryFromCode("US"),
-            FiatCurrencyRepository.getCurrencyByCode("USD"),
-            FiatPaymentMethodChargebackRisk.MODERATE),
-
     // US_POSTAL_MONEY_ORDER, POPMONEY
 
     // EUR
@@ -234,22 +229,22 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
     @Getter
     private final FiatPaymentMethodChargebackRisk chargebackRisk;
 
-    FiatPaymentRail(Country supportedCountries,
+    FiatPaymentRail(Country supportedCountry,
                     List<? extends TradeCurrency> supportedCurrencies,
                     FiatPaymentMethodChargebackRisk chargebackRisk) {
-        this(List.of(supportedCountries), supportedCurrencies, chargebackRisk);
+        this(List.of(supportedCountry), supportedCurrencies, chargebackRisk);
     }
 
     FiatPaymentRail(List<Country> supportedCountries,
-                    TradeCurrency supportedCurrencies,
+                    TradeCurrency supportedCurrency,
                     FiatPaymentMethodChargebackRisk chargebackRisk) {
-        this(supportedCountries, List.of(supportedCurrencies), chargebackRisk);
+        this(supportedCountries, List.of(supportedCurrency), chargebackRisk);
     }
 
-    FiatPaymentRail(Country supportedCountries,
-                    TradeCurrency supportedCurrencies,
+    FiatPaymentRail(Country supportedCountry,
+                    TradeCurrency supportedCurrency,
                     FiatPaymentMethodChargebackRisk chargebackRisk) {
-        this(List.of(supportedCountries), List.of(supportedCurrencies), chargebackRisk);
+        this(List.of(supportedCountry), List.of(supportedCurrency), chargebackRisk);
     }
 
     FiatPaymentRail(List<Country> supportedCountries,
@@ -318,7 +313,6 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             case STRIKE -> DAYS_4;
             case ACH_TRANSFER -> DAYS_5;
             case US_POSTAL_MONEY_ORDER -> DAYS_4;
-            case CASH_APP -> DAYS_4;
             case SEPA -> DAYS_6;
             case SEPA_INSTANT -> HOURS_24;
             case BIZUM -> DAYS_4;

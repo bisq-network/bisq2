@@ -17,6 +17,9 @@
 
 package bisq.desktop.main.content.mu_sig.open_trades.trade_state.states;
 
+import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountPayload;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.WrappingText;
@@ -26,13 +29,18 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
 
 @Slf4j
 public class State3aSellerConfirmPaymentReceipt extends BaseState {
     private final Controller controller;
 
-    public State3aSellerConfirmPaymentReceipt(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
+    public State3aSellerConfirmPaymentReceipt(ServiceProvider serviceProvider,
+                                              MuSigTrade trade,
+                                              MuSigOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, trade, channel);
     }
 
@@ -58,6 +66,10 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
         @Override
         public void onActivate() {
             super.onActivate();
+            Optional<AccountPayload<?>> accountPayload = model.getTrade().getSeller().getAccountPayload();
+            Optional<Account<? extends PaymentMethod<?>, ?>> account = accountService.findAccount(accountPayload.orElseThrow());
+            String accountName = account.orElseThrow().getAccountName();
+            model.setMyAccountName(accountName);
         }
 
         @Override
@@ -74,6 +86,9 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
 
     @Getter
     private static class Model extends BaseState.Model {
+        @Setter
+        private String myAccountName;
+
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
         }
@@ -82,12 +97,13 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
     public static class View extends BaseState.View<Model, Controller> {
         private final WrappingText headline;
         private final Button confirmPaymentReceiptButton;
+        private final WrappingText info;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
             headline = MuSigFormUtils.getHeadline();
-            WrappingText info = MuSigFormUtils.getInfo(Res.get("bisqEasy.tradeState.info.seller.phase2b.info"));
+            info = MuSigFormUtils.getInfo();
             confirmPaymentReceiptButton = new Button();
             confirmPaymentReceiptButton.setDefaultButton(true);
             VBox.setMargin(confirmPaymentReceiptButton, new Insets(5, 0, 10, 0));
@@ -98,7 +114,8 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
-            headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.headline", model.getFormattedQuoteAmount(), model.getTrade().getShortId()));
+            headline.setText(Res.get("muSig.tradeState.info.seller.phase3a.headline", model.getFormattedQuoteAmount()));
+            info.setText(Res.get("muSig.tradeState.info.seller.phase3a.info", model.getMyAccountName(), model.getTrade().getShortId()));
             confirmPaymentReceiptButton.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.fiatReceivedButton", model.getFormattedQuoteAmount()));
             confirmPaymentReceiptButton.setOnAction(e -> controller.onPaymentReceiptConfirmed());
         }

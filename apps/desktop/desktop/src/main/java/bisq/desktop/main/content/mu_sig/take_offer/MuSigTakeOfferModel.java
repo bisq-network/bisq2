@@ -37,6 +37,12 @@ import java.util.List;
 @Slf4j
 @Getter
 public class MuSigTakeOfferModel extends NavigationModel {
+    @Setter
+    private boolean amountVisible;
+    @Setter
+    private boolean paymentMethodVisible;
+    @Setter
+    private boolean animateRightOut = true;
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
     private final StringProperty nextButtonText = new SimpleStringProperty();
     private final StringProperty backButtonText = new SimpleStringProperty();
@@ -47,13 +53,7 @@ public class MuSigTakeOfferModel extends NavigationModel {
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty showProgressBox = new SimpleBooleanProperty();
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
-    @Setter
-    private boolean amountVisible;
-    @Setter
-    private boolean paymentMethodVisible;
     private final List<NavigationTarget> childTargets = new ArrayList<>();
-    @Setter
-    private boolean animateRightOut = true;
 
     public MuSigTakeOfferModel() {
     }
@@ -61,5 +61,22 @@ public class MuSigTakeOfferModel extends NavigationModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
         return NavigationTarget.MU_SIG_TAKE_OFFER_AMOUNT;
+    }
+
+    void reset() {
+        amountVisible = false;
+        paymentMethodVisible = false;
+        animateRightOut = true;
+        currentIndex.set(0);
+        nextButtonText.set(null);
+        backButtonText.set(null);
+        closeButtonVisible.set(false);
+        nextButtonDisabled.set(false);
+        nextButtonVisible.set(false);
+        takeOfferButtonVisible.set(false);
+        backButtonVisible.set(false);
+        showProgressBox.set(false);
+        selectedChildTarget.set(null);
+        childTargets.clear();
     }
 }

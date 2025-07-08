@@ -36,7 +36,7 @@ public class RevolutPaymentFormModel extends PaymentFormModel {
     private final ObservableList<FiatCurrency> revolutCurrencies;
     private final List<FiatCurrency> selectedCurrencies = new ArrayList<>();
     private final BooleanProperty selectedCurrenciesErrorVisible = new SimpleBooleanProperty();
-    private final BooleanProperty requireValidation = new SimpleBooleanProperty();
+    private final BooleanProperty runValidation = new SimpleBooleanProperty();
     private final StringProperty userName = new SimpleStringProperty();
 
     private final TextMinMaxLengthValidator userNameValidator = new TextMinMaxLengthValidator(RevolutAccountPayload.USER_NAME_MIN_LENGTH,

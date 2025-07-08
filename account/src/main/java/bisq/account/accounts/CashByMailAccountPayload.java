@@ -1,7 +1,9 @@
 package bisq.account.accounts;
 
+import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -53,5 +55,14 @@ public final class CashByMailAccountPayload extends AccountPayload<FiatPaymentMe
     @Override
     public FiatPaymentMethod getPaymentMethod() {
         return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.CASH_BY_MAIL);
+    }
+
+    @Override
+    public String getAccountDataDisplayString() {
+        return new AccountDataDisplayStringBuilder(
+                Res.get("user.paymentAccounts.postalAddress"), postalAddress,
+                Res.get("user.paymentAccounts.cashByMail.contact"), contact,
+                Res.get("user.paymentAccounts.cashByMail.extraInfo"), extraInfo
+        ).toString();
     }
 }

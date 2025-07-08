@@ -44,7 +44,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.Tooltip;
-import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
@@ -374,15 +373,9 @@ public final class MuSigOpenTradesView extends ChatView<MuSigOpenTradesView, MuS
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<MuSigOpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.paymentMethod"))
-                .minWidth(45)
+                .minWidth(60)
                 .comparator(Comparator.comparing(MuSigOpenTradeListItem::getFiatPaymentMethod))
                 .setCellFactory(getPaymentMethodCellFactory())
-                .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<MuSigOpenTradeListItem>()
-                .title(Res.get("bisqEasy.openTrades.table.settlementMethod"))
-                .minWidth(45)
-                .comparator(Comparator.comparing(MuSigOpenTradeListItem::getBitcoinSettlementMethod))
-                .setCellFactory(getSettlementMethodCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<MuSigOpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.makerTakerRole"))
@@ -527,39 +520,8 @@ public final class MuSigOpenTradesView extends ChatView<MuSigOpenTradesView, MuS
                             ? ImageUtil.getImageViewById(item.getFiatPaymentRail().name())
                             : MuSigViewUtils.getCustomPaymentMethodIcon(item.getFiatPaymentMethod());
                     pane.getChildren().add(paymentMethodIcon);
-                    tooltip.setText(Res.get("bisqEasy.openTrades.table.paymentMethod.tooltip",
+                    tooltip.setText(Res.get("muSig.openTrades.table.paymentMethod.tooltip",
                             item.getFiatPaymentMethod()));
-                    Tooltip.install(pane, tooltip);
-                    setGraphic(pane);
-                } else {
-                    Tooltip.uninstall(pane, tooltip);
-                    pane.getChildren().clear();
-                    setGraphic(null);
-                }
-            }
-        };
-    }
-
-    private Callback<TableColumn<MuSigOpenTradeListItem, MuSigOpenTradeListItem>, TableCell<MuSigOpenTradeListItem, MuSigOpenTradeListItem>> getSettlementMethodCellFactory() {
-        return column -> new TableCell<>() {
-            private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.MEDIUM_DARK);
-            private final StackPane pane = new StackPane();
-            private final ColorAdjust colorAdjust = new ColorAdjust();
-
-            {
-                colorAdjust.setBrightness(-0.2);
-            }
-
-            @Override
-            protected void updateItem(MuSigOpenTradeListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty) {
-                    ImageView icon = ImageUtil.getImageViewById(item.getBitcoinPaymentRail().name());
-                    icon.setEffect(colorAdjust);
-                    pane.getChildren().add(icon);
-                    tooltip.setText(Res.get("bisqEasy.openTrades.table.settlementMethod.tooltip",
-                            item.getBitcoinSettlementMethod()));
                     Tooltip.install(pane, tooltip);
                     setGraphic(pane);
                 } else {

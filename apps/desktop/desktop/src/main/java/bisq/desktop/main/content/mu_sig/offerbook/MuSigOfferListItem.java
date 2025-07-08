@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.content.mu_sig.offerbook;
 
+import bisq.account.AccountService;
+import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -51,6 +53,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -62,26 +66,25 @@ public class MuSigOfferListItem {
     private final MuSigOffer offer;
     private final MarketPriceService marketPriceService;
 
-    private final boolean isMyOffer;
-    private final String quoteCurrencyCode;
-    private final String baseAmountAsString;
-    private final String quoteAmountAsString;
-    private final String fiatPaymentMethodsAsString;
-    private final String deposit;
-    private final String maker;
+    private final String quoteCurrencyCode, baseAmountAsString, quoteAmountAsString, paymentMethodsAsString,
+            maker, takeOfferButtonText;
+    private final boolean isMyOffer, hasAnyMatchingAccount, canTakeOffer;
     private final Market market;
-    private final String takeOfferButtonText;
     private final Direction direction;
-    private final List<FiatPaymentMethod> fiatPaymentMethods;
+    private final List<FiatPaymentMethod> paymentMethods;
     private final UserProfile makerUserProfile;
     private final ReputationScore reputationScore;
     private final long totalScore;
+    private final Map<FiatPaymentMethod, Boolean> accountAvailableByPaymentMethod;
+
+    private Optional<String> cannotTakeOfferReason = Optional.empty();
 
     private double priceSpecAsPercent = 0;
-    private String formattedPercentagePrice = Res.get("data.na");
+    private String formattedPercentagePrice = Res.get("data.na"),
+            price = Res.get("data.na"),
+            priceTooltip = Res.get("data.na");
     private long priceAsLong = 0;
-    private String price = Res.get("data.na");
-    private String priceTooltip = Res.get("data.na");
+
 
     private final Pin marketPriceByCurrencyMapPin;
 
@@ -89,7 +92,8 @@ public class MuSigOfferListItem {
                        MarketPriceService marketPriceService,
                        UserProfileService userProfileService,
                        IdentityService identityService,
-                       ReputationService reputationService) {
+                       ReputationService reputationService,
+                       AccountService accountService) {
         this.offer = offer;
         this.marketPriceService = marketPriceService;
 
@@ -100,7 +104,7 @@ public class MuSigOfferListItem {
         PriceSpec priceSpec = offer.getPriceSpec();
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         market = offer.getMarket();
-        baseAmountAsString = OfferAmountFormatter.formatBaseAmount(marketPriceService, offer, false);
+        baseAmountAsString = OfferAmountFormatter.formatBaseAmount(marketPriceService, offer, false, false);
         quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, false);
         takeOfferButtonText = offer.getDirection().isBuy()
                 ? Res.get("muSig.offerbook.table.cell.offer.intent.sell")
@@ -108,11 +112,27 @@ public class MuSigOfferListItem {
         direction = offer.getDirection();
 
         // ImageUtil.getImageViewById(fiatPaymentMethod.getName());
-        fiatPaymentMethodsAsString = Joiner.on("\n")
+        paymentMethodsAsString = Joiner.on("\n")
                 .join(PaymentMethodSpecUtil.getPaymentMethods(offer.getQuoteSidePaymentMethodSpecs()).stream()
                         .map(PaymentMethod::getDisplayString)
                         .collect(Collectors.toList()));
-        fiatPaymentMethods = retrieveAndSortFiatPaymentMethods();
+        paymentMethods = retrieveAndSortFiatPaymentMethods();
+
+        accountAvailableByPaymentMethod = paymentMethods.stream().collect(Collectors.toMap(paymentMethod -> paymentMethod,
+                paymentMethod -> !accountService.getAccounts(paymentMethod).isEmpty()));
+
+        hasAnyMatchingAccount = paymentMethods.stream()
+                .anyMatch(paymentMethod -> accountService.getAccounts(paymentMethod).stream()
+                        .filter(account -> !(account instanceof UserDefinedFiatAccount))
+                        .anyMatch(account ->
+                                account.getAccountPayload().getSelectedCurrencyCodes().contains(quoteCurrencyCode))
+                );
+
+        if (!hasAnyMatchingAccount) {
+            cannotTakeOfferReason = Optional.of(Res.get("muSig.offerbook..table.cell.takeOffer.cannotTakeOfferReason.noAccountForOfferPaymentMethods",
+                    quoteCurrencyCode));
+        }
+        canTakeOffer = hasAnyMatchingAccount;
 
         makerUserProfile = userProfileService.findUserProfile(offer.getMakersUserProfileId())
                 .orElseThrow(() -> new RuntimeException("No maker user profile found for offer: " + offer.getId()));
@@ -120,7 +140,6 @@ public class MuSigOfferListItem {
         reputationScore = reputationService.getReputationScore(makerUserProfile);
         totalScore = reputationScore.getTotalScore();
 
-        deposit = "15%";
         maker = userProfileService.findUserProfile(offer.getMakersUserProfileId())
                 .map(UserProfile::getUserName)
                 .orElse(Res.get("data.na"));
@@ -157,10 +176,9 @@ public class MuSigOfferListItem {
                     this.priceSpecAsPercent = priceSpecAsPercent;
                     formattedPercentagePrice = PercentageFormatter.formatToPercentWithSignAndSymbol(priceSpecAsPercent);
                     String offerPrice = OfferPriceFormatter.formatQuote(marketPriceService, offer);
-                    priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(offer.getPriceSpec(), offerPrice);
-
                     PriceSpec priceSpec = offer.getPriceSpec();
-                    price = PriceSpecFormatter.getFormattedPrice(priceSpec, marketPriceService);
+                    priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(priceSpec, offerPrice);
+                    price = PriceSpecFormatter.getFormattedPrice(priceSpec, marketPriceService, offer.getMarket());
 
                     priceAsLong = PriceUtil.findQuote(marketPriceService, priceSpec, offer.getMarket()).map(PriceQuote::getValue).orElse(0L);
                 });

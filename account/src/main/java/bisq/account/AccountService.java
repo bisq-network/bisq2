@@ -19,6 +19,7 @@ package bisq.account;
 
 
 import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentMethodUtil;
 import bisq.account.payment_method.PaymentRail;
@@ -106,6 +107,12 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
         return Optional.ofNullable(getAccountByNameMap().get(name));
     }
 
+    public Optional<Account<? extends PaymentMethod<?>, ?>> findAccount(AccountPayload<?> accountPayload) {
+        return getAccountByNameMap().values().stream()
+                .filter(account -> account.getAccountPayload().equals(accountPayload))
+                .findAny();
+    }
+
     public Observable<Account<? extends PaymentMethod<?>, ?>> selectedAccountAsObservable() {
         return persistableStore.getSelectedAccount();
     }
@@ -114,6 +121,7 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
         return Optional.ofNullable(selectedAccountAsObservable().get());
     }
 
+    //todo do we need that?
     public void setSelectedAccount(Account<? extends PaymentMethod<?>, ?> account) {
         selectedAccountAsObservable().set(account);
         persist();
@@ -127,5 +135,11 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
                 .filter(account -> paymentMethods.contains(account.getAccountPayload().getPaymentMethod().getPaymentRail()))
                 .filter(account -> account.getSupportedCurrencyCodes().contains(currencyCode))
                 .collect(Collectors.toList());
+    }
+
+    public Set<Account<? extends PaymentMethod<?>, ?>> getAccounts(PaymentMethod<?> paymentMethod) {
+        return accounts.stream()
+                .filter(account -> account.getPaymentMethod().equals(paymentMethod))
+                .collect(Collectors.toSet());
     }
 }

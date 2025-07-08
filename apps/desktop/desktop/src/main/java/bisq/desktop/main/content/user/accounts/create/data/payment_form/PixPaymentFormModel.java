@@ -27,7 +27,7 @@ import lombok.Getter;
 
 @Getter
 public class PixPaymentFormModel extends PaymentFormModel {
-    private final BooleanProperty requireValidation = new SimpleBooleanProperty();
+    private final BooleanProperty runValidation = new SimpleBooleanProperty();
     private final StringProperty holderName = new SimpleStringProperty();
     private final StringProperty pixKey = new SimpleStringProperty();
 

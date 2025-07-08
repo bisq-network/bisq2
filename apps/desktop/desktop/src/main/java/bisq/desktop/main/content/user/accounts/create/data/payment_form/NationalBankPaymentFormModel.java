@@ -52,7 +52,7 @@ public class NationalBankPaymentFormModel extends PaymentFormModel {
     private final BooleanProperty bankAccountTypeErrorVisible = new SimpleBooleanProperty();
     private final BooleanProperty isBankAccountTypesVisible = new SimpleBooleanProperty();
 
-    private final BooleanProperty requireValidation = new SimpleBooleanProperty();
+    private final BooleanProperty runValidation = new SimpleBooleanProperty();
     private final BooleanProperty useValidation = new SimpleBooleanProperty();
 
     private final StringProperty holderName = new SimpleStringProperty();

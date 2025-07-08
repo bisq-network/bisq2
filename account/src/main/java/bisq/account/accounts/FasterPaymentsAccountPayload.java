@@ -1,9 +1,11 @@
 package bisq.account.accounts;
 
+import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -13,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class FasterPaymentsAccountPayload extends CountryBasedAccountPayload {
+public final class FasterPaymentsAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
     public static final int HOLDER_NAME_MIN_LENGTH = 2;
     public static final int HOLDER_NAME_MAX_LENGTH = 70;
 
@@ -65,5 +67,14 @@ public final class FasterPaymentsAccountPayload extends CountryBasedAccountPaylo
     @Override
     public FiatPaymentMethod getPaymentMethod() {
         return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.FASTER_PAYMENTS);
+    }
+
+    @Override
+    public String getAccountDataDisplayString() {
+        return new AccountDataDisplayStringBuilder(
+                Res.get("user.paymentAccounts.holderName"), holderName,
+                Res.get("user.paymentAccounts.fasterPayments.sortCode"), sortCode,
+                Res.get("user.paymentAccounts.fasterPayments.accountNr"), accountNr
+        ).toString();
     }
 }

@@ -93,6 +93,7 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
         gridPane.add(countryVBox, 2, rowIndex);
 
         accountNameField = new MaterialTextField(Res.get("user.paymentAccounts.summary.accountNameOverlay.accountName.description"));
+        accountNameField.setValidator(model.getAccountNameValidator());
         accountNameButton = new Button(Res.get("user.paymentAccounts.summary.accountNameOverlay.button"));
         accountNameOverlay = new VBox(20);
         configAccountNameOverlay();
@@ -106,7 +107,10 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
     protected void onViewAttached() {
         accountNameButton.disableProperty().bind(accountNameField.textProperty().isEmpty());
 
-        accountNameButton.setOnAction(e -> controller.onCreateAccount(accountNameField.getText()));
+        accountNameButton.setOnAction(e -> {
+            accountNameField.validate();
+            controller.onCreateAccount(accountNameField.getText());
+        });
 
         showAccountNameOverlayPin = EasyBind.subscribe(model.getShowAccountNameOverlay(),
                 show -> {
@@ -122,7 +126,7 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
 
         accountNameField.setText(model.getDefaultAccountName());
         paymentMethod.setText(model.getPaymentMethod().getDisplayString());
-        currency.setText(model.getCurrency());
+        currency.setText(model.getCurrencyString());
         country.setText(model.getCountry());
 
         boolean isCountryBasedAccountPayload = model.getAccountPayload() instanceof CountryBasedAccountPayload;

@@ -28,7 +28,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class PixPaymentFormView extends PaymentFormView<PixPaymentFormModel, PixPaymentFormController> {
     private final MaterialTextField holderName, pixKey;
-    private Subscription requireValidationPin;
+    private Subscription runValidationPin;
 
     public PixPaymentFormView(PixPaymentFormModel model, PixPaymentFormController controller) {
         super(model, controller);
@@ -60,8 +60,8 @@ public class PixPaymentFormView extends PaymentFormView<PixPaymentFormModel, Pix
         holderName.textProperty().bindBidirectional(model.getHolderName());
         pixKey.textProperty().bindBidirectional(model.getPixKey());
 
-        requireValidationPin = EasyBind.subscribe(model.getRequireValidation(), requireValidation -> {
-            if (requireValidation) {
+        runValidationPin = EasyBind.subscribe(model.getRunValidation(), runValidation -> {
+            if (runValidation) {
                 holderName.validate();
                 pixKey.validate();
                 controller.onValidationDone();
@@ -77,6 +77,6 @@ public class PixPaymentFormView extends PaymentFormView<PixPaymentFormModel, Pix
         holderName.textProperty().unbindBidirectional(model.getHolderName());
         pixKey.textProperty().unbindBidirectional(model.getPixKey());
 
-        requireValidationPin.unsubscribe();
+        runValidationPin.unsubscribe();
     }
 }

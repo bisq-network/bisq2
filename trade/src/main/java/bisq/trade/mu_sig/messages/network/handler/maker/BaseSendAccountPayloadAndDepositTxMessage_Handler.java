@@ -18,7 +18,7 @@
 package bisq.trade.mu_sig.messages.network.handler.maker;
 
 import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.F2FAccountPayload;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.common.data.ByteArray;
 import bisq.common.util.StringUtils;
 import bisq.offer.mu_sig.MuSigOffer;
@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class BaseSendAccountPayloadAndDepositTxMessage_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, SendAccountPayloadAndDepositTxMessage> {
     private ByteArray depositTx;
-    private AccountPayload peersAccountPayload;
+    private AccountPayload<?> accountPayload;
 
     public BaseSendAccountPayloadAndDepositTxMessage_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -46,7 +46,7 @@ public abstract class BaseSendAccountPayloadAndDepositTxMessage_Handler extends 
     @Override
     protected void process(SendAccountPayloadAndDepositTxMessage message) {
         depositTx = message.getDepositTx();
-        peersAccountPayload = message.getAccountPayload();
+        accountPayload = message.getAccountPayload();
 
         // We observe the txConfirmationStatus to get informed once the deposit tx is confirmed (gets published by the
         // buyer when they receive the MuSigSetupTradeMessage_D).
@@ -71,7 +71,7 @@ public abstract class BaseSendAccountPayloadAndDepositTxMessage_Handler extends 
     @Override
     protected void commit() {
         trade.getPeer().setDepositTx(depositTx);
-        trade.getPeer().setPeersAccountPayload(peersAccountPayload);
+        trade.getPeer().setAccountPayload(accountPayload);
     }
 
     @Override
@@ -80,20 +80,14 @@ public abstract class BaseSendAccountPayloadAndDepositTxMessage_Handler extends 
         // we send our payment account data.
         // We require that both peers exchange the account data to allow verification
         // that the buyer used the account defined in the contract to avoid fraud.
-        //todo mock
-        AccountPayload accountPayload = new F2FAccountPayload(
-                "id",
-                "countryCode",
-                "USD",
-                "city",
-                "contact",
-                "extraInfo");
+
+        AccountPayload<? extends PaymentMethod<?>> myAccountPayload = trade.getMaker().getAccountPayload().orElseThrow();
         send(new SendAccountPayloadMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
-                accountPayload));
+                myAccountPayload));
     }
 
     @Override

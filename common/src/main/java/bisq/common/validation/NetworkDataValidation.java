@@ -18,6 +18,7 @@
 package bisq.common.validation;
 
 import bisq.common.platform.Version;
+import bisq.common.proto.Proto;
 import bisq.common.util.DateUtils;
 import bisq.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -81,6 +82,11 @@ public class NetworkDataValidation {
     public static void validateTradeId(String tradeId) {
         // For private channels we combine user profile IDs for channelId
         validateText(tradeId, 200);
+    }
+
+    public static void validateSerializedSize(Proto proto, int maxSize) {
+        checkArgument(proto.getSerializedSize() <= maxSize,
+                "Proto must not be larger than " + maxSize + " bytes. Proto=" + proto);
     }
 
     public static void validateText(String text, int maxLength) {

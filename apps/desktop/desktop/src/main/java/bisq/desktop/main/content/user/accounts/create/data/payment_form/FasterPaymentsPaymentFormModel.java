@@ -30,7 +30,7 @@ import lombok.Getter;
 
 @Getter
 public class FasterPaymentsPaymentFormModel extends PaymentFormModel {
-    private final BooleanProperty requireValidation = new SimpleBooleanProperty();
+    private final BooleanProperty runValidation = new SimpleBooleanProperty();
     private final StringProperty holderName = new SimpleStringProperty();
     private final StringProperty sortCode = new SimpleStringProperty();
     private final StringProperty accountNr = new SimpleStringProperty();

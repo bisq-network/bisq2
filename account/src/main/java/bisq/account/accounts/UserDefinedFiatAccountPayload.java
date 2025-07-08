@@ -17,12 +17,17 @@
 
 package bisq.account.accounts;
 
+import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
+import bisq.common.currency.FiatCurrencyRepository;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -30,7 +35,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class UserDefinedFiatAccountPayload extends AccountPayload<FiatPaymentMethod> {
+public final class UserDefinedFiatAccountPayload extends AccountPayload<FiatPaymentMethod> implements MultiCurrencyAccountPayload {
     public static final int MAX_DATA_LENGTH = 1000;
     private final String accountData;
 
@@ -62,5 +67,17 @@ public final class UserDefinedFiatAccountPayload extends AccountPayload<FiatPaym
     @Override
     public FiatPaymentMethod getPaymentMethod() {
         return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.CUSTOM);
+    }
+
+    @Override
+    public String getAccountDataDisplayString() {
+        return new AccountDataDisplayStringBuilder(
+                Res.get("user.paymentAccounts.userDefined.accountData"), accountData
+        ).toString();
+    }
+
+    @Override
+    public List<String> getSelectedCurrencyCodes() {
+        return FiatCurrencyRepository.getAllFiatCurrencyCodes();
     }
 }

@@ -22,6 +22,7 @@ import bisq.account.accounts.Account;
 import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.account.accounts.UserDefinedFiatAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.common.util.StringUtils;
 import bisq.dto.DtoMappings;
 import bisq.dto.account.UserDefinedFiatAccountDto;
 import bisq.http_api.rest_api.domain.RestApiBase;
@@ -49,7 +50,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -141,8 +141,8 @@ public class PaymentAccountsRestApi extends RestApiBase {
             response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
         });
         try {
-            UserDefinedFiatAccountPayload accountPayload = new UserDefinedFiatAccountPayload(UUID.randomUUID().toString(), request.accountData());
-            accountService.addPaymentAccount(new UserDefinedFiatAccount(new Date().getTime(), request.accountName(), accountPayload));
+            UserDefinedFiatAccountPayload accountPayload = new UserDefinedFiatAccountPayload(StringUtils.createUid(), request.accountData());
+            accountService.addPaymentAccount(new UserDefinedFiatAccount(StringUtils.createUid(), new Date().getTime(), request.accountName(), accountPayload));
             asyncResponse.resume(buildResponse(Response.Status.CREATED, new AddAccountResponse(request.accountName())));
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));

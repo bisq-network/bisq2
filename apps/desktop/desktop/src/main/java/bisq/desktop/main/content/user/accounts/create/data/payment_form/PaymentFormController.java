@@ -22,7 +22,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
-public abstract class PaymentFormController<V extends PaymentFormView<?, ?>, M extends PaymentFormModel, P extends AccountPayload> implements Controller {
+public abstract class PaymentFormController<V extends PaymentFormView<?, ?>, M extends PaymentFormModel, P extends AccountPayload<?>> implements Controller {
     @Getter
     protected final V view;
     protected final M model;
@@ -38,5 +38,5 @@ public abstract class PaymentFormController<V extends PaymentFormView<?, ?>, M e
 
     public abstract boolean validate();
 
-    public abstract P getAccountPayload();
+    public abstract P createAccountPayload();
 }

@@ -28,8 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class RevolutAccount extends Account<FiatPaymentMethod, RevolutAccountPayload> {
-    public RevolutAccount(long creationDate, String accountName, RevolutAccountPayload revolutAccountPayload) {
-        super(creationDate, accountName, revolutAccountPayload);
+    public RevolutAccount(String id, long creationDate, String accountName, RevolutAccountPayload accountPayload) {
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -47,7 +47,8 @@ public final class RevolutAccount extends Account<FiatPaymentMethod, RevolutAcco
     }
 
     public static RevolutAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new RevolutAccount(proto.getCreationDate(),
+        return new RevolutAccount(proto.getId(),
+                proto.getCreationDate(),
                 proto.getAccountName(),
                 RevolutAccountPayload.fromProto(proto.getAccountPayload()));
     }

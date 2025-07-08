@@ -18,7 +18,6 @@
 package bisq.trade.mu_sig.messages.network.handler.taker;
 
 import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.F2FAccountPayload;
 import bisq.common.data.ByteArray;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
@@ -81,14 +80,8 @@ public abstract class BaseSetupTradeMessage_D_Handler extends MuSigTradeMessageH
         // Now we published the deposit transaction we send our payment account data.
         // We require that both peers exchange the account data to allow verification
         // that the buyer used the account defined in the contract to avoid fraud.
-        //todo mock
-        AccountPayload accountPayload = new F2FAccountPayload(
-                "id",
-                "countryCode",
-                "USD",
-                "city",
-                "contact",
-                "extraInfo");
+
+        AccountPayload<?> accountPayload = trade.getTaker().getAccountPayload().orElseThrow();
         send(new SendAccountPayloadAndDepositTxMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),

@@ -54,6 +54,7 @@ public class FiatPaymentMethodUtil {
 
     public static List<FiatPaymentMethod> getPaymentMethods(String currencyCode) {
         return FiatPaymentRailUtil.getPaymentRails(currencyCode).stream()
+                .filter(rail -> rail != FiatPaymentRail.CUSTOM)
                 .map(FiatPaymentMethod::fromPaymentRail)
                 .collect(Collectors.toList());
     }

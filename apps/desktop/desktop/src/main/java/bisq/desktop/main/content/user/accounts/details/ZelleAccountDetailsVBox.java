@@ -33,7 +33,7 @@ public class ZelleAccountDetailsVBox extends FiatAccountDetailsVBox<ZelleAccount
         addDescriptionAndValue(Res.get("user.paymentAccounts.holderName"),
                 accountPayload.getHolderName());
 
-        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.zelle.emailOrMobileNr"),
+        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.emailOrMobileNr"),
                 accountPayload.getEmailOrMobileNr());
     }
 }

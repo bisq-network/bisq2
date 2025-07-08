@@ -10,8 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class FasterPaymentsAccount extends CountryBasedAccount<FasterPaymentsAccountPayload> {
-    public FasterPaymentsAccount(long creationDate, String accountName, FasterPaymentsAccountPayload accountPayload) {
-        super(creationDate, accountName, accountPayload);
+    public FasterPaymentsAccount(String id, long creationDate, String accountName, FasterPaymentsAccountPayload accountPayload) {
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -29,7 +29,7 @@ public final class FasterPaymentsAccount extends CountryBasedAccount<FasterPayme
     }
 
     public static FasterPaymentsAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new FasterPaymentsAccount(
+        return new FasterPaymentsAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 FasterPaymentsAccountPayload.fromProto(proto.getAccountPayload()));

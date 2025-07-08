@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.review;
 
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.monetary.Monetary;
@@ -27,8 +27,6 @@ import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -43,7 +41,7 @@ class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private MuSigOffer offer;
     @Setter
-    private FiatPaymentMethod takersSelectedFiatPaymentMethod;
+    private PaymentMethod<?> takersSelectedFiatPaymentMethod;
     @Setter
     private Monetary minBaseSideAmount;
     @Setter
@@ -59,7 +57,7 @@ class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private PriceSpec priceSpec;
     @Setter
-    private List<FiatPaymentMethod> paymentMethods;
+    private List<PaymentMethod<?>> paymentMethods;
     @Setter
     private String headline;
     @Setter
@@ -71,7 +69,9 @@ class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private String paymentMethodDescription;
     @Setter
-    private String paymentMethod;
+    private String paymentMethodsDisplayString;
+    @Setter
+    private String paymentMethodDetails;
     @Setter
     private String priceDescription;
     @Setter
@@ -82,12 +82,13 @@ class MuSigCreateOfferReviewModel implements Model {
     private String fee;
     @Setter
     private String feeDetails;
-    private final ObservableList<FiatPaymentMethod> takersFiatPaymentMethods = FXCollections.observableArrayList();
-    private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
     @Setter
     private long marketPrice;
+    private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
 
-    public void reset() {
+    void reset() {
+        direction = null;
+        market = null;
         offer = null;
         takersSelectedFiatPaymentMethod = null;
         minBaseSideAmount = null;
@@ -99,16 +100,17 @@ class MuSigCreateOfferReviewModel implements Model {
         priceSpec = null;
         paymentMethods = null;
         headline = null;
+        headerFiatPaymentMethod = null;
         detailsHeadline = null;
+        isRangeAmount = false;
+        paymentMethodDescription = null;
+        paymentMethodsDisplayString = null;
         priceDescription = null;
         price = null;
         priceDetails = null;
-        paymentMethodDescription = null;
-        paymentMethod = null;
         fee = null;
         feeDetails = null;
-        takersFiatPaymentMethods.clear();
-        showCreateOfferSuccess.set(false);
         marketPrice = 0;
+        showCreateOfferSuccess.set(false);
     }
 }

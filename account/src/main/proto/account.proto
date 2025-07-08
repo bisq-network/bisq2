@@ -83,7 +83,6 @@ message AccountPayload {
     USPostalMoneyOrderAccountPayload usPostalMoneyOrderAccountPayload = 25;
     CashByMailAccountPayload cashByMailAccountPayload = 26;
     InteracETransferAccountPayload interacETransferAccountPayload = 27;
-    CashAppAccountPayload cashAppAccountPayload = 28;
   }
 }
 message UserDefinedFiatAccountPayload {
@@ -124,8 +123,8 @@ message SepaInstantAccountPayload {
 
 message WiseAccountPayload {
   repeated string selectedCurrencyCodes = 1;
-  string email = 2;
-  string holderName = 3;
+  string holderName = 2;
+  string email = 3;
 }
 
 message F2FAccountPayload {
@@ -182,8 +181,8 @@ message ZelleAccountPayload {
 }
 
 message PixAccountPayload {
-  string pixKey = 1;
-  string holderName = 2;
+  string holderName = 1;
+  string pixKey = 2;
 }
 
 message FasterPaymentsAccountPayload {
@@ -193,13 +192,13 @@ message FasterPaymentsAccountPayload {
 }
 
 message PayIDAccountPayload {
-  string bankAccountName = 1;
+  string holderName = 1;
   string payId = 2;
 }
 
 message USPostalMoneyOrderAccountPayload {
-  string postalAddress = 1;
-  string holderName = 2;
+  string holderName = 1;
+  string postalAddress = 2;
 }
 
 message CashByMailAccountPayload {
@@ -214,8 +213,8 @@ message StrikeAccountPayload {
 }
 
 message InteracETransferAccountPayload {
-  string email = 1;
-  string holderName = 2;
+  string holderName = 1;
+  string email = 2;
   string question = 3;
   string answer = 4;
 }
@@ -236,16 +235,13 @@ message BizumAccountPayload {
   string mobileNr = 1;
 }
 
-message CashAppAccountPayload {
-  string cashTag = 1;
-}
-
 // Account
 message Account {
   sint64 creationDate = 1;
   string accountName = 2;
   AccountPayload accountPayload = 3;
   PaymentMethod paymentMethod = 4;
+  string id = 5;
 
   oneof message {
     ZelleAccount zelleAccount = 19;

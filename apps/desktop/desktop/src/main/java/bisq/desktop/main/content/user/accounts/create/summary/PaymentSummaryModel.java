@@ -20,6 +20,7 @@ package bisq.desktop.main.content.user.accounts.create.summary;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.view.Model;
+import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import bisq.desktop.main.content.user.accounts.create.summary.details.AccountDetailsGridPane;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -35,10 +36,12 @@ public class PaymentSummaryModel implements Model {
     @Setter
     private AccountDetailsGridPane<?, ?> accountDetailsGridPane;
     @Setter
-    private String currency;
+    private String currencyString;
     @Setter
     private String country;
     @Setter
     private String defaultAccountName;
     private final BooleanProperty showAccountNameOverlay = new SimpleBooleanProperty();
+    private final TextMinMaxLengthValidator accountNameValidator = new TextMinMaxLengthValidator(2, 20);
+
 }

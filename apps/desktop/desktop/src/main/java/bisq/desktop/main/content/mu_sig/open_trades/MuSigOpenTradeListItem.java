@@ -51,7 +51,7 @@ class MuSigOpenTradeListItem implements DateTableItem {
 
     private final UserProfile myUserProfile, peersUserProfile;
     private final String offerId, tradeId, shortTradeId, myUserName, directionalTitle, peersUserName, dateString, timeString,
-            market, priceString, baseAmountString, quoteAmountString, myRole, bitcoinSettlementMethod,
+            market, priceString, baseAmountString, quoteAmountString, myRole,
             fiatPaymentMethod;
     private final long date, price, baseAmount, quoteAmount;
     private final ChatNotificationService chatNotificationService;
@@ -98,7 +98,6 @@ class MuSigOpenTradeListItem implements DateTableItem {
         quoteAmountString = MuSigTradeFormatter.formatQuoteSideAmountWithCode(trade);
         bitcoinPaymentRail = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
         fiatPaymentRail = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
-        bitcoinSettlementMethod = contract.getBaseSidePaymentMethodSpec().getShortDisplayString();
         fiatPaymentMethod = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
         isFiatPaymentMethodCustom = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().isCustomPaymentMethod();
 

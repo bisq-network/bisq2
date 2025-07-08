@@ -50,8 +50,6 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
 
     private final transient Observable<TxConfirmationStatus> depositTxConfirmationStatus = new Observable<>();
 
-    //todo temp
-    private final Observable<String> paymentAccountData = new Observable<>("TODO paymentAccountData");
     private final Observable<String> depositTxId = new Observable<>("TODO depositTxId");
     @Getter
     private Optional<Long> tradeCompletedDate = Optional.empty();
@@ -108,7 +106,6 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
     private bisq.trade.protobuf.MuSigTrade.Builder getMuSigTradeBuilder(boolean serializeForHash) {
         var builder = bisq.trade.protobuf.MuSigTrade.newBuilder();
         Optional.ofNullable(depositTxId.get()).ifPresent(builder::setDepositTxId);
-        Optional.ofNullable(paymentAccountData.get()).ifPresent(builder::setPaymentAccountData);
         tradeCompletedDate.ifPresent(builder::setTradeCompletedDate);
         return builder;
     }
@@ -143,10 +140,6 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
         if (muSigTradeProto.hasDepositTxId()) {
             trade.setDepositTxId(muSigTradeProto.getDepositTxId());
         }
-
-        if (muSigTradeProto.hasPaymentAccountData()) {
-            trade.setPaymentAccountData(muSigTradeProto.getPaymentAccountData());
-        }
         return trade;
     }
 
@@ -175,24 +168,13 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
         return depositTxConfirmationStatus;
     }
 
-    public void setPaymentAccountData(String value) {
-        paymentAccountData.set(value);
-    }
 
     public void setDepositTxId(String value) {
         depositTxId.set(value);
     }
 
-    public ReadOnlyObservable<String> paymentAccountData() {
-        return paymentAccountData;
-    }
-
     public ReadOnlyObservable<String> depositTxId() {
         return depositTxId;
-    }
-
-    public String getPaymentAccountData() {
-        return paymentAccountData.get();
     }
 
     public String getDepositTxId() {

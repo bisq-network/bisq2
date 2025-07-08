@@ -187,7 +187,7 @@ message MuSigTradeParty {
   optional musigrpc.PubKeySharesResponse myPubKeySharesResponse = 1;
   optional PubKeyShares peersPubKeyShares = 2;
   optional musigrpc.NonceSharesMessage myNonceSharesMessage = 3;
-  optional  NonceShares peersNonceShares = 4;
+  optional NonceShares peersNonceShares = 4;
   optional musigrpc.PartialSignaturesMessage myPartialSignaturesMessage = 5;
   optional PartialSignatures peersPartialSignatures = 6;
   optional musigrpc.DepositPsbt myDepositPsbt = 7;
@@ -196,13 +196,12 @@ message MuSigTradeParty {
   optional SwapTxSignature peersSwapTxSignature = 10;
   optional musigrpc.CloseTradeResponse myCloseTradeResponse = 11;
   optional common.ByteArray peersOutputPrvKeyShare = 12;
-  optional account.AccountPayload peersAccountPayload = 13;
+  optional account.AccountPayload accountPayload = 13;
 }
 
 message MuSigTrade {
   optional string depositTxId = 1;
-  optional string paymentAccountData = 2;
-  optional sint64 tradeCompletedDate = 3;
+  optional sint64 tradeCompletedDate = 2;
 }
 
 message MuSigTradeStore {

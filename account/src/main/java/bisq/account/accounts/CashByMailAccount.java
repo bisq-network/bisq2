@@ -11,8 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class CashByMailAccount extends Account<FiatPaymentMethod, CashByMailAccountPayload> {
-    public CashByMailAccount(long creationDate, String accountName, CashByMailAccountPayload accountPayload) {
-        super(creationDate, accountName, accountPayload);
+    public CashByMailAccount(String id, long creationDate, String accountName, CashByMailAccountPayload accountPayload) {
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -30,7 +30,8 @@ public final class CashByMailAccount extends Account<FiatPaymentMethod, CashByMa
     }
 
     public static CashByMailAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new CashByMailAccount(proto.getCreationDate(),
+        return new CashByMailAccount(proto.getId(),
+                proto.getCreationDate(),
                 proto.getAccountName(),
                 CashByMailAccountPayload.fromProto(proto.getAccountPayload())
         );

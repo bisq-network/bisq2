@@ -1,9 +1,11 @@
 package bisq.account.accounts;
 
+import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -92,5 +94,20 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
     @Override
     public FiatPaymentMethod getPaymentMethod() {
         return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.CASH_DEPOSIT);
+    }
+    @Override
+    public String getAccountDataDisplayString() {
+        AccountDataDisplayStringBuilder builder = new AccountDataDisplayStringBuilder();
+        holderName.ifPresent(value -> builder.add(Res.get("user.paymentAccounts.holderName"), value));
+        holderId.ifPresent(value -> builder.add(BankAccountUtils.getHolderIdDescription(countryCode), value));
+        bankName.ifPresent(value -> builder.add(Res.get("user.paymentAccounts.bank.bankName"), value));
+        bankId.ifPresent(value -> builder.add(BankAccountUtils.getBankIdDescription(countryCode), value));
+        branchId.ifPresent(value -> builder.add(BankAccountUtils.getBranchIdDescription(countryCode), value));
+        builder.add(BankAccountUtils.getAccountNrDescription(countryCode), accountNr);
+        bankAccountType.ifPresent(value -> builder.add(Res.get("user.paymentAccounts.bank.bankAccountType"),
+                Res.get("user.paymentAccounts.bank.bankAccountType." + value.name())));
+        nationalAccountId.ifPresent(value -> builder.add(BankAccountUtils.getNationalAccountIdDescription(countryCode), value));
+        requirements.ifPresent(value -> builder.add(Res.get("user.paymentAccounts.cashDeposit.requirements"), value));
+        return builder.toString();
     }
 }

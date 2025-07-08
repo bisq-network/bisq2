@@ -17,6 +17,7 @@
 
 package bisq.account.accounts;
 
+import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.FiatPaymentRailUtil;
@@ -24,6 +25,7 @@ import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.common.validation.SepaPaymentAccountValidation;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -31,11 +33,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class SepaAccountPayload extends CountryBasedAccountPayload {
+public final class SepaAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
     public static final int HOLDER_NAME_MIN_LENGTH = 2;
     public static final int HOLDER_NAME_MAX_LENGTH = 70;
 
@@ -107,7 +111,24 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
     }
 
     @Override
+    public String getCurrencyCode() {
+        List<String> supportedCurrencyCodes = getPaymentMethod().getSupportedCurrencyCodes();
+        checkArgument(supportedCurrencyCodes.size() == 1);
+        return supportedCurrencyCodes.get(0);
+    }
+
+    @Override
     public String getDefaultAccountName() {
         return getPaymentMethodName() + "-" + StringUtils.truncate(iban, 8);
     }
+
+    @Override
+    public String getAccountDataDisplayString() {
+        return new AccountDataDisplayStringBuilder(
+                Res.get("user.paymentAccounts.holderName"), holderName,
+                Res.get("user.paymentAccounts.sepa.iban"), iban,
+                Res.get("user.paymentAccounts.sepa.bic"), bic
+        ).toString();
+    }
+
 }

@@ -48,7 +48,7 @@ public class SepaPaymentFormView extends PaymentFormView<SepaPaymentFormModel, S
     private final MaterialTextField holderName, iban, bic;
     private final Label countryErrorLabel, acceptedCountriesErrorLabel;
     private final FlowPane acceptEuroCountriesFlowPane, acceptNonEuroCountriesFlowPane;
-    private Subscription selectedCountryPin, requireValidationPin;
+    private Subscription selectedCountryPin, runValidationPin;
 
     public SepaPaymentFormView(SepaPaymentFormModel model, SepaPaymentFormController controller) {
         super(model, controller);
@@ -164,8 +164,8 @@ public class SepaPaymentFormView extends PaymentFormView<SepaPaymentFormModel, S
             }
         });
 
-        requireValidationPin = EasyBind.subscribe(model.getRequireValidation(), requireValidation -> {
-            if (requireValidation) {
+        runValidationPin = EasyBind.subscribe(model.getRunValidation(), runValidation -> {
+            if (runValidation) {
                 holderName.validate();
                 iban.validate();
                 bic.validate();
@@ -197,7 +197,7 @@ public class SepaPaymentFormView extends PaymentFormView<SepaPaymentFormModel, S
         bic.textProperty().unbindBidirectional(model.getBic());
 
         selectedCountryPin.unsubscribe();
-        requireValidationPin.unsubscribe();
+        runValidationPin.unsubscribe();
 
         acceptEuroCountriesFlowPane.getChildren().stream()
                 .map(e -> (CheckBox) e)

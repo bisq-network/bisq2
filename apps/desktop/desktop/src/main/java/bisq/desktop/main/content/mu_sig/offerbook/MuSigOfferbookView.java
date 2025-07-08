@@ -34,7 +34,6 @@ import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.RichTableView;
-import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
@@ -107,7 +106,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
             favouritesRemoveFilterDefaultIcon, favouritesRemoveFilterActiveIcon;
     private Subscription selectedMarketItemPin, marketListViewSelectionPin, favouritesListViewNeedsHeightUpdatePin,
             favouritesListViewSelectionPin, selectedMarketFilterPin, selectedMarketSortTypePin, shouldShowAppliedFiltersPin,
-            selectedOffersFilterPin, activeMarketPaymentsCountPin, isCustomPaymentsSelectedPin;
+            selectedOffersFilterPin, activeMarketPaymentsCountPin;
     private Label paymentsFilterLabel;
 
     public MuSigOfferbookView(MuSigOfferbookModel model, MuSigOfferbookController controller) {
@@ -216,9 +215,6 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
             }
         });
 
-        isCustomPaymentsSelectedPin = EasyBind.subscribe(model.getIsCustomPaymentsSelected(),
-                isSelected -> updatePaymentsSelection());
-
         sortByMostOffers.setOnAction(e -> controller.onSortMarkets(MarketSortType.NUM_OFFERS));
         sortByNameAZ.setOnAction(e -> controller.onSortMarkets(MarketSortType.ASC));
         sortByNameZA.setOnAction(e -> controller.onSortMarkets(MarketSortType.DESC));
@@ -276,7 +272,6 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         shouldShowAppliedFiltersPin.unsubscribe();
         selectedOffersFilterPin.unsubscribe();
         activeMarketPaymentsCountPin.unsubscribe();
-        isCustomPaymentsSelectedPin.unsubscribe();
 
         sortByMostOffers.setOnAction(null);
         sortByNameAZ.setOnAction(null);
@@ -308,7 +303,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
     private void configMuSigOfferListView() {
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
-                .title(Res.get("muSig.offerbook.table.header.peerProfile"))
+                .title(Res.get("muSig.offerbook.table.header.peer"))
                 .left()
                 .comparator(Comparator.comparingLong(MuSigOfferListItem::getTotalScore).reversed())
                 .setCellFactory(getUserProfileCellFactory())
@@ -328,12 +323,14 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .titleProperty(model.getBaseCodeTitle())
+                .minWidth(120)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getBaseAmountAsString))
                 .valueSupplier(MuSigOfferListItem::getBaseAmountAsString)
                 .build());
 
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .titleProperty(model.getQuoteCodeTitle())
+                .minWidth(160)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getQuoteAmountAsString))
                 .valueSupplier(MuSigOfferListItem::getQuoteAmountAsString)
                 .build());
@@ -342,14 +339,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 .left()
                 .title(Res.get("muSig.offerbook.table.header.paymentMethod"))
                 .setCellFactory(getPaymentCellFactory())
-                .minWidth(105)
-                .comparator(Comparator.comparing(MuSigOfferListItem::getFiatPaymentMethodsAsString))
-                .build());
-
-        muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
-                .title(Res.get("muSig.offerbook.table.header.deposit"))
-                .comparator(Comparator.comparing(MuSigOfferListItem::getDeposit))
-                .valueSupplier(MuSigOfferListItem::getDeposit)
+                .minWidth(140)
+                .comparator(Comparator.comparing(MuSigOfferListItem::getPaymentMethodsAsString))
                 .build());
 
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
@@ -629,13 +620,18 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                         removeOfferMenuItem.setOnAction(e -> controller.onRemoveOffer(item.getOffer()));
                     } else {
                         takeOfferButton.setText(item.getTakeOfferButtonText());
-                        takeOfferButton.setOpacity(1);
+                        boolean canTakeOffer = item.isCanTakeOffer();
+                        takeOfferButton.setOpacity(canTakeOffer ? 1 : 0.2);
                         if (item.getOffer().getDirection().mirror().isBuy()) {
                             takeOfferButton.getStyleClass().add("buy-button");
                         } else {
                             takeOfferButton.getStyleClass().add("sell-button");
                         }
-                        takeOfferButton.setOnAction(e -> controller.onTakeOffer(item.getOffer()));
+                        if (canTakeOffer) {
+                            takeOfferButton.setOnAction(e -> controller.onTakeOffer(item.getOffer()));
+                        } else {
+                            takeOfferButton.setOnAction(e -> controller.onHandleCannotTakeOfferCase(item.getCannotTakeOfferReason().get()));
+                        }
                         setGraphic(takeOfferButton);
                     }
                 } else {
@@ -732,13 +728,18 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
                 if (item != null && !empty) {
                     hbox.getChildren().clear();
-                    for (FiatPaymentMethod fiatPaymentMethod : item.getFiatPaymentMethods()) {
-                        Node icon = !fiatPaymentMethod.isCustomPaymentMethod()
-                                ? ImageUtil.getImageViewById(fiatPaymentMethod.getName())
-                                : BisqEasyViewUtils.getCustomPaymentMethodIcon(fiatPaymentMethod.getDisplayString());
+                    for (FiatPaymentMethod paymentMethod : item.getPaymentMethods()) {
+                        Node icon = ImageUtil.getImageViewById(paymentMethod.getName());
+                        Optional<Double> opacity = Optional.ofNullable(item.getAccountAvailableByPaymentMethod().get(paymentMethod))
+                                .map(isAccountAvailable -> isAccountAvailable ? 1 : 0.2);
+                        if (opacity.isPresent()) {
+                            icon.setOpacity(opacity.get());
+                        } else {
+                            log.error("Unexpected state: accountAvailableByPaymentMethod={}", item.getAccountAvailableByPaymentMethod());
+                        }
                         hbox.getChildren().add(icon);
                     }
-                    tooltip.setText(item.getFiatPaymentMethodsAsString());
+                    tooltip.setText(item.getPaymentMethodsAsString());
                     Tooltip.install(hbox, tooltip);
                     setGraphic(hbox);
                 } else {
@@ -799,13 +800,13 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     }
 
     private void setupOffersVBox() {
-        allOffersToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerlistSubheader.offersToggleGroup.allOffers"));
+        allOffersToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerListSubheader.offersToggleGroup.allOffers"));
         allOffersToggleButton.getStyleClass().add("offerlist-toggle-button-all-offers");
-        buyToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerlistSubheader.offersToggleGroup.buy"));
+        buyToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerListSubheader.offersToggleGroup.buy"));
         buyToggleButton.getStyleClass().add("offerlist-toggle-button-buy");
-        sellToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerlistSubheader.offersToggleGroup.sell"));
+        sellToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerListSubheader.offersToggleGroup.sell"));
         sellToggleButton.getStyleClass().add("offerlist-toggle-button-sell");
-        myOffersToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerlistSubheader.offersToggleGroup.myOffers"));
+        myOffersToggleButton = new ToggleButton(Res.get("muSig.offerbook.offerListSubheader.offersToggleGroup.myOffers"));
         myOffersToggleButton.getStyleClass().add("offerlist-toggle-button-my-offers");
 
         offerFiltersToggleGroup = new ToggleGroup();
@@ -957,18 +958,9 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
             paymentsFilterMenu.addMenuItems(paymentItem);
         });
 
-        StackPane customPaymentIcon = BisqEasyViewUtils.getCustomPaymentMethodIcon("C");
-        Label customPaymentLabel = new Label(
-                Res.get("muSig.offerbook.offerlistSubheader.paymentMethods.customPayments"), customPaymentIcon);
-        customPaymentLabel.setGraphicTextGap(10);
-        PaymentMenuItem customItem = new PaymentMenuItem(null, customPaymentLabel);
-        customItem.setHideOnClick(false);
-        customItem.setOnAction(e -> controller.onToggleCustomPaymentFilter(customItem.isSelected()));
-        paymentsFilterMenu.addMenuItems(customItem);
-
         SeparatorMenuItem separator = new SeparatorMenuItem();
         DropdownBisqMenuItem clearFilters = new DropdownBisqMenuItem("delete-t-grey", "delete-t-white",
-                Res.get("muSig.offerbook.offerlistSubheader.paymentMethods.clearFilters"));
+                Res.get("muSig.offerbook.offerListSubheader.paymentMethods.clearFilters"));
         clearFilters.setHideOnClick(false);
         clearFilters.setOnAction(e -> controller.onClearPaymentFilters());
         paymentsFilterMenu.addMenuItems(separator, clearFilters);
@@ -982,7 +974,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                         paymentMenuItem.getPaymentMethod()
                                 .ifPresentOrElse(
                                         payment -> paymentMenuItem.updateSelection(model.getSelectedPaymentMethods().contains(payment)),
-                                        () -> paymentMenuItem.updateSelection(model.getIsCustomPaymentsSelected().get()))
+                                        () -> paymentMenuItem.updateSelection(false))
                 );
     }
 

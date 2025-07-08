@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.offerbook;
 
+import bisq.account.AccountService;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethodUtil;
 import bisq.account.payment_method.FiatPaymentRail;
@@ -79,6 +80,7 @@ public class MuSigOfferbookController implements Controller {
     private final FavouriteMarketsService favouriteMarketsService;
     private final UserIdentityService userIdentityService;
     private final ReputationService reputationService;
+    private final AccountService accountService;
     private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin;
     private Subscription selectedMarketItemPin, marketsSearchBoxTextPin, selectedMarketFilterPin, selectedMarketSortTypePin,
             selectedOffersFilterPin, activeMarketPaymentsCountPin, selectedMarketPricePin;
@@ -93,6 +95,7 @@ public class MuSigOfferbookController implements Controller {
         favouriteMarketsService = serviceProvider.getFavouriteMarketsService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         reputationService = serviceProvider.getUserService().getReputationService();
+        accountService = serviceProvider.getAccountService();
 
         model = new MuSigOfferbookModel();
         view = new MuSigOfferbookView(model, this);
@@ -117,7 +120,12 @@ public class MuSigOfferbookController implements Controller {
                 UIThread.run(() -> {
                     String offerId = muSigOffer.getId();
                     if (!model.getMuSigOfferIds().contains(offerId)) {
-                        model.getMuSigOfferListItems().add(new MuSigOfferListItem(muSigOffer, marketPriceService, userProfileService, identityService, reputationService));
+                        model.getMuSigOfferListItems().add(new MuSigOfferListItem(muSigOffer,
+                                marketPriceService,
+                                userProfileService,
+                                identityService,
+                                reputationService,
+                                accountService));
                         model.getMuSigOfferIds().add(offerId);
                         updateFilteredMuSigOfferListItems();
                     }
@@ -193,22 +201,22 @@ public class MuSigOfferbookController implements Controller {
         });
 
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
-            UIThread.run(() -> {
-                model.setMarketPricePredicate(item -> marketPriceService.getMarketPriceByCurrencyMap().isEmpty() ||
-                        marketPriceService.getMarketPriceByCurrencyMap().containsKey(item.getMarket()));
-                updateFilteredMarketItems();
+                UIThread.run(() -> {
+                    model.setMarketPricePredicate(item -> marketPriceService.getMarketPriceByCurrencyMap().isEmpty() ||
+                            marketPriceService.getMarketPriceByCurrencyMap().containsKey(item.getMarket()));
+                    updateFilteredMarketItems();
 
-                if (selectedMarketPricePin != null) {
-                    selectedMarketPricePin.unsubscribe();
-                }
-                if (model.getSelectedMarketItem() != null) {
-                    selectedMarketPricePin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarketItem -> {
-                        if (selectedMarketItem != null) {
-                            UIThread.run(() -> updateMarketPrice(selectedMarketItem));
-                        }
-                    });
-                }
-            })
+                    if (selectedMarketPricePin != null) {
+                        selectedMarketPricePin.unsubscribe();
+                    }
+                    if (model.getSelectedMarketItem() != null) {
+                        selectedMarketPricePin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarketItem -> {
+                            if (selectedMarketItem != null) {
+                                UIThread.run(() -> updateMarketPrice(selectedMarketItem));
+                            }
+                        });
+                    }
+                })
         );
 
         selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarketItem -> {
@@ -265,22 +273,22 @@ public class MuSigOfferbookController implements Controller {
                 .orElse(MuSigFilters.MuSigOffersFilter.ALL);
         model.getSelectedMuSigOffersFilter().set(persistedOffersFilter);
         selectedOffersFilterPin = EasyBind.subscribe(model.getSelectedMuSigOffersFilter(), filter -> {
-           if (filter != null) {
-               if (filter == MuSigFilters.MuSigOffersFilter.ALL) {
-                   model.setMuSigOffersFilterPredicate(item -> true);
-               } else if (filter == MuSigFilters.MuSigOffersFilter.BUY) {
-                   model.setMuSigOffersFilterPredicate(item -> item.getDirection() == Direction.BUY);
-               } else if (filter == MuSigFilters.MuSigOffersFilter.SELL) {
-                   model.setMuSigOffersFilterPredicate(item -> item.getDirection() == Direction.SELL);
-               } else if (filter == MuSigFilters.MuSigOffersFilter.MINE) {
-                   UserProfile selectedProfile = Optional.ofNullable(userIdentityService.getSelectedUserIdentity())
-                           .map(UserIdentity::getUserProfile)
-                           .orElse(null);
-                   model.setMuSigOffersFilterPredicate(item -> item.getMakerUserProfile().equals(selectedProfile));
-               }
-               settingsService.setCookie(CookieKey.MU_SIG_OFFERS_FILTER, filter.name());
-               updateFilteredMuSigOfferListItems();
-           }
+            if (filter != null) {
+                if (filter == MuSigFilters.MuSigOffersFilter.ALL) {
+                    model.setMuSigOffersFilterPredicate(item -> true);
+                } else if (filter == MuSigFilters.MuSigOffersFilter.BUY) {
+                    model.setMuSigOffersFilterPredicate(item -> item.getDirection() == Direction.BUY);
+                } else if (filter == MuSigFilters.MuSigOffersFilter.SELL) {
+                    model.setMuSigOffersFilterPredicate(item -> item.getDirection() == Direction.SELL);
+                } else if (filter == MuSigFilters.MuSigOffersFilter.MINE) {
+                    UserProfile selectedProfile = Optional.ofNullable(userIdentityService.getSelectedUserIdentity())
+                            .map(UserIdentity::getUserProfile)
+                            .orElse(null);
+                    model.setMuSigOffersFilterPredicate(item -> item.getMakerUserProfile().equals(selectedProfile));
+                }
+                settingsService.setCookie(CookieKey.MU_SIG_OFFERS_FILTER, filter.name());
+                updateFilteredMuSigOfferListItems();
+            }
         });
 
         activeMarketPaymentsCountPin = EasyBind.subscribe(model.getActiveMarketPaymentsCount(), count -> {
@@ -332,8 +340,17 @@ public class MuSigOfferbookController implements Controller {
         Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER, new MuSigCreateOfferController.InitData(marketItem.getMarket()));
     }
 
+
     void onTakeOffer(MuSigOffer offer) {
         Navigation.navigateTo(NavigationTarget.MU_SIG_TAKE_OFFER, new MuSigTakeOfferController.InitData(offer));
+    }
+
+    void onHandleCannotTakeOfferCase(String cannotTakeOfferReason) {
+        new Popup().warning(cannotTakeOfferReason)
+                .actionButtonText(Res.get("confirmation.yes"))
+                .onAction(() -> Navigation.navigateTo(NavigationTarget.PAYMENT_ACCOUNTS))
+                .closeButtonText(Res.get("confirmation.no"))
+                .show();
     }
 
     void onRemoveOffer(MuSigOffer muSigOffer) {
@@ -361,27 +378,14 @@ public class MuSigOfferbookController implements Controller {
                         .map(payment -> payment.getPaymentRail().name()).collect(Collectors.toList())));
     }
 
-    void onToggleCustomPaymentFilter(boolean isSelected) {
-        boolean newValue = !isSelected;
-        model.getIsCustomPaymentsSelected().set(newValue);
-        updateActiveMarketPaymentsCount();
-        settingsService.setCookie(CookieKey.MU_SIG_OFFER_CUSTOM_PAYMENT_FILTER, getCookieSubKey(), newValue);
-    }
-
     void onClearPaymentFilters() {
         model.getSelectedPaymentMethods().clear();
-        model.getIsCustomPaymentsSelected().set(false);
         updateActiveMarketPaymentsCount();
         settingsService.removeCookie(CookieKey.MU_SIG_OFFER_PAYMENT_FILTERS, getCookieSubKey());
-        settingsService.removeCookie(CookieKey.MU_SIG_OFFER_CUSTOM_PAYMENT_FILTER, getCookieSubKey());
     }
 
     private void updateActiveMarketPaymentsCount() {
-        int count = model.getSelectedPaymentMethods().size();
-        if (model.getIsCustomPaymentsSelected().get()) {
-            ++count;
-        }
-        model.getActiveMarketPaymentsCount().set(count);
+        model.getActiveMarketPaymentsCount().set(model.getSelectedPaymentMethods().size());
     }
 
     private String getCookieSubKey() {
@@ -429,8 +433,8 @@ public class MuSigOfferbookController implements Controller {
                         .ifPresentOrElse(
                                 marketPrice -> model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true)),
                                 () -> model.getMarketPrice().set(""));
-                model.getBaseCodeTitle().set(selectedMarket.getBaseCurrencyCode());
-                model.getQuoteCodeTitle().set(selectedMarket.getQuoteCurrencyCode());
+                model.getBaseCodeTitle().set(Res.get("muSig.offerbook.table.header.amount", selectedMarket.getBaseCurrencyCode()).toUpperCase());
+                model.getQuoteCodeTitle().set(Res.get("muSig.offerbook.table.header.amount", selectedMarket.getQuoteCurrencyCode()).toUpperCase());
                 model.getPriceTitle().set(Res.get("muSig.offerbook.table.header.price", selectedMarket.getMarketCodes()).toUpperCase());
                 model.getMarketIconId().set(selectedMarket.getBaseCurrencyCode());
             }
@@ -493,10 +497,6 @@ public class MuSigOfferbookController implements Controller {
                     }
                 });
 
-        model.getIsCustomPaymentsSelected().set(false);
-        settingsService.getCookie().asBoolean(CookieKey.MU_SIG_OFFER_CUSTOM_PAYMENT_FILTER, getCookieSubKey())
-                .ifPresent(cookie -> model.getIsCustomPaymentsSelected().set(cookie));
-
         updateActiveMarketPaymentsCount();
     }
 
@@ -504,9 +504,8 @@ public class MuSigOfferbookController implements Controller {
         boolean paymentFiltersApplied = model.getActiveMarketPaymentsCount().get() != 0;
         if (paymentFiltersApplied) {
             model.setPaymentMethodFilterPredicate(item ->
-                    item.getFiatPaymentMethods().stream()
-                            .anyMatch(payment -> model.getSelectedPaymentMethods().contains(payment)
-                                    || (payment.isCustomPaymentMethod() && model.getIsCustomPaymentsSelected().get())));
+                    item.getPaymentMethods().stream()
+                            .anyMatch(payment -> model.getSelectedPaymentMethods().contains(payment)));
         } else {
             model.setPaymentMethodFilterPredicate(item -> true);
         }
@@ -514,7 +513,7 @@ public class MuSigOfferbookController implements Controller {
     }
 
     private void updatePaymentFilterTitle(int count) {
-        String hint = count == 0 ? Res.get("muSig.offerbook.offerlistSubheader.paymentMethods.all") : String.valueOf(count);
-        model.getPaymentFilterTitle().set(Res.get("muSig.offerbook.offerlistSubheader.paymentMethods", hint));
+        String hint = count == 0 ? Res.get("muSig.offerbook.offerListSubheader.paymentMethods.all") : String.valueOf(count);
+        model.getPaymentFilterTitle().set(Res.get("muSig.offerbook.offerListSubheader.paymentMethods", hint));
     }
 }

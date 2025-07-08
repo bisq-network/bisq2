@@ -35,13 +35,16 @@ import java.util.List;
 @ToString
 @EqualsAndHashCode
 public abstract class Account<M extends PaymentMethod<?>, P extends AccountPayload<M>> implements PersistableProto {
+    protected final String id;
     protected final long creationDate;
     protected final String accountName;
     protected final P accountPayload;
 
-    public Account(long creationDate,
+    public Account(String id,
+                   long creationDate,
                    String accountName,
                    P accountPayload) {
+        this.id = id;
         this.creationDate = creationDate;
         this.accountName = accountName;
         this.accountPayload = accountPayload;
@@ -59,9 +62,9 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
 
     protected bisq.account.protobuf.Account.Builder getAccountBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.Account.newBuilder()
+                .setId(id)
                 .setCreationDate(creationDate)
                 .setAccountName(accountName)
-                //.setPaymentMethod(paymentMethod.toProto(serializeForHash))
                 .setAccountPayload(accountPayload.toProto(serializeForHash));
     }
 
@@ -75,7 +78,6 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
             case PAYIDACCOUNT -> PayIDAccount.fromProto(proto);
             case CASHBYMAILACCOUNT -> CashByMailAccount.fromProto(proto);
             case INTERACETRANSFERACCOUNT -> InteracETransferAccount.fromProto(proto);
-            case CASHAPPACCOUNT -> CashAppAccount.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);
         };

@@ -11,8 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class USPostalMoneyOrderAccount extends Account<FiatPaymentMethod,USPostalMoneyOrderAccountPayload> {
-    public USPostalMoneyOrderAccount(long creationDate, String accountName, USPostalMoneyOrderAccountPayload accountPayload) {
-        super(creationDate, accountName, accountPayload);
+    public USPostalMoneyOrderAccount(String id, long creationDate, String accountName, USPostalMoneyOrderAccountPayload accountPayload) {
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -30,7 +30,8 @@ public final class USPostalMoneyOrderAccount extends Account<FiatPaymentMethod,U
     }
 
     public static USPostalMoneyOrderAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new USPostalMoneyOrderAccount(proto.getCreationDate(),
+        return new USPostalMoneyOrderAccount(proto.getId(),
+                proto.getCreationDate(),
                 proto.getAccountName(),
                 USPostalMoneyOrderAccountPayload.fromProto(proto.getAccountPayload()));
     }

@@ -25,12 +25,12 @@ import bisq.common.currency.FiatCurrency;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -51,7 +51,7 @@ public class NationalBankPaymentFormController extends PaymentFormController<Nat
         List<FiatCurrency> nationBankAccountCurrencies = nationBankAccountCountryCodes.stream()
                 .map(FiatCurrencyRepository::getCurrencyByCountryCode)
                 .collect(Collectors.toList());
-        return new NationalBankPaymentFormModel(UUID.randomUUID().toString(),
+        return new NationalBankPaymentFormModel(StringUtils.createUid(),
                 nationBankAccountCountries,
                 nationBankAccountCurrencies,
                 List.of(BankAccountType.CHECKINGS, BankAccountType.SAVINGS));
@@ -59,7 +59,7 @@ public class NationalBankPaymentFormController extends PaymentFormController<Nat
 
     @Override
     public void onActivate() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
         model.getCountryErrorVisible().set(false);
         model.getCurrencyErrorVisible().set(false);
         model.getBankAccountTypeErrorVisible().set(false);
@@ -78,18 +78,18 @@ public class NationalBankPaymentFormController extends PaymentFormController<Nat
         boolean isCountrySet = selectedCountry != null;
         model.getCountryErrorVisible().set(!isCountrySet);
         if (!isCountrySet) {
-            model.getRequireValidation().set(true);
+            model.getRunValidation().set(true);
             return false;
         }
         boolean isAccountNrValid = model.getAccountNrValidator().validateAndGet();
         if (!isAccountNrValid) {
-            model.getRequireValidation().set(true);
+            model.getRunValidation().set(true);
             return false;
         }
 
         String countryCode = selectedCountry.getCode();
         if (!model.getUseValidation().get()) {
-            model.getRequireValidation().set(true);
+            model.getRunValidation().set(true);
             return true;
         }
 
@@ -117,12 +117,12 @@ public class NationalBankPaymentFormController extends PaymentFormController<Nat
                 isBranchIdValid &&
                 isBankAccountTypeSet &&
                 isNationalAccountIdValid;
-        model.getRequireValidation().set(true);
+        model.getRunValidation().set(true);
         return isValid;
     }
 
     @Override
-    public NationalBankAccountPayload getAccountPayload() {
+    public NationalBankAccountPayload createAccountPayload() {
         return new NationalBankAccountPayload(model.getId(),
                 model.getSelectedCountry().get().getCode(),
                 model.getSelectedCurrency().get().getCode(),
@@ -137,7 +137,7 @@ public class NationalBankPaymentFormController extends PaymentFormController<Nat
     }
 
     void onValidationDone() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
     }
 
     void onSelectCountry(Country selectedCountry) {
@@ -165,7 +165,7 @@ public class NationalBankPaymentFormController extends PaymentFormController<Nat
     void onSelectCurrency(FiatCurrency selectedCurrency) {
         model.getSelectedCurrency().set(selectedCurrency);
         model.getCurrencyErrorVisible().set(false);
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
         checkCurrencyCountryMatch();
     }
 
@@ -182,9 +182,11 @@ public class NationalBankPaymentFormController extends PaymentFormController<Nat
     }
 
     private void checkCurrencyCountryMatch() {
-        if (model.getSelectedCountry().get() != null &&
-                model.getSelectedCurrency().get() != null &&
-                !FiatCurrencyRepository.getCurrencyByCountryCode(model.getSelectedCountry().get().getCode()).equals(model.getSelectedCurrency().get())) {
+        Country country = model.getSelectedCountry().get();
+        FiatCurrency currency = model.getSelectedCurrency().get();
+        if (country != null &&
+                currency != null &&
+                !FiatCurrencyRepository.getCurrencyByCountryCode(country.getCode()).equals(currency)) {
             model.getCurrencyCountryMismatch().set(true);
         } else {
             model.getCurrencyCountryMismatch().set(false);
@@ -211,7 +213,6 @@ public class NationalBankPaymentFormController extends PaymentFormController<Nat
 
             model.getNationalAccountIdDescription().set(BankAccountUtils.getNationalAccountIdDescription(countryCode));
             model.getNationalAccountIdPrompt().set(BankAccountUtils.getPrompt(countryCode, BankAccountUtils.getNationalAccountIdDescription(countryCode)));
-
 
             model.getIsBankAccountTypesVisible().set(BankAccountUtils.isBankAccountTypeRequired(countryCode));
             model.getIsHolderIdVisible().set(BankAccountUtils.isHolderIdRequired(countryCode));

@@ -17,6 +17,7 @@
 
 package bisq.account.accounts;
 
+import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.FiatPaymentRailUtil;
@@ -24,6 +25,7 @@ import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.common.validation.SepaPaymentAccountValidation;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -36,7 +38,7 @@ import java.util.List;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class SepaInstantAccountPayload extends CountryBasedAccountPayload {
+public final class SepaInstantAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
     private final String holderName;
     private final String iban;
     private final String bic;
@@ -107,5 +109,14 @@ public final class SepaInstantAccountPayload extends CountryBasedAccountPayload 
     @Override
     public FiatPaymentMethod getPaymentMethod() {
         return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA_INSTANT);
+    }
+
+    @Override
+    public String getAccountDataDisplayString() {
+        return new AccountDataDisplayStringBuilder(
+                Res.get("user.paymentAccounts.holderName"), holderName,
+                Res.get("user.paymentAccounts.sepa.iban"), iban,
+                Res.get("user.paymentAccounts.sepa.bic"), bic
+        ).toString();
     }
 }

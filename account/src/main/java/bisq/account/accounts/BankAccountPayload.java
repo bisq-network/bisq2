@@ -1,9 +1,11 @@
 package bisq.account.accounts;
 
+import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.protobuf.AccountPayload;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -121,5 +123,20 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
             case DOMESTICWIRETRANSFERACCOUNTPAYLOAD -> DomesticWireTransferAccountPayload.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
+    }
+
+    @Override
+    public String getAccountDataDisplayString() {
+        AccountDataDisplayStringBuilder builder = new AccountDataDisplayStringBuilder();
+        holderName.ifPresent(value -> builder.add(Res.get("user.paymentAccounts.holderName"), value));
+        holderId.ifPresent(value -> builder.add(BankAccountUtils.getHolderIdDescription(countryCode), value));
+        bankName.ifPresent(value -> builder.add(Res.get("user.paymentAccounts.bank.bankName"), value));
+        bankId.ifPresent(value -> builder.add(BankAccountUtils.getBankIdDescription(countryCode), value));
+        branchId.ifPresent(value -> builder.add(BankAccountUtils.getBranchIdDescription(countryCode), value));
+        builder.add(BankAccountUtils.getAccountNrDescription(countryCode), accountNr);
+        bankAccountType.ifPresent(value -> builder.add(Res.get("user.paymentAccounts.bank.bankAccountType"),
+                Res.get("user.paymentAccounts.bank.bankAccountType." + value.name())));
+        nationalAccountId.ifPresent(value -> builder.add(BankAccountUtils.getNationalAccountIdDescription(countryCode), value));
+        return builder.toString();
     }
 }

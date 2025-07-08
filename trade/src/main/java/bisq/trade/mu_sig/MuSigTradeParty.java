@@ -53,7 +53,7 @@ public final class MuSigTradeParty extends TradeParty {
     private Optional<SwapTxSignature> peersSwapTxSignature = Optional.empty();
     private Optional<CloseTradeResponse> myCloseTradeResponse = Optional.empty();
     private Optional<ByteArray> peersOutputPrvKeyShare = Optional.empty();
-    private Optional<AccountPayload> peersAccountPayload = Optional.empty();
+    private Optional<AccountPayload<?>> accountPayload = Optional.empty();
 
     public MuSigTradeParty(NetworkId networkId) {
         super(networkId);
@@ -72,7 +72,7 @@ public final class MuSigTradeParty extends TradeParty {
                            Optional<SwapTxSignature> peersSwapTxSignature,
                            Optional<CloseTradeResponse> myCloseTradeResponse,
                            Optional<ByteArray> peersOutputPrvKeyShare,
-                           Optional<AccountPayload> peersAccountPayload) {
+                           Optional<AccountPayload<?>> accountPayload) {
         super(networkId);
 
         this.myPubKeySharesResponse = myPubKeySharesResponse;
@@ -87,7 +87,7 @@ public final class MuSigTradeParty extends TradeParty {
         this.peersSwapTxSignature = peersSwapTxSignature;
         this.myCloseTradeResponse = myCloseTradeResponse;
         this.peersOutputPrvKeyShare = peersOutputPrvKeyShare;
-        this.peersAccountPayload = peersAccountPayload;
+        this.accountPayload = accountPayload;
     }
 
     @Override
@@ -105,7 +105,7 @@ public final class MuSigTradeParty extends TradeParty {
         peersSwapTxSignature.ifPresent(e -> builder.setPeersSwapTxSignature(e.toProto(serializeForHash)));
         myCloseTradeResponse.ifPresent(e -> builder.setMyCloseTradeResponse(e.toProto(serializeForHash)));
         peersOutputPrvKeyShare.ifPresent(e -> builder.setPeersOutputPrvKeyShare(e.toProto(serializeForHash)));
-        peersAccountPayload.ifPresent(e -> builder.setPeersAccountPayload(e.toProto(serializeForHash)));
+        accountPayload.ifPresent(e -> builder.setAccountPayload(e.toProto(serializeForHash)));
         return getTradePartyBuilder(serializeForHash).setMuSigTradeParty(builder);
     }
 
@@ -149,8 +149,8 @@ muSigTradePartyProto.hasMyNonceSharesMessage()
                 muSigTradePartyProto.hasPeersOutputPrvKeyShare()
                         ? Optional.of(ByteArray.fromProto(muSigTradePartyProto.getPeersOutputPrvKeyShare()))
                         : Optional.empty(),
-                muSigTradePartyProto.hasPeersAccountPayload()
-                        ? Optional.of(AccountPayload.fromProto(muSigTradePartyProto.getPeersAccountPayload()))
+                muSigTradePartyProto.hasAccountPayload()
+                        ? Optional.of(AccountPayload.fromProto(muSigTradePartyProto.getAccountPayload()))
                         : Optional.empty()
         );
     }
@@ -203,7 +203,7 @@ muSigTradePartyProto.hasMyNonceSharesMessage()
         this.peersOutputPrvKeyShare = Optional.of(peersOutputPrvKeyShare);
     }
 
-    public void setPeersAccountPayload(AccountPayload peersAccountPayload) {
-        this.peersAccountPayload = Optional.of(peersAccountPayload);
+    public void setAccountPayload(AccountPayload<?> accountPayload) {
+        this.accountPayload = Optional.of(accountPayload);
     }
 }

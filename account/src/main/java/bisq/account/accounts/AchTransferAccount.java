@@ -4,8 +4,8 @@ import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
 public final class AchTransferAccount extends BankAccount<AchTransferAccountPayload> {
-    public AchTransferAccount(long creationDate, String accountName, AchTransferAccountPayload accountPayload) {
-        super(creationDate, accountName, accountPayload);
+    public AchTransferAccount(String id, long creationDate, String accountName, AchTransferAccountPayload accountPayload) {
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -23,7 +23,8 @@ public final class AchTransferAccount extends BankAccount<AchTransferAccountPayl
     }
 
     public static AchTransferAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new AchTransferAccount(proto.getCreationDate(),
+        return new AchTransferAccount(proto.getId(),
+                proto.getCreationDate(),
                 proto.getAccountName(),
                 AchTransferAccountPayload.fromProto(proto.getAccountPayload()));
     }

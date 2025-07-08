@@ -21,13 +21,13 @@ import bisq.account.accounts.SepaAccountPayload;
 import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -55,7 +55,7 @@ public class SepaPaymentFormController extends PaymentFormController<SepaPayment
                 .map(CountryRepository::getCountry)
                 .sorted(Comparator.comparing(Country::getName))
                 .collect(Collectors.toList());
-        return new SepaPaymentFormModel(UUID.randomUUID().toString(),
+        return new SepaPaymentFormModel(StringUtils.createUid(),
                 allSepaCountries,
                 allEuroCountries,
                 allNonEuroCountries);
@@ -63,7 +63,7 @@ public class SepaPaymentFormController extends PaymentFormController<SepaPayment
 
     @Override
     public void onActivate() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
         model.getCountryErrorVisible().set(false);
         model.getAcceptedCountriesErrorVisible().set(false);
 
@@ -80,7 +80,7 @@ public class SepaPaymentFormController extends PaymentFormController<SepaPayment
     }
 
     @Override
-    public SepaAccountPayload getAccountPayload() {
+    public SepaAccountPayload createAccountPayload() {
         List<Country> acceptedCountries = getAcceptedCountries();
         List<String> acceptedCountryCodes = acceptedCountries.stream()
                 .map(Country::getCode)
@@ -110,12 +110,12 @@ public class SepaPaymentFormController extends PaymentFormController<SepaPayment
                 holderNameValid &&
                 ibanValid &&
                 bicValid;
-        model.getRequireValidation().set(true);
+        model.getRunValidation().set(true);
         return isValid;
     }
 
     void onValidationDone() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
     }
 
     void onCountryOfBankSelected(Country selectedCountry) {

@@ -18,6 +18,8 @@
 package bisq.mu_sig;
 
 import bisq.account.AccountService;
+import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -206,15 +208,17 @@ public class MuSigService extends LifecycleService {
     // Offer API
     /* --------------------------------------------------------------------- */
 
-    public MuSigOffer createAndGetMuSigOffer(Direction direction,
+    public MuSigOffer createAndGetMuSigOffer(String id,
+                                             Direction direction,
                                              Market market,
                                              AmountSpec amountSpec,
                                              PriceSpec priceSpec,
                                              List<FiatPaymentMethod> fiatPaymentMethods,
-                                             List<OfferOption> offerOptions) {
+                                             List<? extends OfferOption> offerOptions) {
         checkArgument(isActivated());
         NetworkId makerNetworkId = userIdentityService.getSelectedUserIdentity().getUserProfile().getNetworkId();
-        return new MuSigOffer(makerNetworkId,
+        return new MuSigOffer(id,
+                makerNetworkId,
                 direction,
                 market,
                 amountSpec,
@@ -246,11 +250,12 @@ public class MuSigService extends LifecycleService {
     // Trade API
     /* --------------------------------------------------------------------- */
 
-    public MuSigProtocol createProtocol(UserIdentity takerIdentity,
-                                        MuSigOffer muSigOffer,
-                                        Monetary takersBaseSideAmount,
-                                        Monetary takersQuoteSideAmount,
-                                        FiatPaymentMethodSpec fiatPaymentMethodSpec)
+    public MuSigProtocol takerCreatesProtocol(UserIdentity takerIdentity,
+                                              MuSigOffer muSigOffer,
+                                              Monetary takersBaseSideAmount,
+                                              Monetary takersQuoteSideAmount,
+                                              FiatPaymentMethodSpec fiatPaymentMethodSpec,
+                                              Account<?, ?> takersAccount)
             throws UserProfileBannedException, NoMediatorAvailableException,
             NoMarketPriceAvailableException, RateLimitExceededException {
 
@@ -266,20 +271,23 @@ public class MuSigService extends LifecycleService {
             throw new NoMediatorAvailableException();
         }
 
-        return createProtocol(takerIdentity,
+        return takerCreatesProtocol(takerIdentity,
                 muSigOffer,
                 takersBaseSideAmount,
                 takersQuoteSideAmount,
                 fiatPaymentMethodSpec,
+                takersAccount.getAccountPayload(),
                 mediator);
     }
 
-    private MuSigProtocol createProtocol(UserIdentity takerIdentity,
-                                         MuSigOffer muSigOffer,
-                                         Monetary takersBaseSideAmount,
-                                         Monetary takersQuoteSideAmount,
-                                         FiatPaymentMethodSpec fiatPaymentMethodSpec,
-                                         Optional<UserProfile> mediator) throws NoMarketPriceAvailableException {
+    private MuSigProtocol takerCreatesProtocol(UserIdentity takerIdentity,
+                                               MuSigOffer muSigOffer,
+                                               Monetary takersBaseSideAmount,
+                                               Monetary takersQuoteSideAmount,
+                                               FiatPaymentMethodSpec fiatPaymentMethodSpec,
+                                               AccountPayload<?> takersAccountPayload,
+                                               Optional<UserProfile> mediator
+                                         ) throws NoMarketPriceAvailableException {
 
         log.info("Selected mediator for trade {}: {}", muSigOffer.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
         Optional<Long> marketPrice = marketPriceService.findMarketPrice(muSigOffer.getMarket())
@@ -289,27 +297,30 @@ public class MuSigService extends LifecycleService {
         }
 
         log.info("Market price for trade {}: {}", muSigOffer.getShortId(), marketPrice.get());
-        return createProtocol(takerIdentity,
+        return takerCreatesProtocol(takerIdentity,
                 muSigOffer,
                 takersBaseSideAmount,
                 takersQuoteSideAmount,
                 fiatPaymentMethodSpec,
+                takersAccountPayload,
                 mediator,
                 marketPrice.get());
     }
 
-    private MuSigProtocol createProtocol(UserIdentity takerIdentity,
-                                         MuSigOffer muSigOffer,
-                                         Monetary takersBaseSideAmount,
-                                         Monetary takersQuoteSideAmount,
-                                         FiatPaymentMethodSpec fiatPaymentMethodSpec,
-                                         Optional<UserProfile> mediator,
-                                         long marketPrice) {
-        return muSigTradeService.createMuSigProtocol(takerIdentity.getIdentity(),
+    private MuSigProtocol takerCreatesProtocol(UserIdentity takerIdentity,
+                                               MuSigOffer muSigOffer,
+                                               Monetary takersBaseSideAmount,
+                                               Monetary takersQuoteSideAmount,
+                                               FiatPaymentMethodSpec fiatPaymentMethodSpec,
+                                               AccountPayload<?> takersAccountPayload,
+                                               Optional<UserProfile> mediator,
+                                               long marketPrice) {
+        return muSigTradeService.takerCreatesProtocol(takerIdentity.getIdentity(),
                 muSigOffer,
                 takersBaseSideAmount,
                 takersQuoteSideAmount,
                 fiatPaymentMethodSpec,
+                takersAccountPayload,
                 mediator,
                 muSigOffer.getPriceSpec(),
                 marketPrice);
@@ -374,7 +385,7 @@ public class MuSigService extends LifecycleService {
         }
     }
 
-    public boolean isAccountDataBanned(String sellersAccountData) {
+    public boolean isAccountDataBanned(AccountPayload<?> accountPayload) {
         // TODO: Implement account data validation logic to check against banned payment information
         return false;
     }

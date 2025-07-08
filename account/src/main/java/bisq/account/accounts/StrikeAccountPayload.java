@@ -1,8 +1,10 @@
 package bisq.account.accounts;
 
+import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -12,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class StrikeAccountPayload extends CountryBasedAccountPayload {
+public final class StrikeAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
     private final String holderName;
 
     public StrikeAccountPayload(String id, String countryCode, String holderName) {
@@ -44,5 +46,12 @@ public final class StrikeAccountPayload extends CountryBasedAccountPayload {
     @Override
     public FiatPaymentMethod getPaymentMethod() {
         return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.STRIKE);
+    }
+
+    @Override
+    public String getAccountDataDisplayString() {
+        return new AccountDataDisplayStringBuilder(
+                Res.get("user.paymentAccounts.holderName"), holderName
+        ).toString();
     }
 }

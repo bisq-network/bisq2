@@ -27,10 +27,11 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class DomesticWireTransferAccount extends BankAccount<DomesticWireTransferAccountPayload> {
-    public DomesticWireTransferAccount(long creationDate,
+    public DomesticWireTransferAccount(String id,
+                                       long creationDate,
                                        String accountName,
                                        DomesticWireTransferAccountPayload accountPayload) {
-        super(creationDate, accountName, accountPayload);
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -48,7 +49,8 @@ public final class DomesticWireTransferAccount extends BankAccount<DomesticWireT
     }
 
     public static DomesticWireTransferAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new DomesticWireTransferAccount(proto.getCreationDate(),
+        return new DomesticWireTransferAccount(proto.getId(),
+                proto.getCreationDate(),
                 proto.getAccountName(),
                 DomesticWireTransferAccountPayload.fromProto(proto.getAccountPayload()));
     }

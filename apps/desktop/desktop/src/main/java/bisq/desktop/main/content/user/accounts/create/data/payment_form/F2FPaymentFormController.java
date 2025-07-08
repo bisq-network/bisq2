@@ -22,10 +22,9 @@ import bisq.common.currency.FiatCurrency;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.UUID;
 
 @Slf4j
 public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFormView, F2FPaymentFormModel, F2FAccountPayload> {
@@ -40,14 +39,14 @@ public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFo
 
     @Override
     protected F2FPaymentFormModel createModel() {
-        return new F2FPaymentFormModel(UUID.randomUUID().toString(),
+        return new F2FPaymentFormModel(StringUtils.createUid(),
                 CountryRepository.getAllCountries(),
                 FiatCurrencyRepository.getAllCurrencies());
     }
 
     @Override
     public void onActivate() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
         model.getCountryErrorVisible().set(false);
         model.getCurrencyErrorVisible().set(false);
     }
@@ -57,7 +56,7 @@ public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFo
     }
 
     void onValidationDone() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
     }
 
     @Override
@@ -71,12 +70,12 @@ public class F2FPaymentFormController extends PaymentFormController<F2FPaymentFo
                 model.getCityValidator().validateAndGet() &&
                 model.getContactValidator().validateAndGet() &&
                 model.getExtraInfoValidator().validateAndGet();
-        model.getRequireValidation().set(true);
+        model.getRunValidation().set(true);
         return isValid;
     }
 
     @Override
-    public F2FAccountPayload getAccountPayload() {
+    public F2FAccountPayload createAccountPayload() {
         return new F2FAccountPayload(model.getId(),
                 model.getSelectedCountry().get().getCode(),
                 model.getSelectedCurrency().get().getCode(),

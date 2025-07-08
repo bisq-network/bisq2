@@ -67,6 +67,9 @@ message FiatPaymentMethodSpec {
 message BitcoinPaymentMethodSpec {
 }
 
+message CryptoPaymentMethodSpec {
+}
+
 message StablecoinPaymentMethodSpec {
 }
 
@@ -76,7 +79,8 @@ message PaymentMethodSpec {
   oneof message {
     BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = 10;
     FiatPaymentMethodSpec fiatPaymentMethodSpec = 11;
-    StablecoinPaymentMethodSpec stablecoinPaymentMethodSpec = 12;
+    CryptoPaymentMethodSpec cryptoPaymentMethodSpec = 12;
+    StablecoinPaymentMethodSpec stablecoinPaymentMethodSpec = 13;
   }
 }
 
@@ -113,6 +117,15 @@ message LanguageOption {
   repeated string supportedLanguageCodes = 1;
 }
 
+message AccountOption {
+  account.PaymentMethod paymentMethod = 1;
+  string saltedAccountId = 2;
+  optional string countryCode = 3;
+  repeated string acceptedCountryCodes = 4;
+  optional string bankId = 5;
+  repeated string acceptedBanks = 6;
+}
+
 message OfferOption {
   oneof message {
     TradeTermsOption tradeTermsOption = 1;
@@ -121,6 +134,7 @@ message OfferOption {
     FiatPaymentOption fiatPaymentOption = 5;
     FeeOption feeOption = 6;
     LanguageOption languageOption = 7;
+    AccountOption accountOption = 8;
   }
 }
 

@@ -11,8 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class PayIDAccount extends Account<FiatPaymentMethod, PayIDAccountPayload> {
-    public PayIDAccount(long creationDate, String accountName, PayIDAccountPayload accountPayload) {
-        super(creationDate, accountName, accountPayload);
+    public PayIDAccount(String id, long creationDate, String accountName, PayIDAccountPayload accountPayload) {
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -30,7 +30,8 @@ public final class PayIDAccount extends Account<FiatPaymentMethod, PayIDAccountP
     }
 
     public static PayIDAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new PayIDAccount(proto.getCreationDate(),
+        return new PayIDAccount(proto.getId(),
+                proto.getCreationDate(),
                 proto.getAccountName(),
                 PayIDAccountPayload.fromProto(proto.getAccountPayload())
         );

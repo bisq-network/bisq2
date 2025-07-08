@@ -40,6 +40,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class MuSigContract extends TwoPartyContract<MuSigOffer> {
+
     private static BitcoinPaymentMethodSpec getBitcoinPaymentMethodSpec(MuSigOffer offer) {
         checkArgument(offer.getBaseSidePaymentMethodSpecs().size() == 1,
                 "MuSigOffers baseSidePaymentMethodSpecs must have exactly 1 item");

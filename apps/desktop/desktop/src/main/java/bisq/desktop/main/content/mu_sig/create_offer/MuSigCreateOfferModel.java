@@ -58,7 +58,7 @@ public class MuSigCreateOfferModel extends NavigationModel {
         return NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET;
     }
 
-    public void reset() {
+    void reset() {
         currentIndex.set(0);
         nextButtonText.set(null);
         backButtonText.set(null);

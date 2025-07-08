@@ -28,7 +28,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class FasterPaymentsPaymentFormView extends PaymentFormView<FasterPaymentsPaymentFormModel, FasterPaymentsPaymentFormController> {
     private final MaterialTextField holderName, sortCode, accountNr;
-    private Subscription requireValidationPin;
+    private Subscription runValidationPin;
 
     public FasterPaymentsPaymentFormView(FasterPaymentsPaymentFormModel model,
                                          FasterPaymentsPaymentFormController controller) {
@@ -71,8 +71,8 @@ public class FasterPaymentsPaymentFormView extends PaymentFormView<FasterPayment
         sortCode.textProperty().bindBidirectional(model.getSortCode());
         accountNr.textProperty().bindBidirectional(model.getAccountNr());
 
-        requireValidationPin = EasyBind.subscribe(model.getRequireValidation(), requireValidation -> {
-            if (requireValidation) {
+        runValidationPin = EasyBind.subscribe(model.getRunValidation(), runValidation -> {
+            if (runValidation) {
                 holderName.validate();
                 sortCode.validate();
                 accountNr.validate();
@@ -91,6 +91,6 @@ public class FasterPaymentsPaymentFormView extends PaymentFormView<FasterPayment
         sortCode.textProperty().unbindBidirectional(model.getSortCode());
         accountNr.textProperty().unbindBidirectional(model.getAccountNr());
 
-        requireValidationPin.unsubscribe();
+        runValidationPin.unsubscribe();
     }
 }

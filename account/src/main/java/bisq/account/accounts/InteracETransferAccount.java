@@ -1,7 +1,6 @@
 package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentRail;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -12,10 +11,11 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class InteracETransferAccount extends Account<FiatPaymentMethod, InteracETransferAccountPayload> {
-    public InteracETransferAccount(long creationDate,
+    public InteracETransferAccount(String id,
+                                   long creationDate,
                                    String accountName,
                                    InteracETransferAccountPayload accountPayload) {
-        super(creationDate, accountName, accountPayload);
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -33,7 +33,7 @@ public final class InteracETransferAccount extends Account<FiatPaymentMethod, In
     }
 
     public static InteracETransferAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new InteracETransferAccount(
+        return new InteracETransferAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 InteracETransferAccountPayload.fromProto(proto.getAccountPayload())

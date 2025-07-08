@@ -17,11 +17,11 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.review;
 
-import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.TextFlowUtils;
 import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferView;
 import bisq.i18n.Res;
@@ -29,7 +29,6 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -38,27 +37,26 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
-import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javax.annotation.Nullable;
-
 @Slf4j
 class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewModel, MuSigCreateOfferReviewController> {
     private final static int FEEDBACK_WIDTH = 700;
+    public static final String DESCRIPTION_STYLE = "trade-wizard-review-description";
+    public static final String VALUE_STYLE = "trade-wizard-review-value";
+    public static final String DETAILS_STYLE = "trade-wizard-review-details";
 
-    private final Label headline, detailsHeadline, paymentMethod, paymentMethodDescription, fee, feeDetails,
-            priceDetails, priceDescription;
+    private final Label headline, detailsHeadline,
+            priceDetails, priceDescription,
+            paymentMethodDescription, paymentMethod, paymentMethodDetails,
+            fee, feeDetails;
     private final VBox createOfferSuccess;
     private final Button createOfferSuccessButton;
     private final GridPane gridPane;
-    private final StackPane paymentMethodValuePane;
     private final TextFlow price;
     private final HBox reviewDataDisplay;
-    @Nullable
-    private ComboBox<FiatPaymentMethod> paymentMethodsComboBox;
     private Subscription showCreateOfferSuccessPin;
 
     MuSigCreateOfferReviewView(MuSigCreateOfferReviewModel model,
@@ -74,83 +72,72 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
         gridPane.setMouseTransparent(true);
         GridPaneUtil.setGridPaneMultiColumnsConstraints(gridPane, 4);
 
-        String descriptionStyle = "trade-wizard-review-description";
-        String valueStyle = "trade-wizard-review-value";
-        String detailsStyle = "trade-wizard-review-details";
-
         int rowIndex = 0;
         headline = new Label();
         headline.getStyleClass().add("trade-wizard-review-headline");
         GridPane.setHalignment(headline, HPos.CENTER);
         GridPane.setMargin(headline, new Insets(10, 0, 30, 0));
-        GridPane.setColumnSpan(headline, 4);
-        gridPane.add(headline, 0, rowIndex);
+        gridPane.add(headline, 0, rowIndex, 4, 1);
 
         rowIndex++;
         Region line1 = getLine();
-        GridPane.setColumnSpan(line1, 4);
-        gridPane.add(line1, 0, rowIndex);
+        gridPane.add(line1, 0, rowIndex, 4, 1);
 
         rowIndex++;
-        GridPane.setColumnSpan(reviewDataDisplay, 4);
-        gridPane.add(reviewDataDisplay, 0, rowIndex);
+        gridPane.add(reviewDataDisplay, 0, rowIndex, 4, 1);
 
         rowIndex++;
         detailsHeadline = new Label();
         detailsHeadline.getStyleClass().add("trade-wizard-review-details-headline");
-        GridPane.setColumnSpan(detailsHeadline, 4);
-        gridPane.add(detailsHeadline, 0, rowIndex);
+        gridPane.add(detailsHeadline, 0, rowIndex, 4, 1);
 
         rowIndex++;
         Region line2 = getLine();
         GridPane.setMargin(line2, new Insets(-10, 0, -5, 0));
-        GridPane.setColumnSpan(line2, 4);
-        gridPane.add(line2, 0, rowIndex);
+        gridPane.add(line2, 0, rowIndex, 4, 1);
 
         rowIndex++;
         priceDescription = new Label();
-        priceDescription.getStyleClass().add(descriptionStyle);
+        priceDescription.getStyleClass().add(DESCRIPTION_STYLE);
         gridPane.add(priceDescription, 0, rowIndex);
 
         price = new TextFlow();
-        price.getStyleClass().add(valueStyle);
+        price.getStyleClass().add(VALUE_STYLE);
         gridPane.add(price, 1, rowIndex);
 
         priceDetails = new Label();
-        priceDetails.getStyleClass().add(detailsStyle);
-        GridPane.setColumnSpan(priceDetails, 2);
-        gridPane.add(priceDetails, 2, rowIndex);
+        priceDetails.getStyleClass().add(DETAILS_STYLE);
+        gridPane.add(priceDetails, 2, rowIndex, 2, 1);
 
         rowIndex++;
         paymentMethodDescription = new Label();
-        paymentMethodDescription.getStyleClass().add(descriptionStyle);
+        paymentMethodDescription.getStyleClass().add(DESCRIPTION_STYLE);
         gridPane.add(paymentMethodDescription, 0, rowIndex);
 
         paymentMethod = new Label();
-        paymentMethod.getStyleClass().add(valueStyle);
-        paymentMethodValuePane = new StackPane(paymentMethod);
-        paymentMethodValuePane.setAlignment(Pos.TOP_LEFT);
-        GridPane.setColumnSpan(paymentMethodValuePane, 3);
-        gridPane.add(paymentMethodValuePane, 1, rowIndex);
+        paymentMethod.getStyleClass().add(VALUE_STYLE);
+        gridPane.add(paymentMethod, 1, rowIndex);
+
+        paymentMethodDetails = new Label();
+        paymentMethodDetails.getStyleClass().add(DETAILS_STYLE);
+        gridPane.add(paymentMethodDetails, 2, rowIndex, 2, 1);
 
         rowIndex++;
         Label feeInfoDescription = new Label(Res.get("bisqEasy.tradeWizard.review.feeDescription"));
-        feeInfoDescription.getStyleClass().add(descriptionStyle);
+        feeInfoDescription.getStyleClass().add(DESCRIPTION_STYLE);
         gridPane.add(feeInfoDescription, 0, rowIndex);
 
         fee = new Label();
-        fee.getStyleClass().add(valueStyle);
+        fee.getStyleClass().add(VALUE_STYLE);
         gridPane.add(fee, 1, rowIndex);
 
         feeDetails = new Label();
-        feeDetails.getStyleClass().add(detailsStyle);
-        GridPane.setColumnSpan(feeDetails, 2);
-        gridPane.add(feeDetails, 2, rowIndex);
+        feeDetails.getStyleClass().add(DETAILS_STYLE);
+        gridPane.add(feeDetails, 2, rowIndex, 2, 1);
 
         rowIndex++;
         Region line3 = getLine();
-        GridPane.setColumnSpan(line3, 4);
-        gridPane.add(line3, 0, rowIndex);
+        gridPane.add(line3, 0, rowIndex, 4, 1);
 
 
         // Feedback overlays
@@ -173,7 +160,16 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
         priceDetails.setText(model.getPriceDetails());
 
         paymentMethodDescription.setText(model.getPaymentMethodDescription());
-        paymentMethod.setText(model.getPaymentMethod());
+        String paymentMethodsDisplayString = model.getPaymentMethodsDisplayString();
+        paymentMethod.setText(paymentMethodsDisplayString);
+        if (paymentMethodsDisplayString.length() > 25) {
+            paymentMethod.setTooltip(new BisqTooltip(paymentMethodsDisplayString));
+        }
+        String paymentMethodDetailsValue = model.getPaymentMethodDetails();
+        paymentMethodDetails.setText(paymentMethodDetailsValue);
+        if (paymentMethodDetailsValue.length() > 50) {
+            paymentMethodDetails.setTooltip(new BisqTooltip(paymentMethodDetailsValue));
+        }
 
         fee.setText(model.getFee());
         feeDetails.setText(model.getFeeDetails());
@@ -191,36 +187,6 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
                     }
                 });
 
-        if (model.getTakersFiatPaymentMethods().size() > 1) {
-            paymentMethodsComboBox = new ComboBox<>(model.getTakersFiatPaymentMethods());
-            paymentMethodsComboBox.getStyleClass().add("trade-wizard-review-payment-combo-box");
-            GridPane.setMargin(paymentMethodValuePane, new Insets(-8, 0, -8, 0));
-            paymentMethodValuePane.getChildren().setAll(paymentMethodsComboBox);
-            paymentMethodsComboBox.setConverter(new StringConverter<>() {
-                @Override
-                public String toString(FiatPaymentMethod method) {
-                    return method != null ? method.getDisplayString() : "";
-                }
-
-                @Override
-                public FiatPaymentMethod fromString(String string) {
-                    return null;
-                }
-            });
-
-            paymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedFiatPaymentMethod());
-            paymentMethodsComboBox.setOnAction(e -> {
-                if (paymentMethodsComboBox.getSelectionModel().getSelectedItem() == null) {
-                    paymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedFiatPaymentMethod());
-                    return;
-                }
-                controller.onSelectFiatPaymentMethod(paymentMethodsComboBox.getSelectionModel().getSelectedItem());
-            });
-        } else {
-            GridPane.setMargin(paymentMethodValuePane, new Insets(0, 0, 0, 0));
-            paymentMethodValuePane.getChildren().setAll(paymentMethod);
-        }
-
         if (model.isRangeAmount()) {
             GridPane.setMargin(reviewDataDisplay, new Insets(0, 0, 45, 0));
         } else {
@@ -231,12 +197,9 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
     @Override
     protected void onViewDetached() {
         createOfferSuccessButton.setOnAction(null);
-
         showCreateOfferSuccessPin.unsubscribe();
-
-        if (paymentMethodsComboBox != null) {
-            paymentMethodsComboBox.setOnAction(null);
-        }
+        paymentMethod.setTooltip(null);
+        paymentMethodDetails.setTooltip(null);
     }
 
     private void configCreateOfferSuccess() {

@@ -27,8 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class WiseAccount extends CountryBasedAccount<WiseAccountPayload> {
-    public WiseAccount(long creationDate, String accountName, WiseAccountPayload accountPayload) {
-        super(creationDate, accountName, accountPayload);
+    public WiseAccount(String id, long creationDate, String accountName, WiseAccountPayload accountPayload) {
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -46,7 +46,8 @@ public final class WiseAccount extends CountryBasedAccount<WiseAccountPayload> {
     }
 
     public static WiseAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new WiseAccount(proto.getCreationDate(),
+        return new WiseAccount(proto.getId(),
+                proto.getCreationDate(),
                 proto.getAccountName(),
                 WiseAccountPayload.fromProto(proto.getAccountPayload())
         );

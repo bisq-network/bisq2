@@ -10,8 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class F2FAccount extends CountryBasedAccount<F2FAccountPayload> {
-    public F2FAccount(long creationDate, String accountName, F2FAccountPayload accountPayload) {
-        super(creationDate, accountName, accountPayload);
+    public F2FAccount(String id, long creationDate, String accountName, F2FAccountPayload accountPayload) {
+        super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
@@ -29,7 +29,8 @@ public final class F2FAccount extends CountryBasedAccount<F2FAccountPayload> {
     }
 
     public static F2FAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new F2FAccount(proto.getCreationDate(),
+        return new F2FAccount(proto.getId(),
+                proto.getCreationDate(),
                 proto.getAccountName(),
                 F2FAccountPayload.fromProto(proto.getAccountPayload()));
     }

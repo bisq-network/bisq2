@@ -55,22 +55,23 @@ public class PriceSpecFormatter {
         return priceInfo;
     }
 
-    public static String getFormattedPrice(PriceSpec priceSpec, MarketPriceService marketPriceService) {
+    public static String getFormattedPrice(PriceSpec priceSpec,
+                                           MarketPriceService marketPriceService,
+                                           Market market) {
         String priceInfo = Res.get("data.na");
         if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
             return PriceFormatter.format(fixPriceSpec.getPriceQuote());
         }
 
-        Market selectedMarket = marketPriceService.getSelectedMarket().get();
-        if (selectedMarket == null) {
+        if (market == null) {
             log.warn("No market price selected");
             return Res.get("data.na");
         }
 
         //  marketPrice.getMarket().getMarketCodes();
-        Optional<MarketPrice> marketPrice = marketPriceService.findMarketPrice(selectedMarket);
+        Optional<MarketPrice> marketPrice = marketPriceService.findMarketPrice(market);
         if (marketPrice.isEmpty()) {
-            log.warn("No market price available for selected market {}", selectedMarket);
+            log.warn("No market price available for selected market {}", market);
             return Res.get("data.na");
         }
 

@@ -17,11 +17,13 @@
 
 package bisq.account.accounts;
 
+import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.EmailValidation;
 import bisq.common.validation.PaymentAccountValidation;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -37,18 +39,19 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode(callSuper = true)
 public final class WiseAccountPayload extends CountryBasedAccountPayload implements MultiCurrencyAccountPayload {
     private final List<String> selectedCurrencyCodes;
-    private final String email;
     private final String holderName;
+    private final String email;
 
     public WiseAccountPayload(String id,
                               String countryCode,
                               List<String> selectedCurrencyCodes,
-                              String email,
-                              String holderName) {
+                              String holderName,
+                              String email
+    ) {
         super(id, countryCode);
         this.selectedCurrencyCodes = selectedCurrencyCodes;
-        this.email = email;
         this.holderName = holderName;
+        this.email = email;
 
         verify();
     }
@@ -69,8 +72,8 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
                 proto.getId(),
                 countryBasedAccountPayload.getCountryCode(),
                 wisePayload.getSelectedCurrencyCodesList(),
-                wisePayload.getEmail(),
-                wisePayload.getHolderName()
+                wisePayload.getHolderName(),
+                wisePayload.getEmail()
         );
     }
 
@@ -87,12 +90,20 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
     private bisq.account.protobuf.WiseAccountPayload.Builder getWiseAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.WiseAccountPayload.newBuilder()
                 .addAllSelectedCurrencyCodes(selectedCurrencyCodes)
-                .setEmail(email)
-                .setHolderName(holderName);
+                .setHolderName(holderName)
+                .setEmail(email);
     }
 
     @Override
     public FiatPaymentMethod getPaymentMethod() {
         return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.WISE);
+    }
+
+    @Override
+    public String getAccountDataDisplayString() {
+        return new AccountDataDisplayStringBuilder(
+                Res.get("user.paymentAccounts.holderName"), holderName,
+                Res.get("user.paymentAccounts.email"), email
+        ).toString();
     }
 }

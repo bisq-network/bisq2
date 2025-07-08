@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.amount_and_price.amount;
 
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
@@ -44,7 +44,7 @@ import bisq.offer.amount.spec.BaseSideAmountSpec;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
 import bisq.offer.amount.spec.BaseSideRangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.payment_method.FiatPaymentMethodSpec;
+import bisq.offer.payment_method.PaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.MarketPriceSpec;
@@ -137,7 +137,7 @@ public class MuSigCreateOfferAmountController implements Controller {
         applyQuoteSideMinMaxRange();
     }
 
-    public void setPaymentMethods(List<FiatPaymentMethod> paymentMethods) {
+    public void setPaymentMethods(List<PaymentMethod<?>> paymentMethods) {
         if (paymentMethods == null) {
             return;
         }
@@ -651,7 +651,7 @@ public class MuSigCreateOfferAmountController implements Controller {
 
     private boolean isValidPaymentMethods(BisqEasyOffer peersOffer) {
         List<String> fiatPaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(peersOffer.getQuoteSidePaymentMethodSpecs());
-        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(model.getPaymentMethods());
+        List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs = PaymentMethodSpecUtil.createPaymentMethodSpecs(model.getPaymentMethods(), model.getMarket().getQuoteCurrencyCode());
         List<String> quoteSidePaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(quoteSidePaymentMethodSpecs);
         if (quoteSidePaymentMethodNames.stream().noneMatch(fiatPaymentMethodNames::contains)) {
             return false;

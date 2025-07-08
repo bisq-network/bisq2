@@ -46,6 +46,10 @@ public class OfferAmountFormatter {
         return formatBaseAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), offer.hasAmountRange(), withCode, true);
     }
 
+    public static String formatBaseAmount(MarketPriceService marketPriceService, Offer<?, ?> offer, boolean withCode, boolean useLowPrecision) {
+        return formatBaseAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), offer.hasAmountRange(), withCode, useLowPrecision);
+    }
+
     public static String formatBaseAmount(MarketPriceService marketPriceService,
                                           AmountSpec amountSpec,
                                           PriceSpec priceSpec,

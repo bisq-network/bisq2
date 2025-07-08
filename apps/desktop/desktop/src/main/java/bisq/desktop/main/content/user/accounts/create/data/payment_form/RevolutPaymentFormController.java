@@ -21,12 +21,12 @@ import bisq.account.accounts.RevolutAccountPayload;
 import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.currency.FiatCurrency;
 import bisq.common.currency.TradeCurrency;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -45,12 +45,12 @@ public class RevolutPaymentFormController extends PaymentFormController<RevolutP
         List<FiatCurrency> revolutCurrencies = FiatPaymentRailUtil.getRevolutCurrencies().stream()
                 .sorted(Comparator.comparing(TradeCurrency::getName))
                 .collect(Collectors.toList());
-        return new RevolutPaymentFormModel(UUID.randomUUID().toString(), revolutCurrencies);
+        return new RevolutPaymentFormModel(StringUtils.createUid(), revolutCurrencies);
     }
 
     @Override
     public void onActivate() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
         model.getSelectedCurrenciesErrorVisible().set(false);
     }
 
@@ -59,7 +59,7 @@ public class RevolutPaymentFormController extends PaymentFormController<RevolutP
     }
 
     @Override
-    public RevolutAccountPayload getAccountPayload() {
+    public RevolutAccountPayload createAccountPayload() {
         return new RevolutAccountPayload(model.getId(),
                 model.getUserName().get(),
                 model.getSelectedCurrencies().stream()
@@ -73,12 +73,12 @@ public class RevolutPaymentFormController extends PaymentFormController<RevolutP
         model.getSelectedCurrenciesErrorVisible().set(!selectedCurrenciesValid);
         boolean holderNameValid = model.getUserNameValidator().validateAndGet();
         boolean isValid = selectedCurrenciesValid && holderNameValid;
-        model.getRequireValidation().set(true);
+        model.getRunValidation().set(true);
         return isValid;
     }
 
     void onValidationDone() {
-        model.getRequireValidation().set(false);
+        model.getRunValidation().set(false);
     }
 
     void onSelectCurrency(FiatCurrency currency, boolean selected) {

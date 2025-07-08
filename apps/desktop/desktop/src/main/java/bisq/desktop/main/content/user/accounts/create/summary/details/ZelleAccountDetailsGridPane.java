@@ -31,7 +31,7 @@ public class ZelleAccountDetailsGridPane extends FiatAccountDetailsGridPane<Zell
         addDescriptionAndValue(Res.get("user.paymentAccounts.holderName"),
                 accountPayload.getHolderName());
 
-        addDescriptionAndValue(Res.get("user.paymentAccounts.zelle.emailOrMobileNr"),
+        addDescriptionAndValue(Res.get("user.paymentAccounts.emailOrMobileNr"),
                 accountPayload.getEmailOrMobileNr());
     }
 }
