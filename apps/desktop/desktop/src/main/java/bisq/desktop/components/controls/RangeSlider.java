@@ -25,69 +25,18 @@ import javafx.scene.control.Control;
 import javafx.scene.control.Skin;
 import lombok.Getter;
 
+@Getter
 public class RangeSlider extends Control {
-    // TODO: These do not need to be properties
-    private final DoubleProperty min = new SimpleDoubleProperty(this, "min", 0);
-    private final DoubleProperty max = new SimpleDoubleProperty(this, "max", 100);
-
-    private final DoubleProperty lowValue = new SimpleDoubleProperty(this, "lowValue", 25);
-    private final DoubleProperty highValue = new SimpleDoubleProperty(this, "highValue", 75);
-    @Getter
+    private final DoubleProperty min = new SimpleDoubleProperty(0);
+    private final DoubleProperty max = new SimpleDoubleProperty(100);
+    private final DoubleProperty lowValue = new SimpleDoubleProperty(25);
+    private final DoubleProperty highValue = new SimpleDoubleProperty(75);
     private final BooleanProperty lowThumbFocused = new SimpleBooleanProperty(false);
-    @Getter
     private final BooleanProperty highThumbFocused = new SimpleBooleanProperty(false);
 
     public RangeSlider() {
         getStyleClass().add("range-slider");
         setSkin(createDefaultSkin());
-    }
-
-    public double getMin() {
-        return min.get();
-    }
-
-    public void setMin(double value) {
-        min.set(value);
-    }
-
-    public DoubleProperty minProperty() {
-        return min;
-    }
-
-    public double getMax() {
-        return max.get();
-    }
-
-    public void setMax(double value) {
-        max.set(value);
-    }
-
-    public DoubleProperty maxProperty() {
-        return max;
-    }
-
-    public double getLowValue() {
-        return lowValue.get();
-    }
-
-    public void setLowValue(double value) {
-        lowValue.set(value);
-    }
-
-    public DoubleProperty lowValueProperty() {
-        return lowValue;
-    }
-
-    public double getHighValue() {
-        return highValue.get();
-    }
-
-    public void setHighValue(double value) {
-        highValue.set(value);
-    }
-
-    public DoubleProperty highValueProperty() {
-        return highValue;
     }
 
     @Override

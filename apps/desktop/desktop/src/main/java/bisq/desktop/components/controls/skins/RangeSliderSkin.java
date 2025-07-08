@@ -68,8 +68,8 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
 
         rangeSlider.widthProperty().removeListener(changeListener);
         rangeSlider.heightProperty().removeListener(changeListener);
-        rangeSlider.lowValueProperty().removeListener(changeListener);
-        rangeSlider.highValueProperty().removeListener(changeListener);
+        rangeSlider.getLowValue().removeListener(changeListener);
+        rangeSlider.getHighValue().removeListener(changeListener);
     }
 
     private void registerListeners() {
@@ -102,23 +102,23 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
 
         rangeSlider.widthProperty().addListener(changeListener);
         rangeSlider.heightProperty().addListener(changeListener);
-        rangeSlider.lowValueProperty().addListener(changeListener);
-        rangeSlider.highValueProperty().addListener(changeListener);
+        rangeSlider.getLowValue().addListener(changeListener);
+        rangeSlider.getHighValue().addListener(changeListener);
     }
 
     private void updateUI() {
         RangeSlider slider = getSkinnable();
         double w = slider.getWidth() > 0 ? slider.getWidth() : 200;
-        double min = slider.getMin();
-        double max = slider.getMax();
+        double min = slider.getMin().get();
+        double max = slider.getMax().get();
         double range = max - min;
         double trackStart = TRACK_PADDING;
         double trackEnd = w - TRACK_PADDING;
         double trackWidth = trackEnd - trackStart;
         track.setLayoutX(trackStart);
         track.setPrefWidth(trackWidth);
-        double lowX = trackStart + EDGE_OFFSET + ((slider.getLowValue() - min) / range) * trackWidth;
-        double highX = trackStart - EDGE_OFFSET + ((slider.getHighValue() - min) / range) * trackWidth;
+        double lowX = trackStart + EDGE_OFFSET + ((slider.getLowValue().get() - min) / range) * trackWidth;
+        double highX = trackStart - EDGE_OFFSET + ((slider.getHighValue().get() - min) / range) * trackWidth;
         lowThumb.setLayoutX(lowX - THUMB_SIZE);
         highThumb.setLayoutX(highX);
     }
@@ -130,15 +130,15 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
 
         RangeSlider slider = getSkinnable();
         double newLow = getValue(slider, e);
-        double high = slider.getHighValue();
+        double high = slider.getHighValue().get();
         // Clamp newLow to not exceed high
         if (newLow > high) {
             newLow = high;
         }
-        if (newLow < slider.getMin()) {
-            newLow = slider.getMin();
+        if (newLow < slider.getMin().get()) {
+            newLow = slider.getMin().get();
         }
-        slider.setLowValue(newLow);
+        slider.getLowValue().set(newLow);
         e.consume();
     }
 
@@ -149,22 +149,22 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
 
         RangeSlider slider = getSkinnable();
         double newHigh = getValue(slider, e);
-        double low = slider.getLowValue();
+        double low = slider.getLowValue().get();
         // Clamp newHigh to not go below low
         if (newHigh < low) {
             newHigh = low;
         }
-        if (newHigh > slider.getMax()) {
-            newHigh = slider.getMax();
+        if (newHigh > slider.getMax().get()) {
+            newHigh = slider.getMax().get();
         }
-        slider.setHighValue(newHigh);
+        slider.getHighValue().set(newHigh);
         e.consume();
     }
 
     private double getValue(RangeSlider slider, MouseEvent e) {
         double w = slider.getWidth() > 0 ? slider.getWidth() : 200;
-        double min = slider.getMin();
-        double max = slider.getMax();
+        double min = slider.getMin().get();
+        double max = slider.getMax().get();
         double range = max - min;
         double trackStart = TRACK_PADDING;
         double trackEnd = w - TRACK_PADDING;

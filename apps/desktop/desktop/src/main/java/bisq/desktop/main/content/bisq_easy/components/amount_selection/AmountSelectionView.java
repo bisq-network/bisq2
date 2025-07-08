@@ -177,8 +177,8 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         fixedAmountSlider.getStyleClass().add("fixed-amount-slider");
 
         rangeAmountSlider = new RangeSlider();
-        rangeAmountSlider.setMin(model.getSliderMin());
-        rangeAmountSlider.setMax(model.getSliderMax());
+        rangeAmountSlider.getMin().set(model.getSliderMin());
+        rangeAmountSlider.getMax().set(model.getSliderMax());
         rangeAmountSlider.getStyleClass().add("amount-range-slider");
 
         minRangeValue = new Label();
@@ -206,11 +206,11 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         maxOrFixedAmountSliderValueListener = (observable, oldValue, newValue) -> {
             double maxAllowedSliderValue = controller.onGetMaxAllowedSliderValue();
             fixedAmountSlider.setValue(Math.min(newValue.doubleValue(), maxAllowedSliderValue));
-            rangeAmountSlider.setHighValue(Math.min(newValue.doubleValue(), maxAllowedSliderValue));
+            rangeAmountSlider.getHighValue().set(Math.min(newValue.doubleValue(), maxAllowedSliderValue));
         };
         minAmountSliderValueListener = (observable, oldValue, newValue) -> {
             double maxAllowedSliderValue = controller.onGetMaxAllowedSliderValue();
-            rangeAmountSlider.setLowValue(Math.min(newValue.doubleValue(), maxAllowedSliderValue));
+            rangeAmountSlider.getLowValue().set(Math.min(newValue.doubleValue(), maxAllowedSliderValue));
         };
     }
 
@@ -230,10 +230,10 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         shouldFocusInputTextFieldPin = EasyBind.subscribe(model.getShouldFocusInputTextField(), this::maybeFocusInputTextField);
         shouldApplyNewInputTextFontStylePin = EasyBind.subscribe(model.getShouldApplyNewInputTextFontStyle(), this::applyTextInputFontStyle);
 
-        rangeAmountSlider.lowValueProperty().bindBidirectional(model.getMinAmountSliderValue());
-        rangeAmountSlider.highValueProperty().bindBidirectional(model.getMaxOrFixedAmountSliderValue());
-        rangeAmountSlider.lowValueProperty().addListener(minAmountSliderValueListener);
-        rangeAmountSlider.highValueProperty().addListener(maxOrFixedAmountSliderValueListener);
+        rangeAmountSlider.getLowValue().bindBidirectional(model.getMinAmountSliderValue());
+        rangeAmountSlider.getHighValue().bindBidirectional(model.getMaxOrFixedAmountSliderValue());
+        rangeAmountSlider.getLowValue().addListener(minAmountSliderValueListener);
+        rangeAmountSlider.getHighValue().addListener(maxOrFixedAmountSliderValueListener);
         model.getRangeSliderLowThumbFocus().bind(rangeAmountSlider.getLowThumbFocused());
         model.getRangeSliderHighThumbFocus().bind(rangeAmountSlider.getHighThumbFocused());
         fixedAmountSlider.valueProperty().bindBidirectional(model.getMaxOrFixedAmountSliderValue());
@@ -291,10 +291,10 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         shouldFocusInputTextFieldPin.unsubscribe();
         shouldApplyNewInputTextFontStylePin.unsubscribe();
 
-        rangeAmountSlider.highValueProperty().unbindBidirectional(model.getMaxOrFixedAmountSliderValue());
-        rangeAmountSlider.highValueProperty().removeListener(maxOrFixedAmountSliderValueListener);
-        rangeAmountSlider.lowValueProperty().unbindBidirectional(model.getMinAmountSliderValue());
-        rangeAmountSlider.lowValueProperty().removeListener(minAmountSliderValueListener);
+        rangeAmountSlider.getHighValue().unbindBidirectional(model.getMaxOrFixedAmountSliderValue());
+        rangeAmountSlider.getHighValue().removeListener(maxOrFixedAmountSliderValueListener);
+        rangeAmountSlider.getLowValue().unbindBidirectional(model.getMinAmountSliderValue());
+        rangeAmountSlider.getLowValue().removeListener(minAmountSliderValueListener);
         model.getRangeSliderLowThumbFocus().unbind();
         model.getRangeSliderHighThumbFocus().unbind();
         fixedAmountSlider.valueProperty().unbindBidirectional(model.getMaxOrFixedAmountSliderValue());
