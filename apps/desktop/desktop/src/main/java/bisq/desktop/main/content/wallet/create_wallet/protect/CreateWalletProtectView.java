@@ -40,7 +40,7 @@ public class CreateWalletProtectView extends View<StackPane, CreateWalletProtect
     private final MaterialTextField passwordField, confirmPasswordField;
     private static final int PASSWORD_MAX_LENGTH = 100;
     private static final TextMaxLengthValidator PASSWORD_MAX_LENGTH_VALIDATOR =
-            new TextMaxLengthValidator(PASSWORD_MAX_LENGTH, Res.get("wallet.protectWallet.password.tooLong", PASSWORD_MAX_LENGTH));
+            new TextMaxLengthValidator(Res.get("wallet.protectWallet.password.tooLong", PASSWORD_MAX_LENGTH), PASSWORD_MAX_LENGTH);
 
     public CreateWalletProtectView(CreateWalletProtectModel model,
                                CreateWalletProtectController controller) {
