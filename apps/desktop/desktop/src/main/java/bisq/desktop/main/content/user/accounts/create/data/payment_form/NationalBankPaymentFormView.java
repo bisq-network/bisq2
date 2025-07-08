@@ -384,10 +384,6 @@ public class NationalBankPaymentFormView extends PaymentFormView<NationalBankPay
                     if (child.isVisible()) {
                         region.setMinWidth(width);
                         region.setMaxWidth(width);
-
-                    } else {
-                        // region.setMinWidth(Control.USE_COMPUTED_SIZE);
-                        // region.setMaxWidth(Control.USE_COMPUTED_SIZE);
                     }
                 }
             });

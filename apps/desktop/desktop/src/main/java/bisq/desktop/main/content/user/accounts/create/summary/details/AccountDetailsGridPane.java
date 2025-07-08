@@ -31,8 +31,8 @@ public abstract class AccountDetailsGridPane<A extends AccountPayload<?>, R exte
     protected static final String VALUE_STYLE = "trade-wizard-review-value";
     protected static final String DETAILS_STYLE = "trade-wizard-review-details";
 
-    protected final Label detailsHeadline;
-    protected final Region detailsLine;
+    protected final Label headline;
+    protected final Region line;
 
     int rowIndex = 0;
 
@@ -41,19 +41,15 @@ public abstract class AccountDetailsGridPane<A extends AccountPayload<?>, R exte
 
         GridPaneUtil.setGridPaneMultiColumnsConstraints(this, 3);
 
-        detailsHeadline = new Label(Res.get("user.paymentAccounts.accountDetails").toUpperCase());
-        detailsHeadline.getStyleClass().add("trade-wizard-review-details-headline");
-        GridPane.setMargin(detailsHeadline, new Insets(10, 0, 0, 0));
-        add(detailsHeadline, 0, rowIndex, 3, 1);
-        detailsLine = getLine();
-        GridPane.setMargin(detailsLine, new Insets(-10, 0, -5, 0));
-        add(detailsLine, 0, ++rowIndex, 3, 1);
+        headline = new Label(Res.get("user.paymentAccounts.accountDetails").toUpperCase());
+        headline.getStyleClass().add("trade-wizard-review-details-headline");
+        GridPane.setMargin(headline, new Insets(10, 0, 0, 0));
+        add(headline, 0, rowIndex, 3, 1);
+        line = getLine();
+        GridPane.setMargin(line, new Insets(-10, 0, -5, 0));
+        add(line, 0, ++rowIndex, 3, 1);
 
         addDetails(accountPayload);
-
-       /* Region restrictionsLine = getLine();
-        GridPane.setMargin(restrictionsLine, new Insets(-10, 0, -5, 0));
-        add(restrictionsLine, 0, ++rowIndex, 3, 1);*/
 
         addRestrictions(paymentRail);
     }
@@ -79,14 +75,9 @@ public abstract class AccountDetailsGridPane<A extends AccountPayload<?>, R exte
     }
 
     protected Label addValueLabel(String value) {
-        Label label = getValueLabel(value);
-        add(label, 1, rowIndex, 2, 1);
-        return label;
-    }
-
-    protected static Label getValueLabel(String value) {
         Label label = new Label(value);
         label.getStyleClass().add(VALUE_STYLE);
+        add(label, 1, rowIndex, 2, 1);
         return label;
     }
 
