@@ -919,7 +919,7 @@
 .range-slider .range-slider-high-thumb {
     -fx-background-color: -bisq-white;
     -fx-background-insets: 2.5;
-    -fx-translate-y: -8;
+    -fx-translate-y: -9;
     -fx-scale-x: 0.75;
     -fx-scale-y: 1.2;
     -fx-background-radius: 1.0em; /* makes sure this remains circular */

@@ -1125,7 +1125,7 @@
     -fx-shape: "M481.89,0H28.35C12.69,0,0,12.69,0,28.35v170.08h0l255.12,226.77,255.12-226.77V28.35C510.24,12.69,497.55,0,481.89,0Z";
     -fx-scale-x: 1.4;
     -fx-scale-y: 1.2;
-    -fx-translate-y: -8;
+    -fx-translate-y: -9;
 }
 
 .slider.max-or-fixed-amount-slider .track,
