@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.mu_sig.offerbook;
 
 import bisq.account.AccountService;
+import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -67,7 +68,7 @@ public class MuSigOfferListItem {
 
     private final String quoteCurrencyCode, baseAmountAsString, quoteAmountAsString, paymentMethodsAsString,
             maker, takeOfferButtonText;
-    private final boolean isMyOffer, noAccountForOfferPaymentMethods, canTakeOffer;
+    private final boolean isMyOffer, hasAnyMatchingAccount, canTakeOffer;
     private final Market market;
     private final Direction direction;
     private final List<FiatPaymentMethod> paymentMethods;
@@ -119,12 +120,19 @@ public class MuSigOfferListItem {
 
         accountAvailableByPaymentMethod = paymentMethods.stream().collect(Collectors.toMap(paymentMethod -> paymentMethod,
                 paymentMethod -> !accountService.getAccounts(paymentMethod).isEmpty()));
-        noAccountForOfferPaymentMethods = paymentMethods.stream()
-                .allMatch(paymentMethod -> accountService.getAccounts(paymentMethod).isEmpty());
-        if (noAccountForOfferPaymentMethods) {
-            cannotTakeOfferReason = Optional.of(Res.get("muSig.offerbook..table.cell.takeOffer.cannotTakeOfferReason.noAccountForOfferPaymentMethods"));
+
+        hasAnyMatchingAccount = paymentMethods.stream()
+                .anyMatch(paymentMethod -> accountService.getAccounts(paymentMethod).stream()
+                        .filter(account -> !(account instanceof UserDefinedFiatAccount))
+                        .anyMatch(account ->
+                                account.getAccountPayload().getSelectedCurrencyCodes().contains(quoteCurrencyCode))
+                );
+
+        if (!hasAnyMatchingAccount) {
+            cannotTakeOfferReason = Optional.of(Res.get("muSig.offerbook..table.cell.takeOffer.cannotTakeOfferReason.noAccountForOfferPaymentMethods",
+                    quoteCurrencyCode));
         }
-        canTakeOffer = !noAccountForOfferPaymentMethods;
+        canTakeOffer = hasAnyMatchingAccount;
 
         makerUserProfile = userProfileService.findUserProfile(offer.getMakersUserProfileId())
                 .orElseThrow(() -> new RuntimeException("No maker user profile found for offer: " + offer.getId()));

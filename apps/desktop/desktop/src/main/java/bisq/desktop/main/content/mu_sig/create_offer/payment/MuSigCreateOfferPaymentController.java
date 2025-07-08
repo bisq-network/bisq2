@@ -106,11 +106,8 @@ public class MuSigCreateOfferPaymentController implements Controller {
 
         model.getAccountsByPaymentMethod().putAll(accountService.getAccounts().stream()
                 .filter(account -> !(account instanceof UserDefinedFiatAccount))
-                .filter(account -> {
-                    AccountPayload<? extends PaymentMethod<?>> accountPayload = account.getAccountPayload();
-                    List<String> accountCurrencyCodes = getAccountCurrencyCodes(accountPayload);
-                    return accountCurrencyCodes.contains(quoteCurrencyCode);
-                })
+                .filter(account ->
+                        account.getAccountPayload().getSelectedCurrencyCodes().contains(quoteCurrencyCode))
                 .collect(Collectors.groupingBy(
                         Account::getPaymentMethod,
                         Collectors.toList()

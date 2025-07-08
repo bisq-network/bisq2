@@ -19,6 +19,7 @@ package bisq.desktop.main.content.mu_sig.take_offer.payment;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
+import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.FiatPaymentMethod;
@@ -44,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -57,19 +59,14 @@ public class MuSigTakeOfferPaymentController implements Controller {
     @Getter
     private final MuSigTakeOfferPaymentView view;
     private final Region owner;
+    private final AccountService accountService;
 
     public MuSigTakeOfferPaymentController(ServiceProvider serviceProvider, Region owner) {
-        AccountService accountService = serviceProvider.getAccountService();
+        accountService = serviceProvider.getAccountService();
         this.owner = owner;
 
         model = new MuSigTakeOfferPaymentModel();
         view = new MuSigTakeOfferPaymentView(model, this);
-
-        model.getAccountsByPaymentMethod().putAll(accountService.getAccounts().stream()
-                .collect(Collectors.groupingBy(
-                        Account::getPaymentMethod,
-                        Collectors.toList()
-                )));
 
         model.getSortedAccountsForPaymentMethod().setComparator(Comparator.comparing(Account::getAccountName));
         model.getSortedPaymentMethods().setComparator(Comparator.comparing(PaymentMethod::getShortDisplayString));
@@ -84,6 +81,16 @@ public class MuSigTakeOfferPaymentController implements Controller {
                 ? Res.get("muSig.takeOffer.paymentMethods.headline.buyer", quoteCurrencyCode)
                 : Res.get("muSig.takeOffer.paymentMethods.headline.seller", quoteCurrencyCode));
 
+        Map<? extends PaymentMethod<?>, List<Account<?, ?>>> accountsByPaymentMethod = accountService.getAccounts().stream()
+                .filter(account -> !(account instanceof UserDefinedFiatAccount))
+                .filter(account ->
+                        account.getAccountPayload().getSelectedCurrencyCodes().contains(quoteCurrencyCode))
+                .collect(Collectors.groupingBy(
+                        Account::getPaymentMethod,
+                        Collectors.toList()
+                ));
+        model.getAccountsByPaymentMethod().putAll(accountsByPaymentMethod);
+
         List<FiatPaymentMethodSpec> offeredPaymentMethodSpecs = muSigOffer.getQuoteSidePaymentMethodSpecs();
         boolean isSinglePaymentMethod = offeredPaymentMethodSpecs.size() == 1;
         model.setSinglePaymentMethod(isSinglePaymentMethod);
@@ -91,7 +98,7 @@ public class MuSigTakeOfferPaymentController implements Controller {
             FiatPaymentMethod paymentMethod = offeredPaymentMethodSpecs.get(0).getPaymentMethod();
             model.getSelectedPaymentMethodSpec().set(PaymentMethodSpecUtil.createPaymentMethodSpec(paymentMethod, model.getMarket().getQuoteCurrencyCode()));
 
-            List<Account<?, ?>> accountsForPaymentMethod = model.getAccountsByPaymentMethod().get(paymentMethod);
+            List<Account<?, ?>> accountsForPaymentMethod = accountsByPaymentMethod.get(paymentMethod);
             checkNotNull(accountsForPaymentMethod, "There must be a account list for paymentMethod " + paymentMethod);
             model.getAccountsForPaymentMethod().setAll(accountsForPaymentMethod);
 
