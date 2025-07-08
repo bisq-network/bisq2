@@ -309,18 +309,21 @@ public class AmountSelectionController implements Controller {
         setMinBaseFromQuote();
 
         maxOrFixedQuoteAmountFromModelPin = EasyBind.subscribe(model.getMaxOrFixedQuoteSideAmount(), amount -> {
-            // Only apply value from component to slider if we have no focus on slider (not used)
-            boolean isSliderFocus = model.getIsRangeAmountEnabled().get()
-                    ? model.getRangeSliderFocus().get()
+            // Only apply value from component to slider if we have no focus on the high thumb (max)
+            boolean isHighThumbFocus = model.getIsRangeAmountEnabled().get()
+                    ? model.getRangeSliderHighThumbFocus().get()
                     : model.getMaxOrFixedAmountSliderFocus().get();
-            if (amount != null && !isSliderFocus) {
+            if (amount != null && !isHighThumbFocus) {
                 UIThread.run(() -> model.getMaxOrFixedAmountSliderValue().set(getSliderValue(amount.getValue())));
             }
         });
 
         minQuoteAmountFromModelPin = EasyBind.subscribe(model.getMinQuoteSideAmount(), amount -> {
-            // Only apply value from component to slider if we have no focus on slider (not used)
-            if (amount != null && !model.getRangeSliderFocus().get()) {
+            // Only apply value from component to slider if we have no focus on the low thumb (min)
+            boolean isLowThumbFocus = model.getIsRangeAmountEnabled().get()
+                    ? model.getRangeSliderLowThumbFocus().get()
+                    : model.getMinAmountSliderFocus().get();
+            if (amount != null && !isLowThumbFocus) {
                 UIThread.run(() -> model.getMinAmountSliderValue().set(getSliderValue(amount.getValue())));
             }
         });

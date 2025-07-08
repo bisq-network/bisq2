@@ -236,7 +236,8 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         rangeSlider.highValueProperty().bindBidirectional(model.getMaxOrFixedAmountSliderValue());
         rangeSlider.lowValueProperty().addListener(minAmountSliderValueListener);
         rangeSlider.highValueProperty().addListener(maxOrFixedAmountSliderValueListener);
-        model.getRangeSliderFocus().bind(rangeSlider.focusedProperty());
+        model.getRangeSliderLowThumbFocus().bind(rangeSlider.getLowThumbFocused());
+        model.getRangeSliderHighThumbFocus().bind(rangeSlider.getHighThumbFocused());
         maxOrFixedAmountSlider.valueProperty().bindBidirectional(model.getMaxOrFixedAmountSliderValue());
         maxOrFixedAmountSlider.valueProperty().addListener(maxOrFixedAmountSliderValueListener);
         model.getMaxOrFixedAmountSliderFocus().bind(maxOrFixedAmountSlider.focusedProperty());
@@ -296,7 +297,8 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         rangeSlider.highValueProperty().removeListener(maxOrFixedAmountSliderValueListener);
         rangeSlider.lowValueProperty().unbindBidirectional(model.getMinAmountSliderValue());
         rangeSlider.lowValueProperty().removeListener(minAmountSliderValueListener);
-        model.getRangeSliderFocus().unbind();
+        model.getRangeSliderLowThumbFocus().unbind();
+        model.getRangeSliderHighThumbFocus().unbind();
         maxOrFixedAmountSlider.valueProperty().unbindBidirectional(model.getMaxOrFixedAmountSliderValue());
         maxOrFixedAmountSlider.valueProperty().removeListener(maxOrFixedAmountSliderValueListener);
         model.getMaxOrFixedAmountSliderFocus().unbind();

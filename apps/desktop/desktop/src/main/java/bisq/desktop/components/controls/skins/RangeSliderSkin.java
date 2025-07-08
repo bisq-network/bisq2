@@ -77,10 +77,12 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
             draggingLow = true;
             dragOffsetX = e.getX() - lowThumb.getWidth();
             lowThumb.requestFocus();
+            rangeSlider.getLowThumbFocused().set(true);
             e.consume();
         });
         lowThumb.setOnMouseReleased(e -> {
             draggingLow = false;
+            rangeSlider.getLowThumbFocused().set(false);
             e.consume();
         });
         lowThumb.setOnMouseDragged(this::handleLowThumbDrag);
@@ -88,10 +90,12 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
             draggingHigh = true;
             dragOffsetX = e.getX();
             highThumb.requestFocus();
+            rangeSlider.getHighThumbFocused().set(true);
             e.consume();
         });
         highThumb.setOnMouseReleased(e -> {
             draggingHigh = false;
+            rangeSlider.getHighThumbFocused().set(false);
             e.consume();
         });
         highThumb.setOnMouseDragged(this::handleHighThumbDrag);
