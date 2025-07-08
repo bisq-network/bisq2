@@ -133,7 +133,6 @@ public class CreateWalletVerifyView extends View<StackPane, CreateWalletVerifyMo
                 instructLabel.getStyleClass().add("bisq-text-3");
                 instructLabel.setWrapText(true);
                 instructLabel.setTextAlignment(TextAlignment.CENTER);
-                content.getChildren().clear();
                 content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, wrongLabel, instructLabel, Spacer.fillVBox());
                 break;
             case SUCCESS:
@@ -143,13 +142,11 @@ public class CreateWalletVerifyView extends View<StackPane, CreateWalletVerifyMo
                 successInstruct.getStyleClass().add("bisq-text-3");
                 successInstruct.setWrapText(true);
                 successInstruct.setTextAlignment(TextAlignment.CENTER);
-                content.getChildren().clear();
                 content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, successLabel, successInstruct, Spacer.fillVBox());
                 break;
 
             case QUIZ:
                 // Restore quiz UI
-                content.getChildren().clear();
                 content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, questionLabel, answerButtonsRow, nextWordButton, Spacer.fillVBox());
                 updateQuestion();
                 break;
