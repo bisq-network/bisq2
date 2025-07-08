@@ -20,6 +20,8 @@ package bisq.desktop.main.content.user.accounts.details;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
+import bisq.account.accounts.SelectableCurrencyAccountPayload;
+import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.PaymentRail;
 import bisq.common.currency.FiatCurrencyRepository;
@@ -101,16 +103,20 @@ public abstract class AccountDetailsVBox<A extends Account<?, ?>, R extends Paym
                     account.getPaymentMethod().getDisplayString());
             gridPane.add(paymentMethodTriple.getThird(), 0, rowIndex);
 
-            String currency;
             AccountPayload<?> accountPayload = account.getAccountPayload();
-            if (accountPayload instanceof MultiCurrencyAccountPayload multiCurrencyAccountPayload) {
-                currency = FiatCurrencyRepository.getCodeAndDisplayNames(multiCurrencyAccountPayload.getSelectedCurrencyCodes());
-            } else {
-                currency = FiatCurrencyRepository.getCodeAndDisplayName(accountPayload.getCurrencyCode().orElseThrow());
-            }
+            String currencyString = switch (accountPayload) {
+                case MultiCurrencyAccountPayload multiCurrencyAccountPayload ->
+                        FiatCurrencyRepository.getCodeAndDisplayNames(multiCurrencyAccountPayload.getSelectedCurrencyCodes());
+                case SelectableCurrencyAccountPayload selectableCurrencyAccountPayload ->
+                        FiatCurrencyRepository.getCodeAndDisplayName(selectableCurrencyAccountPayload.getSelectedCurrencyCode());
+                case SingleCurrencyAccountPayload singleCurrencyAccountPayload ->
+                        FiatCurrencyRepository.getCodeAndDisplayName(singleCurrencyAccountPayload.getCurrencyCode());
+                case null, default ->
+                        throw new UnsupportedOperationException("accountPayload of unexpected type: " + accountPayload.getClass().getSimpleName());
+            };
 
             Triple<Text, Label, VBox> currencyTriple = getDescriptionValueVBoxTriple(Res.get("user.paymentAccounts.currency"),
-                    currency);
+                    currencyString);
             gridPane.add(currencyTriple.getThird(), 1, rowIndex);
         }
     }

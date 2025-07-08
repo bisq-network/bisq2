@@ -33,11 +33,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class SepaAccountPayload extends CountryBasedAccountPayload {
+public final class SepaAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
     public static final int HOLDER_NAME_MIN_LENGTH = 2;
     public static final int HOLDER_NAME_MAX_LENGTH = 70;
 
@@ -109,6 +111,13 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
     }
 
     @Override
+    public String getCurrencyCode() {
+        List<String> supportedCurrencyCodes = getPaymentMethod().getSupportedCurrencyCodes();
+        checkArgument(supportedCurrencyCodes.size() == 1);
+        return supportedCurrencyCodes.get(0);
+    }
+
+    @Override
     public String getDefaultAccountName() {
         return getPaymentMethodName() + "-" + StringUtils.truncate(iban, 8);
     }
@@ -121,4 +130,5 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
                 Res.get("user.paymentAccounts.sepa.bic"), bic
         ).toString();
     }
+
 }

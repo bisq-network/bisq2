@@ -229,22 +229,22 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
     @Getter
     private final FiatPaymentMethodChargebackRisk chargebackRisk;
 
-    FiatPaymentRail(Country supportedCountries,
+    FiatPaymentRail(Country supportedCountry,
                     List<? extends TradeCurrency> supportedCurrencies,
                     FiatPaymentMethodChargebackRisk chargebackRisk) {
-        this(List.of(supportedCountries), supportedCurrencies, chargebackRisk);
+        this(List.of(supportedCountry), supportedCurrencies, chargebackRisk);
     }
 
     FiatPaymentRail(List<Country> supportedCountries,
-                    TradeCurrency supportedCurrencies,
+                    TradeCurrency supportedCurrency,
                     FiatPaymentMethodChargebackRisk chargebackRisk) {
-        this(supportedCountries, List.of(supportedCurrencies), chargebackRisk);
+        this(supportedCountries, List.of(supportedCurrency), chargebackRisk);
     }
 
-    FiatPaymentRail(Country supportedCountries,
-                    TradeCurrency supportedCurrencies,
+    FiatPaymentRail(Country supportedCountry,
+                    TradeCurrency supportedCurrency,
                     FiatPaymentMethodChargebackRisk chargebackRisk) {
-        this(List.of(supportedCountries), List.of(supportedCurrencies), chargebackRisk);
+        this(List.of(supportedCountry), List.of(supportedCurrency), chargebackRisk);
     }
 
     FiatPaymentRail(List<Country> supportedCountries,

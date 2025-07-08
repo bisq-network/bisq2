@@ -38,7 +38,7 @@ import java.util.List;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class SepaInstantAccountPayload extends CountryBasedAccountPayload {
+public final class SepaInstantAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
     private final String holderName;
     private final String iban;
     private final String bic;

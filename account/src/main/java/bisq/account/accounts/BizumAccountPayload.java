@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class BizumAccountPayload extends CountryBasedAccountPayload {
+public final class BizumAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
     private final String mobileNr;
 
     public BizumAccountPayload(String id, String countryCode, String mobileNr) {

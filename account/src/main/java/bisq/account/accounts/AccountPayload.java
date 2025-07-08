@@ -26,7 +26,10 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
+import java.util.Collections;
+import java.util.List;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * AccountPayload is sent over the wire to the peer during the trade process. It is not used in the offer.
@@ -88,13 +91,32 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
         return getPaymentMethodName() + "-" + id.substring(0, 4);
     }
 
-    public Optional<String> getCurrencyCode() {
+/*    public Optional<String> getCurrencyCode() {
         if (this instanceof SelectableCurrencyAccountPayload selectableCurrencyAccountPayload) {
             return Optional.of(selectableCurrencyAccountPayload.getSelectedCurrencyCode());
         } else if (this instanceof MultiCurrencyAccountPayload selectedCurrencyAccountPayload) {
             return Optional.empty();
+        } else if (this instanceof UserDefinedFiatAccountPayload) {
+            return Optional.empty();
         } else {
-            return Optional.of(getPaymentMethod().getSupportedCurrencyCodes().get(0));
+            List<String> supportedCurrencyCodes = getPaymentMethod().getSupportedCurrencyCodes();
+            checkArgument(supportedCurrencyCodes.size() == 1);
+            return Optional.of(supportedCurrencyCodes.get(0));
+        }
+    }*/
+
+    public List<String> getCurrencyCodes() {
+        if (this instanceof SelectableCurrencyAccountPayload selectableCurrencyAccountPayload) {
+            return Collections.singletonList(selectableCurrencyAccountPayload.getSelectedCurrencyCode());
+        } else if (this instanceof MultiCurrencyAccountPayload selectedCurrencyAccountPayload) {
+            return selectedCurrencyAccountPayload.getSelectedCurrencyCodes();
+        } else if (this instanceof SingleCurrencyAccountPayload singleCurrencyAccountPayload) {
+            return  Collections.singletonList(singleCurrencyAccountPayload.getCurrencyCode());
+        } else {
+            // If not SelectableCurrencyAccountPayload and not MultiCurrencyAccountPayload we expect exactly 1 currencyCode
+            List<String> supportedCurrencyCodes = getPaymentMethod().getSupportedCurrencyCodes();
+            checkArgument(supportedCurrencyCodes.size() == 1);
+            return Collections.singletonList(supportedCurrencyCodes.get(0));
         }
     }
 

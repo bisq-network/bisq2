@@ -126,7 +126,7 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
 
         accountNameField.setText(model.getDefaultAccountName());
         paymentMethod.setText(model.getPaymentMethod().getDisplayString());
-        currency.setText(model.getCurrency());
+        currency.setText(model.getCurrencyString());
         country.setText(model.getCountry());
 
         boolean isCountryBasedAccountPayload = model.getAccountPayload() instanceof CountryBasedAccountPayload;

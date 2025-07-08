@@ -19,6 +19,11 @@ package bisq.desktop.main.content.mu_sig.create_offer.payment;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.MultiCurrencyAccountPayload;
+import bisq.account.accounts.SelectableCurrencyAccountPayload;
+import bisq.account.accounts.SingleCurrencyAccountPayload;
+import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.FiatPaymentMethodUtil;
@@ -40,6 +45,7 @@ import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -95,7 +101,20 @@ public class MuSigCreateOfferPaymentController implements Controller {
 
         model.getMarket().set(market);
         model.getSelectedPaymentMethods().clear();
-        model.getPaymentMethods().setAll(FiatPaymentMethodUtil.getPaymentMethods(market.getQuoteCurrencyCode()));
+        String quoteCurrencyCode = market.getQuoteCurrencyCode();
+        model.getPaymentMethods().setAll(FiatPaymentMethodUtil.getPaymentMethods(quoteCurrencyCode));
+
+        model.getAccountsByPaymentMethod().putAll(accountService.getAccounts().stream()
+                .filter(account -> !(account instanceof UserDefinedFiatAccount))
+                .filter(account -> {
+                    AccountPayload<? extends PaymentMethod<?>> accountPayload = account.getAccountPayload();
+                    List<String> accountCurrencyCodes = getAccountCurrencyCodes(accountPayload);
+                    return accountCurrencyCodes.contains(quoteCurrencyCode);
+                })
+                .collect(Collectors.groupingBy(
+                        Account::getPaymentMethod,
+                        Collectors.toList()
+                )));
     }
 
     public void reset() {
@@ -104,11 +123,6 @@ public class MuSigCreateOfferPaymentController implements Controller {
 
     @Override
     public void onActivate() {
-        model.getAccountsByPaymentMethod().putAll(accountService.getAccounts().stream()
-                .collect(Collectors.groupingBy(
-                        Account::getPaymentMethod,
-                        Collectors.toList()
-                )));
         model.setSubtitleLabel(model.getDirection().isBuy()
                 ? Res.get("bisqEasy.tradeWizard.paymentMethods.fiat.subTitle.buyer", model.getMarket().get().getQuoteCurrencyCode())
                 : Res.get("bisqEasy.tradeWizard.paymentMethods.fiat.subTitle.seller", model.getMarket().get().getQuoteCurrencyCode()));
@@ -183,5 +197,23 @@ public class MuSigCreateOfferPaymentController implements Controller {
             model.getPaymentMethodWithoutAccount().set(null);
             model.getPaymentMethodWithMultipleAccounts().set(null);
         });
+    }
+
+    private static List<String> getAccountCurrencyCodes(AccountPayload<? extends PaymentMethod<?>> accountPayload) {
+        return switch (accountPayload) {
+            case MultiCurrencyAccountPayload multiCurrencyAccountPayload ->
+                    multiCurrencyAccountPayload.getSelectedCurrencyCodes();
+            case SelectableCurrencyAccountPayload selectableCurrencyAccountPayload ->
+                    Collections.singletonList(selectableCurrencyAccountPayload.getSelectedCurrencyCode());
+            case SingleCurrencyAccountPayload singleCurrencyAccountPayload ->
+                    Collections.singletonList(singleCurrencyAccountPayload.getCurrencyCode());
+            case null, default -> {
+                log.error("accountPayload of unexpected type: {}",
+                        (accountPayload != null
+                                ? accountPayload.getClass().getSimpleName()
+                                : "accountPayload is null"));
+                yield List.of();
+            }
+        };
     }
 }

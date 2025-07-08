@@ -32,8 +32,10 @@ import bisq.account.accounts.PixAccount;
 import bisq.account.accounts.PixAccountPayload;
 import bisq.account.accounts.RevolutAccount;
 import bisq.account.accounts.RevolutAccountPayload;
+import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.SepaAccount;
 import bisq.account.accounts.SepaAccountPayload;
+import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.ZelleAccount;
 import bisq.account.accounts.ZelleAccountPayload;
 import bisq.account.payment_method.CryptoPaymentRail;
@@ -85,11 +87,17 @@ public class PaymentSummaryController implements Controller {
         model.setAccountPayload(accountPayload);
         model.setDefaultAccountName(accountPayload.getDefaultAccountName());
 
-        if (accountPayload instanceof MultiCurrencyAccountPayload multiCurrencyAccountPayload) {
-            model.setCurrency(FiatCurrencyRepository.getCodeAndDisplayNames(multiCurrencyAccountPayload.getSelectedCurrencyCodes()));
-        } else {
-            model.setCurrency(FiatCurrencyRepository.getCodeAndDisplayName(accountPayload.getCurrencyCode().orElseThrow()));
-        }
+        String currencyString = switch (accountPayload) {
+            case MultiCurrencyAccountPayload multiCurrencyAccountPayload ->
+                    FiatCurrencyRepository.getCodeAndDisplayNames(multiCurrencyAccountPayload.getSelectedCurrencyCodes());
+            case SelectableCurrencyAccountPayload selectableCurrencyAccountPayload ->
+                    FiatCurrencyRepository.getCodeAndDisplayName(selectableCurrencyAccountPayload.getSelectedCurrencyCode());
+            case SingleCurrencyAccountPayload singleCurrencyAccountPayload ->
+                    FiatCurrencyRepository.getCodeAndDisplayName(singleCurrencyAccountPayload.getCurrencyCode());
+            case null, default ->
+                    throw new UnsupportedOperationException("accountPayload of unexpected type: " + accountPayload.getClass().getSimpleName());
+        };
+        model.setCurrencyString(currencyString);
 
         if (accountPayload instanceof CountryBasedAccountPayload countryBasedAccountPayload) {
             model.setCountry(countryBasedAccountPayload.getCountry().getName());

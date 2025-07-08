@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class UpiAccountPayload extends CountryBasedAccountPayload {
+public final class UpiAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
     private final String virtualPaymentAddress;
 
     public UpiAccountPayload(String id, String countryCode, String virtualPaymentAddress) {

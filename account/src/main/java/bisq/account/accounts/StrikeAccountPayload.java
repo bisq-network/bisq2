@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class StrikeAccountPayload extends CountryBasedAccountPayload {
+public final class StrikeAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
     private final String holderName;
 
     public StrikeAccountPayload(String id, String countryCode, String holderName) {

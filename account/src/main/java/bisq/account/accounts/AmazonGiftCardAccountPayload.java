@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPayload {
+public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
     private final String emailOrMobileNr;
 
     public AmazonGiftCardAccountPayload(String id, String countryCode, String emailOrMobileNr) {

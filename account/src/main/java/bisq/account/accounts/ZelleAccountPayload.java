@@ -16,14 +16,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
-public class ZelleAccountPayload extends CountryBasedAccountPayload {
+public class ZelleAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
     public static final int HOLDER_NAME_MIN_LENGTH = 2;
     public static final int HOLDER_NAME_MAX_LENGTH = 70;
 
     private final String holderName;
     private final String emailOrMobileNr;
 
-    public ZelleAccountPayload(String id,  String holderName,String emailOrMobileNr) {
+    public ZelleAccountPayload(String id, String holderName, String emailOrMobileNr) {
         super(id, "US");
         this.holderName = holderName;
         this.emailOrMobileNr = emailOrMobileNr;
