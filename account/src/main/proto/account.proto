@@ -193,7 +193,7 @@ message FasterPaymentsAccountPayload {
 }
 
 message PayIDAccountPayload {
-  string bankAccountName = 1;
+  string holderName = 1;
   string payId = 2;
 }
 

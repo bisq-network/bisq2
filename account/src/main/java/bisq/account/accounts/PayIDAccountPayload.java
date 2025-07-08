@@ -1,7 +1,9 @@
 package bisq.account.accounts;
 
+import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -12,13 +14,13 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class PayIDAccountPayload extends AccountPayload<FiatPaymentMethod> {
-    private final String bankAccountName;
-    private final String payID;
+    private final String holderName;
+    private final String payId;
 
-    public PayIDAccountPayload(String id, String bankAccountName, String payID) {
+    public PayIDAccountPayload(String id, String holderName, String payId) {
         super(id);
-        this.bankAccountName = bankAccountName;
-        this.payID = payID;
+        this.holderName = holderName;
+        this.payId = payId;
     }
 
     @Override
@@ -33,20 +35,28 @@ public final class PayIDAccountPayload extends AccountPayload<FiatPaymentMethod>
 
     private bisq.account.protobuf.PayIDAccountPayload.Builder getPayIDAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.PayIDAccountPayload.newBuilder()
-                .setBankAccountName(bankAccountName)
-                .setPayId(payID);
+                .setHolderName(holderName)
+                .setPayId(payId);
     }
 
     public static PayIDAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         var payload = proto.getPayIDAccountPayload();
         return new PayIDAccountPayload(
                 proto.getId(),
-                payload.getBankAccountName(),
+                payload.getHolderName(),
                 payload.getPayId());
     }
 
     @Override
     public FiatPaymentMethod getPaymentMethod() {
         return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.PAY_ID);
+    }
+
+    @Override
+    public String getAccountDataDisplayString() {
+        return new AccountDataDisplayStringBuilder(
+                Res.get("user.paymentAccounts.holderName"), holderName,
+                Res.get("user.paymentAccounts.payId.payId"), payId
+        ).toString();
     }
 }

@@ -40,15 +40,6 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
     protected final String accountName;
     protected final P accountPayload;
 
-   /* public Account(long creationDate,
-                   String accountName,
-                   P accountPayload) {
-        this(StringUtils.createUid(),
-                creationDate,
-                accountName,
-                accountPayload);
-    }*/
-
     public Account(String id,
                    long creationDate,
                    String accountName,
@@ -74,7 +65,6 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
                 .setId(id)
                 .setCreationDate(creationDate)
                 .setAccountName(accountName)
-                //.setPaymentMethod(paymentMethod.toProto(serializeForHash))
                 .setAccountPayload(accountPayload.toProto(serializeForHash));
     }
 

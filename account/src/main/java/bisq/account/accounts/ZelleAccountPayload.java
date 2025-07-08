@@ -72,7 +72,7 @@ public class ZelleAccountPayload extends CountryBasedAccountPayload {
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
                 Res.get("user.paymentAccounts.holderName"), holderName,
-                Res.get("user.paymentAccounts.zelle.emailOrMobileNr"), emailOrMobileNr
+                Res.get("user.paymentAccounts.emailOrMobileNr"), emailOrMobileNr
         ).toString();
     }
 }

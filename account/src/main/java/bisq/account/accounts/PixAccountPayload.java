@@ -72,7 +72,7 @@ public final class PixAccountPayload extends CountryBasedAccountPayload {
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.pix.holderName"), holderName,
+                Res.get("user.paymentAccounts.holderName"), holderName,
                 Res.get("user.paymentAccounts.pix.pixKey"), pixKey
         ).toString();
     }

@@ -39,8 +39,8 @@ public class ZellePaymentFormView extends PaymentFormView<ZellePaymentFormModel,
         holderName.setMaxWidth(Double.MAX_VALUE);
 
 
-        emailOrMobileNr = new MaterialTextField(Res.get("user.paymentAccounts.zelle.emailOrMobileNr"),
-                Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("user.paymentAccounts.zelle.emailOrMobileNr"))));
+        emailOrMobileNr = new MaterialTextField(Res.get("user.paymentAccounts.emailOrMobileNr"),
+                Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("user.paymentAccounts.emailOrMobileNr"))));
         emailOrMobileNr.setValidators(model.getEmailOrPhoneNumberValidator());
         emailOrMobileNr.setMaxWidth(Double.MAX_VALUE);
 

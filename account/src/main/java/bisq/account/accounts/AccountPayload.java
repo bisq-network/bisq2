@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 /**
- * AccountPayload is sent over the wire to the peer during the trade process. It is not used in teh offer.
+ * AccountPayload is sent over the wire to the peer during the trade process. It is not used in the offer.
  */
 @Getter
 @Slf4j
@@ -99,8 +99,5 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
         }
     }
 
-    //todo make abstract once impl for all
-    public String getAccountDataDisplayString() {
-        throw new UnsupportedOperationException("Not implemented for " + getPaymentMethod().getName());
-    }
+    public abstract String getAccountDataDisplayString();
 }
