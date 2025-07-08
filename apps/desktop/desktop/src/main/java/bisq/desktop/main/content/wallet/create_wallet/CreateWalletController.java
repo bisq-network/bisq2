@@ -99,7 +99,7 @@ public class CreateWalletController extends NavigationController {
             createWalletVerifyController.getModel().getCurrentScreenState().removeListener(verifyScreenStateListener);
             createWalletVerifyController.getModel().getCurrentScreenState().addListener(verifyScreenStateListener);
             backString = Res.get("action.back");
-            nextString = "Next word";
+            nextString = Res.get("wallet.verifySeeds.button.question.nextWord");
         }
 
         model.getNextButtonText().set(nextString);

@@ -7,6 +7,7 @@ import bisq.desktop.main.content.wallet.create_wallet.SeedState;
 import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
 import java.util.function.Consumer;
 
 import java.util.List;
@@ -16,10 +17,10 @@ public class CreateWalletBackupController implements Controller {
     private final CreateWalletBackupModel model;
     @Getter
     private final CreateWalletBackupView view;
-    WalletService walletService;
+    private final WalletService walletService;
 
     public CreateWalletBackupController(ServiceProvider serviceProvider,
-        Consumer<Boolean> navigationButtonsVisibleHandler) {
+                                        Consumer<Boolean> navigationButtonsVisibleHandler) {
         model = new CreateWalletBackupModel();
         view = new CreateWalletBackupView(model, this, navigationButtonsVisibleHandler);
 
@@ -41,6 +42,11 @@ public class CreateWalletBackupController implements Controller {
     }
 
     private void setSeedWords(List<String> seedWords) {
+        if (seedWords.size() != model.getSEED_WORD_COUNT()) {
+            throw new IllegalArgumentException(
+                    "Expected " + model.getSEED_WORD_COUNT() + " seed words, but got " + seedWords.size()
+            );
+        }
         for (int i = 0; i < model.getSEED_WORD_COUNT(); i++) {
             model.getSeedWords()[i].set(seedWords.get(i));
         }

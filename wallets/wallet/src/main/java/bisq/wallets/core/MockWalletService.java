@@ -142,7 +142,7 @@ public class MockWalletService implements WalletService {
 
     @Override
     public void setEncryptionPassword(String password) {
-        log.debug("setEncryptionPassword: " + password);
+        log.debug("setEncryptionPassword: REDACTED");
         encryptionPassword = password;
     }
 

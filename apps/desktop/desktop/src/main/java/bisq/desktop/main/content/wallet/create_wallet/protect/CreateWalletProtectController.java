@@ -39,12 +39,10 @@ public class CreateWalletProtectController implements Controller {
 
     @Override
     public void onActivate() {
-
     }
 
     @Override
     public void onDeactivate() {
-
     }
 
     public boolean isValid() {
@@ -60,21 +58,25 @@ public class CreateWalletProtectController implements Controller {
 
         if (password.isEmpty()) {
             new Popup().invalid(Res.get("wallet.protectWallet.error.passwordRequired"))
-                    .owner((Region) view.getRoot().getParent().getParent())
+                    .owner(getPopupOwner())
                     .show();
         } else if (confirmPassword.isEmpty()) {
             new Popup().invalid(Res.get("wallet.protectWallet.error.confirmPasswordRequired"))
-                    .owner((Region) view.getRoot().getParent().getParent())
+                    .owner(getPopupOwner())
                     .show();
         } else if (!password.equals(confirmPassword)) {
             new Popup().invalid(Res.get("wallet.protectWallet.error.passwordsDontMatch"))
-                    .owner((Region) view.getRoot().getParent().getParent())
+                    .owner(getPopupOwner())
                     .show();
         }
     }
 
     public CreateWalletProtectModel getModel() {
         return model;
+    }
+
+    private Region getPopupOwner() {
+        return (Region) view.getRoot().getParent().getParent();
     }
 
 }

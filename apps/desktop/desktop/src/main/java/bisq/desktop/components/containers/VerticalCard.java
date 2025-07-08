@@ -7,10 +7,12 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.io.InputStream;
 
+@Slf4j
 public class VerticalCard extends VBox {
 
     private static final int DEFAULT_IMAGE_WIDTH = 80;
@@ -92,11 +94,15 @@ public class VerticalCard extends VBox {
     }
 
     private @Nullable Image loadImage(String src) {
-        InputStream imageStream = getClass().getResourceAsStream(src);
-        if (imageStream == null) {
-            System.err.println("Warning: Image not found: " + src);
+        try (InputStream imageStream = getClass().getResourceAsStream(src)) {
+            if (imageStream == null) {
+                log.warn("Image not found: {}", src);
+                return null;
+            }
+            return new Image(imageStream);
+        } catch (Exception e) {
+            log.error("Failed to load image: {}", src, e);
             return null;
         }
-        return new Image(imageStream);
     }
 }

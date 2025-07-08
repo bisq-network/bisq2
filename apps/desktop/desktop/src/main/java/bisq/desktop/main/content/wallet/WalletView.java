@@ -61,18 +61,12 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
         super.onViewAttached();
         isWalletInitializedPin = EasyBind.subscribe(model.getIsWalletInitialized(), isInitialized -> {
             log.info("Wallet initialization status changed: {}", isInitialized);
-            if ((boolean) isInitialized) {
+            if (isInitialized) {
                 setContentToTabs();
             } else {
                 setContentToNotInitialized();
             }
         });
-        // Set initial state
-        if (model.getIsWalletInitialized().get()) {
-            setContentToTabs();
-        } else {
-            setContentToNotInitialized();
-        }
     }
 
     private void setContentToTabs() {

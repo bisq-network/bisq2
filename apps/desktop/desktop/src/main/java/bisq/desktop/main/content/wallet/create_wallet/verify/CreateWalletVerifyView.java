@@ -101,7 +101,7 @@ public class CreateWalletVerifyView extends View<StackPane, CreateWalletVerifyMo
             return;
         }
         int pos = model.getQuestionPositions().get(qIdx);
-        questionLabel.setText((qIdx + 1) + ". " + Res.get("wallet.verifySeeds.question", + (pos + 1)));
+        questionLabel.setText((qIdx + 1) + ". " + Res.get("wallet.verifySeeds.question", (pos + 1)));
         for (int i = 0; i < ANSWER_BUTTONS_COUNT; i++) {
             answerButtons[i].setText(model.getAnswerChoices().get(qIdx).get(i));
             answerButtons[i].setVisible(true);
@@ -161,7 +161,7 @@ public class CreateWalletVerifyView extends View<StackPane, CreateWalletVerifyMo
                 break;
 
             case ERROR:
-                Label errorLabel = new Label(Res.get("wallet.backupSeeds.error.failedToLoa"));
+                Label errorLabel = new Label(Res.get("wallet.backupSeeds.error.failedToLoad"));
                 errorLabel.getStyleClass().add("bisq-text-error");
                 root.getChildren().addAll(errorLabel);
                 break;

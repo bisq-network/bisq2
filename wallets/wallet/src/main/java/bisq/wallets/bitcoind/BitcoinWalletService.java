@@ -55,6 +55,8 @@ public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinW
     private final BitcoinWalletStore persistableStore = new BitcoinWalletStore();
     private final Persistence<BitcoinWalletStore> persistence;
     private final Observable<Coin> balance = new Observable<>(Coin.asBtcFromValue(0));
+    private final Observable<Boolean> isWalletInitialized = new Observable<>(true);
+    private final Observable<Boolean> isWalletBackedUp = new Observable<>(true);
 
     public BitcoinWalletService(Config config,
                                 PersistenceService persistenceService) {
@@ -81,16 +83,17 @@ public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinW
 
     @Override
     public Observable<Boolean> getIsWalletInitialized() {
-        return new Observable<Boolean>(true);
+        return isWalletInitialized;
     }
 
     @Override
     public Observable<Boolean> getIsWalletBackedup() {
-        return new Observable<Boolean>(true);
+        return isWalletBackedUp;
     }
 
     @Override
     public void setIsWalletBackedup(Boolean value) {
+        isWalletBackedUp.set(value);
     }
 
     @Override
@@ -110,7 +113,7 @@ public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinW
 
     @Override
     public void setEncryptionPassword(String password) {
-        log.debug("setEncryptionPassword: " + password);
+        log.debug("setEncryptionPassword called ");
     }
 
     // TODO

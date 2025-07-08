@@ -83,7 +83,6 @@ public class CreateWalletVerifyController implements Controller {
                         UIThread.run(() -> {
                             setSeedWords(seedWords);
                             model.getCurrentScreenState().set(CreateWalletVerifyModel.ScreenState.QUIZ);
-                            log.error("loadSeedWordsAsync :: Verify :: Loaded seed words");
                         }))
                 .exceptionally(ex -> {
                     Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
