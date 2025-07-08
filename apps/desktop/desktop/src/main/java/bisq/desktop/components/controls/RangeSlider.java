@@ -24,15 +24,18 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.control.Control;
 import javafx.scene.control.Skin;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class RangeSlider extends Control {
-    private final DoubleProperty min = new SimpleDoubleProperty(0);
-    private final DoubleProperty max = new SimpleDoubleProperty(100);
     private final DoubleProperty lowValue = new SimpleDoubleProperty(25);
     private final DoubleProperty highValue = new SimpleDoubleProperty(75);
     private final BooleanProperty lowThumbFocused = new SimpleBooleanProperty(false);
     private final BooleanProperty highThumbFocused = new SimpleBooleanProperty(false);
+    @Setter
+    private double min = 0;
+    @Setter
+    private double max = 100;
 
     public RangeSlider() {
         getStyleClass().add("range-slider");

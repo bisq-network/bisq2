@@ -177,8 +177,8 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         fixedAmountSlider.getStyleClass().add("fixed-amount-slider");
 
         rangeAmountSlider = new RangeSlider();
-        rangeAmountSlider.getMin().set(model.getSliderMin());
-        rangeAmountSlider.getMax().set(model.getSliderMax());
+        rangeAmountSlider.setMin(model.getSliderMin());
+        rangeAmountSlider.setMax(model.getSliderMax());
         rangeAmountSlider.getStyleClass().add("amount-range-slider");
 
         minRangeValue = new Label();

@@ -109,8 +109,8 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
     private void updateUI() {
         RangeSlider slider = getSkinnable();
         double w = slider.getWidth() > 0 ? slider.getWidth() : 200;
-        double min = slider.getMin().get();
-        double max = slider.getMax().get();
+        double min = slider.getMin();
+        double max = slider.getMax();
         double range = max - min;
         double trackStart = TRACK_PADDING;
         double trackEnd = w - TRACK_PADDING;
@@ -135,8 +135,8 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
         if (newLow > high) {
             newLow = high;
         }
-        if (newLow < slider.getMin().get()) {
-            newLow = slider.getMin().get();
+        if (newLow < slider.getMin()) {
+            newLow = slider.getMin();
         }
         slider.getLowValue().set(newLow);
         e.consume();
@@ -154,8 +154,8 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
         if (newHigh < low) {
             newHigh = low;
         }
-        if (newHigh > slider.getMax().get()) {
-            newHigh = slider.getMax().get();
+        if (newHigh > slider.getMax()) {
+            newHigh = slider.getMax();
         }
         slider.getHighValue().set(newHigh);
         e.consume();
@@ -163,8 +163,8 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
 
     private double getValue(RangeSlider slider, MouseEvent e) {
         double w = slider.getWidth() > 0 ? slider.getWidth() : 200;
-        double min = slider.getMin().get();
-        double max = slider.getMax().get();
+        double min = slider.getMin();
+        double max = slider.getMax();
         double range = max - min;
         double trackStart = TRACK_PADDING;
         double trackEnd = w - TRACK_PADDING;
