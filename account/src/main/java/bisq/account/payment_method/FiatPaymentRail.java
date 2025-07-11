@@ -77,9 +77,12 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
     // Spain
     BIZUM(countryFromCode("ES"),
             FiatCurrencyRepository.getCurrencyByCode("EUR"),
-            FiatPaymentMethodChargebackRisk.VERY_LOW),
+            FiatPaymentMethodChargebackRisk.LOW),
 
-    // MONEY_BEAM
+    // Sweden
+    SWISH(countryFromCode("SE"),
+            FiatCurrencyRepository.getCurrencyByCode("SEK"),
+            FiatPaymentMethodChargebackRisk.LOW),
 
     // UK
     FASTER_PAYMENTS(countryFromCode("GB"),
@@ -333,6 +336,7 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             case SEPA_INSTANT -> HOURS_24;
             case MONEY_BEAM -> HOURS_24;
             case BIZUM -> DAYS_4;
+            case SWISH -> HOURS_24;
             case FASTER_PAYMENTS -> HOURS_24;
             case INTERAC_E_TRANSFER -> HOURS_24;
             case PAY_ID -> DAYS_4;

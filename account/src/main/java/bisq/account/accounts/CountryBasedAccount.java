@@ -51,6 +51,7 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload> 
             case BIZUMACCOUNT -> BizumAccount.fromProto(proto);
             case WISEUSDACCOUNT -> WiseUsdAccount.fromProto(proto);
             case MONEYBEAMACCOUNT ->  MoneyBeamAccount.fromProto(proto);
+            case SWISHACCOUNT -> SwishAccount.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

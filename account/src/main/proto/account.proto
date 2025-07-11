@@ -107,6 +107,7 @@ message CountryBasedAccountPayload {
     WiseAccountPayload wiseAccountPayload = 29;
     WiseUsdAccountPayload wiseUsdAccountPayload = 30;
     MoneyBeamAccountPayload moneyBeamAccountPayload = 31;
+    SwishAccountPayload swishAccountPayload = 32;
   }
 }
 message SepaAccountPayload {
@@ -198,6 +199,11 @@ message PixAccountPayload {
   string pixKey = 2;
 }
 
+message SwishAccountPayload {
+  string holderName = 1;
+  string mobileNr = 2;
+}
+
 message FasterPaymentsAccountPayload {
   string holderName = 1;
   string sortCode = 2;
@@ -287,6 +293,7 @@ message CountryBasedAccount {
     WiseAccount wiseAccount = 29;
     WiseUsdAccount wiseUsdAccount = 30;
     MoneyBeamAccount moneyBeamAccount = 31;
+    SwishAccount swishAccount = 32;
   }
 }
 message SepaAccount {
@@ -333,6 +340,9 @@ message NationalBankAccount {
 }
 
 message PixAccount {
+}
+
+message SwishAccount {
 }
 
 message FasterPaymentsAccount {
