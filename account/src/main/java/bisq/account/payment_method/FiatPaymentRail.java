@@ -53,7 +53,8 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             FiatCurrencyRepository.getCurrencyByCode("USD"),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
-    //todo remove
+    @Deprecated(since = "2.1.8")
+    // Has high chargeback risk and was added accidentally to Bisq 2. Only kept for backward compatibility for Bisq Easy 2.1.7
     CASH_APP(countryFromCode("US"),
             FiatCurrencyRepository.getCurrencyByCode("USD"),
             FiatPaymentMethodChargebackRisk.MODERATE),
