@@ -119,7 +119,9 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
     // WECHAT_PAY = new PaymentMethod(WECHAT_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
 
     // Thailand
-    // PROMPT_PAY = new PaymentMethod(PROMPT_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
+    PROMPT_PAY(countryFromCode("TH"),
+            FiatCurrencyRepository.getCurrencyByCode("THB"),
+            FiatPaymentMethodChargebackRisk.LOW),
 
     // Russia
     // SBP = new PaymentMethod(SBP_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
@@ -334,6 +336,7 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             case INTERAC_E_TRANSFER -> HOURS_24;
             case PAY_ID -> DAYS_4;
             case PIX -> HOURS_24;
+            case PROMPT_PAY -> HOURS_24;
             case UPI -> DAYS_4;
             case CUSTOM -> DAYS_4;
             case F2F -> DAYS_4;

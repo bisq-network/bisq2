@@ -215,6 +215,7 @@ public class PaymentAccountsController implements Controller {
             case AMAZON_GIFT_CARD ->
                     throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case CASH_DEPOSIT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case PROMPT_PAY -> null;
             case UPI -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case BIZUM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);

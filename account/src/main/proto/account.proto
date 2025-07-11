@@ -110,6 +110,7 @@ message CountryBasedAccountPayload {
     SwishAccountPayload swishAccountPayload = 32;
     UpholdAccountPayload upholdAccountPayload = 33;
     MoneyGramAccountPayload moneyGramAccountPayload = 34;
+    PromptPayAccountPayload promptPayAccountPayload = 35;
   }
 }
 message SepaAccountPayload {
@@ -214,6 +215,10 @@ message PixAccountPayload {
   string pixKey = 2;
 }
 
+message PromptPayAccountPayload {
+  string promptPayId = 1;
+}
+
 message SwishAccountPayload {
   string holderName = 1;
   string mobileNr = 2;
@@ -311,6 +316,7 @@ message CountryBasedAccount {
     SwishAccount swishAccount = 32;
     UpholdAccount upholdAccount = 33;
     MoneyGramAccount moneyGramAccount = 34;
+    PromptPayAccount promptPayAccount = 35;
   }
 }
 message SepaAccount {
@@ -329,7 +335,8 @@ message MoneyGramAccount {
 }
 message F2FAccount {
 }
-
+message PromptPayAccount {
+}
 message BankAccount {
   oneof message {
     AchTransferAccount achTransferAccount = 1;

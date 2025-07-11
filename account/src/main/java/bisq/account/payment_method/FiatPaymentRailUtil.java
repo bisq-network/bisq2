@@ -449,6 +449,7 @@ public class FiatPaymentRailUtil {
                 Map.entry(FiatPaymentRail.SWISH, 2), //?
                 Map.entry(FiatPaymentRail.SWIFT, 2),
                 Map.entry(FiatPaymentRail.BIZUM, 2),
+                Map.entry(FiatPaymentRail.PROMPT_PAY, 2),//?
                 Map.entry(FiatPaymentRail.MONEY_GRAM, 2), //?
                 Map.entry(FiatPaymentRail.CASH_DEPOSIT, 2),
                 Map.entry(FiatPaymentRail.SAME_BANK, 2), //?
