@@ -15,20 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.wallet;
+package bisq.desktop.main.content.wallet.create_wallet.protect;
 
-import bisq.desktop.navigation.NavigationTarget;
-import bisq.desktop.main.content.ContentTabModel;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import bisq.desktop.common.view.Model;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public class WalletModel extends ContentTabModel {
-    @Getter
-    private final BooleanProperty isWalletInitialized = new SimpleBooleanProperty(false);
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.WALLET_DASHBOARD;
-    }
+@Slf4j
+@Getter
+public class CreateWalletProtectModel implements Model {
+    private final StringProperty password = new SimpleStringProperty("");
+    private final StringProperty confirmPassword = new SimpleStringProperty("");
 }

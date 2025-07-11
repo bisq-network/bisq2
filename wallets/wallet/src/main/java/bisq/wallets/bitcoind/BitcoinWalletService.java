@@ -25,8 +25,11 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Getter
@@ -52,6 +55,8 @@ public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinW
     private final BitcoinWalletStore persistableStore = new BitcoinWalletStore();
     private final Persistence<BitcoinWalletStore> persistence;
     private final Observable<Coin> balance = new Observable<>(Coin.asBtcFromValue(0));
+    private final Observable<Boolean> isWalletInitialized = new Observable<>(true);
+    private final Observable<Boolean> isWalletBackedUp = new Observable<>(true);
 
     public BitcoinWalletService(Config config,
                                 PersistenceService persistenceService) {
@@ -77,6 +82,21 @@ public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinW
     }
 
     @Override
+    public Observable<Boolean> getIsWalletInitialized() {
+        return isWalletInitialized;
+    }
+
+    @Override
+    public Observable<Boolean> getIsWalletBackedup() {
+        return isWalletBackedUp;
+    }
+
+    @Override
+    public void setIsWalletBackedup(Boolean value) {
+        isWalletBackedUp.set(value);
+    }
+
+    @Override
     public CompletableFuture<Coin> requestBalance() {
         return wallet.map(bitcoinWallet -> CompletableFuture.supplyAsync(() -> {
             double balance = bitcoinWallet.getBalance();
@@ -84,5 +104,30 @@ public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinW
             this.balance.set(balanceAsCoin);
             return balanceAsCoin;
         })).orElseGet(() -> CompletableFuture.completedFuture(Coin.asBtcFromValue(0)));
+    }
+
+    @Override
+    public void setNoEncryption() {
+
+    }
+
+    @Override
+    public void setEncryptionPassword(String password) {
+        log.debug("setEncryptionPassword called ");
+    }
+
+    // TODO
+    @Override
+    public CompletableFuture<List<String>> getSeedWords() {
+        return CompletableFuture.supplyAsync(() ->
+                        Arrays.asList("car", "van", "lion", "water", "bero", "cycle",
+                                "love", "key", "system", "wife", "husband", "trade"),
+                CompletableFuture.delayedExecutor(400, TimeUnit.MILLISECONDS)
+        );
+    }
+
+    @Override
+    public void purgeSeedWords() {
+
     }
 }
