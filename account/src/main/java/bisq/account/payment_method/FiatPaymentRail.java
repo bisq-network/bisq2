@@ -45,6 +45,10 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             FiatCurrencyRepository.getCurrencyByCode("USD"),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
+    WISE_USD(countryFromCode("US"),
+            FiatCurrencyRepository.getCurrencyByCode("USD"),
+            FiatPaymentMethodChargebackRisk.MODERATE),
+
     ACH_TRANSFER(countryFromCode("US"),
             FiatCurrencyRepository.getCurrencyByCode("USD"),
             FiatPaymentMethodChargebackRisk.MODERATE),

@@ -29,9 +29,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class PaymentAccountValidation {
     public static final int HOLDER_NAME_MIN_LENGTH = 2;
     public static final int HOLDER_NAME_MAX_LENGTH = 70;
+    public static final int ADDRESS_MIN_LENGTH = 2;
+    public static final int ADDRESS_MAX_LENGTH = 120;
 
     public static void validateHolderName(String name) {
         NetworkDataValidation.validateText(name, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);
+    }
+
+    public static void validateAddress(String name) {
+        NetworkDataValidation.validateText(name, ADDRESS_MIN_LENGTH, ADDRESS_MAX_LENGTH);
     }
 
     public static void validateCountryCodes(List<String> countryCodes,
