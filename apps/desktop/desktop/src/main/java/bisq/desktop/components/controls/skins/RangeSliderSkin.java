@@ -28,6 +28,7 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
     private static final double TRACK_PADDING = 5;
     private static final double EDGE_OFFSET = 4;
     private static final double THUMB_SIZE = 16;
+    private static final double DEFAULT_WIDTH = 200;
 
     private final RangeSlider rangeSlider;
     private final StackPane track, lowThumb, highThumb;
@@ -108,7 +109,7 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
 
     private void updateUI() {
         RangeSlider slider = getSkinnable();
-        double w = slider.getWidth() > 0 ? slider.getWidth() : 200;
+        double w = slider.getWidth() > 0 ? slider.getWidth() : DEFAULT_WIDTH;
         double min = slider.getMin();
         double max = slider.getMax();
         double range = max - min;
@@ -131,12 +132,11 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
         RangeSlider slider = getSkinnable();
         double newLow = getValue(slider, e);
         double high = slider.getHighValue().get();
-        // Clamp newLow to not exceed high
-        if (newLow > high) {
-            newLow = high;
-        }
         if (newLow < slider.getMin()) {
             newLow = slider.getMin();
+        }
+        if (newLow > high) {
+            newLow = high;
         }
         slider.getLowValue().set(newLow);
         e.consume();
@@ -150,19 +150,18 @@ public class RangeSliderSkin extends SkinBase<RangeSlider> {
         RangeSlider slider = getSkinnable();
         double newHigh = getValue(slider, e);
         double low = slider.getLowValue().get();
-        // Clamp newHigh to not go below low
-        if (newHigh < low) {
-            newHigh = low;
-        }
         if (newHigh > slider.getMax()) {
             newHigh = slider.getMax();
+        }
+        if (newHigh < low) {
+            newHigh = low;
         }
         slider.getHighValue().set(newHigh);
         e.consume();
     }
 
     private double getValue(RangeSlider slider, MouseEvent e) {
-        double w = slider.getWidth() > 0 ? slider.getWidth() : 200;
+        double w = slider.getWidth() > 0 ? slider.getWidth() : DEFAULT_WIDTH;
         double min = slider.getMin();
         double max = slider.getMax();
         double range = max - min;
