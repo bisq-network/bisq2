@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.application.DevMode;
 import bisq.common.data.ByteArray;
+import bisq.common.formatter.DataSizeFormatter;
 import bisq.network.p2p.services.data.storage.*;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
@@ -42,7 +43,10 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Object mapAccessLock = new Object();
 
-    public MailboxDataStorageService(PersistenceService persistenceService, PruneExpiredEntriesService pruneExpiredEntriesService, String storeName, String storeKey) {
+    public MailboxDataStorageService(PersistenceService persistenceService,
+                                     PruneExpiredEntriesService pruneExpiredEntriesService,
+                                     String storeName,
+                                     String storeKey) {
         super(persistenceService, storeName, storeKey);
         pruneExpiredEntriesService.addTask(this::pruneExpired);
     }
@@ -240,22 +244,25 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     }
 
     // Useful for debugging state of the store
-    private void maybeLogMapState(String methodName, DataStore<MailboxRequest> persisted) {
+    private void maybeLogMapState(String methodName, DataStore<MailboxRequest> dataStore) {
         if (DevMode.isDevMode() || methodName.equals("onPersistedApplied")) {
-            var added = persisted.getMap().values().stream()
+            var dataSize = dataStore.getMap().values().stream()
+                    .mapToLong(authenticatedDataRequest -> authenticatedDataRequest.serializeForHash().length)
+                    .sum();
+            var added = dataStore.getMap().values().stream()
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof AddMailboxRequest)
                     .map(authenticatedDataRequest -> (AddMailboxRequest) authenticatedDataRequest)
                     .map(e -> e.getMailboxSequentialData().getMailboxData().getClassName())
                     .toList();
-            var removed = persisted.getMap().values().stream()
+            var removed = dataStore.getMap().values().stream()
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof RemoveMailboxRequest)
                     .map(authenticatedDataRequest -> (RemoveMailboxRequest) authenticatedDataRequest)
                     .map(RemoveMailboxRequest::getClassName)
                     .toList();
             var className = Stream.concat(added.stream(), removed.stream())
                     .findAny().orElse(persistence.getFileName().replace("Store", ""));
-            log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}",
-                    methodName, className, added.size(), removed.size(), persisted.getMap().size());
+            log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}, data size: {}",
+                    methodName, className, added.size(), removed.size(), dataStore.getMap().size(), DataSizeFormatter.format(dataSize));
         }
     }
 }

@@ -108,6 +108,8 @@ public class MediationCaseListItem implements ActivatableTableItem, DateTableIte
         quoteAmount = contract.getQuoteSideAmount();
         quoteAmountString = BisqEasyTradeFormatter.formatQuoteSideAmountWithCode(contract);
         paymentMethod = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
+
+        onActivate();
     }
 
     @Override
@@ -151,7 +153,7 @@ public class MediationCaseListItem implements ActivatableTableItem, DateTableIte
 
     @Getter
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-    static class Trader {
+    public static class Trader {
         @EqualsAndHashCode.Include
         private final UserProfile userProfile;
         private final String userName;

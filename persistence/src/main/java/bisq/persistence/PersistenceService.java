@@ -101,7 +101,7 @@ public class PersistenceService {
         List<CompletableFuture<Void>> list = clients.stream()
                 .map(PersistenceClient::getPersistence)
                 .map(Persistence::pruneBackups)
-                .toList();
+                .collect(Collectors.toList());
         return CompletableFutureUtils.allOf(list).thenApply(l -> null);
     }
 
@@ -111,7 +111,7 @@ public class PersistenceService {
                         .toAbsolutePath().toString())
                 .sorted()
                 .collect(Collectors.toList());
-        log.info("Read persisted data from:\n{}", Joiner.on("\n").join(storagePaths));
+        log.debug("Read persisted data from:\n{}", Joiner.on("\n").join(storagePaths));
         return CompletableFutureUtils.allOf(clients.stream()
                         .map(persistenceClient -> persistenceClient.readPersisted()
                                 .whenComplete((optionalResult, throwable) -> {

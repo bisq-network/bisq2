@@ -68,6 +68,5 @@ public class ProtocolListItem {
         this.securityInfo = Res.get("tradeApps.overview.security." + name);
         this.convenienceInfo = Res.get("tradeApps.overview.convenience." + name);
         this.iconId = "protocol-" + StringUtils.snakeCaseToKebapCase(name.toLowerCase());
-        log.error(iconId);
     }
 }

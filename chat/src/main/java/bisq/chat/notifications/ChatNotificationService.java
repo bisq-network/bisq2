@@ -397,11 +397,21 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         ChatNotification chatNotification = persistableStore.findNotification(id)
                 .orElseGet(() -> createNotification(id, chatChannel, chatMessage));
 
+        long pruneDate = System.currentTimeMillis() - MAX_AGE;
+        if (chatNotification.getDate() <= pruneDate) {
+            // Notification is older than max age. This can happen in case of mediators who have old messages.
+            // We prune the notifications but the messages from old cases are not pruned thus we would get displayed
+            // all the old notifications again.
+            return;
+        }
+
         if (isConsumed(chatNotification)) {
             return;
         }
 
         // At first start-up when user has not setup their profile yet, we set all notifications as consumed
+        // TODO: When receiving messages by inventory requests after we have set up the profile those will still trigger
+        //  notifications display.
         if (!userIdentityService.hasUserIdentities()) {
             consumeNotification(chatNotification);
             return;

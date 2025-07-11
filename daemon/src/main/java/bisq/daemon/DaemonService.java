@@ -21,6 +21,7 @@ import bisq.daemon.protobuf.BootstrapEvent;
 import bisq.daemon.protobuf.Command;
 import bisq.daemon.protobuf.DaemonGrpc;
 import bisq.network.tor.TorService;
+import bisq.network.tor.controller.events.events.TorBootstrapEvent;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,7 +40,7 @@ public class DaemonService extends DaemonGrpc.DaemonImplBase {
 
     @Override
     public void bootstrapTor(Command request, StreamObserver<BootstrapEvent> responseObserver) {
-        Consumer<bisq.network.tor.controller.events.events.BootstrapEvent> observer = createBootstrapObserver(responseObserver);
+        Consumer<TorBootstrapEvent> observer = createBootstrapObserver(responseObserver);
         torService.getBootstrapEvent().addObserver(observer);
         torService.initialize();
 
@@ -53,7 +54,7 @@ public class DaemonService extends DaemonGrpc.DaemonImplBase {
         }
     }
 
-    private Consumer<bisq.network.tor.controller.events.events.BootstrapEvent> createBootstrapObserver(
+    private Consumer<TorBootstrapEvent> createBootstrapObserver(
             StreamObserver<BootstrapEvent> responseObserver) {
         return bootstrapEvent -> {
             if (bootstrapEvent != null) {

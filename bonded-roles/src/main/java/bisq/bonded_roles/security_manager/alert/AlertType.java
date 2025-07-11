@@ -35,4 +35,10 @@ public enum AlertType implements ProtoEnum {
     public static AlertType fromProto(bisq.bonded_roles.protobuf.AlertType proto) {
         return ProtobufUtils.enumFromProto(AlertType.class, proto.name(), INFO);
     }
+
+    public static boolean isMessageAlert(AlertType alertType) {
+        return alertType == AlertType.INFO ||
+                alertType == AlertType.WARN ||
+                alertType == AlertType.EMERGENCY;
+    }
 }

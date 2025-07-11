@@ -48,6 +48,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 
 /**
  * Publicly shared user profile (from other peers or mine).
+ * Data size about 300 bytes
  */
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
@@ -76,12 +77,6 @@ public final class UserProfile implements DistributedData, PublishDateAware {
                 networkId,
                 terms,
                 statement);
-    }
-
-    public static UserProfile withVersion(UserProfile userProfile, int version) {
-        return new UserProfile(version, userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getAvatarVersion(),
-                userProfile.getNetworkId(), userProfile.getTerms(), userProfile.getStatement(),
-                ApplicationVersion.getVersion().getVersionAsString());
     }
 
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are

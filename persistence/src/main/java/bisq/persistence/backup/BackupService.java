@@ -29,12 +29,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * We back up the persisted data at each write operation. We append the date time format with minutes as smallest time unit.
@@ -59,7 +61,6 @@ import java.util.function.Predicate;
 @ToString
 public class BackupService {
     static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmm");
-    public static final double TOTAL_MAX_BACKUP_SIZE_IN_MB = 100;
     private static final Map<String, Long> accumulatedFileSizeByStore = new ConcurrentHashMap<>();
     @Setter
     private static double totalMaxBackupSize = ByteUnit.MB.toBytes(100);
@@ -78,12 +79,7 @@ public class BackupService {
         this.maxBackupSize = maxBackupSize;
 
         fileName = storeFilePath.getFileName().toString();
-        Path backupDir = Path.of(storeFilePath.toString()
-                .replaceFirst("db", "backups")
-                .replace(fileName, ""));
-        String dirName = fileName.replace(Persistence.EXTENSION, "")
-                .replace("_store", "");
-        dirPath = backupDir.resolve(dirName);
+        dirPath = resolveDirPath(dataDir, storeFilePath);
     }
 
     public void maybeMigrateLegacyBackupFile() {
@@ -143,6 +139,7 @@ public class BackupService {
             return;
         }
 
+        // TODO Consider to let that run in a background thread
         accumulatedFileSize = 0;
         Set<String> fileNames = FileUtils.listFiles(dirPath);
         List<BackupFileInfo> backupFileInfoList = createBackupFileInfo(fileName, fileNames);
@@ -152,7 +149,7 @@ public class BackupService {
             try {
                 String fileNameWithDate = backupFileInfo.getFileNameWithDate();
                 FileUtils.deleteFile(dirPath.resolve(fileNameWithDate).toFile());
-                log.info("Deleted outdated backup {}", fileNameWithDate);
+                log.debug("Deleted outdated backup {}", fileNameWithDate);
             } catch (Exception e) {
                 log.error("Failed to prune backups", e);
             }
@@ -248,6 +245,37 @@ public class BackupService {
     /* --------------------------------------------------------------------- */
 
     @VisibleForTesting
+    static Path resolveDirPath(Path dataDir, Path storeFilePath) {
+        boolean isWindowsPath = dataDir.toString().contains("\\");
+        String relativeStoreFilePath = getRelativePath(dataDir, storeFilePath, isWindowsPath);
+        String relativeBackupDir = relativeStoreFilePath
+                .replaceFirst("db", "backups")
+                .replace(Persistence.EXTENSION, "")
+                .replace("_store", "");
+        // We don't use `resolve` as we use it in unit test which need to be OS independent.
+        return Paths.get(dataDir.toString() + relativeBackupDir);
+    }
+
+    @VisibleForTesting
+    static String getRelativePath(Path dataDir, Path filePath, boolean isWindowsPath) {
+        // We don't use File.pathSeparator as we use it in unit test which need to be OS independent.
+        String normalizedDataDir = dataDir.toString().replace("\\", "/");
+        String normalizedFilePath = filePath.toString().replace("\\", "/");
+
+        // Ensure dataDir is a prefix of filePath
+        if (!normalizedFilePath.startsWith(normalizedDataDir)) {
+            throw new IllegalArgumentException("File path is not inside the data directory");
+        }
+
+        String normalizedRelativePath = normalizedFilePath.substring(normalizedDataDir.length());
+        if (isWindowsPath) {
+            return normalizedRelativePath.replace("/", "\\");
+        } else {
+            return normalizedRelativePath;
+        }
+    }
+
+    @VisibleForTesting
     File getBackupFile() throws IOException {
         return getBackupFile(LocalDateTime.now());
     }
@@ -269,7 +297,7 @@ public class BackupService {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .sorted()
-                .toList();
+                .collect(Collectors.toList());
     }
 
     private static long getBackupAgeInDays(BackupFileInfo backupFileInfo, LocalDateTime now) {

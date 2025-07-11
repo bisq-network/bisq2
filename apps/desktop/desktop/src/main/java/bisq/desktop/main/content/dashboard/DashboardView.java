@@ -156,14 +156,13 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
         activeUsersLabel.textProperty().bind(model.getActiveUsers());
 
         isNotificationVisiblePin = EasyBind.subscribe(model.getIsNotificationVisible(), visible -> {
-                    if (!visible) {
-                        UIScheduler.run(() -> gridPane.setPadding(DEFAULT_PADDING))
-                                .after(NotificationPanelView.DURATION);
-                    } else {
-                        gridPane.setPadding(NOTIFICATION_PADDING);
-                    }
-                }
-        );
+            if (!visible) {
+                UIScheduler.run(() -> gridPane.setPadding(DEFAULT_PADDING))
+                        .after(NotificationPanelView.DURATION);
+            } else {
+                gridPane.setPadding(NOTIFICATION_PADDING);
+            }
+        });
 
         tradeProtocols.setOnAction(e -> controller.onOpenTradeOverview());
         buildReputation.setOnAction(e -> controller.onBuildReputation());

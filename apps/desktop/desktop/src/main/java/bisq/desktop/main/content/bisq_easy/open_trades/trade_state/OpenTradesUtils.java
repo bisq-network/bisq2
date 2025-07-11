@@ -71,24 +71,10 @@ public class OpenTradesUtils {
         }
     }
 
-    public static void reportToMediator(BisqEasyOpenTradeChannel channel,
-                                        BisqEasyContract contract,
-                                        MediationRequestService mediationRequestService,
-                                        BisqEasyOpenTradeChannelService channelService) {
-        openDispute(channel, contract, mediationRequestService, channelService);
-    }
-
     public static void requestMediation(BisqEasyOpenTradeChannel channel,
-                                        BisqEasyContract contract,
-                                        MediationRequestService mediationRequestService,
-                                        BisqEasyOpenTradeChannelService channelService) {
-        openDispute(channel, contract, mediationRequestService, channelService);
-    }
-
-    private static void openDispute(BisqEasyOpenTradeChannel channel,
-                                    BisqEasyContract contract,
-                                    MediationRequestService mediationRequestService,
-                                    BisqEasyOpenTradeChannelService channelService) {
+                                         BisqEasyContract contract,
+                                         MediationRequestService mediationRequestService,
+                                         BisqEasyOpenTradeChannelService channelService) {
         Optional<UserProfile> mediator = channel.getMediator();
         if (mediator.isPresent()) {
             new Popup().headline(Res.get("bisqEasy.mediation.request.confirm.headline"))
@@ -97,8 +83,8 @@ public class OpenTradesUtils {
                     .onAction(() -> {
                         String encoded = Res.encode("bisqEasy.mediation.requester.tradeLogMessage", channel.getMyUserIdentity().getUserName());
                         channelService.sendTradeLogMessage(encoded, channel);
-
                         channel.setIsInMediation(true);
+                        channelService.persist();
                         mediationRequestService.requestMediation(channel, contract);
                         new Popup().headline(Res.get("bisqEasy.mediation.request.feedback.headline"))
                                 .feedback(Res.get("bisqEasy.mediation.request.feedback.msg"))

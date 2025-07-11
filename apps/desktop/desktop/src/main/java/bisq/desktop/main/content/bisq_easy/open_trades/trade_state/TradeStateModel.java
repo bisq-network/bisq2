@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.common.view.Model;
+import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import javafx.beans.property.*;
 import javafx.scene.layout.VBox;
@@ -54,6 +55,8 @@ public class TradeStateModel implements Model {
     private final StringProperty buyerPriceDescriptionApprovalOverlay = new SimpleStringProperty();
     private final StringProperty sellerPriceDescriptionApprovalOverlay = new SimpleStringProperty();
     private final BooleanProperty isTradeCompleted = new SimpleBooleanProperty();
+    private final ObjectProperty<MessageDeliveryStatus> requestMediationDeliveryStatus = new SimpleObjectProperty<>();
+    private final BooleanProperty shouldShowTryRequestMediationAgain = new SimpleBooleanProperty();
 
     void resetAll() {
         reset();
@@ -78,5 +81,7 @@ public class TradeStateModel implements Model {
         buyerPriceDescriptionApprovalOverlay.set(null);
         sellerPriceDescriptionApprovalOverlay.set(null);
         isTradeCompleted.set(false);
+        requestMediationDeliveryStatus.set(null);
+        shouldShowTryRequestMediationAgain.set(false);
     }
 }

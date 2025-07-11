@@ -1,13 +1,14 @@
 package bisq.network.p2p.node.transport;
 
-import bisq.common.timer.Scheduler;
-import bisq.common.util.NetworkUtils;
-import bisq.network.i2p.I2pClient;
-import bisq.network.i2p.I2pEmbeddedRouter;
-import bisq.network.NetworkService;
 import bisq.common.network.Address;
 import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
+import bisq.common.observable.Observable;
+import bisq.common.observable.map.ObservableHashMap;
+import bisq.common.util.NetworkUtils;
+import bisq.network.NetworkService;
+import bisq.network.i2p.I2pClient;
+import bisq.network.i2p.I2pEmbeddedRouter;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.security.keys.KeyBundle;
@@ -93,11 +94,15 @@ public class I2PTransportService implements TransportService {
     private I2pClient i2pClient;
     private boolean initializeCalled;
     private String sessionId;
-    @Getter
-    private final BootstrapInfo bootstrapInfo = new BootstrapInfo();
-    private int numSocketsCreated = 0;
     private final I2PTransportService.Config config;
-    private Scheduler startBootstrapProgressUpdater;
+    @Getter
+    public final Observable<TransportState> transportState = new Observable<>(TransportState.NEW);
+    @Getter
+    public final ObservableHashMap<TransportState, Long> timestampByTransportState = new ObservableHashMap<>();
+    @Getter
+    public final ObservableHashMap<NetworkId, Long> initializeServerSocketTimestampByNetworkId = new ObservableHashMap<>();
+    @Getter
+    public final ObservableHashMap<NetworkId, Long> initializedServerSocketTimestampByNetworkId = new ObservableHashMap<>();
 
     public I2PTransportService(TransportConfig config) {
         // Demonstrate potential usage of specific config.
@@ -108,6 +113,7 @@ public class I2PTransportService implements TransportService {
 
         i2pDirPath = config.getDataDir().toAbsolutePath().toString();
         log.info("I2PTransport using i2pDirPath: {}", i2pDirPath);
+        setTransportState(TransportState.NEW);
     }
 
     @Override
@@ -115,15 +121,9 @@ public class I2PTransportService implements TransportService {
         if (initializeCalled) {
             return;
         }
+        setTransportState(TransportState.INITIALIZE);
         initializeCalled = true;
         log.debug("Initialize");
-
-        bootstrapInfo.getBootstrapState().set(BootstrapState.BOOTSTRAP_TO_NETWORK);
-        startBootstrapProgressUpdater = Scheduler.run(() -> updateStartBootstrapProgress(bootstrapInfo))
-                .host(this)
-                .runnableName("updateStartBootstrapProgress")
-                .periodically(1000);
-        bootstrapInfo.getBootstrapDetails().set("Start bootstrapping");
 
         //If embedded router, start it already ...
         boolean isEmbeddedRouter = isEmbeddedRouter();
@@ -146,20 +146,19 @@ public class I2PTransportService implements TransportService {
         } else {
             i2pClient = getClient(false);
         }
+        setTransportState(TransportState.INITIALIZED);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         initializeCalled = false;
-        if (startBootstrapProgressUpdater != null) {
-            startBootstrapProgressUpdater.stop();
-            startBootstrapProgressUpdater = null;
-        }
+        setTransportState(TransportState.STOPPING);
         if (i2pClient == null) {
             return CompletableFuture.completedFuture(true);
         }
         return CompletableFuture.runAsync(i2pClient::shutdown, NetworkService.NETWORK_IO_POOL)
-                .thenApply(nil -> true);
+                .thenApply(nil -> true)
+                .whenComplete((result, throwable) -> setTransportState(TransportState.TERMINATED));
     }
 
     private boolean isEmbeddedRouter() {
@@ -186,17 +185,9 @@ public class I2PTransportService implements TransportService {
     @Override
     public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle) {
         int port = networkId.getAddressByTransportTypeMap().get(TransportType.I2P).getPort();
+        initializeServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
         log.debug("Create serverSocket");
         try {
-            if (startBootstrapProgressUpdater != null) {
-                startBootstrapProgressUpdater.stop();
-                startBootstrapProgressUpdater = null;
-            }
-            bootstrapInfo.getBootstrapState().set(BootstrapState.START_PUBLISH_SERVICE);
-            // 25%-50% we attribute to the publishing of the hidden service. Takes usually 5-10 sec.
-            bootstrapInfo.getBootstrapProgress().set(0.25);
-            bootstrapInfo.getBootstrapDetails().set("Create I2P service for node ID '" + networkId + "'");
-
             sessionId = UUID.randomUUID().toString();
             //TODO: Investigate why not using port passed as parameter and if no port, find one?
             //Pass parameters to connect with Local instance
@@ -209,9 +200,7 @@ public class I2PTransportService implements TransportService {
             // Port is irrelevant for I2P
             Address address = new Address(destination, port);
 
-            bootstrapInfo.getBootstrapState().set(BootstrapState.SERVICE_PUBLISHED);
-            bootstrapInfo.getBootstrapProgress().set(0.5);
-            bootstrapInfo.getBootstrapDetails().set("My I2P destination: " + address);
+            initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
 
             log.debug("ServerSocket created. SessionId={}, destination={}", sessionId, destination);
             return new ServerSocketResult(serverSocket, address);
@@ -228,10 +217,6 @@ public class I2PTransportService implements TransportService {
             log.debug("Create new Socket to {} with sessionId={}", address, sessionId);
             long ts = System.currentTimeMillis();
             Socket socket = i2pClient.getSocket(address.getHost(), sessionId);
-            numSocketsCreated++;
-            bootstrapInfo.getBootstrapState().set(BootstrapState.CONNECTED_TO_PEERS);
-            bootstrapInfo.getBootstrapProgress().set(Math.min(1, 0.5 + numSocketsCreated / 10d));
-            bootstrapInfo.getBootstrapDetails().set("Connected to " + numSocketsCreated + " peer(s)");
             log.info("I2P socket to {} created. Took {} ms", address, System.currentTimeMillis() - ts);
             return socket;
         } catch (IOException exception) {

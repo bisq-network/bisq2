@@ -15,13 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node.transport;
+package bisq.common.network.clear_net_address_types;
 
-public enum BootstrapState {
-    BOOTSTRAP_TO_NETWORK,
-    CONNECT_TO_EXTERNAL_TOR,
-    CONNECTION_TO_EXTERNAL_TOR_COMPLETED,
-    START_PUBLISH_SERVICE,
-    SERVICE_PUBLISHED,
-    CONNECTED_TO_PEERS
+import bisq.common.network.Address;
+import com.google.common.annotations.VisibleForTesting;
+
+public class LocalHostAddressTypeFacade implements ClearNetAddressTypeFacade {
+    @VisibleForTesting
+    public static Address toLocalHostAddress(int port) {
+        return new Address("127.0.0.1", port);
+    }
+
+    @Override
+    public Address toMyLocalAddress(int port) {
+        return toLocalHostAddress(port);
+    }
 }

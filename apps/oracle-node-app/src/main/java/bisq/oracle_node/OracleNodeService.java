@@ -196,16 +196,6 @@ public class OracleNodeService implements Service {
                 staticPublicKeysProvided);
         bisq1BridgeService.setAuthorizedOracleNode(authorizedOracleNode);
 
-        // Can be removed once there are no pre 2.1.0 versions out there anymore
-        AuthorizedOracleNode oldVersion = new AuthorizedOracleNode(0,
-                networkId,
-                profileId,
-                authorizedPublicKeyAsHex,
-                bondUserName,
-                signatureBase64,
-                staticPublicKeysProvided);
-        bisq1BridgeService.setAuthorizedOracleNodeOldVersion(oldVersion);
-
         // We only self-publish if we are a root oracle
         if (staticPublicKeysProvided) {
             AuthorizedBondedRole authorizedBondedRole = new AuthorizedBondedRole(profileId,

@@ -64,7 +64,7 @@ final class ChatMessageListCellFactory
 
             @Override
             protected void updateItem(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
-                                   boolean empty) {
+                                      boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -131,6 +131,10 @@ final class ChatMessageListCellFactory
             } else {
                 return new PeerLeftMessageBox(item, controller);
             }
+        }
+
+        if (item.isChatRulesWarningMessage()) {
+            return new ChatRulesWarningMessageBox(item, controller);
         }
 
         if (item.isMyMessage()) {

@@ -261,9 +261,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         log.info("publishUserProfile {}", userProfile.getUserName());
         persist();
 
-        // We publish both the old version and the new version to support old clients
-        return networkService.publishAuthenticatedData(UserProfile.withVersion(userProfile, 0), keyPair)
-                .thenCompose(e -> networkService.publishAuthenticatedData(userProfile, keyPair));
+        return networkService.publishAuthenticatedData(userProfile, keyPair);
     }
 
     public CompletableFuture<BroadcastResult> refreshUserProfile(UserProfile userProfile, KeyPair keyPair) {

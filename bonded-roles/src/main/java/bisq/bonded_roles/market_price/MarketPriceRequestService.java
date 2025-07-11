@@ -254,6 +254,12 @@ public class MarketPriceRequestService {
                         String json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
                         log.info("Received market price from {} after {} ms", client.getBaseUrl() + "/" + param, System.currentTimeMillis() - ts);
                         Map<Market, MarketPrice> map = parseResponse(json);
+
+                        if (map.isEmpty()) {
+                            log.warn("Provider {} returned an empty or invalid response, switching provider.", client.getBaseUrl());
+                            throw new IllegalStateException("Provider is responsive but not returning any market prices");
+                        }
+
                         long now = System.currentTimeMillis();
                         String sinceLastResponse = timeSinceLastResponse == 0 ? "" : "Time since last response: " + (now - timeSinceLastResponse) / 1000 + " sec";
                         log.info("Market price request from {} resulted in {} items took {} ms. {}",

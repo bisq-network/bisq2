@@ -26,6 +26,8 @@ import java.util.regex.Pattern;
  * @author Rodrigo Varela
  */
 public class BitcoinAddressValidation {
+    public static final int MIN_LENGTH = 25;
+    public static final int MAX_LENGTH = 60;
     private static final Pattern BASE_58_PATTERN = Pattern.compile("^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$");
     private static final Pattern BECH32_PATTERN = Pattern.compile("^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,60}$");
 

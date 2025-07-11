@@ -35,6 +35,14 @@
     -fx-image: url("/images/i2p.png");
 }
 
+#rocket {
+    -fx-image: url("/images/icons/rocket.png");
+}
+
+#peer-group {
+    -fx-image: url("/images/icons/peer-group.png");
+}
+
 #info {
     -fx-image: url("/images/info.png");
 }
@@ -297,6 +305,22 @@
 
 #new-badge {
     -fx-image: url("/images/new.png");
+}
+
+#expand-white {
+    -fx-image: url("/images/icons/expand-white.png");
+}
+
+#expand-grey {
+    -fx-image: url("/images/icons/expand-grey.png");
+}
+
+#collapse-white {
+    -fx-image: url("/images/icons/collapse-white.png");
+}
+
+#collapse-grey {
+    -fx-image: url("/images/icons/collapse-grey.png");
 }
 
 
@@ -981,6 +1005,14 @@
     -fx-image: url("/images/icons/interchangeable-green.png");
 }
 
+#moderator-badge {
+    -fx-image: url("/images/icons/moderator-badge.png");
+}
+
+#moderator-badge-large {
+    -fx-image: url("/images/icons/moderator-badge-large.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat */
@@ -1156,6 +1188,10 @@
 
 #try-again-green {
     -fx-image: url("/images/chat/message-status/try-again-green.png");
+}
+
+#try-again-dark {
+    -fx-image: url("/images/chat/message-status/try-again-dark.png");
 }
 
 #try-again-grey {

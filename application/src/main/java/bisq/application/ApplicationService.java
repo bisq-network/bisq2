@@ -44,6 +44,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileLock;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -83,6 +84,7 @@ public abstract class ApplicationService implements Service {
             return new Config(appDataDir,
                     appName,
                     config.getBoolean("devMode"),
+                    config.getLong("devModeReputationScore"),
                     config.getString("keyIds"),
                     config.getBoolean("ignoreSigningKeyInResourcesCheck"),
                     config.getBoolean("ignoreSignatureVerification"),
@@ -93,6 +95,7 @@ public abstract class ApplicationService implements Service {
         private final Path baseDir;
         private final String appName;
         private final boolean devMode;
+        private final long devModeReputationScore;
         private final List<String> keyIds;
         private final boolean ignoreSigningKeyInResourcesCheck;
         private final boolean ignoreSignatureVerification;
@@ -102,6 +105,7 @@ public abstract class ApplicationService implements Service {
         public Config(Path baseDir,
                       String appName,
                       boolean devMode,
+                      long devModeReputationScore,
                       String keyIds,
                       boolean ignoreSigningKeyInResourcesCheck,
                       boolean ignoreSignatureVerification,
@@ -110,6 +114,7 @@ public abstract class ApplicationService implements Service {
             this.baseDir = baseDir;
             this.appName = appName;
             this.devMode = devMode;
+            this.devModeReputationScore = devModeReputationScore;
             // We want to use the keyIds at the DesktopApplicationLauncher as a simple format. 
             // Using the typesafe format with indexes would require a more complicate parsing as we do not use 
             // typesafe at the DesktopApplicationLauncher class. Thus, we use a simple comma separated list instead and treat it as sting in typesafe.
@@ -139,7 +144,8 @@ public abstract class ApplicationService implements Service {
         Path appDataDir = OptionUtils.findOptionValue(args, "--data-dir")
                 .map(Path::of)
                 .orElse(userDataDir.resolve(appName));
-        File customConfigFile = Path.of(appDataDir.toString(), "bisq.conf").toFile();
+        // J8 compatible to avoid issues on mobile Samsung devices
+        File customConfigFile = Paths.get(appDataDir.toString(), "bisq.conf").toFile();
         com.typesafe.config.Config typesafeConfig;
         boolean customConfigProvided = customConfigFile.exists();
         if (customConfigProvided) {
@@ -175,6 +181,9 @@ public abstract class ApplicationService implements Service {
         }
 
         DevMode.setDevMode(config.isDevMode());
+        if (config.isDevMode()) {
+            DevMode.setDevModeReputationScore(config.getDevModeReputationScore());
+        }
 
         Locale locale = LocaleRepository.getDefaultLocale();
         CountryRepository.applyDefaultLocale(locale);

@@ -69,7 +69,7 @@ public class ResourcesController implements Controller {
         model.getBackupButtonDefault().bind(model.getBackupLocation().isEmpty().not());
         model.getBackupButtonDisabled().bind(model.getBackupLocation().isEmpty());
         backupLocationPin = FxBindings.bindBiDir(model.getBackupLocation())
-                .to(settingsService.getBackupLocation());
+                .to(settingsService.getBackupLocation(), settingsService::setBackupLocation);
 
     }
 
@@ -81,11 +81,11 @@ public class ResourcesController implements Controller {
     }
 
     void onOpenLogFile() {
-        PlatformUtils.open(Path.of(baseDir, "bisq.log").toFile());
+        PlatformUtils.open(Paths.get(baseDir, "bisq.log").toFile());
     }
 
     void onOpenTorLogFile() {
-        PlatformUtils.open(Path.of(baseDir, "tor", "debug.log").toFile());
+        PlatformUtils.open(Paths.get(baseDir, "tor", "debug.log").toFile());
     }
 
     void onOpenDataDir() {

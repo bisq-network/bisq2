@@ -15,14 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node.transport;
+package bisq.dto.settings;
 
-import bisq.common.observable.Observable;
-import lombok.Getter;
-
-@Getter
-public class BootstrapInfo {
-    private final Observable<Double> bootstrapProgress = new Observable<>(0d);
-    private final Observable<String> bootstrapDetails = new Observable<>("");
-    private final Observable<BootstrapState> bootstrapState = new Observable<>(BootstrapState.BOOTSTRAP_TO_NETWORK);
+public record SettingsApiVersionDto(String version) {
 }

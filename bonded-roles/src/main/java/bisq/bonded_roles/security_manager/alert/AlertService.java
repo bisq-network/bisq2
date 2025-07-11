@@ -87,12 +87,12 @@ public class AlertService implements Service, AuthorizedBondedRolesService.Liste
         return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.SECURITY_MANAGER);
     }
 
-    private void maybeApplyBannedState(AuthorizedAlertData authorizedAlertData, boolean wasAdded) {
+    private void maybeApplyBannedState(AuthorizedAlertData authorizedAlertData, boolean isBanned) {
         if (authorizedAlertData.getAlertType() == AlertType.BAN && authorizedAlertData.getBannedRole().isPresent()) {
             authorizedBondedRolesService.getBondedRoles().stream()
                     .filter(bondedRole -> bondedRole.getAuthorizedBondedRole().equals(authorizedAlertData.getBannedRole().get()))
                     .findAny()
-                    .ifPresent(bondedRole -> bondedRole.setIsBanned(wasAdded));
+                    .ifPresent(bondedRole -> bondedRole.setIsBanned(isBanned));
         }
     }
 

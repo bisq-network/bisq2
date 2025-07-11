@@ -19,15 +19,15 @@ package bisq.network;
 
 
 import bisq.common.application.Service;
+import bisq.common.network.Address;
+import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.platform.MemoryReportService;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.threading.ThreadName;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.common.network.Address;
-import bisq.common.network.AddressByTransportTypeMap;
-import bisq.common.network.TransportType;
 import bisq.network.http.BaseHttpClient;
 import bisq.network.http.HttpClientsByTransport;
 import bisq.network.identity.NetworkId;
@@ -39,7 +39,6 @@ import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
-import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
@@ -75,6 +74,8 @@ import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -282,7 +283,24 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                                     senderKeyPair,
                                     senderNetworkId);
                         },
-                        NETWORK_IO_POOL));
+                        NETWORK_IO_POOL))
+                .orTimeout(2, TimeUnit.SECONDS)
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        if (throwable instanceof TimeoutException) {
+                            log.warn("TimeoutException at confidentialSend. Node for give networkId is not initialized. " +
+                                    "We send the message as mailbox message");
+                            supplyAsync(() -> {
+                                        ThreadName.set(this, "confidentialSend");
+                                        return serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
+                                                receiverNetworkId,
+                                                senderKeyPair,
+                                                senderNetworkId);
+                                    },
+                                    NETWORK_IO_POOL);
+                        }
+                    }
+                });
     }
 
     // TODO (low prio): Not used. Consider to remove it so it wont get used accidentally.
@@ -433,10 +451,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         return serviceNodesByTransport.getDefaultNodeStateByTransportType();
     }
 
-    public Map<TransportType, BootstrapInfo> getBootstrapInfoByTransportType() {
-        return serviceNodesByTransport.getBootstrapInfoByTransportType();
-    }
-
     public boolean isTransportTypeSupported(TransportType transportType) {
         return supportedTransportTypes.contains(transportType);
     }
@@ -447,7 +461,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
     public Set<NetworkLoadService> getNetworkLoadServices() {
-        return serviceNodesByTransport.getAllServices().stream()
+        return serviceNodesByTransport.getAllServiceNodes().stream()
                 .flatMap(serviceNode -> serviceNode.getNetworkLoadService().stream())
                 .collect(Collectors.toSet());
     }
@@ -514,7 +528,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
     public Set<ConfidentialMessageService> getConfidentialMessageServices() {
-        return serviceNodesByTransport.getAllServices().stream()
+        return serviceNodesByTransport.getAllServiceNodes().stream()
                 .filter(serviceNode -> serviceNode.getConfidentialMessageService().isPresent())
                 .map(serviceNode -> serviceNode.getConfidentialMessageService().get())
                 .collect(Collectors.toSet());

@@ -32,7 +32,9 @@ import bisq.offer.Offer;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
 import bisq.trade.ServiceProvider;
+import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.protocol.events.TradeMessageHandler;
 import bisq.trade.protocol.events.TradeMessageSender;
 import bisq.user.profile.UserProfile;
@@ -96,8 +98,8 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
     protected void verifyMessage(BisqEasyTakeOfferRequest message) {
         super.verifyMessage(message);
 
-        BisqEasyContract takersContract = checkNotNull(message.getBisqEasyContract());
-        BisqEasyOffer takersOffer = checkNotNull(takersContract.getOffer());
+        BisqEasyContract takersContract = checkNotNull(message.getBisqEasyContract(), "Takers contract must not be null");
+        BisqEasyOffer takersOffer = checkNotNull(takersContract.getOffer(), "Offer from takers contract must not be null");
 
         List<BisqEasyOffer> myOffers = serviceProvider.getChatService().getBisqEasyOfferbookChannelService().getChannels().stream()
                 .flatMap(channel -> channel.getChatMessages().stream())
@@ -109,31 +111,64 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
                 .filter(offer -> offer.equals(takersOffer))
                 .findAny();
         if (matchingOfferInChannel.isEmpty()) {
-            log.error("Could not find matching offer in BisqEasyOfferbookChannel.\n" +
-                            "takersOffer={}\n" +
-                            "myOffers={}",
-                    takersOffer, myOffers);
-            throw new RuntimeException("Could not find matching offer in BisqEasyOfferbookChannel");
+            BisqEasyTradeService bisqEasyTradeService = (BisqEasyTradeService) serviceProvider;
+            // After TRADE_ID_V1_ACTIVATION_DATE we might have trades in the open trades list which have an id created
+            // with the createId_V0 method, thus we need to check for both.
+            String v0_tradeId = Trade.createId(takersOffer.getId(), takersContract.getTaker().getNetworkId().getId());
+            String v1_tradeId = Trade.createId(takersOffer.getId(), takersContract.getTaker().getNetworkId().getId(), takersContract.getTakeOfferDate());
+            boolean hasTradeWithSameTradeId = bisqEasyTradeService.getTrades().stream().anyMatch(trade ->
+                    trade.getId().equals(v0_tradeId) || trade.getId().equals(v1_tradeId));
+            if (hasTradeWithSameTradeId) {
+                String errorMessage = String.format("A trade with the same tradeId already exist.\n" +
+                                "takersOffer=%s; takerNetworkId=%s; v1_tradeId=%s; v0_tradeId=%s",
+                        takersOffer, takersContract.getTaker().getNetworkId(), v0_tradeId, v1_tradeId);
+                log.error(errorMessage);
+                throw new RuntimeException(errorMessage);
+            }
+
+            boolean hasOfferInTrades = bisqEasyTradeService.getTrades().stream().anyMatch(trade ->
+                    trade.getOffer().getId().equals(takersOffer.getId()));
+            boolean closeMyOfferWhenTaken = serviceProvider.getSettingsService().getCloseMyOfferWhenTaken().get();
+            if (hasOfferInTrades) {
+                log.info("The offer has not been found in open offers, but we found another trade with the same offer.\n" +
+                                "We accept the take offer request as it might be from processing mailbox messages " +
+                                "where multiple takers took the same offer.\n" +
+                                "closeMyOfferWhenTaken={}; takersOffer={}",
+                        closeMyOfferWhenTaken, takersOffer);
+            } else {
+                String errorMessage = String.format("Could not find matching offer in BisqEasyOfferbookChannel and no " +
+                        "trade with that offer was found.\n" +
+                        "closeMyOfferWhenTaken=%s; takersOffer=%s", closeMyOfferWhenTaken, takersOffer);
+                log.error(errorMessage);
+                throw new RuntimeException(errorMessage);
+            }
         }
 
-        checkArgument(message.getSender().equals(takersContract.getTaker().getNetworkId()));
+        checkArgument(message.getSender().equals(takersContract.getTaker().getNetworkId()),
+                "Senders networkId must be same as takers networkId from takers contract");
 
         validateAmount(takersOffer, takersContract);
 
-        checkArgument(takersOffer.getBaseSidePaymentMethodSpecs().contains(takersContract.getBaseSidePaymentMethodSpec()));
-        checkArgument(takersOffer.getQuoteSidePaymentMethodSpecs().contains(takersContract.getQuoteSidePaymentMethodSpec()));
+        checkArgument(takersOffer.getBaseSidePaymentMethodSpecs().contains(takersContract.getBaseSidePaymentMethodSpec()),
+                "BaseSidePaymentMethodSpec from takers contract must be present in the offers baseSidePaymentMethodSpecs");
+        checkArgument(takersOffer.getQuoteSidePaymentMethodSpecs().contains(takersContract.getQuoteSidePaymentMethodSpec()),
+                "QuoteSidePaymentMethodSpec from takers contract must be present in the offers quoteSidePaymentMethodSpecs");
 
         Optional<UserProfile> mediator = serviceProvider.getSupportService().getMediationRequestService()
-                .selectMediator(takersOffer.getMakersUserProfileId(), trade.getTaker().getNetworkId().getId());
-        checkArgument(mediator.map(UserProfile::getNetworkId).equals(takersContract.getMediator().map(UserProfile::getNetworkId)), "Mediators do not match. " +
-                "\nmediator=" + mediator +
-                "\ntakersContract.getMediator()=" + takersContract.getMediator());
+                .selectMediator(takersOffer.getMakersUserProfileId(),
+                        trade.getTaker().getNetworkId().getId(),
+                        trade.getOffer().getId());
+        checkArgument(mediator.map(UserProfile::getNetworkId).equals(takersContract.getMediator().map(UserProfile::getNetworkId)),
+                "Mediators do not match. " +
+                        "\nmediator=" + mediator +
+                        "\ntakersContract.getMediator()=" + takersContract.getMediator());
 
         log.info("Selected mediator for trade {}: {}", trade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
 
         ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
         try {
-            checkArgument(serviceProvider.getContractService().verifyContractSignature(takersContract, takersContractSignatureData));
+            checkArgument(serviceProvider.getContractService().verifyContractSignature(takersContract, takersContractSignatureData),
+                    "Verifying takers contract signature failed");
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
@@ -151,10 +186,10 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         MarketPrice marketPrice = marketPriceService.getMarketPriceByCurrencyMap().get(market);
         Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService,
                 takersContract.getPriceSpec(), market);
+        checkArgument(priceQuote.isPresent(),
+                "PriceQuote is empty. Might be that no market price is available. marketPrice=" + marketPrice);
         Optional<Monetary> amount = priceQuote.map(quote -> quote.toBaseSideMonetary(Monetary.from(takersContract.getQuoteSideAmount(),
                 market.getQuoteCurrencyCode())));
-
-        checkArgument(amount.isPresent(), "No priceQuote present. Might be that no market price is available. marketPrice=" + marketPrice);
 
         long takersAmount = takersContract.getBaseSideAmount();
         long myAmount = amount.get().getValue(); // I am maker

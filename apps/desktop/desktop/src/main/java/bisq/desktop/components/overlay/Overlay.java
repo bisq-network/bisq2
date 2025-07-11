@@ -435,17 +435,29 @@ public abstract class Overlay<T extends Overlay<T>> {
 
         String version = Res.get("version.versionAndCommitHash", ApplicationVersion.getVersion().getVersionAsString(), ApplicationVersion.getBuildCommitShortHash());
         String platformDetails = Platform.getDetails();
-        String errorReport = Res.get("popup.reportBug.report", version, platformDetails, message);
-        TextArea errorReportTextArea = new TextArea(errorReport);
-        errorReportTextArea.setContextMenu(new ContextMenu());
-        errorReportTextArea.setEditable(false);
-        errorReportTextArea.setPrefWidth(width);
-        errorReportTextArea.setWrapText(true);
-        errorReportTextArea.getStyleClass().addAll("code-block", "error-log");
+        String metaData = Res.get("popup.reportBug.metaData", version, platformDetails);
+        TextArea metaDataTextArea = getErrorTextArea(metaData, width);
+        metaDataTextArea.setMaxHeight(50);
 
-        content(errorReportTextArea);
+        String errorReport = Res.get("popup.reportBug.message", message);
+        TextArea errorReportTextArea = getErrorTextArea(errorReport, width);
+
+        VBox.setVgrow(metaDataTextArea, Priority.NEVER);
+        VBox.setVgrow(errorReportTextArea, Priority.ALWAYS);
+        VBox errorReportVBox = new VBox(10,  metaDataTextArea, errorReportTextArea);
+        content(errorReportVBox);
 
         return cast();
+    }
+
+    private static TextArea getErrorTextArea(String text, double width) {
+        TextArea textArea = new TextArea(text);
+        textArea.setContextMenu(new ContextMenu());
+        textArea.setEditable(false);
+        textArea.setPrefWidth(width);
+        textArea.setWrapText(true);
+        textArea.getStyleClass().addAll("code-block", "error-log");
+        return textArea;
     }
 
     @SuppressWarnings("UnusedReturnValue")

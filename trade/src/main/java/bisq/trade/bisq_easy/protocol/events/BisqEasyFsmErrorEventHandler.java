@@ -45,10 +45,7 @@ public class BisqEasyFsmErrorEventHandler extends SendTradeMessageHandler<BisqEa
         commitToModel(ExceptionUtil.getRootCauseMessage(fsmException),
                 ExceptionUtil.getStackTraceAsString(fsmException));
 
-        // We do not send the error message to the peer as there is risk that private data could be leaked.
-        // Instead, we send the stack of causes as error message.
-        // We might send more meaningful error messages in the future.
-        String errorMessage = truncate(ExceptionUtil.getCauseStackClassNames(fsmException), MAX_LENGTH_ERROR_MESSAGE);
+        String errorMessage = truncate(ExceptionUtil.getRootCauseMessage(fsmException), MAX_LENGTH_ERROR_MESSAGE);
         String stackTrace = truncate(ExceptionUtil.getSafeStackTraceAsString(fsmException), MAX_LENGTH_STACKTRACE);
         log.warn("We send the cause stack and stackTrace to our peer.\n" +
                 "errorMessage={}\nstackTrace={}", errorMessage, stackTrace);

@@ -32,7 +32,7 @@ public class AlertBannerModel implements Model {
     private final StringProperty headline = new SimpleStringProperty();
     private final StringProperty message = new SimpleStringProperty();
     private final ObjectProperty<AlertType> alertType = new SimpleObjectProperty<>();
-    private final BooleanProperty isBisqEasyNotificationVisible = new SimpleBooleanProperty();
+    private final BooleanProperty isBisqEasyNotificationVisible = new SimpleBooleanProperty(false);
 
     public AlertBannerModel() {
     }

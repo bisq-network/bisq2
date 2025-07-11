@@ -18,6 +18,9 @@
 package bisq.network.p2p.node;
 
 
+import bisq.common.network.Address;
+import bisq.common.network.TransportConfig;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
@@ -25,9 +28,6 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
-import bisq.common.network.Address;
-import bisq.common.network.TransportConfig;
-import bisq.common.network.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
@@ -201,9 +201,9 @@ public class Node implements Connection.Handler {
         if (startingStateLatch.isPresent() && startingStateLatch.get().getCount() > 0) {
             try {
                 log.info("Our node is still starting up. We block the calling thread until state is RUNNING or a throw and exception after a timeout. Node: {}", getNodeInfo());
-                boolean success = startingStateLatch.get().await(120, TimeUnit.SECONDS); //hsUploadTimeout
+                boolean success = startingStateLatch.get().await(120, TimeUnit.SECONDS);
                 if (!success) {
-                    String errorMessage = "State did not change from STARTING to RUNNING in 120 sec. Node: " + getNodeInfo();
+                    String errorMessage = "We got called a repeated initialize. State has not change from STARTING to RUNNING in 120 sec. Node: " + getNodeInfo();
                     log.warn(errorMessage);
                     throw new RuntimeException(new TimeoutException(errorMessage));
                 } else {
@@ -554,14 +554,11 @@ public class Node implements Connection.Handler {
         if (findConnection(connection).isEmpty()) {
             // TODO for now we delay the shutdown call to not introduce a bigger change in behaviour.
             //  We need to test more to see if that case happens and why, and if there might be valid listeners.
-            log.warn("""
-                            We got handleNetworkMessage called from an orphaned connection which is not managed by our \
-                            outboundConnectionsByAddress or inboundConnectionsByAddress maps. \
-                            We close after a short delay that connection to avoid memory leaks. \
-                            We still notify listeners as its is unclear yet if there are valid listeners in that case.\
-                                                        
-                            envelopePayloadMessage={}
-                            connection={}""",
+            log.warn("We got handleNetworkMessage called from an orphaned connection which is not managed by our\n" +
+                            "outboundConnectionsByAddress or inboundConnectionsByAddress maps.\n" +
+                            "We close after a short delay that connection to avoid memory leaks.\n" +
+                            "We still notify listeners as its is unclear yet if there are valid listeners in that case.\n" +
+                            "envelopePayloadMessage={} connection={}",
                     StringUtils.truncate(envelopePayloadMessage), connection);
             Scheduler.run(() -> connection.shutdown(CloseReason.ORPHANED_CONNECTION))
                     .host(this)

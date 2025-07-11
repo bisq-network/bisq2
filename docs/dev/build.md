@@ -221,7 +221,20 @@ Note, that in that case it runs with the default config (using Tor).
 You likely want to run a second desktop application for testing the trade use case with 2 traders (e.g. Alice and Bob).
 Just change the `-Dapplication.appName` to something like `bisq2_Bob_clear` in the above configuration.
 
-
-
+### Setting devMode and devModeReputationScore
+A seller requires reputation for trading. This can be achieved in dev environment with setting up an oracle node and Bisq 1, though this setup is a bit advanced.
+To make it easier for devs, we added a `devModeReputationScore` field to the config. It also requires that the `devMode` flag is set to true.
+Set the desired reputation score to `devModeReputationScore` and apply that to all your trade apps. This value will not 
+be applied per user profile but overrides the reputation score lookup globally.
+For proper release testing a correct setup should be used, as this workaround does not cover all the use cases for reputation.
+```sh
+JAVA_OPTS="-Dapplication.appName=bisq2_Alice_clear \
+    -Dapplication.network.supportedTransportTypes.0=CLEAR \
+    -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
+    -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
+    -Dapplication.devMode=true \
+    -Dapplication.devModeReputationScore=50000" \
+    apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app
+```
 
 

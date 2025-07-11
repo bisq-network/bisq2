@@ -83,7 +83,7 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
     protected boolean isValid(M message) {
         String authorUserProfileId = message.getAuthorUserProfileId();
         if (bannedUserService.isUserProfileBanned(authorUserProfileId)) {
-            log.warn("Message invalid as sender is banned. AuthorUserProfileId={}", authorUserProfileId);
+            //log.warn("Message invalid as sender is banned. AuthorUserProfileId={}", authorUserProfileId);
             return false;
         }
         if (bannedUserService.isRateLimitExceeding(authorUserProfileId)) {

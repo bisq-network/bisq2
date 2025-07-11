@@ -48,10 +48,6 @@ public class MarketPricePropagationService implements Service {
                 TreeMap<Market, MarketPrice> marketPriceByCurrencyMap = new TreeMap<>(marketPriceRequestService.getMarketPriceByCurrencyMap());
                 AuthorizedMarketPriceData data = new AuthorizedMarketPriceData(marketPriceByCurrencyMap, staticPublicKeysProvided);
                 publishAuthorizedData(data);
-
-                // Can be removed once there are no pre 2.1.0 versions out there anymore
-                AuthorizedMarketPriceData oldVersion = new AuthorizedMarketPriceData(0, marketPriceByCurrencyMap, staticPublicKeysProvided);
-                publishAuthorizedData(oldVersion);
             }
         });
 

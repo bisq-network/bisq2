@@ -83,6 +83,8 @@ public enum NavigationTarget {
 
     BISQ_EASY_TRADE_DETAILS(OVERLAY, false),
 
+    MEDIATION_CASE_DETAILS(OVERLAY, false),
+
     BISQ_EASY_OFFER_DETAILS(OVERLAY, false),
 
     CHAT_RULES(OVERLAY, false),
@@ -221,7 +223,6 @@ public enum NavigationTarget {
     ORACLE_NODE(AUTHORIZED_ROLE),
     EXPLORER_NODE(AUTHORIZED_ROLE),
     MARKET_PRICE_NODE(AUTHORIZED_ROLE);
-
 
     @Getter
     private final Optional<NavigationTarget> parent;

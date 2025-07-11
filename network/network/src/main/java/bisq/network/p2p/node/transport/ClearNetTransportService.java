@@ -1,9 +1,15 @@
 package bisq.network.p2p.node.transport;
 
+import bisq.common.facades.FacadeProvider;
 import bisq.common.network.Address;
+import bisq.common.network.clear_net_address_types.ClearNetAddressType;
+import bisq.common.network.clear_net_address_types.AndroidEmulatorAddressTypeFacade;
+import bisq.common.network.clear_net_address_types.LANAddressTypeFacade;
+import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
-import bisq.common.timer.Scheduler;
+import bisq.common.observable.Observable;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.network.identity.NetworkId;
 import bisq.security.keys.KeyBundle;
 import lombok.EqualsAndHashCode;
@@ -20,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 
-import static bisq.common.facades.FacadeProvider.getLocalhostFacade;
+import static bisq.common.facades.FacadeProvider.getClearNetAddressTypeFacade;
 
 
 @Slf4j
@@ -31,7 +37,6 @@ public class ClearNetTransportService implements TransportService {
     @EqualsAndHashCode
     public static final class Config implements TransportConfig {
         public static Config from(Path dataDir, com.typesafe.config.Config config) {
-
             return new Config(dataDir,
                     config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("defaultNodeSocketTimeout")),
@@ -39,7 +44,8 @@ public class ClearNetTransportService implements TransportService {
                     config.getInt("devModeDelayInMs"),
                     config.getInt("sendMessageThrottleTime"),
                     config.getInt("receiveMessageThrottleTime"),
-                    config.getInt("connectTimeoutMs")
+                    config.getInt("connectTimeoutMs"),
+                    config.getEnum(ClearNetAddressType.class, "clearNetAddressType")
             );
         }
 
@@ -51,6 +57,7 @@ public class ClearNetTransportService implements TransportService {
         private final int sendMessageThrottleTime;
         private final int receiveMessageThrottleTime;
         private final int connectTimeoutMs;
+        private final ClearNetAddressType clearNetAddressType;
 
         public Config(Path dataDir,
                       int defaultNodePort,
@@ -59,7 +66,8 @@ public class ClearNetTransportService implements TransportService {
                       int devModeDelayInMs,
                       int sendMessageThrottleTime,
                       int receiveMessageThrottleTime,
-                      int connectTimeoutMs) {
+                      int connectTimeoutMs,
+                      ClearNetAddressType clearNetAddressType) {
             this.dataDir = dataDir;
             this.defaultNodePort = defaultNodePort;
             this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
@@ -68,20 +76,38 @@ public class ClearNetTransportService implements TransportService {
             this.sendMessageThrottleTime = sendMessageThrottleTime;
             this.receiveMessageThrottleTime = receiveMessageThrottleTime;
             this.connectTimeoutMs = connectTimeoutMs;
+            this.clearNetAddressType = clearNetAddressType;
         }
     }
 
     private final int devModeDelayInMs;
     private final int connectTimeoutMs;
-    private int numSocketsCreated = 0;
-    @Getter
-    private final BootstrapInfo bootstrapInfo = new BootstrapInfo();
     private boolean initializeCalled;
-    private Scheduler startBootstrapProgressUpdater;
+    @Getter
+    public final Observable<TransportState> transportState = new Observable<>(TransportState.NEW);
+    @Getter
+    public final ObservableHashMap<TransportState, Long> timestampByTransportState = new ObservableHashMap<>();
+    @Getter
+    public final ObservableHashMap<NetworkId, Long> initializeServerSocketTimestampByNetworkId = new ObservableHashMap<>();
+    @Getter
+    public final ObservableHashMap<NetworkId, Long> initializedServerSocketTimestampByNetworkId = new ObservableHashMap<>();
 
     public ClearNetTransportService(TransportConfig config) {
         devModeDelayInMs = config.getDevModeDelayInMs();
         connectTimeoutMs = ((Config) config).getConnectTimeoutMs();
+        setTransportState(TransportState.NEW);
+
+        switch (((Config) config).getClearNetAddressType()) {
+            case LOCAL_HOST -> {
+                FacadeProvider.setClearNetAddressTypeFacade(new LocalHostAddressTypeFacade());
+            }
+            case ANDROID_EMULATOR -> {
+                FacadeProvider.setClearNetAddressTypeFacade(new AndroidEmulatorAddressTypeFacade());
+            }
+            case LAN -> {
+                FacadeProvider.setClearNetAddressTypeFacade(new LANAddressTypeFacade());
+            }
+        }
     }
 
     @Override
@@ -89,49 +115,33 @@ public class ClearNetTransportService implements TransportService {
         if (initializeCalled) {
             return;
         }
+        setTransportState(TransportState.INITIALIZE);
         initializeCalled = true;
         maybeSimulateDelay();
-        bootstrapInfo.getBootstrapState().set(BootstrapState.BOOTSTRAP_TO_NETWORK);
-        startBootstrapProgressUpdater = Scheduler.run(() -> updateStartBootstrapProgress(bootstrapInfo))
-                .host(this)
-                .runnableName("updateStartBootstrapProgress")
-                .periodically(1000);
+        setTransportState(TransportState.INITIALIZED);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        if (startBootstrapProgressUpdater != null) {
-            startBootstrapProgressUpdater.stop();
-            startBootstrapProgressUpdater = null;
-        }
+        setTransportState(TransportState.STOPPING);
         return CompletableFuture.supplyAsync(() -> true,
-                CompletableFuture.delayedExecutor(devModeDelayInMs, TimeUnit.MILLISECONDS));
+                        CompletableFuture.delayedExecutor(devModeDelayInMs, TimeUnit.MILLISECONDS))
+                .whenComplete((result, throwable) -> setTransportState(TransportState.TERMINATED));
     }
 
     @Override
     public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle) {
         int port = networkId.getAddressByTransportTypeMap().get(TransportType.CLEAR).getPort();
+        initializeServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
         log.info("Create serverSocket at port {}", port);
-
-        if (startBootstrapProgressUpdater != null) {
-            startBootstrapProgressUpdater.stop();
-            startBootstrapProgressUpdater = null;
-        }
-        bootstrapInfo.getBootstrapState().set(BootstrapState.START_PUBLISH_SERVICE);
-        bootstrapInfo.getBootstrapProgress().set(0.25);
-        bootstrapInfo.getBootstrapDetails().set("Start creating server");
 
         maybeSimulateDelay();
         try {
             ServerSocket serverSocket = new ServerSocket(port);
-            Address myAddress = getLocalhostFacade().toMyLocalhost(port);
+            Address address = getClearNetAddressTypeFacade().toMyLocalAddress(port);
             log.debug("ServerSocket created at port {}", port);
-
-            bootstrapInfo.getBootstrapState().set(BootstrapState.SERVICE_PUBLISHED);
-            bootstrapInfo.getBootstrapProgress().set(0.5);
-            bootstrapInfo.getBootstrapDetails().set("Server created: " + myAddress);
-
-            return new ServerSocketResult(serverSocket, myAddress);
+            initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
+            return new ServerSocketResult(serverSocket, address);
         } catch (IOException e) {
             log.error("{}. Server port {}", e, port);
             throw new CompletionException(e);
@@ -140,18 +150,12 @@ public class ClearNetTransportService implements TransportService {
 
     @Override
     public Socket getSocket(Address address) throws IOException {
-        address = getLocalhostFacade().toPeersLocalhost(address);
+        address = getClearNetAddressTypeFacade().toPeersLocalAddress(address);
 
         log.debug("Create new Socket to {}", address);
         maybeSimulateDelay();
         Socket socket = new Socket();
         socket.connect(new InetSocketAddress(address.getHost(), address.getPort()), connectTimeoutMs);
-
-        numSocketsCreated++;
-
-        bootstrapInfo.getBootstrapState().set(BootstrapState.CONNECTED_TO_PEERS);
-        bootstrapInfo.getBootstrapProgress().set(Math.min(1, 0.5 + numSocketsCreated / 10d));
-        bootstrapInfo.getBootstrapDetails().set("Connected to " + numSocketsCreated + " peers");
 
         return socket;
     }

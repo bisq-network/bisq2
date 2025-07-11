@@ -400,7 +400,7 @@ public class TradeWizardReviewController implements Controller {
         if (hasShowOnlyTextFilter) {
             new Popup().information(Res.get("chat.message.send.textMsgOnly.warn"))
                     .actionButtonText(Res.get("confirmation.yes"))
-                    .onAction(() -> settingsService.getBisqEasyOfferbookMessageTypeFilter().set(ChatMessageType.ALL))
+                    .onAction(() -> settingsService.setBisqEasyOfferbookMessageTypeFilter(ChatMessageType.ALL))
                     .closeButtonText(Res.get("confirmation.no"))
                     .dontShowAgainId(dontShowAgainId)
                     .show();
@@ -423,7 +423,9 @@ public class TradeWizardReviewController implements Controller {
             // If taker is banned we don't need to show them a popup
             return;
         }
-        Optional<UserProfile> mediator = mediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(), takerIdentity.getId());
+        Optional<UserProfile> mediator = mediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(),
+                takerIdentity.getId(),
+                bisqEasyOffer.getId());
         if (!DevMode.isDevMode() && mediator.isEmpty()) {
             new Popup().warning(Res.get("bisqEasy.takeOffer.noMediatorAvailable.warning"))
                     .closeButtonText(Res.get("action.cancel"))
@@ -458,7 +460,7 @@ public class TradeWizardReviewController implements Controller {
                     if (errorMessage != null) {
                         UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
                                         errorMessage,
-                                        StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 500)))
+                                        StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 2000)))
                                 .show());
                     }
                 }
@@ -467,7 +469,7 @@ public class TradeWizardReviewController implements Controller {
                     if (peersErrorMessage != null) {
                         UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.popup",
                                         peersErrorMessage,
-                                        StringUtils.truncate(bisqEasyTrade.getPeersErrorStackTrace(), 500)))
+                                        StringUtils.truncate(bisqEasyTrade.getPeersErrorStackTrace(), 2000)))
                                 .show());
                     }
                 }

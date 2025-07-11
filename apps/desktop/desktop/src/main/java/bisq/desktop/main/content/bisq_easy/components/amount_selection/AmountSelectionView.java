@@ -302,7 +302,7 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         if (focus || isOtherFocused) {
             selectionLine.setPrefWidth(0);
             selectionLine.setOpacity(1);
-            Transitions.animateWidth(selectionLine, AMOUNT_BOX_WIDTH + 40);
+            Transitions.animatePrefWidth(selectionLine, AMOUNT_BOX_WIDTH + 40);
             description.getStyleClass().add("description-focused");
         } else {
             Transitions.fadeOut(selectionLine, 200);

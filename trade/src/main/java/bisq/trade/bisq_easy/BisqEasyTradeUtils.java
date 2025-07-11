@@ -31,8 +31,7 @@ public class BisqEasyTradeUtils {
     }
 
     public static Monetary getQuoteSideMonetary(BisqEasyTrade trade) {
-        BisqEasyContract contract = trade.getContract();
-        return Monetary.from(contract.getQuoteSideAmount(), contract.getOffer().getMarket().getQuoteCurrencyCode());
+        return getQuoteSideMonetary(trade.getContract());
     }
 
     public static Monetary getQuoteSideMonetary(BisqEasyContract contract) {

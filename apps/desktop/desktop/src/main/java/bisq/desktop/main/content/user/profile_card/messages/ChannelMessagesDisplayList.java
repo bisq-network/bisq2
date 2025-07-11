@@ -129,7 +129,12 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
                             boolean elementMissing = model.getChannelMessageItems().stream()
                                     .noneMatch(item -> item.getPublicChatMessage().equals(element));
                             if (elementMissing) {
-                                ChannelMessageItem chatMessageItem = new ChannelMessageItem(element, userProfile);
+                                Optional<String> citationAuthorName = Optional.empty();
+                                if (element.getCitation().isPresent()) {
+                                    String citationAuthorId = element.getCitation().get().getAuthorUserProfileId();
+                                    citationAuthorName = Optional.of(controller.getUserName(citationAuthorId));
+                                }
+                                ChannelMessageItem chatMessageItem = new ChannelMessageItem(element, userProfile, citationAuthorName);
                                 model.getChannelMessageItems().add(chatMessageItem);
                                 updateShouldShow();
                             }
@@ -269,21 +274,14 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
 
         private void updateMessageListVBox() {
             clearMessageListVBox();
-            model.getSortedChannelMessageItems().forEach(item -> {
-                ChannelMessageBox channelMessageBox = new ChannelMessageBox();
-                String citationAuthorId = "";
-                if (item.getCitation().isPresent()) {
-                    citationAuthorId = item.getCitation().get().getAuthorUserProfileId();
-                }
-                channelMessageBox.setChannelMessageItem(item, controller.getUserName(citationAuthorId));
-                channelMessageBox.getGoToMessageButton().setOnAction(e -> controller.onGoToMessage(item.getPublicChatMessage()));
-                messageListVBox.getChildren().add(channelMessageBox);
+            model.getSortedChannelMessageItems().forEach(channelMessageItem -> {
+                messageListVBox.getChildren().add(new ChannelMessageBox(channelMessageItem, controller));
             });
         }
 
         private void clearMessageListVBox() {
-            messageListVBox.getChildren().forEach(item -> {
-                if (item instanceof ChannelMessageBox channelMessageBox) {
+            messageListVBox.getChildren().forEach(node -> {
+                if (node instanceof ChannelMessageBox channelMessageBox) {
                     channelMessageBox.dispose();
                 }
             });
@@ -300,45 +298,54 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
     }
 
     private static class ChannelMessageBox extends HBox {
-        private final Label dateTimeLabel, textMessageLabel, citationMessage, citationAuthor;
-        private final VBox citationMessageVBox;
         private final ImageView catHashImageView;
-        @Getter
         private final BisqMenuItem goToMessageButton;
 
-        private ChannelMessageBox() {
-            dateTimeLabel = new Label();
+        private ChannelMessageBox(ChannelMessageItem channelMessageItem,
+                                  ChannelMessagesDisplayList<?>.Controller  controller) {
+            Label dateTimeLabel = new Label(channelMessageItem.getDateTime());
             dateTimeLabel.getStyleClass().addAll("text-fill-grey-dimmed", "font-size-09", "font-light");
 
-            textMessageLabel = new Label();
+            Label textMessageLabel = new Label(channelMessageItem.getMessage());
             textMessageLabel.setPadding(new Insets(10));
             textMessageLabel.getStyleClass().addAll("wrap-text", "text-fill-white", "medium-text", "font-default");
             textMessageLabel.setMinHeight(Label.USE_PREF_SIZE);
 
-            citationMessage = new Label();
+            Label citationAuthor = new Label();
+            channelMessageItem.getCitationAuthorName().ifPresent(citationAuthor::setText);
+            citationAuthor.getStyleClass().add("font-medium");
+            citationAuthor.setStyle("-fx-text-fill: -bisq-mid-grey-30");
+            Label citationMessage = new Label();
             citationMessage.setMinHeight(Label.USE_PREF_SIZE);
             citationMessage.setWrapText(true);
             citationMessage.setStyle("-fx-fill: -fx-mid-text-color");
-            citationAuthor = new Label();
-            citationAuthor.getStyleClass().add("font-medium");
-            citationAuthor.setStyle("-fx-text-fill: -bisq-mid-grey-30");
-            citationMessageVBox = new VBox(citationMessage, citationAuthor);
+            VBox citationMessageVBox = new VBox(citationAuthor, citationMessage);
             citationMessageVBox.setId("chat-message-quote-box-peer-msg");
             citationMessageVBox.setVisible(false);
             citationMessageVBox.setManaged(false);
 
+            channelMessageItem.getCitation().ifPresent(citation -> {
+                if (citation.isValid()) {
+                    citationMessageVBox.setVisible(true);
+                    citationMessageVBox.setManaged(true);
+                    citationMessage.setText(citation.getText());
+                }
+            });
+
             VBox textMessageVBox = new VBox(10, citationMessageVBox, textMessageLabel);
             HBox.setMargin(textMessageVBox, new Insets(0, 0, 0, -10));
 
-            catHashImageView = new ImageView();
-            catHashImageView.setFitWidth(30);
-            catHashImageView.setFitHeight(catHashImageView.getFitWidth());
+            int size = 30;
+            catHashImageView = new ImageView(CatHash.getImage(channelMessageItem.getSenderUserProfile(), size));
+            catHashImageView.setFitWidth(size);
+            catHashImageView.setFitHeight(size);
             HBox.setMargin(catHashImageView, new Insets(5, 0, 0, 5));
 
             goToMessageButton = new BisqMenuItem(Res.get("user.profileCard.messages.goToMessage.button"));
             goToMessageButton.getStyleClass().addAll("text-underline", "text-fill-grey-dimmed");
             goToMessageButton.setMaxWidth(BisqMenuItem.USE_PREF_SIZE);
             goToMessageButton.setMinWidth(BisqMenuItem.USE_PREF_SIZE);
+            goToMessageButton.setOnAction(e -> controller.onGoToMessage(channelMessageItem.getPublicChatMessage()));
             HBox.setMargin(goToMessageButton, new Insets(0, 0, 0, 20));
 
             HBox messageBubbleHBox = new HBox(15, catHashImageView, textMessageVBox);
@@ -358,21 +365,6 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
             setFillHeight(true);
             setPadding(new Insets(0, 50, 0, 50));
             getChildren().add(messageBg);
-        }
-
-        private void setChannelMessageItem(ChannelMessageItem channelMessageItem, String citationAuthorName) {
-            dateTimeLabel.setText(channelMessageItem.getDateTime());
-            channelMessageItem.getCitation().ifPresent(citation -> {
-                if (citation.isValid()) {
-                    citationMessageVBox.setVisible(true);
-                    citationMessageVBox.setManaged(true);
-                    citationMessage.setText(citation.getText());
-                    citationAuthor.setText(citationAuthorName);
-                }
-            });
-            catHashImageView.setImage(CatHash.getImage(channelMessageItem.getSenderUserProfile(),
-                    catHashImageView.getFitWidth()));
-            textMessageLabel.setText(channelMessageItem.getMessage());
         }
 
         private void dispose() {

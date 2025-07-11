@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.application.DevMode;
 import bisq.common.data.ByteArray;
+import bisq.common.formatter.DataSizeFormatter;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.*;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -206,12 +207,12 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             // different versions and metaData has changed between those versions.
             // If we detect such a difference we use our metaData version. This also protects against malicious manipulation.
             MetaData metaDataFromDistributedData = addRequestFromMap.getAuthenticatedSequentialData().getAuthenticatedData().getMetaData();
-            if (!request.getMetaDataFromProto().equals(metaDataFromDistributedData)) {
+            if (!request.getFallbackMetaData().equals(metaDataFromDistributedData)) {
                 request.setMetaDataFromDistributedData(Optional.of(metaDataFromDistributedData));
                 log.warn("MetaData of remove request not matching the one from the addRequest from the map. We override " +
                                 "metadata with the one we have from the associated distributed data." +
                                 "{} vs. {}",
-                        request.getMetaDataFromProto(),
+                        request.getFallbackMetaData(),
                         metaDataFromDistributedData);
             }
 
@@ -384,20 +385,23 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     // Useful for debugging state of the store
     private void maybeLogMapState(String methodName, DataStore<AuthenticatedDataRequest> dataStore) {
         if (DevMode.isDevMode() || methodName.equals("onPersistedApplied")) {
+            var dataSize = dataStore.getMap().values().stream()
+                    .mapToLong(authenticatedDataRequest -> authenticatedDataRequest.serializeForHash().length)
+                    .sum();
             var added = dataStore.getMap().values().stream()
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof AddAuthenticatedDataRequest)
                     .map(authenticatedDataRequest -> (AddAuthenticatedDataRequest) authenticatedDataRequest)
                     .map(e -> e.getDistributedData().getClass().getSimpleName())
-                    .toList();
+                    .collect(Collectors.toList());
             var removed = dataStore.getMap().values().stream()
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof RemoveAuthenticatedDataRequest)
                     .map(authenticatedDataRequest -> (RemoveAuthenticatedDataRequest) authenticatedDataRequest)
                     .map(RemoveAuthenticatedDataRequest::getClassName)
-                    .toList();
+                    .collect(Collectors.toList());
             var className = Stream.concat(added.stream(), removed.stream())
                     .findAny().orElse(persistence.getFileName().replace("Store", "")); // Remove trailing Store postfix
-            log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}",
-                    methodName, className, added.size(), removed.size(), dataStore.getMap().size());
+            log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}, data size: {}",
+                    methodName, className, added.size(), removed.size(), dataStore.getMap().size(), DataSizeFormatter.format(dataSize));
         }
     }
 }

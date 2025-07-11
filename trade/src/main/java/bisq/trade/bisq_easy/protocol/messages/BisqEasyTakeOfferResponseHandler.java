@@ -51,12 +51,15 @@ public class BisqEasyTakeOfferResponseHandler extends TradeMessageHandler<BisqEa
 
         ContractSignatureData makersContractSignatureData = message.getContractSignatureData();
         ContractSignatureData takersContractSignatureData = trade.getTaker().getContractSignatureData().get();
-        checkArgument(Arrays.equals(makersContractSignatureData.getContractHash(), takersContractSignatureData.getContractHash()));
+        checkArgument(Arrays.equals(makersContractSignatureData.getContractHash(), takersContractSignatureData.getContractHash()),
+                "Takers and makers contracts must be the same");
 
         ContractService contractService = serviceProvider.getContractService();
         try {
-            checkArgument(contractService.verifyContractSignature(trade.getContract(), makersContractSignatureData));
+            checkArgument(contractService.verifyContractSignature(trade.getContract(), makersContractSignatureData),
+                    "Verifying makers contract signature failed");
         } catch (GeneralSecurityException e) {
+            log.error("Verifying makers contract signature failed", e);
             throw new RuntimeException(e);
         }
     }

@@ -5,7 +5,7 @@
 # Convention: mark all versions using 'strictly'. This ensures only one version is allowed in the dependency tree, even
 # when multiple versions are attempted to be brought in as transitive dependencies of other requirements.
 [versions]
-bisq = '2.1.6'
+bisq = '2.1.7'
 annotations-lib = { strictly = '23.0.0' }
 
 apache-commons-lang-lib = { strictly = '3.14.0' }

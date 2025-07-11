@@ -58,7 +58,7 @@ public class BisqEasyGuideRulesController implements Controller {
     }
 
     void onConfirm(boolean selected) {
-        settingsService.getTradeRulesConfirmed().set(selected);
+        settingsService.setTradeRulesConfirmed(selected);
         model.getTradeRulesConfirmed().set(selected);
     }
 

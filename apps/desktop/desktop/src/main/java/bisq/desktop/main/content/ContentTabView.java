@@ -53,14 +53,13 @@ public abstract class ContentTabView<M extends ContentTabModel, C extends Conten
     @Override
     protected void onViewAttached() {
         isNotificationVisiblePin = EasyBind.subscribe(model.getIsNotificationVisible(), visible -> {
-                    if (!visible) {
-                        UIScheduler.run(() -> topBox.setPadding(TabView.DEFAULT_TOP_PANE_PADDING))
-                                .after(NotificationPanelView.DURATION);
-                    } else {
-                        topBox.setPadding(NOTIFICATION_PADDING);
-                    }
-                }
-        );
+            if (!visible) {
+                UIScheduler.run(() -> topBox.setPadding(TabView.DEFAULT_TOP_PANE_PADDING))
+                        .after(NotificationPanelView.DURATION);
+            } else {
+                topBox.setPadding(NOTIFICATION_PADDING);
+            }
+        });
     }
 
     @Override

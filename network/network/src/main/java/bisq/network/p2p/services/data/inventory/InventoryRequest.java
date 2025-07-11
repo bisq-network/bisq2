@@ -39,7 +39,6 @@ public final class InventoryRequest implements BroadcastMessage, Request {
     private final InventoryFilter inventoryFilter;
     private final int nonce;
 
-
     public InventoryRequest(InventoryFilter inventoryFilter, int nonce) {
         this(VERSION, inventoryFilter, nonce);
     }

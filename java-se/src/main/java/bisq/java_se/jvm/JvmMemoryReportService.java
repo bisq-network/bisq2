@@ -50,7 +50,7 @@ public class JvmMemoryReportService implements MemoryReportService {
         scheduler = Scheduler.run(this::logReport)
                 .host(JvmMemoryReportService.class)
                 .runnableName("logReport")
-                .periodically(30, memoryReportIntervalSec, TimeUnit.SECONDS);
+                .periodically(90, memoryReportIntervalSec, TimeUnit.SECONDS);
         return CompletableFuture.completedFuture(true);
     }
 

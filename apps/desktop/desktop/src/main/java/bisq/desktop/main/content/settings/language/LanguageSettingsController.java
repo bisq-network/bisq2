@@ -62,7 +62,7 @@ public class LanguageSettingsController implements Controller {
 
     void onSelectLanguage(String languageCode) {
         model.setSelectedLanguageCode(languageCode);
-        settingsService.getLanguageCode().set(languageCode);
+        settingsService.setLanguageCode(languageCode);
         new Popup().feedback(Res.get("settings.language.restart")).useShutDownButton().show();
     }
 

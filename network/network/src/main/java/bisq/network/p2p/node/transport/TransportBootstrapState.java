@@ -15,16 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.network;
+package bisq.network.p2p.node.transport;
 
-/**
- * For Android running in emulator we need to convert the localhost addresses to the IP addresses used by the emulator.
- * To support that we use a facade which by default use the loop-back address 127.0.0.1.
- */
-public interface LocalhostFacade {
-    Address toMyLocalhost(int port);
-
-    default Address toPeersLocalhost(Address address) {
-        return address;
-    }
+public enum TransportBootstrapState {
+    BOOTSTRAP_TO_NETWORK,
+    CONNECT_TO_EXTERNAL_TOR,
+    CONNECTION_TO_EXTERNAL_TOR_COMPLETED,
+    START_PUBLISH_SERVICE,
+    SERVICE_PUBLISHED,
+    CONNECTED_TO_PEERS
 }

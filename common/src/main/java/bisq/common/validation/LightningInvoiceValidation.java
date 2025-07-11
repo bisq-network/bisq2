@@ -22,6 +22,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.regex.Pattern;
 
 public class LightningInvoiceValidation {
+    public static final int MIN_LENGTH = 50;
+    public static final int MAX_LENGTH = 7089;
     private static final Pattern LN_BECH32_PATTERN = Pattern.compile("^(lnbc|LNBC)(\\d*[munpMUNP]?)1[02-9a-zA-Z]{50,7089}$");
 
     public static boolean validateInvoice(@NotNull String invoice) {

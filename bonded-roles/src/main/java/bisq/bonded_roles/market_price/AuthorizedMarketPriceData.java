@@ -69,7 +69,7 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
         this(VERSION, marketPriceByCurrencyMap, staticPublicKeysProvided);
     }
 
-    public AuthorizedMarketPriceData(int version,
+    private AuthorizedMarketPriceData(int version,
                                       TreeMap<Market, MarketPrice> marketPriceByCurrencyMap,
                                       boolean staticPublicKeysProvided) {
         this.version = version;

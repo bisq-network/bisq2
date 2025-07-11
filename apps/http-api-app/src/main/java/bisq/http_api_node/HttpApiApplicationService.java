@@ -178,7 +178,8 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                 supportService,
                 tradeService,
                 settingsService,
-                openTradeItemsService);
+                openTradeItemsService,
+                accountService);
     }
 
     @Override

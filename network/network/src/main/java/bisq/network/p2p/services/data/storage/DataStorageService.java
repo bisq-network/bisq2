@@ -103,8 +103,8 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
                     .map(DataRequest::getMaxMapSize)
                     .findFirst()
                     .orElse(100_000);
-            // Until the too low values in some MetaData are fixed we use 5000 as min size
-            maxMapSize = Optional.of(Math.max(MetaData.MAX_MAP_SIZE_5000, size));
+            // Until the too low values in some MetaData are fixed we use 10000 as min size
+            maxMapSize = Optional.of(Math.max(MetaData.MAX_MAP_SIZE_10_000, size));
         }
         return maxMapSize.get();
     }

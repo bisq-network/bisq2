@@ -47,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static bisq.chat.common.SubDomain.*;
@@ -135,13 +136,13 @@ public class ChatService implements Service {
                 bisqEasyOpenTradeChannelService.initialize()));
         list.addAll(commonPublicChatChannelServices.values().stream()
                 .map(CommonPublicChatChannelService::initialize)
-                .toList());
+                .collect(Collectors.toList()));
         list.addAll(getTwoPartyPrivateChatChannelServices()
                 .map(PrivateChatChannelService::initialize)
-                .toList());
+                .collect(Collectors.toList()));
         list.addAll(chatChannelSelectionServices.values().stream()
                 .map(ChatChannelSelectionService::initialize)
-                .toList());
+                .collect(Collectors.toList()));
 
         list.add(chatNotificationService.initialize());
 

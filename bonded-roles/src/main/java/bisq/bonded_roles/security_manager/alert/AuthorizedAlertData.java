@@ -72,7 +72,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
-    // Added in version 2.1.4
+    // Added in version 2.1.6
     private final Optional<String> bannedAccountData;
 
     public AuthorizedAlertData(String id,
@@ -102,7 +102,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                 bannedAccountData);
     }
 
-    public AuthorizedAlertData(int version,
+    private AuthorizedAlertData(int version,
                                 String id,
                                 long date,
                                 AlertType alertType,
@@ -114,7 +114,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                                 Optional<AuthorizedBondedRole> bannedRole,
                                 String securityManagerProfileId,
                                 boolean staticPublicKeysProvided,
-                               Optional<String> bannedAccountData) {
+                                Optional<String> bannedAccountData) {
         this.version = version;
         this.id = id;
         this.date = date;
@@ -191,14 +191,14 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                 proto.getSecurityManagerProfileId(),
                 proto.getStaticPublicKeysProvided(),
                 proto.hasBannedAccountData() ? Optional.of(proto.getBannedAccountData()) : Optional.empty()
-                );
+        );
     }
 
     private static Optional<String> getDefaultHeadline(AlertType alertType) {
-        if (alertType == AlertType.BAN) {
-            return Optional.empty();
-        } else {
+        if (AlertType.isMessageAlert(alertType)) {
             return Optional.of(Res.get("authorizedRole.securityManager.alertType." + alertType.name()));
+        } else {
+            return Optional.empty();
         }
     }
 

@@ -205,7 +205,9 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         if (keyEvent.getCode() == KeyCode.ENTER) {
             keyEvent.consume();
             if (keyEvent.isShiftDown()) {
-                inputField.appendText(System.lineSeparator());
+                int caretPosition = inputField.getCaretPosition();
+                inputField.insertText(caretPosition, System.lineSeparator());
+                inputField.positionCaret(caretPosition + System.lineSeparator().length());
             } else if (!inputField.getText().isEmpty()) {
                 controller.onSendMessage(inputField.getText().trim());
                 inputField.clear();

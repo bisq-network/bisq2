@@ -38,7 +38,7 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class NetworkLoadService {
-    private static final long INITIAL_DELAY = TimeUnit.SECONDS.toSeconds(15);
+    private static final long INITIAL_DELAY = TimeUnit.SECONDS.toSeconds(90);
     private static final long INTERVAL = TimeUnit.MINUTES.toSeconds(1);
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.####");
 

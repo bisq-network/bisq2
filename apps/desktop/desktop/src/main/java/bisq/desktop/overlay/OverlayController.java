@@ -23,6 +23,7 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
+import bisq.desktop.main.content.authorized_role.mediator.details.MediationCaseDetailsController;
 import bisq.desktop.main.content.bisq_easy.offerbook.offer_details.BisqEasyOfferDetailsController;
 import bisq.desktop.main.content.bisq_easy.onboarding.video.BisqEasyVideoController;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetailsController;
@@ -138,6 +139,7 @@ public class OverlayController extends NavigationController {
             case BISQ_EASY_GUIDE -> Optional.of(new BisqEasyGuideController(serviceProvider));
             case WALLET_GUIDE -> Optional.of(new WalletGuideController(serviceProvider));
             case BISQ_EASY_TRADE_DETAILS -> Optional.of(new TradeDetailsController(serviceProvider));
+            case MEDIATION_CASE_DETAILS -> Optional.of(new MediationCaseDetailsController(serviceProvider));
             case BISQ_EASY_OFFER_DETAILS -> Optional.of(new BisqEasyOfferDetailsController(serviceProvider));
             case CHAT_RULES -> Optional.of(new ChatRulesController(serviceProvider));
             case CREATE_PROFILE -> Optional.of(new CreateUserProfileController(serviceProvider));

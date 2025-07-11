@@ -22,6 +22,7 @@ import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.TabController;
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,8 +58,12 @@ public abstract class ContentTabController<M extends ContentTabModel> extends Ta
     }
 
     private void updateIsNotificationVisible() {
-        model.getIsNotificationVisible().set(
-                bisqEasyNotificationsService.getIsNotificationPanelVisible().get()
-                        || alertNotificationsService.getIsAlertBannerVisible().get());
+        UIThread.run(() -> {
+            boolean isNotificationPanelVisible = bisqEasyNotificationsService.getIsNotificationPanelVisible() != null
+                    && bisqEasyNotificationsService.getIsNotificationPanelVisible().get();
+            boolean isAlertBannerVisible = alertNotificationsService.getIsAlertBannerVisible() != null
+                    && alertNotificationsService.getIsAlertBannerVisible().get();
+            model.getIsNotificationVisible().set(isNotificationPanelVisible || isAlertBannerVisible);
+        });
     }
 }

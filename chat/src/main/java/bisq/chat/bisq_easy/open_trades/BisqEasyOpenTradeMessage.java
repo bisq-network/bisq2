@@ -48,6 +48,8 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyOpenTradeMessageReaction> implements BisqEasyOfferMessage {
+    public static final String ACK_REQUESTING_MESSAGE_ID_SEPARATOR = "_";
+
     public static BisqEasyOpenTradeMessage createTakeOfferMessage(String tradeId,
                                                                   String channelId,
                                                                   UserProfile senderUserProfile,
@@ -224,5 +226,10 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyO
     @Override
     public boolean addChatMessageReaction(ChatMessageReaction chatMessageReaction) {
         return addPrivateChatMessageReaction((BisqEasyOpenTradeMessageReaction) chatMessageReaction);
+    }
+
+    @Override
+    public String getAckRequestingMessageId() {
+        return id + ACK_REQUESTING_MESSAGE_ID_SEPARATOR + receiverUserProfileId;
     }
 }

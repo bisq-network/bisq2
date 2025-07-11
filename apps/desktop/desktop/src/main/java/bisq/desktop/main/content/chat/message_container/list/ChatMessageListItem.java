@@ -20,18 +20,23 @@ package bisq.desktop.main.content.chat.message_container.list;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bisq_easy.BisqEasyServiceUtil;
+import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
 import bisq.chat.bisq_easy.BisqEasyOfferMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.common.currency.Market;
 import bisq.common.data.Pair;
+import bisq.common.data.Triple;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
@@ -42,10 +47,12 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.main.content.components.BondedRoleBadge;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.Direction;
@@ -58,7 +65,6 @@ import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
-import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -69,14 +75,11 @@ import com.google.common.base.Joiner;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.text.DateFormat;
 import java.util.*;
 import java.util.function.Function;
@@ -103,9 +106,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final String nickName;
     private final ReputationScore reputationScore;
     private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
-    private final boolean offerAlreadyTaken;
-    @Nullable
-    private String messageId;
+    private final boolean wasOfferAlreadyTaken;
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
     private final BooleanProperty showHighlighted = new SimpleBooleanProperty();
@@ -113,8 +114,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     // Delivery status
     private final Set<Pin> mapPins = new HashSet<>();
     private final Set<Pin> statusPins = new HashSet<>();
-    private final BooleanProperty shouldShowTryAgain = new SimpleBooleanProperty();
-    private final SimpleObjectProperty<Node> messageDeliveryStatusNode = new SimpleObjectProperty<>();
+    private final SimpleObjectProperty<Map<String, Triple<MessageDeliveryStatus, String, Boolean>>> messageDeliveryStatusByPeerProfileId = new SimpleObjectProperty<>();
     private final Optional<ResendMessageService> resendMessageService;
     private ImageView successfulDeliveryIcon, connectingDeliveryIcon, pendingDeliveryIcon, addedToMailboxIcon, failedDeliveryIcon;
     private BisqMenuItem tryAgainMenuItem;
@@ -124,6 +124,10 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final HashMap<Reaction, ReactionItem> userReactions = new HashMap<>();
     private Optional<Pin> userReactionsPin = Optional.empty();
 
+    // Bonded role badge
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
+    private final BondedRoleBadge bondedRoleBadge = new BondedRoleBadge(false);
+
     public ChatMessageListItem(M chatMessage,
                                C chatChannel,
                                MarketPriceService marketPriceService,
@@ -132,12 +136,14 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                                BisqEasyTradeService bisqEasyTradeService,
                                UserIdentityService userIdentityService,
                                NetworkService networkService,
-                               Optional<ResendMessageService> resendMessageService) {
+                               Optional<ResendMessageService> resendMessageService,
+                               AuthorizedBondedRolesService authorizedBondedRolesService) {
         this.chatMessage = chatMessage;
         this.chatChannel = chatChannel;
         this.marketPriceService = marketPriceService;
         this.userIdentityService = userIdentityService;
         this.resendMessageService = resendMessageService;
+        this.authorizedBondedRolesService = authorizedBondedRolesService;
 
         if (chatMessage instanceof PrivateChatMessage<?> privateChatMessage) {
             senderUserProfile = Optional.of(userProfileService.getManagedUserProfile(privateChatMessage.getSenderUserProfile()));
@@ -161,16 +167,15 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 UserProfile userProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
                 NetworkId takerNetworkId = userProfile.getNetworkId();
                 BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().get();
-                String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
-                offerAlreadyTaken = bisqEasyTradeService.tradeExists(tradeId);
+                wasOfferAlreadyTaken = bisqEasyTradeService.wasOfferAlreadyTaken(bisqEasyOffer, takerNetworkId);
             } else {
-                offerAlreadyTaken = false;
+                wasOfferAlreadyTaken = false;
             }
         } else {
             // Normal chat message or BisqEasyOfferbookMessage without offer
             String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
             message = chatMessage.getTextOrNA() + editPostFix;
-            offerAlreadyTaken = false;
+            wasOfferAlreadyTaken = false;
         }
 
         userIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> UIThread.run(this::onUserIdentity));
@@ -178,6 +183,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         createAndAddSubscriptionToUserReactions(userProfileService);
         initializeDeliveryStatusIcons();
         addSubscriptionToMessageDeliveryStatus(networkService);
+        setupBondedRoleBadge();
     }
 
     @Override
@@ -199,6 +205,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         statusPins.forEach(Pin::unbind);
         userReactionsPin.ifPresent(Pin::unbind);
         userIdentityPin.unbind();
+        bondedRoleBadge.dispose();
     }
 
     public boolean hasTradeChatOffer() {
@@ -220,6 +227,10 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
     public boolean isLeaveChatMessage() {
         return chatMessage.getChatMessageType() == LEAVE;
+    }
+
+    public boolean isChatRulesWarningMessage() {
+        return chatMessage.getChatMessageType() == CHAT_RULES_WARNING;
     }
 
     public String getSupportedLanguageCodes(BisqEasyOfferbookMessage chatMessage) {
@@ -337,61 +348,52 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private void addSubscriptionToMessageDeliveryStatus(NetworkService networkService) {
         mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
             @Override
-            public void put(String messageId, Observable<MessageDeliveryStatus> value) {
-                if (messageId.equals(chatMessage.getId())) {
-                    updateMessageStatus(messageId, value);
+            public void put(String ackRequestingMessageId, Observable<MessageDeliveryStatus> value) {
+                if (ackRequestingMessageId != null && chatMessage instanceof AckRequestingMessage ackRequestingMessage) {
+                    String messageId = ackRequestingMessageId;
+                    String chatMessageId = ackRequestingMessage.getAckRequestingMessageId();
+                    String peersProfileId = null;
+                    String separator = BisqEasyOpenTradeMessage.ACK_REQUESTING_MESSAGE_ID_SEPARATOR;
+                    if (chatMessage instanceof BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage) {
+                        // In case of a bisqEasyOpenTradeMessage we use the message id and receiver id separated with a '_'.
+                        // This allows us to handle the ACK messages separately to know when the message was received by
+                        // both the peer and the mediator (in case of mediation).
+                        if (messageId.contains(separator)) {
+                            String[] parts = messageId.split(separator);
+                            messageId = parts[0];
+                            peersProfileId = parts[1];
+                        }
+                        if (chatMessageId.contains(separator)) {
+                            String[] parts = chatMessageId.split(separator);
+                            chatMessageId = parts[0];
+                        }
+                    }
+
+                    if (messageId.equals(chatMessageId)) {
+                        updateMessageStatus(ackRequestingMessageId, value, peersProfileId);
+                    }
                 }
-            }
-
-            @Override
-            public void putAll(Map<? extends String, ? extends Observable<MessageDeliveryStatus>> map) {
-                map.forEach(this::put);
-            }
-
-            @Override
-            public void remove(Object key) {
-            }
-
-            @Override
-            public void clear() {
             }
         }));
-
     }
 
-    private void updateMessageStatus(String messageId, Observable<MessageDeliveryStatus> value) {
+    private void updateMessageStatus(String ackRequestingMessageId,
+                                     Observable<MessageDeliveryStatus> value,
+                                     String peersProfileId) {
         // Delay to avoid ConcurrentModificationException
         UIThread.runOnNextRenderFrame(() -> statusPins.add(value.addObserver(status -> UIThread.run(() -> {
-            ChatMessageListItem.this.messageId = messageId;
-            boolean shouldShowTryAgain = false;
-            if (status != null) {
-                Label statusLabel = new Label();
-                statusLabel.setTooltip(new BisqTooltip(Res.get("chat.message.deliveryState." + status.name())));
-                switch (status) {
-                    // Successful delivery
-                    case ACK_RECEIVED:
-                    case MAILBOX_MSG_RECEIVED:
-                        statusLabel.setGraphic(successfulDeliveryIcon);
-                        break;
-                    // Pending delivery
-                    case CONNECTING:
-                        statusLabel.setGraphic(connectingDeliveryIcon);
-                        break;
-                    case SENT:
-                    case TRY_ADD_TO_MAILBOX:
-                        statusLabel.setGraphic(pendingDeliveryIcon);
-                        break;
-                    case ADDED_TO_MAILBOX:
-                        statusLabel.setGraphic(addedToMailboxIcon);
-                        break;
-                    case FAILED:
-                        statusLabel.setGraphic(failedDeliveryIcon);
-                        shouldShowTryAgain = resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false);
-                        break;
-                }
-                messageDeliveryStatusNode.set(statusLabel);
+            if (peersProfileId == null) {
+                return;
             }
-            this.shouldShowTryAgain.set(shouldShowTryAgain);
+            Map<String, Triple<MessageDeliveryStatus, String, Boolean>> map = messageDeliveryStatusByPeerProfileId.get();
+            if (map == null) {
+                map = new HashMap<>();
+            }
+            boolean canManuallyResendMessage = status == MessageDeliveryStatus.FAILED &&
+                    resendMessageService.map(service -> service.canManuallyResendMessage(ackRequestingMessageId)).orElse(false);
+            map.put(peersProfileId, new Triple<>(status, ackRequestingMessageId, canManuallyResendMessage));
+            messageDeliveryStatusByPeerProfileId.set(null); // trigger update by setting it to null
+            messageDeliveryStatusByPeerProfileId.set(map);
         }))));
     }
 
@@ -446,5 +448,18 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private void onUserIdentity() {
         UserProfile selectedUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
         userReactions.forEach((key, value) -> value.setSelectedUserProfile(selectedUserProfile));
+    }
+
+    private void setupBondedRoleBadge() {
+        senderUserProfile.ifPresent(userProfile -> {
+            Set<BondedRoleType> bondedRoleTypes = authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+                    .filter(bondedRole ->
+                            (bondedRole.getBondedRoleType() == BondedRoleType.MEDIATOR
+                                    || bondedRole.getBondedRoleType() == BondedRoleType.MODERATOR)
+                                    && userProfile.getId().equals(bondedRole.getProfileId()))
+                    .map(AuthorizedBondedRole::getBondedRoleType)
+                    .collect(Collectors.toSet());
+            bondedRoleBadge.applyBondedRoleTypes(bondedRoleTypes);
+        });
     }
 }

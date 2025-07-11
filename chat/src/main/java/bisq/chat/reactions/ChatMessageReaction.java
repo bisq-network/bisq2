@@ -35,7 +35,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @EqualsAndHashCode
 public abstract class ChatMessageReaction implements NetworkProto {
-    private final String id;
+    protected final String id;
     protected final String userProfileId;
     private final String chatChannelId;
     private final ChatChannelDomain chatChannelDomain;

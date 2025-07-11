@@ -43,11 +43,13 @@
 
 package bisq.common.jvm;
 
+import bisq.common.file.FileUtils;
 import bisq.common.threading.ThreadName;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -110,6 +112,11 @@ public class DeleteOnExitHook {
         // Last in first deleted.
         Collections.reverse(toBeDeleted);
         for (String filename : toBeDeleted) {
+            try {
+                FileUtils.deleteFileOrDirectory(new File(filename));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             if (!(new File(filename)).delete()) {
                 log.warn("Deleting {} failed", filename);
             }

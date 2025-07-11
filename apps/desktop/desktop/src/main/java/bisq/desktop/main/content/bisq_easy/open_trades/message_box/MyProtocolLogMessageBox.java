@@ -19,51 +19,24 @@ package bisq.desktop.main.content.bisq_easy.open_trades.message_box;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
-import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
-import javafx.geometry.Pos;
-import javafx.scene.layout.HBox;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
+import bisq.desktop.main.content.chat.message_container.list.message_box.MessageDeliveryStatusBox;
 
 public class MyProtocolLogMessageBox extends PeerProtocolLogMessageBox {
-    private final Subscription shouldShowTryAgainPin, messageDeliveryStatusNodePin;
+    private final MessageDeliveryStatusBox messageDeliveryStatusBox;
 
     public MyProtocolLogMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                                    ChatMessagesListController controller) {
         super(item);
 
-        BisqMenuItem tryAgainMenuItem = item.getTryAgainMenuItem();
-        HBox deliveryStateHBox = new HBox();
-        deliveryStateHBox.setAlignment(Pos.CENTER);
-        HBox messageStatusHbox = new HBox(5, tryAgainMenuItem, deliveryStateHBox);
-        messageStatusHbox.setAlignment(Pos.CENTER);
+        messageDeliveryStatusBox = new MessageDeliveryStatusBox(item, controller);
 
-        messageDeliveryStatusNodePin = EasyBind.subscribe(item.getMessageDeliveryStatusNode(), node -> {
-            deliveryStateHBox.setManaged(node != null);
-            deliveryStateHBox.setVisible(node != null);
-            if (node != null) {
-                deliveryStateHBox.getChildren().setAll(node);
-            }
-        });
-
-        shouldShowTryAgainPin = EasyBind.subscribe(item.getShouldShowTryAgain(), showTryAgain -> {
-            tryAgainMenuItem.setVisible(showTryAgain);
-            tryAgainMenuItem.setManaged(showTryAgain);
-            if (showTryAgain) {
-                tryAgainMenuItem.setOnAction(e -> controller.onResendMessage(item.getMessageId()));
-            } else {
-                tryAgainMenuItem.setOnAction(null);
-            }
-        });
-
-        dateTimeHBox.getChildren().add(0, messageStatusHbox);
+        dateTimeHBox.getChildren().add(0, messageDeliveryStatusBox);
     }
 
     @Override
     public void dispose() {
-        shouldShowTryAgainPin.unsubscribe();
-        messageDeliveryStatusNodePin.unsubscribe();
+        messageDeliveryStatusBox.dispose();
     }
 }
