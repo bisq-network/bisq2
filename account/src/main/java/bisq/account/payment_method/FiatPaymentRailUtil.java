@@ -275,7 +275,8 @@ public class FiatPaymentRailUtil {
                 Map.entry(FiatPaymentRail.SWIFT, 2),
                 Map.entry(FiatPaymentRail.BIZUM, 2),
                 Map.entry(FiatPaymentRail.CASH_DEPOSIT, 2),
-                Map.entry(FiatPaymentRail.UPI, 1)
+                Map.entry(FiatPaymentRail.UPI, 1),
+                Map.entry(FiatPaymentRail.CASH_APP, 1)
         );
     }
 }
