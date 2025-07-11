@@ -4,11 +4,14 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
+import bisq.common.validation.PhoneNumberValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
 @Slf4j
@@ -20,6 +23,13 @@ public final class BizumAccountPayload extends CountryBasedAccountPayload implem
     public BizumAccountPayload(String id, String countryCode, String mobileNr) {
         super(id, countryCode);
         this.mobileNr = mobileNr;
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
+
+        checkArgument(PhoneNumberValidation.isValid(mobileNr, "ES"));
     }
 
     @Override

@@ -81,7 +81,14 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             FiatCurrencyRepository.getCurrencyByCode("EUR"),
             FiatPaymentMethodChargebackRisk.LOW),
 
-    // HAL_CASH = new PaymentMethod(HAL_CASH_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
+    HAL_CASH(countryFromCode("ES"),
+            FiatCurrencyRepository.getCurrencyByCode("EUR"),
+            FiatPaymentMethodChargebackRisk.LOW),
+
+    // Poland (Polish brand of Halcash)
+    PIN_4(countryFromCode("PL"),
+            FiatCurrencyRepository.getCurrencyByCode("PLN"),
+            FiatPaymentMethodChargebackRisk.LOW),
 
     // Sweden
     SWISH(countryFromCode("SE"),
@@ -168,6 +175,7 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             allCurrencies(),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
+    //todo not impl accounts yet
     SWIFT(allCountries(),
             allCurrencies(),
             FiatPaymentMethodChargebackRisk.MEDIUM),
@@ -331,6 +339,7 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             case SEPA_INSTANT -> HOURS_24;
             case MONEY_BEAM -> HOURS_24;
             case BIZUM -> DAYS_4;
+            case PIN_4 -> HOURS_24;
             case SWISH -> HOURS_24;
             case FASTER_PAYMENTS -> HOURS_24;
             case INTERAC_E_TRANSFER -> HOURS_24;
@@ -351,9 +360,34 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             case UPHOLD -> HOURS_24;
             case AMAZON_GIFT_CARD -> DAYS_4;
             case MONEY_GRAM -> DAYS_4;
+            case HAL_CASH -> HOURS_24;
         };
     }
 }
+/**
+ * Not added methods from Bisq 1:
+ * - All deprecated ones
+ * - Japan Bank Furikomi: No language support yet
+ * - AliPay, WeChat: No language support yet, AliPay likely mostly test trades. Bitcoin trade in China is illegal
+ * - Popmoney: Popmoney was discontinued on June 30, 2023
+ * <p>
+ * Those are not planned to get added for release:
+ * - Western Union: high fees, low usage
+ * - Perfect Money: low usage, mostly test trades?
+ * - Transfers with specific banks: Low usage, complex UI
+ * - SWIFT International Wire Transfer: Low usage, complex UI, high fees
+ * <p>
+ * All those had low usage but might get added on demand:
+ * [Monese] => 7
+ * [Advanced Cash] => 6
+ * [Paysera] => 6
+ * [Satispay] => 4
+ * [Faster Payments System (SBP)] => 3
+ * [Payment method] => 1
+ * [MercadoPago] => 1
+ * [India/NEFT] => 1
+ * [Verse] => 1
+ */
 
 /*
     x[SEPA] => 66417

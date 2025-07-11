@@ -418,6 +418,23 @@ public class FiatPaymentRailUtil {
         return currenciesFromCodes(getMoneyBeamCurrencyCodes());
     }
 
+
+
+    /* --------------------------------------------------------------------- */
+    // MONEY_GRAM
+    /* --------------------------------------------------------------------- */
+
+    //
+    public static List<String> getHalCashCountryCodes() {
+        return new ArrayList<>(List.of("ES", "PL"));
+    }
+
+    public static List<Country> getHalCashCountries() {
+        return CountryRepository.getCountriesFromCodes(getHalCashCountryCodes());
+    }
+
+
+
     /* --------------------------------------------------------------------- */
     // Popularity
     /* --------------------------------------------------------------------- */
@@ -453,6 +470,8 @@ public class FiatPaymentRailUtil {
                 Map.entry(FiatPaymentRail.MONEY_GRAM, 2), //?
                 Map.entry(FiatPaymentRail.CASH_DEPOSIT, 2),
                 Map.entry(FiatPaymentRail.SAME_BANK, 2), //?
+                Map.entry(FiatPaymentRail.HAL_CASH, 2), //?
+                Map.entry(FiatPaymentRail.PIN_4, 1), // not in bisq 1, polish version of halcash
                 Map.entry(FiatPaymentRail.UPI, 1)
         );
     }

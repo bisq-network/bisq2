@@ -111,7 +111,16 @@ message CountryBasedAccountPayload {
     UpholdAccountPayload upholdAccountPayload = 33;
     MoneyGramAccountPayload moneyGramAccountPayload = 34;
     PromptPayAccountPayload promptPayAccountPayload = 35;
+    HalCashAccountPayload halCashAccountPayload = 36;
+    Pin4AccountPayload pin4AccountPayload = 37;
   }
+}
+
+message HalCashAccountPayload {
+  string mobileNr = 1;
+}
+message Pin4AccountPayload {
+  string mobileNr = 1;
 }
 message SepaAccountPayload {
   string holderName = 1;
@@ -317,7 +326,13 @@ message CountryBasedAccount {
     UpholdAccount upholdAccount = 33;
     MoneyGramAccount moneyGramAccount = 34;
     PromptPayAccount promptPayAccount = 35;
+    HalCashAccount halCashAccount = 36;
+    Pin4Account pin4Account = 37;
   }
+}
+message HalCashAccount {
+}
+message Pin4Account {
 }
 message SepaAccount {
 }
