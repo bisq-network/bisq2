@@ -53,6 +53,12 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             FiatCurrencyRepository.getCurrencyByCode("USD"),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
+    @Deprecated(since = "2.1.8")
+    // Has high chargeback risk and was added accidentally to Bisq 2. Only kept for backward compatibility for Bisq Easy 2.1.7
+    CASH_APP(countryFromCode("US"),
+            FiatCurrencyRepository.getCurrencyByCode("USD"),
+            FiatPaymentMethodChargebackRisk.MODERATE),
+
     // US_POSTAL_MONEY_ORDER, POPMONEY
 
     // EUR
@@ -313,6 +319,7 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             case STRIKE -> DAYS_4;
             case ACH_TRANSFER -> DAYS_5;
             case US_POSTAL_MONEY_ORDER -> DAYS_4;
+            case CASH_APP -> DAYS_4;
             case SEPA -> DAYS_6;
             case SEPA_INSTANT -> HOURS_24;
             case BIZUM -> DAYS_4;

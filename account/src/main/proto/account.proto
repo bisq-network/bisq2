@@ -253,7 +253,6 @@ message Account {
     USPostalMoneyOrderAccount usPostalMoneyOrderAccount = 25;
     CashByMailAccount cashByMailAccount = 26;
     InteracETransferAccount interacETransferAccount = 27;
-    CashAppAccount cashAppAccount = 28;
   }
 }
 
@@ -343,9 +342,6 @@ message UpiAccount {
 }
 
 message BizumAccount {
-}
-
-message CashAppAccount {
 }
 
 message AccountStore {

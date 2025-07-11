@@ -123,6 +123,7 @@ public class PaymentDataController implements Controller {
             case CASH_DEPOSIT -> throw new UnsupportedOperationException("Not implemented yet");
             case UPI -> throw new UnsupportedOperationException("Not implemented yet");
             case BIZUM -> throw new UnsupportedOperationException("Not implemented yet");
+            case CASH_APP -> throw new UnsupportedOperationException("Not implemented yet");
             case DOMESTIC_WIRE_TRANSFER -> throw new UnsupportedOperationException("Not implemented yet");
         };
     }
