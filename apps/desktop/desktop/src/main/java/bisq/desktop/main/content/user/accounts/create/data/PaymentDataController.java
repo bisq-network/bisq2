@@ -129,6 +129,7 @@ public class PaymentDataController implements Controller {
             case CASH_APP -> throw new UnsupportedOperationException("Not implemented yet");
             case DOMESTIC_WIRE_TRANSFER -> throw new UnsupportedOperationException("Not implemented yet");
             case MONEY_BEAM -> null;
+            case MONEY_GRAM -> null;
         };
     }
 }

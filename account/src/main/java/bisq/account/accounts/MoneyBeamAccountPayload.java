@@ -16,11 +16,17 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = true)
 public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload implements SelectableCurrencyAccountPayload {
     private final String selectedCurrencyCode;
+    private final String holderName;
     private final String accountId;
 
-    public MoneyBeamAccountPayload(String id, String countryCode, String selectedCurrencyCode, String accountId) {
+    public MoneyBeamAccountPayload(String id,
+                                   String countryCode,
+                                   String selectedCurrencyCode,
+                                   String holderName,
+                                   String accountId) {
         super(id, countryCode);
         this.selectedCurrencyCode = selectedCurrencyCode;
+        this.holderName = holderName;
         this.accountId = accountId;
     }
 
@@ -37,16 +43,18 @@ public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload im
     private bisq.account.protobuf.MoneyBeamAccountPayload.Builder getMoneyBeamAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.MoneyBeamAccountPayload.newBuilder()
                 .setSelectedCurrencyCode(selectedCurrencyCode)
+                .setHolderName(holderName)
                 .setAccountId(accountId);
     }
 
     public static MoneyBeamAccountPayload fromProto(AccountPayload proto) {
-        var moneyBeamProto = proto.getCountryBasedAccountPayload().getMoneyBeamAccountPayload();
+        var payload = proto.getCountryBasedAccountPayload().getMoneyBeamAccountPayload();
         return new MoneyBeamAccountPayload(
                 proto.getId(),
                 proto.getCountryBasedAccountPayload().getCountryCode(),
-                moneyBeamProto.getSelectedCurrencyCode(),
-                moneyBeamProto.getAccountId());
+                payload.getSelectedCurrencyCode(),
+                payload.getHolderName(),
+                payload.getAccountId());
     }
 
     @Override
@@ -57,6 +65,7 @@ public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload im
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
+                Res.get("user.paymentAccounts.holderName"), holderName,
                 Res.get("user.paymentAccounts.emailOrMobileNr"), accountId
         ).toString();
     }

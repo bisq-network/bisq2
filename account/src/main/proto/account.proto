@@ -109,6 +109,7 @@ message CountryBasedAccountPayload {
     MoneyBeamAccountPayload moneyBeamAccountPayload = 31;
     SwishAccountPayload swishAccountPayload = 32;
     UpholdAccountPayload upholdAccountPayload = 33;
+    MoneyGramAccountPayload moneyGramAccountPayload = 34;
   }
 }
 message SepaAccountPayload {
@@ -137,6 +138,12 @@ message UpholdAccountPayload {
   string accountId = 3;
 }
 
+message MoneyGramAccountPayload {
+  repeated string selectedCurrencyCodes = 1;
+  string holderName = 2;
+  string email = 3;
+}
+
 message WiseUsdAccountPayload {
   string holderName = 1;
   string email = 2;
@@ -145,7 +152,8 @@ message WiseUsdAccountPayload {
 
 message MoneyBeamAccountPayload {
   string selectedCurrencyCode = 1;
-  string accountId = 2;
+  string holderName = 2;
+  string accountId = 3;
 }
 
 message F2FAccountPayload {
@@ -302,6 +310,7 @@ message CountryBasedAccount {
     MoneyBeamAccount moneyBeamAccount = 31;
     SwishAccount swishAccount = 32;
     UpholdAccount upholdAccount = 33;
+    MoneyGramAccount moneyGramAccount = 34;
   }
 }
 message SepaAccount {
@@ -315,6 +324,8 @@ message UpholdAccount {
 message WiseUsdAccount {
 }
 message MoneyBeamAccount {
+}
+message MoneyGramAccount {
 }
 message F2FAccount {
 }

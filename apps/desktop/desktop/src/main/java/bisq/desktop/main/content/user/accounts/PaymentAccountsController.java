@@ -220,6 +220,7 @@ public class PaymentAccountsController implements Controller {
             case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case DOMESTIC_WIRE_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case MONEY_BEAM -> null;
+            case MONEY_GRAM -> null;
         };
     }
 }
