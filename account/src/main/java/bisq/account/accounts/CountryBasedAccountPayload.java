@@ -64,6 +64,7 @@ public abstract class CountryBasedAccountPayload extends AccountPayload<FiatPaym
             case UPIACCOUNTPAYLOAD -> UpiAccountPayload.fromProto(proto);
             case BIZUMACCOUNTPAYLOAD -> BizumAccountPayload.fromProto(proto);
             case WISEUSDACCOUNTPAYLOAD -> WiseUsdAccountPayload.fromProto(proto);
+            case MONEYBEAMACCOUNTPAYLOAD -> MoneyBeamAccountPayload.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

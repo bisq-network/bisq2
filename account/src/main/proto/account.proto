@@ -106,6 +106,7 @@ message CountryBasedAccountPayload {
     SepaInstantAccountPayload sepaInstantAccountPayload = 28;
     WiseAccountPayload wiseAccountPayload = 29;
     WiseUsdAccountPayload wiseUsdAccountPayload = 30;
+    MoneyBeamAccountPayload moneyBeamAccountPayload = 31;
   }
 }
 message SepaAccountPayload {
@@ -132,6 +133,11 @@ message WiseUsdAccountPayload {
   string holderName = 1;
   string email = 2;
   string beneficiaryAddress = 3;
+}
+
+message MoneyBeamAccountPayload {
+  string selectedCurrencyCode = 1;
+  string accountId = 2;
 }
 
 message F2FAccountPayload {
@@ -280,6 +286,7 @@ message CountryBasedAccount {
     SepaInstantAccount sepaInstantAccount = 28;
     WiseAccount wiseAccount = 29;
     WiseUsdAccount wiseUsdAccount = 30;
+    MoneyBeamAccount moneyBeamAccount = 31;
   }
 }
 message SepaAccount {
@@ -292,6 +299,9 @@ message WiseAccount {
 }
 
 message WiseUsdAccount {
+}
+
+message MoneyBeamAccount {
 }
 
 message F2FAccount {

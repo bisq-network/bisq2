@@ -195,6 +195,10 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
     // Selected currency is the currency derived from country
     AMAZON_GIFT_CARD(FiatPaymentRailUtil.getAmazonGiftCardsCountries(),
             FiatPaymentRailUtil.getAmazonGiftCardsCurrencies(),
+            FiatPaymentMethodChargebackRisk.MODERATE),
+
+    MONEY_BEAM(FiatPaymentRailUtil.getAllSepaCountries(),
+            FiatPaymentRailUtil.getMoneyBeamCurrencies(),
             FiatPaymentMethodChargebackRisk.MODERATE);
 
 
@@ -321,11 +325,13 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
         return switch (this) {
             case ZELLE -> DAYS_4;
             case STRIKE -> DAYS_4;
+            case WISE_USD -> DAYS_4;
             case ACH_TRANSFER -> DAYS_5;
             case US_POSTAL_MONEY_ORDER -> DAYS_4;
             case CASH_APP -> DAYS_4;
             case SEPA -> DAYS_6;
             case SEPA_INSTANT -> HOURS_24;
+            case MONEY_BEAM -> HOURS_24;
             case BIZUM -> DAYS_4;
             case FASTER_PAYMENTS -> HOURS_24;
             case INTERAC_E_TRANSFER -> HOURS_24;
@@ -341,7 +347,7 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             case SWIFT -> DAYS_4;
             case DOMESTIC_WIRE_TRANSFER -> DAYS_4;
             case REVOLUT -> HOURS_24;
-            case WISE -> HOURS_24;
+            case WISE -> DAYS_4;
             case AMAZON_GIFT_CARD -> DAYS_4;
             default -> HOURS_24;
         };

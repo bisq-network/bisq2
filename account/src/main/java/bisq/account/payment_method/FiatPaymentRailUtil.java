@@ -195,6 +195,15 @@ public class FiatPaymentRailUtil {
     }
 
 
+    public static List<String> getMoneyBeamCurrencyCodes() {
+        return List.of("EUR", "GBP");
+    }
+
+    public static List<FiatCurrency> getMoneyBeamCurrencies() {
+        return currenciesFromCodes(getMoneyBeamCurrencyCodes());
+    }
+
+
     // https://help.revolut.com/help/wealth/exchanging-money/what-currencies-are-available/what-currencies-are-supported-for-holding-and-exchange/
     public static List<String> getRevolutCountryCodes() {
         return List.of("AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
