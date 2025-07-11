@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.account.accounts;
 
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
@@ -66,13 +83,13 @@ public class F2FAccountPayload extends CountryBasedAccountPayload implements Sel
 
     public static F2FAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        bisq.account.protobuf.F2FAccountPayload f2fAccountPayload = countryBasedAccountPayload.getF2FAccountPayload();
+        bisq.account.protobuf.F2FAccountPayload payload = countryBasedAccountPayload.getF2FAccountPayload();
         return new F2FAccountPayload(proto.getId(),
                 countryBasedAccountPayload.getCountryCode(),
-                f2fAccountPayload.getSelectedCurrencyCode(),
-                f2fAccountPayload.getCity(),
-                f2fAccountPayload.getContact(),
-                f2fAccountPayload.getExtraInfo()
+                payload.getSelectedCurrencyCode(),
+                payload.getCity(),
+                payload.getContact(),
+                payload.getExtraInfo()
         );
     }
 

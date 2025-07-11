@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.account.accounts;
 
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
@@ -57,11 +74,11 @@ public final class SwishAccountPayload extends CountryBasedAccountPayload implem
 
     public static SwishAccountPayload fromProto(AccountPayload proto) {
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        bisq.account.protobuf.SwishAccountPayload swishAccountPayload = countryBasedAccountPayload.getSwishAccountPayload();
+        bisq.account.protobuf.SwishAccountPayload payload = countryBasedAccountPayload.getSwishAccountPayload();
         return new SwishAccountPayload(proto.getId(),
                 countryBasedAccountPayload.getCountryCode(),
-                swishAccountPayload.getHolderName(),
-                swishAccountPayload.getMobileNr()
+                payload.getHolderName(),
+                payload.getMobileNr()
         );
     }
 

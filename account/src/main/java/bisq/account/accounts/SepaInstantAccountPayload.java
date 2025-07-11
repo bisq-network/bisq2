@@ -61,15 +61,15 @@ public final class SepaInstantAccountPayload extends CountryBasedAccountPayload 
 
     public static SepaInstantAccountPayload fromProto(AccountPayload proto) {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        var sepaInstantPayload = countryBasedAccountPayload.getSepaInstantAccountPayload();
+        var payload = countryBasedAccountPayload.getSepaInstantAccountPayload();
 
         return new SepaInstantAccountPayload(
                 proto.getId(),
-                sepaInstantPayload.getHolderName(),
-                sepaInstantPayload.getIban(),
-                sepaInstantPayload.getBic(),
+                payload.getHolderName(),
+                payload.getIban(),
+                payload.getBic(),
                 countryBasedAccountPayload.getCountryCode(),
-                sepaInstantPayload.getAcceptedCountryCodesList()
+                payload.getAcceptedCountryCodesList()
         );
     }
 

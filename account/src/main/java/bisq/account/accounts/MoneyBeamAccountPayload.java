@@ -1,14 +1,36 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.account.accounts;
 
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
+import bisq.common.validation.EmailValidation;
+import bisq.common.validation.PaymentAccountValidation;
+import bisq.common.validation.PhoneNumberValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
 @Slf4j
@@ -17,17 +39,25 @@ import lombok.extern.slf4j.Slf4j;
 public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload implements SelectableCurrencyAccountPayload {
     private final String selectedCurrencyCode;
     private final String holderName;
-    private final String accountId;
+    private final String emailOrMobileNr;
 
     public MoneyBeamAccountPayload(String id,
                                    String countryCode,
                                    String selectedCurrencyCode,
                                    String holderName,
-                                   String accountId) {
+                                   String emailOrMobileNr) {
         super(id, countryCode);
         this.selectedCurrencyCode = selectedCurrencyCode;
         this.holderName = holderName;
-        this.accountId = accountId;
+        this.emailOrMobileNr = emailOrMobileNr;
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
+        PaymentAccountValidation.validateCurrencyCode(selectedCurrencyCode);
+        PaymentAccountValidation.validateHolderName(holderName);
+        checkArgument(EmailValidation.isValid(emailOrMobileNr) || PhoneNumberValidation.isValid(emailOrMobileNr, countryCode));
     }
 
     @Override
@@ -44,7 +74,7 @@ public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload im
         return bisq.account.protobuf.MoneyBeamAccountPayload.newBuilder()
                 .setSelectedCurrencyCode(selectedCurrencyCode)
                 .setHolderName(holderName)
-                .setAccountId(accountId);
+                .setAccountId(emailOrMobileNr);
     }
 
     public static MoneyBeamAccountPayload fromProto(AccountPayload proto) {
@@ -66,7 +96,7 @@ public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload im
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
                 Res.get("user.paymentAccounts.holderName"), holderName,
-                Res.get("user.paymentAccounts.emailOrMobileNr"), accountId
+                Res.get("user.paymentAccounts.emailOrMobileNr"), emailOrMobileNr
         ).toString();
     }
 }

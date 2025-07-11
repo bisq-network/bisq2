@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.account.accounts;
 
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
@@ -50,10 +67,10 @@ public final class Pin4AccountPayload extends CountryBasedAccountPayload impleme
 
     public static Pin4AccountPayload fromProto(AccountPayload proto) {
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        bisq.account.protobuf.Pin4AccountPayload pixAccountPayload = countryBasedAccountPayload.getPin4AccountPayload();
+        bisq.account.protobuf.Pin4AccountPayload payload = countryBasedAccountPayload.getPin4AccountPayload();
         return new Pin4AccountPayload(proto.getId(),
                 countryBasedAccountPayload.getCountryCode(),
-                pixAccountPayload.getMobileNr()
+                payload.getMobileNr()
         );
     }
 

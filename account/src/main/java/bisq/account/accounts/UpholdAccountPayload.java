@@ -83,13 +83,13 @@ public final class UpholdAccountPayload extends CountryBasedAccountPayload imple
 
     public static UpholdAccountPayload fromProto(AccountPayload proto) {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        var upholdPayload = countryBasedAccountPayload.getUpholdAccountPayload();
+        var payload = countryBasedAccountPayload.getUpholdAccountPayload();
         return new UpholdAccountPayload(
                 proto.getId(),
                 countryBasedAccountPayload.getCountryCode(),
-                upholdPayload.getSelectedCurrencyCodesList(),
-                upholdPayload.getHolderName(),
-                upholdPayload.getAccountId()
+                payload.getSelectedCurrencyCodesList(),
+                payload.getHolderName(),
+                payload.getAccountId()
         );
     }
 

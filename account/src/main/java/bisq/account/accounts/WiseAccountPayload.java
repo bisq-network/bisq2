@@ -83,14 +83,13 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
 
     public static WiseAccountPayload fromProto(AccountPayload proto) {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        var wisePayload = countryBasedAccountPayload.getWiseAccountPayload();
-
+        var payload = countryBasedAccountPayload.getWiseAccountPayload();
         return new WiseAccountPayload(
                 proto.getId(),
                 countryBasedAccountPayload.getCountryCode(),
-                wisePayload.getSelectedCurrencyCodesList(),
-                wisePayload.getHolderName(),
-                wisePayload.getEmail()
+                payload.getSelectedCurrencyCodesList(),
+                payload.getHolderName(),
+                payload.getEmail()
         );
     }
 

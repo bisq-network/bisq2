@@ -415,24 +415,8 @@ public class FiatPaymentRailUtil {
     }
 
     public static List<FiatCurrency> getMoneyGramCurrencies() {
-        return currenciesFromCodes(getMoneyBeamCurrencyCodes());
+        return currenciesFromCodes(getMoneyGramCurrencyCodes());
     }
-
-
-
-    /* --------------------------------------------------------------------- */
-    // MONEY_GRAM
-    /* --------------------------------------------------------------------- */
-
-    //
-    public static List<String> getHalCashCountryCodes() {
-        return new ArrayList<>(List.of("ES", "PL"));
-    }
-
-    public static List<Country> getHalCashCountries() {
-        return CountryRepository.getCountriesFromCodes(getHalCashCountryCodes());
-    }
-
 
 
     /* --------------------------------------------------------------------- */

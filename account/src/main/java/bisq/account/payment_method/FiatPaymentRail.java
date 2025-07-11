@@ -106,6 +106,7 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             FiatPaymentMethodChargebackRisk.MODERATE),
 
     // Japan
+    // Not added yet due lack of language support and low usage
     // JAPAN_BANK = new PaymentMethod(JAPAN_BANK_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
 
     // Australia
@@ -122,6 +123,7 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             FiatPaymentMethodChargebackRisk.MODERATE),
 
     // China
+    // Not added yet due lack of language support and low usage
     // ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
     // WECHAT_PAY = new PaymentMethod(WECHAT_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
 
@@ -137,15 +139,15 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
     UPI(countryFromCode("IN"),
             FiatCurrencyRepository.getCurrencyByCode("INR"),
             FiatPaymentMethodChargebackRisk.LOW),
-    //            NEFT = new PaymentMethod(NEFT_ID, DAY, Coin.parseCoin("0.02")),
-    //            RTGS = new PaymentMethod(RTGS_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            IMPS = new PaymentMethod(IMPS_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            PAYTM = new PaymentMethod(PAYTM_ID, DAY, Coin.parseCoin("0.05")),
+    // NEFT = new PaymentMethod(NEFT_ID, DAY, Coin.parseCoin("0.02")),
+    // RTGS = new PaymentMethod(RTGS_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // IMPS = new PaymentMethod(IMPS_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // PAYTM = new PaymentMethod(PAYTM_ID, DAY, Coin.parseCoin("0.05")),
 
 
     // Global
-    //            WESTERN_UNION = new PaymentMethod(WESTERN_UNION_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
-    //            SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // WESTERN_UNION = new PaymentMethod(WESTERN_UNION_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK), N
+    // SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
     CUSTOM(allCountries(),
             allCurrencies(),
@@ -210,26 +212,19 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             FiatPaymentMethodChargebackRisk.MEDIUM);
 
 
-    //            PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
-    //            ADVANCED_CASH = new PaymentMethod(ADVANCED_CASH_ID, DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
-    //            PAYSERA = new PaymentMethod(PAYSERA_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            PAXUM = new PaymentMethod(PAXUM_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
+    // ADVANCED_CASH = new PaymentMethod(ADVANCED_CASH_ID, DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
+    // PAYSERA = new PaymentMethod(PAYSERA_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // PAXUM = new PaymentMethod(PAXUM_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
 
-    //            NEQUI = new PaymentMethod(NEQUI_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            CAPITUAL = new PaymentMethod(CAPITUAL_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            CELPAY = new PaymentMethod(CELPAY_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            MONESE = new PaymentMethod(MONESE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            SATISPAY = new PaymentMethod(SATISPAY_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            TIKKIE = new PaymentMethod(TIKKIE_ID, DAY, Coin.parseCoin("0.05")),
-    //            VERSE = new PaymentMethod(VERSE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            DOMESTIC_WIRE_TRANSFER = new PaymentMethod(DOMESTIC_WIRE_TRANSFER_ID, 3 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-
-    // Altcoins
-    //  BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
-    // Altcoins with 1 hour trade period
-    //  BLOCK_CHAINS_INSTANT = new PaymentMethod(BLOCK_CHAINS_INSTANT_ID, TimeUnit.HOURS.toMillis(1), DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
-
+    // NEQUI = new PaymentMethod(NEQUI_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // CAPITUAL = new PaymentMethod(CAPITUAL_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // CELPAY = new PaymentMethod(CELPAY_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // MONESE = new PaymentMethod(MONESE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // SATISPAY = new PaymentMethod(SATISPAY_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // TIKKIE = new PaymentMethod(TIKKIE_ID, DAY, Coin.parseCoin("0.05")),
+    // VERSE = new PaymentMethod(VERSE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
     private static List<FiatCurrency> allCurrencies() {
         return FiatCurrencyRepository.getAllCurrencies();

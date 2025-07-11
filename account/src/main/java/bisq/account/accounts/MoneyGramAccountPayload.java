@@ -83,14 +83,14 @@ public final class MoneyGramAccountPayload extends CountryBasedAccountPayload im
 
     public static MoneyGramAccountPayload fromProto(AccountPayload proto) {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        var moneyGramPayload = countryBasedAccountPayload.getMoneyGramAccountPayload();
+        var payload = countryBasedAccountPayload.getMoneyGramAccountPayload();
 
         return new MoneyGramAccountPayload(
                 proto.getId(),
                 countryBasedAccountPayload.getCountryCode(),
-                moneyGramPayload.getSelectedCurrencyCodesList(),
-                moneyGramPayload.getHolderName(),
-                moneyGramPayload.getEmail()
+                payload.getSelectedCurrencyCodesList(),
+                payload.getHolderName(),
+                payload.getEmail()
         );
     }
 
