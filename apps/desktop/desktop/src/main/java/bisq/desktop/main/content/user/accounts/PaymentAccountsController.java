@@ -199,8 +199,10 @@ public class PaymentAccountsController implements Controller {
             case SAME_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case F2F -> new F2FAccountDetailsVBox((F2FAccount) account);
+            case WISE_USD -> null;
             case ACH_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case PIX -> new PixAccountDetailsVBox((PixAccount) account);
+            case SWISH -> null;
             case FASTER_PAYMENTS -> new FasterPaymentsAccountDetailsVBox((FasterPaymentsAccount) account);
             case PAY_ID -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case US_POSTAL_MONEY_ORDER ->
@@ -209,6 +211,7 @@ public class PaymentAccountsController implements Controller {
             case STRIKE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case INTERAC_E_TRANSFER ->
                     throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case UPHOLD -> null;
             case AMAZON_GIFT_CARD ->
                     throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case CASH_DEPOSIT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
@@ -216,6 +219,7 @@ public class PaymentAccountsController implements Controller {
             case BIZUM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case DOMESTIC_WIRE_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case MONEY_BEAM -> null;
         };
     }
 }

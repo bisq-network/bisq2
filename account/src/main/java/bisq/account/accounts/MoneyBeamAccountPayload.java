@@ -57,7 +57,7 @@ public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload im
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.moneyBeam.accountId"), accountId
+                Res.get("user.paymentAccounts.emailOrMobileNr"), accountId
         ).toString();
     }
 }

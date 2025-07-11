@@ -157,8 +157,10 @@ public class PaymentSummaryController implements Controller {
             case SAME_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case F2F -> new F2FAccountDetailsGridPane((F2FAccountPayload) accountPayload, fiatPaymentRail);
+            case WISE_USD -> null;
             case ACH_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case PIX -> new PixAccountDetailsGridPane((PixAccountPayload) accountPayload, fiatPaymentRail);
+            case SWISH -> null;
             case FASTER_PAYMENTS ->
                     new FasterPaymentsAccountDetailsGridPane((FasterPaymentsAccountPayload) accountPayload, fiatPaymentRail);
             case PAY_ID -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
@@ -168,6 +170,7 @@ public class PaymentSummaryController implements Controller {
             case STRIKE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case INTERAC_E_TRANSFER ->
                     throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case UPHOLD -> null;
             case AMAZON_GIFT_CARD ->
                     throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case CASH_DEPOSIT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
@@ -176,6 +179,7 @@ public class PaymentSummaryController implements Controller {
             case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case DOMESTIC_WIRE_TRANSFER ->
                     throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case MONEY_BEAM -> null;
         };
     }
 

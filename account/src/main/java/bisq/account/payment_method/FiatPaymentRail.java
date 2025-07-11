@@ -53,6 +53,10 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             FiatCurrencyRepository.getCurrencyByCode("USD"),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
+    DOMESTIC_WIRE_TRANSFER(countryFromCode("US"),
+            FiatCurrencyRepository.getCurrencyByCode("USD"),
+            FiatPaymentMethodChargebackRisk.MODERATE),
+
     US_POSTAL_MONEY_ORDER(countryFromCode("US"),
             FiatCurrencyRepository.getCurrencyByCode("USD"),
             FiatPaymentMethodChargebackRisk.MODERATE),
@@ -88,10 +92,6 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
     FASTER_PAYMENTS(countryFromCode("GB"),
             FiatCurrencyRepository.getCurrencyByCode("GBP"),
             FiatPaymentMethodChargebackRisk.MODERATE),
-
-    // Sweden
-    // SWISH
-
 
     // Canada
     INTERAC_E_TRANSFER(countryFromCode("CA"),
@@ -178,11 +178,6 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             allCurrencies(),
             FiatPaymentMethodChargebackRisk.LOW),
 
-    //todo
-    DOMESTIC_WIRE_TRANSFER(allCountries(),
-            allCurrencies(),
-            FiatPaymentMethodChargebackRisk.MODERATE),
-
     // Trans national
 
     // User can define supported currencies
@@ -195,6 +190,10 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             FiatPaymentRailUtil.getWiseCurrencies(),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
+    UPHOLD(FiatPaymentRailUtil.getUpholdCountries(),
+            FiatPaymentRailUtil.getUpholdCurrencies(),
+            FiatPaymentMethodChargebackRisk.MODERATE),
+
     // Selected currency is the currency derived from country
     AMAZON_GIFT_CARD(FiatPaymentRailUtil.getAmazonGiftCardsCountries(),
             FiatPaymentRailUtil.getAmazonGiftCardsCurrencies(),
@@ -205,10 +204,8 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             FiatPaymentMethodChargebackRisk.MODERATE);
 
 
-    //  UPHOLD = new PaymentMethod(UPHOLD_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
     //            PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
     //            ADVANCED_CASH = new PaymentMethod(ADVANCED_CASH_ID, DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
-    //            TRANSFERWISE_USD = new PaymentMethod(TRANSFERWISE_USD_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
     //            PAYSERA = new PaymentMethod(PAYSERA_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
     //            PAXUM = new PaymentMethod(PAXUM_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
@@ -349,11 +346,11 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             case NATIONAL_BANK -> DAYS_4;
             case SAME_BANK -> HOURS_24;
             case SWIFT -> DAYS_4;
-            case DOMESTIC_WIRE_TRANSFER -> DAYS_4;
+            case DOMESTIC_WIRE_TRANSFER -> DAYS_3;
             case REVOLUT -> HOURS_24;
             case WISE -> DAYS_4;
+            case UPHOLD -> HOURS_24;
             case AMAZON_GIFT_CARD -> DAYS_4;
-            default -> HOURS_24;
         };
     }
 }
