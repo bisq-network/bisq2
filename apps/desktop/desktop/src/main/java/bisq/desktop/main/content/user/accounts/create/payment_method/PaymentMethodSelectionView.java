@@ -267,7 +267,7 @@ public class PaymentMethodSelectionView extends View<VBox, PaymentMethodSelectio
             if (method instanceof FiatPaymentMethod fiatMethod) {
                 return fiatMethod.getPaymentRail().getChargebackRisk();
             } else {
-                return FiatPaymentMethodChargebackRisk.VERY_LOW;
+                return FiatPaymentMethodChargebackRisk.LOW;
             }
         }
     }

@@ -22,6 +22,7 @@ import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.EmailValidation;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.common.validation.PhoneNumberValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
@@ -35,54 +36,66 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
+public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload implements SelectableCurrencyAccountPayload {
+    private final String selectedCurrencyCode;
+    private final String holderName;
     private final String emailOrMobileNr;
 
-    public AmazonGiftCardAccountPayload(String id, String countryCode, String emailOrMobileNr) {
+    public MoneyBeamAccountPayload(String id,
+                                   String countryCode,
+                                   String selectedCurrencyCode,
+                                   String holderName,
+                                   String emailOrMobileNr) {
         super(id, countryCode);
+        this.selectedCurrencyCode = selectedCurrencyCode;
+        this.holderName = holderName;
         this.emailOrMobileNr = emailOrMobileNr;
     }
 
     @Override
     public void verify() {
         super.verify();
+        PaymentAccountValidation.validateCurrencyCode(selectedCurrencyCode);
+        PaymentAccountValidation.validateHolderName(holderName);
         checkArgument(EmailValidation.isValid(emailOrMobileNr) || PhoneNumberValidation.isValid(emailOrMobileNr, countryCode));
     }
 
     @Override
     protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
-        return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setAmazonGiftCardAccountPayload(
-                toAmazonGiftCardAccountPayloadProto(serializeForHash));
+        return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setMoneyBeamAccountPayload(
+                toMoneyBeamAccountPayloadProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.AmazonGiftCardAccountPayload toAmazonGiftCardAccountPayloadProto(boolean serializeForHash) {
-        return resolveBuilder(getAmazonGiftCardAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    private bisq.account.protobuf.MoneyBeamAccountPayload toMoneyBeamAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getMoneyBeamAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private bisq.account.protobuf.AmazonGiftCardAccountPayload.Builder getAmazonGiftCardAccountPayloadBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.AmazonGiftCardAccountPayload.newBuilder().setEmailOrMobileNr(emailOrMobileNr);
+    private bisq.account.protobuf.MoneyBeamAccountPayload.Builder getMoneyBeamAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.MoneyBeamAccountPayload.newBuilder()
+                .setSelectedCurrencyCode(selectedCurrencyCode)
+                .setHolderName(holderName)
+                .setEmailOrMobileNr(emailOrMobileNr);
     }
 
-    public static AmazonGiftCardAccountPayload fromProto(AccountPayload proto) {
-        bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload =
-                proto.getCountryBasedAccountPayload();
-        bisq.account.protobuf.AmazonGiftCardAccountPayload amazonGiftCardAccountPayload =
-                countryBasedAccountPayload.getAmazonGiftCardAccountPayload();
-        return new AmazonGiftCardAccountPayload(
+    public static MoneyBeamAccountPayload fromProto(AccountPayload proto) {
+        var payload = proto.getCountryBasedAccountPayload().getMoneyBeamAccountPayload();
+        return new MoneyBeamAccountPayload(
                 proto.getId(),
-                countryBasedAccountPayload.getCountryCode(),
-                amazonGiftCardAccountPayload.getEmailOrMobileNr()
-        );
+                proto.getCountryBasedAccountPayload().getCountryCode(),
+                payload.getSelectedCurrencyCode(),
+                payload.getHolderName(),
+                payload.getEmailOrMobileNr());
     }
 
     @Override
     public FiatPaymentMethod getPaymentMethod() {
-        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.AMAZON_GIFT_CARD);
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.MONEY_BEAM);
     }
 
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
+                Res.get("user.paymentAccounts.holderName"), holderName,
                 Res.get("user.paymentAccounts.emailOrMobileNr"), emailOrMobileNr
         ).toString();
     }

@@ -34,10 +34,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class BizumAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
+public final class HalCashAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
+
     private final String mobileNr;
 
-    public BizumAccountPayload(String id, String countryCode, String mobileNr) {
+    public HalCashAccountPayload(String id, String countryCode,  String mobileNr) {
         super(id, countryCode);
         this.mobileNr = mobileNr;
     }
@@ -51,29 +52,31 @@ public final class BizumAccountPayload extends CountryBasedAccountPayload implem
 
     @Override
     protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
-        return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setBizumAccountPayload(
-                toBizumAccountPayloadProto(serializeForHash));
+        return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setHalCashAccountPayload(
+                toHalCashAccountPayloadProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.BizumAccountPayload toBizumAccountPayloadProto(boolean serializeForHash) {
-        return resolveBuilder(getBizumAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    private bisq.account.protobuf.HalCashAccountPayload toHalCashAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getHalCashAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private bisq.account.protobuf.BizumAccountPayload.Builder getBizumAccountPayloadBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.BizumAccountPayload.newBuilder().setMobileNr(mobileNr);
+    private bisq.account.protobuf.HalCashAccountPayload.Builder getHalCashAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.HalCashAccountPayload.newBuilder()
+                .setMobileNr(mobileNr);
     }
 
-    public static BizumAccountPayload fromProto(AccountPayload proto) {
-        var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        return new BizumAccountPayload(
-                proto.getId(),
+    public static HalCashAccountPayload fromProto(AccountPayload proto) {
+        bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
+        bisq.account.protobuf.HalCashAccountPayload payload = countryBasedAccountPayload.getHalCashAccountPayload();
+        return new HalCashAccountPayload(proto.getId(),
                 countryBasedAccountPayload.getCountryCode(),
-                countryBasedAccountPayload.getBizumAccountPayload().getMobileNr());
+                payload.getMobileNr()
+        );
     }
 
     @Override
     public FiatPaymentMethod getPaymentMethod() {
-        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.BIZUM);
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.HAL_CASH);
     }
 
     @Override

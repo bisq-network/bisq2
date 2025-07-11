@@ -157,8 +157,12 @@ public class PaymentSummaryController implements Controller {
             case SAME_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case F2F -> new F2FAccountDetailsGridPane((F2FAccountPayload) accountPayload, fiatPaymentRail);
+            case WISE_USD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case ACH_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case PIX -> new PixAccountDetailsGridPane((PixAccountPayload) accountPayload, fiatPaymentRail);
+            case HAL_CASH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case PIN_4 -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case SWISH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case FASTER_PAYMENTS ->
                     new FasterPaymentsAccountDetailsGridPane((FasterPaymentsAccountPayload) accountPayload, fiatPaymentRail);
             case PAY_ID -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
@@ -168,14 +172,18 @@ public class PaymentSummaryController implements Controller {
             case STRIKE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case INTERAC_E_TRANSFER ->
                     throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case UPHOLD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case AMAZON_GIFT_CARD ->
                     throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case CASH_DEPOSIT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case PROMPT_PAY -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case UPI -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case BIZUM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case DOMESTIC_WIRE_TRANSFER ->
                     throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case MONEY_BEAM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case MONEY_GRAM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
         };
     }
 
@@ -198,10 +206,14 @@ public class PaymentSummaryController implements Controller {
                 case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case F2F ->
                         new F2FAccount(StringUtils.createUid(), new Date().getTime(), accountName, (F2FAccountPayload) model.getAccountPayload());
+                case WISE_USD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case ACH_TRANSFER ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case PIX ->
                         new PixAccount(StringUtils.createUid(), new Date().getTime(), accountName, (PixAccountPayload) model.getAccountPayload());
+                case HAL_CASH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case PIN_4 -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case SWISH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case FASTER_PAYMENTS ->
                         new FasterPaymentsAccount(StringUtils.createUid(), new Date().getTime(), accountName, (FasterPaymentsAccountPayload) model.getAccountPayload());
                 case PAY_ID -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
@@ -212,15 +224,19 @@ public class PaymentSummaryController implements Controller {
                 case STRIKE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case INTERAC_E_TRANSFER ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case UPHOLD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case AMAZON_GIFT_CARD ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case CASH_DEPOSIT ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case PROMPT_PAY -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case UPI -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case BIZUM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case DOMESTIC_WIRE_TRANSFER ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case MONEY_BEAM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case MONEY_GRAM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             };
         } else if (model.getPaymentMethod().getPaymentRail() instanceof CryptoPaymentRail cryptoPaymentRail) {
             throw new UnsupportedOperationException("Unsupported paymentRail " + model.getPaymentMethod().getPaymentRail());

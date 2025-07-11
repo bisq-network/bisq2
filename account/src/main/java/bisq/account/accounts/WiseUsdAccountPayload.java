@@ -29,29 +29,27 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class WiseAccountPayload extends CountryBasedAccountPayload implements MultiCurrencyAccountPayload {
-    private final List<String> selectedCurrencyCodes;
+public final class WiseUsdAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
     private final String holderName;
     private final String email;
+    private final String beneficiaryAddress;
 
-    public WiseAccountPayload(String id,
-                              String countryCode,
-                              List<String> selectedCurrencyCodes,
-                              String holderName,
-                              String email
+    public WiseUsdAccountPayload(String id,
+                                 String countryCode,
+                                 String holderName,
+                                 String email,
+                                 String beneficiaryAddress
     ) {
         super(id, countryCode);
-        this.selectedCurrencyCodes = selectedCurrencyCodes;
         this.holderName = holderName;
         this.email = email;
+        this.beneficiaryAddress = beneficiaryAddress;
 
         verify();
     }
@@ -59,43 +57,43 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
     @Override
     public void verify() {
         super.verify();
-        PaymentAccountValidation.validateCurrencyCodes(selectedCurrencyCodes);
         checkArgument(EmailValidation.isValid(email));
         PaymentAccountValidation.validateHolderName(holderName);
+        PaymentAccountValidation.validateAddress(beneficiaryAddress);
     }
 
     @Override
     protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
         return super.getCountryBasedAccountPayloadBuilder(serializeForHash)
-                .setWiseAccountPayload(toWiseAccountPayloadProto(serializeForHash));
+                .setWiseUsdAccountPayload(toWiseUsdAccountPayloadProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.WiseAccountPayload toWiseAccountPayloadProto(boolean serializeForHash) {
-        return resolveBuilder(getWiseAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    private bisq.account.protobuf.WiseUsdAccountPayload toWiseUsdAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getWiseUsdAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private bisq.account.protobuf.WiseAccountPayload.Builder getWiseAccountPayloadBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.WiseAccountPayload.newBuilder()
-                .addAllSelectedCurrencyCodes(selectedCurrencyCodes)
+    private bisq.account.protobuf.WiseUsdAccountPayload.Builder getWiseUsdAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.WiseUsdAccountPayload.newBuilder()
                 .setHolderName(holderName)
-                .setEmail(email);
+                .setEmail(email)
+                .setBeneficiaryAddress(beneficiaryAddress);
     }
 
-    public static WiseAccountPayload fromProto(AccountPayload proto) {
+    public static WiseUsdAccountPayload fromProto(AccountPayload proto) {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        var payload = countryBasedAccountPayload.getWiseAccountPayload();
-        return new WiseAccountPayload(
+        var payload = countryBasedAccountPayload.getWiseUsdAccountPayload();
+        return new WiseUsdAccountPayload(
                 proto.getId(),
                 countryBasedAccountPayload.getCountryCode(),
-                payload.getSelectedCurrencyCodesList(),
                 payload.getHolderName(),
-                payload.getEmail()
+                payload.getEmail(),
+                payload.getBeneficiaryAddress()
         );
     }
 
     @Override
     public FiatPaymentMethod getPaymentMethod() {
-        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.WISE);
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.WISE_USD);
     }
 
     @Override

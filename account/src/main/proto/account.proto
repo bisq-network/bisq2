@@ -72,7 +72,7 @@ message StablecoinPaymentMethod {
 // AccountPayload
 message AccountPayload {
   string id = 1;
- /* string paymentRailName = 2;*/ // todo check if it breaks BE accounts
+  /* string paymentRailName = 2;*/ // todo check if it breaks BE accounts
   oneof message {
     ZelleAccountPayload zelleAccountPayload = 19;
     UserDefinedFiatAccountPayload userDefinedFiatAccountPayload = 20;
@@ -95,17 +95,32 @@ message RevolutAccountPayload {
 message CountryBasedAccountPayload {
   string countryCode = 1;
   oneof message {
-    BankAccountPayload bankAccountPayload = 2;
-    SepaAccountPayload sepaAccountPayload = 10;
-    F2FAccountPayload f2fAccountPayload = 11;
-    PixAccountPayload pixAccountPayload = 12;
-    StrikeAccountPayload strikeAccountPayload = 13;
-    AmazonGiftCardAccountPayload amazonGiftCardAccountPayload = 14;
-    UpiAccountPayload upiAccountPayload = 15;
-    BizumAccountPayload bizumAccountPayload = 16;
-    SepaInstantAccountPayload sepaInstantAccountPayload = 17;
-    WiseAccountPayload wiseAccountPayload = 18;
+    BankAccountPayload bankAccountPayload = 20;
+    SepaAccountPayload sepaAccountPayload = 21;
+    F2FAccountPayload f2fAccountPayload = 22;
+    PixAccountPayload pixAccountPayload = 23;
+    StrikeAccountPayload strikeAccountPayload = 24;
+    AmazonGiftCardAccountPayload amazonGiftCardAccountPayload = 25;
+    UpiAccountPayload upiAccountPayload = 26;
+    BizumAccountPayload bizumAccountPayload = 27;
+    SepaInstantAccountPayload sepaInstantAccountPayload = 28;
+    WiseAccountPayload wiseAccountPayload = 29;
+    WiseUsdAccountPayload wiseUsdAccountPayload = 30;
+    MoneyBeamAccountPayload moneyBeamAccountPayload = 31;
+    SwishAccountPayload swishAccountPayload = 32;
+    UpholdAccountPayload upholdAccountPayload = 33;
+    MoneyGramAccountPayload moneyGramAccountPayload = 34;
+    PromptPayAccountPayload promptPayAccountPayload = 35;
+    HalCashAccountPayload halCashAccountPayload = 36;
+    Pin4AccountPayload pin4AccountPayload = 37;
   }
+}
+
+message HalCashAccountPayload {
+  string mobileNr = 1;
+}
+message Pin4AccountPayload {
+  string mobileNr = 1;
 }
 message SepaAccountPayload {
   string holderName = 1;
@@ -125,6 +140,30 @@ message WiseAccountPayload {
   repeated string selectedCurrencyCodes = 1;
   string holderName = 2;
   string email = 3;
+}
+
+message UpholdAccountPayload {
+  repeated string selectedCurrencyCodes = 1;
+  string holderName = 2;
+  string accountId = 3;
+}
+
+message MoneyGramAccountPayload {
+  repeated string selectedCurrencyCodes = 1;
+  string holderName = 2;
+  string email = 3;
+}
+
+message WiseUsdAccountPayload {
+  string holderName = 1;
+  string email = 2;
+  string beneficiaryAddress = 3;
+}
+
+message MoneyBeamAccountPayload {
+  string selectedCurrencyCode = 1;
+  string holderName = 2;
+  string emailOrMobileNr = 3;
 }
 
 message F2FAccountPayload {
@@ -160,8 +199,8 @@ message BankAccountPayload {
   optional string holderName = 2;
   optional string holderId = 3;
   optional string bankName = 4;
-  optional string bankId =5;
-  optional string branchId =6;
+  optional string bankId = 5;
+  optional string branchId = 6;
   string accountNr = 7;
   optional BankAccountType bankAccountType = 8;
   optional string nationalAccountId = 9;
@@ -183,6 +222,15 @@ message ZelleAccountPayload {
 message PixAccountPayload {
   string holderName = 1;
   string pixKey = 2;
+}
+
+message PromptPayAccountPayload {
+  string promptPayId = 1;
+}
+
+message SwishAccountPayload {
+  string holderName = 1;
+  string mobileNr = 2;
 }
 
 message FasterPaymentsAccountPayload {
@@ -262,30 +310,48 @@ message RevolutAccount {
 }
 message CountryBasedAccount {
   oneof message {
-    BankAccount bankAccount = 19;
-    SepaAccount sepaAccount = 20;
-    F2FAccount f2fAccount = 21;
-    PixAccount pixAccount = 22;
-    StrikeAccount strikeAccount = 23;
-    AmazonGiftCardAccount amazonGiftCardAccount = 24;
-    UpiAccount upiAccount = 25;
-    BizumAccount bizumAccount = 26;
-    SepaInstantAccount sepaInstantAccount = 27;
-    WiseAccount wiseAccount = 28;
+    BankAccount bankAccount = 20;
+    SepaAccount sepaAccount = 21;
+    F2FAccount f2fAccount = 22;
+    PixAccount pixAccount = 23;
+    StrikeAccount strikeAccount = 24;
+    AmazonGiftCardAccount amazonGiftCardAccount = 25;
+    UpiAccount upiAccount = 26;
+    BizumAccount bizumAccount = 27;
+    SepaInstantAccount sepaInstantAccount = 28;
+    WiseAccount wiseAccount = 29;
+    WiseUsdAccount wiseUsdAccount = 30;
+    MoneyBeamAccount moneyBeamAccount = 31;
+    SwishAccount swishAccount = 32;
+    UpholdAccount upholdAccount = 33;
+    MoneyGramAccount moneyGramAccount = 34;
+    PromptPayAccount promptPayAccount = 35;
+    HalCashAccount halCashAccount = 36;
+    Pin4Account pin4Account = 37;
   }
+}
+message HalCashAccount {
+}
+message Pin4Account {
 }
 message SepaAccount {
 }
-
 message SepaInstantAccount {
 }
-
 message WiseAccount {
 }
-
+message UpholdAccount {
+}
+message WiseUsdAccount {
+}
+message MoneyBeamAccount {
+}
+message MoneyGramAccount {
+}
 message F2FAccount {
 }
-
+message PromptPayAccount {
+}
 message BankAccount {
   oneof message {
     AchTransferAccount achTransferAccount = 1;
@@ -312,6 +378,9 @@ message NationalBankAccount {
 }
 
 message PixAccount {
+}
+
+message SwishAccount {
 }
 
 message FasterPaymentsAccount {

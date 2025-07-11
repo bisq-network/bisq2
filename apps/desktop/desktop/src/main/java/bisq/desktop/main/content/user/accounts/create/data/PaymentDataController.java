@@ -111,20 +111,28 @@ public class PaymentDataController implements Controller {
             case SAME_BANK -> throw new UnsupportedOperationException("Not implemented yet");
             case SWIFT -> throw new UnsupportedOperationException("Not implemented yet");
             case F2F -> new F2FPaymentFormController(serviceProvider);
+            case WISE_USD -> throw new UnsupportedOperationException("Not implemented yet");
             case ACH_TRANSFER -> throw new UnsupportedOperationException("Not implemented yet");
             case PIX -> new PixPaymentFormController(serviceProvider);
+            case HAL_CASH -> throw new UnsupportedOperationException("Not implemented yet");
+            case PIN_4 -> throw new UnsupportedOperationException("Not implemented yet");
+            case SWISH -> throw new UnsupportedOperationException("Not implemented yet");
             case FASTER_PAYMENTS -> new FasterPaymentsPaymentFormController(serviceProvider);
             case PAY_ID -> throw new UnsupportedOperationException("Not implemented yet");
             case US_POSTAL_MONEY_ORDER -> throw new UnsupportedOperationException("Not implemented yet");
             case CASH_BY_MAIL -> throw new UnsupportedOperationException("Not implemented yet");
             case STRIKE -> throw new UnsupportedOperationException("Not implemented yet");
             case INTERAC_E_TRANSFER -> throw new UnsupportedOperationException("Not implemented yet");
+            case UPHOLD -> throw new UnsupportedOperationException("Not implemented yet");
             case AMAZON_GIFT_CARD -> throw new UnsupportedOperationException("Not implemented yet");
             case CASH_DEPOSIT -> throw new UnsupportedOperationException("Not implemented yet");
+            case PROMPT_PAY -> throw new UnsupportedOperationException("Not implemented yet");
             case UPI -> throw new UnsupportedOperationException("Not implemented yet");
             case BIZUM -> throw new UnsupportedOperationException("Not implemented yet");
             case CASH_APP -> throw new UnsupportedOperationException("Not implemented yet");
             case DOMESTIC_WIRE_TRANSFER -> throw new UnsupportedOperationException("Not implemented yet");
+            case MONEY_BEAM -> throw new UnsupportedOperationException("Not implemented yet");
+            case MONEY_GRAM -> throw new UnsupportedOperationException("Not implemented yet");
         };
     }
 }

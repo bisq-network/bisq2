@@ -96,13 +96,13 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
 
     public static SepaAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        bisq.account.protobuf.SepaAccountPayload sepaAccountPayload = countryBasedAccountPayload.getSepaAccountPayload();
+        bisq.account.protobuf.SepaAccountPayload payload = countryBasedAccountPayload.getSepaAccountPayload();
         return new SepaAccountPayload(proto.getId(),
-                sepaAccountPayload.getHolderName(),
-                sepaAccountPayload.getIban(),
-                sepaAccountPayload.getBic(),
+                payload.getHolderName(),
+                payload.getIban(),
+                payload.getBic(),
                 countryBasedAccountPayload.getCountryCode(),
-                sepaAccountPayload.getAcceptedCountryCodesList());
+                payload.getAcceptedCountryCodesList());
     }
 
     @Override

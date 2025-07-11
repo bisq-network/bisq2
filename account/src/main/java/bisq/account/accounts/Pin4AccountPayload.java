@@ -34,10 +34,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class BizumAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
+public final class Pin4AccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
+
     private final String mobileNr;
 
-    public BizumAccountPayload(String id, String countryCode, String mobileNr) {
+    public Pin4AccountPayload(String id, String countryCode, String mobileNr) {
         super(id, countryCode);
         this.mobileNr = mobileNr;
     }
@@ -46,34 +47,36 @@ public final class BizumAccountPayload extends CountryBasedAccountPayload implem
     public void verify() {
         super.verify();
 
-        checkArgument(PhoneNumberValidation.isValid(mobileNr, "ES"));
+        checkArgument(PhoneNumberValidation.isValid(mobileNr, "PL"));
     }
 
     @Override
     protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
-        return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setBizumAccountPayload(
-                toBizumAccountPayloadProto(serializeForHash));
+        return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setPin4AccountPayload(
+                toPin4AccountPayloadProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.BizumAccountPayload toBizumAccountPayloadProto(boolean serializeForHash) {
-        return resolveBuilder(getBizumAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    private bisq.account.protobuf.Pin4AccountPayload toPin4AccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getPin4AccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private bisq.account.protobuf.BizumAccountPayload.Builder getBizumAccountPayloadBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.BizumAccountPayload.newBuilder().setMobileNr(mobileNr);
+    private bisq.account.protobuf.Pin4AccountPayload.Builder getPin4AccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.Pin4AccountPayload.newBuilder()
+                .setMobileNr(mobileNr);
     }
 
-    public static BizumAccountPayload fromProto(AccountPayload proto) {
-        var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        return new BizumAccountPayload(
-                proto.getId(),
+    public static Pin4AccountPayload fromProto(AccountPayload proto) {
+        bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
+        bisq.account.protobuf.Pin4AccountPayload payload = countryBasedAccountPayload.getPin4AccountPayload();
+        return new Pin4AccountPayload(proto.getId(),
                 countryBasedAccountPayload.getCountryCode(),
-                countryBasedAccountPayload.getBizumAccountPayload().getMobileNr());
+                payload.getMobileNr()
+        );
     }
 
     @Override
     public FiatPaymentMethod getPaymentMethod() {
-        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.BIZUM);
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.PIN_4);
     }
 
     @Override

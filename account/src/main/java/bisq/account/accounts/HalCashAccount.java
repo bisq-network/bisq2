@@ -26,29 +26,29 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class CashDepositAccount extends BankAccount<CashDepositAccountPayload> {
-    public CashDepositAccount(String id, long creationDate, String accountName, CashDepositAccountPayload accountPayload) {
+public final class HalCashAccount extends CountryBasedAccount<HalCashAccountPayload> {
+    public HalCashAccount(String id, long creationDate, String accountName, HalCashAccountPayload accountPayload) {
         super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
-    protected bisq.account.protobuf.BankAccount.Builder getBankAccountBuilder(boolean serializeForHash) {
-        return super.getBankAccountBuilder(serializeForHash).setCashDepositAccount(
-                toCashDepositAccountProto(serializeForHash));
+    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountBuilder(serializeForHash).setHalCashAccount(
+                toHalCashAccountProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.CashDepositAccount toCashDepositAccountProto(boolean serializeForHash) {
-        return resolveBuilder(getCashDepositAccountBuilder(serializeForHash), serializeForHash).build();
+    private bisq.account.protobuf.HalCashAccount toHalCashAccountProto(boolean serializeForHash) {
+        return resolveBuilder(getHalCashAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private bisq.account.protobuf.CashDepositAccount.Builder getCashDepositAccountBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.CashDepositAccount.newBuilder();
+    private bisq.account.protobuf.HalCashAccount.Builder getHalCashAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.HalCashAccount.newBuilder();
     }
 
-    public static CashDepositAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new CashDepositAccount(proto.getId(),
+    public static HalCashAccount fromProto(bisq.account.protobuf.Account proto) {
+        return new HalCashAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
-                CashDepositAccountPayload.fromProto(proto.getAccountPayload()));
+                HalCashAccountPayload.fromProto(proto.getAccountPayload()));
     }
 }

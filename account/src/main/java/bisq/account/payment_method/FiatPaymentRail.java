@@ -45,7 +45,15 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             FiatCurrencyRepository.getCurrencyByCode("USD"),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
+    WISE_USD(countryFromCode("US"),
+            FiatCurrencyRepository.getCurrencyByCode("USD"),
+            FiatPaymentMethodChargebackRisk.MODERATE),
+
     ACH_TRANSFER(countryFromCode("US"),
+            FiatCurrencyRepository.getCurrencyByCode("USD"),
+            FiatPaymentMethodChargebackRisk.MODERATE),
+
+    DOMESTIC_WIRE_TRANSFER(countryFromCode("US"),
             FiatCurrencyRepository.getCurrencyByCode("USD"),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
@@ -59,8 +67,6 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             FiatCurrencyRepository.getCurrencyByCode("USD"),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
-    // US_POSTAL_MONEY_ORDER, POPMONEY
-
     // EUR
     SEPA(FiatPaymentRailUtil.getAllSepaCountries(),
             FiatCurrencyRepository.getCurrencyByCode("EUR"),
@@ -73,18 +79,26 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
     // Spain
     BIZUM(countryFromCode("ES"),
             FiatCurrencyRepository.getCurrencyByCode("EUR"),
-            FiatPaymentMethodChargebackRisk.VERY_LOW),
+            FiatPaymentMethodChargebackRisk.LOW),
 
-    // MONEY_BEAM
+    HAL_CASH(countryFromCode("ES"),
+            FiatCurrencyRepository.getCurrencyByCode("EUR"),
+            FiatPaymentMethodChargebackRisk.LOW),
+
+    // Poland (Polish brand of Halcash)
+    PIN_4(countryFromCode("PL"),
+            FiatCurrencyRepository.getCurrencyByCode("PLN"),
+            FiatPaymentMethodChargebackRisk.LOW),
+
+    // Sweden
+    SWISH(countryFromCode("SE"),
+            FiatCurrencyRepository.getCurrencyByCode("SEK"),
+            FiatPaymentMethodChargebackRisk.LOW),
 
     // UK
     FASTER_PAYMENTS(countryFromCode("GB"),
             FiatCurrencyRepository.getCurrencyByCode("GBP"),
             FiatPaymentMethodChargebackRisk.MODERATE),
-
-    // Sweden
-    // SWISH
-
 
     // Canada
     INTERAC_E_TRANSFER(countryFromCode("CA"),
@@ -92,12 +106,13 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             FiatPaymentMethodChargebackRisk.MODERATE),
 
     // Japan
+    // Not added yet due lack of language support and low usage
     // JAPAN_BANK = new PaymentMethod(JAPAN_BANK_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
 
     // Australia
     PAY_ID(countryFromCode("AU"),
             FiatCurrencyRepository.getCurrencyByCode("AUD"),
-            FiatPaymentMethodChargebackRisk.VERY_LOW),
+            FiatPaymentMethodChargebackRisk.LOW),
 
     // Argentina
     // MERCADO_PAGO = new PaymentMethod(MERCADO_PAGO_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
@@ -108,11 +123,14 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             FiatPaymentMethodChargebackRisk.MODERATE),
 
     // China
+    // Not added yet due lack of language support and low usage
     // ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
     // WECHAT_PAY = new PaymentMethod(WECHAT_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
 
     // Thailand
-    // PROMPT_PAY = new PaymentMethod(PROMPT_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
+    PROMPT_PAY(countryFromCode("TH"),
+            FiatCurrencyRepository.getCurrencyByCode("THB"),
+            FiatPaymentMethodChargebackRisk.LOW),
 
     // Russia
     // SBP = new PaymentMethod(SBP_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
@@ -120,23 +138,16 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
     //India
     UPI(countryFromCode("IN"),
             FiatCurrencyRepository.getCurrencyByCode("INR"),
-            FiatPaymentMethodChargebackRisk.VERY_LOW),
-    //            NEFT = new PaymentMethod(NEFT_ID, DAY, Coin.parseCoin("0.02")),
-    //            RTGS = new PaymentMethod(RTGS_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            IMPS = new PaymentMethod(IMPS_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            PAYTM = new PaymentMethod(PAYTM_ID, DAY, Coin.parseCoin("0.05")),
+            FiatPaymentMethodChargebackRisk.LOW),
+    // NEFT = new PaymentMethod(NEFT_ID, DAY, Coin.parseCoin("0.02")),
+    // RTGS = new PaymentMethod(RTGS_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // IMPS = new PaymentMethod(IMPS_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // PAYTM = new PaymentMethod(PAYTM_ID, DAY, Coin.parseCoin("0.05")),
 
 
     // Global
-    //CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            CASH_BY_MAIL = new PaymentMethod(CASH_BY_MAIL_ID, 8 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            MONEY_GRAM = new PaymentMethod(MONEY_GRAM_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
-    //            WESTERN_UNION = new PaymentMethod(WESTERN_UNION_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
-    //            NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            SAME_BANK = new PaymentMethod(SAME_BANK_ID, 2 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            HAL_CASH = new PaymentMethod(HAL_CASH_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
-    //            AMAZON_GIFT_CARD = new PaymentMethod(AMAZON_GIFT_CARD_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // WESTERN_UNION = new PaymentMethod(WESTERN_UNION_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK), N
+    // SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
     CUSTOM(allCountries(),
             allCurrencies(),
@@ -145,7 +156,7 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
     // Currency derived from country, but can be overridden to any
     F2F(allCountries(),
             allCurrencies(),
-            FiatPaymentMethodChargebackRisk.VERY_LOW),
+            FiatPaymentMethodChargebackRisk.LOW),
 
     // Select currency, no country in bisq 1
     CASH_BY_MAIL(allCountries(),
@@ -162,19 +173,14 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             allCurrencies(),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
-    //todo
     SAME_BANK(allCountries(),
             allCurrencies(),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
+    //todo not impl accounts yet
     SWIFT(allCountries(),
             allCurrencies(),
-            FiatPaymentMethodChargebackRisk.LOW),
-
-    //todo
-    DOMESTIC_WIRE_TRANSFER(allCountries(),
-            allCurrencies(),
-            FiatPaymentMethodChargebackRisk.MODERATE),
+            FiatPaymentMethodChargebackRisk.MEDIUM),
 
     // Trans national
 
@@ -188,34 +194,37 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             FiatPaymentRailUtil.getWiseCurrencies(),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
+    UPHOLD(FiatPaymentRailUtil.getUpholdCountries(),
+            FiatPaymentRailUtil.getUpholdCurrencies(),
+            FiatPaymentMethodChargebackRisk.MODERATE),
+
     // Selected currency is the currency derived from country
-    AMAZON_GIFT_CARD(FiatPaymentRailUtil.getAmazonGiftCardsCountries(),
-            FiatPaymentRailUtil.getAmazonGiftCardsCurrencies(),
-            FiatPaymentMethodChargebackRisk.MODERATE);
+    AMAZON_GIFT_CARD(FiatPaymentRailUtil.getAmazonGiftCardCountries(),
+            FiatPaymentRailUtil.getAmazonGiftCardCurrencies(),
+            FiatPaymentMethodChargebackRisk.MODERATE),
+
+    MONEY_BEAM(FiatPaymentRailUtil.getAllSepaCountries(),
+            FiatPaymentRailUtil.getMoneyBeamCurrencies(),
+            FiatPaymentMethodChargebackRisk.MODERATE),
+
+    MONEY_GRAM(FiatPaymentRailUtil.getMoneyGramCountries(),
+            FiatPaymentRailUtil.getMoneyGramCurrencies(),
+            FiatPaymentMethodChargebackRisk.MEDIUM);
 
 
-    //  UPHOLD = new PaymentMethod(UPHOLD_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
-    //            ADVANCED_CASH = new PaymentMethod(ADVANCED_CASH_ID, DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
-    //            TRANSFERWISE_USD = new PaymentMethod(TRANSFERWISE_USD_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            PAYSERA = new PaymentMethod(PAYSERA_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            PAXUM = new PaymentMethod(PAXUM_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
+    // ADVANCED_CASH = new PaymentMethod(ADVANCED_CASH_ID, DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
+    // PAYSERA = new PaymentMethod(PAYSERA_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // PAXUM = new PaymentMethod(PAXUM_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
 
-    //            NEQUI = new PaymentMethod(NEQUI_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            CAPITUAL = new PaymentMethod(CAPITUAL_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            CELPAY = new PaymentMethod(CELPAY_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            MONESE = new PaymentMethod(MONESE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            SATISPAY = new PaymentMethod(SATISPAY_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            TIKKIE = new PaymentMethod(TIKKIE_ID, DAY, Coin.parseCoin("0.05")),
-    //            VERSE = new PaymentMethod(VERSE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    //            DOMESTIC_WIRE_TRANSFER = new PaymentMethod(DOMESTIC_WIRE_TRANSFER_ID, 3 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-
-    // Altcoins
-    //  BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
-    // Altcoins with 1 hour trade period
-    //  BLOCK_CHAINS_INSTANT = new PaymentMethod(BLOCK_CHAINS_INSTANT_ID, TimeUnit.HOURS.toMillis(1), DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
-
+    // NEQUI = new PaymentMethod(NEQUI_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // CAPITUAL = new PaymentMethod(CAPITUAL_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // CELPAY = new PaymentMethod(CELPAY_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // MONESE = new PaymentMethod(MONESE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // SATISPAY = new PaymentMethod(SATISPAY_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    // TIKKIE = new PaymentMethod(TIKKIE_ID, DAY, Coin.parseCoin("0.05")),
+    // VERSE = new PaymentMethod(VERSE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
     private static List<FiatCurrency> allCurrencies() {
         return FiatCurrencyRepository.getAllCurrencies();
@@ -291,10 +300,10 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
     public String getTradeLimit() {
         //todo
         switch (getChargebackRisk()) {
-            case VERY_LOW -> {
+            case LOW -> {
                 return "10000 USD";
             }
-            case LOW -> {
+            case MEDIUM -> {
                 return "5000 USD";
             }
             default -> {
@@ -317,16 +326,21 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
         return switch (this) {
             case ZELLE -> DAYS_4;
             case STRIKE -> DAYS_4;
+            case WISE_USD -> DAYS_4;
             case ACH_TRANSFER -> DAYS_5;
             case US_POSTAL_MONEY_ORDER -> DAYS_4;
             case CASH_APP -> DAYS_4;
             case SEPA -> DAYS_6;
             case SEPA_INSTANT -> HOURS_24;
+            case MONEY_BEAM -> HOURS_24;
             case BIZUM -> DAYS_4;
+            case PIN_4 -> HOURS_24;
+            case SWISH -> HOURS_24;
             case FASTER_PAYMENTS -> HOURS_24;
             case INTERAC_E_TRANSFER -> HOURS_24;
             case PAY_ID -> DAYS_4;
             case PIX -> HOURS_24;
+            case PROMPT_PAY -> HOURS_24;
             case UPI -> DAYS_4;
             case CUSTOM -> DAYS_4;
             case F2F -> DAYS_4;
@@ -335,14 +349,40 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
             case NATIONAL_BANK -> DAYS_4;
             case SAME_BANK -> HOURS_24;
             case SWIFT -> DAYS_4;
-            case DOMESTIC_WIRE_TRANSFER -> DAYS_4;
+            case DOMESTIC_WIRE_TRANSFER -> DAYS_3;
             case REVOLUT -> HOURS_24;
-            case WISE -> HOURS_24;
+            case WISE -> DAYS_4;
+            case UPHOLD -> HOURS_24;
             case AMAZON_GIFT_CARD -> DAYS_4;
-            default -> HOURS_24;
+            case MONEY_GRAM -> DAYS_4;
+            case HAL_CASH -> HOURS_24;
         };
     }
 }
+/**
+ * Not added methods from Bisq 1:
+ * - All deprecated ones
+ * - Japan Bank Furikomi: No language support yet
+ * - AliPay, WeChat: No language support yet, AliPay likely mostly test trades. Bitcoin trade in China is illegal
+ * - Popmoney: Popmoney was discontinued on June 30, 2023
+ * <p>
+ * Those are not planned to get added for release:
+ * - Western Union: high fees, low usage
+ * - Perfect Money: low usage, mostly test trades?
+ * - Transfers with specific banks: Low usage, complex UI
+ * - SWIFT International Wire Transfer: Low usage, complex UI, high fees
+ * <p>
+ * All those had low usage but might get added on demand:
+ * [Monese] => 7
+ * [Advanced Cash] => 6
+ * [Paysera] => 6
+ * [Satispay] => 4
+ * [Faster Payments System (SBP)] => 3
+ * [Payment method] => 1
+ * [MercadoPago] => 1
+ * [India/NEFT] => 1
+ * [Verse] => 1
+ */
 
 /*
     x[SEPA] => 66417

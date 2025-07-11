@@ -37,16 +37,16 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class WiseAccountPayload extends CountryBasedAccountPayload implements MultiCurrencyAccountPayload {
+public final class MoneyGramAccountPayload extends CountryBasedAccountPayload implements MultiCurrencyAccountPayload {
     private final List<String> selectedCurrencyCodes;
     private final String holderName;
     private final String email;
 
-    public WiseAccountPayload(String id,
-                              String countryCode,
-                              List<String> selectedCurrencyCodes,
-                              String holderName,
-                              String email
+    public MoneyGramAccountPayload(String id,
+                                   String countryCode,
+                                   List<String> selectedCurrencyCodes,
+                                   String holderName,
+                                   String email
     ) {
         super(id, countryCode);
         this.selectedCurrencyCodes = selectedCurrencyCodes;
@@ -67,24 +67,25 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
     @Override
     protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
         return super.getCountryBasedAccountPayloadBuilder(serializeForHash)
-                .setWiseAccountPayload(toWiseAccountPayloadProto(serializeForHash));
+                .setMoneyGramAccountPayload(toMoneyGramAccountPayloadProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.WiseAccountPayload toWiseAccountPayloadProto(boolean serializeForHash) {
-        return resolveBuilder(getWiseAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    private bisq.account.protobuf.MoneyGramAccountPayload toMoneyGramAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getMoneyGramAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private bisq.account.protobuf.WiseAccountPayload.Builder getWiseAccountPayloadBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.WiseAccountPayload.newBuilder()
+    private bisq.account.protobuf.MoneyGramAccountPayload.Builder getMoneyGramAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.MoneyGramAccountPayload.newBuilder()
                 .addAllSelectedCurrencyCodes(selectedCurrencyCodes)
                 .setHolderName(holderName)
                 .setEmail(email);
     }
 
-    public static WiseAccountPayload fromProto(AccountPayload proto) {
+    public static MoneyGramAccountPayload fromProto(AccountPayload proto) {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        var payload = countryBasedAccountPayload.getWiseAccountPayload();
-        return new WiseAccountPayload(
+        var payload = countryBasedAccountPayload.getMoneyGramAccountPayload();
+
+        return new MoneyGramAccountPayload(
                 proto.getId(),
                 countryBasedAccountPayload.getCountryCode(),
                 payload.getSelectedCurrencyCodesList(),
@@ -95,7 +96,7 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
 
     @Override
     public FiatPaymentMethod getPaymentMethod() {
-        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.WISE);
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.MONEY_GRAM);
     }
 
     @Override

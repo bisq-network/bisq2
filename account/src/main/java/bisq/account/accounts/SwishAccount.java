@@ -26,29 +26,29 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class CashDepositAccount extends BankAccount<CashDepositAccountPayload> {
-    public CashDepositAccount(String id, long creationDate, String accountName, CashDepositAccountPayload accountPayload) {
+public final class SwishAccount extends CountryBasedAccount<SwishAccountPayload> {
+    public SwishAccount(String id, long creationDate, String accountName, SwishAccountPayload accountPayload) {
         super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
-    protected bisq.account.protobuf.BankAccount.Builder getBankAccountBuilder(boolean serializeForHash) {
-        return super.getBankAccountBuilder(serializeForHash).setCashDepositAccount(
-                toCashDepositAccountProto(serializeForHash));
+    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountBuilder(serializeForHash).setSwishAccount(
+                toSwishAccountProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.CashDepositAccount toCashDepositAccountProto(boolean serializeForHash) {
-        return resolveBuilder(getCashDepositAccountBuilder(serializeForHash), serializeForHash).build();
+    private bisq.account.protobuf.SwishAccount toSwishAccountProto(boolean serializeForHash) {
+        return resolveBuilder(getSwishAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private bisq.account.protobuf.CashDepositAccount.Builder getCashDepositAccountBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.CashDepositAccount.newBuilder();
+    private bisq.account.protobuf.SwishAccount.Builder getSwishAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.SwishAccount.newBuilder();
     }
 
-    public static CashDepositAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new CashDepositAccount(proto.getId(),
+    public static SwishAccount fromProto(bisq.account.protobuf.Account proto) {
+        return new SwishAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
-                CashDepositAccountPayload.fromProto(proto.getAccountPayload()));
+                SwishAccountPayload.fromProto(proto.getAccountPayload()));
     }
 }

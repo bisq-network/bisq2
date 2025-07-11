@@ -37,21 +37,21 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class WiseAccountPayload extends CountryBasedAccountPayload implements MultiCurrencyAccountPayload {
+public final class UpholdAccountPayload extends CountryBasedAccountPayload implements MultiCurrencyAccountPayload {
     private final List<String> selectedCurrencyCodes;
     private final String holderName;
-    private final String email;
+    private final String accountId;
 
-    public WiseAccountPayload(String id,
-                              String countryCode,
-                              List<String> selectedCurrencyCodes,
-                              String holderName,
-                              String email
+    public UpholdAccountPayload(String id,
+                                String countryCode,
+                                List<String> selectedCurrencyCodes,
+                                String holderName,
+                                String accountId
     ) {
         super(id, countryCode);
         this.selectedCurrencyCodes = selectedCurrencyCodes;
         this.holderName = holderName;
-        this.email = email;
+        this.accountId = accountId;
 
         verify();
     }
@@ -60,49 +60,49 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
     public void verify() {
         super.verify();
         PaymentAccountValidation.validateCurrencyCodes(selectedCurrencyCodes);
-        checkArgument(EmailValidation.isValid(email));
+        checkArgument(EmailValidation.isValid(accountId));
         PaymentAccountValidation.validateHolderName(holderName);
     }
 
     @Override
     protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
         return super.getCountryBasedAccountPayloadBuilder(serializeForHash)
-                .setWiseAccountPayload(toWiseAccountPayloadProto(serializeForHash));
+                .setUpholdAccountPayload(toUpholdAccountPayloadProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.WiseAccountPayload toWiseAccountPayloadProto(boolean serializeForHash) {
-        return resolveBuilder(getWiseAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    private bisq.account.protobuf.UpholdAccountPayload toUpholdAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getUpholdAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private bisq.account.protobuf.WiseAccountPayload.Builder getWiseAccountPayloadBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.WiseAccountPayload.newBuilder()
+    private bisq.account.protobuf.UpholdAccountPayload.Builder getUpholdAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.UpholdAccountPayload.newBuilder()
                 .addAllSelectedCurrencyCodes(selectedCurrencyCodes)
                 .setHolderName(holderName)
-                .setEmail(email);
+                .setAccountId(accountId);
     }
 
-    public static WiseAccountPayload fromProto(AccountPayload proto) {
+    public static UpholdAccountPayload fromProto(AccountPayload proto) {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        var payload = countryBasedAccountPayload.getWiseAccountPayload();
-        return new WiseAccountPayload(
+        var payload = countryBasedAccountPayload.getUpholdAccountPayload();
+        return new UpholdAccountPayload(
                 proto.getId(),
                 countryBasedAccountPayload.getCountryCode(),
                 payload.getSelectedCurrencyCodesList(),
                 payload.getHolderName(),
-                payload.getEmail()
+                payload.getAccountId()
         );
     }
 
     @Override
     public FiatPaymentMethod getPaymentMethod() {
-        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.WISE);
+        return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.UPHOLD);
     }
 
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
                 Res.get("user.paymentAccounts.holderName"), holderName,
-                Res.get("user.paymentAccounts.email"), email
+                Res.get("user.paymentAccounts.uphold.accountId"), accountId
         ).toString();
     }
 }
