@@ -74,7 +74,7 @@ public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload im
         return bisq.account.protobuf.MoneyBeamAccountPayload.newBuilder()
                 .setSelectedCurrencyCode(selectedCurrencyCode)
                 .setHolderName(holderName)
-                .setAccountId(emailOrMobileNr);
+                .setEmailOrMobileNr(emailOrMobileNr);
     }
 
     public static MoneyBeamAccountPayload fromProto(AccountPayload proto) {
@@ -84,7 +84,7 @@ public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload im
                 proto.getCountryBasedAccountPayload().getCountryCode(),
                 payload.getSelectedCurrencyCode(),
                 payload.getHolderName(),
-                payload.getAccountId());
+                payload.getEmailOrMobileNr());
     }
 
     @Override
