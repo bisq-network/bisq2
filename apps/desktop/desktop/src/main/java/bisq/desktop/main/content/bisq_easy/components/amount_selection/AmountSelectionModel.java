@@ -53,6 +53,8 @@ public class AmountSelectionModel implements Model {
     private final DoubleProperty minAmountSliderValue = new SimpleDoubleProperty();
     private final BooleanProperty maxOrFixedAmountSliderFocus = new SimpleBooleanProperty();
     private final BooleanProperty minAmountSliderFocus = new SimpleBooleanProperty();
+    private final BooleanProperty rangeSliderLowThumbFocus = new SimpleBooleanProperty();
+    private final BooleanProperty rangeSliderHighThumbFocus = new SimpleBooleanProperty();
     private final BooleanProperty isRangeAmountEnabled = new SimpleBooleanProperty();
 
     @Setter
@@ -68,6 +70,7 @@ public class AmountSelectionModel implements Model {
     @Setter
     private ObjectProperty<Monetary> maxRangeQuoteSideValue = new SimpleObjectProperty<>();
     private final ObjectProperty<Monetary> maxQuoteAllowedLimitation = new SimpleObjectProperty<>();
+    private final ObjectProperty<Monetary> maxBaseAllowedLimitation = new SimpleObjectProperty<>();
     @Setter
     private Monetary leftMarkerQuoteSideValue;
     @Setter
@@ -103,6 +106,8 @@ public class AmountSelectionModel implements Model {
         minAmountSliderValue.set(0L);
         maxOrFixedAmountSliderFocus.set(false);
         minAmountSliderFocus.set(false);
+        rangeSliderLowThumbFocus.set(false);
+        rangeSliderHighThumbFocus.set(false);
         isRangeAmountEnabled.set(false);
         minRangeMonetary.set(BisqEasyTradeAmountLimits.DEFAULT_MIN_BTC_TRADE_AMOUNT);
         maxRangeMonetary.set(BisqEasyTradeAmountLimits.DEFAULT_MAX_BTC_TRADE_AMOUNT);
@@ -111,6 +116,7 @@ public class AmountSelectionModel implements Model {
         minRangeQuoteSideValue.set(null);
         maxRangeQuoteSideValue.set(null);
         maxQuoteAllowedLimitation.set(null);
+        maxBaseAllowedLimitation.set(null);
         leftMarkerQuoteSideValue = null;
         rightMarkerQuoteSideValue = null;
         sliderTrackStyle.set(null);

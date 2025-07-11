@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.components.amount_selection;
 
+import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.Market;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Fiat;
@@ -65,6 +66,7 @@ public class AmountSelectionController implements Controller {
     final AmountSelectionModel model;
     @Getter
     private final AmountSelectionView view;
+    private final MarketPriceService marketPriceService;
     private final BigNumberAmountInputBox maxOrFixedQuoteSideAmountInput, minQuoteSideAmountInput, invertedMinBaseSideAmountInput,
             invertedMaxOrFixedBaseSideAmountInput;
     private final SmallNumberDisplayBox maxOrFixedBaseSideAmountDisplay, minBaseSideAmountDisplay, invertedMinQuoteSideAmountDisplay,
@@ -84,6 +86,8 @@ public class AmountSelectionController implements Controller {
             invertedMaxOrFixedBaseSideAmountInputLengthPin, invertedMinBaseSideAmountInputFocusPin, invertedMinBaseSideAmountInputLengthPin;
 
     public AmountSelectionController(ServiceProvider serviceProvider) {
+        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
+
         // max or fixed amount
         maxOrFixedQuoteSideAmountInput = new BigNumberAmountInputBox(false, true);
         maxOrFixedBaseSideAmountDisplay = new SmallNumberDisplayBox(true, true);
@@ -215,6 +219,10 @@ public class AmountSelectionController implements Controller {
 
     public void setMaxAllowedLimitation(Monetary maxAllowedLimitation) {
         model.getMaxQuoteAllowedLimitation().set(maxAllowedLimitation);
+        // TODO: this should work for any coin, not just BTC
+        Monetary maxAllowedLimitationInBtc = marketPriceService.findMarketPriceQuote(model.getMarket())
+                .map(btcFiatPriceQuote -> btcFiatPriceQuote.toBaseSideMonetary(maxAllowedLimitation)).orElseThrow();
+        model.getMaxBaseAllowedLimitation().set(maxAllowedLimitationInBtc);
     }
 
     public void setMinMaxRange(Monetary minRangeValue, Monetary maxRangeValue) {
@@ -309,15 +317,21 @@ public class AmountSelectionController implements Controller {
         setMinBaseFromQuote();
 
         maxOrFixedQuoteAmountFromModelPin = EasyBind.subscribe(model.getMaxOrFixedQuoteSideAmount(), amount -> {
-            // Only apply value from component to slider if we have no focus on slider (not used)
-            if (amount != null && !model.getMaxOrFixedAmountSliderFocus().get()) {
+            // Only apply value from component to slider if we have no focus on the high thumb (max)
+            boolean isMaxOrFixedThumbFocused = model.getIsRangeAmountEnabled().get()
+                    ? model.getRangeSliderHighThumbFocus().get()
+                    : model.getMaxOrFixedAmountSliderFocus().get();
+            if (amount != null && !isMaxOrFixedThumbFocused) {
                 UIThread.run(() -> model.getMaxOrFixedAmountSliderValue().set(getSliderValue(amount.getValue())));
             }
         });
 
         minQuoteAmountFromModelPin = EasyBind.subscribe(model.getMinQuoteSideAmount(), amount -> {
-            // Only apply value from component to slider if we have no focus on slider (not used)
-            if (amount != null && !model.getMinAmountSliderFocus().get()) {
+            // Only apply value from component to slider if we have no focus on the low thumb (min)
+            boolean isMinThumbFocused = model.getIsRangeAmountEnabled().get()
+                    ? model.getRangeSliderLowThumbFocus().get()
+                    : model.getMinAmountSliderFocus().get();
+            if (amount != null && !isMinThumbFocused) {
                 UIThread.run(() -> model.getMinAmountSliderValue().set(getSliderValue(amount.getValue())));
             }
         });
@@ -641,7 +655,9 @@ public class AmountSelectionController implements Controller {
         if (isUsingInvertedBaseAndQuoteCurrencies()) {
             if (model.getMinRangeBaseSideValue().get() != null && model.getMaxRangeBaseSideValue().get() != null) {
                 long min = model.getMinRangeBaseSideValue().get().getValue();
-                long max = model.getMaxRangeBaseSideValue().get().getValue();
+                long max = model.getMaxBaseAllowedLimitation().get() != null
+                        ? model.getMaxBaseAllowedLimitation().get().getValue()
+                        : model.getMaxRangeBaseSideValue().get().getValue();
                 long value = Math.round(sliderValue * (max - min)) + min;
 
                 String baseCurrencyCode = model.getMarket().getBaseCurrencyCode();

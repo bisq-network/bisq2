@@ -21,6 +21,7 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.desktop.components.controls.RangeSlider;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
@@ -64,7 +65,7 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         CHAR_COUNT_FONT_STYLE_MAP.put(23, "input-text-23");
     }
 
-    private final Slider maxOrFixedAmountSlider, minAmountSlider;
+    private final Slider fixedAmountSlider;
     private final Label minRangeValue, maxRangeValue, minRangeCode, maxRangeCode, description, quoteAmountSeparator,
             baseAmountSeparator;
     private final Region selectionLine;
@@ -73,6 +74,7 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
     private final HBox quoteAmountSelectionHBox, baseAmountSelectionHBox, sliderIndicators;
     private final ChangeListener<Number> maxOrFixedAmountSliderValueListener, minAmountSliderValueListener;
     private final BisqMenuItem flipCurrenciesButton;
+    private final RangeSlider rangeAmountSlider;
     private Subscription shouldFocusInputTextFieldPin, sliderTrackStylePin, isRangeAmountEnabledPin,
             shouldApplyNewInputTextFontStylePin;
 
@@ -169,16 +171,15 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         amountPane.setMinHeight(model.getAmountBoxHeight());
         amountPane.setMaxHeight(model.getAmountBoxHeight());
 
-        // slider
-        maxOrFixedAmountSlider = new Slider();
-        maxOrFixedAmountSlider.setMin(model.getSliderMin());
-        maxOrFixedAmountSlider.setMax(model.getSliderMax());
-        maxOrFixedAmountSlider.getStyleClass().add("max-or-fixed-amount-slider");
+        fixedAmountSlider = new Slider();
+        fixedAmountSlider.setMin(model.getSliderMin());
+        fixedAmountSlider.setMax(model.getSliderMax());
+        fixedAmountSlider.getStyleClass().add("fixed-amount-slider");
 
-        minAmountSlider = new Slider();
-        minAmountSlider.setMin(model.getSliderMin());
-        minAmountSlider.setMax(model.getSliderMax());
-        minAmountSlider.getStyleClass().add("min-amount-slider");
+        rangeAmountSlider = new RangeSlider();
+        rangeAmountSlider.setMin(model.getSliderMin());
+        rangeAmountSlider.setMax(model.getSliderMax());
+        rangeAmountSlider.getStyleClass().add("amount-range-slider");
 
         minRangeValue = new Label();
         minRangeValue.getStyleClass().add("range-value");
@@ -195,7 +196,7 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         maxRangeValueAndCodeHBox.setAlignment(Pos.BASELINE_RIGHT);
 
         sliderIndicators = new HBox(minRangeValueAndCodeHBox, Spacer.fillHBox(), maxRangeValueAndCodeHBox);
-        VBox sliderBox = new VBox(2, maxOrFixedAmountSlider, minAmountSlider, sliderIndicators);
+        VBox sliderBox = new VBox(2, fixedAmountSlider, rangeAmountSlider, sliderIndicators);
         sliderBox.setMaxWidth(model.getAmountBoxWidth() + 40);
 
         VBox.setMargin(sliderBox, new Insets(30, 0, 0, 0));
@@ -204,11 +205,12 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
 
         maxOrFixedAmountSliderValueListener = (observable, oldValue, newValue) -> {
             double maxAllowedSliderValue = controller.onGetMaxAllowedSliderValue();
-            maxOrFixedAmountSlider.setValue(Math.min(newValue.doubleValue(), maxAllowedSliderValue));
+            fixedAmountSlider.setValue(Math.min(newValue.doubleValue(), maxAllowedSliderValue));
+            rangeAmountSlider.getHighValue().set(Math.min(newValue.doubleValue(), maxAllowedSliderValue));
         };
         minAmountSliderValueListener = (observable, oldValue, newValue) -> {
             double maxAllowedSliderValue = controller.onGetMaxAllowedSliderValue();
-            minAmountSlider.setValue(Math.min(newValue.doubleValue(), maxAllowedSliderValue));
+            rangeAmountSlider.getLowValue().set(Math.min(newValue.doubleValue(), maxAllowedSliderValue));
         };
     }
 
@@ -221,16 +223,22 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
             VBox.setMargin(sliderIndicators, isRangeAmountEnabled ? SLIDER_INDICATORS_RANGE_MARGIN : SLIDER_INDICATORS_FIXED_MARGIN);
             applyTextInputFontStyle(true);
         });
-        sliderTrackStylePin = EasyBind.subscribe(model.getSliderTrackStyle(), maxOrFixedAmountSlider::setStyle);
+        sliderTrackStylePin = EasyBind.subscribe(model.getSliderTrackStyle(), trackStyle -> {
+            rangeAmountSlider.setStyle(trackStyle);
+            fixedAmountSlider.setStyle(trackStyle);
+        });
         shouldFocusInputTextFieldPin = EasyBind.subscribe(model.getShouldFocusInputTextField(), this::maybeFocusInputTextField);
         shouldApplyNewInputTextFontStylePin = EasyBind.subscribe(model.getShouldApplyNewInputTextFontStyle(), this::applyTextInputFontStyle);
 
-        maxOrFixedAmountSlider.valueProperty().bindBidirectional(model.getMaxOrFixedAmountSliderValue());
-        maxOrFixedAmountSlider.valueProperty().addListener(maxOrFixedAmountSliderValueListener);
-        minAmountSlider.valueProperty().bindBidirectional(model.getMinAmountSliderValue());
-        minAmountSlider.valueProperty().addListener(minAmountSliderValueListener);
-        model.getMaxOrFixedAmountSliderFocus().bind(maxOrFixedAmountSlider.focusedProperty());
-        model.getMinAmountSliderFocus().bind(minAmountSlider.focusedProperty());
+        rangeAmountSlider.getLowValue().bindBidirectional(model.getMinAmountSliderValue());
+        rangeAmountSlider.getHighValue().bindBidirectional(model.getMaxOrFixedAmountSliderValue());
+        rangeAmountSlider.getLowValue().addListener(minAmountSliderValueListener);
+        rangeAmountSlider.getHighValue().addListener(maxOrFixedAmountSliderValueListener);
+        model.getRangeSliderLowThumbFocus().bind(rangeAmountSlider.getLowThumbFocused());
+        model.getRangeSliderHighThumbFocus().bind(rangeAmountSlider.getHighThumbFocused());
+        fixedAmountSlider.valueProperty().bindBidirectional(model.getMaxOrFixedAmountSliderValue());
+        fixedAmountSlider.valueProperty().addListener(maxOrFixedAmountSliderValueListener);
+        model.getMaxOrFixedAmountSliderFocus().bind(fixedAmountSlider.focusedProperty());
         description.textProperty().bind(model.getDescription());
         minRangeValue.textProperty().bind(model.getMinRangeValueAsString());
         minRangeCode.textProperty().bind(model.getMinRangeCodeAsString());
@@ -248,8 +256,10 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         invertedMinQuoteAmountRoot.managedProperty().bind(model.getShouldShowInvertedMinAmounts());
         invertedMinBaseAmountRoot.visibleProperty().bind(model.getShouldShowInvertedMinAmounts());
         invertedMinBaseAmountRoot.managedProperty().bind(model.getShouldShowInvertedMinAmounts());
-        minAmountSlider.visibleProperty().bind(model.getIsRangeAmountEnabled());
-        minAmountSlider.managedProperty().bind(model.getIsRangeAmountEnabled());
+        rangeAmountSlider.visibleProperty().bind(model.getIsRangeAmountEnabled());
+        rangeAmountSlider.managedProperty().bind(model.getIsRangeAmountEnabled());
+        fixedAmountSlider.visibleProperty().bind(model.getIsRangeAmountEnabled().not());
+        fixedAmountSlider.managedProperty().bind(model.getIsRangeAmountEnabled().not());
         flipCurrenciesButton.visibleProperty().bind(model.getAllowInvertingBaseAndQuoteCurrencies());
         flipCurrenciesButton.managedProperty().bind(model.getAllowInvertingBaseAndQuoteCurrencies());
         baseAmountSelectionHBox.minWidthProperty().bind(model.getBaseAmountSelectionHBoxWidth());
@@ -281,12 +291,15 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         shouldFocusInputTextFieldPin.unsubscribe();
         shouldApplyNewInputTextFontStylePin.unsubscribe();
 
-        maxOrFixedAmountSlider.valueProperty().unbindBidirectional(model.getMaxOrFixedAmountSliderValue());
-        maxOrFixedAmountSlider.valueProperty().removeListener(maxOrFixedAmountSliderValueListener);
-        minAmountSlider.valueProperty().unbindBidirectional(model.getMinAmountSliderValue());
-        minAmountSlider.valueProperty().removeListener(minAmountSliderValueListener);
+        rangeAmountSlider.getHighValue().unbindBidirectional(model.getMaxOrFixedAmountSliderValue());
+        rangeAmountSlider.getHighValue().removeListener(maxOrFixedAmountSliderValueListener);
+        rangeAmountSlider.getLowValue().unbindBidirectional(model.getMinAmountSliderValue());
+        rangeAmountSlider.getLowValue().removeListener(minAmountSliderValueListener);
+        model.getRangeSliderLowThumbFocus().unbind();
+        model.getRangeSliderHighThumbFocus().unbind();
+        fixedAmountSlider.valueProperty().unbindBidirectional(model.getMaxOrFixedAmountSliderValue());
+        fixedAmountSlider.valueProperty().removeListener(maxOrFixedAmountSliderValueListener);
         model.getMaxOrFixedAmountSliderFocus().unbind();
-        model.getMinAmountSliderFocus().unbind();
         description.textProperty().unbind();
         minRangeValue.textProperty().unbind();
         minRangeCode.textProperty().unbind();
@@ -304,8 +317,10 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         invertedMinQuoteAmountRoot.managedProperty().unbind();
         invertedMinBaseAmountRoot.visibleProperty().unbind();
         invertedMinBaseAmountRoot.managedProperty().unbind();
-        minAmountSlider.visibleProperty().unbind();
-        minAmountSlider.managedProperty().unbind();
+        rangeAmountSlider.visibleProperty().unbind();
+        rangeAmountSlider.managedProperty().unbind();
+        fixedAmountSlider.visibleProperty().unbind();
+        fixedAmountSlider.managedProperty().unbind();
         flipCurrenciesButton.visibleProperty().unbind();
         flipCurrenciesButton.managedProperty().unbind();
         baseAmountSelectionHBox.minWidthProperty().unbind();
