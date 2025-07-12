@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.desktop.main.left;
 
 import bisq.common.data.Pair;
@@ -9,7 +26,6 @@ import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
@@ -32,6 +48,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
@@ -254,33 +271,30 @@ public class NetworkInfo {
         public View(Model model, Controller controller) {
             super(new VBox(8), model, controller);
 
-            root.setMinHeight(53);
-            root.setMaxHeight(53);
+            root.setMinHeight(VBox.USE_PREF_SIZE);
             root.setPadding(new Insets(26, 24, 0, 24));
 
-            Triple<HBox, BisqTooltip, Triple<Label, Label, ImageView>> clearNet = getNetworkBox(Res.get("navigation.network.info.clearNet"), "clearnet");
+            Triple<HBox, BisqTooltip, Triple<Label, Label, ImageView>> clearNet = getNetworkBox("clearnet-white");
             clearNetHBox = clearNet.getFirst();
             clearNetTooltip = clearNet.getSecond();
             clearNetTriple = clearNet.getThird();
 
-            Triple<HBox, BisqTooltip, Triple<Label, Label, ImageView>> tor = getNetworkBox(Res.get("navigation.network.info.tor"), "tor");
+            Triple<HBox, BisqTooltip, Triple<Label, Label, ImageView>> tor = getNetworkBox("tor-white");
             torHBox = tor.getFirst();
             torTooltip = tor.getSecond();
             torTriple = tor.getThird();
 
-            Triple<HBox, BisqTooltip, Triple<Label, Label, ImageView>> i2p = getNetworkBox(Res.get("navigation.network.info.i2p"), "i2p");
+            Triple<HBox, BisqTooltip, Triple<Label, Label, ImageView>> i2p = getNetworkBox("i2p-white");
             i2pHBox = i2p.getFirst();
             i2pTooltip = i2p.getSecond();
             i2pTriple = i2p.getThird();
-
-            HBox hBox = new HBox(clearNetHBox, torHBox, Spacer.fillHBox(), i2pHBox);
 
             Triple<HBox, BisqTooltip, Pair<Label, ImageView>> inventoryRequests = getInventoryRequestBox();
             HBox inventoryRequestsHBox = inventoryRequests.getFirst();
             inventoryRequestsTooltip = inventoryRequests.getSecond();
             inventoryRequestsPair = inventoryRequests.getThird();
 
-            root.getChildren().addAll(hBox, inventoryRequestsHBox);
+            root.getChildren().addAll(clearNetHBox, torHBox, i2pHBox, inventoryRequestsHBox);
         }
 
         @Override
@@ -325,7 +339,7 @@ public class NetworkInfo {
                                 .filter(node -> node instanceof ImageView)
                                 .map(node -> (ImageView) node)
                                 .forEach(imageView -> {
-                                    imageView.setId("tor_green");
+                                    imageView.setId("tor-green");
                                     imageView.setOpacity(0.75);
                                 });
                     }
@@ -404,23 +418,22 @@ public class NetworkInfo {
             root.setOnMouseClicked(null);
         }
 
-        private Triple<HBox, BisqTooltip, Triple<Label, Label, ImageView>> getNetworkBox(String title, String imageId) {
-            Label titleLabel = new Label(title);
-            titleLabel.getStyleClass().add("bisq-smaller-dimmed-label");
-
+        private Triple<HBox, BisqTooltip, Triple<Label, Label, ImageView>> getNetworkBox(String imageId) {
             Label numConnectionsLabel = new Label();
-            numConnectionsLabel.getStyleClass().add("bisq-smaller-label");
+            numConnectionsLabel.getStyleClass().add("bisq-smaller-dimmed-label");
+            numConnectionsLabel.setMinWidth(Label.USE_PREF_SIZE);
 
             Label separator = new Label("|");
             separator.getStyleClass().add("bisq-smaller-dimmed-label");
 
             Label numTargetConnectionsLabel = new Label();
-            numTargetConnectionsLabel.getStyleClass().add("bisq-smaller-label");
+            numTargetConnectionsLabel.getStyleClass().add("bisq-smaller-dimmed-label");
+            numTargetConnectionsLabel.setMinWidth(Label.USE_PREF_SIZE);
 
             ImageView icon = ImageUtil.getImageViewById(imageId);
-            HBox.setMargin(icon, new Insets(0, 0, 0, 2));
 
-            HBox hBox = new HBox(5, titleLabel, numConnectionsLabel, separator, numTargetConnectionsLabel, icon);
+            HBox hBox = new HBox(5, icon, numConnectionsLabel, separator, numTargetConnectionsLabel);
+            hBox.setAlignment(Pos.CENTER_LEFT);
 
             BisqTooltip tooltip = new BisqTooltip();
             Tooltip.install(hBox, tooltip);
@@ -433,7 +446,6 @@ public class NetworkInfo {
             info.getStyleClass().add("bisq-smaller-dimmed-label");
 
             ImageView icon = ImageUtil.getImageViewById("check-white");
-            HBox.setMargin(icon, new Insets(0, 0, 0, 2));
 
             HBox hBox = new HBox(5, info, icon);
             BisqTooltip tooltip = new BisqTooltip();

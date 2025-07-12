@@ -271,9 +271,9 @@ public class BootstrapElement {
 
         private String getIconId(TransportType transportType) {
             return switch (transportType) {
-                case TOR -> "tor";
-                case I2P -> "i2p";
-                default -> "clearnet";
+                case TOR -> "tor-white";
+                case I2P -> "i2p-white";
+                default -> "clearnet-white";
             };
         }
     }
