@@ -327,7 +327,7 @@ public class NetworkInfo {
                     torTriple.getFirst().setText(numConnections);
                     String torInfo = Res.get("navigation.network.info.tor");
                     String postFixInfo = model.useExternalTor.get() ? Res.get("navigation.network.info.externalTor") : "";
-                    torTooltip.setText(Res.get("navigation.network.info.tooltip",
+                    torTooltip.setText(Res.get("navigation.network.info.tooltip.tor",
                             torInfo, numConnections, model.getTorNumTargetConnections(), postFixInfo));
                 }
             });
