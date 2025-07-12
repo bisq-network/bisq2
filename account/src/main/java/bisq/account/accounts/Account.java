@@ -21,7 +21,7 @@ import bisq.account.accounts.fiat.CashByMailAccount;
 import bisq.account.accounts.fiat.CountryBasedAccount;
 import bisq.account.accounts.fiat.FasterPaymentsAccount;
 import bisq.account.accounts.fiat.InteracETransferAccount;
-import bisq.account.accounts.fiat.PayIDAccount;
+import bisq.account.accounts.fiat.PayIdAccount;
 import bisq.account.accounts.fiat.RevolutAccount;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.accounts.fiat.ZelleAccount;
@@ -83,7 +83,7 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
             case REVOLUTACCOUNT -> RevolutAccount.fromProto(proto);
             case COUNTRYBASEDACCOUNT -> CountryBasedAccount.fromProto(proto);
             case FASTERPAYMENTSACCOUNT -> FasterPaymentsAccount.fromProto(proto);
-            case PAYIDACCOUNT -> PayIDAccount.fromProto(proto);
+            case PAYIDACCOUNT -> PayIdAccount.fromProto(proto);
             case CASHBYMAILACCOUNT -> CashByMailAccount.fromProto(proto);
             case INTERACETRANSFERACCOUNT -> InteracETransferAccount.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
