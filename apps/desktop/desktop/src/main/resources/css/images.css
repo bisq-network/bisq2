@@ -19,20 +19,40 @@
     -fx-image: url("/images/bullet-point.png");
 }
 
-#clearnet {
-    -fx-image: url("/images/clearnet.png");
+#clearnet-white {
+    -fx-image: url("/images/clearnet-white.png");
 }
 
-#tor {
-    -fx-image: url("/images/tor.png");
+#clearnet-grey {
+    -fx-image: url("/images/clearnet-grey.png");
 }
 
-#tor_green {
-    -fx-image: url("/images/tor_green.png");
+#clearnet-green {
+    -fx-image: url("/images/clearnet-green.png");
 }
 
-#i2p {
-    -fx-image: url("/images/i2p.png");
+#tor-white {
+    -fx-image: url("/images/tor-white.png");
+}
+
+#tor-grey {
+    -fx-image: url("/images/tor-grey.png");
+}
+
+#tor-green {
+    -fx-image: url("/images/tor-green.png");
+}
+
+#i2p-white {
+    -fx-image: url("/images/i2p-white.png");
+}
+
+#i2p-grey {
+    -fx-image: url("/images/i2p-grey.png");
+}
+
+#i2p-green {
+    -fx-image: url("/images/i2p-green.png");
 }
 
 #rocket {
