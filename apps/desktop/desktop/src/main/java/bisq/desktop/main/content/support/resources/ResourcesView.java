@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.support.resources;
 
+import bisq.common.application.ApplicationVersion;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqHyperlink;
 import bisq.desktop.components.controls.MaterialTextField;
@@ -71,6 +72,14 @@ public class ResourcesView extends View<VBox, ResourcesModel, ResourcesControlle
 
         VBox localDataBox = new VBox(5, openDataDirButton, openLogFileButton, openTorLogFileButton);
 
+        Label localVersionHeadline = SettingsViewUtils.getHeadline(Res.get("support.resources.localVersion.headline"));
+
+        Label details = new Label(Res.get("support.resources.localVersion.details",
+            ApplicationVersion.getVersion().getVersionAsString(),
+            ApplicationVersion.getBuildCommitShortHash(),
+            ApplicationVersion.getTorVersionString()));
+        VBox localVersionBox = new VBox(5, details);
+
 
         Label resourcesHeadline = SettingsViewUtils.getHeadline(Res.get("support.resources.resources.headline"));
         webpage = new BisqHyperlink(Res.get("support.resources.resources.webpage"), "https://bisq.network/");
@@ -92,10 +101,12 @@ public class ResourcesView extends View<VBox, ResourcesModel, ResourcesControlle
         VBox.setMargin(guidesBox, value);
         VBox.setMargin(legalBox, value);
         VBox.setMargin(resourcesBox, value);
+        VBox.setMargin(localVersionBox, value);
         VBox contentBox = new VBox(50);
         contentBox.getChildren().addAll(
                 guidesHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), guidesBox,
                 localDataHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), localDataBox,
+                localVersionHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), localVersionBox,
                 backupHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), backupBox,
                 resourcesHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), resourcesBox,
                 legalHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), legalBox
