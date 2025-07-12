@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.user.accounts.details;
 
-import bisq.account.accounts.ZelleAccount;
-import bisq.account.accounts.ZelleAccountPayload;
+import bisq.account.accounts.fiat.ZelleAccount;
+import bisq.account.accounts.fiat.ZelleAccountPayload;
 import bisq.i18n.Res;
 
 public class ZelleAccountDetailsVBox extends FiatAccountDetailsVBox<ZelleAccount> {

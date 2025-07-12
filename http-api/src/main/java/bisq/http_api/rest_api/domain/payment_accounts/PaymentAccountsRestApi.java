@@ -19,8 +19,8 @@ package bisq.http_api.rest_api.domain.payment_accounts;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
-import bisq.account.accounts.UserDefinedFiatAccount;
-import bisq.account.accounts.UserDefinedFiatAccountPayload;
+import bisq.account.accounts.fiat.UserDefinedFiatAccount;
+import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.util.StringUtils;
 import bisq.dto.DtoMappings;

@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.user.accounts.details;
 
-import bisq.account.accounts.BankAccountUtils;
-import bisq.account.accounts.NationalBankAccount;
-import bisq.account.accounts.NationalBankAccountPayload;
+import bisq.account.accounts.fiat.BankAccountUtils;
+import bisq.account.accounts.fiat.NationalBankAccount;
+import bisq.account.accounts.fiat.NationalBankAccountPayload;
 import bisq.i18n.Res;
 
 public class NationalBankAccountDetailsVBox extends FiatAccountDetailsVBox<NationalBankAccount> {

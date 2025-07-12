@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.mu_sig.offerbook;
 
 import bisq.account.AccountService;
-import bisq.account.accounts.UserDefinedFiatAccount;
+import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -33,7 +33,7 @@ import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.offer.payment_method.PaymentMethodSpecUtil;
+import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.OfferPriceFormatter;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.PriceSpec;

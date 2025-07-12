@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.user.accounts.create.legacy;
 
 import bisq.account.AccountService;
-import bisq.account.accounts.UserDefinedFiatAccount;
-import bisq.account.accounts.UserDefinedFiatAccountPayload;
+import bisq.account.accounts.fiat.UserDefinedFiatAccount;
+import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;

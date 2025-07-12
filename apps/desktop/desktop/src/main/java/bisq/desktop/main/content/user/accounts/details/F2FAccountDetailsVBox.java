@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.user.accounts.details;
 
-import bisq.account.accounts.F2FAccount;
-import bisq.account.accounts.F2FAccountPayload;
+import bisq.account.accounts.fiat.F2FAccount;
+import bisq.account.accounts.fiat.F2FAccountPayload;
 import bisq.i18n.Res;
 
 public class F2FAccountDetailsVBox extends FiatAccountDetailsVBox<F2FAccount> {

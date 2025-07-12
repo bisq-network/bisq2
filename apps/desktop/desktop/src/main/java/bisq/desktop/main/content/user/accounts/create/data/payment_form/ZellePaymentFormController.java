@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
-import bisq.account.accounts.ZelleAccountPayload;
+import bisq.account.accounts.fiat.ZelleAccountPayload;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;

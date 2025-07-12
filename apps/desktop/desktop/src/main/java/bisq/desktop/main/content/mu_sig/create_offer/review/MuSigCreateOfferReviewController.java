@@ -48,7 +48,7 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.options.AccountOption;
 import bisq.offer.options.OfferOptionUtil;
-import bisq.offer.payment_method.PaymentMethodSpecFormatter;
+import bisq.account.payment_method.PaymentMethodSpecFormatter;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;

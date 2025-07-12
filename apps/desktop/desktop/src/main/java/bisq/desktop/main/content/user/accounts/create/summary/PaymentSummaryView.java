@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.accounts.create.summary;
 
-import bisq.account.accounts.CountryBasedAccountPayload;
+import bisq.account.accounts.fiat.CountryBasedAccountPayload;
 import bisq.common.data.Triple;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.GridPaneUtil;

@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
-import bisq.account.accounts.BankAccountPayload;
-import bisq.account.accounts.BankAccountType;
+import bisq.account.accounts.fiat.BankAccountPayload;
+import bisq.account.accounts.fiat.BankAccountType;
 import bisq.common.currency.FiatCurrency;
 import bisq.common.locale.Country;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;

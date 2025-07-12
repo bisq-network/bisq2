@@ -29,7 +29,7 @@ import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.options.OfferOption;
-import bisq.offer.payment_method.PaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

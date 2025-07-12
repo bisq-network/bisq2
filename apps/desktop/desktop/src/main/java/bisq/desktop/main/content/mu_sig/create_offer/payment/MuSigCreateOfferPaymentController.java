@@ -23,7 +23,7 @@ import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
-import bisq.account.accounts.UserDefinedFiatAccount;
+import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.FiatPaymentMethodUtil;

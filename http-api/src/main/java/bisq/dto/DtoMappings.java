@@ -17,7 +17,7 @@
 
 package bisq.dto;
 
-import bisq.account.accounts.UserDefinedFiatAccount;
+import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
@@ -113,10 +113,10 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.options.OfferOption;
 import bisq.offer.options.ReputationOption;
 import bisq.offer.options.TradeTermsOption;
-import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
-import bisq.offer.payment_method.FiatPaymentMethodSpec;
-import bisq.offer.payment_method.PaymentMethodSpec;
-import bisq.offer.payment_method.PaymentMethodSpecUtil;
+import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.FiatPaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;

@@ -21,7 +21,7 @@ import bisq.account.accounts.Account;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.offer.payment_method.PaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.ObjectProperty;

@@ -32,12 +32,12 @@ import lombok.Getter;
 
 import java.util.List;
 
-import static bisq.account.accounts.F2FAccountPayload.CITY_MAX_LENGTH;
-import static bisq.account.accounts.F2FAccountPayload.CITY_MIN_LENGTH;
-import static bisq.account.accounts.F2FAccountPayload.CONTACT_MAX_LENGTH;
-import static bisq.account.accounts.F2FAccountPayload.CONTACT_MIN_LENGTH;
-import static bisq.account.accounts.F2FAccountPayload.EXTRA_INFO_MAX_LENGTH;
-import static bisq.account.accounts.F2FAccountPayload.EXTRA_INFO_MIN_LENGTH;
+import static bisq.account.accounts.fiat.F2FAccountPayload.CITY_MAX_LENGTH;
+import static bisq.account.accounts.fiat.F2FAccountPayload.CITY_MIN_LENGTH;
+import static bisq.account.accounts.fiat.F2FAccountPayload.CONTACT_MAX_LENGTH;
+import static bisq.account.accounts.fiat.F2FAccountPayload.CONTACT_MIN_LENGTH;
+import static bisq.account.accounts.fiat.F2FAccountPayload.EXTRA_INFO_MAX_LENGTH;
+import static bisq.account.accounts.fiat.F2FAccountPayload.EXTRA_INFO_MIN_LENGTH;
 
 @Getter
 public class F2FPaymentFormModel extends PaymentFormModel {

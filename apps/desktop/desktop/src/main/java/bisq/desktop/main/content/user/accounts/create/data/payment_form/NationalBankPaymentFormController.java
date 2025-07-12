@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
-import bisq.account.accounts.BankAccountType;
-import bisq.account.accounts.BankAccountUtils;
-import bisq.account.accounts.NationalBankAccountPayload;
+import bisq.account.accounts.fiat.BankAccountType;
+import bisq.account.accounts.fiat.BankAccountUtils;
+import bisq.account.accounts.fiat.NationalBankAccountPayload;
 import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.currency.FiatCurrency;
 import bisq.common.currency.FiatCurrencyRepository;

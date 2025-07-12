@@ -17,6 +17,13 @@
 
 package bisq.account.accounts;
 
+import bisq.account.accounts.fiat.CashByMailAccountPayload;
+import bisq.account.accounts.fiat.CountryBasedAccountPayload;
+import bisq.account.accounts.fiat.FasterPaymentsAccountPayload;
+import bisq.account.accounts.fiat.InteracETransferAccountPayload;
+import bisq.account.accounts.fiat.RevolutAccountPayload;
+import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
+import bisq.account.accounts.fiat.ZelleAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;

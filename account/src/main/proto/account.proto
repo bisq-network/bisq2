@@ -68,6 +68,29 @@ message CryptoPaymentMethod {
 message StablecoinPaymentMethod {
 }
 
+message FiatPaymentMethodSpec {
+}
+
+message BitcoinPaymentMethodSpec {
+}
+
+message CryptoPaymentMethodSpec {
+}
+
+message StablecoinPaymentMethodSpec {
+}
+
+message PaymentMethodSpec {
+  account.PaymentMethod paymentMethod = 1;
+  optional string saltedMakerAccountId = 2;
+  oneof message {
+    BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = 10;
+    FiatPaymentMethodSpec fiatPaymentMethodSpec = 11;
+    CryptoPaymentMethodSpec cryptoPaymentMethodSpec = 12;
+    StablecoinPaymentMethodSpec stablecoinPaymentMethodSpec = 13;
+  }
+}
+
 
 // AccountPayload
 message AccountPayload {

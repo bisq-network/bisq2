@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
-import bisq.account.accounts.SepaAccountPayload;
+import bisq.account.accounts.fiat.SepaAccountPayload;
 import bisq.common.locale.Country;
 import bisq.desktop.components.controls.validator.SepaBicValidator;
 import bisq.desktop.components.controls.validator.SepaIbanValidator;
