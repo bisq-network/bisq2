@@ -31,11 +31,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class PayIDAccountPayload extends AccountPayload<FiatPaymentMethod> {
+public final class PayIdAccountPayload extends AccountPayload<FiatPaymentMethod> {
     private final String holderName;
     private final String payId;
 
-    public PayIDAccountPayload(String id, String holderName, String payId) {
+    public PayIdAccountPayload(String id, String holderName, String payId) {
         super(id);
         this.holderName = holderName;
         this.payId = payId;
@@ -44,22 +44,22 @@ public final class PayIDAccountPayload extends AccountPayload<FiatPaymentMethod>
     @Override
     public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
         return getAccountPayloadBuilder(serializeForHash)
-                .setPayIDAccountPayload(toPayIDAccountPayloadProto(serializeForHash));
+                .setPayIdAccountPayload(toPayIdAccountPayloadProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.PayIDAccountPayload toPayIDAccountPayloadProto(boolean serializeForHash) {
-        return resolveBuilder(getPayIDAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    private bisq.account.protobuf.PayIdAccountPayload toPayIdAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getPayIdAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private bisq.account.protobuf.PayIDAccountPayload.Builder getPayIDAccountPayloadBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.PayIDAccountPayload.newBuilder()
+    private bisq.account.protobuf.PayIdAccountPayload.Builder getPayIdAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.PayIdAccountPayload.newBuilder()
                 .setHolderName(holderName)
                 .setPayId(payId);
     }
 
-    public static PayIDAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var payload = proto.getPayIDAccountPayload();
-        return new PayIDAccountPayload(
+    public static PayIdAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+        var payload = proto.getPayIdAccountPayload();
+        return new PayIdAccountPayload(
                 proto.getId(),
                 payload.getHolderName(),
                 payload.getPayId());

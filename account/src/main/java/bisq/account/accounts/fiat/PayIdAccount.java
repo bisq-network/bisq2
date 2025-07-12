@@ -28,30 +28,30 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class PayIDAccount extends Account<FiatPaymentMethod, PayIDAccountPayload> {
-    public PayIDAccount(String id, long creationDate, String accountName, PayIDAccountPayload accountPayload) {
+public final class PayIdAccount extends Account<FiatPaymentMethod, PayIdAccountPayload> {
+    public PayIdAccount(String id, long creationDate, String accountName, PayIdAccountPayload accountPayload) {
         super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
     public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
         return getAccountBuilder(serializeForHash)
-                .setPayIDAccount(toPayIDAccountProto(serializeForHash));
+                .setPayIdAccount(toPayIdAccountProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.PayIDAccount toPayIDAccountProto(boolean serializeForHash) {
-        return resolveBuilder(getPayIDAccountBuilder(serializeForHash), serializeForHash).build();
+    private bisq.account.protobuf.PayIdAccount toPayIdAccountProto(boolean serializeForHash) {
+        return resolveBuilder(getPayIdAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private bisq.account.protobuf.PayIDAccount.Builder getPayIDAccountBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.PayIDAccount.newBuilder();
+    private bisq.account.protobuf.PayIdAccount.Builder getPayIdAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.PayIdAccount.newBuilder();
     }
 
-    public static PayIDAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new PayIDAccount(proto.getId(),
+    public static PayIdAccount fromProto(bisq.account.protobuf.Account proto) {
+        return new PayIdAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
-                PayIDAccountPayload.fromProto(proto.getAccountPayload())
+                PayIdAccountPayload.fromProto(proto.getAccountPayload())
         );
     }
 }

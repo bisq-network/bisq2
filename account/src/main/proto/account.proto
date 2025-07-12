@@ -102,7 +102,7 @@ message AccountPayload {
     RevolutAccountPayload RevolutAccountPayload = 21;
     CountryBasedAccountPayload countryBasedAccountPayload = 22;
     FasterPaymentsAccountPayload fasterPaymentsAccountPayload = 23;
-    PayIDAccountPayload payIDAccountPayload = 24;
+    PayIdAccountPayload payIdAccountPayload = 24;
     USPostalMoneyOrderAccountPayload usPostalMoneyOrderAccountPayload = 25;
     CashByMailAccountPayload cashByMailAccountPayload = 26;
     InteracETransferAccountPayload interacETransferAccountPayload = 27;
@@ -262,7 +262,7 @@ message FasterPaymentsAccountPayload {
   string accountNr = 3;
 }
 
-message PayIDAccountPayload {
+message PayIdAccountPayload {
   string holderName = 1;
   string payId = 2;
 }
@@ -320,7 +320,7 @@ message Account {
     RevolutAccount revolutAccount = 21;
     CountryBasedAccount countryBasedAccount = 22;
     FasterPaymentsAccount fasterPaymentsAccount = 23;
-    PayIDAccount payIDAccount = 24;
+    PayIdAccount payIdAccount = 24;
     USPostalMoneyOrderAccount usPostalMoneyOrderAccount = 25;
     CashByMailAccount cashByMailAccount = 26;
     InteracETransferAccount interacETransferAccount = 27;
@@ -409,7 +409,7 @@ message SwishAccount {
 message FasterPaymentsAccount {
 }
 
-message PayIDAccount {
+message PayIdAccount {
 }
 
 message USPostalMoneyOrderAccount {
