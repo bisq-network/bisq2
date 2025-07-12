@@ -28,7 +28,7 @@ import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.options.OfferOptionUtil;
-import bisq.offer.payment_method.PaymentMethodSpecFormatter;
+import bisq.account.payment_method.PaymentMethodSpecFormatter;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.AmountFormatter;

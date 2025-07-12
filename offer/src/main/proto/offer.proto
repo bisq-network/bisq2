@@ -61,28 +61,6 @@ message PriceSpec {
   }
 }
 
-message FiatPaymentMethodSpec {
-}
-
-message BitcoinPaymentMethodSpec {
-}
-
-message CryptoPaymentMethodSpec {
-}
-
-message StablecoinPaymentMethodSpec {
-}
-
-message PaymentMethodSpec {
-  account.PaymentMethod paymentMethod = 1;
-  optional string saltedMakerAccountId = 2;
-  oneof message {
-    BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = 10;
-    FiatPaymentMethodSpec fiatPaymentMethodSpec = 11;
-    CryptoPaymentMethodSpec cryptoPaymentMethodSpec = 12;
-    StablecoinPaymentMethodSpec stablecoinPaymentMethodSpec = 13;
-  }
-}
 
 // options
 message ReputationOption {
@@ -148,8 +126,8 @@ message Offer {
   AmountSpec amountSpec = 6;
   PriceSpec priceSpec = 7;
   repeated account.TradeProtocolType protocolTypes = 8;
-  repeated PaymentMethodSpec baseSidePaymentSpecs = 9;
-  repeated PaymentMethodSpec quoteSidePaymentSpecs = 10;
+  repeated account.PaymentMethodSpec baseSidePaymentSpecs = 9;
+  repeated account.PaymentMethodSpec quoteSidePaymentSpecs = 10;
   repeated OfferOption offerOptions = 11;
   sint32 version = 12;
   string tradeProtocolVersion = 13;

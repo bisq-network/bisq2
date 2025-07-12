@@ -15,10 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.payment_method;
+package bisq.account.payment_method;
 
-import bisq.account.payment_method.PaymentMethod;
-import bisq.account.payment_method.PaymentRail;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
@@ -28,6 +26,9 @@ import lombok.ToString;
 
 import java.util.Optional;
 
+/**
+ * PaymentMethod related data which is included in offers.
+ */
 @ToString
 @Getter
 @EqualsAndHashCode
@@ -59,21 +60,21 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
     }
 
     @Override
-    public abstract bisq.offer.protobuf.PaymentMethodSpec toProto(boolean serializeForHash);
+    public abstract bisq.account.protobuf.PaymentMethodSpec toProto(boolean serializeForHash);
 
-    public bisq.offer.protobuf.PaymentMethodSpec.Builder getPaymentMethodSpecBuilder(boolean serializeForHash) {
-        bisq.offer.protobuf.PaymentMethodSpec.Builder builder = bisq.offer.protobuf.PaymentMethodSpec.newBuilder()
+    public bisq.account.protobuf.PaymentMethodSpec.Builder getPaymentMethodSpecBuilder(boolean serializeForHash) {
+        bisq.account.protobuf.PaymentMethodSpec.Builder builder = bisq.account.protobuf.PaymentMethodSpec.newBuilder()
                 .setPaymentMethod(paymentMethod.toProto(serializeForHash));
         saltedMakerAccountId.ifPresent(builder::setSaltedMakerAccountId);
         return builder;
     }
 
-    // Alternative signature would be: `public static <T extends PaymentMethodSpec<?>> T fromProto(bisq.offer.protobuf.PaymentMethodSpec proto)`
+    // Alternative signature would be: `public static <T extends PaymentMethodSpec<?>> T fromProto(bisq.account.protobuf.PaymentMethodSpec proto)`
     // This would require an unsafe cast  (T) for the return type.
     // The caller would provide the expected type. E.g. `PaymentMethodSpec::<BitcoinPaymentMethodSpec>fromProto`
     // By using specific methods we avoid those issues and the code is more readable without generics overhead.
 
-    public static FiatPaymentMethodSpec protoToFiatPaymentMethodSpec(bisq.offer.protobuf.PaymentMethodSpec proto) {
+    public static FiatPaymentMethodSpec protoToFiatPaymentMethodSpec(bisq.account.protobuf.PaymentMethodSpec proto) {
         return switch (proto.getMessageCase()) {
             case FIATPAYMENTMETHODSPEC -> FiatPaymentMethodSpec.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
@@ -81,7 +82,7 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
         };
     }
 
-    public static BitcoinPaymentMethodSpec protoToBitcoinPaymentMethodSpec(bisq.offer.protobuf.PaymentMethodSpec proto) {
+    public static BitcoinPaymentMethodSpec protoToBitcoinPaymentMethodSpec(bisq.account.protobuf.PaymentMethodSpec proto) {
         return switch (proto.getMessageCase()) {
             case BITCOINPAYMENTMETHODSPEC -> BitcoinPaymentMethodSpec.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
@@ -89,7 +90,7 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
         };
     }
 
-    public static PaymentMethodSpec<?> fromProto(bisq.offer.protobuf.PaymentMethodSpec proto) {
+    public static PaymentMethodSpec<?> fromProto(bisq.account.protobuf.PaymentMethodSpec proto) {
         return switch (proto.getMessageCase()) {
             case BITCOINPAYMENTMETHODSPEC -> BitcoinPaymentMethodSpec.fromProto(proto);
             case FIATPAYMENTMETHODSPEC -> FiatPaymentMethodSpec.fromProto(proto);

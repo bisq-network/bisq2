@@ -29,7 +29,7 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.mu_sig.components.PaymentMethodChipButton;
 import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferView;
 import bisq.i18n.Res;
-import bisq.offer.payment_method.PaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpec;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;

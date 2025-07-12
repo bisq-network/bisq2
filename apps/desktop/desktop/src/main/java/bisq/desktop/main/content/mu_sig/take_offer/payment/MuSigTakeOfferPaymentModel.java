@@ -22,7 +22,7 @@ import bisq.account.payment_method.PaymentMethod;
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
-import bisq.offer.payment_method.PaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpec;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;

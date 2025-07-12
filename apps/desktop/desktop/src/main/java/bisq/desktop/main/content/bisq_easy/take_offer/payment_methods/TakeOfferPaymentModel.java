@@ -19,8 +19,8 @@ package bisq.desktop.main.content.bisq_easy.take_offer.payment_methods;
 
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
-import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
-import bisq.offer.payment_method.FiatPaymentMethodSpec;
+import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.FiatPaymentMethodSpec;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;

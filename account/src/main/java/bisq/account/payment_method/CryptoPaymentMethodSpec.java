@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.payment_method;
+package bisq.account.payment_method;
 
-import bisq.account.payment_method.CryptoPaymentMethod;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -44,17 +43,17 @@ public final class CryptoPaymentMethodSpec extends PaymentMethodSpec<CryptoPayme
     }
 
     @Override
-    public bisq.offer.protobuf.PaymentMethodSpec.Builder getBuilder(boolean serializeForHash) {
+    public bisq.account.protobuf.PaymentMethodSpec.Builder getBuilder(boolean serializeForHash) {
         return getPaymentMethodSpecBuilder(serializeForHash)
-                .setCryptoPaymentMethodSpec(bisq.offer.protobuf.CryptoPaymentMethodSpec.newBuilder());
+                .setCryptoPaymentMethodSpec(bisq.account.protobuf.CryptoPaymentMethodSpec.newBuilder());
     }
 
     @Override
-    public bisq.offer.protobuf.PaymentMethodSpec toProto(boolean serializeForHash) {
+    public bisq.account.protobuf.PaymentMethodSpec toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
 
-    public static CryptoPaymentMethodSpec fromProto(bisq.offer.protobuf.PaymentMethodSpec proto) {
+    public static CryptoPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto) {
         return new CryptoPaymentMethodSpec(CryptoPaymentMethod.fromProto(proto.getPaymentMethod()),
                 proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
     }

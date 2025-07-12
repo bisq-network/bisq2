@@ -49,7 +49,7 @@ import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.mu_sig.MuSigOfferService;
 import bisq.offer.options.OfferOption;
-import bisq.offer.payment_method.FiatPaymentMethodSpec;
+import bisq.account.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.PersistenceService;
 import bisq.presentation.notifications.SystemNotificationService;

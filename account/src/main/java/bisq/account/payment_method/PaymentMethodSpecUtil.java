@@ -15,15 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.payment_method;
+package bisq.account.payment_method;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.BitcoinPaymentMethodUtil;
-import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.account.payment_method.CryptoPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethodUtil;
-import bisq.account.payment_method.PaymentMethod;
 import bisq.common.currency.TradeCurrency;
 
 import java.util.Collection;

@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.payment_method;
+package bisq.account.payment_method;
 
-import bisq.account.payment_method.PaymentMethod;
 import bisq.i18n.Res;
 import com.google.common.base.Joiner;
 

@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.payment_method;
+package bisq.account.payment_method;
 
-import bisq.account.payment_method.StablecoinPaymentMethod;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -44,17 +43,17 @@ public final class StablecoinPaymentMethodSpec extends PaymentMethodSpec<Stablec
     }
 
     @Override
-    public bisq.offer.protobuf.PaymentMethodSpec.Builder getBuilder(boolean serializeForHash) {
+    public bisq.account.protobuf.PaymentMethodSpec.Builder getBuilder(boolean serializeForHash) {
         return getPaymentMethodSpecBuilder(serializeForHash)
-                .setStablecoinPaymentMethodSpec(bisq.offer.protobuf.StablecoinPaymentMethodSpec.newBuilder());
+                .setStablecoinPaymentMethodSpec(bisq.account.protobuf.StablecoinPaymentMethodSpec.newBuilder());
     }
 
     @Override
-    public bisq.offer.protobuf.PaymentMethodSpec toProto(boolean serializeForHash) {
+    public bisq.account.protobuf.PaymentMethodSpec toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
 
-    public static StablecoinPaymentMethodSpec fromProto(bisq.offer.protobuf.PaymentMethodSpec proto) {
+    public static StablecoinPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto) {
         return new StablecoinPaymentMethodSpec(StablecoinPaymentMethod.fromProto(proto.getPaymentMethod()),
                 proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
     }

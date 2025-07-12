@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.payment_method;
+package bisq.account.payment_method;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -27,12 +26,12 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class BitcoinPaymentMethodSpec extends PaymentMethodSpec<BitcoinPaymentMethod> {
-    public BitcoinPaymentMethodSpec(BitcoinPaymentMethod paymentMethod) {
+public final class FiatPaymentMethodSpec extends PaymentMethodSpec<FiatPaymentMethod> {
+    public FiatPaymentMethodSpec(FiatPaymentMethod paymentMethod) {
         super(paymentMethod);
     }
 
-    public BitcoinPaymentMethodSpec(BitcoinPaymentMethod paymentMethod, Optional<String> saltedMakerAccountId) {
+    public FiatPaymentMethodSpec(FiatPaymentMethod paymentMethod, Optional<String> saltedMakerAccountId) {
         super(paymentMethod, saltedMakerAccountId);
 
         verify();
@@ -44,18 +43,18 @@ public final class BitcoinPaymentMethodSpec extends PaymentMethodSpec<BitcoinPay
     }
 
     @Override
-    public bisq.offer.protobuf.PaymentMethodSpec.Builder getBuilder(boolean serializeForHash) {
+    public bisq.account.protobuf.PaymentMethodSpec.Builder getBuilder(boolean serializeForHash) {
         return getPaymentMethodSpecBuilder(serializeForHash)
-                .setBitcoinPaymentMethodSpec(bisq.offer.protobuf.BitcoinPaymentMethodSpec.newBuilder());
+                .setFiatPaymentMethodSpec(bisq.account.protobuf.FiatPaymentMethodSpec.newBuilder());
     }
 
     @Override
-    public bisq.offer.protobuf.PaymentMethodSpec toProto(boolean serializeForHash) {
+    public bisq.account.protobuf.PaymentMethodSpec toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
 
-    public static BitcoinPaymentMethodSpec fromProto(bisq.offer.protobuf.PaymentMethodSpec proto) {
-        return new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromProto(proto.getPaymentMethod()),
+    public static FiatPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto) {
+        return new FiatPaymentMethodSpec(FiatPaymentMethod.fromProto(proto.getPaymentMethod()),
                 proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
     }
 }

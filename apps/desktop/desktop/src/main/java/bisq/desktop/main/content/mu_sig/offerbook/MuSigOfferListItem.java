@@ -33,7 +33,7 @@ import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.offer.payment_method.PaymentMethodSpecUtil;
+import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.OfferPriceFormatter;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.PriceSpec;
