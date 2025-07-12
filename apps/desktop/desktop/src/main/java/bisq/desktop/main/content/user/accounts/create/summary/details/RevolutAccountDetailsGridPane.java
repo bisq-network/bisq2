@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.accounts.create.summary.details;
 
-import bisq.account.accounts.RevolutAccountPayload;
+import bisq.account.accounts.fiat.RevolutAccountPayload;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.currency.FiatCurrencyRepository;

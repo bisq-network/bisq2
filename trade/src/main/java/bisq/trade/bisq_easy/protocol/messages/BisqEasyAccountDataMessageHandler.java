@@ -17,7 +17,7 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
-import bisq.account.accounts.UserDefinedFiatAccountPayload;
+import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;

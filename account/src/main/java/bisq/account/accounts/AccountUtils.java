@@ -17,6 +17,12 @@
 
 package bisq.account.accounts;
 
+import bisq.account.accounts.fiat.BankAccountPayload;
+import bisq.account.accounts.fiat.CountryBasedAccountPayload;
+import bisq.account.accounts.fiat.SameBankAccountPayload;
+import bisq.account.accounts.fiat.SepaAccountPayload;
+import bisq.account.accounts.fiat.SepaInstantAccountPayload;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

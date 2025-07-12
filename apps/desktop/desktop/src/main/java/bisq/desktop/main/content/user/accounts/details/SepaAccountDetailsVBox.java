@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.user.accounts.details;
 
-import bisq.account.accounts.SepaAccount;
-import bisq.account.accounts.SepaAccountPayload;
+import bisq.account.accounts.fiat.SepaAccount;
+import bisq.account.accounts.fiat.SepaAccountPayload;
 import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.locale.CountryRepository;
 import bisq.desktop.components.controls.BisqTooltip;

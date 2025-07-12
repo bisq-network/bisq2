@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.user.accounts.details;
 
-import bisq.account.accounts.FasterPaymentsAccount;
-import bisq.account.accounts.FasterPaymentsAccountPayload;
+import bisq.account.accounts.fiat.FasterPaymentsAccount;
+import bisq.account.accounts.fiat.FasterPaymentsAccountPayload;
 import bisq.i18n.Res;
 
 public class FasterPaymentsAccountDetailsVBox extends FiatAccountDetailsVBox<FasterPaymentsAccount> {

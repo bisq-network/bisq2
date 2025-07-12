@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.mu_sig.offerbook;
 
 import bisq.account.AccountService;
-import bisq.account.accounts.UserDefinedFiatAccount;
+import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;

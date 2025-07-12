@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
-import bisq.account.accounts.FasterPaymentsAccountPayload;
+import bisq.account.accounts.fiat.FasterPaymentsAccountPayload;
 import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.desktop.components.controls.validator.TextFixLengthValidator;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;

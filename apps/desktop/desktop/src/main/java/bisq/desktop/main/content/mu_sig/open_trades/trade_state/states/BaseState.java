@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.mu_sig.open_trades.trade_state.states;
 
 import bisq.account.AccountService;
-import bisq.account.accounts.UserDefinedFiatAccount;
+import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.chat.ChatService;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;

@@ -17,7 +17,7 @@
 
 package bisq.offer.options;
 
-import bisq.account.accounts.BankAccountPayload;
+import bisq.account.accounts.fiat.BankAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentRail;
 import bisq.common.validation.NetworkDataValidation;

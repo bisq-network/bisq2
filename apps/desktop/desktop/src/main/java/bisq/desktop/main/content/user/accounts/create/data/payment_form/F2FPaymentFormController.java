@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
-import bisq.account.accounts.F2FAccountPayload;
+import bisq.account.accounts.fiat.F2FAccountPayload;
 import bisq.common.currency.FiatCurrency;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.locale.Country;

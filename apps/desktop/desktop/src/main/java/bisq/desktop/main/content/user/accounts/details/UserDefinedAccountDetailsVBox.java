@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.accounts.details;
 
-import bisq.account.accounts.UserDefinedFiatAccount;
+import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.i18n.Res;

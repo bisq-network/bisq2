@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.user.accounts.details;
 
-import bisq.account.accounts.PixAccount;
-import bisq.account.accounts.PixAccountPayload;
+import bisq.account.accounts.fiat.PixAccount;
+import bisq.account.accounts.fiat.PixAccountPayload;
 import bisq.i18n.Res;
 
 public class PixAccountDetailsVBox extends FiatAccountDetailsVBox<PixAccount> {

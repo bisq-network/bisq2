@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
-import bisq.account.accounts.ZelleAccountPayload;
+import bisq.account.accounts.fiat.ZelleAccountPayload;
 import bisq.desktop.components.controls.validator.EmailOrPhoneNumberValidator;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import javafx.beans.property.BooleanProperty;

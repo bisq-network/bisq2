@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
-import bisq.account.accounts.SepaAccountPayload;
+import bisq.account.accounts.fiat.SepaAccountPayload;
 import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;

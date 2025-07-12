@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.accounts.create.data.payment_form;
 
-import bisq.account.accounts.RevolutAccountPayload;
+import bisq.account.accounts.fiat.RevolutAccountPayload;
 import bisq.common.currency.FiatCurrency;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import javafx.beans.property.BooleanProperty;
