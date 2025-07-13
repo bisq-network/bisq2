@@ -339,7 +339,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .left()
                 .title(Res.get("muSig.offerbook.table.header.paymentMethod"))
-                .setCellFactory(getPaymentCellFactory())
+                .setCellFactory(MuSigOfferUtil.getPaymentCellFactory())
                 .minWidth(140)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getPaymentMethodsAsString))
                 .build());
@@ -685,45 +685,6 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 myOfferLabelBox.setManaged(true);
                 myOfferActionsMenuBox.setVisible(false);
                 myOfferActionsMenuBox.setManaged(false);
-            }
-        };
-    }
-
-    private Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>,
-            TableCell<MuSigOfferListItem, MuSigOfferListItem>> getPaymentCellFactory() {
-        return column -> new TableCell<>() {
-            private final HBox hbox = new HBox(5);
-            private final BisqTooltip tooltip = new BisqTooltip();
-
-            {
-                hbox.setAlignment(Pos.CENTER_LEFT);
-            }
-
-            @Override
-            protected void updateItem(MuSigOfferListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty) {
-                    hbox.getChildren().clear();
-                    for (FiatPaymentMethod paymentMethod : item.getPaymentMethods()) {
-                        Node icon = ImageUtil.getImageViewById(paymentMethod.getName());
-                        Optional<Double> opacity = Optional.ofNullable(item.getAccountAvailableByPaymentMethod().get(paymentMethod))
-                                .map(isAccountAvailable -> isAccountAvailable ? 1 : 0.2);
-                        if (opacity.isPresent()) {
-                            icon.setOpacity(opacity.get());
-                        } else {
-                            log.error("Unexpected state: accountAvailableByPaymentMethod={}", item.getAccountAvailableByPaymentMethod());
-                        }
-                        hbox.getChildren().add(icon);
-                    }
-                    tooltip.setText(item.getPaymentMethodsAsString());
-                    Tooltip.install(hbox, tooltip);
-                    setGraphic(hbox);
-                } else {
-                    Tooltip.uninstall(hbox, tooltip);
-                    hbox.getChildren().clear();
-                    setGraphic(null);
-                }
             }
         };
     }

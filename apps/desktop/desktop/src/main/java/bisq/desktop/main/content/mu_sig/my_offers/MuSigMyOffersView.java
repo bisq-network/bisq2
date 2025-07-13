@@ -26,6 +26,7 @@ import bisq.desktop.main.content.mu_sig.MuSigOfferUtil;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -40,7 +41,10 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
     public MuSigMyOffersView(MuSigMyOffersModel model, MuSigMyOffersController controller) {
         super(new VBox(), model, controller);
 
-        HBox headerHBox = new HBox();
+        Label headlineLabel = new Label(Res.get("muSig.myOffers.headline"));
+        headlineLabel.getStyleClass().add("bisq-easy-container-headline");
+        HBox headerHBox = new HBox(headlineLabel);
+        headerHBox.setAlignment(Pos.CENTER_LEFT);
         headerHBox.getStyleClass().add("chat-container-header");
 
         HBox subheader = new HBox();
@@ -60,11 +64,56 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
 
     private void configMuSigMyOffersListView() {
         muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
-                .title(Res.get("muSig.offerbook.table.header.peer"))
+                .title(Res.get("muSig.myOffers.table.header.myProfile"))
                 .left()
                 .comparator(Comparator.comparingLong(MuSigOfferListItem::getTotalScore).reversed())
                 .setCellFactory(MuSigOfferUtil.getUserProfileCellFactory())
                 .minWidth(100)
+                .build());
+
+        // Date
+//        muSigMyOffersListView.getSortOrder().add(dateColumn);
+
+        muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+                .title(Res.get("muSig.myOffers.table.header.offerType"))
+                .left()
+                .minWidth(160)
+                .comparator(Comparator.comparing(MuSigOfferListItem::getOfferIntentText))
+                .valueSupplier(MuSigOfferListItem::getOfferIntentText)
+                .build());
+
+        muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+                .title(Res.get("muSig.myOffers.table.header.baseAmount"))
+                .left()
+                .minWidth(120)
+                .comparator(Comparator.comparing(MuSigOfferListItem::getBaseAmountWithSymbol))
+                .valueSupplier(MuSigOfferListItem::getBaseAmountWithSymbol)
+                .build());
+
+        muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+                .title(Res.get("muSig.myOffers.table.header.quoteAmount"))
+                .left()
+                .minWidth(160)
+                .comparator(Comparator.comparing(MuSigOfferListItem::getQuoteAmountWithSymbol))
+                .valueSupplier(MuSigOfferListItem::getQuoteAmountWithSymbol)
+                .build());
+
+        BisqTableColumn<MuSigOfferListItem> priceColumn = new BisqTableColumn.Builder<MuSigOfferListItem>()
+                .title(Res.get("muSig.myOffers.table.header.price"))
+                .left()
+                .comparator(Comparator.comparing(MuSigOfferListItem::getPrice))
+                .valueSupplier(MuSigOfferListItem::getPrice)
+                .tooltipSupplier(MuSigOfferListItem::getPriceTooltip)
+                .minWidth(200)
+                .build();
+        muSigMyOffersListView.getColumns().add(priceColumn);
+
+        muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+                .left()
+                .title(Res.get("muSig.myOffers.table.header.paymentMethods"))
+                .setCellFactory(MuSigOfferUtil.getPaymentCellFactory())
+                .minWidth(140)
+                .comparator(Comparator.comparing(MuSigOfferListItem::getPaymentMethodsAsString))
                 .build());
     }
 
