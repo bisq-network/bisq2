@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offerbook;
+package bisq.desktop.main.content.mu_sig;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
@@ -88,12 +88,12 @@ public class MuSigOfferListItem {
 
     private final Pin marketPriceByCurrencyMapPin;
 
-    MuSigOfferListItem(MuSigOffer offer,
-                       MarketPriceService marketPriceService,
-                       UserProfileService userProfileService,
-                       IdentityService identityService,
-                       ReputationService reputationService,
-                       AccountService accountService) {
+    public MuSigOfferListItem(MuSigOffer offer,
+                              MarketPriceService marketPriceService,
+                              UserProfileService userProfileService,
+                              IdentityService identityService,
+                              ReputationService reputationService,
+                              AccountService accountService) {
         this.offer = offer;
         this.marketPriceService = marketPriceService;
 
@@ -166,7 +166,7 @@ public class MuSigOfferListItem {
         updatePriceSpecAsPercent();
     }
 
-    void dispose() {
+    public void dispose() {
         marketPriceByCurrencyMapPin.unbind();
     }
 

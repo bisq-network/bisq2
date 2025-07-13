@@ -35,7 +35,8 @@ import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.MarketImageComposition;
-import bisq.desktop.main.content.components.UserProfileDisplay;
+import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
+import bisq.desktop.main.content.mu_sig.MuSigOfferUtil;
 import bisq.i18n.Res;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
@@ -75,7 +76,7 @@ import java.util.Optional;
 
 @Slf4j
 public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, MuSigOfferbookController> {
-    private final static double HEADER_HEIGHT = 61;
+    private static final double HEADER_HEIGHT = 61;
     private static final double LIST_CELL_HEIGHT = 53;
     private static final double MARKET_LIST_WIDTH = 210;
     private static final double SIDE_PADDING = 40;
@@ -306,7 +307,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 .title(Res.get("muSig.offerbook.table.header.peer"))
                 .left()
                 .comparator(Comparator.comparingLong(MuSigOfferListItem::getTotalScore).reversed())
-                .setCellFactory(getUserProfileCellFactory())
+                .setCellFactory(MuSigOfferUtil.getUserProfileCellFactory())
                 .minWidth(100)
                 .build());
 
@@ -684,30 +685,6 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 myOfferLabelBox.setManaged(true);
                 myOfferActionsMenuBox.setVisible(false);
                 myOfferActionsMenuBox.setManaged(false);
-            }
-        };
-    }
-
-    private Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>,
-            TableCell<MuSigOfferListItem, MuSigOfferListItem>> getUserProfileCellFactory() {
-        return column -> new TableCell<>() {
-            private UserProfileDisplay userProfileDisplay;
-
-            @Override
-            protected void updateItem(MuSigOfferListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty) {
-                    userProfileDisplay = new UserProfileDisplay(item.getMakerUserProfile(), true, true);
-                    userProfileDisplay.setReputationScore(item.getReputationScore());
-                    setGraphic(userProfileDisplay);
-                } else {
-                    if (userProfileDisplay != null) {
-                        userProfileDisplay.dispose();
-                        userProfileDisplay = null;
-                    }
-                    setGraphic(null);
-                }
             }
         };
     }

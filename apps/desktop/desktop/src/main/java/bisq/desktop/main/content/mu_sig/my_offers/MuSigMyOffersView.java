@@ -17,25 +17,62 @@
 
 package bisq.desktop.main.content.mu_sig.my_offers;
 
+import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.components.table.RichTableView;
+import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
+import bisq.desktop.main.content.mu_sig.MuSigOfferUtil;
+import bisq.i18n.Res;
 import javafx.geometry.Insets;
-import javafx.scene.control.Label;
+import javafx.geometry.Pos;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
+import java.util.Comparator;
+
 public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOffersController> {
+    private static final double SIDE_PADDING = 40;
+
+    private final RichTableView<MuSigOfferListItem> muSigMyOffersListView;
 
     public MuSigMyOffersView(MuSigMyOffersModel model, MuSigMyOffersController controller) {
         super(new VBox(), model, controller);
 
-        VBox contentBox = new VBox(20);
-        contentBox.getChildren().addAll(new Label(this.getClass().getSimpleName()));
-        contentBox.getStyleClass().add("bisq-common-bg");
-        root.getChildren().add(contentBox);
-        root.setPadding(new Insets(0, 40, 500, 40));
+        HBox headerHBox = new HBox();
+        headerHBox.getStyleClass().add("chat-container-header");
+
+        HBox subheader = new HBox();
+        subheader.getStyleClass().add("offerbook-subheader");
+        subheader.setAlignment(Pos.CENTER);
+
+        muSigMyOffersListView = new RichTableView<>(model.getSortedMuSigMyOffersListItems());
+        muSigMyOffersListView.getFooterVBox().setVisible(false);
+        muSigMyOffersListView.getFooterVBox().setManaged(false);
+        muSigMyOffersListView.getStyleClass().add("mu-sig-my-offers-table");
+        configMuSigMyOffersListView();
+        VBox.setVgrow(muSigMyOffersListView, Priority.ALWAYS);
+
+        root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
+        root.getChildren().addAll(headerHBox, Layout.hLine(), subheader, muSigMyOffersListView);
+    }
+
+    private void configMuSigMyOffersListView() {
+        muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+                .title(Res.get("muSig.offerbook.table.header.peer"))
+                .left()
+                .comparator(Comparator.comparingLong(MuSigOfferListItem::getTotalScore).reversed())
+                .setCellFactory(MuSigOfferUtil.getUserProfileCellFactory())
+                .minWidth(100)
+                .build());
     }
 
     @Override
     protected void onViewAttached() {
+        muSigMyOffersListView.initialize();
+        muSigMyOffersListView.resetSearch();
+        muSigMyOffersListView.sort();
     }
 
     @Override

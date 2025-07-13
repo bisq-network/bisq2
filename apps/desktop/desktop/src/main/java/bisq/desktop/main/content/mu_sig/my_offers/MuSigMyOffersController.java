@@ -17,27 +17,119 @@
 
 package bisq.desktop.main.content.mu_sig.my_offers;
 
+import bisq.account.AccountService;
+import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
+import bisq.identity.IdentityService;
+import bisq.mu_sig.MuSigService;
+import bisq.offer.mu_sig.MuSigOffer;
+import bisq.user.banned.BannedUserService;
+import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 public class MuSigMyOffersController implements Controller {
     @Getter
     private final MuSigMyOffersView view;
     private final MuSigMyOffersModel model;
+    private final MuSigService muSigService;
+    private final UserIdentityService userIdentityService;
+    private final MarketPriceService marketPriceService;
+    private final UserProfileService userProfileService;
+    private final IdentityService identityService;
+    private final BannedUserService bannedUserService;
+    private final ReputationService reputationService;
+    private final AccountService accountService;
+    private Pin offersPin;
 
     public MuSigMyOffersController(ServiceProvider serviceProvider) {
+        muSigService = serviceProvider.getMuSigService();
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
+        userProfileService = serviceProvider.getUserService().getUserProfileService();
+        identityService = serviceProvider.getIdentityService();
+        bannedUserService = serviceProvider.getUserService().getBannedUserService();
+        reputationService = serviceProvider.getUserService().getReputationService();
+        accountService = serviceProvider.getAccountService();
+
         model = new MuSigMyOffersModel();
         view = new MuSigMyOffersView(model, this);
     }
 
     @Override
     public void onActivate() {
+        offersPin = muSigService.getObservableOffers().addObserver(new CollectionObserver<>() {
+            @Override
+            public void add(MuSigOffer muSigOffer) {
+                UIThread.run(() -> {
+                    Set<String> myUserProfileIds = userIdentityService.getMyUserProfileIds();
+                    boolean isMyOffer = myUserProfileIds.contains(muSigOffer.getMakersUserProfileId());
+                    if (isMyOffer) {
+                        String offerId = muSigOffer.getId();
+                        if (!model.getMuSigMyOffersIds().contains(offerId)) {
+                            model.getMuSigMyOffersListItems().add(new MuSigOfferListItem(muSigOffer,
+                                    marketPriceService,
+                                    userProfileService,
+                                    identityService,
+                                    reputationService,
+                                    accountService));
+                            model.getMuSigMyOffersIds().add(offerId);
+                            updateFilteredMuSigMyOffersListItems();
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void remove(Object element) {
+                if (element instanceof MuSigOffer muSigOffer) {
+                    UIThread.run(() -> {
+                        String offerId = muSigOffer.getId();
+                        Optional<MuSigOfferListItem> toRemove = model.getMuSigMyOffersListItems().stream()
+                                .filter(item -> item.getOffer().getId().equals(offerId))
+                                .findAny();
+                        toRemove.ifPresent(offer -> {
+                            model.getMuSigMyOffersListItems().remove(offer);
+                            model.getMuSigMyOffersIds().remove(offerId);
+                        });
+                        updateFilteredMuSigMyOffersListItems();
+                    });
+                }
+            }
+
+            @Override
+            public void clear() {
+                UIThread.run(() -> {
+                    model.getMuSigMyOffersListItems().clear();
+                    model.getMuSigMyOffersIds().clear();
+                    updateFilteredMuSigMyOffersListItems();
+                });
+            }
+        });
     }
 
     @Override
     public void onDeactivate() {
+        model.getMuSigMyOffersListItems().forEach(MuSigOfferListItem::dispose);
+        model.getMuSigMyOffersListItems().clear();
+        model.getMuSigMyOffersIds().clear();
+
+        offersPin.unbind();
+    }
+
+    private void updateFilteredMuSigMyOffersListItems() {
+        model.getFilteredMuSigMyOffersListItems().setPredicate(null);
+        model.getFilteredMuSigMyOffersListItems().setPredicate(model.getMuSigMyOffersListItemsPredicate());
     }
 }

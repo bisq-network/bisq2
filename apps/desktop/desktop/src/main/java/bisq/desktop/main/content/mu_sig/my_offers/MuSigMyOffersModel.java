@@ -18,6 +18,25 @@
 package bisq.desktop.main.content.mu_sig.my_offers;
 
 import bisq.desktop.common.view.Model;
+import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
+import lombok.Getter;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Predicate;
+
+@Getter
 public class MuSigMyOffersModel implements Model {
+    private final Set<String> muSigMyOffersIds = new HashSet<>();
+    private final ObservableList<MuSigOfferListItem> muSigMyOffersListItems = FXCollections.observableArrayList();
+    private final FilteredList<MuSigOfferListItem> filteredMuSigMyOffersListItems = new FilteredList<>(muSigMyOffersListItems);
+    private final SortedList<MuSigOfferListItem> sortedMuSigMyOffersListItems = new SortedList<>(filteredMuSigMyOffersListItems);
+
+    private final Predicate<MuSigOfferListItem> muSigMyOffersListItemsPredicate = item ->
+            getMuSigMyOffersFilterPredicate().test(item);
+    private final Predicate<MuSigOfferListItem> muSigMyOffersFilterPredicate = item -> true;
 }
