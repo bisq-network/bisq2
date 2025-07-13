@@ -24,11 +24,15 @@ import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
+import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.mu_sig.MuSigService;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.user.banned.BannedUserService;
+import bisq.user.banned.RateLimitExceededException;
+import bisq.user.banned.UserProfileBannedException;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
@@ -126,6 +130,28 @@ public class MuSigMyOffersController implements Controller {
         model.getMuSigMyOffersIds().clear();
 
         offersPin.unbind();
+    }
+
+    void onRemoveOffer(MuSigOffer muSigOffer) {
+        new Popup().warning(Res.get("muSig.offerbook.removeOffer.confirmation"))
+                .actionButtonText(Res.get("confirmation.yes"))
+                .onAction(() -> doRemoveOffer(muSigOffer))
+                .closeButtonText(Res.get("confirmation.no"))
+                .show();
+    }
+
+    private void doRemoveOffer(MuSigOffer muSigOffer) {
+        try {
+            muSigService.removeOffer(muSigOffer);
+        } catch (UserProfileBannedException e) {
+            UIThread.run(() -> {
+                // We do not inform banned users about being banned
+            });
+        } catch (RateLimitExceededException e) {
+            UIThread.run(() -> {
+                new Popup().warning(Res.get("muSig.offerbook.rateLimitsExceeded.removeOffer.warning")).show();
+            });
+        }
     }
 
     private void updateFilteredMuSigMyOffersListItems() {

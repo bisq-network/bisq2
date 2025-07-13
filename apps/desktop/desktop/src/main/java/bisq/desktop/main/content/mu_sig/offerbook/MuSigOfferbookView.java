@@ -345,7 +345,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 .build());
 
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
-                .setCellFactory(getActionButtonCellFactory())
+                .setCellFactory(getActionButtonsCellFactory())
                 .minWidth(150)
                 .build());
     }
@@ -539,7 +539,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 : Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.one", numOffers, quoteCurrencyName);
     }
 
-    private Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>, TableCell<MuSigOfferListItem, MuSigOfferListItem>> getActionButtonCellFactory() {
+    private Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>, TableCell<MuSigOfferListItem, MuSigOfferListItem>> getActionButtonsCellFactory() {
         return column -> new TableCell<>() {
             private static final double PREF_WIDTH = 120;
             private static final double PREF_HEIGHT = 26;

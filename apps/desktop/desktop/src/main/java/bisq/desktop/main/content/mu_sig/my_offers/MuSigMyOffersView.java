@@ -19,17 +19,23 @@ package bisq.desktop.main.content.mu_sig.my_offers;
 
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
 import bisq.desktop.main.content.mu_sig.MuSigOfferUtil;
 import bisq.i18n.Res;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.util.Callback;
 
 import java.util.Comparator;
 
@@ -115,6 +121,11 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 .minWidth(140)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getPaymentMethodsAsString))
                 .build());
+
+        muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+                .setCellFactory(getActionButtonsCellFactory())
+                .minWidth(150)
+                .build());
     }
 
     @Override
@@ -126,5 +137,102 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
 
     @Override
     protected void onViewDetached() {
+        muSigMyOffersListView.dispose();
+    }
+
+    private Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>, TableCell<MuSigOfferListItem, MuSigOfferListItem>> getActionButtonsCellFactory() {
+        return column -> new TableCell<>() {
+            private static final double PREF_WIDTH = 120;
+            private static final double PREF_HEIGHT = 26;
+
+            private final HBox myOfferMainBox = new HBox();
+            private final HBox myOfferActionsMenuBox = new HBox(5);
+            private final BisqMenuItem removeOfferMenuItem = new BisqMenuItem("delete-t-grey", "delete-t-red");
+            private final BisqMenuItem copyOfferMenuItem = new BisqMenuItem("copy-grey", "copy-white");
+            private final BisqMenuItem editOfferMenuItem = new BisqMenuItem("edit-grey", "edit-white");
+            private final ChangeListener<Boolean> selectedListener = (observable, oldValue, newValue) -> {
+                boolean shouldShow = newValue || getTableRow().isHover();
+                myOfferActionsMenuBox.setVisible(shouldShow);
+                myOfferActionsMenuBox.setManaged(shouldShow);
+            };
+
+            {
+                myOfferMainBox.setMinWidth(PREF_WIDTH);
+                myOfferMainBox.setPrefWidth(PREF_WIDTH);
+                myOfferMainBox.setMaxWidth(PREF_WIDTH);
+                myOfferMainBox.setMinHeight(PREF_HEIGHT);
+                myOfferMainBox.setPrefHeight(PREF_HEIGHT);
+                myOfferMainBox.setMaxHeight(PREF_HEIGHT);
+                myOfferMainBox.getChildren().addAll(myOfferActionsMenuBox);
+
+                myOfferActionsMenuBox.setMinWidth(PREF_WIDTH);
+                myOfferActionsMenuBox.setPrefWidth(PREF_WIDTH);
+                myOfferActionsMenuBox.setMaxWidth(PREF_WIDTH);
+                myOfferActionsMenuBox.setMinHeight(PREF_HEIGHT);
+                myOfferActionsMenuBox.setPrefHeight(PREF_HEIGHT);
+                myOfferActionsMenuBox.setMaxHeight(PREF_HEIGHT);
+                myOfferActionsMenuBox.getChildren().addAll(editOfferMenuItem, copyOfferMenuItem, removeOfferMenuItem);
+                myOfferActionsMenuBox.setAlignment(Pos.CENTER);
+
+                removeOfferMenuItem.useIconOnly();
+                removeOfferMenuItem.setTooltip(Res.get("offer.delete"));
+
+                copyOfferMenuItem.useIconOnly();
+                copyOfferMenuItem.setTooltip(Res.get("offer.copy"));
+
+                editOfferMenuItem.useIconOnly();
+                editOfferMenuItem.setTooltip(Res.get("offer.edit"));
+            }
+
+            @Override
+            protected void updateItem(MuSigOfferListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                resetRowEventHandlersAndListeners();
+                resetVisibilities();
+
+                if (item != null && !empty) {
+                    setUpRowEventHandlersAndListeners();
+                    setGraphic(myOfferMainBox);
+                    removeOfferMenuItem.setOnAction(e -> controller.onRemoveOffer(item.getOffer()));
+                } else {
+                    resetRowEventHandlersAndListeners();
+                    resetVisibilities();
+                    removeOfferMenuItem.setOnAction(null);
+                    setGraphic(null);
+                }
+            }
+
+            private void setUpRowEventHandlersAndListeners() {
+                TableRow<?> row = getTableRow();
+                if (row != null) {
+                    row.setOnMouseEntered(e -> {
+                        boolean shouldShow = row.isSelected() || row.isHover();
+                        myOfferActionsMenuBox.setVisible(shouldShow);
+                        myOfferActionsMenuBox.setManaged(shouldShow);
+                    });
+                    row.setOnMouseExited(e -> {
+                        boolean showShow = row.isSelected();
+                        myOfferActionsMenuBox.setVisible(showShow);
+                        myOfferActionsMenuBox.setManaged(showShow);
+                    });
+                    row.selectedProperty().addListener(selectedListener);
+                }
+            }
+
+            private void resetRowEventHandlersAndListeners() {
+                TableRow<?> row = getTableRow();
+                if (row != null) {
+                    row.setOnMouseEntered(null);
+                    row.setOnMouseExited(null);
+                    row.selectedProperty().removeListener(selectedListener);
+                }
+            }
+
+            private void resetVisibilities() {
+                myOfferActionsMenuBox.setVisible(false);
+                myOfferActionsMenuBox.setManaged(false);
+            }
+        };
     }
 }
