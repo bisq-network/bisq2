@@ -212,9 +212,9 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                         myOfferActionsMenuBox.setManaged(shouldShow);
                     });
                     row.setOnMouseExited(e -> {
-                        boolean showShow = row.isSelected();
-                        myOfferActionsMenuBox.setVisible(showShow);
-                        myOfferActionsMenuBox.setManaged(showShow);
+                        boolean shouldShow = row.isSelected();
+                        myOfferActionsMenuBox.setVisible(shouldShow);
+                        myOfferActionsMenuBox.setManaged(shouldShow);
                     });
                     row.selectedProperty().addListener(selectedListener);
                 }
