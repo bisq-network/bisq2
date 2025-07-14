@@ -36,9 +36,9 @@ public class MarketRepository {
     }
 
     public static Market getDefaultCryptoBtcMarket() {
-        return new Market(CryptoCurrencyRepository.L_BTC.getCode(),
+        return new Market(CryptoCurrencyRepository.getDefaultCurrency().getCode(),
                 CryptoCurrencyRepository.BITCOIN.getCode(),
-                CryptoCurrencyRepository.L_BTC.getName(),
+                CryptoCurrencyRepository.getDefaultCurrency().getName(),
                 CryptoCurrencyRepository.BITCOIN.getName()
         );
     }

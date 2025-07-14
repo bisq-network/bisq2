@@ -73,8 +73,8 @@ public final class PayIdAccountPayload extends AccountPayload<FiatPaymentMethod>
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.holderName"), holderName,
-                Res.get("user.paymentAccounts.payId.payId"), payId
+                Res.get("paymentAccounts.holderName"), holderName,
+                Res.get("paymentAccounts.payId.payId"), payId
         ).toString();
     }
 }

@@ -47,7 +47,7 @@ public class BankAccountUtils {
             case "IN" -> "PAN or Aadhaar";
             case "SA" -> "South African ID number";
             case "ID" -> "Nomor KTP Indonesia";     // Indonesia KTP number
-            default -> Res.get("user.paymentAccounts.bank.holderId");
+            default -> Res.get("paymentAccounts.bank.holderId");
         };
     }
 
@@ -78,21 +78,21 @@ public class BankAccountUtils {
     public static String getBankIdDescription(String countryCode) {
         return switch (countryCode) {
             case "CA" -> "Institution Number"; // do not translate as it is used in English only
-            case "MX", "HK" -> Res.get("user.paymentAccounts.bank.bankCode");
+            case "MX", "HK" -> Res.get("paymentAccounts.bank.bankCode");
             case "US" -> "Routing Number"; // do not translate as it is used in English only
             case "IN" -> "IFSC Code";
             default -> isBankIdRequired(countryCode) ?
-                    Res.get("user.paymentAccounts.bank.bankId") :
-                    Res.get("user.paymentAccounts.bank.bankIdOptional");
+                    Res.get("paymentAccounts.bank.bankId") :
+                    Res.get("paymentAccounts.bank.bankIdOptional");
         };
     }
     public static String getBankIdDescriptionShort(String countryCode) {
         return switch (countryCode) {
             case "CA" -> "Institution No."; // Shorter informal synonym for Institution Number (often used in online forms)
-            case "MX", "HK" -> Res.get("user.paymentAccounts.bank.bankCode");
+            case "MX", "HK" -> Res.get("paymentAccounts.bank.bankCode");
             case "US" -> "Routing No."; // do not translate as it is used in English only
             case "IN" -> "IFSC";
-            default -> Res.get("user.paymentAccounts.bank.bankIdShort");
+            default -> Res.get("paymentAccounts.bank.bankIdShort");
         };
     }
 
@@ -110,8 +110,8 @@ public class BankAccountUtils {
             case "AU" -> "BSB code"; // do not translate as it is used in English only
             case "CA" -> "Transit Number"; // do not translate as it is used in English only
             default -> isBranchIdRequired(countryCode) ?
-                    Res.get("user.paymentAccounts.bank.branchId") :
-                    Res.get("user.paymentAccounts.bank.branchIdOptional");
+                    Res.get("paymentAccounts.bank.branchId") :
+                    Res.get("paymentAccounts.bank.branchIdOptional");
         };
     }
     public static String getBranchIdDescriptionShort(String countryCode) {
@@ -121,19 +121,19 @@ public class BankAccountUtils {
             case "AU" -> "BSB"; // do not translate as it is used in English only
             case "CA" -> "Transit No."; // do not translate as it is used in English only
             default -> isBranchIdRequired(countryCode) ?
-                    Res.get("user.paymentAccounts.bank.branchId") :
-                    Res.get("user.paymentAccounts.bank.branchIdOptional");
+                    Res.get("paymentAccounts.bank.branchId") :
+                    Res.get("paymentAccounts.bank.branchIdOptional");
         };
     }
 
     public static String getAccountNrDescription(String countryCode) {
         return switch (countryCode) {
-            case "GB", "US", "BR", "NZ", "AU", "CA", "HK" -> Res.get("user.paymentAccounts.accountNr");
+            case "GB", "US", "BR", "NZ", "AU", "CA", "HK" -> Res.get("paymentAccounts.accountNr");
             case "NO", "SE" -> "Kontonummer"; // do not translate as it is used in Norwegian and Swedish only
             case "MX" -> "CLABE"; // do not translate as it is used in Spanish only
             case "CL" -> "Cuenta"; // do not translate as it is used in Spanish only
             case "AR" -> "Número de cuenta"; // do not translate as it is used in Spanish only
-            default -> Res.get("user.paymentAccounts.bank.accountNrOrIban");
+            default -> Res.get("paymentAccounts.bank.accountNrOrIban");
         };
     }
 
@@ -175,7 +175,7 @@ public class BankAccountUtils {
     public static String getPrompt(String countryCode, String description) {
         return switch (countryCode) {
             case "AR", "IN", "NO", "SE", "MX", "CL", "GB", "BR", "AU", "CA", "US", "SA" -> description;
-            default -> Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(description));
+            default -> Res.get("paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(description));
         };
     }
 }

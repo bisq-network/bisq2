@@ -14,10 +14,10 @@ public enum FiatPaymentMethodChargebackRisk {
     @Override
     public String toString() {
         return switch (this) {
-            case VERY_LOW -> Res.get("user.paymentAccounts.createAccount.paymentMethod.risk.veryLow");
-            case LOW -> Res.get("user.paymentAccounts.createAccount.paymentMethod.risk.low");
-            case MEDIUM -> Res.get("user.paymentAccounts.createAccount.paymentMethod.risk.medium");
-            case MODERATE -> Res.get("user.paymentAccounts.createAccount.paymentMethod.risk.moderate");
+            case VERY_LOW -> Res.get("paymentAccounts.createAccount.paymentMethod.risk.veryLow");
+            case LOW -> Res.get("paymentAccounts.createAccount.paymentMethod.risk.low");
+            case MEDIUM -> Res.get("paymentAccounts.createAccount.paymentMethod.risk.medium");
+            case MODERATE -> Res.get("paymentAccounts.createAccount.paymentMethod.risk.moderate");
         };
     }
 }

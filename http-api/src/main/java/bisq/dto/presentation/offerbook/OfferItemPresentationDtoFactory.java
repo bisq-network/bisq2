@@ -95,11 +95,11 @@ public class OfferItemPresentationDtoFactory {
         String formattedPriceSpec = PriceSpecFormatter.getFormattedPriceSpec(priceSpec, true);
         List<String> quoteSidePaymentMethods = PaymentMethodSpecUtil.getPaymentMethods(bisqEasyOffer.getQuoteSidePaymentMethodSpecs())
                 .stream()
-                .map(PaymentMethod::getName)
+                .map(PaymentMethod::getPaymentRailName)
                 .collect(Collectors.toList());
         List<String> baseSidePaymentMethods = PaymentMethodSpecUtil.getPaymentMethods(bisqEasyOffer.getBaseSidePaymentMethodSpecs())
                 .stream()
-                .map(PaymentMethod::getName)
+                .map(PaymentMethod::getPaymentRailName)
                 .collect(Collectors.toList());
 
         UserProfile userProfile = userProfileService.findUserProfile(authorUserProfileId).orElseThrow();

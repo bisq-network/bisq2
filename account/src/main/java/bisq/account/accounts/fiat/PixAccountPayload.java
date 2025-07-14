@@ -90,8 +90,8 @@ public final class PixAccountPayload extends CountryBasedAccountPayload implemen
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.holderName"), holderName,
-                Res.get("user.paymentAccounts.pix.pixKey"), pixKey
+                Res.get("paymentAccounts.holderName"), holderName,
+                Res.get("paymentAccounts.pix.pixKey"), pixKey
         ).toString();
     }
 }

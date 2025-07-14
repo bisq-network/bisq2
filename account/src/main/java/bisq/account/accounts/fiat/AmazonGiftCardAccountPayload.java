@@ -84,7 +84,7 @@ public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPaylo
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.emailOrMobileNr"), emailOrMobileNr
+                Res.get("paymentAccounts.emailOrMobileNr"), emailOrMobileNr
         ).toString();
     }
 }

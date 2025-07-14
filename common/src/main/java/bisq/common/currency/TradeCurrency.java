@@ -112,5 +112,7 @@ public abstract class TradeCurrency implements Comparable<TradeCurrency>, Persis
         return this.getDisplayName().compareTo(other.getDisplayName());
     }
 
-    public abstract boolean isFiat();
+    public boolean isFiat() {
+        return this instanceof FiatCurrency;
+    }
 }

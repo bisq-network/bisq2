@@ -17,17 +17,34 @@
 
 package bisq.desktop.main.content.user;
 
-import bisq.desktop.navigation.NavigationTarget;
+import bisq.desktop.common.view.TabButton;
 import bisq.desktop.main.content.ContentTabView;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 
 public class UserView extends ContentTabView<UserModel, UserController> {
+    private final TabButton cryptoPaymentAccountsTab;
+
     public UserView(UserModel model, UserController controller) {
         super(model, controller);
 
         addTab(Res.get("user.userProfile"), NavigationTarget.USER_PROFILE);
         // We wait for supporting a password protection until there is a wallet integrated
         //addTab(Res.get("user.password"), NavigationTarget.PASSWORD);
-        addTab(Res.get("user.paymentAccounts"), NavigationTarget.PAYMENT_ACCOUNTS);
+        addTab(Res.get("user.fiatPaymentAccounts"), NavigationTarget.FIAT_PAYMENT_ACCOUNTS);
+
+        cryptoPaymentAccountsTab = addTab(Res.get("user.cryptoPaymentAccounts"), NavigationTarget.CRYPTO_CURRENCY_ACCOUNTS);
+    }
+
+    @Override
+    protected void onViewAttached() {
+        super.onViewAttached();
+        cryptoPaymentAccountsTab.setVisible(model.isShowCryptoPaymentAccounts());
+        cryptoPaymentAccountsTab.setManaged(model.isShowCryptoPaymentAccounts());
+    }
+
+    @Override
+    protected void onViewDetached() {
+        super.onViewDetached();
     }
 }

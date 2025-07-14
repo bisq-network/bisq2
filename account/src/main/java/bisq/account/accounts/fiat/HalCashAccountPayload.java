@@ -83,7 +83,7 @@ public final class HalCashAccountPayload extends CountryBasedAccountPayload impl
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.mobileNr"), mobileNr
+                Res.get("paymentAccounts.mobileNr"), mobileNr
         ).toString();
     }
 }

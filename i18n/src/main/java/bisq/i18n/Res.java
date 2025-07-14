@@ -47,7 +47,7 @@ public class Res {
             "settings",
             "wallet",
             "authorized_role",
-            "payment_method",
+            "account",
             "mu_sig"
     );
 

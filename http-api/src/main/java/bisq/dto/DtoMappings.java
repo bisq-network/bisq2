@@ -862,7 +862,7 @@ public class DtoMappings {
         }
 
         public static BitcoinPaymentMethodSpecDto fromBisq2Model(BitcoinPaymentMethodSpec value) {
-            return new BitcoinPaymentMethodSpecDto(value.getPaymentMethod().getName(), value.getSaltedMakerAccountId());
+            return new BitcoinPaymentMethodSpecDto(value.getPaymentMethod().getPaymentRailName(), value.getSaltedMakerAccountId());
         }
     }
 
@@ -874,7 +874,7 @@ public class DtoMappings {
         }
 
         public static FiatPaymentMethodSpecDto fromBisq2Model(FiatPaymentMethodSpec value) {
-            return new FiatPaymentMethodSpecDto(value.getPaymentMethod().getName(), value.getSaltedMakerAccountId());
+            return new FiatPaymentMethodSpecDto(value.getPaymentMethod().getPaymentRailName(), value.getSaltedMakerAccountId());
         }
     }
 

@@ -32,26 +32,24 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> {
     private final String currencyCode;
-
-    public static CryptoPaymentMethod fromPaymentRail(CryptoPaymentRail cryptoPaymentRail, String currencyCode) {
-        return new CryptoPaymentMethod(cryptoPaymentRail, currencyCode);
-    }
+    private final String currencyName;
 
     public static CryptoPaymentMethod fromCustomName(String customName, String currencyCode) {
         return new CryptoPaymentMethod(customName, currencyCode);
     }
 
-
-    private CryptoPaymentMethod(CryptoPaymentRail cryptoPaymentRail, String currencyCode) {
+    public CryptoPaymentMethod(CryptoPaymentRail cryptoPaymentRail, String currencyCode) {
         super(cryptoPaymentRail);
         this.currencyCode = currencyCode;
+        this.currencyName = CryptoCurrencyRepository.findName(currencyCode).orElse(currencyCode);
 
-        NetworkDataValidation.validateCode(currencyCode);
+        verify();
     }
 
     private CryptoPaymentMethod(String name, String currencyCode) {
         super(name);
         this.currencyCode = currencyCode;
+        this.currencyName = CryptoCurrencyRepository.findName(currencyCode).orElse(currencyCode);
 
         verify();
     }
@@ -59,6 +57,20 @@ public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> 
     @Override
     public void verify() {
         NetworkDataValidation.validateCode(currencyCode);
+    }
+
+    public String getCurrencyNameAndCode() {
+        return currencyName + " (" + currencyCode + ")";
+    }
+
+    @Override
+    public String getDisplayString() {
+        return currencyName;
+    }
+
+    @Override
+    public String getShortDisplayString() {
+        return currencyCode;
     }
 
     @Override
@@ -74,7 +86,7 @@ public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> 
     }
 
     public static CryptoPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
-        return CryptoPaymentMethodUtil.getPaymentMethod(proto.getName(), proto.getCryptoPaymentMethod().getCurrencyCode());
+        return CryptoPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName(), proto.getCryptoPaymentMethod().getCurrencyCode());
     }
 
     @Override

@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class PaymentMethodUtil {
     public static List<String> getPaymentMethodNames(List<? extends PaymentMethod<?>> paymentMethods) {
         return paymentMethods.stream()
-                .map(PaymentMethod::getName)
+                .map(PaymentMethod::getPaymentRailName)
                 .collect(Collectors.toList());
     }
 

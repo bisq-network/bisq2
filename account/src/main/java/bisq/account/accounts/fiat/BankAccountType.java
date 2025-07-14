@@ -36,7 +36,7 @@ public enum BankAccountType implements ProtocolType {
 
     @Override
     public String toString() {
-        return Res.get("user.paymentAccounts.bank.bankAccountType." + name());
+        return Res.get("paymentAccounts.bank.bankAccountType." + name());
     }
 }
 

@@ -83,7 +83,7 @@ public final class PromptPayAccountPayload extends CountryBasedAccountPayload im
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.promptPay.promptPayId"), promptPayId
+                Res.get("paymentAccounts.promptPay.promptPayId"), promptPayId
         ).toString();
     }
 }

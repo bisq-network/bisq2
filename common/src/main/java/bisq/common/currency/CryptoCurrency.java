@@ -18,14 +18,34 @@
 package bisq.common.currency;
 
 
+import bisq.common.validation.Validation;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.ToString;
+
+import java.util.Set;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class CryptoCurrency extends TradeCurrency {
+    private static final Set<String> SUPPORT_AUTO_CONF_CODES = Set.of("XMR", "ETH");
+
+    @Getter
+    @EqualsAndHashCode.Exclude
+    private transient final Validation validation;
+    @Getter
+    @EqualsAndHashCode.Exclude
+    private transient final boolean supportAutoConf;
+
+    // For custom cryptoCurrencies not listed in Bisq
+    public CryptoCurrency(String code) {
+        this(code, code);
+    }
+
     public CryptoCurrency(String code, String name) {
         super(code, name);
+        this.validation = CryptoCurrencyValidationRepository.getValidation(code);
+        supportAutoConf = SUPPORT_AUTO_CONF_CODES.contains(code);
     }
 
     @Override
@@ -40,10 +60,6 @@ public class CryptoCurrency extends TradeCurrency {
 
     public static CryptoCurrency fromProto(bisq.common.protobuf.TradeCurrency baseProto) {
         return new CryptoCurrency(baseProto.getCode(), baseProto.getName());
-    }
-
-    public boolean isFiat() {
-        return false;
     }
 
     @Override

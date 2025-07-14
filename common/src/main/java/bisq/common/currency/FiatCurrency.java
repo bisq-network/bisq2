@@ -71,8 +71,4 @@ public final class FiatCurrency extends TradeCurrency {
         }
         return displayName;
     }
-
-    public boolean isFiat() {
-        return true;
-    }
 }

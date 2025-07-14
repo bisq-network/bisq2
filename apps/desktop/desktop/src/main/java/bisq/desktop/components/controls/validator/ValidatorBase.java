@@ -17,39 +17,69 @@
 
 package bisq.desktop.components.controls.validator;
 
-import javafx.beans.property.*;
+import bisq.common.validation.Validation;
+import bisq.i18n.Res;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.css.PseudoClass;
 import javafx.scene.Node;
 import javafx.scene.control.Control;
+import javafx.scene.control.TextInputControl;
 
 import java.util.function.Supplier;
 
-/**
- * An abstract class that defines the basic validation functionality for a certain control.
- */
-public abstract class ValidatorBase {
+public class ValidatorBase {
 
     /**
      * This {@link PseudoClass} will be activated when a validation error occurs.
      */
     public static final PseudoClass PSEUDO_CLASS_ERROR = PseudoClass.getPseudoClass("error");
 
-    /**
-     * @param message will be set as the validator's {@link #message}.
-     * @see #ValidatorBase()
-     */
+    protected final Validation validation;
+
+
+    //todo
     public ValidatorBase(String message) {
-        this();
+        this(new Validation() {
+            @Override
+            public boolean isValid(String input) {
+                return true;
+            }
+
+            @Override
+            public String getI18nKey() {
+                return "";
+            }
+        }, message);
+    }
+
+    public ValidatorBase() {
+        this(new Validation() {
+            @Override
+            public boolean isValid(String input) {
+                return true;
+            }
+
+            @Override
+            public String getI18nKey() {
+                return "";
+            }
+        });
+    }
+
+    public ValidatorBase(Validation validation) {
+        this.validation = validation;
+        this.setMessage(Res.get(validation.getI18nKey()));
+    }
+
+    public ValidatorBase(Validation validation, String message) {
+        this.validation = validation;
         this.setMessage(message);
     }
 
-    /**
-     * When creating a new validator you need to define the validation condition by implementing {@link #eval()}.
-     * <p>
-     */
-    public ValidatorBase() {
-
-    }
 
     /* --------------------------------------------------------------------- */
     // Methods
@@ -71,7 +101,15 @@ public abstract class ValidatorBase {
      * <p>
      * This method is fired once {@link #validate()} is called.
      */
-    protected abstract void eval();
+    protected void eval() {
+        TextInputControl textField = (TextInputControl) srcControl.get();
+        String address = textField.getText();
+        if (address != null && !address.isEmpty()) {
+            hasErrors.set(!validation.isValid(address));
+        } else {
+            hasErrors.set(false);
+        }
+    }
 
     /**
      * This method will update the source control after evaluating the validation condition (see {@link #eval()}).

@@ -185,7 +185,7 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
                             },
                             () -> {
                                 // Lookup for an image with the id of the enum name (REVOLUT)
-                                ImageView icon = ImageUtil.getImageViewById(fiatPaymentMethod.getName());
+                                ImageView icon = ImageUtil.getImageViewById(fiatPaymentMethod.getPaymentRailName());
                                 chipButton.setLeftIcon(icon);
                             });
 
@@ -235,7 +235,7 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
                             },
                             () -> {
                                 // Lookup for an image with the id of the enum name (REVOLUT)
-                                ImageView icon = ImageUtil.getImageViewById(bitcoinPaymentMethod.getName());
+                                ImageView icon = ImageUtil.getImageViewById(bitcoinPaymentMethod.getPaymentRailName());
                                 ColorAdjust colorAdjust = new ColorAdjust();
                                 colorAdjust.setBrightness(-0.2);
                                 icon.setEffect(colorAdjust);

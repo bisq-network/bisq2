@@ -19,6 +19,7 @@ package bisq.account.accounts.crypto;
 
 import bisq.account.payment_method.CryptoPaymentMethod;
 import bisq.account.payment_method.CryptoPaymentRail;
+import bisq.common.currency.CryptoCurrencyRepository;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -39,7 +40,10 @@ public final class MoneroAccountPayload extends CryptoCurrencyAccountPayload {
     public MoneroAccountPayload(String id,
                                 String address,
                                 boolean isInstant,
-                                boolean isAutoConf,
+                                Optional<Boolean> isAutoConf,
+                                Optional<Integer> autoConfNumConfirmations,
+                                Optional<Long> autoConfMaxTradeAmount,
+                                Optional<String> autoConfExplorerUrls,
                                 boolean useSubAddresses,
                                 Optional<String> privateViewKey,
                                 Optional<Integer> accountIndex,
@@ -49,6 +53,9 @@ public final class MoneroAccountPayload extends CryptoCurrencyAccountPayload {
                 address,
                 isInstant,
                 isAutoConf,
+                autoConfNumConfirmations,
+                autoConfMaxTradeAmount,
+                autoConfExplorerUrls,
                 useSubAddresses,
                 privateViewKey,
                 accountIndex,
@@ -59,12 +66,22 @@ public final class MoneroAccountPayload extends CryptoCurrencyAccountPayload {
                                  String currencyCode,
                                  String address,
                                  boolean isInstant,
-                                 boolean isAutoConf,
+                                 Optional<Boolean> isAutoConf,
+                                 Optional<Integer> autoConfNumConfirmations,
+                                 Optional<Long> autoConfMaxTradeAmount,
+                                 Optional<String> autoConfExplorerUrls,
                                  boolean useSubAddresses,
                                  Optional<String> privateViewKey,
                                  Optional<Integer> accountIndex,
                                  Optional<Integer> initialSubAddressIndex) {
-        super(id, currencyCode, address, isInstant, isAutoConf);
+        super(id,
+                currencyCode,
+                address,
+                isInstant,
+                isAutoConf,
+                autoConfNumConfirmations,
+                autoConfMaxTradeAmount,
+                autoConfExplorerUrls);
         this.useSubAddresses = useSubAddresses;
         this.privateViewKey = privateViewKey;
         this.accountIndex = accountIndex;
@@ -98,7 +115,10 @@ public final class MoneroAccountPayload extends CryptoCurrencyAccountPayload {
                 cryptoCurrency.getCurrencyCode(),
                 cryptoCurrency.getAddress(),
                 cryptoCurrency.getIsInstant(),
-                cryptoCurrency.getIsAutoConf(),
+                cryptoCurrency.hasIsAutoConf() ? Optional.of(cryptoCurrency.getIsAutoConf()) : Optional.empty(),
+                cryptoCurrency.hasAutoConfNumConfirmations() ? Optional.of(cryptoCurrency.getAutoConfNumConfirmations()) : Optional.empty(),
+                cryptoCurrency.hasAutoConfMaxTradeAmount() ? Optional.of(cryptoCurrency.getAutoConfMaxTradeAmount()) : Optional.empty(),
+                cryptoCurrency.hasAutoConfExplorerUrls() ? Optional.of(cryptoCurrency.getAutoConfExplorerUrls()) : Optional.empty(),
                 monero.getUseSubAddresses(),
                 monero.hasPrivateViewKey() ? Optional.of(monero.getPrivateViewKey()) : Optional.empty(),
                 monero.hasAccountIndex() ? Optional.of(monero.getAccountIndex()) : Optional.empty(),
@@ -108,14 +128,14 @@ public final class MoneroAccountPayload extends CryptoCurrencyAccountPayload {
 
     @Override
     public CryptoPaymentMethod getPaymentMethod() {
-        return CryptoPaymentMethod.fromPaymentRail(CryptoPaymentRail.NATIVE_CHAIN, "XMR");
+        return new CryptoPaymentMethod(CryptoPaymentRail.NATIVE_CHAIN, CryptoCurrencyRepository.XMR.getCode());
     }
 
   /*  @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.altcoin.currencyCode"), currencyCode,
-                Res.get("user.paymentAccounts.altcoin.address"), address
+                Res.get("paymentAccounts.altcoin.currencyCode"), currencyCode,
+                Res.get("paymentAccounts.altcoin.address"), address
         ).toString();
     }*/
 }

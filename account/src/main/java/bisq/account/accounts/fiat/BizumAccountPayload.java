@@ -80,7 +80,7 @@ public final class BizumAccountPayload extends CountryBasedAccountPayload implem
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.mobileNr"), mobileNr
+                Res.get("paymentAccounts.mobileNr"), mobileNr
         ).toString();
     }
 }

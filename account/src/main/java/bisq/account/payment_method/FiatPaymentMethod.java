@@ -61,7 +61,7 @@ public class FiatPaymentMethod extends NationalCurrencyPaymentMethod<FiatPayment
         return resolveProto(serializeForHash);
     }
     public static FiatPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
-        return FiatPaymentMethodUtil.getPaymentMethod(proto.getName());
+        return FiatPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName());
     }
 
     @Override

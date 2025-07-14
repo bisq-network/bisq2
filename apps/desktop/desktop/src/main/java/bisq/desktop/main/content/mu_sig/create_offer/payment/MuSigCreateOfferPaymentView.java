@@ -234,7 +234,7 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
 
             button.setOnAction(() -> controller.onTogglePaymentMethod(paymentMethod, button));
 
-            ImageView icon = ImageUtil.getImageViewById(paymentMethod.getName());
+            ImageView icon = ImageUtil.getImageViewById(paymentMethod.getPaymentRailName());
             button.setLeftIcon(icon);
 
             col = i % numColumns;
@@ -261,7 +261,7 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
     }
 
     private AutoCompleteComboBox<Account<?, ?>> createComboBox() {
-        AutoCompleteComboBox<Account<?, ?>> comboBox = new AutoCompleteComboBox<>(model.getSortedAccountsForPaymentMethod(), Res.get("user.paymentAccounts.selectAccount"));
+        AutoCompleteComboBox<Account<?, ?>> comboBox = new AutoCompleteComboBox<>(model.getSortedAccountsForPaymentMethod(), Res.get("paymentAccounts.selectAccount"));
         comboBox.setPrefWidth(325);
         comboBox.setConverter(new StringConverter<>() {
             @Override

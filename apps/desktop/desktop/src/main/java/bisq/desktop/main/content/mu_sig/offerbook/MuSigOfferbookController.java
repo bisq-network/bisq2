@@ -349,7 +349,7 @@ public class MuSigOfferbookController implements Controller {
     void onHandleCannotTakeOfferCase(String cannotTakeOfferReason) {
         new Popup().warning(cannotTakeOfferReason)
                 .actionButtonText(Res.get("confirmation.yes"))
-                .onAction(() -> Navigation.navigateTo(NavigationTarget.PAYMENT_ACCOUNTS))
+                .onAction(() -> Navigation.navigateTo(NavigationTarget.FIAT_PAYMENT_ACCOUNTS))
                 .closeButtonText(Res.get("confirmation.no"))
                 .show();
     }

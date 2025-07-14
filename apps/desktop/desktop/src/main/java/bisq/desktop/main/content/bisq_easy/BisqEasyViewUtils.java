@@ -106,7 +106,7 @@ public class BisqEasyViewUtils {
 
     private static Label createMethodLabel(PaymentMethod<?> paymentMethod) {
         Node icon = !paymentMethod.isCustomPaymentMethod()
-                ? ImageUtil.getImageViewById(paymentMethod.getName())
+                ? ImageUtil.getImageViewById(paymentMethod.getPaymentRailName())
                 : BisqEasyViewUtils.getCustomPaymentMethodIcon(paymentMethod.getDisplayString());
         Label label = new Label();
         label.setGraphic(icon);

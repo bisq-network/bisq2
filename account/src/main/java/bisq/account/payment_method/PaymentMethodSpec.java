@@ -102,7 +102,7 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
     }
 
     public String getPaymentMethodName() {
-        return paymentMethod.getName();
+        return paymentMethod.getPaymentRailName();
     }
 
     public String getShortDisplayString() {

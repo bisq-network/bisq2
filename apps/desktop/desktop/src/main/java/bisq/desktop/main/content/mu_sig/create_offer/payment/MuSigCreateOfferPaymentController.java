@@ -174,7 +174,7 @@ public class MuSigCreateOfferPaymentController implements Controller {
         model.getPaymentMethodWithoutAccount().set(null);
         model.getSelectedPaymentMethods().remove(paymentMethod);
         OverlayController.hide();
-        Navigation.navigateTo(NavigationTarget.PAYMENT_ACCOUNTS);
+        Navigation.navigateTo(NavigationTarget.FIAT_PAYMENT_ACCOUNTS);
     }
 
     void onCloseNoAccountOverlay(PaymentMethod<?> paymentMethod) {

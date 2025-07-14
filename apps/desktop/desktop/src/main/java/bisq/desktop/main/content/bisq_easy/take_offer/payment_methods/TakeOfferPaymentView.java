@@ -107,7 +107,7 @@ public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, Take
                 FiatPaymentMethod paymentMethod = spec.getPaymentMethod();
                 ChipToggleButton chipToggleButton = new ChipToggleButton(paymentMethod.getShortDisplayString(), fiatToggleGroup);
                 Node icon = !paymentMethod.isCustomPaymentMethod()
-                        ? ImageUtil.getImageViewById(paymentMethod.getName())
+                        ? ImageUtil.getImageViewById(paymentMethod.getPaymentRailName())
                         : BisqEasyViewUtils.getCustomPaymentMethodIcon(paymentMethod.getDisplayString());
                 chipToggleButton.setLeftIcon(icon);
                 chipToggleButton.setOnAction(() -> controller.onToggleFiatPaymentMethod(spec, chipToggleButton.isSelected()));
@@ -130,7 +130,7 @@ public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, Take
                 BitcoinPaymentMethod paymentMethod = spec.getPaymentMethod();
                 ChipToggleButton chipToggleButton = new ChipToggleButton(paymentMethod.getShortDisplayString(), bitcoinToggleGroup);
                 if (!paymentMethod.isCustomPaymentMethod()) {
-                    ImageView icon = ImageUtil.getImageViewById(paymentMethod.getName());
+                    ImageView icon = ImageUtil.getImageViewById(paymentMethod.getPaymentRailName());
                     ColorAdjust colorAdjust = new ColorAdjust();
                     colorAdjust.setBrightness(-0.2);
                     icon.setEffect(colorAdjust);
