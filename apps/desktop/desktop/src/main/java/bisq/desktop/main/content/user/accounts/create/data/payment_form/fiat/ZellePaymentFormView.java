@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.data.payment_form;
+package bisq.desktop.main.content.user.accounts.create.data.payment_form.fiat;
 
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.containers.Spacer;
@@ -26,12 +26,11 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class FasterPaymentsPaymentFormView extends PaymentFormView<FasterPaymentsPaymentFormModel, FasterPaymentsPaymentFormController> {
-    private final MaterialTextField holderName, sortCode, accountNr;
+public class ZellePaymentFormView extends PaymentFormView<ZellePaymentFormModel, ZellePaymentFormController> {
+    private final MaterialTextField holderName, emailOrMobileNr;
     private Subscription runValidationPin;
 
-    public FasterPaymentsPaymentFormView(FasterPaymentsPaymentFormModel model,
-                                         FasterPaymentsPaymentFormController controller) {
+    public ZellePaymentFormView(ZellePaymentFormModel model, ZellePaymentFormController controller) {
         super(model, controller);
 
         holderName = new MaterialTextField(Res.get("user.paymentAccounts.holderName"),
@@ -39,17 +38,13 @@ public class FasterPaymentsPaymentFormView extends PaymentFormView<FasterPayment
         holderName.setValidators(model.getHolderNameValidator());
         holderName.setMaxWidth(Double.MAX_VALUE);
 
-        sortCode = new MaterialTextField(Res.get("user.paymentAccounts.fasterPayments.sortCode"),
-                Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("user.paymentAccounts.fasterPayments.sortCode"))));
-        sortCode.setValidators(model.getSortCodeValidator(), model.getSortCodeNumberValidator());
-        sortCode.setMaxWidth(Double.MAX_VALUE);
 
-        accountNr = new MaterialTextField(Res.get("user.paymentAccounts.accountNr"),
-                Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("user.paymentAccounts.accountNr"))));
-        accountNr.setValidators(model.getAccountNrValidator(), model.getAccountNrNumberValidator());
-        accountNr.setMaxWidth(Double.MAX_VALUE);
+        emailOrMobileNr = new MaterialTextField(Res.get("user.paymentAccounts.emailOrMobileNr"),
+                Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("user.paymentAccounts.emailOrMobileNr"))));
+        emailOrMobileNr.setValidators(model.getEmailOrPhoneNumberValidator());
+        emailOrMobileNr.setMaxWidth(Double.MAX_VALUE);
 
-        root.getChildren().addAll(holderName, sortCode, accountNr, Spacer.height(100));
+        root.getChildren().addAll(holderName, emailOrMobileNr, Spacer.height(100));
     }
 
     @Override
@@ -58,24 +53,18 @@ public class FasterPaymentsPaymentFormView extends PaymentFormView<FasterPayment
             holderName.setText(model.getHolderName().get());
             holderName.validate();
         }
-        if (StringUtils.isNotEmpty(model.getSortCode().get())) {
-            sortCode.setText(model.getSortCode().get());
-            sortCode.validate();
-        }
-        if (StringUtils.isNotEmpty(model.getAccountNr().get())) {
-            accountNr.setText(model.getAccountNr().get());
-            accountNr.validate();
+        if (StringUtils.isNotEmpty(model.getEmailOrMobileNr().get())) {
+            emailOrMobileNr.setText(model.getEmailOrMobileNr().get());
+            emailOrMobileNr.validate();
         }
 
         holderName.textProperty().bindBidirectional(model.getHolderName());
-        sortCode.textProperty().bindBidirectional(model.getSortCode());
-        accountNr.textProperty().bindBidirectional(model.getAccountNr());
+        emailOrMobileNr.textProperty().bindBidirectional(model.getEmailOrMobileNr());
 
         runValidationPin = EasyBind.subscribe(model.getRunValidation(), runValidation -> {
             if (runValidation) {
                 holderName.validate();
-                sortCode.validate();
-                accountNr.validate();
+                emailOrMobileNr.validate();
                 controller.onValidationDone();
             }
         });
@@ -84,12 +73,10 @@ public class FasterPaymentsPaymentFormView extends PaymentFormView<FasterPayment
     @Override
     protected void onViewDetached() {
         holderName.resetValidation();
-        sortCode.resetValidation();
-        accountNr.resetValidation();
+        emailOrMobileNr.resetValidation();
 
         holderName.textProperty().unbindBidirectional(model.getHolderName());
-        sortCode.textProperty().unbindBidirectional(model.getSortCode());
-        accountNr.textProperty().unbindBidirectional(model.getAccountNr());
+        emailOrMobileNr.textProperty().unbindBidirectional(model.getEmailOrMobileNr());
 
         runValidationPin.unsubscribe();
     }

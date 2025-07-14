@@ -15,27 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.data.payment_form;
+package bisq.desktop.main.content.user.accounts.create.data.payment_form.fiat;
 
-import bisq.account.accounts.fiat.ZelleAccountPayload;
+import bisq.account.accounts.fiat.PixAccountPayload;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ZellePaymentFormController extends PaymentFormController<ZellePaymentFormView, ZellePaymentFormModel, ZelleAccountPayload> {
-    public ZellePaymentFormController(ServiceProvider serviceProvider) {
+public class PixPaymentFormController extends PaymentFormController<PixPaymentFormView, PixPaymentFormModel, PixAccountPayload> {
+    public PixPaymentFormController(ServiceProvider serviceProvider) {
         super(serviceProvider);
     }
 
     @Override
-    protected ZellePaymentFormView createView() {
-        return new ZellePaymentFormView(model, this);
+    protected PixPaymentFormView createView() {
+        return new PixPaymentFormView(model, this);
     }
 
     @Override
-    protected ZellePaymentFormModel createModel() {
-        return new ZellePaymentFormModel(StringUtils.createUid());
+    protected PixPaymentFormModel createModel() {
+        return new PixPaymentFormModel(StringUtils.createUid());
     }
 
     @Override
@@ -48,18 +48,19 @@ public class ZellePaymentFormController extends PaymentFormController<ZellePayme
     }
 
     @Override
-    public ZelleAccountPayload createAccountPayload() {
-        return new ZelleAccountPayload(model.getId(),
+    public PixAccountPayload createAccountPayload() {
+        return new PixAccountPayload(model.getId(),
+                "BR",
                 model.getHolderName().get(),
-                model.getEmailOrMobileNr().get());
+                model.getPixKey().get());
     }
 
     @Override
     public boolean validate() {
         boolean holderNameValid = model.getHolderNameValidator().validateAndGet();
-        boolean emailOrPhoneNumberValid = model.getEmailOrPhoneNumberValidator().validateAndGet();
+        boolean pixKeyValidatorValid = model.getPixKeyValidator().validateAndGet();
         model.getRunValidation().set(true);
-        return holderNameValid && emailOrPhoneNumberValid;
+        return holderNameValid && pixKeyValidatorValid;
     }
 
     void onValidationDone() {

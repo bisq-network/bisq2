@@ -15,27 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.data.payment_form;
+package bisq.desktop.main.content.user.accounts.create.data.payment_form.fiat;
 
-import bisq.account.accounts.fiat.FasterPaymentsAccountPayload;
+import bisq.account.accounts.fiat.ZelleAccountPayload;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class FasterPaymentsPaymentFormController extends PaymentFormController<FasterPaymentsPaymentFormView, FasterPaymentsPaymentFormModel, FasterPaymentsAccountPayload> {
-    public FasterPaymentsPaymentFormController(ServiceProvider serviceProvider) {
+public class ZellePaymentFormController extends PaymentFormController<ZellePaymentFormView, ZellePaymentFormModel, ZelleAccountPayload> {
+    public ZellePaymentFormController(ServiceProvider serviceProvider) {
         super(serviceProvider);
     }
 
     @Override
-    protected FasterPaymentsPaymentFormView createView() {
-        return new FasterPaymentsPaymentFormView(model, this);
+    protected ZellePaymentFormView createView() {
+        return new ZellePaymentFormView(model, this);
     }
 
     @Override
-    protected FasterPaymentsPaymentFormModel createModel() {
-        return new FasterPaymentsPaymentFormModel(StringUtils.createUid());
+    protected ZellePaymentFormModel createModel() {
+        return new ZellePaymentFormModel(StringUtils.createUid());
     }
 
     @Override
@@ -48,20 +48,18 @@ public class FasterPaymentsPaymentFormController extends PaymentFormController<F
     }
 
     @Override
-    public FasterPaymentsAccountPayload createAccountPayload() {
-        return new FasterPaymentsAccountPayload(model.getId(),
+    public ZelleAccountPayload createAccountPayload() {
+        return new ZelleAccountPayload(model.getId(),
                 model.getHolderName().get(),
-                model.getSortCode().get(),
-                model.getAccountNr().get());
+                model.getEmailOrMobileNr().get());
     }
 
     @Override
     public boolean validate() {
         boolean holderNameValid = model.getHolderNameValidator().validateAndGet();
-        boolean sortCodeValid = model.getSortCodeValidator().validateAndGet() && model.getSortCodeNumberValidator().validateAndGet();
-        boolean accountNrValid = model.getAccountNrValidator().validateAndGet() && model.getAccountNrNumberValidator().validateAndGet();
+        boolean emailOrPhoneNumberValid = model.getEmailOrPhoneNumberValidator().validateAndGet();
         model.getRunValidation().set(true);
-        return holderNameValid && sortCodeValid && accountNrValid;
+        return holderNameValid && emailOrPhoneNumberValid;
     }
 
     void onValidationDone() {

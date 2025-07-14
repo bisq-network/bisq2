@@ -19,7 +19,7 @@ package bisq.desktop.main.content.user.accounts.create.data;
 
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.view.Model;
-import bisq.desktop.main.content.user.accounts.create.data.payment_form.PaymentFormController;
+import bisq.desktop.main.content.user.accounts.create.data.payment_form.fiat.PaymentFormController;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.Setter;

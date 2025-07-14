@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.data.payment_form;
+package bisq.desktop.main.content.user.accounts.create.data.payment_form.fiat;
 
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.containers.Spacer;
@@ -26,11 +26,12 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class ZellePaymentFormView extends PaymentFormView<ZellePaymentFormModel, ZellePaymentFormController> {
-    private final MaterialTextField holderName, emailOrMobileNr;
+public class FasterPaymentsPaymentFormView extends PaymentFormView<FasterPaymentsPaymentFormModel, FasterPaymentsPaymentFormController> {
+    private final MaterialTextField holderName, sortCode, accountNr;
     private Subscription runValidationPin;
 
-    public ZellePaymentFormView(ZellePaymentFormModel model, ZellePaymentFormController controller) {
+    public FasterPaymentsPaymentFormView(FasterPaymentsPaymentFormModel model,
+                                         FasterPaymentsPaymentFormController controller) {
         super(model, controller);
 
         holderName = new MaterialTextField(Res.get("user.paymentAccounts.holderName"),
@@ -38,13 +39,17 @@ public class ZellePaymentFormView extends PaymentFormView<ZellePaymentFormModel,
         holderName.setValidators(model.getHolderNameValidator());
         holderName.setMaxWidth(Double.MAX_VALUE);
 
+        sortCode = new MaterialTextField(Res.get("user.paymentAccounts.fasterPayments.sortCode"),
+                Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("user.paymentAccounts.fasterPayments.sortCode"))));
+        sortCode.setValidators(model.getSortCodeValidator(), model.getSortCodeNumberValidator());
+        sortCode.setMaxWidth(Double.MAX_VALUE);
 
-        emailOrMobileNr = new MaterialTextField(Res.get("user.paymentAccounts.emailOrMobileNr"),
-                Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("user.paymentAccounts.emailOrMobileNr"))));
-        emailOrMobileNr.setValidators(model.getEmailOrPhoneNumberValidator());
-        emailOrMobileNr.setMaxWidth(Double.MAX_VALUE);
+        accountNr = new MaterialTextField(Res.get("user.paymentAccounts.accountNr"),
+                Res.get("user.paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("user.paymentAccounts.accountNr"))));
+        accountNr.setValidators(model.getAccountNrValidator(), model.getAccountNrNumberValidator());
+        accountNr.setMaxWidth(Double.MAX_VALUE);
 
-        root.getChildren().addAll(holderName, emailOrMobileNr, Spacer.height(100));
+        root.getChildren().addAll(holderName, sortCode, accountNr, Spacer.height(100));
     }
 
     @Override
@@ -53,18 +58,24 @@ public class ZellePaymentFormView extends PaymentFormView<ZellePaymentFormModel,
             holderName.setText(model.getHolderName().get());
             holderName.validate();
         }
-        if (StringUtils.isNotEmpty(model.getEmailOrMobileNr().get())) {
-            emailOrMobileNr.setText(model.getEmailOrMobileNr().get());
-            emailOrMobileNr.validate();
+        if (StringUtils.isNotEmpty(model.getSortCode().get())) {
+            sortCode.setText(model.getSortCode().get());
+            sortCode.validate();
+        }
+        if (StringUtils.isNotEmpty(model.getAccountNr().get())) {
+            accountNr.setText(model.getAccountNr().get());
+            accountNr.validate();
         }
 
         holderName.textProperty().bindBidirectional(model.getHolderName());
-        emailOrMobileNr.textProperty().bindBidirectional(model.getEmailOrMobileNr());
+        sortCode.textProperty().bindBidirectional(model.getSortCode());
+        accountNr.textProperty().bindBidirectional(model.getAccountNr());
 
         runValidationPin = EasyBind.subscribe(model.getRunValidation(), runValidation -> {
             if (runValidation) {
                 holderName.validate();
-                emailOrMobileNr.validate();
+                sortCode.validate();
+                accountNr.validate();
                 controller.onValidationDone();
             }
         });
@@ -73,10 +84,12 @@ public class ZellePaymentFormView extends PaymentFormView<ZellePaymentFormModel,
     @Override
     protected void onViewDetached() {
         holderName.resetValidation();
-        emailOrMobileNr.resetValidation();
+        sortCode.resetValidation();
+        accountNr.resetValidation();
 
         holderName.textProperty().unbindBidirectional(model.getHolderName());
-        emailOrMobileNr.textProperty().unbindBidirectional(model.getEmailOrMobileNr());
+        sortCode.textProperty().unbindBidirectional(model.getSortCode());
+        accountNr.textProperty().unbindBidirectional(model.getAccountNr());
 
         runValidationPin.unsubscribe();
     }

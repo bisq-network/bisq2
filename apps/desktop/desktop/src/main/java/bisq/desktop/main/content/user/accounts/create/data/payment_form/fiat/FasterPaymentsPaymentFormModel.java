@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.data.payment_form;
+package bisq.desktop.main.content.user.accounts.create.data.payment_form.fiat;
 
 import bisq.account.accounts.fiat.FasterPaymentsAccountPayload;
 import bisq.desktop.components.controls.validator.NumberValidator;

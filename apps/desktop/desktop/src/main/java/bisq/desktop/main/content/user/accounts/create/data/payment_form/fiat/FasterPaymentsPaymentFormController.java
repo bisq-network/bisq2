@@ -15,27 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.data.payment_form;
+package bisq.desktop.main.content.user.accounts.create.data.payment_form.fiat;
 
-import bisq.account.accounts.fiat.PixAccountPayload;
+import bisq.account.accounts.fiat.FasterPaymentsAccountPayload;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PixPaymentFormController extends PaymentFormController<PixPaymentFormView, PixPaymentFormModel, PixAccountPayload> {
-    public PixPaymentFormController(ServiceProvider serviceProvider) {
+public class FasterPaymentsPaymentFormController extends PaymentFormController<FasterPaymentsPaymentFormView, FasterPaymentsPaymentFormModel, FasterPaymentsAccountPayload> {
+    public FasterPaymentsPaymentFormController(ServiceProvider serviceProvider) {
         super(serviceProvider);
     }
 
     @Override
-    protected PixPaymentFormView createView() {
-        return new PixPaymentFormView(model, this);
+    protected FasterPaymentsPaymentFormView createView() {
+        return new FasterPaymentsPaymentFormView(model, this);
     }
 
     @Override
-    protected PixPaymentFormModel createModel() {
-        return new PixPaymentFormModel(StringUtils.createUid());
+    protected FasterPaymentsPaymentFormModel createModel() {
+        return new FasterPaymentsPaymentFormModel(StringUtils.createUid());
     }
 
     @Override
@@ -48,19 +48,20 @@ public class PixPaymentFormController extends PaymentFormController<PixPaymentFo
     }
 
     @Override
-    public PixAccountPayload createAccountPayload() {
-        return new PixAccountPayload(model.getId(),
-                "BR",
+    public FasterPaymentsAccountPayload createAccountPayload() {
+        return new FasterPaymentsAccountPayload(model.getId(),
                 model.getHolderName().get(),
-                model.getPixKey().get());
+                model.getSortCode().get(),
+                model.getAccountNr().get());
     }
 
     @Override
     public boolean validate() {
         boolean holderNameValid = model.getHolderNameValidator().validateAndGet();
-        boolean pixKeyValidatorValid = model.getPixKeyValidator().validateAndGet();
+        boolean sortCodeValid = model.getSortCodeValidator().validateAndGet() && model.getSortCodeNumberValidator().validateAndGet();
+        boolean accountNrValid = model.getAccountNrValidator().validateAndGet() && model.getAccountNrNumberValidator().validateAndGet();
         model.getRunValidation().set(true);
-        return holderNameValid && pixKeyValidatorValid;
+        return holderNameValid && sortCodeValid && accountNrValid;
     }
 
     void onValidationDone() {
