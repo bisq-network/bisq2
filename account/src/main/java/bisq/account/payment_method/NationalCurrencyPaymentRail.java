@@ -16,6 +16,6 @@
  */
 
 package bisq.account.payment_method;
-
+// rename to FiatPaymentRail
 public interface NationalCurrencyPaymentRail extends PaymentRail {
 }

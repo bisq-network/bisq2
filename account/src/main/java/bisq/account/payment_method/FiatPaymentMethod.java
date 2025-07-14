@@ -18,6 +18,7 @@
 package bisq.account.payment_method;
 
 import bisq.common.currency.TradeCurrency;
+import bisq.common.locale.Country;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -71,5 +72,9 @@ public class FiatPaymentMethod extends NationalCurrencyPaymentMethod<FiatPayment
     @Override
     public List<? extends TradeCurrency> getSupportedCurrencies() {
         return paymentRail.getSupportedCurrencies();
+    }
+
+    public List<Country> getSupportedCountries() {
+        return paymentRail.getSupportedCountries();
     }
 }

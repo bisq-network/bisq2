@@ -15,10 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.accounts.fiat;
+package bisq.account.accounts.crypto;
 
-import bisq.account.accounts.Account;
-import bisq.account.payment_method.FiatPaymentMethod;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,30 +26,32 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class PayIDAccount extends Account<FiatPaymentMethod, PayIDAccountPayload> {
-    public PayIDAccount(String id, long creationDate, String accountName, PayIDAccountPayload accountPayload) {
+public final class MoneroAccount extends CryptoCurrencyAccount<MoneroAccountPayload> {
+    public MoneroAccount(String id, long creationDate, String accountName, MoneroAccountPayload accountPayload) {
         super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
     public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
+        bisq.account.protobuf.CryptoCurrencyAccount.Builder builder = getCryptoCurrencyAccountBuilder(serializeForHash)
+                .setMoneroAccount(getMoneroAccountBuilder(serializeForHash));
+        bisq.account.protobuf.CryptoCurrencyAccount cryptoCurrencyAccount = resolveBuilder(builder, serializeForHash).build();
         return getAccountBuilder(serializeForHash)
-                .setPayIDAccount(toPayIDAccountProto(serializeForHash));
+                .setCryptoCurrencyAccount(cryptoCurrencyAccount);
     }
 
-    private bisq.account.protobuf.PayIDAccount toPayIDAccountProto(boolean serializeForHash) {
-        return resolveBuilder(getPayIDAccountBuilder(serializeForHash), serializeForHash).build();
+    private bisq.account.protobuf.MoneroAccount.Builder getMoneroAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.MoneroAccount.newBuilder();
     }
 
-    private bisq.account.protobuf.PayIDAccount.Builder getPayIDAccountBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.PayIDAccount.newBuilder();
-    }
-
-    public static PayIDAccount fromProto(bisq.account.protobuf.Account proto) {
-        return new PayIDAccount(proto.getId(),
+    public static MoneroAccount fromProto(bisq.account.protobuf.Account proto) {
+        var cryptoCurrency = proto.getCryptoCurrencyAccount();
+        var monero = cryptoCurrency.getMoneroAccount();
+        return new MoneroAccount(
+                proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
-                PayIDAccountPayload.fromProto(proto.getAccountPayload())
+                MoneroAccountPayload.fromProto(proto.getAccountPayload())
         );
     }
 }

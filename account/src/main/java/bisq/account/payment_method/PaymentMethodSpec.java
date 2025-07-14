@@ -26,6 +26,7 @@ import lombok.ToString;
 
 import java.util.Optional;
 
+//todo move back to offer?
 /**
  * PaymentMethod related data which is included in offers.
  */

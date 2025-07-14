@@ -26,6 +26,7 @@ import lombok.Getter;
 import java.util.Collections;
 import java.util.List;
 
+//rename to TokenizedFiatPaymentRail?
 public enum StablecoinPaymentRail implements NationalCurrencyPaymentRail {
     USDT_ERC20(StableCoinCurrencyRepository.USDT_ERC20),
     USDT_TRC20(StableCoinCurrencyRepository.USDT_TRC20),

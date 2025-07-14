@@ -3,6 +3,7 @@ package bisq.account.payment_method;
 import bisq.i18n.Res;
 import lombok.Getter;
 
+//todo Introduce a generic RiskLevel to cover also double-spend risks, custodian risk,...
 @Getter
 public enum FiatPaymentMethodChargebackRisk {
     VERY_LOW,

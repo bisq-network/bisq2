@@ -17,11 +17,14 @@
 
 package bisq.account.accounts;
 
+import bisq.account.accounts.crypto.CryptoCurrencyAccountPayload;
 import bisq.account.accounts.fiat.CashByMailAccountPayload;
 import bisq.account.accounts.fiat.CountryBasedAccountPayload;
 import bisq.account.accounts.fiat.FasterPaymentsAccountPayload;
 import bisq.account.accounts.fiat.InteracETransferAccountPayload;
+import bisq.account.accounts.fiat.PayIdAccountPayload;
 import bisq.account.accounts.fiat.RevolutAccountPayload;
+import bisq.account.accounts.fiat.USPostalMoneyOrderAccountPayload;
 import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
 import bisq.account.accounts.fiat.ZelleAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
@@ -68,8 +71,7 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
 
     protected bisq.account.protobuf.AccountPayload.Builder getAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.AccountPayload.newBuilder()
-                .setId(id)/*
-                .setPaymentRailName(paymentRailName)*/;
+                .setId(id);
     }
 
     public static AccountPayload<?> fromProto(bisq.account.protobuf.AccountPayload proto) {
@@ -79,8 +81,11 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
             case REVOLUTACCOUNTPAYLOAD -> RevolutAccountPayload.fromProto(proto);
             case USERDEFINEDFIATACCOUNTPAYLOAD -> UserDefinedFiatAccountPayload.fromProto(proto);
             case FASTERPAYMENTSACCOUNTPAYLOAD -> FasterPaymentsAccountPayload.fromProto(proto);
+            case PAYIDACCOUNTPAYLOAD -> PayIdAccountPayload.fromProto(proto);
+            case USPOSTALMONEYORDERACCOUNTPAYLOAD -> USPostalMoneyOrderAccountPayload.fromProto(proto);
             case CASHBYMAILACCOUNTPAYLOAD -> CashByMailAccountPayload.fromProto(proto);
             case INTERACETRANSFERACCOUNTPAYLOAD -> InteracETransferAccountPayload.fromProto(proto);
+            case CRYPTOCURRENCYACCOUNTPAYLOAD -> CryptoCurrencyAccountPayload.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);
         };

@@ -20,11 +20,10 @@ package bisq.account.payment_method;
 //TODO Requires more thoughts
 public enum CryptoPaymentRail implements PaymentRail {
     CUSTOM,                             // Custom defined payment rail by the user
-    BSQ,                                // BSQ (colored coin on the BTC blockchain)
-    MONERO,                             // Monero blockchain
-    LIQUID,                             // Liquid side chain
     NATIVE_CHAIN,                       // The native chain of that cryptocurrency
-    ATOMIC_SWAP_CAPABLE_CHAIN,          // A blockchain capable for atomic cross chain swaps
+    LN,                                 // Lightning Network
+    LIQUID,                             // Liquid side chain
+    BSQ,                                // BSQ (colored coin on the BTC blockchain)
     OTHER;
 
     @Override
