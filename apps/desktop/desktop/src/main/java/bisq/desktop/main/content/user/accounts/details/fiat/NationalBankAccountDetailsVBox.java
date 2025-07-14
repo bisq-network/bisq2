@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.details;
+package bisq.desktop.main.content.user.accounts.details.fiat;
 
 import bisq.account.accounts.fiat.BankAccountUtils;
 import bisq.account.accounts.fiat.NationalBankAccount;

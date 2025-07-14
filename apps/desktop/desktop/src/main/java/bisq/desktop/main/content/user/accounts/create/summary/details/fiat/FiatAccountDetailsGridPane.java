@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.summary.details;
+package bisq.desktop.main.content.user.accounts.create.summary.details.fiat;
 
 import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.FiatPaymentRail;

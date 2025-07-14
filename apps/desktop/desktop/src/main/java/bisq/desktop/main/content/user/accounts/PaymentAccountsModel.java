@@ -20,7 +20,7 @@ package bisq.desktop.main.content.user.accounts;
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.view.Model;
-import bisq.desktop.main.content.user.accounts.details.AccountDetailsVBox;
+import bisq.desktop.main.content.user.accounts.details.fiat.AccountDetailsVBox;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;

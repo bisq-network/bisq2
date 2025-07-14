@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.details;
+package bisq.desktop.main.content.user.accounts.create.summary.details.fiat;
 
-import bisq.account.accounts.fiat.SepaAccount;
 import bisq.account.accounts.fiat.SepaAccountPayload;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.common.locale.CountryRepository;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -30,39 +30,39 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class SepaAccountDetailsVBox extends FiatAccountDetailsVBox<SepaAccount> {
-    public SepaAccountDetailsVBox(SepaAccount account) {
-        super(account);
-
+public class SepaAccountDetailsGridPane extends FiatAccountDetailsGridPane<SepaAccountPayload> {
+    public SepaAccountDetailsGridPane(SepaAccountPayload accountPayload, FiatPaymentRail fiatPaymentRail) {
+        super(accountPayload, fiatPaymentRail);
     }
 
     @Override
-    protected void addDetails(SepaAccount account) {
-        SepaAccountPayload accountPayload = account.getAccountPayload();
-
+    protected void addDetails(SepaAccountPayload accountPayload) {
         addDescriptionAndValue(Res.get("user.paymentAccounts.holderName"),
                 accountPayload.getHolderName());
 
-        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.sepa.iban"),
+        addDescriptionAndValue(Res.get("user.paymentAccounts.sepa.iban"),
                 accountPayload.getIban());
 
-        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.sepa.bic"),
+        addDescriptionAndValue(Res.get("user.paymentAccounts.sepa.bic"),
                 accountPayload.getBic());
 
         String countryName = CountryRepository.getNameByCode(accountPayload.getCountryCode());
         List<String> acceptedCountryCodes = new ArrayList<>(accountPayload.getAcceptedCountryCodes());
         Collections.sort(acceptedCountryCodes);
-        List<String> allSepaCountryCodes = new ArrayList<>(FiatPaymentRailUtil.getAllSepaCountryCodes());
-        Collections.sort(allSepaCountryCodes);
-        boolean matchAllCountries = acceptedCountryCodes.equals(allSepaCountryCodes);
-        String allSepaCountries = Res.get("user.paymentAccounts.createAccount.accountData.sepa.allSepaCountries");
-        String acceptedCountries = acceptedCountryCodes.stream()
-                .map(CountryRepository::getNameByCode)
-                .collect(Collectors.joining(", "));
-        Label acceptCountriesLabel = addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.createAccount.accountData.sepa.acceptCountries"),
-                matchAllCountries ? allSepaCountries : acceptedCountries, acceptedCountries);
-        if (matchAllCountries || acceptedCountries.length() > 70) {
-            acceptCountriesLabel.setTooltip(new BisqTooltip(acceptedCountries));
+        List<String> allSepaCountries = new ArrayList<>(FiatPaymentRailUtil.getAllSepaCountryCodes());
+        Collections.sort(allSepaCountries);
+        String acceptCountries;
+        if (acceptedCountryCodes.equals(allSepaCountries)) {
+            acceptCountries = Res.get("user.paymentAccounts.createAccount.accountData.sepa.allSepaCountries");
+        } else {
+            acceptCountries = acceptedCountryCodes.stream()
+                    .map(CountryRepository::getNameByCode)
+                    .collect(Collectors.joining(", "));
+        }
+        Label acceptCountriesLabel = addDescriptionAndValue(Res.get("user.paymentAccounts.createAccount.accountData.sepa.acceptCountries"),
+                acceptCountries);
+        if (acceptCountries.length() > 70) {
+            acceptCountriesLabel.setTooltip(new BisqTooltip(acceptCountries));
         }
     }
 }

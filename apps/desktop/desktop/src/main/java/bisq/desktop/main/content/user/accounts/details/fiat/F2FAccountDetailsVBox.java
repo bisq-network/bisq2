@@ -15,25 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.create.summary.details;
+package bisq.desktop.main.content.user.accounts.details.fiat;
 
+import bisq.account.accounts.fiat.F2FAccount;
 import bisq.account.accounts.fiat.F2FAccountPayload;
-import bisq.account.payment_method.FiatPaymentRail;
 import bisq.i18n.Res;
 
-public class F2FAccountDetailsGridPane extends FiatAccountDetailsGridPane<F2FAccountPayload> {
-    public F2FAccountDetailsGridPane(F2FAccountPayload accountPayload, FiatPaymentRail fiatPaymentRail) {
-        super(accountPayload, fiatPaymentRail);
+public class F2FAccountDetailsVBox extends FiatAccountDetailsVBox<F2FAccount> {
+    public F2FAccountDetailsVBox(F2FAccount account) {
+        super(account);
     }
 
-    protected void addDetails(F2FAccountPayload accountPayload) {
+    @Override
+    protected void addDetails(F2FAccount account) {
+        F2FAccountPayload accountPayload = account.getAccountPayload();
         addDescriptionAndValue(Res.get("user.paymentAccounts.f2f.city"),
                 accountPayload.getCity());
 
-        addDescriptionAndValue(Res.get("user.paymentAccounts.f2f.contact"),
+        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.f2f.contact"),
                 accountPayload.getContact());
 
-        addDescriptionAndValue(Res.get("user.paymentAccounts.f2f.extraInfo"),
+        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.f2f.extraInfo"),
                 accountPayload.getExtraInfo());
     }
 }

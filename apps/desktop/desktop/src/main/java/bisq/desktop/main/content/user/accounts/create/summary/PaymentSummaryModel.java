@@ -21,7 +21,7 @@ import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
-import bisq.desktop.main.content.user.accounts.create.summary.details.AccountDetailsGridPane;
+import bisq.desktop.main.content.user.accounts.create.summary.details.fiat.AccountDetailsGridPane;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;

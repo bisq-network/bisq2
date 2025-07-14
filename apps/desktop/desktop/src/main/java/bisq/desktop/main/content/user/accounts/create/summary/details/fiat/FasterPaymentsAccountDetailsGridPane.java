@@ -15,25 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.details;
+package bisq.desktop.main.content.user.accounts.create.summary.details.fiat;
 
-import bisq.account.accounts.fiat.PixAccount;
-import bisq.account.accounts.fiat.PixAccountPayload;
+import bisq.account.accounts.fiat.FasterPaymentsAccountPayload;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.i18n.Res;
 
-public class PixAccountDetailsVBox extends FiatAccountDetailsVBox<PixAccount> {
-    public PixAccountDetailsVBox(PixAccount account) {
-        super(account);
+public class FasterPaymentsAccountDetailsGridPane extends FiatAccountDetailsGridPane<FasterPaymentsAccountPayload> {
+    public FasterPaymentsAccountDetailsGridPane(FasterPaymentsAccountPayload accountPayload, FiatPaymentRail fiatPaymentRail) {
+        super(accountPayload, fiatPaymentRail);
     }
 
     @Override
-    protected void addDetails(PixAccount account) {
-        PixAccountPayload accountPayload = account.getAccountPayload();
-
+    protected void addDetails(FasterPaymentsAccountPayload accountPayload) {
         addDescriptionAndValue(Res.get("user.paymentAccounts.holderName"),
                 accountPayload.getHolderName());
-
-        addDescriptionAndValueWithCopyButton(Res.get("user.paymentAccounts.pix.pixKey"),
-                accountPayload.getPixKey());
+        addDescriptionAndValue(Res.get("user.paymentAccounts.fasterPayments.sortCode"),
+                accountPayload.getSortCode());
+        addDescriptionAndValue(Res.get("user.paymentAccounts.accountNr"),
+                accountPayload.getAccountNr());
     }
 }
