@@ -23,9 +23,12 @@ import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.http_api.web_socket.domain.BaseWebSocketService;
 import bisq.http_api.web_socket.domain.OpenTradeItemsService;
+import bisq.http_api.web_socket.domain.chat.reactions.ChatReactionsWebSocketService;
+import bisq.http_api.web_socket.domain.chat.trade.TradeChatWebSocketService;
 import bisq.http_api.web_socket.domain.market_price.MarketPriceWebSocketService;
 import bisq.http_api.web_socket.domain.offers.NumOffersWebSocketService;
 import bisq.http_api.web_socket.domain.offers.OffersWebSocketService;
+import bisq.http_api.web_socket.domain.reputation.ReputationWebSocketService;
 import bisq.http_api.web_socket.domain.trades.TradePropertiesWebSocketService;
 import bisq.http_api.web_socket.domain.trades.TradesWebSocketService;
 import bisq.http_api.web_socket.util.JsonUtil;
@@ -47,6 +50,9 @@ public class SubscriptionService implements Service {
     private final OffersWebSocketService offersWebSocketService;
     private final TradesWebSocketService tradesWebSocketService;
     private final TradePropertiesWebSocketService tradePropertiesWebSocketService;
+    private final TradeChatWebSocketService tradeChatWebSocketService;
+    private final ChatReactionsWebSocketService chatReactionsWebSocketService;
+    private final ReputationWebSocketService reputationWebSocketService;
 
     public SubscriptionService(ObjectMapper objectMapper,
                                BondedRolesService bondedRolesService,
@@ -62,6 +68,14 @@ public class SubscriptionService implements Service {
         offersWebSocketService = new OffersWebSocketService(objectMapper, subscriberRepository, chatService, userService, bondedRolesService);
         tradesWebSocketService = new TradesWebSocketService(objectMapper, subscriberRepository, openTradeItemsService);
         tradePropertiesWebSocketService = new TradePropertiesWebSocketService(objectMapper, subscriberRepository, tradeService);
+        tradeChatWebSocketService = new TradeChatWebSocketService(objectMapper,
+                subscriberRepository,
+                chatService.getBisqEasyOpenTradeChannelService(),
+                userService.getUserProfileService());
+        chatReactionsWebSocketService = new ChatReactionsWebSocketService(objectMapper,
+                subscriberRepository,
+                chatService.getBisqEasyOpenTradeChannelService());
+        reputationWebSocketService = new ReputationWebSocketService(objectMapper, subscriberRepository, userService.getReputationService());
     }
 
     @Override
@@ -70,7 +84,10 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> numOffersWebSocketService.initialize())
                 .thenCompose(e -> offersWebSocketService.initialize())
                 .thenCompose(e -> tradesWebSocketService.initialize())
-                .thenCompose(e -> tradePropertiesWebSocketService.initialize());
+                .thenCompose(e -> tradePropertiesWebSocketService.initialize())
+                .thenCompose(e -> tradeChatWebSocketService.initialize())
+                .thenCompose(e -> chatReactionsWebSocketService.initialize())
+                .thenCompose(e -> reputationWebSocketService.initialize());
     }
 
     @Override
@@ -79,7 +96,10 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> numOffersWebSocketService.shutdown())
                 .thenCompose(e -> offersWebSocketService.shutdown())
                 .thenCompose(e -> tradesWebSocketService.shutdown())
-                .thenCompose(e -> tradePropertiesWebSocketService.shutdown());
+                .thenCompose(e -> tradePropertiesWebSocketService.shutdown())
+                .thenCompose(e -> tradeChatWebSocketService.shutdown())
+                .thenCompose(e -> chatReactionsWebSocketService.shutdown())
+                .thenCompose(e -> reputationWebSocketService.shutdown());
     }
 
     public void onConnectionClosed(WebSocket webSocket) {
@@ -129,6 +149,15 @@ public class SubscriptionService implements Service {
             }
             case TRADE_PROPERTIES -> {
                 return Optional.of(tradePropertiesWebSocketService);
+            }
+            case TRADE_CHATS -> {
+                return Optional.of(tradeChatWebSocketService);
+            }
+            case CHAT_REACTIONS -> {
+                return Optional.of(chatReactionsWebSocketService);
+            }
+            case USER_REPUTATION -> {
+                return Optional.of(reputationWebSocketService);
             }
         }
         log.warn("No WebSocketService for topic {} found", topic);

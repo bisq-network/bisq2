@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 import static bisq.common.platform.PlatformUtils.EXIT_FAILURE;
+import java.util.Arrays;
 
 @Slf4j
 public class DesktopExecutable extends Executable<DesktopApplicationService> {
@@ -92,13 +93,18 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
     protected void setDefaultUncaughtExceptionHandler() {
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
             log.error("Uncaught exception:", throwable);
-            UIThread.run(() -> {
-                if (desktopController != null) {
-                    desktopController.onUncaughtException(thread, throwable);
-                } else {
-                    log.error("primaryStageController not set yet");
-                }
-            });
+            if (throwable instanceof NullPointerException &&
+                    Arrays.stream(throwable.getStackTrace()).anyMatch(e -> e.getClassName().contains("GraphicsPipeline"))) {
+                // Ignore known JavaFX shutdown issue when runLater tasks are executed after the rendering subsystem
+                // is already torn down
+                return;
+            }
+
+            if (desktopController != null) {
+                UIThread.run(() -> desktopController.onUncaughtException(thread, throwable));
+            } else {
+                log.error("primaryStageController not set yet");
+            }
         });
     }
 

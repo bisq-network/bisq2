@@ -22,5 +22,8 @@ public enum Topic {
     NUM_OFFERS,
     OFFERS,
     TRADES,
-    TRADE_PROPERTIES
+    TRADE_PROPERTIES,
+    TRADE_CHATS,
+    CHAT_REACTIONS,
+    USER_REPUTATION,
 }

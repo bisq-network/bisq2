@@ -54,6 +54,7 @@ import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
+import bisq.user.reputation.ReputationService;
 import bisq.wallets.core.BitcoinWalletSelection;
 import bisq.wallets.core.WalletService;
 import lombok.Getter;
@@ -93,6 +94,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     private final OfferService offerService;
     private final ContractService contractService;
     private final UserService userService;
+    private final ReputationService reputationService;
     private final ChatService chatService;
     private final SettingsService settingsService;
     private final SupportService supportService;
@@ -154,6 +156,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 networkService,
                 bondedRolesService);
 
+        reputationService = userService.getReputationService();
+
         settingsService = new SettingsService(persistenceService);
 
         systemNotificationService = new SystemNotificationService(findSystemNotificationDelegate());
@@ -173,7 +177,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 userService,
                 bondedRolesService);
 
-        tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
+        TradeService.Config tradeConfig = TradeService.Config.from(getConfig("trade"));
+        tradeService = new TradeService(tradeConfig, networkService, identityService, persistenceService, offerService,
                 contractService, supportService, chatService, bondedRolesService, userService, settingsService);
 
         updaterService = new UpdaterService(getConfig(),
@@ -243,7 +248,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 tradeService,
                 settingsService,
                 openTradeItemsService,
-                accountService);
+                accountService,
+                reputationService);
     }
 
     @Override

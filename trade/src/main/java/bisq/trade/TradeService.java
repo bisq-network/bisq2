@@ -37,6 +37,19 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Getter
 public class TradeService implements Service, ServiceProvider {
+    @Getter
+    public static class Config {
+        private final com.typesafe.config.Config muSigConfig;
+
+        public Config(com.typesafe.config.Config muSigConfig) {
+            this.muSigConfig = muSigConfig;
+        }
+
+        public static Config from(com.typesafe.config.Config config) {
+            return new Config(config.getConfig("muSig"));
+        }
+    }
+
     private final BisqEasyTradeService bisqEasyTradeService;
     private final NetworkService networkService;
     private final IdentityService identityService;
@@ -49,7 +62,8 @@ public class TradeService implements Service, ServiceProvider {
     private final UserService userService;
     private final SettingsService settingsService;
 
-    public TradeService(NetworkService networkService,
+    public TradeService(Config config,
+                        NetworkService networkService,
                         IdentityService identityService,
                         PersistenceService persistenceService,
                         OfferService offerService,
