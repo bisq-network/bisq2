@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offerbook;
+package bisq.desktop.main.content.mu_sig;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
@@ -67,7 +67,7 @@ public class MuSigOfferListItem {
     private final MarketPriceService marketPriceService;
 
     private final String quoteCurrencyCode, baseAmountAsString, quoteAmountAsString, paymentMethodsAsString,
-            maker, takeOfferButtonText;
+            maker, takeOfferButtonText, baseAmountWithSymbol, quoteAmountWithSymbol, offerIntentText;
     private final boolean isMyOffer, hasAnyMatchingAccount, canTakeOffer;
     private final Market market;
     private final Direction direction;
@@ -88,12 +88,12 @@ public class MuSigOfferListItem {
 
     private final Pin marketPriceByCurrencyMapPin;
 
-    MuSigOfferListItem(MuSigOffer offer,
-                       MarketPriceService marketPriceService,
-                       UserProfileService userProfileService,
-                       IdentityService identityService,
-                       ReputationService reputationService,
-                       AccountService accountService) {
+    public MuSigOfferListItem(MuSigOffer offer,
+                              MarketPriceService marketPriceService,
+                              UserProfileService userProfileService,
+                              IdentityService identityService,
+                              ReputationService reputationService,
+                              AccountService accountService) {
         this.offer = offer;
         this.marketPriceService = marketPriceService;
 
@@ -105,11 +105,16 @@ public class MuSigOfferListItem {
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         market = offer.getMarket();
         baseAmountAsString = OfferAmountFormatter.formatBaseAmount(marketPriceService, offer, false, false);
+        baseAmountWithSymbol = String.format("%s %s", baseAmountAsString, market.getBaseCurrencyCode());
         quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, false);
+        quoteAmountWithSymbol = String.format("%s %s", quoteAmountAsString, market.getQuoteCurrencyCode());
         takeOfferButtonText = offer.getDirection().isBuy()
                 ? Res.get("muSig.offerbook.table.cell.offer.intent.sell")
                 : Res.get("muSig.offerbook.table.cell.offer.intent.buy");
         direction = offer.getDirection();
+        offerIntentText = offer.getDirection().isBuy()
+                ? Res.get("muSig.myOffers.table.cell.offerType.buying")
+                : Res.get("muSig.myOffers.table.cell.offerType.selling");
 
         // ImageUtil.getImageViewById(fiatPaymentMethod.getName());
         paymentMethodsAsString = Joiner.on("\n")
@@ -166,7 +171,7 @@ public class MuSigOfferListItem {
         updatePriceSpecAsPercent();
     }
 
-    void dispose() {
+    public void dispose() {
         marketPriceByCurrencyMapPin.unbind();
     }
 

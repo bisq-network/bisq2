@@ -156,6 +156,7 @@ public enum NavigationTarget {
     // MU_SIG
     MU_SIG(CONTENT),
     MU_SIG_OFFERBOOK(MU_SIG),
+    MU_SIG_MY_OFFERS(MU_SIG),
     MU_SIG_OPEN_TRADES(MU_SIG),
     MU_SIG_HISTORY(MU_SIG),
 

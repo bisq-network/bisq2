@@ -35,7 +35,8 @@ import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.MarketImageComposition;
-import bisq.desktop.main.content.components.UserProfileDisplay;
+import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
+import bisq.desktop.main.content.mu_sig.MuSigOfferUtil;
 import bisq.i18n.Res;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
@@ -75,7 +76,7 @@ import java.util.Optional;
 
 @Slf4j
 public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, MuSigOfferbookController> {
-    private final static double HEADER_HEIGHT = 61;
+    private static final double HEADER_HEIGHT = 61;
     private static final double LIST_CELL_HEIGHT = 53;
     private static final double MARKET_LIST_WIDTH = 210;
     private static final double SIDE_PADDING = 40;
@@ -306,7 +307,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 .title(Res.get("muSig.offerbook.table.header.peer"))
                 .left()
                 .comparator(Comparator.comparingLong(MuSigOfferListItem::getTotalScore).reversed())
-                .setCellFactory(getUserProfileCellFactory())
+                .setCellFactory(MuSigOfferUtil.getUserProfileCellFactory())
                 .minWidth(100)
                 .build());
 
@@ -338,13 +339,13 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .left()
                 .title(Res.get("muSig.offerbook.table.header.paymentMethod"))
-                .setCellFactory(getPaymentCellFactory())
+                .setCellFactory(MuSigOfferUtil.getPaymentCellFactory())
                 .minWidth(140)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getPaymentMethodsAsString))
                 .build());
 
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
-                .setCellFactory(getActionButtonCellFactory())
+                .setCellFactory(getActionButtonsCellFactory())
                 .minWidth(150)
                 .build());
     }
@@ -538,7 +539,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 : Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.one", numOffers, quoteCurrencyName);
     }
 
-    private Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>, TableCell<MuSigOfferListItem, MuSigOfferListItem>> getActionButtonCellFactory() {
+    private Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>, TableCell<MuSigOfferListItem, MuSigOfferListItem>> getActionButtonsCellFactory() {
         return column -> new TableCell<>() {
             private static final double PREF_WIDTH = 120;
             private static final double PREF_HEIGHT = 26;
@@ -684,69 +685,6 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 myOfferLabelBox.setManaged(true);
                 myOfferActionsMenuBox.setVisible(false);
                 myOfferActionsMenuBox.setManaged(false);
-            }
-        };
-    }
-
-    private Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>,
-            TableCell<MuSigOfferListItem, MuSigOfferListItem>> getUserProfileCellFactory() {
-        return column -> new TableCell<>() {
-            private UserProfileDisplay userProfileDisplay;
-
-            @Override
-            protected void updateItem(MuSigOfferListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty) {
-                    userProfileDisplay = new UserProfileDisplay(item.getMakerUserProfile(), true, true);
-                    userProfileDisplay.setReputationScore(item.getReputationScore());
-                    setGraphic(userProfileDisplay);
-                } else {
-                    if (userProfileDisplay != null) {
-                        userProfileDisplay.dispose();
-                        userProfileDisplay = null;
-                    }
-                    setGraphic(null);
-                }
-            }
-        };
-    }
-
-    private Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>,
-            TableCell<MuSigOfferListItem, MuSigOfferListItem>> getPaymentCellFactory() {
-        return column -> new TableCell<>() {
-            private final HBox hbox = new HBox(5);
-            private final BisqTooltip tooltip = new BisqTooltip();
-
-            {
-                hbox.setAlignment(Pos.CENTER_LEFT);
-            }
-
-            @Override
-            protected void updateItem(MuSigOfferListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty) {
-                    hbox.getChildren().clear();
-                    for (FiatPaymentMethod paymentMethod : item.getPaymentMethods()) {
-                        Node icon = ImageUtil.getImageViewById(paymentMethod.getName());
-                        Optional<Double> opacity = Optional.ofNullable(item.getAccountAvailableByPaymentMethod().get(paymentMethod))
-                                .map(isAccountAvailable -> isAccountAvailable ? 1 : 0.2);
-                        if (opacity.isPresent()) {
-                            icon.setOpacity(opacity.get());
-                        } else {
-                            log.error("Unexpected state: accountAvailableByPaymentMethod={}", item.getAccountAvailableByPaymentMethod());
-                        }
-                        hbox.getChildren().add(icon);
-                    }
-                    tooltip.setText(item.getPaymentMethodsAsString());
-                    Tooltip.install(hbox, tooltip);
-                    setGraphic(hbox);
-                } else {
-                    Tooltip.uninstall(hbox, tooltip);
-                    hbox.getChildren().clear();
-                    setGraphic(null);
-                }
             }
         };
     }

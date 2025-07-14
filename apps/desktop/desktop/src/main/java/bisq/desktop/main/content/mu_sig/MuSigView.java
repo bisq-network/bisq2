@@ -21,6 +21,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
 import bisq.desktop.main.content.ContentTabView;
+import bisq.desktop.main.content.mu_sig.my_offers.MuSigMyOffersView;
 import bisq.desktop.main.content.mu_sig.offerbook.MuSigOfferbookView;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
@@ -33,12 +34,14 @@ public class MuSigView extends ContentTabView<MuSigModel, MuSigController> {
         super(model, controller);
 
         addTab(Res.get("muSig.offerbook"), NavigationTarget.MU_SIG_OFFERBOOK);
+        addTab(Res.get("muSig.myOffers"), NavigationTarget.MU_SIG_MY_OFFERS);
         addTab(Res.get("muSig.openTrades"), NavigationTarget.MU_SIG_OPEN_TRADES);
         addTab(Res.get("muSig.history"), NavigationTarget.MU_SIG_HISTORY);
     }
 
     @Override
     protected boolean useFitToHeight(View<? extends Parent, ? extends Model, ? extends Controller> childView) {
-        return childView instanceof MuSigOfferbookView;
+        return childView instanceof MuSigOfferbookView
+                || childView instanceof MuSigMyOffersView;
     }
 }
