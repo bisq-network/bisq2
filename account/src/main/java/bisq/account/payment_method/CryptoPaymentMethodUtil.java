@@ -42,7 +42,7 @@ public class CryptoPaymentMethodUtil {
         return switch (protocolType) {
             case BISQ_EASY -> throw new IllegalArgumentException("No support for CryptoPaymentMethods for BISQ_EASY");
             case MU_SIG, LIGHTNING_ESCROW -> getPaymentRails();
-            case MONERO_SWAP -> List.of(CryptoPaymentRail.MONERO);
+            case MONERO_SWAP -> List.of(CryptoPaymentRail.NATIVE_CHAIN);
             case LIQUID_SWAP -> List.of(CryptoPaymentRail.LIQUID);
             case BSQ_SWAP -> List.of(CryptoPaymentRail.BSQ);
             default -> throw new RuntimeException("Not handled case: protocolType=" + protocolType);

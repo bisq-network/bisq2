@@ -63,13 +63,12 @@ class PaymentMethodComparator implements Comparator<PaymentMethodItem> {
         int relevanceScore = 0;
 
         if (method instanceof FiatPaymentMethod fiatMethod) {
-            FiatPaymentRail rail = fiatMethod.getPaymentRail();
-
-            if (rail.getSupportedCurrencyCodes().contains(userCurrencyCode)) {
+            if (fiatMethod.getSupportedCurrencyCodes().contains(userCurrencyCode)) {
                 relevanceScore += 2;
             }
 
-            boolean supportsUserCountry = rail.getSupportedCountries().stream()
+
+            boolean supportsUserCountry = fiatMethod.getSupportedCountries().stream()
                     .anyMatch(country -> country.getCode().equalsIgnoreCase(userCountryCode));
             if (supportsUserCountry) {
                 relevanceScore++;

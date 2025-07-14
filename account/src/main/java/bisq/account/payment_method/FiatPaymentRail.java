@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+// rename to NationalFiatPaymentRail/NationalCurrencyPaymentRail/TraditionalPaymentRail
 /**
  * The payment rails for fiat payments.
  * Provide static data associated with the payment rail.
@@ -296,6 +297,7 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
         return CountryRepository.getAllCountries();
     }
 
+    //todo use long instead of String
     @Override
     public String getTradeLimit() {
         //todo
@@ -312,6 +314,7 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
         }
     }
 
+    //todo add duration as enum field, use Duration not string (add method to get display string)
     private static final String HOURS_24 = Res.get("temporal.hour.*", 24);
     private static final String DAYS_2 = Res.get("temporal.day.*", 2);
     private static final String DAYS_3 = Res.get("temporal.day.*", 3);
