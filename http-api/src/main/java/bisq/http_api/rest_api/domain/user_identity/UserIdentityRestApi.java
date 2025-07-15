@@ -149,26 +149,48 @@ public class UserIdentityRestApi extends RestApiBase {
         }
     }
 
-// Create UserIdentityDto
-   /* @GET
-    @Path("/{id}")
+    @PATCH
     @Operation(
-            summary = "Get User Identity",
-            description = "Retrieves the user identity for the specified ID.",
+            summary = "Update User Identity and Publish User Profile",
+            description = "Updates user identity trade & terms and publishes the associated user profile changes.",
+            requestBody = @RequestBody(
+                    description = "Request payload containing user nickname, terms, statement, and prepared data.",
+                    content = @Content(schema = @Schema(implementation = UpdateUserIdentityRequest.class))
+            ),
             responses = {
-                    @ApiResponse(responseCode = "200", description = "User identity retrieved successfully",
-                            content = @Content(schema = @Schema(implementation = UserIdentity.class))),
-                    @ApiResponse(responseCode = "404", description = "User identity not found"),
+                    @ApiResponse(responseCode = "201", description = "User identity updated successfully",
+                            content = @Content(schema = @Schema(example = "{ \"userProfileId\": \"d22d7b62ef442b5df03378f134bc8f54a2171cba\" }"))),
+                    @ApiResponse(responseCode = "400", description = "Invalid input"),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response getUserIdentity(@PathParam("id") String id) {
-        Optional<UserIdentity> userIdentity = userIdentityService.findUserIdentity(id);
-        if (userIdentity.isEmpty()) {
-            return buildNotFoundResponse("Could not find user identity for ID: " + id);
+    public void updateAndPublishUserProfile(UpdateUserIdentityRequest request,
+                                                @Suspended AsyncResponse asyncResponse) {
+        asyncResponse.setTimeout(10, TimeUnit.SECONDS);
+        asyncResponse.setTimeoutHandler(response -> {
+            asyncResponse.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
+        });
+        try {
+            UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
+            if (selectedUserIdentity == null) {
+                asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND, "No selected user identity found"));
+            }
+            UserProfile userProfile = UserProfile.forEdit(
+                    selectedUserIdentity.getUserProfile(),
+                    request.getTerms(),
+                    request.getStatement()
+            );
+
+            KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
+            userIdentityService.publishUserProfile(userProfile, keyPair);
+            UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(userProfile);
+            asyncResponse.resume(buildResponse(Response.Status.OK, new UpdateUserIdentityResponse(userProfileDto)));
+        } catch (IllegalArgumentException e) {
+            asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
+        } catch (Exception e) {
+            asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }
-        return buildOkResponse(userIdentity.get());
-    }*/
+    }
 
     @GET
     @Path("/ids")
