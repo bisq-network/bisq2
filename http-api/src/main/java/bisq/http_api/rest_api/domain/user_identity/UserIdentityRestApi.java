@@ -23,6 +23,7 @@ import bisq.dto.security.keys.KeyPairDto;
 import bisq.dto.security.pow.ProofOfWorkDto;
 import bisq.dto.user.profile.UserProfileDto;
 import bisq.http_api.rest_api.domain.RestApiBase;
+import bisq.identity.Identity;
 import bisq.security.DigestUtil;
 import bisq.security.SecurityService;
 import bisq.security.pow.ProofOfWork;
@@ -45,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -176,15 +178,17 @@ public class UserIdentityRestApi extends RestApiBase {
                 asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND, "No selected user identity found"));
             }
             UserProfile userProfile = UserProfile.forEdit(
-                    selectedUserIdentity.getUserProfile(),
+                    Objects.requireNonNull(selectedUserIdentity).getUserProfile(),
                     request.getTerms(),
                     request.getStatement()
             );
+            UserIdentity newUserIdentity = new UserIdentity(selectedUserIdentity.getIdentity(), userProfile);
 
-            KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
-            userIdentityService.publishUserProfile(userProfile, keyPair);
-            UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(userProfile);
-            asyncResponse.resume(buildResponse(Response.Status.OK, new UpdateUserIdentityResponse(userProfileDto)));
+            userIdentityService.editUserProfile(newUserIdentity, request.getTerms(), request.getStatement())
+                    .thenAccept(result -> {
+                        UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(userProfile);
+                        asyncResponse.resume(buildResponse(Response.Status.OK, new UpdateUserIdentityResponse(userProfileDto)));
+                    });
         } catch (IllegalArgumentException e) {
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
         } catch (Exception e) {
