@@ -374,13 +374,13 @@ public class FsmTest {
             fsm.handle(new MockEvent1(model, ""));
         });
 
-        // fromStates null
+        // fromStates empty
         Assertions.assertThrows(FsmConfigException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
             SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
             //noinspection ConfusingArgumentToVarargsMethod
             fsm.addTransition()
-                    .fromStates(null)
+                    .fromStates()
                     .on(MockEvent1.class)
                     .run(MockEventHandler.class)
                     .to(MockState.S1);
