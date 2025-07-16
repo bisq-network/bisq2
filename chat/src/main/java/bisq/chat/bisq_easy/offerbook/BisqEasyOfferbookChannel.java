@@ -20,7 +20,7 @@ package bisq.chat.bisq_easy.offerbook;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.pub.PublicChatChannel;
-import bisq.common.currency.Market;
+import bisq.common.asset.Market;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import lombok.EqualsAndHashCode;

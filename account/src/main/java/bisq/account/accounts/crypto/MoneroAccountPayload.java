@@ -19,7 +19,7 @@ package bisq.account.accounts.crypto;
 
 import bisq.account.payment_method.CryptoPaymentMethod;
 import bisq.account.payment_method.CryptoPaymentRail;
-import bisq.common.currency.CryptoCurrencyRepository;
+import bisq.common.asset.CryptoCurrencyRepository;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

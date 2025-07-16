@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.offerbook.offer_details;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.currency.Market;
+import bisq.common.asset.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.InitWithDataController;

@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.mu_sig.create_offer.review;
 
 import bisq.account.payment_method.PaymentMethod;
-import bisq.common.currency.Market;
-import bisq.common.currency.MarketRepository;
+import bisq.common.asset.Market;
+import bisq.common.asset.MarketRepository;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;

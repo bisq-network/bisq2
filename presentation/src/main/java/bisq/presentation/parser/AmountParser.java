@@ -17,7 +17,7 @@
 
 package bisq.presentation.parser;
 
-import bisq.common.currency.Asset;
+import bisq.common.asset.Asset;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;

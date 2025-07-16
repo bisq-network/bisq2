@@ -17,7 +17,7 @@
 
 package bisq.common.monetary;
 
-import bisq.common.currency.FiatCurrencyRepository;
+import bisq.common.asset.FiatCurrencyRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

@@ -22,7 +22,7 @@ import bisq.bisq_easy.BisqEasyOfferbookMessageService;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
-import bisq.common.currency.Market;
+import bisq.common.asset.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;

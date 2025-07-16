@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.user.crypto_accounts.create.address.form;
 
 import bisq.account.payment_method.CryptoPaymentMethod;
-import bisq.common.currency.CryptoCurrency;
-import bisq.common.currency.CryptoCurrencyRepository;
+import bisq.common.asset.CryptoCurrency;
+import bisq.common.asset.CryptoCurrencyRepository;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;

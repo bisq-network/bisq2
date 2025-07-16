@@ -17,8 +17,8 @@
 
 package bisq.account.payment_method;
 
-import bisq.common.currency.FiatCurrencyRepository;
-import bisq.common.currency.Asset;
+import bisq.common.asset.FiatCurrencyRepository;
+import bisq.common.asset.Asset;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;

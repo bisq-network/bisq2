@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.currency.stable;
+package bisq.common.asset.stable;
 
 
-import bisq.common.currency.Asset;
+import bisq.common.asset.Asset;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

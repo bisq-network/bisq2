@@ -19,7 +19,7 @@ package bisq.desktop.main.content.user.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.BankAccountPayload;
 import bisq.account.accounts.fiat.BankAccountType;
-import bisq.common.currency.FiatCurrency;
+import bisq.common.asset.FiatCurrency;
 import bisq.common.locale.Country;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import bisq.i18n.Res;

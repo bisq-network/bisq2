@@ -17,7 +17,7 @@
 
 package bisq.account.payment_method;
 
-import bisq.common.currency.Asset;
+import bisq.common.asset.Asset;
 
 import java.util.Collection;
 import java.util.Collections;

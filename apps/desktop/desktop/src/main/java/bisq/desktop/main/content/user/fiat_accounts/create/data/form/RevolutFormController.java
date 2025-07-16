@@ -19,8 +19,8 @@ package bisq.desktop.main.content.user.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.RevolutAccountPayload;
 import bisq.account.payment_method.FiatPaymentRailUtil;
-import bisq.common.currency.FiatCurrency;
-import bisq.common.currency.Asset;
+import bisq.common.asset.FiatCurrency;
+import bisq.common.asset.Asset;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;

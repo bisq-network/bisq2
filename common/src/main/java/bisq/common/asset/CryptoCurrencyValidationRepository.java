@@ -15,22 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.currency;
+package bisq.common.asset;
 
-import java.util.ArrayList;
-import java.util.List;
+import bisq.common.validation.Validation;
+import bisq.common.validation.crypto.EtherAddressValidation;
+import bisq.common.validation.crypto.GenericAddressValidation;
+import bisq.common.validation.crypto.MoneroAddressValidation;
 
-public class CurrencyRepository {
+import java.util.Map;
 
-    private static final List<Asset> allCurrencies = new ArrayList<>();
+public class CryptoCurrencyValidationRepository {
+    private static final Map<String, Validation> VALIDATION_BY_CODE = Map.of(
+            "XMR", MoneroAddressValidation.getInstance(),
+            "ETH", EtherAddressValidation.getInstance()
+    );
 
-    public static List<Asset> getAllCurrencies() {
-        if (allCurrencies.isEmpty()) {
-            allCurrencies.addAll(FiatCurrencyRepository.getMajorCurrencies());
-            allCurrencies.addAll(CryptoCurrencyRepository.getMajorCurrencies());
-            allCurrencies.addAll(FiatCurrencyRepository.getMinorCurrencies());
-            allCurrencies.addAll(CryptoCurrencyRepository.getMinorCurrencies());
-        }
-        return allCurrencies;
+    public static Validation getValidation(String code) {
+        return VALIDATION_BY_CODE.getOrDefault(code, GenericAddressValidation.getInstance());
     }
 }

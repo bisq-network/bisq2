@@ -19,7 +19,7 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.select_offer;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.common.currency.Market;
+import bisq.common.asset.Market;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.QuoteSideAmountSpec;

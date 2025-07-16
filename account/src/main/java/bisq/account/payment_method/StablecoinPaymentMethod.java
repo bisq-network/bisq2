@@ -17,7 +17,7 @@
 
 package bisq.account.payment_method;
 
-import bisq.common.currency.Asset;
+import bisq.common.asset.Asset;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

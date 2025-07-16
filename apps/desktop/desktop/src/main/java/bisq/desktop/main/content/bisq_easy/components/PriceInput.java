@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.components;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.currency.Market;
+import bisq.common.asset.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
 import bisq.common.util.MathUtils;

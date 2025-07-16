@@ -4,7 +4,7 @@ import bisq.bonded_roles.market_price.AuthorizedMarketPriceData;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceRequestService;
 import bisq.common.application.Service;
-import bisq.common.currency.Market;
+import bisq.common.asset.Market;
 import bisq.common.observable.Pin;
 import bisq.identity.Identity;
 import bisq.network.NetworkService;

@@ -41,7 +41,7 @@ import bisq.account.accounts.fiat.ZelleAccountPayload;
 import bisq.account.payment_method.CryptoPaymentRail;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.common.currency.FiatCurrencyRepository;
+import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;

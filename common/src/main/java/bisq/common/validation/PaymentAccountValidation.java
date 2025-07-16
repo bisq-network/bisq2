@@ -17,7 +17,7 @@
 
 package bisq.common.validation;
 
-import bisq.common.currency.FiatCurrencyRepository;
+import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 

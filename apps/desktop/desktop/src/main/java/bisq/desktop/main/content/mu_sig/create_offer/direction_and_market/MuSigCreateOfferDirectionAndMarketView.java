@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.direction_and_market;
 
-import bisq.common.currency.FiatCurrency;
-import bisq.common.currency.Market;
+import bisq.common.asset.FiatCurrency;
+import bisq.common.asset.Market;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;

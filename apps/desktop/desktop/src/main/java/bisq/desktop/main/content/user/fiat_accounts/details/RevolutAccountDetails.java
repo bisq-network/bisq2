@@ -20,7 +20,7 @@ package bisq.desktop.main.content.user.fiat_accounts.details;
 import bisq.account.accounts.fiat.RevolutAccount;
 import bisq.account.accounts.fiat.RevolutAccountPayload;
 import bisq.account.payment_method.FiatPaymentRailUtil;
-import bisq.common.currency.FiatCurrencyRepository;
+import bisq.common.asset.FiatCurrencyRepository;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import javafx.scene.control.Label;

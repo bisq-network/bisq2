@@ -17,8 +17,8 @@
 
 package bisq.common.monetary;
 
-import bisq.common.currency.Market;
-import bisq.common.currency.Asset;
+import bisq.common.asset.Market;
+import bisq.common.asset.Asset;
 import bisq.common.proto.PersistableProto;
 import bisq.common.util.MathUtils;
 import lombok.EqualsAndHashCode;

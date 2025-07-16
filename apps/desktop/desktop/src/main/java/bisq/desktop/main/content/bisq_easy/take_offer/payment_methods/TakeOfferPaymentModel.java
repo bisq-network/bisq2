@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.take_offer.payment_methods;
 
-import bisq.common.currency.Market;
+import bisq.common.asset.Market;
 import bisq.desktop.common.view.Model;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
 import bisq.account.payment_method.FiatPaymentMethodSpec;

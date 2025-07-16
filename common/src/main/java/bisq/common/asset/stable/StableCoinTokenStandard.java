@@ -15,22 +15,41 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.currency;
+package bisq.common.asset.stable;
 
-import bisq.common.validation.Validation;
-import bisq.common.validation.crypto.EtherAddressValidation;
-import bisq.common.validation.crypto.GenericAddressValidation;
-import bisq.common.validation.crypto.MoneroAddressValidation;
+import lombok.Getter;
 
-import java.util.Map;
+public enum StableCoinTokenStandard {
+    // Ethereum
+    ERC20("ERC-20"),
+    ERC721("ERC-721"),
+    ERC1155("ERC-1155"),
+    ERC4626("ERC-4626"),
+    ERC777("ERC-777"),
 
-public class CryptoCurrencyValidationRepository {
-    private static final Map<String, Validation> VALIDATION_BY_CODE = Map.of(
-            "XMR", MoneroAddressValidation.getInstance(),
-            "ETH", EtherAddressValidation.getInstance()
-    );
+    // Thron
+    TRC20("TRC-20"),
 
-    public static Validation getValidation(String code) {
-        return VALIDATION_BY_CODE.getOrDefault(code, GenericAddressValidation.getInstance());
+    // Bitcoin
+    RGB("RGB"),
+    Omni("Omni"),
+
+    // Lightning Network
+    TaprootAssets("Taproot Assets"),
+    BOLT11("BOLT-11"),
+
+    // Solana
+    SPL("SPL"),
+
+    // BNB Smart Chain
+    BEP20("BEP-20"),
+    BEP721("BEP-721"),
+    BEP1155("BEP-1155");
+
+    @Getter
+    private final String displayName;
+
+    StableCoinTokenStandard(String displayName) {
+        this.displayName = displayName;
     }
 }

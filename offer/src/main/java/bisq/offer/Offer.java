@@ -19,7 +19,7 @@ package bisq.offer;
 
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.annotation.ExcludeForHash;
-import bisq.common.currency.Market;
+import bisq.common.asset.Market;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;

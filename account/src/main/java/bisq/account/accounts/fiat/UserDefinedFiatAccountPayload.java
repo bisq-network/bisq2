@@ -22,7 +22,7 @@ import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
-import bisq.common.currency.FiatCurrencyRepository;
+import bisq.common.asset.FiatCurrencyRepository;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

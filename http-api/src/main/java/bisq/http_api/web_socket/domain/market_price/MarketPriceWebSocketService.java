@@ -20,7 +20,7 @@ package bisq.http_api.web_socket.domain.market_price;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.currency.Market;
+import bisq.common.asset.Market;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.dto.DtoMappings;

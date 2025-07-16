@@ -17,8 +17,8 @@
 
 package bisq.account.protocol_type;
 
-import bisq.common.currency.Market;
-import bisq.common.currency.Asset;
+import bisq.common.asset.Market;
+import bisq.common.asset.Asset;
 
 import java.util.ArrayList;
 import java.util.Comparator;

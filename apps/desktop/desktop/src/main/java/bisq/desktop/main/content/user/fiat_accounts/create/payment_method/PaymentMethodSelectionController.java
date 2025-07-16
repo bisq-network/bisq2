@@ -21,7 +21,7 @@ import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.FiatPaymentRailUtil;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.common.currency.FiatCurrencyRepository;
+import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.locale.LocaleRepository;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.user.fiat_accounts.create.payment_method.PaymentMethodSelectionView.PaymentMethodItem;

@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.components;
 
-import bisq.common.currency.Asset;
+import bisq.common.asset.Asset;
 import bisq.common.data.Pair;
 import bisq.common.data.Triple;
 import bisq.desktop.components.containers.Spacer;

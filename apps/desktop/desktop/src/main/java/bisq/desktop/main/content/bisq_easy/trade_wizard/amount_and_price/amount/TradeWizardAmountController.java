@@ -24,7 +24,7 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
-import bisq.common.currency.Market;
+import bisq.common.asset.Market;
 import bisq.common.data.Pair;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;

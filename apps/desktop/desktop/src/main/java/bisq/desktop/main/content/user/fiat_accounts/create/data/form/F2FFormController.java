@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.user.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.F2FAccountPayload;
-import bisq.common.currency.FiatCurrency;
-import bisq.common.currency.FiatCurrencyRepository;
+import bisq.common.asset.FiatCurrency;
+import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
 import bisq.common.util.StringUtils;

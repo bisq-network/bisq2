@@ -19,8 +19,8 @@ package bisq.settings;
 
 import bisq.common.application.DevMode;
 import bisq.common.application.Service;
-import bisq.common.currency.FiatCurrencyRepository;
-import bisq.common.currency.Market;
+import bisq.common.asset.FiatCurrencyRepository;
+import bisq.common.asset.Market;
 import bisq.common.data.ByteUnit;
 import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LanguageRepository;

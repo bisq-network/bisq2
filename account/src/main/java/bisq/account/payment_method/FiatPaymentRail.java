@@ -17,9 +17,9 @@
 
 package bisq.account.payment_method;
 
-import bisq.common.currency.FiatCurrency;
-import bisq.common.currency.FiatCurrencyRepository;
-import bisq.common.currency.Asset;
+import bisq.common.asset.FiatCurrency;
+import bisq.common.asset.FiatCurrencyRepository;
+import bisq.common.asset.Asset;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
 import bisq.i18n.Res;

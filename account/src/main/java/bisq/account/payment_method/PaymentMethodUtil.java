@@ -18,7 +18,7 @@
 package bisq.account.payment_method;
 
 import bisq.account.protocol_type.TradeProtocolType;
-import bisq.common.currency.Asset;
+import bisq.common.asset.Asset;
 
 import java.util.List;
 import java.util.stream.Collectors;

@@ -24,7 +24,7 @@ import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.payment_method.PaymentRail;
-import bisq.common.currency.FiatCurrencyRepository;
+import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.data.Triple;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.GridPaneUtil;

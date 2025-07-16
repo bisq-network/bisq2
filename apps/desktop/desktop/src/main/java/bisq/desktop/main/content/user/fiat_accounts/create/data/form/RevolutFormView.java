@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.fiat_accounts.create.data.form;
 
-import bisq.common.currency.FiatCurrency;
+import bisq.common.asset.FiatCurrency;
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextField;

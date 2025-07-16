@@ -17,8 +17,8 @@
 
 package bisq.common.monetary;
 
-import bisq.common.currency.CryptoCurrencyRepository;
-import bisq.common.currency.Asset;
+import bisq.common.asset.CryptoCurrencyRepository;
+import bisq.common.asset.Asset;
 import bisq.common.util.MathUtils;
 import com.google.common.math.LongMath;
 import lombok.EqualsAndHashCode;

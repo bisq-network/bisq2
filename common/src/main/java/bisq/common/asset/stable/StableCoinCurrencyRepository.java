@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.currency.stable;
+package bisq.common.asset.stable;
 
 import lombok.Getter;
 

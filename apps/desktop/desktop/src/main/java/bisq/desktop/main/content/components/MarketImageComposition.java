@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.components;
 
-import bisq.common.currency.FiatCurrencyRepository;
-import bisq.common.currency.Market;
+import bisq.common.asset.FiatCurrencyRepository;
+import bisq.common.asset.Market;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.security.DigestUtil;
 import javafx.geometry.Pos;

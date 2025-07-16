@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.mu_sig.create_offer.direction_and_market;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.currency.Market;
-import bisq.common.currency.MarketRepository;
+import bisq.common.asset.Market;
+import bisq.common.asset.MarketRepository;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.mu_sig.MuSigService;

@@ -17,7 +17,7 @@
 
 package bisq.common.monetary;
 
-import bisq.common.currency.Asset;
+import bisq.common.asset.Asset;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.MathUtils;

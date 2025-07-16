@@ -22,7 +22,7 @@ import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.CryptoPaymentMethod;
 import bisq.account.payment_method.CryptoPaymentRail;
-import bisq.common.currency.CryptoCurrencyRepository;
+import bisq.common.asset.CryptoCurrencyRepository;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;

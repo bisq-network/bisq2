@@ -31,7 +31,7 @@ import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.common.application.DevMode;
 import bisq.common.application.LifecycleService;
-import bisq.common.currency.Market;
+import bisq.common.asset.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;

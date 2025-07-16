@@ -19,8 +19,8 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price.amount
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.common.currency.Market;
-import bisq.common.currency.MarketRepository;
+import bisq.common.asset.Market;
+import bisq.common.asset.MarketRepository;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;

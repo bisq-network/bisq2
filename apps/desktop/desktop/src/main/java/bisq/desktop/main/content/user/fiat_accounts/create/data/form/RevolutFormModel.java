@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.user.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.RevolutAccountPayload;
-import bisq.common.currency.FiatCurrency;
+import bisq.common.asset.FiatCurrency;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;

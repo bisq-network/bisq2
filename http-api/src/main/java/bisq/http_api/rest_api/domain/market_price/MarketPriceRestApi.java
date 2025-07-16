@@ -19,7 +19,7 @@ package bisq.http_api.rest_api.domain.market_price;
 
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.currency.Market;
+import bisq.common.asset.Market;
 import bisq.dto.DtoMappings;
 import bisq.dto.common.monetary.PriceQuoteDto;
 import bisq.http_api.rest_api.domain.RestApiBase;

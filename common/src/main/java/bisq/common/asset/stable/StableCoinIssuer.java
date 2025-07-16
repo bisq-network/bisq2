@@ -15,41 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.currency.stable;
+package bisq.common.asset.stable;
 
 import lombok.Getter;
 
-public enum StableCoinTokenStandard {
-    // Ethereum
-    ERC20("ERC-20"),
-    ERC721("ERC-721"),
-    ERC1155("ERC-1155"),
-    ERC4626("ERC-4626"),
-    ERC777("ERC-777"),
-
-    // Thron
-    TRC20("TRC-20"),
-
-    // Bitcoin
-    RGB("RGB"),
-    Omni("Omni"),
-
-    // Lightning Network
-    TaprootAssets("Taproot Assets"),
-    BOLT11("BOLT-11"),
-
-    // Solana
-    SPL("SPL"),
-
-    // BNB Smart Chain
-    BEP20("BEP-20"),
-    BEP721("BEP-721"),
-    BEP1155("BEP-1155");
+public enum StableCoinIssuer {
+    TETHER("Tether Ltd."),
+    CIRCLE("Circle Internet Financial, LLC"),
+    MAKERDAO("MakerDAO"),
+    FIRST_DIGITAL("First Digital Trust Limited"),
+    PAXOS("Paxos Trust Company"),
+    GEMINI("Gemini Trust Company, LLC"),
+    TECHTERYX("Techteryx Ltd."), // issuer of TrueUSD (TUSD)
+    STABLESAT("Galoy Inc."),     // synthetic USD via Stablesats
+    LIGHTNING_LABS("Lightning Labs"), // Taproot Assets experimental issuer
+    FEDIMINT("Fedimint Federation");
 
     @Getter
     private final String displayName;
 
-    StableCoinTokenStandard(String displayName) {
+    StableCoinIssuer(String displayName) {
         this.displayName = displayName;
     }
 }
+

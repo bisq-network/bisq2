@@ -15,25 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.currency.stable;
+package bisq.common.asset;
 
-import lombok.Getter;
+import java.util.ArrayList;
+import java.util.List;
 
-public enum StableCoinChain {
-    ETHEREUM("Ethereum"),
-    TRON("Tron"),
-    BNB_SMART_CHAIN("BNB Smart Chain"),
-    SOLANA("Solana"),
-    BITCOIN("Bitcoin"),
-    TAPROOT_ASSETS("Taproot Assets"),
-    LIQUID("Liquid Bitcoin");
-    /*RGB,
-    FEDIMINT,
-    STABLESATS*/
-    @Getter
-    private final String displayName;
+public class CurrencyRepository {
 
-    StableCoinChain(String displayName) {
-        this.displayName = displayName;
+    private static final List<Asset> allCurrencies = new ArrayList<>();
+
+    public static List<Asset> getAllCurrencies() {
+        if (allCurrencies.isEmpty()) {
+            allCurrencies.addAll(FiatCurrencyRepository.getMajorCurrencies());
+            allCurrencies.addAll(CryptoCurrencyRepository.getMajorCurrencies());
+            allCurrencies.addAll(FiatCurrencyRepository.getMinorCurrencies());
+            allCurrencies.addAll(CryptoCurrencyRepository.getMinorCurrencies());
+        }
+        return allCurrencies;
     }
 }

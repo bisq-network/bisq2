@@ -28,7 +28,7 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
-import bisq.common.currency.Market;
+import bisq.common.asset.Market;
 import bisq.common.encoding.Hex;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;

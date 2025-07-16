@@ -34,7 +34,7 @@ import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.Reaction;
-import bisq.common.currency.Market;
+import bisq.common.asset.Market;
 import bisq.common.data.Pair;
 import bisq.common.data.Triple;
 import bisq.common.locale.LanguageRepository;

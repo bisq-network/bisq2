@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.currency;
+package bisq.common.asset;
 
 import bisq.common.annotation.ExcludeForHash;
-import bisq.common.currency.stable.StableCoinCurrency;
+import bisq.common.asset.stable.StableCoinCurrency;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;

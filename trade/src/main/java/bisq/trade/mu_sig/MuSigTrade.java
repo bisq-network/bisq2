@@ -17,7 +17,7 @@
 
 package bisq.trade.mu_sig;
 
-import bisq.common.currency.Market;
+import bisq.common.asset.Market;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.ProtobufUtils;

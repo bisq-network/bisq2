@@ -17,9 +17,9 @@
 
 package bisq.account.payment_method;
 
-import bisq.common.currency.Asset;
-import bisq.common.currency.stable.StableCoinCurrency;
-import bisq.common.currency.stable.StableCoinCurrencyRepository;
+import bisq.common.asset.Asset;
+import bisq.common.asset.stable.StableCoinCurrency;
+import bisq.common.asset.stable.StableCoinCurrencyRepository;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
