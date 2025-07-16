@@ -177,16 +177,10 @@ public class UserIdentityRestApi extends RestApiBase {
             if (selectedUserIdentity == null) {
                 asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND, "No selected user identity found"));
             }
-            UserProfile userProfile = UserProfile.forEdit(
-                    Objects.requireNonNull(selectedUserIdentity).getUserProfile(),
-                    request.getTerms(),
-                    request.getStatement()
-            );
-            UserIdentity newUserIdentity = new UserIdentity(selectedUserIdentity.getIdentity(), userProfile);
-
-            userIdentityService.editUserProfile(newUserIdentity, request.getTerms(), request.getStatement())
+            userIdentityService.editUserProfile(Objects.requireNonNull(selectedUserIdentity), request.getTerms(), request.getStatement())
                     .thenAccept(result -> {
-                        UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(userProfile);
+                        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
+                        UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(userIdentity.getUserProfile());
                         asyncResponse.resume(buildResponse(Response.Status.OK, new UpdateUserIdentityResponse(userProfileDto)));
                     });
         } catch (IllegalArgumentException e) {
