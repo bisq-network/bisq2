@@ -22,7 +22,7 @@ import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.asset.Market;
+import bisq.common.market.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;

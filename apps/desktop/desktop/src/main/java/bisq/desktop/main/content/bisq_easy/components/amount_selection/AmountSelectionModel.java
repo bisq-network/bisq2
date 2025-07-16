@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.bisq_easy.components.amount_selection;
 
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
-import bisq.common.asset.Market;
-import bisq.common.asset.MarketRepository;
+import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;

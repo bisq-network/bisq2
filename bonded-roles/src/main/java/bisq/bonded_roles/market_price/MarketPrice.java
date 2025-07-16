@@ -17,7 +17,7 @@
 
 package bisq.bonded_roles.market_price;
 
-import bisq.common.asset.Market;
+import bisq.common.market.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;

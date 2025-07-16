@@ -19,7 +19,7 @@ package bisq.offer.price.spec;
 
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.asset.Market;
+import bisq.common.market.Market;
 import bisq.i18n.Res;
 import bisq.offer.price.PriceUtil;
 import bisq.presentation.formatters.PercentageFormatter;

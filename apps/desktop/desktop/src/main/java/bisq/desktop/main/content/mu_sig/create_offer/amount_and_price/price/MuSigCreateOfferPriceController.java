@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.mu_sig.create_offer.amount_and_price.price;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.asset.Market;
+import bisq.common.market.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;

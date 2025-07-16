@@ -17,7 +17,7 @@
 
 package bisq.trade.mu_sig.messages.network.handler;
 
-import bisq.common.asset.Market;
+import bisq.common.market.Market;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MusSigFeeRateProvider;
 

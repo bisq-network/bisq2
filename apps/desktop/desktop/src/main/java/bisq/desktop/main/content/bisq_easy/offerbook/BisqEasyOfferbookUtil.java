@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
-import bisq.common.asset.Market;
-import bisq.common.asset.MarketRepository;
+import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;

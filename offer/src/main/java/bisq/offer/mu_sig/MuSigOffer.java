@@ -20,7 +20,7 @@ package bisq.offer.mu_sig;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.application.BuildVersion;
-import bisq.common.asset.Market;
+import bisq.common.market.Market;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.Offer;

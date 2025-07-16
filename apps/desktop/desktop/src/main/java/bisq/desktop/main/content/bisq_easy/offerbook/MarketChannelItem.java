@@ -21,7 +21,7 @@ import bisq.bisq_easy.BisqEasyOfferbookMessageService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.notifications.ChatNotificationService;
-import bisq.common.asset.Market;
+import bisq.common.market.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;

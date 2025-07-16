@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.mu_sig.offerbook;
 
-import bisq.common.asset.Market;
-import bisq.common.asset.MarketRepository;
+import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
 
 import java.util.Comparator;
 import java.util.List;

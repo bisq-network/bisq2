@@ -25,7 +25,7 @@ import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
-import bisq.common.asset.MarketRepository;
+import bisq.common.market.MarketRepository;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.util.CompletableFutureUtils;

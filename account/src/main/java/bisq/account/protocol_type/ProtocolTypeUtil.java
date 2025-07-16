@@ -17,7 +17,7 @@
 
 package bisq.account.protocol_type;
 
-import bisq.common.asset.Market;
+import bisq.common.market.Market;
 import bisq.common.asset.Asset;
 
 import java.util.ArrayList;

@@ -15,8 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.asset;
+package bisq.common.market;
 
+import bisq.common.asset.FiatCurrency;
+import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.asset.stable.StableCoin;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.PersistableProto;

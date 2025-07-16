@@ -17,7 +17,7 @@
 
 package bisq.common.monetary;
 
-import bisq.common.asset.Market;
+import bisq.common.market.Market;
 import bisq.common.asset.Asset;
 import bisq.common.proto.PersistableProto;
 import bisq.common.util.MathUtils;

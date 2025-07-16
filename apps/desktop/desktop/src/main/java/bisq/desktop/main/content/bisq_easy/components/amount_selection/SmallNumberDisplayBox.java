@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.components.amount_selection;
 
-import bisq.common.asset.Market;
+import bisq.common.market.Market;
 import bisq.common.asset.Asset;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.utils.ImageUtil;

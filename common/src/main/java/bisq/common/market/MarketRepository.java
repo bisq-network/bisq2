@@ -15,8 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.asset;
+package bisq.common.market;
 
+import bisq.common.asset.CryptoAsset;
+import bisq.common.asset.CryptoAssetRepository;
+import bisq.common.asset.FiatCurrencyRepository;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;

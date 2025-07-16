@@ -21,7 +21,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceRequestService;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.asset.MarketRepository;
+import bisq.common.market.MarketRepository;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;

@@ -17,8 +17,8 @@
 
 package bisq.bonded_roles.market_price;
 
-import bisq.common.asset.Market;
-import bisq.common.asset.MarketRepository;
+import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.proto.ProtoResolver;

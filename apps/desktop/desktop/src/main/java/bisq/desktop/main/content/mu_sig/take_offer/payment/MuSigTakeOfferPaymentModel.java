@@ -19,7 +19,7 @@ package bisq.desktop.main.content.mu_sig.take_offer.payment;
 
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.common.asset.Market;
+import bisq.common.market.Market;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import bisq.account.payment_method.PaymentMethodSpec;
