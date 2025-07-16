@@ -89,8 +89,8 @@ public class ZelleAccountPayload extends CountryBasedAccountPayload implements S
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.holderName"), holderName,
-                Res.get("user.paymentAccounts.emailOrMobileNr"), emailOrMobileNr
+                Res.get("paymentAccounts.holderName"), holderName,
+                Res.get("paymentAccounts.emailOrMobileNr"), emailOrMobileNr
         ).toString();
     }
 }

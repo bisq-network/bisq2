@@ -90,9 +90,9 @@ public final class FasterPaymentsAccountPayload extends CountryBasedAccountPaylo
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.holderName"), holderName,
-                Res.get("user.paymentAccounts.fasterPayments.sortCode"), sortCode,
-                Res.get("user.paymentAccounts.fasterPayments.accountNr"), accountNr
+                Res.get("paymentAccounts.holderName"), holderName,
+                Res.get("paymentAccounts.fasterPayments.sortCode"), sortCode,
+                Res.get("paymentAccounts.fasterPayments.accountNr"), accountNr
         ).toString();
     }
 }

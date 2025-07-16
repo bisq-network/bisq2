@@ -17,6 +17,7 @@
 
 package bisq.account.accounts;
 
+import bisq.account.accounts.crypto.CryptoCurrencyAccount;
 import bisq.account.accounts.fiat.CashByMailAccount;
 import bisq.account.accounts.fiat.CountryBasedAccount;
 import bisq.account.accounts.fiat.FasterPaymentsAccount;
@@ -88,6 +89,7 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
             case USPOSTALMONEYORDERACCOUNT -> USPostalMoneyOrderAccount.fromProto(proto);
             case CASHBYMAILACCOUNT -> CashByMailAccount.fromProto(proto);
             case INTERACETRANSFERACCOUNT -> InteracETransferAccount.fromProto(proto);
+            case CRYPTOCURRENCYACCOUNT -> CryptoCurrencyAccount.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);
         };

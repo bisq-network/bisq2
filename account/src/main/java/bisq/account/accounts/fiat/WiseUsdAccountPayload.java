@@ -100,8 +100,8 @@ public final class WiseUsdAccountPayload extends CountryBasedAccountPayload impl
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.holderName"), holderName,
-                Res.get("user.paymentAccounts.email"), email
+                Res.get("paymentAccounts.holderName"), holderName,
+                Res.get("paymentAccounts.email"), email
         ).toString();
     }
 }

@@ -91,8 +91,8 @@ public final class SwishAccountPayload extends CountryBasedAccountPayload implem
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.holderName"), holderName,
-                Res.get("user.paymentAccounts.mobileNr"), mobileNr
+                Res.get("paymentAccounts.holderName"), holderName,
+                Res.get("paymentAccounts.mobileNr"), mobileNr
         ).toString();
     }
 }

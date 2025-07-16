@@ -218,7 +218,7 @@ public class TradeWizardPaymentMethodsController implements Controller {
         }
         FiatPaymentMethod customFiatPaymentMethod = FiatPaymentMethod.fromCustomName(customName);
         if (model.getAddedCustomFiatPaymentMethods().contains(customFiatPaymentMethod)) {
-            new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.customPaymentMethodAlreadyExists", customFiatPaymentMethod.getName())).show();
+            new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.customPaymentMethodAlreadyExists", customFiatPaymentMethod.getPaymentRailName())).show();
             return false;
         }
         return maybeAddCustomFiatPaymentMethod(customFiatPaymentMethod);
@@ -237,7 +237,7 @@ public class TradeWizardPaymentMethodsController implements Controller {
     private boolean maybeAddCustomFiatPaymentMethod(FiatPaymentMethod fiatPaymentMethod) {
         if (fiatPaymentMethod != null) {
             if (!model.getAddedCustomFiatPaymentMethods().contains(fiatPaymentMethod)) {
-                String customName = fiatPaymentMethod.getName().toUpperCase().strip();
+                String customName = fiatPaymentMethod.getPaymentRailName().toUpperCase().strip();
                 if (isPredefinedPaymentMethodsContainName(customName)) {
                     new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.customNameMatchesPredefinedMethod")).show();
                     model.getCustomFiatPaymentMethodName().set("");

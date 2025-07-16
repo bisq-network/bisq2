@@ -82,10 +82,10 @@ public final class InteracETransferAccountPayload extends AccountPayload<FiatPay
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.holderName"), holderName,
-                Res.get("user.paymentAccounts.email"), email,
-                Res.get("user.paymentAccounts.interacETransfer.question"), question,
-                Res.get("user.paymentAccounts.interacETransfer.answer"), answer
+                Res.get("paymentAccounts.holderName"), holderName,
+                Res.get("paymentAccounts.email"), email,
+                Res.get("paymentAccounts.interacETransfer.question"), question,
+                Res.get("paymentAccounts.interacETransfer.answer"), answer
         ).toString();
     }
 }

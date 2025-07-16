@@ -130,7 +130,7 @@ public class MuSigCreateOfferReviewController implements Controller {
         List<PaymentMethod<?>> paymentMethods = new ArrayList<>();
         List<Account<?, ?>> accounts = new ArrayList<>();
         selectedAccountByPaymentMethod.entrySet().stream()
-                .sorted(Comparator.comparing(o -> o.getKey().getName()))
+                .sorted(Comparator.comparing(o -> o.getKey().getPaymentRailName()))
                 .forEach(e -> {
                     paymentMethods.add(e.getKey());
                     accounts.add(e.getValue());

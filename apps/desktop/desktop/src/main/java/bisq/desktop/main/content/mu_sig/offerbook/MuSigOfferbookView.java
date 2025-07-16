@@ -887,7 +887,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         cleanUpPaymentsFilterMenu();
 
         model.getAvailablePaymentMethods().forEach(paymentMethod -> {
-            ImageView paymentIcon = ImageUtil.getImageViewById(paymentMethod.getName());
+            ImageView paymentIcon = ImageUtil.getImageViewById(paymentMethod.getPaymentRailName());
             Label paymentLabel = new Label(paymentMethod.getDisplayString(), paymentIcon);
             paymentLabel.setGraphicTextGap(10);
             PaymentMenuItem paymentItem = new PaymentMenuItem(paymentMethod, paymentLabel);

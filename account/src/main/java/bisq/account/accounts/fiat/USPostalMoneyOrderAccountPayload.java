@@ -74,8 +74,8 @@ public final class USPostalMoneyOrderAccountPayload extends AccountPayload<FiatP
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.holderName"), holderName,
-                Res.get("user.paymentAccounts.postalAddress"), postalAddress
+                Res.get("paymentAccounts.holderName"), holderName,
+                Res.get("paymentAccounts.postalAddress"), postalAddress
         ).toString();
     }
 }

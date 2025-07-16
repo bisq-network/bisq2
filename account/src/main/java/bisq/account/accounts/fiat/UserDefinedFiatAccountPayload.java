@@ -74,7 +74,7 @@ public final class UserDefinedFiatAccountPayload extends AccountPayload<FiatPaym
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.userDefined.accountData"), accountData
+                Res.get("paymentAccounts.userDefined.accountData"), accountData
         ).toString();
     }
 

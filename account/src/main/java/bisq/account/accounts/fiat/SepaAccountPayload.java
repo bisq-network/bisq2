@@ -126,9 +126,9 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.holderName"), holderName,
-                Res.get("user.paymentAccounts.sepa.iban"), iban,
-                Res.get("user.paymentAccounts.sepa.bic"), bic
+                Res.get("paymentAccounts.holderName"), holderName,
+                Res.get("paymentAccounts.sepa.iban"), iban,
+                Res.get("paymentAccounts.sepa.bic"), bic
         ).toString();
     }
 

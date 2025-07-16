@@ -93,7 +93,7 @@ public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMetho
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.userName"), userName
+                Res.get("paymentAccounts.userName"), userName
         ).toString();
     }
 }

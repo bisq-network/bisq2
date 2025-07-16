@@ -18,20 +18,29 @@
 package bisq.account.payment_method;
 
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.common.currency.CryptoCurrencyRepository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CryptoPaymentMethodUtil {
-    public static CryptoPaymentMethod getPaymentMethod(String name, String currencyCode) {
+
+    public static List<CryptoPaymentMethod> getAllCryptoPaymentMethods() {
+        return CryptoCurrencyRepository.getAllCurrencies().stream()
+                .map(currency -> new CryptoPaymentMethod(CryptoPaymentRail.NATIVE_CHAIN, currency.getCode()))
+                .collect(Collectors.toList());
+    }
+
+    public static CryptoPaymentMethod getPaymentMethod(String cryptoPaymentRailName, String currencyCode) {
         try {
-            CryptoPaymentRail cryptoPaymentRail = CryptoPaymentRail.valueOf(name);
-            CryptoPaymentMethod cryptoPaymentMethod = CryptoPaymentMethod.fromPaymentRail(cryptoPaymentRail, currencyCode);
+            CryptoPaymentRail cryptoPaymentRail = CryptoPaymentRail.valueOf(cryptoPaymentRailName);
+            CryptoPaymentMethod cryptoPaymentMethod = new CryptoPaymentMethod(cryptoPaymentRail, currencyCode);
             if (!cryptoPaymentMethod.isCustomPaymentMethod()) {
                 return cryptoPaymentMethod;
             }
         } catch (Throwable ignore) {
         }
-        return CryptoPaymentMethod.fromCustomName(name, currencyCode);
+        return CryptoPaymentMethod.fromCustomName(cryptoPaymentRailName, currencyCode);
     }
 
     public static List<CryptoPaymentRail> getPaymentRails() {

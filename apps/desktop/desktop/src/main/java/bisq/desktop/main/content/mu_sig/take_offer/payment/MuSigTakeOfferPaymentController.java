@@ -192,7 +192,7 @@ public class MuSigTakeOfferPaymentController implements Controller {
         model.getSelectedPaymentMethodSpec().set(null);
         model.getToggleGroup().selectToggle(null);
         OverlayController.hide();
-        Navigation.navigateTo(NavigationTarget.PAYMENT_ACCOUNTS);
+        Navigation.navigateTo(NavigationTarget.FIAT_PAYMENT_ACCOUNTS);
     }
 
     void onCloseNoAccountOverlay(PaymentMethod<?> paymentMethod) {

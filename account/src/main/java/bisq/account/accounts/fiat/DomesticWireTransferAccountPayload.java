@@ -108,15 +108,15 @@ public final class DomesticWireTransferAccountPayload extends BankAccountPayload
     @Override
     public String getAccountDataDisplayString() {
         AccountDataDisplayStringBuilder builder = new AccountDataDisplayStringBuilder();
-        holderName.ifPresent(value -> builder.add(Res.get("user.paymentAccounts.holderName"), value));
+        holderName.ifPresent(value -> builder.add(Res.get("paymentAccounts.holderName"), value));
         holderId.ifPresent(value -> builder.add(BankAccountUtils.getHolderIdDescription(countryCode), value));
-        builder.add(Res.get("user.paymentAccounts.holderAddress"), holderAddress);
-        bankName.ifPresent(value -> builder.add(Res.get("user.paymentAccounts.bank.bankName"), value));
+        builder.add(Res.get("paymentAccounts.holderAddress"), holderAddress);
+        bankName.ifPresent(value -> builder.add(Res.get("paymentAccounts.bank.bankName"), value));
         bankId.ifPresent(value -> builder.add(BankAccountUtils.getBankIdDescription(countryCode), value));
         branchId.ifPresent(value -> builder.add(BankAccountUtils.getBranchIdDescription(countryCode), value));
         builder.add(BankAccountUtils.getAccountNrDescription(countryCode), accountNr);
-        bankAccountType.ifPresent(value -> builder.add(Res.get("user.paymentAccounts.bank.bankAccountType"),
-                Res.get("user.paymentAccounts.bank.bankAccountType." + value.name())));
+        bankAccountType.ifPresent(value -> builder.add(Res.get("paymentAccounts.bank.bankAccountType"),
+                Res.get("paymentAccounts.bank.bankAccountType." + value.name())));
         nationalAccountId.ifPresent(value -> builder.add(BankAccountUtils.getNationalAccountIdDescription(countryCode), value));
         return builder.toString();
     }

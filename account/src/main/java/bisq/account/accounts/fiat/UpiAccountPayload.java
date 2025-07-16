@@ -70,7 +70,7 @@ public final class UpiAccountPayload extends CountryBasedAccountPayload implemen
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.upi.virtualPaymentAddress"), virtualPaymentAddress
+                Res.get("paymentAccounts.upi.virtualPaymentAddress"), virtualPaymentAddress
         ).toString();
     }
 }

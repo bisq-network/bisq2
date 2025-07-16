@@ -69,7 +69,7 @@ public final class StrikeAccountPayload extends CountryBasedAccountPayload imple
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.holderName"), holderName
+                Res.get("paymentAccounts.holderName"), holderName
         ).toString();
     }
 }

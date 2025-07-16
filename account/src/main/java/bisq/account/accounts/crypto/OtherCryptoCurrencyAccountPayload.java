@@ -22,6 +22,8 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 @Getter
 @Slf4j
 @ToString
@@ -31,8 +33,18 @@ public final class OtherCryptoCurrencyAccountPayload extends CryptoCurrencyAccou
                                              String currencyCode,
                                              String address,
                                              boolean isInstant,
-                                             boolean isAutoConf) {
-        super(id, currencyCode, address, isInstant, isAutoConf);
+                                             Optional<Boolean> isAutoConf,
+                                             Optional<Integer> autoConfNumConfirmations,
+                                             Optional<Long> autoConfMaxTradeAmount,
+                                             Optional<String> autoConfExplorerUrls) {
+        super(id,
+                currencyCode,
+                address,
+                isInstant,
+                isAutoConf,
+                autoConfNumConfirmations,
+                autoConfMaxTradeAmount,
+                autoConfExplorerUrls);
     }
 
     @Override
@@ -55,6 +67,9 @@ public final class OtherCryptoCurrencyAccountPayload extends CryptoCurrencyAccou
                 cryptoCurrency.getCurrencyCode(),
                 cryptoCurrency.getAddress(),
                 cryptoCurrency.getIsInstant(),
-                cryptoCurrency.getIsAutoConf());
+                cryptoCurrency.hasIsAutoConf()? Optional.of(cryptoCurrency.getIsAutoConf()):Optional.empty(),
+                cryptoCurrency.hasAutoConfNumConfirmations()? Optional.of(cryptoCurrency.getAutoConfNumConfirmations()):Optional.empty(),
+                cryptoCurrency.hasAutoConfMaxTradeAmount()? Optional.of(cryptoCurrency.getAutoConfMaxTradeAmount()):Optional.empty(),
+                cryptoCurrency.hasAutoConfExplorerUrls()? Optional.of(cryptoCurrency.getAutoConfExplorerUrls()):Optional.empty());
     }
 }

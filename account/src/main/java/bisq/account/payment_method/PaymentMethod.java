@@ -45,29 +45,22 @@ import java.util.stream.Collectors;
 public abstract class PaymentMethod<R extends PaymentRail> implements Comparable<PaymentMethod<R>>, NetworkProto {
     public final static int MAX_NAME_LENGTH = 50;
 
-    // Only name is used for protobuf, thus other fields are transient.
-    protected final String name;
+    // Only paymentRail name is used for protobuf, thus other fields are transient.
+    protected final String paymentRailName;
 
     // We do not persist the paymentRail but still include it in EqualsAndHashCode.
     protected transient final R paymentRail;
 
-    @EqualsAndHashCode.Exclude
-    protected transient final String displayString;
-    @EqualsAndHashCode.Exclude
-    protected transient final String shortDisplayString;
+
 
     /**
      * @param paymentRail The method to be associated with that payment method
      */
     protected PaymentMethod(R paymentRail) {
-        this.name = paymentRail.name();
-
+        this.paymentRailName = paymentRail.name();
         this.paymentRail = paymentRail;
 
-        displayString = createDisplayString();
-        shortDisplayString = createShortDisplayString();
-
-        NetworkDataValidation.validateText(name, MAX_NAME_LENGTH);
+        NetworkDataValidation.validateText(paymentRailName, MAX_NAME_LENGTH);
     }
 
     /**
@@ -75,35 +68,31 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
      *                   In that case we set the method to the fallback method (e.g. USER_DEFINED).
      */
     protected PaymentMethod(String customName) {
-        this.name = customName;
+        this.paymentRailName = customName;
         this.paymentRail = getCustomPaymentRail();
-
-        // Avoid accidentally using a translation string in case the customName would match a key
-        displayString = name;
-        shortDisplayString = name;
 
         verify();
     }
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateText(name, 100);
+        NetworkDataValidation.validateText(paymentRailName, 100);
     }
 
-    protected String createDisplayString() {
-        return Res.has(name) ? Res.get(name) : name;
+    public String getDisplayString() {
+        return  Res.has(paymentRailName) ? Res.get(paymentRailName) : paymentRailName;
     }
 
-    protected String createShortDisplayString() {
-        String shortName = name + "_SHORT";
-        return Res.has(shortName) ? Res.get(shortName) : createDisplayString();
+    public String getShortDisplayString() {
+        String shortName = paymentRailName + "_SHORT";
+        return Res.has(shortName) ? Res.get(shortName) : getDisplayString();
     }
 
     @Override
     public abstract bisq.account.protobuf.PaymentMethod toProto(boolean serializeForHash);
 
     protected bisq.account.protobuf.PaymentMethod.Builder getPaymentMethodBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.PaymentMethod.newBuilder().setName(name);
+        return bisq.account.protobuf.PaymentMethod.newBuilder().setPaymentRailName(paymentRailName);
     }
 
     public static PaymentMethod<? extends PaymentRail> fromProto(bisq.account.protobuf.PaymentMethod proto) {
@@ -126,7 +115,7 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
 
     @Override
     public int compareTo(PaymentMethod<R> o) {
-        return name.compareTo(o.getName());
+        return paymentRailName.compareTo(o.getPaymentRailName());
     }
 
     public List<String> getSupportedCurrencyCodes() {
@@ -145,7 +134,7 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
 
     public String getSupportedCurrencyCodesAsDisplayString() {
         if (supportsAllCurrencies()) {
-            return Res.get("user.paymentAccounts.allCurrencies");
+            return Res.get("paymentAccounts.allCurrencies");
         } else {
             List<String> currencyCodes = getSupportedCurrencyCodes();
             if (currencyCodes.size() == 1) {
@@ -162,7 +151,7 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
 
     public String getSupportedCurrencyDisplayNameAndCodeAsDisplayString(String delimiter) {
         if (supportsAllCurrencies()) {
-            return Res.get("user.paymentAccounts.allCurrencies");
+            return Res.get("paymentAccounts.allCurrencies");
         } else {
             List<String> displayNameAndCode = getSupportedCurrencyDisplayNameAndCode().stream().sorted().collect(Collectors.toList());
             if (displayNameAndCode.size() == 1) {

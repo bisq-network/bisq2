@@ -102,8 +102,8 @@ public final class UpholdAccountPayload extends CountryBasedAccountPayload imple
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.holderName"), holderName,
-                Res.get("user.paymentAccounts.uphold.accountId"), accountId
+                Res.get("paymentAccounts.holderName"), holderName,
+                Res.get("paymentAccounts.uphold.accountId"), accountId
         ).toString();
     }
 }

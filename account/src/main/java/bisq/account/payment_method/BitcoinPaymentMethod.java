@@ -58,7 +58,7 @@ public class BitcoinPaymentMethod extends PaymentMethod<BitcoinPaymentRail> {
     }
 
     public static BitcoinPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
-        return BitcoinPaymentMethodUtil.getPaymentMethod(proto.getName());
+        return BitcoinPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName());
     }
 
     @Override

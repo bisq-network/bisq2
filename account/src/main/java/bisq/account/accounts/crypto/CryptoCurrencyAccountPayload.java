@@ -22,12 +22,16 @@ import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.CryptoPaymentMethod;
 import bisq.account.payment_method.CryptoPaymentRail;
+import bisq.common.currency.CryptoCurrencyRepository;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
 
 @Getter
 @Slf4j
@@ -37,18 +41,27 @@ public abstract class CryptoCurrencyAccountPayload extends AccountPayload<Crypto
     protected final String currencyCode;
     protected final String address;
     protected final boolean isInstant;
-    protected final boolean isAutoConf;
+    protected final Optional<Boolean> isAutoConf;
+    protected final Optional<Integer> autoConfNumConfirmations;
+    protected final Optional<Long> autoConfMaxTradeAmount;
+    protected final Optional<String> autoConfExplorerUrls;
 
     public CryptoCurrencyAccountPayload(String id,
                                         String currencyCode,
                                         String address,
                                         boolean isInstant,
-                                        boolean isAutoConf) {
+                                        Optional<Boolean> isAutoConf,
+                                        Optional<Integer> autoConfNumConfirmations,
+                                        Optional<Long> autoConfMaxTradeAmount,
+                                        Optional<String> autoConfExplorerUrls) {
         super(id);
         this.currencyCode = currencyCode;
         this.address = address;
         this.isInstant = isInstant;
         this.isAutoConf = isAutoConf;
+        this.autoConfNumConfirmations = autoConfNumConfirmations;
+        this.autoConfMaxTradeAmount = autoConfMaxTradeAmount;
+        this.autoConfExplorerUrls = autoConfExplorerUrls;
     }
 
     protected bisq.account.protobuf.CryptoCurrencyAccountPayload toCryptoCurrencyAccountPayloadProto(boolean serializeForHash) {
@@ -56,11 +69,15 @@ public abstract class CryptoCurrencyAccountPayload extends AccountPayload<Crypto
     }
 
     protected bisq.account.protobuf.CryptoCurrencyAccountPayload.Builder getCryptoCurrencyAccountPayloadBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.CryptoCurrencyAccountPayload.newBuilder()
+        bisq.account.protobuf.CryptoCurrencyAccountPayload.Builder builder = bisq.account.protobuf.CryptoCurrencyAccountPayload.newBuilder()
                 .setCurrencyCode(currencyCode)
                 .setAddress(address)
-                .setIsInstant(isInstant)
-                .setIsAutoConf(isAutoConf);
+                .setIsInstant(isInstant);
+        isAutoConf.ifPresent(builder::setIsAutoConf);
+        autoConfNumConfirmations.ifPresent(builder::setAutoConfNumConfirmations);
+        autoConfMaxTradeAmount.ifPresent(builder::setAutoConfMaxTradeAmount);
+        autoConfExplorerUrls.ifPresent(builder::setAutoConfExplorerUrls);
+        return builder;
     }
 
     public static CryptoCurrencyAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
@@ -73,14 +90,25 @@ public abstract class CryptoCurrencyAccountPayload extends AccountPayload<Crypto
 
     @Override
     public CryptoPaymentMethod getPaymentMethod() {
-        return CryptoPaymentMethod.fromPaymentRail(CryptoPaymentRail.NATIVE_CHAIN, currencyCode);
+        return new CryptoPaymentMethod(CryptoPaymentRail.NATIVE_CHAIN, currencyCode);
+    }
+
+    @Override
+    public String getDefaultAccountName() {
+        return getPaymentMethod().getCurrencyName() + "-" + StringUtils.truncate(address, 8);
     }
 
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.altcoin.currencyCode"), currencyCode,
-                Res.get("user.paymentAccounts.altcoin.address"), address
+                Res.get("paymentAccounts.crypto.summary.tickerSymbol"), currencyCode,
+                Res.get("paymentAccounts.crypto.address.address"), address
         ).toString();
+    }
+
+    public String getCodeAndDisplayName() {
+        return CryptoCurrencyRepository.findName(currencyCode)
+                .map(name -> currencyCode + " (" + name + ")")
+                .orElse(currencyCode);
     }
 }

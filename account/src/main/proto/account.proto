@@ -50,7 +50,7 @@ message ProtocolType {
 
 // PaymentMethod
 message PaymentMethod {
-  string name = 1;
+  string paymentRailName = 1;
   oneof message {
     FiatPaymentMethod fiatPaymentMethod = 10;
     BitcoinPaymentMethod bitcoinPaymentMethod = 11;
@@ -115,7 +115,10 @@ message CryptoCurrencyAccountPayload {
   string currencyCode = 1;
   string address = 2;
   bool isInstant = 3;
-  bool isAutoConf = 4;
+  optional bool isAutoConf = 4;
+  optional uint32 autoConfNumConfirmations = 5;
+  optional uint64 autoConfMaxTradeAmount = 6;
+  optional string autoConfExplorerUrls = 7;
   oneof message {
     MoneroAccountPayload moneroAccountPayload = 10;
     OtherCryptoCurrencyAccountPayload otherCryptoCurrencyAccountPayload = 11;

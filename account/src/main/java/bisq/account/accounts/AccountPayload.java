@@ -30,6 +30,7 @@ import bisq.account.accounts.fiat.ZelleAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -94,11 +95,11 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
     public abstract M getPaymentMethod();
 
     public String getPaymentMethodName() {
-        return getPaymentMethod().getName();
+        return getPaymentMethod().getPaymentRailName();
     }
 
     public String getDefaultAccountName() {
-        return getPaymentMethodName() + "-" + id.substring(0, 4);
+        return getPaymentMethodName() + "-" + StringUtils.truncate(id, 8);
     }
 
     public List<String> getSelectedCurrencyCodes() {

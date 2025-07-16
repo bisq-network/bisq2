@@ -75,7 +75,7 @@ public class MuSigOfferUtil {
                 if (item != null && !empty) {
                     hbox.getChildren().clear();
                     for (FiatPaymentMethod paymentMethod : item.getPaymentMethods()) {
-                        Node icon = ImageUtil.getImageViewById(paymentMethod.getName());
+                        Node icon = ImageUtil.getImageViewById(paymentMethod.getPaymentRailName());
                         Optional<Double> opacity = Optional.ofNullable(item.getAccountAvailableByPaymentMethod().get(paymentMethod))
                                 .map(isAccountAvailable -> isAccountAvailable ? 1 : 0.2);
                         if (opacity.isPresent()) {

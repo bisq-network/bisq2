@@ -288,7 +288,7 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
     }
 
     private AutoCompleteComboBox<Account<?, ?>> createComboBox() {
-        AutoCompleteComboBox<Account<?, ?>> comboBox = new AutoCompleteComboBox<>(model.getSortedAccountsForPaymentMethod(), Res.get("user.paymentAccounts.selectAccount"));
+        AutoCompleteComboBox<Account<?, ?>> comboBox = new AutoCompleteComboBox<>(model.getSortedAccountsForPaymentMethod(), Res.get("paymentAccounts.selectAccount"));
         comboBox.setPrefWidth(325);
         comboBox.setConverter(new StringConverter<>() {
             @Override

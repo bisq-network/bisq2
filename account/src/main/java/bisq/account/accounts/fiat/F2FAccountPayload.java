@@ -107,9 +107,9 @@ public class F2FAccountPayload extends CountryBasedAccountPayload implements Sel
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.f2f.city"), city,
-                Res.get("user.paymentAccounts.f2f.contact"), contact,
-                Res.get("user.paymentAccounts.f2f.extraInfo"), extraInfo
+                Res.get("paymentAccounts.f2f.city"), city,
+                Res.get("paymentAccounts.f2f.contact"), contact,
+                Res.get("paymentAccounts.f2f.extraInfo"), extraInfo
         ).toString();
     }
 }

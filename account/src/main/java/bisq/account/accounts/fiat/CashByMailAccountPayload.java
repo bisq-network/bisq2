@@ -78,9 +78,9 @@ public final class CashByMailAccountPayload extends AccountPayload<FiatPaymentMe
     @Override
     public String getAccountDataDisplayString() {
         return new AccountDataDisplayStringBuilder(
-                Res.get("user.paymentAccounts.postalAddress"), postalAddress,
-                Res.get("user.paymentAccounts.cashByMail.contact"), contact,
-                Res.get("user.paymentAccounts.cashByMail.extraInfo"), extraInfo
+                Res.get("paymentAccounts.postalAddress"), postalAddress,
+                Res.get("paymentAccounts.cashByMail.contact"), contact,
+                Res.get("paymentAccounts.cashByMail.extraInfo"), extraInfo
         ).toString();
     }
 }

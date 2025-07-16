@@ -350,7 +350,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         cleanUpPaymentsFilterMenu();
 
         model.getAvailableMarketPayments().forEach(payment -> {
-            ImageView paymentIcon = ImageUtil.getImageViewById(payment.getName());
+            ImageView paymentIcon = ImageUtil.getImageViewById(payment.getPaymentRailName());
             Label paymentLabel = new Label(payment.getDisplayString(), paymentIcon);
             paymentLabel.setGraphicTextGap(10);
             PaymentMenuItem paymentItem = new PaymentMenuItem(payment, paymentLabel);
@@ -541,7 +541,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                     hbox.getChildren().clear();
                     for (FiatPaymentMethod fiatPaymentMethod : item.getFiatPaymentMethods()) {
                         Node icon = !fiatPaymentMethod.isCustomPaymentMethod()
-                                ? ImageUtil.getImageViewById(fiatPaymentMethod.getName())
+                                ? ImageUtil.getImageViewById(fiatPaymentMethod.getPaymentRailName())
                                 : BisqEasyViewUtils.getCustomPaymentMethodIcon(fiatPaymentMethod.getDisplayString());
                         hbox.getChildren().add(icon);
                     }
@@ -576,7 +576,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                 if (item != null && !empty) {
                     hbox.getChildren().clear();
                     for (BitcoinPaymentMethod bitcoinPaymentMethod : item.getBitcoinPaymentMethods()) {
-                        ImageView icon = ImageUtil.getImageViewById(bitcoinPaymentMethod.getName());
+                        ImageView icon = ImageUtil.getImageViewById(bitcoinPaymentMethod.getPaymentRailName());
                         ColorAdjust colorAdjust = new ColorAdjust();
                         colorAdjust.setBrightness(-0.2);
                         icon.setEffect(colorAdjust);

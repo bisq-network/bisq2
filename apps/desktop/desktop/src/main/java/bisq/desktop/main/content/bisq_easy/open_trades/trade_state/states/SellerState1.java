@@ -176,7 +176,7 @@ public class SellerState1 extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            accountSelection = new AutoCompleteComboBox<>(model.getSortedAccounts(), Res.get("user.paymentAccounts.selectAccount"));
+            accountSelection = new AutoCompleteComboBox<>(model.getSortedAccounts(), Res.get("paymentAccounts.selectAccount"));
             accountSelection.setPrefWidth(300);
             accountSelection.setConverter(new StringConverter<>() {
                 @Override

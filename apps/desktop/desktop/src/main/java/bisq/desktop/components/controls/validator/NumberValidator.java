@@ -46,6 +46,10 @@ public class NumberValidator extends ValidatorBase {
         this(message, Optional.empty(), Optional.empty(), allowEmptyString);
     }
 
+    public NumberValidator(Number minValue, Number maxValue) {
+        this(Res.get("validation.invalidNumber"), minValue, maxValue, true);
+    }
+
     public NumberValidator(String message, Number minValue, Number maxValue) {
         this(message, minValue, maxValue, true);
     }
