@@ -47,7 +47,6 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class CryptoCurrencySelectionView extends View<VBox, CryptoCurrencySelectionModel, CryptoCurrencySelectionController> {
-    //todo use List?
     private final BisqTableView<CryptoCurrencyItem> tableView;
     private final SearchBox searchBox;
     private final ListChangeListener<CryptoCurrencyItem> listChangeListener;
@@ -101,7 +100,7 @@ public class CryptoCurrencySelectionView extends View<VBox, CryptoCurrencySelect
             controller.onSearchTextChanged(searchText);
         });
 
-        selectedItemPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), controller::onPaymentMethodSelected);
+        selectedItemPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), controller::onItemSelected);
 
         model.getFilteredList().addListener(listChangeListener);
 

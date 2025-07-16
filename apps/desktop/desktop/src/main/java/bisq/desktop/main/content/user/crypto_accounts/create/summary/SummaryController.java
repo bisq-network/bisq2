@@ -30,8 +30,8 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.user.crypto_accounts.create.summary.details.CryptoCurrencySummaryDetailsGridPane;
-import bisq.desktop.main.content.user.crypto_accounts.create.summary.details.MoneroSummaryDetailsGridPane;
+import bisq.desktop.main.content.user.crypto_accounts.create.summary.details.MoneroSummaryDetails;
+import bisq.desktop.main.content.user.crypto_accounts.create.summary.details.SummaryDetails;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import lombok.Getter;
@@ -66,13 +66,19 @@ public class SummaryController implements Controller {
         model.setDefaultAccountName(accountPayload.getDefaultAccountName());
         model.setCurrencyString(accountPayload.getCodeAndDisplayName());
 
-        CryptoCurrencySummaryDetailsGridPane<?> accountDetailsGridPane;
-        if (accountPayload instanceof MoneroAccountPayload moneroAccountPayload) {
-            accountDetailsGridPane = new MoneroSummaryDetailsGridPane(moneroAccountPayload);
+        if (accountPayload instanceof MoneroAccountPayload moneroAccountPayload && moneroAccountPayload.isUseSubAddresses()) {
+            model.setAddressDescription(Res.get("paymentAccounts.crypto.address.xmr.mainAddresses"));
         } else {
-            accountDetailsGridPane = new CryptoCurrencySummaryDetailsGridPane<>(accountPayload);
+            model.setAddressDescription(Res.get("paymentAccounts.crypto.address.address"));
         }
-        model.setAccountDetailsGridPane(accountDetailsGridPane);
+
+        SummaryDetails<?> accountDetailsGridPane;
+        if (accountPayload instanceof MoneroAccountPayload moneroAccountPayload) {
+            accountDetailsGridPane = new MoneroSummaryDetails(moneroAccountPayload);
+        } else {
+            accountDetailsGridPane = new SummaryDetails<>(accountPayload);
+        }
+        model.setSummaryDetails(accountDetailsGridPane);
     }
 
     public void showAccountNameOverlay() {

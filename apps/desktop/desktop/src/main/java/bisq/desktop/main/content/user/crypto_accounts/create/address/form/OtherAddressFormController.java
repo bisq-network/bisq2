@@ -28,8 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class OtherAddressFormController extends
-        AddressFormController<OtherAddressFormView, OtherAddressFormModel, OtherCryptoCurrencyAccountPayload> {
+public class OtherAddressFormController extends AddressFormController<OtherAddressFormView, OtherAddressFormModel, OtherCryptoCurrencyAccountPayload> {
     public OtherAddressFormController(ServiceProvider serviceProvider, CryptoPaymentMethod paymentMethod) {
         super(serviceProvider, paymentMethod);
     }

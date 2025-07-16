@@ -15,21 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.presentation.formatters;
+package bisq.desktop.main.content.user.fiat_accounts.details;
 
+import bisq.account.accounts.fiat.PixAccount;
+import bisq.account.accounts.fiat.PixAccountPayload;
 import bisq.i18n.Res;
 
-public class BooleanFormatter {
-    public static String toTrueFalse(boolean value) {
-        return value ? Res.get("data.true") : Res.get("data.false");
+public class PixAccountDetails extends FiatAccountDetails<PixAccount> {
+    public PixAccountDetails(PixAccount account) {
+        super(account);
     }
 
-    public static String toYesNo(boolean value) {
-        return value ? Res.get("confirmation.yes") : Res.get("confirmation.no");
-    }
-    public static String toEnabledDisabled(boolean value) {
-        return value ?  Res.get("state.enabled") : Res.get("state.disabled");
-    }
+    @Override
+    protected void addDetails(PixAccount account) {
+        PixAccountPayload accountPayload = account.getAccountPayload();
 
+        addDescriptionAndValue(Res.get("paymentAccounts.holderName"),
+                accountPayload.getHolderName());
 
+        addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.pix.pixKey"),
+                accountPayload.getPixKey());
+    }
 }

@@ -15,22 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.fiat_accounts.create.data;
+package bisq.desktop.main.content.user.fiat_accounts.create.data.form;
 
-import bisq.account.payment_method.PaymentMethod;
-import bisq.desktop.common.view.Model;
-import bisq.desktop.main.content.user.fiat_accounts.create.data.form.FormController;
-import javafx.scene.layout.Region;
-import lombok.Getter;
-import lombok.Setter;
+import bisq.desktop.common.view.View;
+import javafx.beans.value.ChangeListener;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 
 import java.util.HashMap;
 import java.util.Map;
-@Getter
-public class PaymentDataModel implements Model {
-    @Setter
-    private PaymentMethod<?> paymentMethod;
-    @Setter
-    private Region paymentForm;
-    private final Map<String, FormController<?, ?, ?>> controllerCache = new HashMap<>();
+
+public abstract class FormView<M extends FormModel, C extends FormController<?, ?, ?>> extends View<VBox, M, C> {
+    protected final Map<String, Label> errorLabels = new HashMap<>();
+    protected final Map<String, ChangeListener<?>> listeners = new HashMap<>();
+
+    protected FormView(M model, C controller) {
+        super(new VBox(10), model, controller);
+
+        root.setAlignment(Pos.TOP_CENTER);
+        root.getStyleClass().add("payment-method-form");
+    }
 }

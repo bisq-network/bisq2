@@ -29,11 +29,8 @@ import java.util.Optional;
 
 @Slf4j
 public class MoneroAddressFormController extends AddressFormController<MoneroAddressFormView, MoneroAddressFormModel, MoneroAccountPayload> {
-    private final CryptoPaymentMethod paymentMethod;
-
     public MoneroAddressFormController(ServiceProvider serviceProvider, CryptoPaymentMethod paymentMethod) {
         super(serviceProvider, paymentMethod);
-        this.paymentMethod = paymentMethod;
     }
 
     @Override

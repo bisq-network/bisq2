@@ -21,7 +21,7 @@ import bisq.account.accounts.crypto.CryptoCurrencyAccountPayload;
 import bisq.account.payment_method.CryptoPaymentMethod;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
-import bisq.desktop.main.content.user.crypto_accounts.create.summary.details.CryptoCurrencySummaryDetailsGridPane;
+import bisq.desktop.main.content.user.crypto_accounts.create.summary.details.SummaryDetails;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
@@ -29,17 +29,19 @@ import lombok.Setter;
 
 @Getter
 public class SummaryModel implements Model {
+    private final TextMinMaxLengthValidator accountNameValidator = new TextMinMaxLengthValidator(2, 20);
+
     @Setter
     private CryptoPaymentMethod paymentMethod;
     @Setter
     private CryptoCurrencyAccountPayload accountPayload;
     @Setter
-    private CryptoCurrencySummaryDetailsGridPane accountDetailsGridPane;
+    private SummaryDetails<?> summaryDetails;
     @Setter
     private String currencyString;
     @Setter
     private String defaultAccountName;
+    @Setter
+    private String addressDescription;
     private final BooleanProperty showAccountNameOverlay = new SimpleBooleanProperty();
-    private final TextMinMaxLengthValidator accountNameValidator = new TextMinMaxLengthValidator(2, 20);
-
 }

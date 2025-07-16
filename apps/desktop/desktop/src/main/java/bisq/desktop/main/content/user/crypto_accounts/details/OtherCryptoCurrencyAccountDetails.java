@@ -18,18 +18,9 @@
 package bisq.desktop.main.content.user.crypto_accounts.details;
 
 import bisq.account.accounts.crypto.OtherCryptoCurrencyAccount;
-import bisq.account.accounts.crypto.OtherCryptoCurrencyAccountPayload;
-import bisq.i18n.Res;
 
 public class OtherCryptoCurrencyAccountDetails extends AccountDetails<OtherCryptoCurrencyAccount> {
     public OtherCryptoCurrencyAccountDetails(OtherCryptoCurrencyAccount account) {
         super(account);
-    }
-
-    @Override
-    protected void addDetails(OtherCryptoCurrencyAccount account) {
-        OtherCryptoCurrencyAccountPayload accountPayload = account.getAccountPayload();
-        addDescriptionAndValue(Res.get("paymentAccounts.crypto.address.address"), accountPayload.getAddress());
-
     }
 }

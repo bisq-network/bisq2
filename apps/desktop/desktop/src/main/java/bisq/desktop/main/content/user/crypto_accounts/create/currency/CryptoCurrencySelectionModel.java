@@ -41,8 +41,8 @@ public class CryptoCurrencySelectionModel implements Model {
     private final FilteredList<CryptoCurrencyItem> filteredList = new FilteredList<>(list);
     private final SortedList<CryptoCurrencyItem> sortedList = new SortedList<>(filteredList);
     private final ObjectProperty<CryptoCurrencyItem> selectedItem = new SimpleObjectProperty<>();
-    private final ObjectProperty<CryptoPaymentMethod> selectedCryptoPaymentMethod = new SimpleObjectProperty<>();
-    private final StringProperty searchText = new SimpleStringProperty("");
+    private final ObjectProperty<CryptoPaymentMethod> selectedPaymentMethod = new SimpleObjectProperty<>();
+    private final StringProperty searchText = new SimpleStringProperty();
 
     public CryptoCurrencySelectionModel(List<CryptoCurrencyItem> list) {
         this.list.setAll(list);
