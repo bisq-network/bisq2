@@ -39,7 +39,7 @@ public class TopPanelController implements Controller {
     public TopPanelController(ServiceProvider serviceProvider) {
         walletService = serviceProvider.getWalletService();
 
-        model = new TopPanelModel(serviceProvider.getWalletService().isPresent());
+        model = new TopPanelModel(serviceProvider.getMuSigService().getMuSigActivated().get());
         UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider);
         MarketPriceComponent marketPriceComponent = new MarketPriceComponent(serviceProvider);
         view = new TopPanelView(model, this, userProfileSelection, marketPriceComponent.getRoot());
