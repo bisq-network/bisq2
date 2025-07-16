@@ -47,10 +47,10 @@ public class CryptoCurrencyRepository {
 
     @Getter
     private static final Map<String, CryptoCurrency> MAJOR_CURRENCIES_BY_CODE = MAJOR_CURRENCIES.stream()
-            .collect(Collectors.toMap(TradeCurrency::getCode, e -> e));
+            .collect(Collectors.toMap(Asset::getCode, e -> e));
     @Getter
     private static final Map<String, CryptoCurrency> MINOR_CURRENCIES_BY_CODE = MINOR_CURRENCIES.stream()
-            .collect(Collectors.toMap(TradeCurrency::getCode, e -> e));
+            .collect(Collectors.toMap(Asset::getCode, e -> e));
     @Getter
     private static final Map<String, CryptoCurrency> ALL_CURRENCIES_BY_CODE = Stream.concat(
                     MAJOR_CURRENCIES_BY_CODE.entrySet().stream(),

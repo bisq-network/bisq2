@@ -31,13 +31,64 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 @ToString
 @Getter
-public abstract class TradeCurrency implements Comparable<TradeCurrency>, PersistableProto {
+public abstract class Asset implements Comparable<Asset>, PersistableProto {
     public final static int MAX_NAME_LENGTH = 100;
 
     protected final String code;
     @ExcludeForHash
     @EqualsAndHashCode.Exclude
     protected final String name;
+
+    public Asset(String code, String name) {
+        this.code = code;
+        this.name = name;
+
+        NetworkDataValidation.validateCode(code);
+        NetworkDataValidation.validateText(name, MAX_NAME_LENGTH);
+    }
+
+    @Override
+    public bisq.common.protobuf.TradeCurrency toProto(boolean serializeForHash) {
+        return switch (this) {
+            case FiatCurrency fiatCurrency -> fiatCurrency.toProto(serializeForHash);
+            case CryptoCurrency cryptoCurrency -> cryptoCurrency.toProto(serializeForHash);
+            case StableCoinCurrency stableCoinCurrency -> stableCoinCurrency.toProto(serializeForHash);
+            default -> throw new UnsupportedOperationException("Unsupported tradeCurrency at toProto {}" + name);
+        };
+    }
+
+    public bisq.common.protobuf.TradeCurrency.Builder getTradeCurrencyBuilder() {
+        return bisq.common.protobuf.TradeCurrency.newBuilder()
+                .setCode(code)
+                .setName(name);
+    }
+
+    public static Asset fromProto(bisq.common.protobuf.TradeCurrency proto) {
+        return switch (proto.getMessageCase()) {
+            case CRYPTOCURRENCY -> CryptoCurrency.fromProto(proto);
+            case FIATCURRENCY -> FiatCurrency.fromProto(proto);
+            case STABLECOINCURRENCY -> StableCoinCurrency.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+        };
+    }
+
+
+    public abstract String getDisplayName();
+
+    public String getDisplayNameAndCode() {
+        return getDisplayName() + " (" + code + ")";
+    }
+
+    public String getCodeAndDisplayName() {
+        return code + " (" + getDisplayName() + ")";
+    }
+
+    @Override
+    public int compareTo(Asset other) {
+        return this.getDisplayName().compareTo(other.getDisplayName());
+    }
+
+    //todo
 
     public static boolean isFiat(String code) {
         return FiatCurrencyRepository.getCurrencyByCodeMap().containsKey(code);
@@ -62,57 +113,5 @@ public abstract class TradeCurrency implements Comparable<TradeCurrency>, Persis
      */
     public static boolean isMaybeCrypto(String code) {
         return !isFiat(code) && code.length() >= 3;
-    }
-
-    public TradeCurrency(String code, String name) {
-        this.code = code;
-        this.name = name;
-
-        NetworkDataValidation.validateCode(code);
-        NetworkDataValidation.validateText(name, MAX_NAME_LENGTH);
-    }
-
-    @Override
-    public bisq.common.protobuf.TradeCurrency toProto(boolean serializeForHash) {
-        return switch (this) {
-            case FiatCurrency fiatCurrency -> fiatCurrency.toProto(serializeForHash);
-            case CryptoCurrency cryptoCurrency -> cryptoCurrency.toProto(serializeForHash);
-            case StableCoinCurrency stableCoinCurrency -> stableCoinCurrency.toProto(serializeForHash);
-            default -> throw new UnsupportedOperationException("Unsupported tradeCurrency at toProto {}" + name);
-        };
-    }
-
-    public bisq.common.protobuf.TradeCurrency.Builder getTradeCurrencyBuilder() {
-        return bisq.common.protobuf.TradeCurrency.newBuilder()
-                .setCode(code)
-                .setName(name);
-    }
-
-    public static TradeCurrency fromProto(bisq.common.protobuf.TradeCurrency proto) {
-        return switch (proto.getMessageCase()) {
-            case CRYPTOCURRENCY -> CryptoCurrency.fromProto(proto);
-            case FIATCURRENCY -> FiatCurrency.fromProto(proto);
-            case STABLECOINCURRENCY -> StableCoinCurrency.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-        };
-    }
-
-    public abstract String getDisplayName();
-
-    public String getDisplayNameAndCode() {
-        return getDisplayName() + " (" + code + ")";
-    }
-
-    public String getCodeAndDisplayName() {
-        return code + " (" + getDisplayName() + ")";
-    }
-
-    @Override
-    public int compareTo(TradeCurrency other) {
-        return this.getDisplayName().compareTo(other.getDisplayName());
-    }
-
-    public boolean isFiat() {
-        return this instanceof FiatCurrency;
     }
 }

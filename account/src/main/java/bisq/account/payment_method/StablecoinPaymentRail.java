@@ -17,7 +17,7 @@
 
 package bisq.account.payment_method;
 
-import bisq.common.currency.TradeCurrency;
+import bisq.common.currency.Asset;
 import bisq.common.currency.stable.StableCoinCurrency;
 import bisq.common.currency.stable.StableCoinCurrencyRepository;
 import lombok.EqualsAndHashCode;
@@ -44,7 +44,7 @@ public enum StablecoinPaymentRail implements NationalCurrencyPaymentRail {
     private final StableCoinCurrency stableCoinCurrency;
     @Getter
     @EqualsAndHashCode.Exclude
-    private final List<TradeCurrency> tradeCurrencies;
+    private final List<Asset> tradeCurrencies;
     @Getter
     @EqualsAndHashCode.Exclude
     private final List<String> currencyCodes;

@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.components;
 
-import bisq.common.currency.TradeCurrency;
+import bisq.common.currency.Asset;
 import bisq.common.data.Pair;
 import bisq.common.data.Triple;
 import bisq.desktop.components.containers.Spacer;
@@ -66,7 +66,7 @@ public class ReviewDataDisplay {
 
     public void setToSendCode(String value) {
         controller.model.getToSendCode().set(value);
-        controller.model.getIsSendBtc().set(TradeCurrency.isBtc(value));
+        controller.model.getIsSendBtc().set(Asset.isBtc(value));
     }
 
     public void setToReceiveAmountDescription(String value) {
@@ -75,7 +75,7 @@ public class ReviewDataDisplay {
 
     public void setToReceiveCode(String value) {
         controller.model.getToReceiveCode().set(value);
-        controller.model.getIsReceiveBtc().set(TradeCurrency.isBtc(value));
+        controller.model.getIsReceiveBtc().set(Asset.isBtc(value));
     }
 
     public void setBitcoinPaymentMethodDescription(String value) {

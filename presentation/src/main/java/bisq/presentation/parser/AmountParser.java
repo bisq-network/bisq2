@@ -17,7 +17,7 @@
 
 package bisq.presentation.parser;
 
-import bisq.common.currency.TradeCurrency;
+import bisq.common.currency.Asset;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
@@ -28,7 +28,7 @@ public class AmountParser {
     public static Monetary parse(String value, String code) {
         value = DefaultNumberFormatter.reformat(value);
         value = StringUtils.removeAllWhitespaces(value);
-        if (TradeCurrency.isFiat(code)) {
+        if (Asset.isFiat(code)) {
             return Fiat.parse(value, code);
         } else {
             return Coin.parse(value, code);

@@ -27,7 +27,7 @@ import java.util.Set;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class CryptoCurrency extends TradeCurrency {
+public class CryptoCurrency extends Asset {
     private static final Set<String> SUPPORT_AUTO_CONF_CODES = Set.of("XMR", "ETH");
 
     @Getter

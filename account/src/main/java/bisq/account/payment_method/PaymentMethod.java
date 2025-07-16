@@ -18,7 +18,7 @@
 package bisq.account.payment_method;
 
 import bisq.common.currency.FiatCurrencyRepository;
-import bisq.common.currency.TradeCurrency;
+import bisq.common.currency.Asset;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
@@ -107,7 +107,7 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
 
     protected abstract R getCustomPaymentRail();
 
-    public abstract List<? extends TradeCurrency> getSupportedCurrencies();
+    public abstract List<? extends Asset> getSupportedCurrencies();
 
     public boolean isCustomPaymentMethod() {
         return paymentRail.equals(getCustomPaymentRail());
@@ -120,14 +120,14 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
 
     public List<String> getSupportedCurrencyCodes() {
         return getSupportedCurrencies().stream()
-                .map(TradeCurrency::getCode)
+                .map(Asset::getCode)
                 /*  .sorted()*/
                 .collect(Collectors.toList());
     }
 
     public List<String> getSupportedCurrencyDisplayNameAndCode() {
         return getSupportedCurrencies().stream()
-                .map(TradeCurrency::getDisplayNameAndCode)
+                .map(Asset::getDisplayNameAndCode)
                 /*.sorted()*/
                 .collect(Collectors.toList());
     }

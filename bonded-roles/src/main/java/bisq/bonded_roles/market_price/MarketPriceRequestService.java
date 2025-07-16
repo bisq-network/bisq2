@@ -20,7 +20,7 @@ package bisq.bonded_roles.market_price;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
-import bisq.common.currency.TradeCurrency;
+import bisq.common.currency.Asset;
 import bisq.common.data.Pair;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.map.ObservableHashMap;
@@ -327,7 +327,7 @@ public class MarketPriceRequestService {
                     // We get milliseconds not seconds
                     long timestamp = MathUtils.doubleToLong((Double) treeMap.get("timestampSec"));
                     // We only get BTC based prices not fiat-fiat or altcoin-altcoin
-                    boolean isFiat = TradeCurrency.isFiat(currencyCode);
+                    boolean isFiat = Asset.isFiat(currencyCode);
                     String baseCurrencyCode = isFiat ? "BTC" : currencyCode;
                     String quoteCurrencyCode = isFiat ? currencyCode : "BTC";
                     PriceQuote priceQuote = PriceQuote.fromPrice(price, baseCurrencyCode, quoteCurrencyCode);

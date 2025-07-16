@@ -18,7 +18,7 @@
 package bisq.common.currency.stable;
 
 
-import bisq.common.currency.TradeCurrency;
+import bisq.common.currency.Asset;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -26,7 +26,7 @@ import lombok.ToString;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public final class StableCoinCurrency extends TradeCurrency {
+public final class StableCoinCurrency extends Asset {
     private final String pegCurrencyCode;
     private final String chain;//TODO use StableCoinChain
     private final String standard; //TODO use StableCoinTokenStandard
@@ -85,11 +85,6 @@ public final class StableCoinCurrency extends TradeCurrency {
                 stableCoinCurrencyProto.getChain(),
                 stableCoinCurrencyProto.getStandard(),
                 stableCoinCurrencyProto.getIssuer());
-    }
-
-    @Override
-    public boolean isFiat() {
-        return false;
     }
 
     @Override

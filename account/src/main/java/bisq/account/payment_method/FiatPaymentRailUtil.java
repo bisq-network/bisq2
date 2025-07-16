@@ -20,7 +20,7 @@ package bisq.account.payment_method;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.FiatCurrency;
 import bisq.common.currency.FiatCurrencyRepository;
-import bisq.common.currency.TradeCurrency;
+import bisq.common.currency.Asset;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
 
@@ -466,11 +466,11 @@ public class FiatPaymentRailUtil {
                 .collect(Collectors.toList());
     }
 
-    private static List<TradeCurrency> toTradeCurrencies(List<String> currencyCodes) {
+    private static List<Asset> toTradeCurrencies(List<String> currencyCodes) {
         return currencyCodes.stream()
                 .map(FiatCurrencyRepository::getCurrencyByCode)
                 .distinct()
-                .sorted(Comparator.comparingInt(TradeCurrency::hashCode))
+                .sorted(Comparator.comparingInt(Asset::hashCode))
                 .collect(Collectors.toList());
     }
 }

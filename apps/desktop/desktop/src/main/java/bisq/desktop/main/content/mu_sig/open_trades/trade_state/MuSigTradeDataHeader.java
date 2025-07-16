@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.mu_sig.open_trades.trade_state;
 
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
-import bisq.common.currency.TradeCurrency;
+import bisq.common.currency.Asset;
 import bisq.common.data.Triple;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
@@ -301,7 +301,7 @@ public class MuSigTradeDataHeader {
                 String currencyCode,
                 boolean updateCodeText) {
 
-            boolean isBtc = TradeCurrency.isBtc(currencyCode);
+            boolean isBtc = Asset.isBtc(currencyCode);
             updateAmountDisplay(amountComponents, btcText, amount, isBtc);
 
             if (updateCodeText && !isBtc) {

@@ -22,9 +22,9 @@ import java.util.List;
 
 public class CurrencyRepository {
 
-    private static final List<TradeCurrency> allCurrencies = new ArrayList<>();
+    private static final List<Asset> allCurrencies = new ArrayList<>();
 
-    public static List<TradeCurrency> getAllCurrencies() {
+    public static List<Asset> getAllCurrencies() {
         if (allCurrencies.isEmpty()) {
             allCurrencies.addAll(FiatCurrencyRepository.getMajorCurrencies());
             allCurrencies.addAll(CryptoCurrencyRepository.getMajorCurrencies());

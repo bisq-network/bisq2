@@ -18,7 +18,7 @@
 package bisq.account.payment_method;
 
 import bisq.account.protocol_type.TradeProtocolType;
-import bisq.common.currency.TradeCurrency;
+import bisq.common.currency.Asset;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,7 +31,7 @@ public class PaymentMethodUtil {
     }
 
     public static List<? extends PaymentRail> getPaymentRails(TradeProtocolType protocolType, String currencyCode) {
-        if (TradeCurrency.isFiat(currencyCode)) {
+        if (Asset.isFiat(currencyCode)) {
             return FiatPaymentRailUtil.getPaymentRails(protocolType);
         } else {
             if (currencyCode.equals("BTC")) {
@@ -43,7 +43,7 @@ public class PaymentMethodUtil {
     }
 
     public static PaymentMethod<? extends PaymentRail> getPaymentMethod(String name, String currencyCode) {
-        if (TradeCurrency.isFiat(currencyCode)) {
+        if (Asset.isFiat(currencyCode)) {
             return FiatPaymentMethodUtil.getPaymentMethod(name);
         } else {
             if (currencyCode.equals("BTC")) {
