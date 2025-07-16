@@ -18,7 +18,7 @@
 package bisq.account.payment_method;
 
 import bisq.account.protocol_type.TradeProtocolType;
-import bisq.common.asset.CryptoCurrencyRepository;
+import bisq.common.asset.CryptoAssetRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class CryptoPaymentMethodUtil {
 
     public static List<CryptoPaymentMethod> getAllCryptoPaymentMethods() {
-        return CryptoCurrencyRepository.getAllCurrencies().stream()
+        return CryptoAssetRepository.getAllCurrencies().stream()
                 .map(currency -> new CryptoPaymentMethod(CryptoPaymentRail.NATIVE_CHAIN, currency.getCode()))
                 .collect(Collectors.toList());
     }

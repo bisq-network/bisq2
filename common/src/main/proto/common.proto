@@ -36,26 +36,26 @@ message Region {
   string name = 2;
 }
 
-message CryptoCurrency {
+message CryptoAsset {
 }
 
 message FiatCurrency {
 }
 
-message StableCoinCurrency {
+message StableCoin {
   string pegCurrencyCode = 1;
   string chain = 2;
   string standard = 3;
   string issuer = 4;
 }
 
-message TradeCurrency {
+message Asset {
   string code = 1;
   string name = 2;
   oneof message {
-    CryptoCurrency cryptoCurrency = 10;
+    CryptoAsset cryptoAsset = 10;
     FiatCurrency fiatCurrency = 11;
-    StableCoinCurrency stableCoinCurrency = 12;
+    StableCoin stableCoin = 12;
   }
 }
 

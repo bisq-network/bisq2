@@ -27,9 +27,9 @@ public class CurrencyRepository {
     public static List<Asset> getAllCurrencies() {
         if (allCurrencies.isEmpty()) {
             allCurrencies.addAll(FiatCurrencyRepository.getMajorCurrencies());
-            allCurrencies.addAll(CryptoCurrencyRepository.getMajorCurrencies());
+            allCurrencies.addAll(CryptoAssetRepository.getMajorCurrencies());
             allCurrencies.addAll(FiatCurrencyRepository.getMinorCurrencies());
-            allCurrencies.addAll(CryptoCurrencyRepository.getMinorCurrencies());
+            allCurrencies.addAll(CryptoAssetRepository.getMinorCurrencies());
         }
         return allCurrencies;
     }

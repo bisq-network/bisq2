@@ -24,7 +24,7 @@ import bisq.common.validation.crypto.MoneroAddressValidation;
 
 import java.util.Map;
 
-public class CryptoCurrencyValidationRepository {
+public class CryptoAssetValidationRepository {
     private static final Map<String, Validation> VALIDATION_BY_CODE = Map.of(
             "XMR", MoneroAddressValidation.getInstance(),
             "ETH", EtherAddressValidation.getInstance()

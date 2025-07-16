@@ -17,7 +17,7 @@
 
 package bisq.common.monetary;
 
-import bisq.common.asset.CryptoCurrencyRepository;
+import bisq.common.asset.CryptoAssetRepository;
 import bisq.common.asset.Asset;
 import bisq.common.util.MathUtils;
 import com.google.common.math.LongMath;
@@ -206,7 +206,7 @@ public final class Coin extends Monetary {
 
     @Override
     public String getName() {
-        return CryptoCurrencyRepository.findName(code).orElse(code);
+        return CryptoAssetRepository.findName(code).orElse(code);
     }
 
     @Override

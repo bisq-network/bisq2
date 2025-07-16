@@ -18,8 +18,8 @@
 package bisq.account.payment_method;
 
 import bisq.common.asset.Asset;
-import bisq.common.asset.stable.StableCoinCurrency;
-import bisq.common.asset.stable.StableCoinCurrencyRepository;
+import bisq.common.asset.stable.StableCoin;
+import bisq.common.asset.stable.StableCoinRepository;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -28,20 +28,20 @@ import java.util.List;
 
 //rename to TokenizedFiatPaymentRail?
 public enum StablecoinPaymentRail implements NationalCurrencyPaymentRail {
-    USDT_ERC20(StableCoinCurrencyRepository.USDT_ERC20),
-    USDT_TRC20(StableCoinCurrencyRepository.USDT_TRC20),
-    USDT_BEP20(StableCoinCurrencyRepository.USDT_BEP20),
-    USDC_ERC20(StableCoinCurrencyRepository.USDC_ERC20),
-    USDC_SPL(StableCoinCurrencyRepository.USDC_SPL),
-    DAI_ERC20(StableCoinCurrencyRepository.DAI_ERC20),
-    FDUSD_BEP20(StableCoinCurrencyRepository.FDUSD_BEP20),
-    FDUSD_ERC20(StableCoinCurrencyRepository.FDUSD_ERC20),
-    TUSD_ERC20(StableCoinCurrencyRepository.TUSD_ERC20),
-    USDP_ERC20(StableCoinCurrencyRepository.USDP_ERC20),
-    GUSD_ERC20(StableCoinCurrencyRepository.GUSD_ERC20);
+    USDT_ERC20(StableCoinRepository.USDT_ERC20),
+    USDT_TRC20(StableCoinRepository.USDT_TRC20),
+    USDT_BEP20(StableCoinRepository.USDT_BEP20),
+    USDC_ERC20(StableCoinRepository.USDC_ERC20),
+    USDC_SPL(StableCoinRepository.USDC_SPL),
+    DAI_ERC20(StableCoinRepository.DAI_ERC20),
+    FDUSD_BEP20(StableCoinRepository.FDUSD_BEP20),
+    FDUSD_ERC20(StableCoinRepository.FDUSD_ERC20),
+    TUSD_ERC20(StableCoinRepository.TUSD_ERC20),
+    USDP_ERC20(StableCoinRepository.USDP_ERC20),
+    GUSD_ERC20(StableCoinRepository.GUSD_ERC20);
 
     @Getter
-    private final StableCoinCurrency stableCoinCurrency;
+    private final StableCoin stableCoinCurrency;
     @Getter
     @EqualsAndHashCode.Exclude
     private final List<Asset> tradeCurrencies;
@@ -49,7 +49,7 @@ public enum StablecoinPaymentRail implements NationalCurrencyPaymentRail {
     @EqualsAndHashCode.Exclude
     private final List<String> currencyCodes;
 
-    StablecoinPaymentRail(StableCoinCurrency stableCoinCurrency) {
+    StablecoinPaymentRail(StableCoin stableCoinCurrency) {
         this.stableCoinCurrency = stableCoinCurrency;
         tradeCurrencies = Collections.singletonList(stableCoinCurrency);
         currencyCodes = Collections.singletonList(stableCoinCurrency.getPegCurrencyCode());

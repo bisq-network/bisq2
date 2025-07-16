@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.user.crypto_accounts.create.address.form;
 
 import bisq.account.payment_method.CryptoPaymentMethod;
-import bisq.common.asset.CryptoCurrency;
-import bisq.common.asset.CryptoCurrencyRepository;
+import bisq.common.asset.CryptoAsset;
+import bisq.common.asset.CryptoAssetRepository;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
@@ -35,7 +35,7 @@ public abstract class AddressFormModel implements Model {
     protected final String id;
     protected final CryptoPaymentMethod paymentMethod;
     protected final String currencyCode;
-    protected final CryptoCurrency cryptoCurrency;
+    protected final CryptoAsset cryptoCurrency;
     protected final boolean isAutoConfSupported;
     protected final ValidatorBase addressValidator;
 
@@ -57,7 +57,7 @@ public abstract class AddressFormModel implements Model {
         this.paymentMethod = paymentMethod;
         currencyCode = paymentMethod.getCurrencyCode();
 
-        cryptoCurrency = CryptoCurrencyRepository.findOrCreateCustom(currencyCode);
+        cryptoCurrency = CryptoAssetRepository.findOrCreateCustom(currencyCode);
         isAutoConfSupported = cryptoCurrency.isSupportAutoConf();
         //addressValidator = new CryptoCurrencyValidator(cryptoCurrency.getValidation());
         addressValidator = new ValidatorBase();//todo for dev testing we bypass validation

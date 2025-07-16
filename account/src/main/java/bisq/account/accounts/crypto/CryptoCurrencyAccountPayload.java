@@ -22,7 +22,7 @@ import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.CryptoPaymentMethod;
 import bisq.account.payment_method.CryptoPaymentRail;
-import bisq.common.asset.CryptoCurrencyRepository;
+import bisq.common.asset.CryptoAssetRepository;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
@@ -107,7 +107,7 @@ public abstract class CryptoCurrencyAccountPayload extends AccountPayload<Crypto
     }
 
     public String getCodeAndDisplayName() {
-        return CryptoCurrencyRepository.findName(currencyCode)
+        return CryptoAssetRepository.findName(currencyCode)
                 .map(name -> currencyCode + " (" + name + ")")
                 .orElse(currencyCode);
     }

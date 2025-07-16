@@ -19,7 +19,7 @@ package bisq.account.accounts.crypto;
 
 import bisq.account.payment_method.CryptoPaymentMethod;
 import bisq.account.payment_method.CryptoPaymentRail;
-import bisq.common.asset.CryptoCurrencyRepository;
+import bisq.common.asset.CryptoAssetRepository;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -128,7 +128,7 @@ public final class MoneroAccountPayload extends CryptoCurrencyAccountPayload {
 
     @Override
     public CryptoPaymentMethod getPaymentMethod() {
-        return new CryptoPaymentMethod(CryptoPaymentRail.NATIVE_CHAIN, CryptoCurrencyRepository.XMR.getCode());
+        return new CryptoPaymentMethod(CryptoPaymentRail.NATIVE_CHAIN, CryptoAssetRepository.XMR.getCode());
     }
 
   /*  @Override

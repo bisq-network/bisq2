@@ -26,7 +26,7 @@ import lombok.ToString;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public final class StableCoinCurrency extends Asset {
+public final class StableCoin extends Asset {
     private final String pegCurrencyCode;
     private final String chain;//TODO use StableCoinChain
     private final String standard; //TODO use StableCoinTokenStandard
@@ -36,21 +36,21 @@ public final class StableCoinCurrency extends Asset {
     @EqualsAndHashCode.Exclude
     private final String issuer; //TODO use StableCoinIssuer
 
-    public StableCoinCurrency(String code,
-                              String name,
-                              String pegCurrencyCode,
-                              StableCoinChain chain,
-                              StableCoinTokenStandard standard,
-                              StableCoinIssuer issuer) {
+    public StableCoin(String code,
+                      String name,
+                      String pegCurrencyCode,
+                      StableCoinChain chain,
+                      StableCoinTokenStandard standard,
+                      StableCoinIssuer issuer) {
         this(code, name, pegCurrencyCode, chain.getDisplayName(), standard.getDisplayName(), issuer.getDisplayName());
     }
 
-    public StableCoinCurrency(String code,
-                              String name,
-                              String pegCurrencyCode,
-                              String chain,
-                              String standard,
-                              String issuer) {
+    public StableCoin(String code,
+                      String name,
+                      String pegCurrencyCode,
+                      String chain,
+                      String standard,
+                      String issuer) {
         super(code, name);
         this.pegCurrencyCode = pegCurrencyCode;
         this.chain = chain;
@@ -58,15 +58,15 @@ public final class StableCoinCurrency extends Asset {
         this.issuer = issuer;
     }
 
-    public static boolean isStableCoinCurrency(String code) {
-        return !StableCoinCurrencyRepository.allWithCode(code).isEmpty();
+    public static boolean isStableCoin(String code) {
+        return !StableCoinRepository.allWithCode(code).isEmpty();
     }
 
     //todo
     @Override
-    public bisq.common.protobuf.TradeCurrency.Builder getBuilder(boolean serializeForHash) {
-        return getTradeCurrencyBuilder().setStableCoinCurrency(
-                bisq.common.protobuf.StableCoinCurrency.newBuilder()
+    public bisq.common.protobuf.Asset.Builder getBuilder(boolean serializeForHash) {
+        return getAssetBuilder().setStableCoin(
+                bisq.common.protobuf.StableCoin.newBuilder()
                         .setPegCurrencyCode(pegCurrencyCode)
                         .setChain(chain)
                         .setStandard(standard)
@@ -74,13 +74,13 @@ public final class StableCoinCurrency extends Asset {
     }
 
     @Override
-    public bisq.common.protobuf.TradeCurrency toProto(boolean serializeForHash) {
+    public bisq.common.protobuf.Asset toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
 
-    public static StableCoinCurrency fromProto(bisq.common.protobuf.TradeCurrency baseProto) {
-        bisq.common.protobuf.StableCoinCurrency stableCoinCurrencyProto = baseProto.getStableCoinCurrency();
-        return new StableCoinCurrency(baseProto.getCode(), baseProto.getName(),
+    public static StableCoin fromProto(bisq.common.protobuf.Asset baseProto) {
+        bisq.common.protobuf.StableCoin stableCoinCurrencyProto = baseProto.getStableCoin();
+        return new StableCoin(baseProto.getCode(), baseProto.getName(),
                 stableCoinCurrencyProto.getPegCurrencyCode(),
                 stableCoinCurrencyProto.getChain(),
                 stableCoinCurrencyProto.getStandard(),

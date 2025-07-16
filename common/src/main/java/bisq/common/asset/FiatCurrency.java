@@ -49,16 +49,16 @@ public final class FiatCurrency extends Asset {
     }
 
     @Override
-    public bisq.common.protobuf.TradeCurrency toProto(boolean serializeForHash) {
+    public bisq.common.protobuf.Asset toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
 
     @Override
-    public bisq.common.protobuf.TradeCurrency.Builder getBuilder(boolean serializeForHash) {
-        return getTradeCurrencyBuilder().setFiatCurrency(bisq.common.protobuf.FiatCurrency.newBuilder());
+    public bisq.common.protobuf.Asset.Builder getBuilder(boolean serializeForHash) {
+        return getAssetBuilder().setFiatCurrency(bisq.common.protobuf.FiatCurrency.newBuilder());
     }
 
-    public static FiatCurrency fromProto(bisq.common.protobuf.TradeCurrency baseProto) {
+    public static FiatCurrency fromProto(bisq.common.protobuf.Asset baseProto) {
         return new FiatCurrency(baseProto.getCode(), baseProto.getName());
     }
 

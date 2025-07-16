@@ -18,7 +18,7 @@
 package bisq.common.asset;
 
 import bisq.common.annotation.ExcludeForHash;
-import bisq.common.asset.stable.StableCoinCurrency;
+import bisq.common.asset.stable.StableCoin;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
@@ -48,26 +48,26 @@ public abstract class Asset implements Comparable<Asset>, PersistableProto {
     }
 
     @Override
-    public bisq.common.protobuf.TradeCurrency toProto(boolean serializeForHash) {
+    public bisq.common.protobuf.Asset toProto(boolean serializeForHash) {
         return switch (this) {
             case FiatCurrency fiatCurrency -> fiatCurrency.toProto(serializeForHash);
-            case CryptoCurrency cryptoCurrency -> cryptoCurrency.toProto(serializeForHash);
-            case StableCoinCurrency stableCoinCurrency -> stableCoinCurrency.toProto(serializeForHash);
+            case CryptoAsset cryptoCurrency -> cryptoCurrency.toProto(serializeForHash);
+            case StableCoin stableCoinCurrency -> stableCoinCurrency.toProto(serializeForHash);
             default -> throw new UnsupportedOperationException("Unsupported tradeCurrency at toProto {}" + name);
         };
     }
 
-    public bisq.common.protobuf.TradeCurrency.Builder getTradeCurrencyBuilder() {
-        return bisq.common.protobuf.TradeCurrency.newBuilder()
+    public bisq.common.protobuf.Asset.Builder getAssetBuilder() {
+        return bisq.common.protobuf.Asset.newBuilder()
                 .setCode(code)
                 .setName(name);
     }
 
-    public static Asset fromProto(bisq.common.protobuf.TradeCurrency proto) {
+    public static Asset fromProto(bisq.common.protobuf.Asset proto) {
         return switch (proto.getMessageCase()) {
-            case CRYPTOCURRENCY -> CryptoCurrency.fromProto(proto);
+            case CRYPTOASSET -> CryptoAsset.fromProto(proto);
             case FIATCURRENCY -> FiatCurrency.fromProto(proto);
-            case STABLECOINCURRENCY -> StableCoinCurrency.fromProto(proto);
+            case STABLECOIN -> StableCoin.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

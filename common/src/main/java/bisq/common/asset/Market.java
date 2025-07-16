@@ -17,7 +17,7 @@
 
 package bisq.common.asset;
 
-import bisq.common.asset.stable.StableCoinCurrency;
+import bisq.common.asset.stable.StableCoin;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.PersistableProto;
 import bisq.common.validation.NetworkDataValidation;
@@ -107,7 +107,7 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
     }
 
     public boolean isBtcStableCoinMarket() {
-        return baseCurrencyCode.equals("BTC") && StableCoinCurrency.isStableCoinCurrency(quoteCurrencyCode);
+        return baseCurrencyCode.equals("BTC") && StableCoin.isStableCoin(quoteCurrencyCode);
     }
 
     public boolean isCrypto() {

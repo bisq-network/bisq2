@@ -24,78 +24,78 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class StableCoinCurrencyRepository {
-    public static final StableCoinCurrency USDT_ERC20 = new StableCoinCurrency("USDT",
+public class StableCoinRepository {
+    public static final StableCoin USDT_ERC20 = new StableCoin("USDT",
             "Tether USD (Ethereum ERC-20)",
             "USD",
             StableCoinChain.ETHEREUM,
             StableCoinTokenStandard.ERC20,
             StableCoinIssuer.TETHER);
 
-    public static final StableCoinCurrency USDT_TRC20 = new StableCoinCurrency("USDT",
+    public static final StableCoin USDT_TRC20 = new StableCoin("USDT",
             "Tether USD (Tron TRC-20)",
             "USD",
             StableCoinChain.TRON,
             StableCoinTokenStandard.TRC20,
             StableCoinIssuer.TETHER);
 
-    public static final StableCoinCurrency USDT_BEP20 = new StableCoinCurrency("USDT",
+    public static final StableCoin USDT_BEP20 = new StableCoin("USDT",
             "Tether USD (BNB Smart Chain BEP-20)",
             "USD",
             StableCoinChain.BNB_SMART_CHAIN,
             StableCoinTokenStandard.BEP20,
             StableCoinIssuer.TETHER);
 
-    public static final StableCoinCurrency USDC_ERC20 = new StableCoinCurrency("USDC",
+    public static final StableCoin USDC_ERC20 = new StableCoin("USDC",
             "USD Coin (Ethereum ERC-20)",
             "USD",
             StableCoinChain.ETHEREUM,
             StableCoinTokenStandard.ERC20,
             StableCoinIssuer.CIRCLE);
 
-    public static final StableCoinCurrency USDC_SPL = new StableCoinCurrency("USDC",
+    public static final StableCoin USDC_SPL = new StableCoin("USDC",
             "USD Coin (Solana SPL)",
             "USD",
             StableCoinChain.SOLANA,
             StableCoinTokenStandard.SPL,
             StableCoinIssuer.CIRCLE);
 
-    public static final StableCoinCurrency DAI_ERC20 = new StableCoinCurrency("DAI",
+    public static final StableCoin DAI_ERC20 = new StableCoin("DAI",
             "Dai (Ethereum ERC-20)",
             "USD",
             StableCoinChain.ETHEREUM,
             StableCoinTokenStandard.ERC20,
             StableCoinIssuer.MAKERDAO);
 
-    public static final StableCoinCurrency FDUSD_BEP20 = new StableCoinCurrency("FDUSD",
+    public static final StableCoin FDUSD_BEP20 = new StableCoin("FDUSD",
             "First Digital USD (BNB Smart Chain BEP-20)",
             "USD",
             StableCoinChain.BNB_SMART_CHAIN,
             StableCoinTokenStandard.BEP20,
             StableCoinIssuer.FIRST_DIGITAL);
 
-    public static final StableCoinCurrency FDUSD_ERC20 = new StableCoinCurrency("FDUSD",
+    public static final StableCoin FDUSD_ERC20 = new StableCoin("FDUSD",
             "First Digital USD (Ethereum ERC-20)",
             "USD",
             StableCoinChain.ETHEREUM,
             StableCoinTokenStandard.ERC20,
             StableCoinIssuer.FIRST_DIGITAL);
 
-    public static final StableCoinCurrency TUSD_ERC20 = new StableCoinCurrency("TUSD",
+    public static final StableCoin TUSD_ERC20 = new StableCoin("TUSD",
             "TrueUSD (Ethereum ERC-20)",
             "USD",
             StableCoinChain.ETHEREUM,
             StableCoinTokenStandard.ERC20,
             StableCoinIssuer.TECHTERYX);
 
-    public static final StableCoinCurrency USDP_ERC20 = new StableCoinCurrency("USDP",
+    public static final StableCoin USDP_ERC20 = new StableCoin("USDP",
             "Pax Dollar (Ethereum ERC-20)",
             "USD",
             StableCoinChain.ETHEREUM,
             StableCoinTokenStandard.ERC20,
             StableCoinIssuer.PAXOS);
 
-    public static final StableCoinCurrency GUSD_ERC20 = new StableCoinCurrency("GUSD",
+    public static final StableCoin GUSD_ERC20 = new StableCoin("GUSD",
             "Gemini Dollar (Ethereum ERC-20)",
             "USD",
             StableCoinChain.ETHEREUM,
@@ -103,7 +103,7 @@ public class StableCoinCurrencyRepository {
             StableCoinIssuer.GEMINI);
 
     @Getter
-    private static final Map<String, Set<StableCoinCurrency>> STABLE_COIN_CURRENCY_SET_BY_CODE = Map.of(
+    private static final Map<String, Set<StableCoin>> STABLE_COIN_CURRENCY_SET_BY_CODE = Map.of(
             "USDT", Set.of(USDT_ERC20, USDT_TRC20, USDT_BEP20),
             "USDC", Set.of(USDC_ERC20, USDC_SPL),
             "DAI", Set.of(DAI_ERC20),
@@ -113,14 +113,14 @@ public class StableCoinCurrencyRepository {
             "GUSD", Set.of(GUSD_ERC20)
     );
 
-    public static Set<StableCoinCurrency> allWithPegCurrencyCode(String pegCurrencyCode) {
+    public static Set<StableCoin> allWithPegCurrencyCode(String pegCurrencyCode) {
         return STABLE_COIN_CURRENCY_SET_BY_CODE.values().stream()
                 .flatMap(Collection::stream)
                 .filter(e -> e.getPegCurrencyCode().equals(pegCurrencyCode))
                 .collect(Collectors.toSet());
     }
 
-    public static Set<StableCoinCurrency> allWithCode(String code) {
+    public static Set<StableCoin> allWithCode(String code) {
         return STABLE_COIN_CURRENCY_SET_BY_CODE.values().stream()
                 .flatMap(Collection::stream)
                 .filter(e -> e.getCode().equals(code))
