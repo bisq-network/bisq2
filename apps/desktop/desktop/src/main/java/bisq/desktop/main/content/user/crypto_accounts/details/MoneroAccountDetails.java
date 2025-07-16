@@ -18,7 +18,14 @@
 package bisq.desktop.main.content.user.crypto_accounts.details;
 
 import bisq.account.accounts.crypto.MoneroAccount;
+import bisq.account.accounts.crypto.MoneroAccountPayload;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.BooleanFormatter;
+import javafx.geometry.Insets;
+import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Region;
 
 public class MoneroAccountDetails extends AccountDetails<MoneroAccount> {
     public MoneroAccountDetails(MoneroAccount account) {
@@ -27,7 +34,33 @@ public class MoneroAccountDetails extends AccountDetails<MoneroAccount> {
 
     @Override
     protected void addDetails(MoneroAccount account) {
-        addDescriptionAndValue(Res.get("paymentAccounts.crypto.address.address"), account.getAccountPayload().getAddress());
+        super.addDetails(account);
 
+        MoneroAccountPayload accountPayload = account.getAccountPayload();
+
+        Label subAddressesHeadline = new Label(Res.get("paymentAccounts.crypto.address.xmr.useSubAddresses").toUpperCase());
+        subAddressesHeadline.getStyleClass().add("trade-wizard-review-details-headline");
+        GridPane.setMargin(subAddressesHeadline, new Insets(20, 0, 0, 0));
+        gridPane.add(subAddressesHeadline, 0, ++rowIndex, 3, 1);
+        Region subAddressesLine = getLine();
+        GridPane.setMargin(subAddressesLine, new Insets(-10, 0, -5, 0));
+        gridPane.add(subAddressesLine, 0, ++rowIndex, 3, 1);
+
+        boolean isUseSubAddresses = accountPayload.isUseSubAddresses();
+        String isUseSubAddressesString = BooleanFormatter.toEnabledDisabled(isUseSubAddresses);
+        addDescriptionAndValue(Res.get("state.enabled"), isUseSubAddressesString);
+        if (isUseSubAddresses) {
+            addressDescriptionLabel.setText(Res.get("paymentAccounts.crypto.address.xmr.mainAddresses"));
+            String privateViewKey = accountPayload.getPrivateViewKey().orElseThrow();
+            Label privateViewKeyLabel = addDescriptionAndValue(Res.get("paymentAccounts.crypto.address.xmr.privateViewKey"), privateViewKey);
+            if (privateViewKey.length() > 70) {
+                privateViewKeyLabel.setTooltip(new BisqTooltip(privateViewKey));
+            }
+            String accountIndex = String.valueOf(accountPayload.getAccountIndex().orElseThrow());
+            addDescriptionAndValue(Res.get("paymentAccounts.crypto.address.xmr.accountIndex"), accountIndex);
+
+            String initialSubAddressIndex = String.valueOf(accountPayload.getInitialSubAddressIndex().orElseThrow());
+            addDescriptionAndValue(Res.get("paymentAccounts.crypto.address.xmr.initialSubAddressIndex"), initialSubAddressIndex);
+        }
     }
 }

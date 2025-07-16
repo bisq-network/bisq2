@@ -38,15 +38,15 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.main.content.user.fiat_accounts.details.AccountDetailsVBox;
-import bisq.desktop.main.content.user.fiat_accounts.details.F2FAccountDetailsVBox;
-import bisq.desktop.main.content.user.fiat_accounts.details.FasterPaymentsAccountDetailsVBox;
-import bisq.desktop.main.content.user.fiat_accounts.details.NationalBankAccountDetailsVBox;
-import bisq.desktop.main.content.user.fiat_accounts.details.PixAccountDetailsVBox;
-import bisq.desktop.main.content.user.fiat_accounts.details.RevolutAccountDetailsVBox;
-import bisq.desktop.main.content.user.fiat_accounts.details.SepaAccountDetailsVBox;
-import bisq.desktop.main.content.user.fiat_accounts.details.UserDefinedAccountDetailsVBox;
-import bisq.desktop.main.content.user.fiat_accounts.details.ZelleAccountDetailsVBox;
+import bisq.desktop.main.content.user.fiat_accounts.details.AccountDetails;
+import bisq.desktop.main.content.user.fiat_accounts.details.F2FAccountDetails;
+import bisq.desktop.main.content.user.fiat_accounts.details.FasterPaymentsAccountDetails;
+import bisq.desktop.main.content.user.fiat_accounts.details.NationalBankAccountDetails;
+import bisq.desktop.main.content.user.fiat_accounts.details.PixAccountDetails;
+import bisq.desktop.main.content.user.fiat_accounts.details.RevolutAccountDetails;
+import bisq.desktop.main.content.user.fiat_accounts.details.SepaAccountDetails;
+import bisq.desktop.main.content.user.fiat_accounts.details.UserDefinedAccountDetails;
+import bisq.desktop.main.content.user.fiat_accounts.details.ZelleAccountDetails;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.mu_sig.MuSigService;
 import lombok.Getter;
@@ -58,9 +58,9 @@ import java.util.Comparator;
 
 @Slf4j
 public class FiatPaymentAccountsController implements Controller {
-    private final FiatPPaymentAccountsModel model;
+    private final FiatPaymentAccountsModel model;
     @Getter
-    private final FiatPPaymentAccountsView view;
+    private final FiatPaymentAccountsView view;
     private final AccountService accountService;
     private final MuSigService muSigService;
     private Subscription selectedAccountSubscription;
@@ -70,8 +70,8 @@ public class FiatPaymentAccountsController implements Controller {
         accountService = serviceProvider.getAccountService();
         muSigService = serviceProvider.getMuSigService();
 
-        model = new FiatPPaymentAccountsModel();
-        view = new FiatPPaymentAccountsView(model, this);
+        model = new FiatPaymentAccountsModel();
+        view = new FiatPaymentAccountsView(model, this);
 
         model.getSortedAccounts().setComparator(Comparator.comparing(Account::getAccountName));
     }
@@ -177,31 +177,31 @@ public class FiatPaymentAccountsController implements Controller {
 
         AccountPayload<? extends PaymentMethod<?>> accountPayload = account.getAccountPayload();
         if (account.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
-            AccountDetailsVBox<?, ?> detailsVBox = getAccountDetailsVBox(account, fiatPaymentRail);
+            AccountDetails<?, ?> detailsVBox = getAccountDetails(account, fiatPaymentRail);
             model.getAccountDetailsGridPane().set(detailsVBox);
         }
     }
 
-    private AccountDetailsVBox<?, ?> getAccountDetailsVBox(Account<? extends PaymentMethod<?>, ?> account,
-                                                           FiatPaymentRail fiatPaymentRail) {
+    private AccountDetails<?, ?> getAccountDetails(Account<? extends PaymentMethod<?>, ?> account,
+                                                   FiatPaymentRail fiatPaymentRail) {
         return switch (fiatPaymentRail) {
-            case CUSTOM -> new UserDefinedAccountDetailsVBox((UserDefinedFiatAccount) account);
-            case SEPA -> new SepaAccountDetailsVBox((SepaAccount) account);
+            case CUSTOM -> new UserDefinedAccountDetails((UserDefinedFiatAccount) account);
+            case SEPA -> new SepaAccountDetails((SepaAccount) account);
             case SEPA_INSTANT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case ZELLE -> new ZelleAccountDetailsVBox((ZelleAccount) account);
-            case REVOLUT -> new RevolutAccountDetailsVBox((RevolutAccount) account);
+            case ZELLE -> new ZelleAccountDetails((ZelleAccount) account);
+            case REVOLUT -> new RevolutAccountDetails((RevolutAccount) account);
             case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case NATIONAL_BANK -> new NationalBankAccountDetailsVBox((NationalBankAccount) account);
+            case NATIONAL_BANK -> new NationalBankAccountDetails((NationalBankAccount) account);
             case SAME_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case F2F -> new F2FAccountDetailsVBox((F2FAccount) account);
+            case F2F -> new F2FAccountDetails((F2FAccount) account);
             case WISE_USD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case ACH_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case PIX -> new PixAccountDetailsVBox((PixAccount) account);
+            case PIX -> new PixAccountDetails((PixAccount) account);
             case HAL_CASH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case PIN_4 -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case SWISH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case FASTER_PAYMENTS -> new FasterPaymentsAccountDetailsVBox((FasterPaymentsAccount) account);
+            case FASTER_PAYMENTS -> new FasterPaymentsAccountDetails((FasterPaymentsAccount) account);
             case PAY_ID -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case US_POSTAL_MONEY_ORDER ->
                     throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);

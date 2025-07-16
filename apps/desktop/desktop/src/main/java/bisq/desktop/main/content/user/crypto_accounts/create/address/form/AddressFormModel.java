@@ -39,6 +39,11 @@ public abstract class AddressFormModel implements Model {
     protected final boolean isAutoConfSupported;
     protected final ValidatorBase addressValidator;
 
+    //todo
+    protected final NumberValidator autoConfNumConfirmationsValidator = new NumberValidator(1, 10);
+    protected final NumberValidator autoConfMaxTradeAmountValidator = new NumberValidator(0.001, 1);
+    protected final TextMinMaxLengthValidator autoConfExplorerUrlsValidator = new TextMinMaxLengthValidator(10, 200);
+
     protected final BooleanProperty runValidation = new SimpleBooleanProperty();
     protected final StringProperty address = new SimpleStringProperty();
     protected final BooleanProperty isInstant = new SimpleBooleanProperty();
@@ -46,9 +51,6 @@ public abstract class AddressFormModel implements Model {
     protected final StringProperty autoConfNumConfirmations = new SimpleStringProperty();
     protected final StringProperty autoConfMaxTradeAmount = new SimpleStringProperty();
     protected final StringProperty autoConfExplorerUrls = new SimpleStringProperty();
-    protected final NumberValidator autoConfNumConfirmationsValidator = new NumberValidator(1, 10);
-    protected final NumberValidator autoConfMaxTradeAmountValidator = new NumberValidator(0.001, 1);
-    protected final TextMinMaxLengthValidator autoConfExplorerUrlsValidator = new TextMinMaxLengthValidator(10, 200);
 
     public AddressFormModel(String id, CryptoPaymentMethod paymentMethod) {
         this.id = id;
@@ -57,9 +59,9 @@ public abstract class AddressFormModel implements Model {
         String currencyCode = paymentMethod.getCurrencyCode();
 
         cryptoCurrency = CryptoCurrencyRepository.findOrCreateCustom(currencyCode);
-        //addressValidator = new CryptoCurrencyValidator(cryptoCurrency.getValidation());
-        addressValidator = new ValidatorBase();//todo
         isAutoConfSupported = cryptoCurrency.isSupportAutoConf();
+        //addressValidator = new CryptoCurrencyValidator(cryptoCurrency.getValidation());
+        addressValidator = new ValidatorBase();//todo for dev testing we bypass validation
 
     }
 

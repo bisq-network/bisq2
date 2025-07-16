@@ -39,13 +39,13 @@ import java.util.Optional;
 
 @Slf4j
 public class CreateCryptoCurrencyAccountController extends NavigationController {
-    private final OverlayController overlayController;
     @Getter
     private final CreateCryptoCurrencyAccountModel model;
     @Getter
     private final CreateCryptoCurrencyAccountView view;
-    private final CryptoCurrencySelectionController paymentMethodController;
-    private final AddressController accountDataController;
+    private final OverlayController overlayController;
+    private final CryptoCurrencySelectionController cryptoCurrencySelectionController;
+    private final AddressController addressController;
     private final SummaryController summaryController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
     private Subscription selectedPaymentMethodPin, accountDataPin;
@@ -53,13 +53,13 @@ public class CreateCryptoCurrencyAccountController extends NavigationController 
     public CreateCryptoCurrencyAccountController(ServiceProvider serviceProvider) {
         super(NavigationTarget.CREATE_CRYPTO_CURRENCY_ACCOUNT);
 
-        overlayController = OverlayController.getInstance();
-
         model = new CreateCryptoCurrencyAccountModel();
         view = new CreateCryptoCurrencyAccountView(model, this);
 
-        paymentMethodController = new CryptoCurrencySelectionController();
-        accountDataController = new AddressController(serviceProvider);
+        overlayController = OverlayController.getInstance();
+
+        cryptoCurrencySelectionController = new CryptoCurrencySelectionController();
+        addressController = new AddressController(serviceProvider);
         summaryController = new SummaryController(serviceProvider);
     }
 
@@ -80,11 +80,11 @@ public class CreateCryptoCurrencyAccountController extends NavigationController 
         model.getCurrentIndex().set(0);
         model.getSelectedChildTarget().set(model.getChildTargets().get(0));
 
-        selectedPaymentMethodPin = EasyBind.subscribe(paymentMethodController.getSelectedPaymentMethod(),
+        selectedPaymentMethodPin = EasyBind.subscribe(cryptoCurrencySelectionController.getSelectedPaymentMethod(),
                 paymentMethod -> {
                     if (paymentMethod != null) {
                         model.setPaymentMethod(Optional.of(paymentMethod));
-                        accountDataController.setPaymentMethod(paymentMethod);
+                        addressController.setPaymentMethod(paymentMethod);
                         summaryController.setPaymentMethod(paymentMethod);
                         setChildTargets();
                     }
@@ -113,8 +113,8 @@ public class CreateCryptoCurrencyAccountController extends NavigationController 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case CREATE_CRYPTO_CURRENCY_ACCOUNT_CURRENCY -> Optional.of(paymentMethodController);
-            case CREATE_CRYPTO_CURRENCY_ACCOUNT_DATA -> Optional.of(accountDataController);
+            case CREATE_CRYPTO_CURRENCY_ACCOUNT_CURRENCY -> Optional.of(cryptoCurrencySelectionController);
+            case CREATE_CRYPTO_CURRENCY_ACCOUNT_DATA -> Optional.of(addressController);
             case CREATE_CRYPTO_CURRENCY_ACCOUNT_SUMMARY -> Optional.of(summaryController);
             default -> Optional.empty();
         };
@@ -160,7 +160,7 @@ public class CreateCryptoCurrencyAccountController extends NavigationController 
         model.getCurrentIndex().set(index);
         NavigationTarget target = model.getChildTargets().get(index);
         if (target == NavigationTarget.CREATE_CRYPTO_CURRENCY_ACCOUNT_SUMMARY) {
-            summaryController.setAccountPayload(accountDataController.getAccountPayload());
+            summaryController.setAccountPayload(addressController.getAccountPayload());
         }
         model.getSelectedChildTarget().set(target);
         Navigation.navigateTo(target);
@@ -182,8 +182,8 @@ public class CreateCryptoCurrencyAccountController extends NavigationController 
 
     private boolean validate() {
         return switch (model.getSelectedChildTarget().get()) {
-            case CREATE_CRYPTO_CURRENCY_ACCOUNT_CURRENCY -> paymentMethodController.validate();
-            case CREATE_CRYPTO_CURRENCY_ACCOUNT_DATA -> accountDataController.validate();
+            case CREATE_CRYPTO_CURRENCY_ACCOUNT_CURRENCY -> cryptoCurrencySelectionController.validate();
+            case CREATE_CRYPTO_CURRENCY_ACCOUNT_DATA -> addressController.validate();
             default -> true;
         };
     }

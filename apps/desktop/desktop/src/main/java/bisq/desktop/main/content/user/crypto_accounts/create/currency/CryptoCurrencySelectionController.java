@@ -37,6 +37,7 @@ public class CryptoCurrencySelectionController implements Controller {
     private Subscription searchTextPin;
 
     public CryptoCurrencySelectionController() {
+        // We use sorting provided by the CryptoCurrencyRepository with major assets first
         List<CryptoCurrencyItem> items = CryptoPaymentMethodUtil.getAllCryptoPaymentMethods().stream()
                 .map(CryptoCurrencyItem::new)
                 .toList();
@@ -71,17 +72,17 @@ public class CryptoCurrencySelectionController implements Controller {
     }
 
     public boolean validate() {
-        return model.getSelectedCryptoPaymentMethod().get() != null;
+        return model.getSelectedPaymentMethod().get() != null;
     }
 
     public ReadOnlyObjectProperty<CryptoPaymentMethod> getSelectedPaymentMethod() {
-        return model.getSelectedCryptoPaymentMethod();
+        return model.getSelectedPaymentMethod();
     }
 
-    void onPaymentMethodSelected(CryptoCurrencyItem item) {
+    void onItemSelected(CryptoCurrencyItem item) {
         if (item != null) {
             model.getSelectedItem().set(item);
-            model.getSelectedCryptoPaymentMethod().set(item.getPaymentMethod());
+            model.getSelectedPaymentMethod().set(item.getPaymentMethod());
         }
     }
 
@@ -89,7 +90,7 @@ public class CryptoCurrencySelectionController implements Controller {
         if (searchText != null) {
             model.getSearchText().set(searchText.trim());
         } else {
-            model.getSearchText().set("");
+            model.getSearchText().set(null);
         }
     }
 }

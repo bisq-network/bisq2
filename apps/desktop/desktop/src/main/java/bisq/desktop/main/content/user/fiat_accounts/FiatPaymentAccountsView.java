@@ -15,9 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.crypto_accounts;
+package bisq.desktop.main.content.user.fiat_accounts;
 
-import bisq.account.accounts.crypto.CryptoCurrencyAccount;
+import bisq.account.accounts.Account;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
@@ -38,37 +39,34 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class CryptoCurrencyAccountsView extends View<VBox, CryptoCurrencyAccountsModel, CryptoCurrencyAccountsController> {
+public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel, FiatPaymentAccountsController> {
     private final Label headline;
     private final Button createButtonWithAccounts, createButtonNoAccounts, deletedButton;
-    private final AutoCompleteComboBox<CryptoCurrencyAccount<?>> accountsComboBox;
+    private final AutoCompleteComboBox<Account<?, ?>> accountsComboBox;
     private final HBox comboBoxAndCreateButtonHBox;
     private final VBox noAccountsVBox;
     private final Pane accountDisplayPane;
     private final Region lineAfterHeadline;
     private Subscription selectedAccountPin, noAccountsSetupPin, accountDisplayPin;
 
-    public CryptoCurrencyAccountsView(CryptoCurrencyAccountsModel model, CryptoCurrencyAccountsController controller) {
+    public FiatPaymentAccountsView(FiatPaymentAccountsModel model, FiatPaymentAccountsController controller) {
         super(new VBox(0), model, controller);
 
         root.setAlignment(Pos.TOP_LEFT);
         root.setPadding(new Insets(0, 40, 40, 40));
 
-        headline = new Label(Res.get("paymentAccounts.crypto.headline"));
+        headline = new Label(Res.get("paymentAccounts.headline"));
         headline.getStyleClass().add("large-thin-headline");
 
         Label noAccountsInfo = new Label(Res.get("paymentAccounts.noAccounts.info"));
         noAccountsInfo.setWrapText(true);
         noAccountsInfo.getStyleClass().add("user-payment-account-no-data");
-
         Label whySetup = new Label(Res.get("paymentAccounts.noAccounts.whySetup"));
         whySetup.setWrapText(true);
         whySetup.getStyleClass().add("large-thin-headline");
-
-        Label whySetupInfo = new Label(Res.get("paymentAccounts.crypto.noAccounts.whySetup.info"));
+        Label whySetupInfo = new Label(Res.get("paymentAccounts.noAccounts.whySetup.info"));
         whySetupInfo.setWrapText(true);
         whySetupInfo.getStyleClass().add("user-content-text");
-
         Label whySetupNote = new Label(Res.get("paymentAccounts.noAccounts.whySetup.note"));
         whySetupNote.setWrapText(true);
         whySetupNote.getStyleClass().add("user-content-note");
@@ -77,29 +75,29 @@ public class CryptoCurrencyAccountsView extends View<VBox, CryptoCurrencyAccount
         VBox.setMargin(whySetupNote, new Insets(10, 0, 15, 0));
         noAccountsVBox = new VBox(20, noAccountsInfo, whySetup, whySetupInfo, whySetupNote);
 
-        createButtonNoAccounts = new Button(Res.get("paymentAccounts.crypto.createAccount"));
+        createButtonNoAccounts = new Button(Res.get("paymentAccounts.createAccount"));
         createButtonNoAccounts.setDefaultButton(true);
 
-        createButtonWithAccounts = new Button(Res.get("paymentAccounts.crypto.createAccount"));
+        createButtonWithAccounts = new Button(Res.get("paymentAccounts.createAccount"));
         createButtonWithAccounts.getStyleClass().add("outlined-button");
 
-        accountsComboBox = new AutoCompleteComboBox<>(model.getSortedAccounts(), Res.get("paymentAccounts.crypto.selectAccount"));
+        accountsComboBox = new AutoCompleteComboBox<>(model.getSortedAccounts(), Res.get("paymentAccounts.selectAccount"));
         accountsComboBox.setPrefWidth(325);
         accountsComboBox.setConverter(new StringConverter<>() {
             @Override
-            public String toString(CryptoCurrencyAccount<?> account) {
+            public String toString(Account<? extends PaymentMethod<?>, ?> account) {
                 return account != null ? account.getAccountName() : "";
             }
 
             @Override
-            public CryptoCurrencyAccount<?> fromString(String string) {
+            public Account<? extends PaymentMethod<?>, ?> fromString(String string) {
                 return null;
             }
         });
 
         comboBoxAndCreateButtonHBox = new HBox(20, accountsComboBox, Spacer.fillHBox(), createButtonWithAccounts);
 
-        deletedButton = new Button(Res.get("paymentAccounts.crypto.deleteAccount"));
+        deletedButton = new Button(Res.get("paymentAccounts.deleteAccount"));
 
         accountDisplayPane = new StackPane();
 
@@ -133,7 +131,6 @@ public class CryptoCurrencyAccountsView extends View<VBox, CryptoCurrencyAccount
             createButtonNoAccounts.setVisible(noAccountsSetup);
             createButtonNoAccounts.setManaged(noAccountsSetup);
 
-
             comboBoxAndCreateButtonHBox.setVisible(anyAccountSetup);
             comboBoxAndCreateButtonHBox.setManaged(anyAccountSetup);
             deletedButton.setVisible(anyAccountSetup);
@@ -143,7 +140,7 @@ public class CryptoCurrencyAccountsView extends View<VBox, CryptoCurrencyAccount
         selectedAccountPin = EasyBind.subscribe(model.getSelectedAccount(),
                 account -> accountsComboBox.getSelectionModel().select(account));
 
-        accountDisplayPin = EasyBind.subscribe(model.getAccountDetails(), accountDisplay -> {
+        accountDisplayPin = EasyBind.subscribe(model.getAccountDetailsGridPane(), accountDisplay -> {
             if (accountDisplay != null) {
                 accountDisplayPane.getChildren().setAll(accountDisplay);
             } else {

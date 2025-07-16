@@ -44,7 +44,7 @@ public class MoneroAddressFormView extends AddressFormView<MoneroAddressFormMode
 
     @Override
     protected void addContent() {
-        useSubAddressesSwitch = new Switch(Res.get("paymentAccounts.crypto.address.xmr.useSubAddresses"));
+        useSubAddressesSwitch = new Switch(Res.get("paymentAccounts.crypto.address.xmr.useSubAddresses.switch"));
         HBox useSubAddressesSwitchHBox = new HBox(useSubAddressesSwitch, Spacer.fillHBox());
 
         privateViewKey = new MaterialTextField(Res.get("paymentAccounts.crypto.address.xmr.privateViewKey"),
@@ -87,6 +87,15 @@ public class MoneroAddressFormView extends AddressFormView<MoneroAddressFormMode
             privateViewKey.setText(model.getPrivateViewKey().get());
             privateViewKey.validate();
         }
+        if (StringUtils.isNotEmpty(model.getAccountIndex().get())) {
+            accountIndex.setText(model.getAccountIndex().get());
+            accountIndex.validate();
+        }
+        if (StringUtils.isNotEmpty(model.getInitialSubAddressIndex().get())) {
+            initialSubAddressIndex.setText(model.getInitialSubAddressIndex().get());
+            initialSubAddressIndex.validate();
+        }
+
         useSubAddressesSwitch.setSelected(model.getUseSubAddresses().get());
 
         subAddressesHBox.visibleProperty().bind(model.getUseSubAddresses());

@@ -56,7 +56,7 @@ public class SummaryView extends View<StackPane, SummaryModel, SummaryController
     private final VBox accountNameOverlay;
     private final Button accountNameButton;
     private final MaterialTextField accountNameField;
-    private int rowIndex = 0;
+    private final Text addressDescription;
     private Subscription showAccountNameOverlayPin;
 
     public SummaryView(SummaryModel model, SummaryController controller) {
@@ -67,10 +67,11 @@ public class SummaryView extends View<StackPane, SummaryModel, SummaryController
         gridPane.setVgap(10);
         GridPaneUtil.setGridPaneMultiColumnsConstraints(gridPane, 3);
 
-        Label headline = new Label(Res.get("paymentAccounts.summary.headline"));
+        Label headline = new Label(Res.get("paymentAccounts.crypto.summary.headline"));
         headline.getStyleClass().add("trade-wizard-review-headline");
         GridPane.setHalignment(headline, HPos.CENTER);
         GridPane.setMargin(headline, new Insets(20, 0, 20, 0));
+        int rowIndex = 0;
         gridPane.add(headline, 0, rowIndex, 3, 1);
 
         rowIndex++;
@@ -82,8 +83,9 @@ public class SummaryView extends View<StackPane, SummaryModel, SummaryController
         gridPane.add(cryptoCurrencyTriple.getThird(), 0, rowIndex);
 
         Triple<Text, Label, VBox> addressTriple = getDescriptionValueVBoxTriple(Res.get("paymentAccounts.crypto.address.address"));
+        addressDescription = addressTriple.getFirst();
         address = addressTriple.getSecond();
-        gridPane.add(addressTriple.getThird(), 1, rowIndex, 1, 2);
+        gridPane.add(addressTriple.getThird(), 1, rowIndex, 2, 1);
 
         accountNameField = new MaterialTextField(Res.get("paymentAccounts.summary.accountNameOverlay.accountName.description"));
         accountNameField.setValidator(model.getAccountNameValidator());
@@ -98,6 +100,7 @@ public class SummaryView extends View<StackPane, SummaryModel, SummaryController
 
     @Override
     protected void onViewAttached() {
+        addressDescription.setText(model.getAddressDescription());
         accountNameButton.disableProperty().bind(accountNameField.textProperty().isEmpty());
 
         accountNameButton.setOnAction(e -> {
@@ -122,7 +125,7 @@ public class SummaryView extends View<StackPane, SummaryModel, SummaryController
 
         accountNameField.setText(model.getDefaultAccountName());
 
-        gridPane.add(model.getAccountDetailsGridPane(), 0, gridPane.getRowCount() + 1, 3, 1);
+        gridPane.add(model.getSummaryDetails(), 0, gridPane.getRowCount() + 1, 3, 1);
     }
 
     @Override
@@ -133,7 +136,7 @@ public class SummaryView extends View<StackPane, SummaryModel, SummaryController
 
         showAccountNameOverlayPin.unsubscribe();
 
-        gridPane.getChildren().remove(model.getAccountDetailsGridPane());
+        gridPane.getChildren().remove(model.getSummaryDetails());
     }
 
     private Triple<Label, Button, VBox> getAccountNameElements(@Nullable String description) {
@@ -162,7 +165,6 @@ public class SummaryView extends View<StackPane, SummaryModel, SummaryController
         descriptionLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-description");
         Label valueLabel = new Label();
         valueLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
-        valueLabel.setMaxWidth(250);
 
         VBox.setVgrow(valueLabel, Priority.ALWAYS);
         VBox.setMargin(valueLabel, new Insets(-2, 0, 0, 0));

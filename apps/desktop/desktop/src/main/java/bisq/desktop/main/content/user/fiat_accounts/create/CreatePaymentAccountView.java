@@ -189,7 +189,6 @@ public class CreatePaymentAccountView extends NavigationView<VBox, CreatePayment
 
     @Override
     protected void onViewDetached() {
-        nextButton.textProperty().unbind();
         nextButton.visibleProperty().unbind();
         nextButton.managedProperty().unbind();
         nextButton.disableProperty().unbind();
@@ -207,6 +206,7 @@ public class CreatePaymentAccountView extends NavigationView<VBox, CreatePayment
         backButton.setOnAction(null);
         closeButton.setOnAction(null);
         createAccountButton.setOnAction(null);
+
         root.setOnKeyPressed(null);
 
         if (progressLabelAnimationScheduler != null) {

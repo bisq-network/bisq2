@@ -23,8 +23,6 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.Switch;
 import bisq.i18n.Res;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
@@ -54,7 +52,7 @@ public abstract class AddressFormView<M extends AddressFormModel, C extends Addr
 
         isInstantSwitch = new Switch(Res.get("paymentAccounts.crypto.address.isInstant"));
         isInstantSwitchHBox = new HBox(isInstantSwitch, Spacer.fillHBox());
-        isAutoConfSwitch = new Switch(Res.get("paymentAccounts.crypto.address.autoConf.switch"));
+        isAutoConfSwitch = new Switch(Res.get("paymentAccounts.crypto.address.autoConf.use"));
         isAutoConfSwitchHBox = new HBox(isAutoConfSwitch, Spacer.fillHBox());
 
         autoConfNumConfirmations = new MaterialTextField(Res.get("paymentAccounts.crypto.address.autoConf.numConfirmations"), Res.get("paymentAccounts.crypto.address.autoConf.numConfirmations.prompt"));
@@ -73,13 +71,6 @@ public abstract class AddressFormView<M extends AddressFormModel, C extends Addr
         HBox.setHgrow(autoConfMaxTradeAmount, Priority.ALWAYS);
         HBox.setHgrow(autoConfExplorerUrls, Priority.ALWAYS);
         autoConfHBox = new HBox(10, autoConfNumConfirmations, autoConfMaxTradeAmount, autoConfExplorerUrls);
-
-        autoConfHBox.widthProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                log.error("widthProperty " + newValue.toString());
-            }
-        });
 
         VBox.setMargin(isInstantSwitchHBox, new Insets(5, 0, 0, 0));
         VBox.setMargin(autoConfHBox, new Insets(10, 0, 0, 0));

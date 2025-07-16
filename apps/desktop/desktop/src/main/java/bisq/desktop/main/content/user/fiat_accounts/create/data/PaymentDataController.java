@@ -24,14 +24,14 @@ import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentRail;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.user.fiat_accounts.create.data.payment_form.F2FPaymentFormController;
-import bisq.desktop.main.content.user.fiat_accounts.create.data.payment_form.FasterPaymentsPaymentFormController;
-import bisq.desktop.main.content.user.fiat_accounts.create.data.payment_form.NationalBankPaymentFormController;
-import bisq.desktop.main.content.user.fiat_accounts.create.data.payment_form.PaymentFormController;
-import bisq.desktop.main.content.user.fiat_accounts.create.data.payment_form.PixPaymentFormController;
-import bisq.desktop.main.content.user.fiat_accounts.create.data.payment_form.RevolutPaymentFormController;
-import bisq.desktop.main.content.user.fiat_accounts.create.data.payment_form.SepaPaymentFormController;
-import bisq.desktop.main.content.user.fiat_accounts.create.data.payment_form.ZellePaymentFormController;
+import bisq.desktop.main.content.user.fiat_accounts.create.data.form.F2FFormController;
+import bisq.desktop.main.content.user.fiat_accounts.create.data.form.FasterPaymentsFormController;
+import bisq.desktop.main.content.user.fiat_accounts.create.data.form.NationalBankFormController;
+import bisq.desktop.main.content.user.fiat_accounts.create.data.form.FormController;
+import bisq.desktop.main.content.user.fiat_accounts.create.data.form.PixFormController;
+import bisq.desktop.main.content.user.fiat_accounts.create.data.form.RevolutFormController;
+import bisq.desktop.main.content.user.fiat_accounts.create.data.form.SepaFormController;
+import bisq.desktop.main.content.user.fiat_accounts.create.data.form.ZelleFormController;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +44,7 @@ public class PaymentDataController implements Controller {
     @Getter
     private final PaymentDataView view;
     private final ServiceProvider serviceProvider;
-    private PaymentFormController<?, ?, ?> paymentFormController;
+    private FormController<?, ?, ?> paymentFormController;
 
     public PaymentDataController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
@@ -81,12 +81,12 @@ public class PaymentDataController implements Controller {
         return paymentFormController != null && paymentFormController.validate();
     }
 
-    public PaymentFormController<?, ?, ?> getOrCreateController(PaymentMethod<?> paymentMethod) {
+    public FormController<?, ?, ?> getOrCreateController(PaymentMethod<?> paymentMethod) {
         String key = paymentMethod.getPaymentRail().name();
         return model.getControllerCache().computeIfAbsent(key, k -> createController(paymentMethod));
     }
 
-    public PaymentFormController<?, ?, ?> createController(PaymentMethod<?> paymentMethod) {
+    public FormController<?, ?, ?> createController(PaymentMethod<?> paymentMethod) {
         PaymentRail paymentRail = paymentMethod.getPaymentRail();
         if (paymentRail instanceof FiatPaymentRail fiatPaymentRail) {
             return getPaymentFormController(fiatPaymentRail);
@@ -99,7 +99,7 @@ public class PaymentDataController implements Controller {
         }
     }
 
-    private PaymentFormController<?, ?, ?> getPaymentFormController(PaymentRail paymentRail) {
+    private FormController<?, ?, ?> getPaymentFormController(PaymentRail paymentRail) {
         if (paymentRail instanceof FiatPaymentRail fiatPaymentRail) {
             return getFiatPaymentFormController(fiatPaymentRail);
         } else{
@@ -108,25 +108,25 @@ public class PaymentDataController implements Controller {
     }
 
 
-    private PaymentFormController<?, ?, ?> getFiatPaymentFormController(FiatPaymentRail fiatPaymentRail) {
+    private FormController<?, ?, ?> getFiatPaymentFormController(FiatPaymentRail fiatPaymentRail) {
         return switch (fiatPaymentRail) {
             case CUSTOM -> throw new UnsupportedOperationException("Not implemented yet");
-            case SEPA -> new SepaPaymentFormController(serviceProvider);
+            case SEPA -> new SepaFormController(serviceProvider);
             case SEPA_INSTANT -> throw new UnsupportedOperationException("Not implemented yet");
-            case ZELLE -> new ZellePaymentFormController(serviceProvider);
-            case REVOLUT -> new RevolutPaymentFormController(serviceProvider);
+            case ZELLE -> new ZelleFormController(serviceProvider);
+            case REVOLUT -> new RevolutFormController(serviceProvider);
             case WISE -> throw new UnsupportedOperationException("Not implemented yet");
-            case NATIONAL_BANK -> new NationalBankPaymentFormController(serviceProvider);
+            case NATIONAL_BANK -> new NationalBankFormController(serviceProvider);
             case SAME_BANK -> throw new UnsupportedOperationException("Not implemented yet");
             case SWIFT -> throw new UnsupportedOperationException("Not implemented yet");
-            case F2F -> new F2FPaymentFormController(serviceProvider);
+            case F2F -> new F2FFormController(serviceProvider);
             case WISE_USD -> throw new UnsupportedOperationException("Not implemented yet");
             case ACH_TRANSFER -> throw new UnsupportedOperationException("Not implemented yet");
-            case PIX -> new PixPaymentFormController(serviceProvider);
+            case PIX -> new PixFormController(serviceProvider);
             case HAL_CASH -> throw new UnsupportedOperationException("Not implemented yet");
             case PIN_4 -> throw new UnsupportedOperationException("Not implemented yet");
             case SWISH -> throw new UnsupportedOperationException("Not implemented yet");
-            case FASTER_PAYMENTS -> new FasterPaymentsPaymentFormController(serviceProvider);
+            case FASTER_PAYMENTS -> new FasterPaymentsFormController(serviceProvider);
             case PAY_ID -> throw new UnsupportedOperationException("Not implemented yet");
             case US_POSTAL_MONEY_ORDER -> throw new UnsupportedOperationException("Not implemented yet");
             case CASH_BY_MAIL -> throw new UnsupportedOperationException("Not implemented yet");
