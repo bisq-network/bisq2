@@ -62,7 +62,7 @@ public class MarketRepository {
     }
 
     public static List<Market> getMajorMarkets() {
-        return Stream.concat(getMajorFiatMarkets().stream(), getMajorCryptoCurrencyMarkets().stream())
+        return Stream.concat(getMajorFiatMarkets().stream(), getMajorCryptoAssetMarkets().stream())
                 .distinct()
                 .collect(Collectors.toList());
     }
@@ -93,14 +93,14 @@ public class MarketRepository {
     }
 
 
-    public static List<Market> getMajorCryptoCurrencyMarkets() {
+    public static List<Market> getMajorCryptoAssetMarkets() {
         return CryptoAssetRepository.getCryptoAssets().stream()
                 .map(currency -> new Market(currency.getCode(), "BTC", currency.getName(), "Bitcoin"))
                 .distinct()
                 .collect(Collectors.toList());
     }
 
-    public static List<Market> getAllCryptoCurrencyMarkets() {
+    public static List<Market> getAllCryptoAssetMarkets() {
         return CryptoAssetRepository.getCryptoAssets().stream()
                 .filter(currency -> !currency.equals(CryptoAssetRepository.BITCOIN))
                 .map(currency -> new Market(currency.getCode(), "BTC", currency.getName(), "Bitcoin"))
@@ -108,7 +108,7 @@ public class MarketRepository {
                 .collect(Collectors.toList());
     }
 
-    public static List<Market> getAllNonXMRCryptoCurrencyMarkets() {
+    public static List<Market> getAllNonXMRCryptoAssetMarkets() {
         List<CryptoAsset> allCurrencies = CryptoAssetRepository.getCryptoAssets();
         return allCurrencies.stream()
                 .filter(currency -> !currency.equals(CryptoAssetRepository.BITCOIN))

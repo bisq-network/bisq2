@@ -41,7 +41,7 @@ message CryptoAsset {
 
 message FiatCurrency {
 }
-message CentraBankDigitalCurrency {
+message CentralBankDigitalCurrency {
   string pegCurrencyCode = 1;
   string countryCode = 2;
 }
@@ -60,7 +60,7 @@ message Asset {
     FiatCurrency fiatCurrency = 10;
     CryptoAsset cryptoAsset = 11;
     StableCoin stableCoin = 12;
-    CentraBankDigitalCurrency centraBankDigitalCurrency = 13;
+    CentralBankDigitalCurrency centralBankDigitalCurrency = 13;
   }
 }
 

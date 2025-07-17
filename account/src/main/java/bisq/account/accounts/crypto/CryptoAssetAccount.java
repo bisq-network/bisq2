@@ -29,27 +29,27 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public abstract class CryptoCurrencyAccount<P extends CryptoCurrencyAccountPayload> extends Account<CryptoPaymentMethod, P> {
-    public CryptoCurrencyAccount(String id,
-                                 long creationDate,
-                                 String accountName,
-                                 P accountPayload) {
+public abstract class CryptoAssetAccount<P extends CryptoAssetAccountPayload> extends Account<CryptoPaymentMethod, P> {
+    public CryptoAssetAccount(String id,
+                              long creationDate,
+                              String accountName,
+                              P accountPayload) {
         super(id, creationDate, accountName, accountPayload);
     }
 
 
-    protected bisq.account.protobuf.CryptoCurrencyAccount toCryptoCurrencyAccountProto(boolean serializeForHash) {
-        return resolveBuilder(getCryptoCurrencyAccountBuilder(serializeForHash), serializeForHash).build();
+    protected bisq.account.protobuf.CryptoAssetAccount toCryptoAssetAccountProto(boolean serializeForHash) {
+        return resolveBuilder(getCryptoAssetAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
-    protected bisq.account.protobuf.CryptoCurrencyAccount.Builder getCryptoCurrencyAccountBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.CryptoCurrencyAccount.newBuilder();
+    protected bisq.account.protobuf.CryptoAssetAccount.Builder getCryptoAssetAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.CryptoAssetAccount.newBuilder();
     }
 
-    public static CryptoCurrencyAccount<?> fromProto(bisq.account.protobuf.Account proto) {
-        return switch (proto.getCryptoCurrencyAccount().getMessageCase()) {
+    public static CryptoAssetAccount<?> fromProto(bisq.account.protobuf.Account proto) {
+        return switch (proto.getCryptoAssetAccount().getMessageCase()) {
             case MONEROACCOUNT -> MoneroAccount.fromProto(proto);
-            case OTHERCRYPTOCURRENCYACCOUNT -> OtherCryptoCurrencyAccount.fromProto(proto);
+            case OTHERCRYPTOASSETACCOUNT -> OtherCryptoAssetAccount.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

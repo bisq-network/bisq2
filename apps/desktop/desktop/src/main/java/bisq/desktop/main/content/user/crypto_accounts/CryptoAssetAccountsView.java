@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.crypto_accounts;
 
-import bisq.account.accounts.crypto.CryptoCurrencyAccount;
+import bisq.account.accounts.crypto.CryptoAssetAccount;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
@@ -38,17 +38,17 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class CryptoCurrencyAccountsView extends View<VBox, CryptoCurrencyAccountsModel, CryptoCurrencyAccountsController> {
+public class CryptoAssetAccountsView extends View<VBox, CryptoAssetAccountsModel, CryptoAssetAccountsController> {
     private final Label headline;
     private final Button createButtonWithAccounts, createButtonNoAccounts, deletedButton;
-    private final AutoCompleteComboBox<CryptoCurrencyAccount<?>> accountsComboBox;
+    private final AutoCompleteComboBox<CryptoAssetAccount<?>> accountsComboBox;
     private final HBox comboBoxAndCreateButtonHBox;
     private final VBox noAccountsVBox;
     private final Pane accountDisplayPane;
     private final Region lineAfterHeadline;
     private Subscription selectedAccountPin, noAccountsSetupPin, accountDisplayPin;
 
-    public CryptoCurrencyAccountsView(CryptoCurrencyAccountsModel model, CryptoCurrencyAccountsController controller) {
+    public CryptoAssetAccountsView(CryptoAssetAccountsModel model, CryptoAssetAccountsController controller) {
         super(new VBox(0), model, controller);
 
         root.setAlignment(Pos.TOP_LEFT);
@@ -87,12 +87,12 @@ public class CryptoCurrencyAccountsView extends View<VBox, CryptoCurrencyAccount
         accountsComboBox.setPrefWidth(325);
         accountsComboBox.setConverter(new StringConverter<>() {
             @Override
-            public String toString(CryptoCurrencyAccount<?> account) {
+            public String toString(CryptoAssetAccount<?> account) {
                 return account != null ? account.getAccountName() : "";
             }
 
             @Override
-            public CryptoCurrencyAccount<?> fromString(String string) {
+            public CryptoAssetAccount<?> fromString(String string) {
                 return null;
             }
         });

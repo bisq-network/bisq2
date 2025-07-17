@@ -25,28 +25,24 @@ import lombok.ToString;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public final class CentraBankDigitalCurrency extends Asset {
+public final class CentralBankDigitalCurrency extends Asset {
     private final String pegCurrencyCode;
     private final String countryCode;
 
-    public CentraBankDigitalCurrency(String code,
-                                     String name,
-                                     String pegCurrencyCode,
-                                     String countryCode) {
+    public CentralBankDigitalCurrency(String code,
+                                      String name,
+                                      String pegCurrencyCode,
+                                      String countryCode) {
         super(code, name);
         this.pegCurrencyCode = pegCurrencyCode;
         this.countryCode = countryCode;
     }
 
-    public static boolean isStableCoin(String code) {
-        return !StableCoinRepository.allWithCode(code).isEmpty();
-    }
 
-    //todo
     @Override
     public bisq.common.protobuf.Asset.Builder getBuilder(boolean serializeForHash) {
-        return getAssetBuilder().setCentraBankDigitalCurrency(
-                bisq.common.protobuf.CentraBankDigitalCurrency.newBuilder()
+        return getAssetBuilder().setCentralBankDigitalCurrency(
+                bisq.common.protobuf.CentralBankDigitalCurrency.newBuilder()
                         .setPegCurrencyCode(pegCurrencyCode)
                         .setCountryCode(countryCode));
     }
@@ -56,9 +52,9 @@ public final class CentraBankDigitalCurrency extends Asset {
         return resolveProto(serializeForHash);
     }
 
-    public static CentraBankDigitalCurrency fromProto(bisq.common.protobuf.Asset baseProto) {
-        bisq.common.protobuf.CentraBankDigitalCurrency proto = baseProto.getCentraBankDigitalCurrency();
-        return new CentraBankDigitalCurrency(baseProto.getCode(), baseProto.getName(),
+    public static CentralBankDigitalCurrency fromProto(bisq.common.protobuf.Asset baseProto) {
+        bisq.common.protobuf.CentralBankDigitalCurrency proto = baseProto.getCentralBankDigitalCurrency();
+        return new CentralBankDigitalCurrency(baseProto.getCode(), baseProto.getName(),
                 proto.getPegCurrencyCode(),
                 proto.getCountryCode());
     }

@@ -26,18 +26,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class MoneroAccount extends CryptoCurrencyAccount<MoneroAccountPayload> {
+public final class MoneroAccount extends CryptoAssetAccount<MoneroAccountPayload> {
     public MoneroAccount(String id, long creationDate, String accountName, MoneroAccountPayload accountPayload) {
         super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
     public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
-        bisq.account.protobuf.CryptoCurrencyAccount.Builder builder = getCryptoCurrencyAccountBuilder(serializeForHash)
+        bisq.account.protobuf.CryptoAssetAccount.Builder builder = getCryptoAssetAccountBuilder(serializeForHash)
                 .setMoneroAccount(getMoneroAccountBuilder(serializeForHash));
-        bisq.account.protobuf.CryptoCurrencyAccount cryptoCurrencyAccount = resolveBuilder(builder, serializeForHash).build();
+        bisq.account.protobuf.CryptoAssetAccount cryptoAssetAccount = resolveBuilder(builder, serializeForHash).build();
         return getAccountBuilder(serializeForHash)
-                .setCryptoCurrencyAccount(cryptoCurrencyAccount);
+                .setCryptoAssetAccount(cryptoAssetAccount);
     }
 
     private bisq.account.protobuf.MoneroAccount.Builder getMoneroAccountBuilder(boolean serializeForHash) {
@@ -45,8 +45,8 @@ public final class MoneroAccount extends CryptoCurrencyAccount<MoneroAccountPayl
     }
 
     public static MoneroAccount fromProto(bisq.account.protobuf.Account proto) {
-        var cryptoCurrency = proto.getCryptoCurrencyAccount();
-        var monero = cryptoCurrency.getMoneroAccount();
+        var cryptoAssetAccount = proto.getCryptoAssetAccount();
+        var monero = cryptoAssetAccount.getMoneroAccount();
         return new MoneroAccount(
                 proto.getId(),
                 proto.getCreationDate(),

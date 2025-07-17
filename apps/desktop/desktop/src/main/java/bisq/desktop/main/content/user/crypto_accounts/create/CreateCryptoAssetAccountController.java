@@ -23,7 +23,7 @@ import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.main.content.user.crypto_accounts.create.currency.CryptoCurrencySelectionController;
+import bisq.desktop.main.content.user.crypto_accounts.create.currency.CryptoAssetSelectionController;
 import bisq.desktop.main.content.user.crypto_accounts.create.address.AddressController;
 import bisq.desktop.main.content.user.crypto_accounts.create.summary.SummaryController;
 import bisq.desktop.navigation.NavigationTarget;
@@ -38,27 +38,27 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Optional;
 
 @Slf4j
-public class CreateCryptoCurrencyAccountController extends NavigationController {
+public class CreateCryptoAssetAccountController extends NavigationController {
     @Getter
-    private final CreateCryptoCurrencyAccountModel model;
+    private final CreateCryptoAssetAccountModel model;
     @Getter
-    private final CreateCryptoCurrencyAccountView view;
+    private final CreateCryptoAssetAccountView view;
     private final OverlayController overlayController;
-    private final CryptoCurrencySelectionController cryptoCurrencySelectionController;
+    private final CryptoAssetSelectionController cryptoAssetSelectionController;
     private final AddressController addressController;
     private final SummaryController summaryController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
     private Subscription selectedPaymentMethodPin, accountDataPin;
 
-    public CreateCryptoCurrencyAccountController(ServiceProvider serviceProvider) {
+    public CreateCryptoAssetAccountController(ServiceProvider serviceProvider) {
         super(NavigationTarget.CREATE_CRYPTO_CURRENCY_ACCOUNT);
 
-        model = new CreateCryptoCurrencyAccountModel();
-        view = new CreateCryptoCurrencyAccountView(model, this);
+        model = new CreateCryptoAssetAccountModel();
+        view = new CreateCryptoAssetAccountView(model, this);
 
         overlayController = OverlayController.getInstance();
 
-        cryptoCurrencySelectionController = new CryptoCurrencySelectionController();
+        cryptoAssetSelectionController = new CryptoAssetSelectionController();
         addressController = new AddressController(serviceProvider);
         summaryController = new SummaryController(serviceProvider);
     }
@@ -80,7 +80,7 @@ public class CreateCryptoCurrencyAccountController extends NavigationController 
         model.getCurrentIndex().set(0);
         model.getSelectedChildTarget().set(model.getChildTargets().get(0));
 
-        selectedPaymentMethodPin = EasyBind.subscribe(cryptoCurrencySelectionController.getSelectedPaymentMethod(),
+        selectedPaymentMethodPin = EasyBind.subscribe(cryptoAssetSelectionController.getSelectedPaymentMethod(),
                 paymentMethod -> {
                     if (paymentMethod != null) {
                         model.setPaymentMethod(Optional.of(paymentMethod));
@@ -113,7 +113,7 @@ public class CreateCryptoCurrencyAccountController extends NavigationController 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case CREATE_CRYPTO_CURRENCY_ACCOUNT_CURRENCY -> Optional.of(cryptoCurrencySelectionController);
+            case CREATE_CRYPTO_CURRENCY_ACCOUNT_CURRENCY -> Optional.of(cryptoAssetSelectionController);
             case CREATE_CRYPTO_CURRENCY_ACCOUNT_DATA -> Optional.of(addressController);
             case CREATE_CRYPTO_CURRENCY_ACCOUNT_SUMMARY -> Optional.of(summaryController);
             default -> Optional.empty();
@@ -182,7 +182,7 @@ public class CreateCryptoCurrencyAccountController extends NavigationController 
 
     private boolean validate() {
         return switch (model.getSelectedChildTarget().get()) {
-            case CREATE_CRYPTO_CURRENCY_ACCOUNT_CURRENCY -> cryptoCurrencySelectionController.validate();
+            case CREATE_CRYPTO_CURRENCY_ACCOUNT_CURRENCY -> cryptoAssetSelectionController.validate();
             case CREATE_CRYPTO_CURRENCY_ACCOUNT_DATA -> addressController.validate();
             default -> true;
         };

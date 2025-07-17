@@ -20,7 +20,7 @@ package bisq.desktop.main.content.user.crypto_accounts.create.currency;
 import bisq.account.payment_method.CryptoPaymentMethod;
 import bisq.account.payment_method.CryptoPaymentMethodUtil;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.user.crypto_accounts.create.currency.CryptoCurrencySelectionView.CryptoCurrencyItem;
+import bisq.desktop.main.content.user.crypto_accounts.create.currency.CryptoAssetSelectionView.CryptoAssetItem;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -30,19 +30,19 @@ import org.fxmisc.easybind.Subscription;
 import java.util.List;
 
 @Slf4j
-public class CryptoCurrencySelectionController implements Controller {
-    private final CryptoCurrencySelectionModel model;
+public class CryptoAssetSelectionController implements Controller {
+    private final CryptoAssetSelectionModel model;
     @Getter
-    private final CryptoCurrencySelectionView view;
+    private final CryptoAssetSelectionView view;
     private Subscription searchTextPin;
 
-    public CryptoCurrencySelectionController() {
-        // We use sorting provided by the CryptoCurrencyRepository with major assets first
-        List<CryptoCurrencyItem> items = CryptoPaymentMethodUtil.getAllCryptoPaymentMethods().stream()
-                .map(CryptoCurrencyItem::new)
+    public CryptoAssetSelectionController() {
+        // We use sorting provided by the CryptoAssetRepository with major assets first
+        List<CryptoAssetItem> items = CryptoPaymentMethodUtil.getAllCryptoPaymentMethods().stream()
+                .map(CryptoAssetItem::new)
                 .toList();
-        model = new CryptoCurrencySelectionModel(items);
-        view = new CryptoCurrencySelectionView(model, this);
+        model = new CryptoAssetSelectionModel(items);
+        view = new CryptoAssetSelectionView(model, this);
     }
 
     @Override
@@ -79,7 +79,7 @@ public class CryptoCurrencySelectionController implements Controller {
         return model.getSelectedPaymentMethod();
     }
 
-    void onItemSelected(CryptoCurrencyItem item) {
+    void onItemSelected(CryptoAssetItem item) {
         if (item != null) {
             model.getSelectedItem().set(item);
             model.getSelectedPaymentMethod().set(item.getPaymentMethod());

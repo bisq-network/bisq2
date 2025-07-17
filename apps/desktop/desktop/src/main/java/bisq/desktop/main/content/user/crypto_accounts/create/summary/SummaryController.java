@@ -19,11 +19,11 @@ package bisq.desktop.main.content.user.crypto_accounts.create.summary;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
-import bisq.account.accounts.crypto.CryptoCurrencyAccountPayload;
+import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
 import bisq.account.accounts.crypto.MoneroAccount;
 import bisq.account.accounts.crypto.MoneroAccountPayload;
-import bisq.account.accounts.crypto.OtherCryptoCurrencyAccount;
-import bisq.account.accounts.crypto.OtherCryptoCurrencyAccountPayload;
+import bisq.account.accounts.crypto.OtherCryptoAssetAccount;
+import bisq.account.accounts.crypto.OtherCryptoAssetAccountPayload;
 import bisq.account.payment_method.CryptoPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.util.StringUtils;
@@ -61,7 +61,7 @@ public class SummaryController implements Controller {
         model.setPaymentMethod(paymentMethod);
     }
 
-    public void setAccountPayload(CryptoCurrencyAccountPayload accountPayload) {
+    public void setAccountPayload(CryptoAssetAccountPayload accountPayload) {
         model.setAccountPayload(accountPayload);
         model.setDefaultAccountName(accountPayload.getDefaultAccountName());
         model.setCurrencyString(accountPayload.getCodeAndDisplayName());
@@ -101,15 +101,15 @@ public class SummaryController implements Controller {
         }
 
         Account<? extends PaymentMethod<?>, ?> account;
-        CryptoCurrencyAccountPayload accountPayload = model.getAccountPayload();
+        CryptoAssetAccountPayload accountPayload = model.getAccountPayload();
         if (accountPayload instanceof MoneroAccountPayload moneroAccountPayload) {
             account = new MoneroAccount(StringUtils.createUid(),
                     new Date().getTime(),
                     accountName, moneroAccountPayload);
-        } else if (accountPayload instanceof OtherCryptoCurrencyAccountPayload otherCryptoCurrencyAccountPayload) {
-            account = new OtherCryptoCurrencyAccount(StringUtils.createUid(),
+        } else if (accountPayload instanceof OtherCryptoAssetAccountPayload otherCryptoAssetAccountPayload) {
+            account = new OtherCryptoAssetAccount(StringUtils.createUid(),
                     new Date().getTime(),
-                    accountName, otherCryptoCurrencyAccountPayload);
+                    accountName, otherCryptoAssetAccountPayload);
         } else {
             throw new UnsupportedOperationException("Unsupported accountPayload " + accountPayload.getClass().getSimpleName());
         }

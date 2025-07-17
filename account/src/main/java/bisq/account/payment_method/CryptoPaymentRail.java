@@ -21,7 +21,7 @@ package bisq.account.payment_method;
 public enum CryptoPaymentRail implements PaymentRail {
     CUSTOM,                  // Custom/user-defined
     NATIVE_CHAIN,            // Main chain of the asset (e.g. BTC on Bitcoin, ETH on Ethereum)
-    SMART_CCONTRACT,         // Asset transferred via a smart contract on a host chain (ERC20, TRC20, SPL)
+    SMART_CONTRACT,          // Asset transferred via a smart contract on a host chain (ERC20, TRC20, SPL)
     LAYER_2,                 // Layer 2 (Lightning,...)
     SIDECHAIN,               // Sidechain (Liquid, RBTC,...)
     WRAPPED_ASSET,           // Cross-chain wrapped assets (WBTC, WETH)

@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.crypto_accounts.create.address;
 
-import bisq.account.accounts.crypto.CryptoCurrencyAccountPayload;
+import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
 import bisq.account.payment_method.CryptoPaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -42,7 +42,7 @@ public class AddressController implements Controller {
         view = new AddressView(model, this);
     }
 
-    public CryptoCurrencyAccountPayload getAccountPayload() {
+    public CryptoAssetAccountPayload getAccountPayload() {
         return formController.createAccountPayload();
     }
 

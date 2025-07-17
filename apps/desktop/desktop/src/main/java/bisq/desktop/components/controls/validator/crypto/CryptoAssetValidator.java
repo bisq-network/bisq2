@@ -20,8 +20,8 @@ package bisq.desktop.components.controls.validator.crypto;
 import bisq.common.validation.Validation;
 import bisq.desktop.components.controls.validator.ValidatorBase;
 
-public class CryptoCurrencyValidator extends ValidatorBase {
-    public CryptoCurrencyValidator(Validation validation) {
+public class CryptoAssetValidator extends ValidatorBase {
+    public CryptoAssetValidator(Validation validation) {
         super(validation);
     }
 }

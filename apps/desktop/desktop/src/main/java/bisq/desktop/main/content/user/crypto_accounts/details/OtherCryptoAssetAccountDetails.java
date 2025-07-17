@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.content.user.crypto_accounts.details;
 
-import bisq.account.accounts.crypto.OtherCryptoCurrencyAccount;
+import bisq.account.accounts.crypto.OtherCryptoAssetAccount;
 
-public class OtherCryptoCurrencyAccountDetails extends AccountDetails<OtherCryptoCurrencyAccount> {
-    public OtherCryptoCurrencyAccountDetails(OtherCryptoCurrencyAccount account) {
+public class OtherCryptoAssetAccountDetails extends AccountDetails<OtherCryptoAssetAccount> {
+    public OtherCryptoAssetAccountDetails(OtherCryptoAssetAccount account) {
         super(account);
     }
 }

@@ -19,20 +19,20 @@ package bisq.common.asset;
 
 import java.util.List;
 
-public class CentraBankDigitalCurrencyRepository {
+public class CentralBankDigitalCurrencyRepository {
     // Fully Launched CBDCs
-    public static final CentraBankDigitalCurrency SAND_DOLLAR = new CentraBankDigitalCurrency(
+    public static final CentralBankDigitalCurrency SAND_DOLLAR = new CentralBankDigitalCurrency(
             "SD",
             "Sand Dollar",
             "BSD",
             "BS");
-    public static final CentraBankDigitalCurrency E_NAIRA = new CentraBankDigitalCurrency(
+    public static final CentralBankDigitalCurrency E_NAIRA = new CentralBankDigitalCurrency(
             "eNGN",
             "eNaira",
             "NGN",
             "NG"
     );
-    public static final CentraBankDigitalCurrency JAM_DEX = new CentraBankDigitalCurrency(
+    public static final CentralBankDigitalCurrency JAM_DEX = new CentralBankDigitalCurrency(
             "JAM-DEX",
             "Jamaica Digital Exchange",
             "JMD",
@@ -40,19 +40,19 @@ public class CentraBankDigitalCurrencyRepository {
     );
 
     // Pilot-Phase CBDCs
-    public static final CentraBankDigitalCurrency E_CNY = new CentraBankDigitalCurrency(
+    public static final CentralBankDigitalCurrency E_CNY = new CentralBankDigitalCurrency(
             "eCNY",
             "Digital Yuan (e-CNY)",
             "CNY",
             "CN"
     );
-    public static final CentraBankDigitalCurrency DIGITAL_RUBLE = new CentraBankDigitalCurrency(
+    public static final CentralBankDigitalCurrency DIGITAL_RUBLE = new CentralBankDigitalCurrency(
             "eRUB",
             "Digital Ruble",
             "RUB",
             "RU"
     );
-    public static final CentraBankDigitalCurrency E_RUPEE = new CentraBankDigitalCurrency(
+    public static final CentralBankDigitalCurrency E_RUPEE = new CentralBankDigitalCurrency(
             "eINR",
             "Digital Rupee (e₹)",
             "INR",
@@ -60,20 +60,20 @@ public class CentraBankDigitalCurrencyRepository {
     );
 
     // Not Yet Launched / Placeholder
-    public static final CentraBankDigitalCurrency US_DIGITAL_DOLLAR = new CentraBankDigitalCurrency(
+    public static final CentralBankDigitalCurrency US_DIGITAL_DOLLAR = new CentralBankDigitalCurrency(
             "eUSD",
             "U.S. Digital Dollar",
             "USD",
             "US"
     );
-    public static final CentraBankDigitalCurrency DIGITAL_EURO_CBDC = new CentraBankDigitalCurrency(
+    public static final CentralBankDigitalCurrency DIGITAL_EURO_CBDC = new CentralBankDigitalCurrency(
             "eEUR",
             "Digital Euro",
             "EUR",
             "EU"
     );
 
-    public static List<CentraBankDigitalCurrency> getCentraBankDigitalCurrencies() {
+    public static List<CentralBankDigitalCurrency> getCentralBankDigitalCurrencies() {
         return List.of(SAND_DOLLAR, E_NAIRA, JAM_DEX, E_CNY, DIGITAL_RUBLE, E_RUPEE);
     }
 }

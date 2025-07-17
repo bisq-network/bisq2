@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.crypto_accounts;
 
-import bisq.account.accounts.crypto.CryptoCurrencyAccount;
+import bisq.account.accounts.crypto.CryptoAssetAccount;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.main.content.user.crypto_accounts.details.AccountDetails;
 import javafx.beans.property.BooleanProperty;
@@ -32,13 +32,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Getter
 @Slf4j
-public class CryptoCurrencyAccountsModel implements Model {
+public class CryptoAssetAccountsModel implements Model {
     private final BooleanProperty noAccountsAvailable = new SimpleBooleanProperty();
     private final BooleanProperty deleteButtonDisabled = new SimpleBooleanProperty();
 
-    private final ObservableList<CryptoCurrencyAccount<?>> accounts = FXCollections.observableArrayList();
-    private final SortedList<CryptoCurrencyAccount<?>> sortedAccounts = new SortedList<>(accounts);
-    private final ObjectProperty<CryptoCurrencyAccount<?>> selectedAccount = new SimpleObjectProperty<>();
+    private final ObservableList<CryptoAssetAccount<?>> accounts = FXCollections.observableArrayList();
+    private final SortedList<CryptoAssetAccount<?>> sortedAccounts = new SortedList<>(accounts);
+    private final ObjectProperty<CryptoAssetAccount<?>> selectedAccount = new SimpleObjectProperty<>();
     private final ObjectProperty<AccountDetails<?>> accountDetails = new SimpleObjectProperty<>();
 
     public void reset() {

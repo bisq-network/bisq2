@@ -35,7 +35,7 @@ public abstract class AddressFormModel implements Model {
     protected final String id;
     protected final CryptoPaymentMethod paymentMethod;
     protected final String currencyCode;
-    protected final CryptoAsset cryptoCurrency;
+    protected final CryptoAsset cryptoAsset;
     protected final boolean isAutoConfSupported;
     protected final ValidatorBase addressValidator;
 
@@ -57,9 +57,9 @@ public abstract class AddressFormModel implements Model {
         this.paymentMethod = paymentMethod;
         currencyCode = paymentMethod.getCurrencyCode();
 
-        cryptoCurrency = CryptoAssetRepository.findOrCreateCustom(currencyCode);
-        isAutoConfSupported = cryptoCurrency.isSupportAutoConf();
-        //addressValidator = new CryptoCurrencyValidator(cryptoCurrency.getValidation());
+        cryptoAsset = CryptoAssetRepository.findOrCreateCustom(currencyCode);
+        isAutoConfSupported = cryptoAsset.isSupportAutoConf();
+        //addressValidator = new CryptoAssetValidator(cryptoAsset.getValidation());
         addressValidator = new ValidatorBase();//todo for dev testing we bypass validation
 
     }

@@ -19,9 +19,9 @@ package bisq.desktop.main.content.user.crypto_accounts;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
-import bisq.account.accounts.crypto.CryptoCurrencyAccount;
+import bisq.account.accounts.crypto.CryptoAssetAccount;
 import bisq.account.accounts.crypto.MoneroAccount;
-import bisq.account.accounts.crypto.OtherCryptoCurrencyAccount;
+import bisq.account.accounts.crypto.OtherCryptoAssetAccount;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
@@ -31,7 +31,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.user.crypto_accounts.details.AccountDetails;
 import bisq.desktop.main.content.user.crypto_accounts.details.MoneroAccountDetails;
-import bisq.desktop.main.content.user.crypto_accounts.details.OtherCryptoCurrencyAccountDetails;
+import bisq.desktop.main.content.user.crypto_accounts.details.OtherCryptoAssetAccountDetails;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.mu_sig.MuSigService;
 import lombok.Getter;
@@ -42,21 +42,21 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Comparator;
 
 @Slf4j
-public class CryptoCurrencyAccountsController implements Controller {
-    private final CryptoCurrencyAccountsModel model;
+public class CryptoAssetAccountsController implements Controller {
+    private final CryptoAssetAccountsModel model;
     @Getter
-    private final CryptoCurrencyAccountsView view;
+    private final CryptoAssetAccountsView view;
     private final AccountService accountService;
     private final MuSigService muSigService;
     private Subscription selectedAccountPin;
     private Pin accountsPin;
 
-    public CryptoCurrencyAccountsController(ServiceProvider serviceProvider) {
+    public CryptoAssetAccountsController(ServiceProvider serviceProvider) {
         accountService = serviceProvider.getAccountService();
         muSigService = serviceProvider.getMuSigService();
 
-        model = new CryptoCurrencyAccountsModel();
-        view = new CryptoCurrencyAccountsView(model, this);
+        model = new CryptoAssetAccountsModel();
+        view = new CryptoAssetAccountsView(model, this);
 
         model.getSortedAccounts().setComparator(Comparator.comparing(Account::getAccountName));
     }
@@ -67,9 +67,9 @@ public class CryptoCurrencyAccountsController implements Controller {
             @Override
             public void add(Account<? extends PaymentMethod<?>, ?> account) {
                 UIThread.run(() -> {
-                    if (account instanceof CryptoCurrencyAccount<?> cryptoCurrencyAccount &&
-                            !model.getAccounts().contains(cryptoCurrencyAccount)) {
-                        model.getAccounts().add(cryptoCurrencyAccount);
+                    if (account instanceof CryptoAssetAccount<?> cryptoAssetAccount &&
+                            !model.getAccounts().contains(cryptoAssetAccount)) {
+                        model.getAccounts().add(cryptoAssetAccount);
                         handleAccountChange();
                     }
                 });
@@ -77,9 +77,9 @@ public class CryptoCurrencyAccountsController implements Controller {
 
             @Override
             public void remove(Object element) {
-                if (element instanceof CryptoCurrencyAccount<?> cryptoCurrencyAccount) {
+                if (element instanceof CryptoAssetAccount<?> cryptoAssetAccount) {
                     UIThread.run(() -> {
-                        model.getAccounts().remove(cryptoCurrencyAccount);
+                        model.getAccounts().remove(cryptoAssetAccount);
                         handleAccountChange();
                     });
                 }
@@ -110,9 +110,9 @@ public class CryptoCurrencyAccountsController implements Controller {
         model.reset();
     }
 
-    void onSelectAccount(CryptoCurrencyAccount<?> cryptoCurrencyAccount) {
-        if (cryptoCurrencyAccount != null) {
-            model.getSelectedAccount().set(cryptoCurrencyAccount);
+    void onSelectAccount(CryptoAssetAccount<?> cryptoAssetAccount) {
+        if (cryptoAssetAccount != null) {
+            model.getSelectedAccount().set(cryptoAssetAccount);
         }
     }
 
@@ -123,9 +123,9 @@ public class CryptoCurrencyAccountsController implements Controller {
     }
 
     void onDeleteAccount() {
-        CryptoCurrencyAccount<?> cryptoCurrencyAccount = model.getSelectedAccount().get();
-        accountService.removePaymentAccount(cryptoCurrencyAccount);
-        model.getAccounts().remove(cryptoCurrencyAccount);
+        CryptoAssetAccount<?> cryptoAssetAccount = model.getSelectedAccount().get();
+        accountService.removePaymentAccount(cryptoAssetAccount);
+        model.getAccounts().remove(cryptoAssetAccount);
     }
 
     private void handleAccountChange() {
@@ -134,11 +134,11 @@ public class CryptoCurrencyAccountsController implements Controller {
         model.getNoAccountsAvailable().set(!hasAccounts);
     }
 
-    private void applyDataDisplay(CryptoCurrencyAccount<?> cryptoCurrencyAccount) {
-        if (cryptoCurrencyAccount == null) {
+    private void applyDataDisplay(CryptoAssetAccount<?> cryptoAssetAccount) {
+        if (cryptoAssetAccount == null) {
             model.getAccountDetails().set(null);
         } else {
-            model.getAccountDetails().set(getAccountDetails(cryptoCurrencyAccount));
+            model.getAccountDetails().set(getAccountDetails(cryptoAssetAccount));
         }
     }
 
@@ -146,13 +146,13 @@ public class CryptoCurrencyAccountsController implements Controller {
         model.getDeleteButtonDisabled().set(model.getSelectedAccount().get() == null);
     }
 
-    private AccountDetails<?> getAccountDetails(CryptoCurrencyAccount<?> cryptoCurrencyAccount) {
-        if (cryptoCurrencyAccount instanceof MoneroAccount moneroAccount) {
+    private AccountDetails<?> getAccountDetails(CryptoAssetAccount<?> cryptoAssetAccount) {
+        if (cryptoAssetAccount instanceof MoneroAccount moneroAccount) {
             return new MoneroAccountDetails(moneroAccount);
-        } else if (cryptoCurrencyAccount instanceof OtherCryptoCurrencyAccount otherCryptoCurrencyAccount) {
-            return new OtherCryptoCurrencyAccountDetails(otherCryptoCurrencyAccount);
+        } else if (cryptoAssetAccount instanceof OtherCryptoAssetAccount otherCryptoAssetAccount) {
+            return new OtherCryptoAssetAccountDetails(otherCryptoAssetAccount);
         } else {
-            throw new UnsupportedOperationException("Unsupported cryptoCurrencyAccount " + cryptoCurrencyAccount.getClass().getSimpleName());
+            throw new UnsupportedOperationException("Unsupported cryptoAssetAccount " + cryptoAssetAccount.getClass().getSimpleName());
         }
     }
 }

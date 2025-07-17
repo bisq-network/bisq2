@@ -50,7 +50,7 @@ public abstract class Asset implements Comparable<Asset>, PersistableProto {
     public bisq.common.protobuf.Asset toProto(boolean serializeForHash) {
         return switch (this) {
             case FiatCurrency fiatCurrency -> fiatCurrency.toProto(serializeForHash);
-            case CryptoAsset cryptoCurrency -> cryptoCurrency.toProto(serializeForHash);
+            case CryptoAsset cryptoAsset -> cryptoAsset.toProto(serializeForHash);
             case StableCoin stableCoinCurrency -> stableCoinCurrency.toProto(serializeForHash);
             default -> throw new UnsupportedOperationException("Unsupported tradeCurrency at toProto {}" + name);
         };
@@ -67,7 +67,7 @@ public abstract class Asset implements Comparable<Asset>, PersistableProto {
             case CRYPTOASSET -> CryptoAsset.fromProto(proto);
             case FIATCURRENCY -> FiatCurrency.fromProto(proto);
             case STABLECOIN -> StableCoin.fromProto(proto);
-            case CENTRABANKDIGITALCURRENCY -> CentraBankDigitalCurrency.fromProto(proto);
+            case CENTRALBANKDIGITALCURRENCY -> CentralBankDigitalCurrency.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
