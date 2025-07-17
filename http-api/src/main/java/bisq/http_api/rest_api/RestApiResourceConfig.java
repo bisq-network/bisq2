@@ -3,6 +3,7 @@ package bisq.http_api.rest_api;
 import bisq.http_api.rest_api.domain.chat.trade.TradeChatRestApi;
 import bisq.http_api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
+import bisq.http_api.rest_api.domain.network.NetworkStatsRestApi;
 import bisq.http_api.rest_api.domain.offers.OfferbookRestApi;
 import bisq.http_api.rest_api.domain.payment_accounts.PaymentAccountsRestApi;
 import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
@@ -23,7 +24,8 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
                                  MarketPriceRestApi marketPriceRestApi,
                                  SettingsRestApi settingsRestApi,
                                  ExplorerRestApi explorerRestApi,
-                                 PaymentAccountsRestApi paymentAccountsRestApi) {
+                                 PaymentAccountsRestApi paymentAccountsRestApi,
+                                 NetworkStatsRestApi networkStatsRestApi) {
         super(swaggerBaseUrl);
 
         //todo apply filtering with whiteListEndPoints/whiteListEndPoints
@@ -39,6 +41,7 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
         register(SettingsRestApi.class);
         register(ExplorerRestApi.class);
         register(PaymentAccountsRestApi.class);
+        register(NetworkStatsRestApi.class);
 
         register(new AbstractBinder() {
             @Override
@@ -51,6 +54,7 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
                 bind(settingsRestApi).to(SettingsRestApi.class);
                 bind(explorerRestApi).to(ExplorerRestApi.class);
                 bind(paymentAccountsRestApi).to(PaymentAccountsRestApi.class);
+                bind(networkStatsRestApi).to(NetworkStatsRestApi.class);
             }
         });
     }

@@ -26,6 +26,7 @@ import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.http_api.web_socket.domain.chat.reactions.ChatReactionsWebSocketService;
 import bisq.http_api.web_socket.domain.chat.trade.TradeChatWebSocketService;
 import bisq.http_api.web_socket.domain.market_price.MarketPriceWebSocketService;
+import bisq.http_api.web_socket.domain.network.NetworkStatsWebSocketService;
 import bisq.http_api.web_socket.domain.offers.NumOffersWebSocketService;
 import bisq.http_api.web_socket.domain.offers.OffersWebSocketService;
 import bisq.http_api.web_socket.domain.reputation.ReputationWebSocketService;
@@ -53,6 +54,7 @@ public class SubscriptionService implements Service {
     private final TradeChatWebSocketService tradeChatWebSocketService;
     private final ChatReactionsWebSocketService chatReactionsWebSocketService;
     private final ReputationWebSocketService reputationWebSocketService;
+    private final NetworkStatsWebSocketService networkStatsWebSocketService;
 
     public SubscriptionService(ObjectMapper objectMapper,
                                BondedRolesService bondedRolesService,
@@ -76,6 +78,7 @@ public class SubscriptionService implements Service {
                 subscriberRepository,
                 chatService.getBisqEasyOpenTradeChannelService());
         reputationWebSocketService = new ReputationWebSocketService(objectMapper, subscriberRepository, userService.getReputationService());
+        networkStatsWebSocketService = new NetworkStatsWebSocketService(objectMapper, subscriberRepository, userService);
     }
 
     @Override
@@ -87,7 +90,8 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> tradePropertiesWebSocketService.initialize())
                 .thenCompose(e -> tradeChatWebSocketService.initialize())
                 .thenCompose(e -> chatReactionsWebSocketService.initialize())
-                .thenCompose(e -> reputationWebSocketService.initialize());
+                .thenCompose(e -> reputationWebSocketService.initialize())
+                .thenCompose(e -> networkStatsWebSocketService.initialize());
     }
 
     @Override
@@ -99,7 +103,8 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> tradePropertiesWebSocketService.shutdown())
                 .thenCompose(e -> tradeChatWebSocketService.shutdown())
                 .thenCompose(e -> chatReactionsWebSocketService.shutdown())
-                .thenCompose(e -> reputationWebSocketService.shutdown());
+                .thenCompose(e -> reputationWebSocketService.shutdown())
+                .thenCompose(e -> networkStatsWebSocketService.shutdown());
     }
 
     public void onConnectionClosed(WebSocket webSocket) {
@@ -158,6 +163,9 @@ public class SubscriptionService implements Service {
             }
             case USER_REPUTATION -> {
                 return Optional.of(reputationWebSocketService);
+            }
+            case NETWORK_STATS -> {
+                return Optional.of(networkStatsWebSocketService);
             }
         }
         log.warn("No WebSocketService for topic {} found", topic);

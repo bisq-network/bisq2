@@ -15,16 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.web_socket.subscription;
+package bisq.http_api.rest_api.domain.network;
 
-public enum Topic {
-    MARKET_PRICE,
-    NUM_OFFERS,
-    OFFERS,
-    TRADES,
-    TRADE_PROPERTIES,
-    TRADE_CHATS,
-    CHAT_REACTIONS,
-    USER_REPUTATION,
-    NETWORK_STATS
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Schema(description = "Network statistics response containing current network metrics")
+public class NetworkStatsResponse {
+
+    @JsonProperty("publishedProfiles")
+    @Schema(description = "Total number of published user profiles in the network", example = "1250")
+    private int publishedProfiles;
 }
