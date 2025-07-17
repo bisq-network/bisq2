@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.asset.stable;
+package bisq.common.asset;
 
 import lombok.Getter;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -28,79 +29,79 @@ public class StableCoinRepository {
     public static final StableCoin USDT_ERC20 = new StableCoin("USDT",
             "Tether USD (Ethereum ERC-20)",
             "USD",
-            StableCoinChain.ETHEREUM,
-            StableCoinTokenStandard.ERC20,
-            StableCoinIssuer.TETHER);
+            StableCoin.StableCoinChain.ETHEREUM,
+            StableCoin.StableCoinTokenStandard.ERC20,
+            StableCoin.StableCoinIssuer.TETHER);
 
     public static final StableCoin USDT_TRC20 = new StableCoin("USDT",
             "Tether USD (Tron TRC-20)",
             "USD",
-            StableCoinChain.TRON,
-            StableCoinTokenStandard.TRC20,
-            StableCoinIssuer.TETHER);
+            StableCoin.StableCoinChain.TRON,
+            StableCoin.StableCoinTokenStandard.TRC20,
+            StableCoin.StableCoinIssuer.TETHER);
 
     public static final StableCoin USDT_BEP20 = new StableCoin("USDT",
             "Tether USD (BNB Smart Chain BEP-20)",
             "USD",
-            StableCoinChain.BNB_SMART_CHAIN,
-            StableCoinTokenStandard.BEP20,
-            StableCoinIssuer.TETHER);
+            StableCoin.StableCoinChain.BNB_SMART_CHAIN,
+            StableCoin.StableCoinTokenStandard.BEP20,
+            StableCoin.StableCoinIssuer.TETHER);
 
     public static final StableCoin USDC_ERC20 = new StableCoin("USDC",
             "USD Coin (Ethereum ERC-20)",
             "USD",
-            StableCoinChain.ETHEREUM,
-            StableCoinTokenStandard.ERC20,
-            StableCoinIssuer.CIRCLE);
+            StableCoin.StableCoinChain.ETHEREUM,
+            StableCoin.StableCoinTokenStandard.ERC20,
+            StableCoin.StableCoinIssuer.CIRCLE);
 
     public static final StableCoin USDC_SPL = new StableCoin("USDC",
             "USD Coin (Solana SPL)",
             "USD",
-            StableCoinChain.SOLANA,
-            StableCoinTokenStandard.SPL,
-            StableCoinIssuer.CIRCLE);
+            StableCoin.StableCoinChain.SOLANA,
+            StableCoin.StableCoinTokenStandard.SPL,
+            StableCoin.StableCoinIssuer.CIRCLE);
 
     public static final StableCoin DAI_ERC20 = new StableCoin("DAI",
             "Dai (Ethereum ERC-20)",
             "USD",
-            StableCoinChain.ETHEREUM,
-            StableCoinTokenStandard.ERC20,
-            StableCoinIssuer.MAKERDAO);
+            StableCoin.StableCoinChain.ETHEREUM,
+            StableCoin.StableCoinTokenStandard.ERC20,
+            StableCoin.StableCoinIssuer.MAKERDAO);
 
     public static final StableCoin FDUSD_BEP20 = new StableCoin("FDUSD",
             "First Digital USD (BNB Smart Chain BEP-20)",
             "USD",
-            StableCoinChain.BNB_SMART_CHAIN,
-            StableCoinTokenStandard.BEP20,
-            StableCoinIssuer.FIRST_DIGITAL);
+            StableCoin.StableCoinChain.BNB_SMART_CHAIN,
+            StableCoin.StableCoinTokenStandard.BEP20,
+            StableCoin.StableCoinIssuer.FIRST_DIGITAL);
 
     public static final StableCoin FDUSD_ERC20 = new StableCoin("FDUSD",
             "First Digital USD (Ethereum ERC-20)",
             "USD",
-            StableCoinChain.ETHEREUM,
-            StableCoinTokenStandard.ERC20,
-            StableCoinIssuer.FIRST_DIGITAL);
+            StableCoin.StableCoinChain.ETHEREUM,
+            StableCoin.StableCoinTokenStandard.ERC20,
+            StableCoin.StableCoinIssuer.FIRST_DIGITAL);
 
     public static final StableCoin TUSD_ERC20 = new StableCoin("TUSD",
             "TrueUSD (Ethereum ERC-20)",
             "USD",
-            StableCoinChain.ETHEREUM,
-            StableCoinTokenStandard.ERC20,
-            StableCoinIssuer.TECHTERYX);
+            StableCoin.StableCoinChain.ETHEREUM,
+            StableCoin.StableCoinTokenStandard.ERC20,
+            StableCoin.StableCoinIssuer.TECHTERYX);
 
     public static final StableCoin USDP_ERC20 = new StableCoin("USDP",
             "Pax Dollar (Ethereum ERC-20)",
             "USD",
-            StableCoinChain.ETHEREUM,
-            StableCoinTokenStandard.ERC20,
-            StableCoinIssuer.PAXOS);
+            StableCoin.StableCoinChain.ETHEREUM,
+            StableCoin.StableCoinTokenStandard.ERC20,
+            StableCoin.StableCoinIssuer.PAXOS);
 
     public static final StableCoin GUSD_ERC20 = new StableCoin("GUSD",
             "Gemini Dollar (Ethereum ERC-20)",
             "USD",
-            StableCoinChain.ETHEREUM,
-            StableCoinTokenStandard.ERC20,
-            StableCoinIssuer.GEMINI);
+            StableCoin.StableCoinChain.ETHEREUM,
+            StableCoin.StableCoinTokenStandard.ERC20,
+            StableCoin.StableCoinIssuer.GEMINI);
 
     @Getter
     private static final Map<String, Set<StableCoin>> STABLE_COIN_CURRENCY_SET_BY_CODE = Map.of(
@@ -113,17 +114,21 @@ public class StableCoinRepository {
             "GUSD", Set.of(GUSD_ERC20)
     );
 
+    public static List<StableCoin> getMajorStableCoins() {
+        return List.of(USDT_ERC20, USDT_TRC20, USDC_ERC20, DAI_ERC20);
+    }
+
     public static Set<StableCoin> allWithPegCurrencyCode(String pegCurrencyCode) {
         return STABLE_COIN_CURRENCY_SET_BY_CODE.values().stream()
                 .flatMap(Collection::stream)
-                .filter(e -> e.getPegCurrencyCode().equals(pegCurrencyCode))
+                .filter(coin -> coin.getPegCurrencyCode().equals(pegCurrencyCode))
                 .collect(Collectors.toSet());
     }
 
     public static Set<StableCoin> allWithCode(String code) {
         return STABLE_COIN_CURRENCY_SET_BY_CODE.values().stream()
                 .flatMap(Collection::stream)
-                .filter(e -> e.getCode().equals(code))
+                .filter(coin -> coin.getCode().equals(code))
                 .collect(Collectors.toSet());
     }
 }

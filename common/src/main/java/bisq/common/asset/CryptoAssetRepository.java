@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class CryptoAssetRepository {
     public static final CryptoAsset BITCOIN = new CryptoAsset("BTC", "Bitcoin");
@@ -33,56 +32,35 @@ public class CryptoAssetRepository {
     @Getter
     private static CryptoAsset defaultCurrency = XMR;
 
-    @Getter
-    private static final List<CryptoAsset> MAJOR_CURRENCIES = List.of(
+    private static final List<CryptoAsset> CRYPTO_ASSETS = List.of(
             XMR,
-            new CryptoAsset("ETH", "Ethereum"),
-            new CryptoAsset("LTC", "Litecoin")
-    );
-    @Getter
-    private static final List<CryptoAsset> MINOR_CURRENCIES = List.of(
+            new CryptoAsset("BSQ", "BSQ"),
+            new CryptoAsset("LTC", "Litecoin"),
+            new CryptoAsset("ETH", "Ether"),
+            new CryptoAsset("ETC", "Ether Classic"),
+            new CryptoAsset("L-BTC", "Liquid Bitcoin"),
+            new CryptoAsset("LN-BTC", "Lightning Network Bitcoin"),
             new CryptoAsset("GRIN", "Grin"),
-            new CryptoAsset("ZEC", "Zcash")
+            new CryptoAsset("ZEC", "Zcash"),
+            new CryptoAsset("DOGE", "Dogecoin")
     );
 
-    @Getter
-    private static final Map<String, CryptoAsset> MAJOR_CURRENCIES_BY_CODE = MAJOR_CURRENCIES.stream()
+    private static final Map<String, CryptoAsset> CRYPTO_ASSETS_BY_CODE = CRYPTO_ASSETS.stream()
             .collect(Collectors.toMap(Asset::getCode, e -> e));
-    @Getter
-    private static final Map<String, CryptoAsset> MINOR_CURRENCIES_BY_CODE = MINOR_CURRENCIES.stream()
-            .collect(Collectors.toMap(Asset::getCode, e -> e));
-    @Getter
-    private static final Map<String, CryptoAsset> ALL_CURRENCIES_BY_CODE = Stream.concat(
-                    MAJOR_CURRENCIES_BY_CODE.entrySet().stream(),
-                    MINOR_CURRENCIES_BY_CODE.entrySet().stream())
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    @Getter
-    private static final List<CryptoAsset> ALL_CURRENCIES = Stream.concat(
-                    MAJOR_CURRENCIES.stream(),
-                    MINOR_CURRENCIES.stream())
-            .toList();
 
     public static Optional<String> findName(String code) {
         return find(code).map(CryptoAsset::getName);
     }
 
     public static Optional<CryptoAsset> find(String code) {
-        return Optional.ofNullable(ALL_CURRENCIES_BY_CODE.get(code));
+        return Optional.ofNullable(CRYPTO_ASSETS_BY_CODE.get(code));
     }
 
     public static CryptoAsset findOrCreateCustom(String code) {
         return find(code).orElse(new CryptoAsset(code));
     }
 
-    public static List<CryptoAsset> getMajorCurrencies() {
-        return MAJOR_CURRENCIES;
-    }
-
-    public static List<CryptoAsset> getMinorCurrencies() {
-        return MINOR_CURRENCIES;
-    }
-
-    public static List<CryptoAsset> getAllCurrencies() {
-        return ALL_CURRENCIES;
+    public static List<CryptoAsset> getCryptoAssets() {
+        return CRYPTO_ASSETS;
     }
 }

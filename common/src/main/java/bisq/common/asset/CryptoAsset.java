@@ -19,6 +19,7 @@ package bisq.common.asset;
 
 
 import bisq.common.validation.Validation;
+import bisq.common.validation.crypto.CryptoAddressValidationRepository;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -33,7 +34,7 @@ public class CryptoAsset extends Asset {
     private static final Set<String> SUPPORT_AUTO_CONF_CODES = Set.of("XMR", "ETH");
 
     @Getter
-    private transient final Validation validation;
+    private transient final Validation addressValidation;
     @Getter
     private transient final boolean supportAutoConf;
 
@@ -44,7 +45,7 @@ public class CryptoAsset extends Asset {
 
     public CryptoAsset(String code, String name) {
         super(code, name);
-        this.validation = CryptoAssetValidationRepository.getValidation(code);
+        this.addressValidation = CryptoAddressValidationRepository.getValidation(code);
         supportAutoConf = SUPPORT_AUTO_CONF_CODES.contains(code);
     }
 

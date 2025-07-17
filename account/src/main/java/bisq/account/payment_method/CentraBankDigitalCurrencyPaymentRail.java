@@ -45,14 +45,4 @@ public enum CentraBankDigitalCurrencyPaymentRail implements NationalCurrencyPaym
         this.peggedCurrency = peggedCurrency;
         this.countryCode = countryCode;
     }
-
-    @Override
-    public String getTradeLimit() {
-        return "";
-    }
-
-    @Override
-    public String getTradeDuration() {
-        return "";
-    }
 }

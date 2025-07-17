@@ -15,10 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.asset.stable;
+package bisq.common.asset;
 
 
-import bisq.common.asset.Asset;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -94,7 +93,82 @@ public final class StableCoin extends Asset {
     }
 
     public String getShortDisplayName() {
-        // E.g. USDT (Ethereum ERC-20)
-        return code + " (" + chain + " " + standard + ")";
+        // E.g. USDT_ERC-20)
+        return code + "_" + standard;
+    }
+
+
+    public enum StableCoinChain {
+        ETHEREUM("Ethereum"),
+        TRON("Tron"),
+        BNB_SMART_CHAIN("BNB Smart Chain"),
+        SOLANA("Solana"),
+        BITCOIN("Bitcoin"),
+        TAPROOT_ASSETS("Taproot Assets"),
+        LIQUID("Liquid Bitcoin");
+        /*RGB,
+        FEDIMINT,
+        STABLESATS*/
+        @Getter
+        private final String displayName;
+
+        StableCoinChain(String displayName) {
+            this.displayName = displayName;
+        }
+    }
+
+    public enum StableCoinIssuer {
+        TETHER("Tether Ltd."),
+        CIRCLE("Circle Internet Financial, LLC"),
+        MAKERDAO("MakerDAO"),
+        FIRST_DIGITAL("First Digital Trust Limited"),
+        PAXOS("Paxos Trust Company"),
+        GEMINI("Gemini Trust Company, LLC"),
+        TECHTERYX("Techteryx Ltd."), // issuer of TrueUSD (TUSD)
+        STABLESAT("Galoy Inc."),     // synthetic USD via Stablesats
+        LIGHTNING_LABS("Lightning Labs"), // Taproot Assets experimental issuer
+        FEDIMINT("Fedimint Federation");
+
+        @Getter
+        private final String displayName;
+
+        StableCoinIssuer(String displayName) {
+            this.displayName = displayName;
+        }
+    }
+
+    public enum StableCoinTokenStandard {
+        // Ethereum
+        ERC20("ERC-20"),
+        ERC721("ERC-721"),
+        ERC1155("ERC-1155"),
+        ERC4626("ERC-4626"),
+        ERC777("ERC-777"),
+
+        // Thron
+        TRC20("TRC-20"),
+
+        // Bitcoin
+        RGB("RGB"),
+        OMNI("Omni"),
+
+        // Lightning Network
+        TAPROOT_ASSETS("Taproot Assets"),
+        BOLT11("BOLT-11"),
+
+        // Solana
+        SPL("SPL"),
+
+        // BNB Smart Chain
+        BEP20("BEP-20"),
+        BEP721("BEP-721"),
+        BEP1155("BEP-1155");
+
+        @Getter
+        private final String displayName;
+
+        StableCoinTokenStandard(String displayName) {
+            this.displayName = displayName;
+        }
     }
 }

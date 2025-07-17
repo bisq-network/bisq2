@@ -18,7 +18,6 @@
 package bisq.common.asset;
 
 import bisq.common.annotation.ExcludeForHash;
-import bisq.common.asset.stable.StableCoin;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
@@ -68,6 +67,7 @@ public abstract class Asset implements Comparable<Asset>, PersistableProto {
             case CRYPTOASSET -> CryptoAsset.fromProto(proto);
             case FIATCURRENCY -> FiatCurrency.fromProto(proto);
             case STABLECOIN -> StableCoin.fromProto(proto);
+            case CENTRABANKDIGITALCURRENCY -> CentraBankDigitalCurrency.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

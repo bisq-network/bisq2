@@ -15,25 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.asset.stable;
+package bisq.common.validation.crypto;
 
-import lombok.Getter;
+import bisq.common.validation.Validation;
 
-public enum StableCoinChain {
-    ETHEREUM("Ethereum"),
-    TRON("Tron"),
-    BNB_SMART_CHAIN("BNB Smart Chain"),
-    SOLANA("Solana"),
-    BITCOIN("Bitcoin"),
-    TAPROOT_ASSETS("Taproot Assets"),
-    LIQUID("Liquid Bitcoin");
-    /*RGB,
-    FEDIMINT,
-    STABLESATS*/
-    @Getter
-    private final String displayName;
+import java.util.Map;
 
-    StableCoinChain(String displayName) {
-        this.displayName = displayName;
+public class CryptoAddressValidationRepository {
+    private static final Map<String, Validation> VALIDATION_BY_CODE = Map.of(
+            "XMR", MoneroAddressValidation.getInstance(),
+            "ETH", EtherAddressValidation.getInstance()
+    );
+
+    public static Validation getValidation(String code) {
+        return VALIDATION_BY_CODE.getOrDefault(code, GenericAddressValidation.getInstance());
     }
 }

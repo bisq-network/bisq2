@@ -68,9 +68,7 @@ public class MarketRepository {
     }
 
     public static List<Market> getMinorMarkets() {
-        return Stream.concat(getMinorFiatMarkets().stream(), getMinorCryptoCurrencyMarkets().stream())
-                .distinct()
-                .collect(Collectors.toList());
+        return getMinorFiatMarkets();
     }
 
     public static List<Market> getMinorFiatMarkets() {
@@ -94,22 +92,16 @@ public class MarketRepository {
                 .collect(Collectors.toList());
     }
 
-    public static List<Market> getMinorCryptoCurrencyMarkets() {
-        return CryptoAssetRepository.getMinorCurrencies().stream()
-                .map(currency -> new Market(currency.getCode(), "BTC", currency.getName(), "Bitcoin"))
-                .distinct()
-                .collect(Collectors.toList());
-    }
 
     public static List<Market> getMajorCryptoCurrencyMarkets() {
-        return CryptoAssetRepository.getMajorCurrencies().stream()
+        return CryptoAssetRepository.getCryptoAssets().stream()
                 .map(currency -> new Market(currency.getCode(), "BTC", currency.getName(), "Bitcoin"))
                 .distinct()
                 .collect(Collectors.toList());
     }
 
     public static List<Market> getAllCryptoCurrencyMarkets() {
-        return CryptoAssetRepository.getALL_CURRENCIES().stream()
+        return CryptoAssetRepository.getCryptoAssets().stream()
                 .filter(currency -> !currency.equals(CryptoAssetRepository.BITCOIN))
                 .map(currency -> new Market(currency.getCode(), "BTC", currency.getName(), "Bitcoin"))
                 .distinct()
@@ -117,7 +109,7 @@ public class MarketRepository {
     }
 
     public static List<Market> getAllNonXMRCryptoCurrencyMarkets() {
-        List<CryptoAsset> allCurrencies = CryptoAssetRepository.getALL_CURRENCIES();
+        List<CryptoAsset> allCurrencies = CryptoAssetRepository.getCryptoAssets();
         return allCurrencies.stream()
                 .filter(currency -> !currency.equals(CryptoAssetRepository.BITCOIN))
                 .filter(currency -> !currency.equals(CryptoAssetRepository.XMR))

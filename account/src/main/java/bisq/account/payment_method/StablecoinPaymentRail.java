@@ -18,15 +18,14 @@
 package bisq.account.payment_method;
 
 import bisq.common.asset.Asset;
-import bisq.common.asset.stable.StableCoin;
-import bisq.common.asset.stable.StableCoinRepository;
+import bisq.common.asset.StableCoin;
+import bisq.common.asset.StableCoinRepository;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.Collections;
 import java.util.List;
 
-//rename to TokenizedFiatPaymentRail?
 public enum StablecoinPaymentRail implements NationalCurrencyPaymentRail {
     USDT_ERC20(StableCoinRepository.USDT_ERC20),
     USDT_TRC20(StableCoinRepository.USDT_TRC20),
@@ -41,7 +40,7 @@ public enum StablecoinPaymentRail implements NationalCurrencyPaymentRail {
     GUSD_ERC20(StableCoinRepository.GUSD_ERC20);
 
     @Getter
-    private final StableCoin stableCoinCurrency;
+    private final StableCoin stableCoin;
     @Getter
     @EqualsAndHashCode.Exclude
     private final List<Asset> tradeCurrencies;
@@ -49,25 +48,14 @@ public enum StablecoinPaymentRail implements NationalCurrencyPaymentRail {
     @EqualsAndHashCode.Exclude
     private final List<String> currencyCodes;
 
-    StablecoinPaymentRail(StableCoin stableCoinCurrency) {
-        this.stableCoinCurrency = stableCoinCurrency;
-        tradeCurrencies = Collections.singletonList(stableCoinCurrency);
-        currencyCodes = Collections.singletonList(stableCoinCurrency.getPegCurrencyCode());
+    StablecoinPaymentRail(StableCoin stableCoin) {
+        this.stableCoin = stableCoin;
+        tradeCurrencies = Collections.singletonList(stableCoin);
+        currencyCodes = Collections.singletonList(stableCoin.getPegCurrencyCode());
     }
 
     public boolean supportsCurrency(String currencyCode) {
         return currencyCodes.contains(currencyCode);
-    }
-
-    @Override
-    public String getTradeLimit() {
-        //todo
-        return "10000 USD";
-    }
-
-    @Override
-    public String getTradeDuration() {
-        return "24 hours";
     }
 }
 
