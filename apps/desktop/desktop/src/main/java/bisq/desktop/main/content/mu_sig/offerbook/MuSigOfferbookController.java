@@ -63,6 +63,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -282,10 +283,8 @@ public class MuSigOfferbookController implements Controller {
                 } else if (filter == MuSigFilters.MuSigOffersFilter.SELL) {
                     model.setMuSigOffersFilterPredicate(item -> item.getDirection() == Direction.SELL);
                 } else if (filter == MuSigFilters.MuSigOffersFilter.MINE) {
-                    UserProfile selectedProfile = Optional.ofNullable(userIdentityService.getSelectedUserIdentity())
-                            .map(UserIdentity::getUserProfile)
-                            .orElse(null);
-                    model.setMuSigOffersFilterPredicate(item -> item.getMakerUserProfile().equals(selectedProfile));
+                    Set<String> myUserProfileIds = userIdentityService.getMyUserProfileIds();
+                    model.setMuSigOffersFilterPredicate(item -> myUserProfileIds.contains(item.getMakerUserProfile().getId()));
                 }
                 settingsService.setCookie(CookieKey.MU_SIG_OFFERS_FILTER, filter.name());
                 updateFilteredMuSigOfferListItems();
