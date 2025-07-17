@@ -552,6 +552,10 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
             private final BisqMenuItem removeOfferMenuItem = new BisqMenuItem("delete-t-grey", "delete-t-red");
             private final BisqMenuItem copyOfferMenuItem = new BisqMenuItem("copy-grey", "copy-white");
             private final BisqMenuItem editOfferMenuItem = new BisqMenuItem("edit-grey", "edit-white");
+            private final ChangeListener<Boolean> selectedListener = (observable, oldValue, newValue) -> {
+                boolean shouldShowActionsMenu = newValue || getTableRow().isHover();
+                updateVisibilities(shouldShowActionsMenu);
+            };
 
             {
                 takeOfferButton.setMinWidth(PREF_WIDTH);
@@ -603,13 +607,13 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
             protected void updateItem(MuSigOfferListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
-                resetRowEventHandlers();
+                resetRowEventHandlersAndListeners();
                 resetVisibilities();
                 resetStyles();
 
                 if (item != null && !empty) {
                     if (item.isMyOffer()) {
-                        setUpRowEventHandlers();
+                        setUpRowEventHandlersAndListeners();
                         if (item.getOffer().getDirection().mirror().isBuy()) {
                             myOfferLabelBox.getStyleClass().add("my-offer-to-buy");
                             myOfferLabel.setStyle("-fx-text-fill: -bisq2-green-dim-10;");
@@ -637,7 +641,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                     }
                 } else {
                     resetStyles();
-                    resetRowEventHandlers();
+                    resetRowEventHandlersAndListeners();
                     resetVisibilities();
                     takeOfferButton.setOnAction(null);
                     removeOfferMenuItem.setOnAction(null);
@@ -654,37 +658,39 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 myOfferLabel.getStyleClass().clear();
             }
 
-            private void setUpRowEventHandlers() {
+            private void setUpRowEventHandlersAndListeners() {
                 TableRow<?> row = getTableRow();
                 if (row != null) {
                     row.setOnMouseEntered(e -> {
-                        myOfferLabelBox.setVisible(false);
-                        myOfferLabelBox.setManaged(false);
-                        myOfferActionsMenuBox.setVisible(true);
-                        myOfferActionsMenuBox.setManaged(true);
+                        boolean shouldShowActionsMenu = row.isSelected() || row.isHover();
+                        updateVisibilities(shouldShowActionsMenu);
                     });
                     row.setOnMouseExited(e -> {
-                        myOfferLabelBox.setVisible(true);
-                        myOfferLabelBox.setManaged(true);
-                        myOfferActionsMenuBox.setVisible(false);
-                        myOfferActionsMenuBox.setManaged(false);
+                        boolean shouldShowActionsMenu = row.isSelected();
+                        updateVisibilities(shouldShowActionsMenu);
                     });
+                    row.selectedProperty().addListener(selectedListener);
                 }
             }
 
-            private void resetRowEventHandlers() {
+            private void resetRowEventHandlersAndListeners() {
                 TableRow<?> row = getTableRow();
                 if (row != null) {
                     row.setOnMouseEntered(null);
                     row.setOnMouseExited(null);
+                    row.selectedProperty().removeListener(selectedListener);
                 }
             }
 
             private void resetVisibilities() {
-                myOfferLabelBox.setVisible(true);
-                myOfferLabelBox.setManaged(true);
-                myOfferActionsMenuBox.setVisible(false);
-                myOfferActionsMenuBox.setManaged(false);
+                updateVisibilities(false);
+            }
+
+            private void updateVisibilities(boolean shouldShowActionsMenu) {
+                myOfferLabelBox.setVisible(!shouldShowActionsMenu);
+                myOfferLabelBox.setManaged(!shouldShowActionsMenu);
+                myOfferActionsMenuBox.setVisible(shouldShowActionsMenu);
+                myOfferActionsMenuBox.setManaged(shouldShowActionsMenu);
             }
         };
     }
