@@ -51,7 +51,8 @@ public class MuSigOfferbookModel implements Model {
     private final StringProperty baseCodeTitle = new SimpleStringProperty("");
     private final StringProperty quoteCodeTitle = new SimpleStringProperty("");
     private final StringProperty priceTitle = new SimpleStringProperty("");
-    private final StringProperty marketIconId = new SimpleStringProperty("");
+    private final StringProperty baseMarketIconId = new SimpleStringProperty("");
+    private final StringProperty quoteMarketIconId = new SimpleStringProperty("");
 
     private final Set<String> muSigOfferIds = new HashSet<>();
     private final ObservableList<MuSigOfferListItem> muSigOfferListItems = FXCollections.observableArrayList();
@@ -88,6 +89,7 @@ public class MuSigOfferbookModel implements Model {
     private final BooleanProperty shouldShowAppliedFilters = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowFavouritesListView = new SimpleBooleanProperty();
     private final BooleanProperty favouritesListViewNeedsHeightUpdate = new SimpleBooleanProperty();
+    private final StringProperty marketListTitle = new SimpleStringProperty();
 
     private final Predicate<MarketItem> marketItemsPredicate = item ->
             getMarketFilterPredicate().test(item)

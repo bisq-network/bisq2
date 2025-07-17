@@ -68,6 +68,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class MuSigOfferbookController implements Controller {
+    private static final String btcCode = "BTC";
+    private static final String xmrCode = "XMR";
+
     @Getter
     private final MuSigOfferbookView view;
     private final MuSigOfferbookModel model;
@@ -434,13 +437,26 @@ public class MuSigOfferbookController implements Controller {
                 model.getBaseCodeTitle().set(Res.get("muSig.offerbook.table.header.amount", selectedMarket.getBaseCurrencyCode()).toUpperCase());
                 model.getQuoteCodeTitle().set(Res.get("muSig.offerbook.table.header.amount", selectedMarket.getQuoteCurrencyCode()).toUpperCase());
                 model.getPriceTitle().set(Res.get("muSig.offerbook.table.header.price", selectedMarket.getMarketCodes()).toUpperCase());
-                model.getMarketIconId().set(selectedMarket.getBaseCurrencyCode());
+                model.getBaseMarketIconId().set(selectedMarket.getBaseCurrencyCode());
+                model.getQuoteMarketIconId().set(selectedMarket.getQuoteCurrencyCode());
+                model.getMarketListTitle().set(getMarketListTitleString(selectedMarket));
             }
         } else {
             model.getMarketTitle().set("");
             model.getMarketDescription().set("");
             model.getMarketPrice().set("");
+            model.getMarketListTitle().set("");
         }
+    }
+
+    private String getMarketListTitleString(Market market) {
+        if (market.getBaseCurrencyCode().equalsIgnoreCase(btcCode)) {
+            return Res.get("muSig.offerbook.marketListTitle.bitcoin");
+        }
+        if (market.getBaseCurrencyCode().equalsIgnoreCase(xmrCode)) {
+            return Res.get("muSig.offerbook.marketListTitle.xmr");
+        }
+        return "";
     }
 
     private void updateFilteredMarketItems() {

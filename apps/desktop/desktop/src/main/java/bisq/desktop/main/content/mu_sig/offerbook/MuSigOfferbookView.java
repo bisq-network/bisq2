@@ -94,7 +94,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     private final SetChangeListener<FiatPaymentMethod> selectedPaymentsChangeListener;
     private HBox appliedFiltersSection, withOffersDisplayHint, onlyFavouritesDisplayHint;
     private VBox marketListVBox;
-    private Label marketListTitle, marketHeaderIcon, marketTitle, marketDescription, marketPrice,
+    private Label marketListTitleLabel, marketHeaderIcon, marketTitle, marketDescription, marketPrice,
             removeWithOffersFilter, removeFavouritesFilter;
     private Button createOfferButton;
     private SearchBox marketsSearchBox;
@@ -178,6 +178,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         onlyFavouritesDisplayHint.visibleProperty().bind(model.getSelectedMarketsFilter().isEqualTo(MuSigFilters.MarketFilter.FAVOURITES));
         onlyFavouritesDisplayHint.managedProperty().bind(model.getSelectedMarketsFilter().isEqualTo(MuSigFilters.MarketFilter.FAVOURITES));
         paymentsFilterLabel.textProperty().bind(model.getPaymentFilterTitle());
+        marketListTitleLabel.textProperty().bind(model.getMarketListTitle());
 
         selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), this::selectedMarketItemChanged);
         marketListViewSelectionPin = EasyBind.subscribe(marketListView.getSelectionModel().selectedItemProperty(), item -> {
@@ -263,6 +264,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         onlyFavouritesDisplayHint.visibleProperty().unbind();
         onlyFavouritesDisplayHint.managedProperty().unbind();
         paymentsFilterLabel.textProperty().unbind();
+        marketListTitleLabel.textProperty().unbind();
 
         selectedMarketItemPin.unsubscribe();
         marketListViewSelectionPin.unsubscribe();
@@ -353,11 +355,11 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     }
 
     private void setupMarketsColumn() {
-        marketListTitle = new Label(Res.get("bisqEasy.offerbook.markets"));
-        marketListTitle.setGraphicTextGap(10);
-        HBox.setHgrow(marketListTitle, Priority.ALWAYS);
+        marketListTitleLabel = new Label();
+        marketListTitleLabel.setGraphicTextGap(10);
+        HBox.setHgrow(marketListTitleLabel, Priority.ALWAYS);
 
-        HBox header = new HBox(marketListTitle);
+        HBox header = new HBox(marketListTitleLabel);
         header.setMinHeight(HEADER_HEIGHT);
         header.setMaxHeight(HEADER_HEIGHT);
         header.setAlignment(Pos.CENTER_LEFT);
@@ -704,8 +706,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         favouritesListView.getSelectionModel().select(selectedItem);
 
         if (selectedItem != null) {
-            Node baseMarketImage = MarketImageComposition.createMarketLogo(model.getMarketIconId().get());
-            marketListTitle.setGraphic(baseMarketImage);
+            Node baseMarketImage = MarketImageComposition.createMarketLogo(model.getBaseMarketIconId().get());
+            marketListTitleLabel.setGraphic(baseMarketImage);
 
             // TODO: This now needs to take into account the base market as well
             if (marketHeaderIcon != null) {
