@@ -59,11 +59,11 @@
 }
 
 .mu-sig-offerbook-offerlist-toggle-button-hbox .offerlist-toggle-button-buy.toggle-button:selected {
-    -fx-background-color: -bisq2-green-dim-20;
+    -fx-background-color: -fx-default-button;
 }
 
 .mu-sig-offerbook-offerlist-toggle-button-hbox .offerlist-toggle-button-sell.toggle-button:selected {
-    -fx-background-color: -bisq2-red;
+    -fx-background-color: -bisq2-red-dim-20;
 }
 
 .mu-sig-offerbook-offerlist-myOffer-label-box {
