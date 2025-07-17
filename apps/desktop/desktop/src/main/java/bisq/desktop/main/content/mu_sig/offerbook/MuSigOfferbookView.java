@@ -303,6 +303,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     }
 
     private void configMuSigOfferListView() {
+        muSigOfferListView.getColumns().add(muSigOfferListView.getTableView().getSelectionMarkerColumn());
+
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title(Res.get("muSig.offerbook.table.header.peer"))
                 .left()
