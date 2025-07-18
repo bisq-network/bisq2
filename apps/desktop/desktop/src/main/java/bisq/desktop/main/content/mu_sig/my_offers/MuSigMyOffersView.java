@@ -69,6 +69,8 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
     }
 
     private void configMuSigMyOffersListView() {
+        muSigMyOffersListView.getColumns().add(muSigMyOffersListView.getTableView().getSelectionMarkerColumn());
+
         muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title(Res.get("muSig.myOffers.table.header.myProfile"))
                 .left()
