@@ -365,13 +365,13 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     }
 
     private void setupMarketsColumn() {
-        baseCurrencySelectionMenu = createAndGetBaseMarketSelectionDropdownMenu();
+        baseCurrencySelectionMenu = createAndGetBaseCurrencySelectionDropdownMenu();
         HBox header = new HBox(baseCurrencySelectionMenu);
         header.setMinHeight(HEADER_HEIGHT);
         header.setMaxHeight(HEADER_HEIGHT);
-        header.setAlignment(Pos.CENTER_LEFT);
-        header.setPadding(new Insets(4, 12, 0, 13));
+        header.setAlignment(Pos.CENTER);
         header.getStyleClass().add("chat-header-title");
+        HBox.setHgrow(baseCurrencySelectionMenu, Priority.ALWAYS);
 
         marketsSearchBox = new SearchBox();
         marketsSearchBox.getStyleClass().add("offerbook-search-box");
@@ -725,6 +725,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
             Node baseCryptoImage = MarketImageComposition.createMarketLogo(model.getBaseCurrencyIconId().get());
             marketListTitleLabel.setGraphic(baseCryptoImage);
 
+            //noinspection unchecked
             baseCurrencySelectionMenu.getMenuItems().stream()
                     .filter(item -> item instanceof SelectableMenuItem)
                     .map(item -> (SelectableMenuItem<CryptoAsset>) item)
@@ -745,7 +746,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         HBox marketDescriptionHbox = new HBox(5, marketDescription, marketPrice);
 
         marketTitle = new Label();
-        marketTitle.getStyleClass().addAll("chat-header-title", "offerbook-channel-title");
+        marketTitle.getStyleClass().add("mu-sig-offerbook-market-title");
+        marketTitle.setPadding(new Insets(3, 0, 0, 0));
         VBox titleAndDescription = new VBox(marketTitle, marketDescriptionHbox);
 
         marketHeaderIcon = new Label();
@@ -814,8 +816,9 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         model.getFavouritesListViewNeedsHeightUpdate().set(false);
     }
 
-    private DropdownMenu createAndGetBaseMarketSelectionDropdownMenu() {
+    private DropdownMenu createAndGetBaseCurrencySelectionDropdownMenu() {
         DropdownMenu menu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
+        menu.getStyleClass().add("base-currency-dropdown-menu");
         marketListTitleLabel = new Label();
         marketListTitleLabel.setGraphicTextGap(10);
         menu.setContent(marketListTitleLabel);
@@ -955,6 +958,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     }
 
     private void updatePaymentsSelection() {
+        //noinspection unchecked
         paymentsFilterMenu.getMenuItems().stream()
                 .filter(item -> item instanceof SelectableMenuItem)
                 .map(item -> (SelectableMenuItem<FiatPaymentMethod>) item)
@@ -967,6 +971,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
     }
 
     private void cleanUpPaymentsFilterMenu() {
+        //noinspection unchecked
         paymentsFilterMenu.getMenuItems().stream()
                 .filter(item -> item instanceof SelectableMenuItem)
                 .map(item -> (SelectableMenuItem<FiatPaymentMethod>) item)

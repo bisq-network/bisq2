@@ -105,6 +105,8 @@ public class MuSigOfferbookController implements Controller {
 
     @Override
     public void onActivate() {
+        // TODO: Save user preference
+        model.getSelectedBaseCryptoCurrency().set(CryptoAssetRepository.BITCOIN);
         model.getMarketsSearchBoxText().set("");
 
         offersPin = muSigService.getObservableOffers().addObserver(new CollectionObserver<>() {
@@ -230,6 +232,7 @@ public class MuSigOfferbookController implements Controller {
             if (selectedCrypto != null) {
                 if (selectedCrypto.equals(CryptoAssetRepository.XMR)) {
                     updateQuoteMarketItems(MarketRepository.getAllXmrMarkets());
+
                 } else if (selectedCrypto.equals(CryptoAssetRepository.BITCOIN)) {
                     updateQuoteMarketItems(MarketRepository.getAllFiatMarkets());
                 }
