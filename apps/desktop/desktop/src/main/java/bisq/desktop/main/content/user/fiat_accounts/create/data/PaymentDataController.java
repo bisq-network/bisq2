@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.user.fiat_accounts.create.data;
 
 import bisq.account.accounts.AccountPayload;
-import bisq.account.payment_method.CryptoPaymentRail;
-import bisq.account.payment_method.FiatPaymentRail;
+import bisq.account.payment_method.crypto.CryptoPaymentRail;
+import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentRail;
 import bisq.desktop.ServiceProvider;

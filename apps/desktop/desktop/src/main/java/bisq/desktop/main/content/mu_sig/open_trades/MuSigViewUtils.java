@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.mu_sig.open_trades;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.data.Quadruple;
 import bisq.common.util.StringUtils;

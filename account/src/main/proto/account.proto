@@ -55,7 +55,8 @@ message PaymentMethod {
     FiatPaymentMethod fiatPaymentMethod = 10;
     BitcoinPaymentMethod bitcoinPaymentMethod = 11;
     CryptoPaymentMethod cryptoPaymentMethod = 12;
-    StablecoinPaymentMethod stablecoinPaymentMethod = 13;
+    StableCoinPaymentMethod stableCoinPaymentMethod = 13;
+    CbdcPaymentMethod cbdcPaymentMethod = 14;
   }
 }
 message FiatPaymentMethod {
@@ -65,9 +66,10 @@ message BitcoinPaymentMethod {
 message CryptoPaymentMethod {
   string code = 1;
 }
-message StablecoinPaymentMethod {
+message StableCoinPaymentMethod {
 }
-
+message CbdcPaymentMethod {
+}
 message FiatPaymentMethodSpec {
 }
 
@@ -77,7 +79,10 @@ message BitcoinPaymentMethodSpec {
 message CryptoPaymentMethodSpec {
 }
 
-message StablecoinPaymentMethodSpec {
+message StableCoinPaymentMethodSpec {
+}
+
+message CbdcPaymentMethodSpec {
 }
 
 message PaymentMethodSpec {
@@ -87,7 +92,8 @@ message PaymentMethodSpec {
     BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = 10;
     FiatPaymentMethodSpec fiatPaymentMethodSpec = 11;
     CryptoPaymentMethodSpec cryptoPaymentMethodSpec = 12;
-    StablecoinPaymentMethodSpec stablecoinPaymentMethodSpec = 13;
+    StableCoinPaymentMethodSpec stableCoinPaymentMethodSpec = 13;
+    CbdcPaymentMethodSpec cbdcPaymentMethodSpec = 14;
   }
 }
 

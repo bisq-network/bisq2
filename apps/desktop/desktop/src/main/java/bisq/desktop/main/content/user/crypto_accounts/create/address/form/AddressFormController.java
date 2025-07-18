@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.user.crypto_accounts.create.address.form;
 
 import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
-import bisq.account.payment_method.CryptoPaymentMethod;
+import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
@@ -28,14 +28,14 @@ public abstract class AddressFormController<V extends AddressFormView<?, ?>, M e
     protected final V view;
     protected final M model;
 
-    protected AddressFormController(ServiceProvider serviceProvider, CryptoPaymentMethod paymentMethod) {
+    protected AddressFormController(ServiceProvider serviceProvider, DigitalAssetPaymentMethod paymentMethod) {
         this.model = createModel(paymentMethod);
         this.view = createView();
     }
 
     protected abstract V createView();
 
-    protected abstract M createModel(CryptoPaymentMethod paymentMethod);
+    protected abstract M createModel(DigitalAssetPaymentMethod paymentMethod);
 
     public abstract P createAccountPayload();
 

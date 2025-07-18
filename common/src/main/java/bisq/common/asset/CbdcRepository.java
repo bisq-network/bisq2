@@ -20,20 +20,20 @@ package bisq.common.asset;
 import java.util.List;
 import java.util.Optional;
 
-public class CentralBankDigitalCurrencyRepository {
+public class CbdcRepository {
     // Fully Launched CBDCs
-    public static final CentralBankDigitalCurrency SAND_DOLLAR = new CentralBankDigitalCurrency(
+    public static final Cbdc SAND_DOLLAR = new Cbdc(
             "SD",
             "Sand Dollar",
             "BSD",
             "BS");
-    public static final CentralBankDigitalCurrency E_NAIRA = new CentralBankDigitalCurrency(
+    public static final Cbdc E_NAIRA = new Cbdc(
             "eNGN",
             "eNaira",
             "NGN",
             "NG"
     );
-    public static final CentralBankDigitalCurrency JAM_DEX = new CentralBankDigitalCurrency(
+    public static final Cbdc JAM_DEX = new Cbdc(
             "JAM-DEX",
             "Jamaica Digital Exchange",
             "JMD",
@@ -41,19 +41,19 @@ public class CentralBankDigitalCurrencyRepository {
     );
 
     // Pilot-Phase CBDCs
-    public static final CentralBankDigitalCurrency E_CNY = new CentralBankDigitalCurrency(
+    public static final Cbdc E_CNY = new Cbdc(
             "eCNY",
             "Digital Yuan (e-CNY)",
             "CNY",
             "CN"
     );
-    public static final CentralBankDigitalCurrency DIGITAL_RUBLE = new CentralBankDigitalCurrency(
+    public static final Cbdc DIGITAL_RUBLE = new Cbdc(
             "eRUB",
             "Digital Ruble",
             "RUB",
             "RU"
     );
-    public static final CentralBankDigitalCurrency E_RUPEE = new CentralBankDigitalCurrency(
+    public static final Cbdc E_RUPEE = new Cbdc(
             "eINR",
             "Digital Rupee (e₹)",
             "INR",
@@ -61,25 +61,25 @@ public class CentralBankDigitalCurrencyRepository {
     );
 
     // Not Yet Launched / Placeholder
-    public static final CentralBankDigitalCurrency US_DIGITAL_DOLLAR = new CentralBankDigitalCurrency(
+    public static final Cbdc US_DIGITAL_DOLLAR = new Cbdc(
             "eUSD",
             "U.S. Digital Dollar",
             "USD",
             "US"
     );
-    public static final CentralBankDigitalCurrency DIGITAL_EURO_CBDC = new CentralBankDigitalCurrency(
+    public static final Cbdc DIGITAL_EURO_CBDC = new Cbdc(
             "eEUR",
             "Digital Euro",
             "EUR",
             "EU"
     );
 
-    public static List<CentralBankDigitalCurrency> getCentralBankDigitalCurrencies() {
+    public static List<Cbdc> getMajorCbdcs() {
         return List.of(SAND_DOLLAR, E_NAIRA, JAM_DEX, E_CNY, DIGITAL_RUBLE, E_RUPEE);
     }
 
-    public static Optional<CentralBankDigitalCurrency> find(String code) {
-        return getCentralBankDigitalCurrencies().stream()
+    public static Optional<Cbdc> find(String code) {
+        return getMajorCbdcs().stream()
                 .filter(e -> e.getCode().equals(code))
                 .findAny();
     }

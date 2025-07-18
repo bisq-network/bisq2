@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.offerbook;
 
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
 import javafx.beans.property.BooleanProperty;

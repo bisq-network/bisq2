@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.crypto_accounts.create;
 
-import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.navigation.NavigationTarget;
 import javafx.beans.property.BooleanProperty;
@@ -45,7 +45,7 @@ public class CreateCryptoAssetAccountModel extends NavigationModel {
     @Setter
     private boolean animateRightOut = true;
     @Setter
-    private Optional<PaymentMethod<?>> paymentMethod = Optional.empty();
+    private Optional<DigitalAssetPaymentMethod> paymentMethod = Optional.empty();
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {

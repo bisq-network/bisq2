@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.payment_method;
+package bisq.account.payment_method.crypto;
 
 import bisq.common.asset.CryptoAssetRepository;
 
@@ -31,8 +31,8 @@ public class CryptoPaymentMethodUtil {
             "LTC", CryptoPaymentRail.NATIVE_CHAIN,
             "ETH", CryptoPaymentRail.NATIVE_CHAIN,
             "ETC", CryptoPaymentRail.NATIVE_CHAIN,
-            "L_BTC", CryptoPaymentRail.SIDECHAIN,
-            "LN_BTC", CryptoPaymentRail.LAYER_2,
+            "L-BTC", CryptoPaymentRail.SIDECHAIN,
+            "LN-BTC", CryptoPaymentRail.LAYER_2,
             "GRIN", CryptoPaymentRail.NATIVE_CHAIN,
             "ZEC", CryptoPaymentRail.NATIVE_CHAIN,
             "DOGE", CryptoPaymentRail.NATIVE_CHAIN
@@ -40,7 +40,7 @@ public class CryptoPaymentMethodUtil {
 
     private static final List<CryptoPaymentMethod> ALL_CRYPTO_PAYMENT_METHODS = new ArrayList<>();
 
-    public static List<CryptoPaymentMethod> getAllCryptoPaymentMethods() {
+    public static List<CryptoPaymentMethod> getPaymentMethods() {
         return CryptoAssetRepository.getCryptoAssets().stream()
                 .map(asset -> new CryptoPaymentMethod(asset.getCode()))
                 .collect(Collectors.toList());

@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.payment_method;
+package bisq.account.payment_method.fiat;
 
+import bisq.account.payment_method.PaymentRail;
+import bisq.common.asset.Asset;
 import bisq.common.asset.FiatCurrency;
 import bisq.common.asset.FiatCurrencyRepository;
-import bisq.common.asset.Asset;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
 import bisq.i18n.Res;
@@ -36,7 +37,7 @@ import java.util.stream.Collectors;
  * The payment rails for fiat payments.
  * Provide static data associated with the payment rail.
  */
-public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
+public enum FiatPaymentRail implements PaymentRail {
     // US
     ZELLE(countryFromCode("US"),
             FiatCurrencyRepository.getCurrencyByCode("USD"),

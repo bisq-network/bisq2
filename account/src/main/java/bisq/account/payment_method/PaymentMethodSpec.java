@@ -17,6 +17,10 @@
 
 package bisq.account.payment_method;
 
+import bisq.account.payment_method.cbdc.CbdcPaymentMethodSpec;
+import bisq.account.payment_method.crypto.CryptoPaymentMethodSpec;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethodSpec;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
@@ -95,8 +99,9 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
         return switch (proto.getMessageCase()) {
             case BITCOINPAYMENTMETHODSPEC -> BitcoinPaymentMethodSpec.fromProto(proto);
             case FIATPAYMENTMETHODSPEC -> FiatPaymentMethodSpec.fromProto(proto);
-            case STABLECOINPAYMENTMETHODSPEC -> StablecoinPaymentMethodSpec.fromProto(proto);
+            case STABLECOINPAYMENTMETHODSPEC -> StableCoinPaymentMethodSpec.fromProto(proto);
             case CRYPTOPAYMENTMETHODSPEC -> CryptoPaymentMethodSpec.fromProto(proto);
+            case CBDCPAYMENTMETHODSPEC -> CbdcPaymentMethodSpec.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

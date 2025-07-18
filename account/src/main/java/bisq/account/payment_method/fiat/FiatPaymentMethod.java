@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.payment_method;
+package bisq.account.payment_method.fiat;
 
+import bisq.account.payment_method.PaymentMethod;
 import bisq.common.asset.Asset;
 import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.locale.Country;
@@ -33,7 +34,7 @@ import java.util.stream.Collectors;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class FiatPaymentMethod extends NationalCurrencyPaymentMethod<FiatPaymentRail> {
+public class FiatPaymentMethod extends PaymentMethod<FiatPaymentRail> {
     public static FiatPaymentMethod fromPaymentRail(FiatPaymentRail fiatPaymentRail) {
         return new FiatPaymentMethod(fiatPaymentRail);
     }
@@ -81,6 +82,11 @@ public class FiatPaymentMethod extends NationalCurrencyPaymentMethod<FiatPayment
     @Override
     public List<? extends Asset> getSupportedCurrencies() {
         return paymentRail.getSupportedCurrencies();
+    }
+
+    @Override
+    public String getId() {
+        return paymentRailName;
     }
 
     public List<Country> getSupportedCountries() {

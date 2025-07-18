@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.payment_method;
+package bisq.account.payment_method.fiat;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,12 +57,6 @@ public class FiatPaymentMethodUtil {
                 .filter(rail -> rail != FiatPaymentRail.CUSTOM)
                 .filter(rail -> rail != FiatPaymentRail.CASH_APP)
                 .map(FiatPaymentMethod::fromPaymentRail)
-                .collect(Collectors.toList());
-    }
-
-    public static List<String> getPaymentMethodNames(List<? extends PaymentMethod<?>> paymentMethods) {
-        return paymentMethods.stream()
-                .map(PaymentMethod::getPaymentRailName)
                 .collect(Collectors.toList());
     }
 }

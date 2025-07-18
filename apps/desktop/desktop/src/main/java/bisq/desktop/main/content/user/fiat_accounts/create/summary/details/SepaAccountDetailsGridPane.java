@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.user.fiat_accounts.create.summary.details;
 
 import bisq.account.accounts.fiat.SepaAccountPayload;
-import bisq.account.payment_method.FiatPaymentRail;
-import bisq.account.payment_method.FiatPaymentRailUtil;
+import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
 import bisq.common.locale.CountryRepository;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;

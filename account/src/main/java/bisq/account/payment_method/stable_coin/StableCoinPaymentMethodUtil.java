@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.payment_method;
+package bisq.account.payment_method.stable_coin;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,11 +24,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class StablecoinPaymentMethodUtil {
-    public static Optional<StablecoinPaymentMethod> findPaymentMethod(String name) {
+public class StableCoinPaymentMethodUtil {
+    public static Optional<StableCoinPaymentMethod> findPaymentMethod(String name) {
         try {
-            StablecoinPaymentRail paymentRail = StablecoinPaymentRail.valueOf(name);
-            StablecoinPaymentMethod paymentMethod = StablecoinPaymentMethod.fromPaymentRail(paymentRail);
+            StableCoinPaymentRail paymentRail = StableCoinPaymentRail.valueOf(name);
+            StableCoinPaymentMethod paymentMethod = StableCoinPaymentMethod.fromPaymentRail(paymentRail);
             return Optional.of(paymentMethod);
         } catch (Throwable e) {
             log.warn("Could not find payment method for name: {}", name, e);
@@ -36,10 +36,10 @@ public class StablecoinPaymentMethodUtil {
         }
     }
 
-    public static StablecoinPaymentMethod getPaymentMethod(String name) {
+    public static StableCoinPaymentMethod getPaymentMethod(String name) {
         try {
-            StablecoinPaymentRail paymentRail = StablecoinPaymentRail.valueOf(name);
-            StablecoinPaymentMethod paymentMethod = StablecoinPaymentMethod.fromPaymentRail(paymentRail);
+            StableCoinPaymentRail paymentRail = StableCoinPaymentRail.valueOf(name);
+            StableCoinPaymentMethod paymentMethod = StableCoinPaymentMethod.fromPaymentRail(paymentRail);
             if (!paymentMethod.isCustomPaymentMethod()) {
                 return paymentMethod;
             }
@@ -48,12 +48,18 @@ public class StablecoinPaymentMethodUtil {
         }
 
         //TODO can be removed once stable coin domain is completed and confirmed that this is not needed
-        return StablecoinPaymentMethod.fromCustomName(name);
+        return StableCoinPaymentMethod.fromCustomName(name);
     }
 
-    public static List<StablecoinPaymentMethod> getPaymentMethods(String currencyCode) {
-        return StablecoinPaymentRailUtil.getPaymentRails(currencyCode).stream()
-                .map(StablecoinPaymentMethod::fromPaymentRail)
+    public static List<StableCoinPaymentMethod> getPaymentMethods(String currencyCode) {
+        return StableCoinPaymentRailUtil.getPaymentRails(currencyCode).stream()
+                .map(StableCoinPaymentMethod::fromPaymentRail)
+                .collect(Collectors.toList());
+    }
+
+    public static List<StableCoinPaymentMethod> getPaymentMethods() {
+        return StableCoinPaymentRailUtil.getMajorStableCoinPaymentRails().stream()
+                .map(StableCoinPaymentMethod::fromPaymentRail)
                 .collect(Collectors.toList());
     }
 }

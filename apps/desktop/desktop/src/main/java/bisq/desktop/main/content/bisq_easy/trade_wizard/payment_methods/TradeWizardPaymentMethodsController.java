@@ -20,9 +20,10 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentMethodUtil;
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethodUtil;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodUtil;
 import bisq.common.market.Market;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -260,7 +261,7 @@ public class TradeWizardPaymentMethodsController implements Controller {
     }
 
     private boolean isPredefinedPaymentMethodsContainName(String name) {
-        return new HashSet<>(FiatPaymentMethodUtil.getPaymentMethodNames(model.getFiatPaymentMethods())).contains(name);
+        return new HashSet<>(PaymentMethodUtil.getPaymentMethodNames(model.getFiatPaymentMethods())).contains(name);
     }
 
     void onRemoveFiatCustomMethod(FiatPaymentMethod fiatPaymentMethod) {
@@ -272,7 +273,7 @@ public class TradeWizardPaymentMethodsController implements Controller {
 
     private void setCreateOfferFiatMethodsCookie() {
         settingsService.setCookie(CookieKey.CREATE_OFFER_METHODS, getCookieSubKey(),
-                Joiner.on(",").join(FiatPaymentMethodUtil.getPaymentMethodNames(model.getSelectedFiatPaymentMethods())));
+                Joiner.on(",").join(PaymentMethodUtil.getPaymentMethodNames(model.getSelectedFiatPaymentMethods())));
     }
 
     private String getCookieSubKey() {
@@ -312,7 +313,7 @@ public class TradeWizardPaymentMethodsController implements Controller {
 
     private void setCreateOfferBitcoinMethodsCookie() {
         settingsService.setCookie(CookieKey.CREATE_OFFER_BITCOIN_METHODS,
-                Joiner.on(",").join(FiatPaymentMethodUtil.getPaymentMethodNames(model.getSelectedBitcoinPaymentMethods())));
+                Joiner.on(",").join(PaymentMethodUtil.getPaymentMethodNames(model.getSelectedBitcoinPaymentMethods())));
     }
 
     private void maybeRemoveCustomFiatPaymentMethods() {

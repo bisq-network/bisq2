@@ -17,7 +17,12 @@
 
 package bisq.account.payment_method;
 
+import bisq.account.payment_method.crypto.CryptoPaymentMethodUtil;
+import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
 import bisq.common.asset.Asset;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class PaymentMethodUtil {
     //todo not used yet
@@ -35,5 +40,11 @@ public class PaymentMethodUtil {
 
     public static PaymentRail getPaymentRail(String name, String code) {
         return getPaymentMethod(name, code).getPaymentRail();
+    }
+
+    public static List<String> getPaymentMethodNames(List<? extends PaymentMethod<?>> paymentMethods) {
+        return paymentMethods.stream()
+                .map(PaymentMethod::getPaymentRailName)
+                .collect(Collectors.toList());
     }
 }

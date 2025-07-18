@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.user.fiat_accounts.create.summary.details;
 
 import bisq.account.accounts.fiat.FasterPaymentsAccountPayload;
-import bisq.account.payment_method.FiatPaymentRail;
+import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.i18n.Res;
 
 public class FasterPaymentsAccountDetailsGridPane extends FiatAccountDetailsGridPane<FasterPaymentsAccountPayload> {

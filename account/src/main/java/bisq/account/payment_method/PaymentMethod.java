@@ -17,6 +17,10 @@
 
 package bisq.account.payment_method;
 
+import bisq.account.payment_method.cbdc.CbdcPaymentMethod;
+import bisq.account.payment_method.crypto.CryptoPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethod;
 import bisq.common.asset.Asset;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -72,6 +76,8 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
         NetworkDataValidation.validateText(paymentRailName, MAX_NAME_LENGTH);
     }
 
+    public abstract String getId();
+
     public String getDisplayString() {
         return Res.has(paymentRailName) ? Res.get(paymentRailName) : paymentRailName;
     }
@@ -93,7 +99,8 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
             case FIATPAYMENTMETHOD -> FiatPaymentMethod.fromProto(proto);
             case BITCOINPAYMENTMETHOD -> BitcoinPaymentMethod.fromProto(proto);
             case CRYPTOPAYMENTMETHOD -> CryptoPaymentMethod.fromProto(proto);
-            case STABLECOINPAYMENTMETHOD -> StablecoinPaymentMethod.fromProto(proto);
+            case STABLECOINPAYMENTMETHOD -> StableCoinPaymentMethod.fromProto(proto);
+            case CBDCPAYMENTMETHOD -> CbdcPaymentMethod.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
@@ -123,5 +130,4 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
     }
 
     protected abstract R getCustomPaymentRail();
-
 }

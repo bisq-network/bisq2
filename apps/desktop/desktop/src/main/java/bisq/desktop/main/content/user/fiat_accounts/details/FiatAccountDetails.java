@@ -19,7 +19,7 @@ package bisq.desktop.main.content.user.fiat_accounts.details;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.fiat.CountryBasedAccount;
-import bisq.account.payment_method.FiatPaymentRail;
+import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.data.Triple;
 import bisq.i18n.Res;
 import javafx.scene.control.Label;

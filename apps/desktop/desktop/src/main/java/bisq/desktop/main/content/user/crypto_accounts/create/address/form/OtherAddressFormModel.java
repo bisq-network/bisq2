@@ -17,12 +17,12 @@
 
 package bisq.desktop.main.content.user.crypto_accounts.create.address.form;
 
-import bisq.account.payment_method.CryptoPaymentMethod;
+import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import lombok.Getter;
 
 @Getter
 public class OtherAddressFormModel extends AddressFormModel {
-    public OtherAddressFormModel(String id, CryptoPaymentMethod paymentMethod) {
+    public OtherAddressFormModel(String id, DigitalAssetPaymentMethod paymentMethod) {
         super(id, paymentMethod);
     }
 }

@@ -18,7 +18,10 @@
 package bisq.desktop.main.content.user.crypto_accounts.create.address;
 
 import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
-import bisq.account.payment_method.CryptoPaymentMethod;
+import bisq.account.payment_method.DigitalAssetPaymentMethod;
+import bisq.account.payment_method.cbdc.CbdcPaymentMethod;
+import bisq.account.payment_method.crypto.CryptoPaymentMethod;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.user.crypto_accounts.create.address.form.AddressFormController;
@@ -46,7 +49,7 @@ public class AddressController implements Controller {
         return formController.createAccountPayload();
     }
 
-    public void setPaymentMethod(CryptoPaymentMethod paymentMethod) {
+    public void setPaymentMethod(DigitalAssetPaymentMethod paymentMethod) {
         model.setPaymentMethod(paymentMethod);
 
         formController = getOrCreateController(paymentMethod);
@@ -65,16 +68,23 @@ public class AddressController implements Controller {
         return formController != null && formController.validate();
     }
 
-    public AddressFormController<?, ?, ?> getOrCreateController(CryptoPaymentMethod paymentMethod) {
-        String currencyCode = paymentMethod.getCode();
-        return model.getControllerCache().computeIfAbsent(currencyCode, k -> createController(paymentMethod));
+    public AddressFormController<?, ?, ?> getOrCreateController(DigitalAssetPaymentMethod paymentMethod) {
+        return model.getControllerCache().computeIfAbsent(paymentMethod.getId(), k -> createController(paymentMethod));
     }
 
-    public AddressFormController<?, ?, ?> createController(CryptoPaymentMethod paymentMethod) {
-        if (paymentMethod.getCode().equals("XMR")) {
-            return new MoneroAddressFormController(serviceProvider, paymentMethod);
+    public AddressFormController<?, ?, ?> createController(DigitalAssetPaymentMethod paymentMethod) {
+        if (paymentMethod instanceof DigitalAssetPaymentMethod cryptoPaymentMethod) {
+            if (cryptoPaymentMethod.getCode().equals("XMR")) {
+                return new MoneroAddressFormController(serviceProvider, cryptoPaymentMethod);
+            } else {
+                return new OtherAddressFormController(serviceProvider, cryptoPaymentMethod);
+            }
+        } else if (paymentMethod instanceof StableCoinPaymentMethod stableCoinPaymentMethod) {
+            throw new RuntimeException("Not impl yet");
+        } else if (paymentMethod instanceof CbdcPaymentMethod cbdcPaymentMethod) {
+            throw new RuntimeException("Not impl yet");
         } else {
-            return new OtherAddressFormController(serviceProvider, paymentMethod);
+            throw new UnsupportedOperationException("PaymentMethod not supported");
         }
     }
 }

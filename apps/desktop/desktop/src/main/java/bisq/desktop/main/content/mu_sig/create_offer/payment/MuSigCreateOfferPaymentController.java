@@ -26,7 +26,7 @@ import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.account.payment_method.FiatPaymentMethodUtil;
+import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.market.Market;
 import bisq.common.observable.map.ReadOnlyObservableMap;

@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.user.crypto_accounts.create.summary.details;
 
 import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
-import bisq.account.payment_method.CryptoPaymentRail;
+import bisq.account.payment_method.crypto.CryptoPaymentRail;
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.components.controls.BisqTooltip;

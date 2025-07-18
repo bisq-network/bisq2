@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.crypto_accounts.create.address;
 
-import bisq.account.payment_method.CryptoPaymentMethod;
+import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.main.content.user.crypto_accounts.create.address.form.AddressFormController;
 import javafx.scene.layout.Region;
@@ -29,7 +29,7 @@ import java.util.Map;
 @Getter
 public class AddressModel implements Model {
     @Setter
-    private CryptoPaymentMethod  paymentMethod;
+    private DigitalAssetPaymentMethod paymentMethod;
     @Setter
     private Region paymentForm;
     private final Map<String, AddressFormController<?, ?, ?>> controllerCache = new HashMap<>();

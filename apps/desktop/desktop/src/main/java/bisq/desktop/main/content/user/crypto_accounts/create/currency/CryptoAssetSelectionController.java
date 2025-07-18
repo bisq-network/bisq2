@@ -17,57 +17,66 @@
 
 package bisq.desktop.main.content.user.crypto_accounts.create.currency;
 
-import bisq.account.payment_method.CryptoPaymentMethod;
-import bisq.account.payment_method.CryptoPaymentMethodUtil;
+import bisq.account.payment_method.DigitalAssetPaymentMethod;
+import bisq.account.payment_method.cbdc.CbdcPaymentMethod;
+import bisq.account.payment_method.cbdc.CbdcPaymentMethodUtil;
+import bisq.account.payment_method.crypto.CryptoPaymentMethod;
+import bisq.account.payment_method.crypto.CryptoPaymentMethodUtil;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethod;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethodUtil;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.user.crypto_accounts.create.currency.CryptoAssetSelectionView.CryptoAssetItem;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleGroup;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 @Slf4j
 public class CryptoAssetSelectionController implements Controller {
     private final CryptoAssetSelectionModel model;
     @Getter
     private final CryptoAssetSelectionView view;
-    private Subscription searchTextPin;
+    private Subscription filterMenuItemTogglePin;
 
     public CryptoAssetSelectionController() {
         // We use sorting provided by the CryptoAssetRepository with major assets first
-        List<CryptoAssetItem> items = CryptoPaymentMethodUtil.getAllCryptoPaymentMethods().stream()
+        Stream<CryptoPaymentMethod> cryptoPaymentMethodStream = CryptoPaymentMethodUtil.getPaymentMethods().stream();
+        Stream<StableCoinPaymentMethod> stableCoinPaymentMethods = StableCoinPaymentMethodUtil.getPaymentMethods().stream();
+        Stream<CbdcPaymentMethod> cbdcPaymentMethods = CbdcPaymentMethodUtil.getPaymentMethods().stream();
+        List<CryptoAssetItem> items = Stream.concat(cryptoPaymentMethodStream,
+                        Stream.concat(stableCoinPaymentMethods, cbdcPaymentMethods))
                 .map(CryptoAssetItem::new)
                 .toList();
-        model = new CryptoAssetSelectionModel(items);
+
+        ToggleGroup toggleGroup = new ToggleGroup();
+        RichTableView.FilterMenuItem<CryptoAssetItem> showAllFilterMenuItem = getShowAllFilterMenuItem(toggleGroup);
+        toggleGroup.selectToggle(showAllFilterMenuItem);
+        List<RichTableView.FilterMenuItem<CryptoAssetItem>> filterMenuItems = List.of(
+                showAllFilterMenuItem,
+                getFilterMenuItem(CryptoAssetItem.Type.CRYPTO_CURRENCY, toggleGroup),
+                getFilterMenuItem(CryptoAssetItem.Type.STABLE_COIN, toggleGroup),
+                getFilterMenuItem(CryptoAssetItem.Type.CBDC, toggleGroup));
+        model = new CryptoAssetSelectionModel(items, toggleGroup, filterMenuItems);
         view = new CryptoAssetSelectionView(model, this);
     }
 
     @Override
     public void onActivate() {
-        searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
-            model.getFilteredList().setPredicate(item -> {
-                if (searchText == null) {
-                    return true;
-                } else if (item == null) {
-                    return false;
-                } else {
-                    String searchLowerCase = searchText.toLowerCase().trim();
-                    if (searchLowerCase.isEmpty()) {
-                        return true;
-                    } else {
-                        return item.getNameAndCode().toLowerCase().contains(searchLowerCase);
-                    }
-                }
-            });
-        });
+        filterMenuItemTogglePin = EasyBind.subscribe(model.getFilterMenuItemToggleGroup().selectedToggleProperty(), this::updateFilter);
     }
 
     @Override
     public void onDeactivate() {
-        searchTextPin.unsubscribe();
+        filterMenuItemTogglePin.unsubscribe();
         model.getSearchText().set(null);
     }
 
@@ -75,22 +84,79 @@ public class CryptoAssetSelectionController implements Controller {
         return model.getSelectedPaymentMethod().get() != null;
     }
 
-    public ReadOnlyObjectProperty<CryptoPaymentMethod> getSelectedPaymentMethod() {
+    public ReadOnlyObjectProperty<DigitalAssetPaymentMethod> getSelectedPaymentMethod() {
         return model.getSelectedPaymentMethod();
     }
 
     void onItemSelected(CryptoAssetItem item) {
         if (item != null) {
             model.getSelectedItem().set(item);
-            model.getSelectedPaymentMethod().set(item.getPaymentMethod());
+            model.getSelectedPaymentMethod().set( item.getPaymentMethod());
         }
     }
 
     void onSearchTextChanged(String searchText) {
         if (searchText != null) {
             model.getSearchText().set(searchText.trim());
+            model.setSearchStringPredicate(item -> {
+                if (item == null) {
+                    return false;
+                } else {
+                    String searchLowerCase = searchText.toLowerCase().trim();
+                    if (searchLowerCase.isEmpty()) {
+                        return true;
+                    } else {
+                        return item.relevantStrings().toLowerCase().contains(searchLowerCase);
+                    }
+                }
+            });
         } else {
             model.getSearchText().set(null);
+            model.setSearchStringPredicate(item -> true);
         }
+        applyPredicates();
+    }
+
+    private void updateFilter(Toggle selectedToggle) {
+        if (selectedToggle instanceof RichTableView.FilterMenuItem<?> filterMenuItem) {
+            Optional<Object> data = filterMenuItem.getData();
+            if (data.isPresent() && data.get() instanceof CryptoAssetItem.Type type) {
+                model.getSelectedType().set(type);
+            } else {
+                model.getSelectedType().set(null);
+            }
+        }
+
+        RichTableView.FilterMenuItem.fromToggle(selectedToggle)
+                .ifPresentOrElse(selectedFilterMenuItem -> {
+                    UIThread.runOnNextRenderFrame(() -> {
+                        model.setFilterItemPredicate(item -> selectedFilterMenuItem.getFilter().test(item));
+                        applyPredicates();
+                    });
+
+                }, () -> {
+                    model.setFilterItemPredicate(item -> true);
+                    applyPredicates();
+                });
+    }
+
+    private void applyPredicates() {
+        model.getFilteredList().setPredicate(item ->
+                model.getFilterItemPredicate().test(item) &&
+                        model.getSearchStringPredicate().test(item)
+        );
+    }
+
+    private RichTableView.FilterMenuItem<CryptoAssetItem> getShowAllFilterMenuItem(ToggleGroup toggleGroup) {
+        return RichTableView.FilterMenuItem.getShowAllFilterMenuItem(toggleGroup);
+    }
+
+    private RichTableView.FilterMenuItem<CryptoAssetItem> getFilterMenuItem(CryptoAssetItem.Type type,
+                                                                            ToggleGroup toggleGroup) {
+        return new RichTableView.FilterMenuItem<>(
+                toggleGroup,
+                type.getDisplayString(),
+                Optional.of(type),
+                item -> item.getType().equals(type));
     }
 }

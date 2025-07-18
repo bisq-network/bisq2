@@ -15,18 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.payment_method;
+package bisq.account.payment_method.stable_coin;
 
-import bisq.common.asset.Asset;
+import bisq.account.payment_method.PaymentRail;
 import bisq.common.asset.StableCoin;
 import bisq.common.asset.StableCoinRepository;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import java.util.Collections;
-import java.util.List;
-
-public enum StablecoinPaymentRail implements NationalCurrencyPaymentRail {
+public enum StableCoinPaymentRail implements PaymentRail {
     USDT_ERC20(StableCoinRepository.USDT_ERC20),
     USDT_TRC20(StableCoinRepository.USDT_TRC20),
     USDT_BEP20(StableCoinRepository.USDT_BEP20),
@@ -41,21 +37,9 @@ public enum StablecoinPaymentRail implements NationalCurrencyPaymentRail {
 
     @Getter
     private final StableCoin stableCoin;
-    @Getter
-    @EqualsAndHashCode.Exclude
-    private final List<Asset> tradeCurrencies;
-    @Getter
-    @EqualsAndHashCode.Exclude
-    private final List<String> currencyCodes;
 
-    StablecoinPaymentRail(StableCoin stableCoin) {
+    StableCoinPaymentRail(StableCoin stableCoin) {
         this.stableCoin = stableCoin;
-        tradeCurrencies = Collections.singletonList(stableCoin);
-        currencyCodes = Collections.singletonList(stableCoin.getPegCurrencyCode());
-    }
-
-    public boolean supportsCurrency(String currencyCode) {
-        return currencyCodes.contains(currencyCode);
     }
 }
 

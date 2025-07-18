@@ -68,10 +68,10 @@ public class CreateCryptoAssetAccountView extends NavigationView<VBox, CreateCry
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(POPUP_HEIGHT);
 
-        Label paymentMethod = createAndGetProgressLabel(Res.get("paymentAccounts.crypto.progress.currency"));
+        Label paymentMethod = createAndGetProgressLabel(Res.get("paymentAccounts.crypto.progress.cryptoAsset"));
         progressLabelList.add(paymentMethod);
 
-        Label accountData = createAndGetProgressLabel(Res.get("paymentAccounts.crypto.progress.accountData"));
+        Label accountData = createAndGetProgressLabel(Res.get("paymentAccounts.crypto.progress.addressAndOptions"));
         progressLabelList.add(accountData);
 
         Label summary = createAndGetProgressLabel(Res.get("paymentAccounts.createAccount.progress.summary"));

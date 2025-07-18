@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.user.crypto_accounts.create.address.form;
 
 import bisq.account.accounts.crypto.OtherCryptoAssetAccountPayload;
-import bisq.account.payment_method.CryptoPaymentMethod;
+import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -29,7 +29,7 @@ import java.util.Optional;
 
 @Slf4j
 public class OtherAddressFormController extends AddressFormController<OtherAddressFormView, OtherAddressFormModel, OtherCryptoAssetAccountPayload> {
-    public OtherAddressFormController(ServiceProvider serviceProvider, CryptoPaymentMethod paymentMethod) {
+    public OtherAddressFormController(ServiceProvider serviceProvider, DigitalAssetPaymentMethod paymentMethod) {
         super(serviceProvider, paymentMethod);
     }
 
@@ -39,7 +39,7 @@ public class OtherAddressFormController extends AddressFormController<OtherAddre
     }
 
     @Override
-    protected OtherAddressFormModel createModel(CryptoPaymentMethod paymentMethod) {
+    protected OtherAddressFormModel createModel(DigitalAssetPaymentMethod paymentMethod) {
         return new OtherAddressFormModel(StringUtils.createUid(), paymentMethod);
     }
 

@@ -17,15 +17,12 @@
 
 package bisq.account.payment_method;
 
-/**
- * Base class for PaymentMethods based on national currencies like FiatPaymentMethod or StablecoinPaymentMethod
- */
-public abstract class NationalCurrencyPaymentMethod<R extends NationalCurrencyPaymentRail> extends PaymentMethod<R> {
-    protected NationalCurrencyPaymentMethod(R paymentRail) {
-        super(paymentRail);
-    }
+public interface DigitalAssetPaymentMethod {
+    String getName();
 
-    protected NationalCurrencyPaymentMethod(String customName) {
-        super(customName);
-    }
+    String getId();
+
+    String getDisplayString();
+
+    String getCode();
 }

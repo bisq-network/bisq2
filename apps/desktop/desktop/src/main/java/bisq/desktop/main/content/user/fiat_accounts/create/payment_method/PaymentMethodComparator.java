@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.user.fiat_accounts.create.payment_method;
 
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentRail;
-import bisq.account.payment_method.FiatPaymentRailUtil;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.util.StringUtils;
 

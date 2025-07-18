@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.crypto_accounts.create.address.form;
 
-import bisq.account.payment_method.CryptoPaymentMethod;
+import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import javafx.beans.property.BooleanProperty;
@@ -38,7 +38,7 @@ public class MoneroAddressFormModel extends AddressFormModel {
     protected final StringProperty accountIndex = new SimpleStringProperty();
     protected final StringProperty initialSubAddressIndex = new SimpleStringProperty();
 
-    public MoneroAddressFormModel(String id, CryptoPaymentMethod paymentMethod) {
+    public MoneroAddressFormModel(String id, DigitalAssetPaymentMethod paymentMethod) {
         super(id, paymentMethod);
     }
 

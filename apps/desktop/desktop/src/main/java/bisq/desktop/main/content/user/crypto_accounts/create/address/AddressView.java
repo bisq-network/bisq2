@@ -41,7 +41,7 @@ public class AddressView extends View<VBox, AddressModel, AddressController> {
 
     @Override
     protected void onViewAttached() {
-        titleLabel.setText(Res.get("paymentAccounts.crypto.address.title", model.getPaymentMethod().getDisplayString()));
+        titleLabel.setText(Res.get("paymentAccounts.crypto.address.title", model.getPaymentMethod().getName()));
         root.getChildren().setAll(Spacer.fillVBox(),
                 titleLabel,
                 model.getPaymentForm(),

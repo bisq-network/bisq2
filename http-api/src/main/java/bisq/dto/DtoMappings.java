@@ -19,7 +19,7 @@ package bisq.dto;
 
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
@@ -114,7 +114,7 @@ import bisq.offer.options.OfferOption;
 import bisq.offer.options.ReputationOption;
 import bisq.offer.options.TradeTermsOption;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.FiatPaymentMethodSpec;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.FixPriceSpec;
