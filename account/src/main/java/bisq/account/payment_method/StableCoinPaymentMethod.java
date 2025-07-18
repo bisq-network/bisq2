@@ -18,6 +18,7 @@
 package bisq.account.payment_method;
 
 import bisq.common.asset.Asset;
+import bisq.common.asset.StableCoin;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,18 +31,18 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class StablecoinPaymentMethod extends NationalCurrencyPaymentMethod<StablecoinPaymentRail> {
-    public static StablecoinPaymentMethod fromPaymentRail(StablecoinPaymentRail paymentRail) {
-        return new StablecoinPaymentMethod(paymentRail);
+public class StableCoinPaymentMethod extends NationalCurrencyPaymentMethod<StableCoinPaymentRail> {
+    public static StableCoinPaymentMethod fromPaymentRail(StableCoinPaymentRail paymentRail) {
+        return new StableCoinPaymentMethod(paymentRail);
     }
 
-    public static StablecoinPaymentMethod fromCustomName(String customName) {
+    public static StableCoinPaymentMethod fromCustomName(String customName) {
         // StablecoinPaymentMethod does not support custom paymentRails
         //TODO can be removed once stable coin domain is completed and confirmed that this is not needed
         return null;
     }
 
-    private StablecoinPaymentMethod(StablecoinPaymentRail paymentRail) {
+    private StableCoinPaymentMethod(StableCoinPaymentRail paymentRail) {
         super(paymentRail);
 
         verify();
@@ -49,7 +50,7 @@ public class StablecoinPaymentMethod extends NationalCurrencyPaymentMethod<Stabl
 
     @Override
     public bisq.account.protobuf.PaymentMethod.Builder getBuilder(boolean serializeForHash) {
-        return getPaymentMethodBuilder(serializeForHash).setStablecoinPaymentMethod(bisq.account.protobuf.StablecoinPaymentMethod.newBuilder());
+        return getPaymentMethodBuilder(serializeForHash).setStableCoinPaymentMethod(bisq.account.protobuf.StableCoinPaymentMethod.newBuilder());
     }
 
     @Override
@@ -57,7 +58,7 @@ public class StablecoinPaymentMethod extends NationalCurrencyPaymentMethod<Stabl
         return resolveProto(serializeForHash);
     }
 
-    public static StablecoinPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
+    public static StableCoinPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
         return Optional.ofNullable(
                         StablecoinPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName()))
                 .orElseThrow(() -> new IllegalArgumentException(
@@ -65,7 +66,7 @@ public class StablecoinPaymentMethod extends NationalCurrencyPaymentMethod<Stabl
     }
 
     @Override
-    protected StablecoinPaymentRail getCustomPaymentRail() {
+    protected StableCoinPaymentRail getCustomPaymentRail() {
         // StablecoinPaymentMethod does not support custom paymentRails
         return null;
     }
@@ -73,5 +74,30 @@ public class StablecoinPaymentMethod extends NationalCurrencyPaymentMethod<Stabl
     @Override
     public List<Asset> getSupportedCurrencies() {
         return paymentRail.getTradeCurrencies();
+    }
+
+    public String getCode() {
+        return getStableCoin().getCode();
+    }
+
+    public String getName() {
+        return getStableCoin().getName();
+    }
+
+    public String getPegCurrencyCode() {
+        return getStableCoin().getPegCurrencyCode();
+    }
+
+    public StableCoin.TokenStandard getTokenStandard() {
+        return getStableCoin().getTokenStandard();
+    }
+
+    public StableCoin.Network getNetwork() {
+        return getStableCoin().getNetwork();
+    }
+
+
+    private StableCoin getStableCoin() {
+        return paymentRail.getStableCoin();
     }
 }

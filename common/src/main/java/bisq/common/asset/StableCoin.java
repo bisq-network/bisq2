@@ -18,6 +18,7 @@
 package bisq.common.asset;
 
 
+import bisq.common.proto.ProtobufUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -27,33 +28,24 @@ import lombok.ToString;
 @ToString(callSuper = true)
 public final class StableCoin extends DigitalAsset {
     private final String pegCurrencyCode;
-    private final String chain;//TODO use StableCoinChain
-    private final String standard; //TODO use StableCoinTokenStandard
+    private final Network network;
+    private final TokenStandard tokenStandard;
 
     // We consider issues as only informational data, if for instance the backing company gets sold, the coin
     // should not change.
     @EqualsAndHashCode.Exclude
-    private final String issuer; //TODO use StableCoinIssuer
+    private final Issuer issuer;
 
     public StableCoin(String code,
                       String name,
                       String pegCurrencyCode,
-                      StableCoinChain chain,
-                      StableCoinTokenStandard standard,
-                      StableCoinIssuer issuer) {
-        this(code, name, pegCurrencyCode, chain.getDisplayName(), standard.getDisplayName(), issuer.getDisplayName());
-    }
-
-    public StableCoin(String code,
-                      String name,
-                      String pegCurrencyCode,
-                      String chain,
-                      String standard,
-                      String issuer) {
+                      Network network,
+                      TokenStandard tokenStandard,
+                      Issuer issuer) {
         super(code, name);
         this.pegCurrencyCode = pegCurrencyCode;
-        this.chain = chain;
-        this.standard = standard;
+        this.network = network;
+        this.tokenStandard = tokenStandard;
         this.issuer = issuer;
     }
 
@@ -68,9 +60,9 @@ public final class StableCoin extends DigitalAsset {
                 .setStableCoin(
                         bisq.common.protobuf.StableCoin.newBuilder()
                                 .setPegCurrencyCode(pegCurrencyCode)
-                                .setChain(chain)
-                                .setStandard(standard)
-                                .setIssuer(issuer)));
+                                .setNetwork(network.name())
+                                .setTokenStandard(tokenStandard.name())
+                                .setIssuer(issuer.name())));
     }
 
     @Override
@@ -80,17 +72,20 @@ public final class StableCoin extends DigitalAsset {
 
     public static StableCoin fromProto(bisq.common.protobuf.Asset baseProto) {
         bisq.common.protobuf.StableCoin stableCoinCurrencyProto = baseProto.getDigitalAsset().getStableCoin();
+        Network network = ProtobufUtils.enumFromProto(Network.class, stableCoinCurrencyProto.getNetwork(), Network.UNDEFINED);
+        TokenStandard standard = ProtobufUtils.enumFromProto(TokenStandard.class, stableCoinCurrencyProto.getTokenStandard(), TokenStandard.UNDEFINED);
+        Issuer issuer = ProtobufUtils.enumFromProto(Issuer.class, stableCoinCurrencyProto.getIssuer(), Issuer.UNDEFINED);
         return new StableCoin(baseProto.getCode(), baseProto.getName(),
                 stableCoinCurrencyProto.getPegCurrencyCode(),
-                stableCoinCurrencyProto.getChain(),
-                stableCoinCurrencyProto.getStandard(),
-                stableCoinCurrencyProto.getIssuer());
+                network,
+                standard,
+                issuer);
     }
 
     @Override
     public String getDisplayName() {
         // E.g. Tether USD (USDT, Ethereum ERC-20)
-        return name + " (" + code + ", " + chain + " " + standard + ")";
+        return name + " (" + code + ", " + network + " " + tokenStandard + ")";
     }
 
     @Override
@@ -99,11 +94,12 @@ public final class StableCoin extends DigitalAsset {
     }
 
     public String getShortDisplayName() {
-        // E.g. USDT_ERC-20)
-        return code + "_" + standard;
+        // E.g. USDT (ERC-20)
+        return code + " (" + tokenStandard + ")";
     }
 
-    public enum StableCoinChain {
+    public enum Network {
+        UNDEFINED("Undefined"),
         ETHEREUM("Ethereum"),
         TRON("Tron"),
         BNB_SMART_CHAIN("BNB Smart Chain"),
@@ -117,12 +113,13 @@ public final class StableCoin extends DigitalAsset {
         @Getter
         private final String displayName;
 
-        StableCoinChain(String displayName) {
+        Network(String displayName) {
             this.displayName = displayName;
         }
     }
 
-    public enum StableCoinIssuer {
+    public enum Issuer {
+        UNDEFINED("Undefined"),
         TETHER("Tether Ltd."),
         CIRCLE("Circle Internet Financial, LLC"),
         MAKERDAO("MakerDAO"),
@@ -137,12 +134,13 @@ public final class StableCoin extends DigitalAsset {
         @Getter
         private final String displayName;
 
-        StableCoinIssuer(String displayName) {
+        Issuer(String displayName) {
             this.displayName = displayName;
         }
     }
 
-    public enum StableCoinTokenStandard {
+    public enum TokenStandard {
+        UNDEFINED("Undefined"),
         // Ethereum
         ERC20("ERC-20"),
         ERC721("ERC-721"),
@@ -172,7 +170,7 @@ public final class StableCoin extends DigitalAsset {
         @Getter
         private final String displayName;
 
-        StableCoinTokenStandard(String displayName) {
+        TokenStandard(String displayName) {
             this.displayName = displayName;
         }
     }

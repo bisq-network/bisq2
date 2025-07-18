@@ -26,12 +26,12 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class StablecoinPaymentMethodSpec extends PaymentMethodSpec<StablecoinPaymentMethod> {
-    public StablecoinPaymentMethodSpec(StablecoinPaymentMethod paymentMethod) {
+public final class StablecoinPaymentMethodSpec extends PaymentMethodSpec<StableCoinPaymentMethod> {
+    public StablecoinPaymentMethodSpec(StableCoinPaymentMethod paymentMethod) {
         this(paymentMethod, Optional.empty());
     }
 
-    public StablecoinPaymentMethodSpec(StablecoinPaymentMethod paymentMethod, Optional<String> saltedMakerAccountId) {
+    public StablecoinPaymentMethodSpec(StableCoinPaymentMethod paymentMethod, Optional<String> saltedMakerAccountId) {
         super(paymentMethod, saltedMakerAccountId);
 
         verify();
@@ -45,7 +45,7 @@ public final class StablecoinPaymentMethodSpec extends PaymentMethodSpec<Stablec
     @Override
     public bisq.account.protobuf.PaymentMethodSpec.Builder getBuilder(boolean serializeForHash) {
         return getPaymentMethodSpecBuilder(serializeForHash)
-                .setStablecoinPaymentMethodSpec(bisq.account.protobuf.StablecoinPaymentMethodSpec.newBuilder());
+                .setStableCoinPaymentMethodSpec(bisq.account.protobuf.StableCoinPaymentMethodSpec.newBuilder());
     }
 
     @Override
@@ -54,7 +54,7 @@ public final class StablecoinPaymentMethodSpec extends PaymentMethodSpec<Stablec
     }
 
     public static StablecoinPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto) {
-        return new StablecoinPaymentMethodSpec(StablecoinPaymentMethod.fromProto(proto.getPaymentMethod()),
+        return new StablecoinPaymentMethodSpec(StableCoinPaymentMethod.fromProto(proto.getPaymentMethod()),
                 proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
     }
 }

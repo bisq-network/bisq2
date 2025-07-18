@@ -19,6 +19,8 @@ package bisq.desktop.main.content.user.crypto_accounts.create.currency;
 
 import bisq.account.payment_method.CryptoPaymentMethod;
 import bisq.account.payment_method.CryptoPaymentMethodUtil;
+import bisq.account.payment_method.StableCoinPaymentMethod;
+import bisq.account.payment_method.StablecoinPaymentMethodUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.user.crypto_accounts.create.currency.CryptoAssetSelectionView.CryptoAssetItem;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -28,6 +30,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 @Slf4j
 public class CryptoAssetSelectionController implements Controller {
@@ -38,7 +41,10 @@ public class CryptoAssetSelectionController implements Controller {
 
     public CryptoAssetSelectionController() {
         // We use sorting provided by the CryptoAssetRepository with major assets first
-        List<CryptoAssetItem> items = CryptoPaymentMethodUtil.getAllCryptoPaymentMethods().stream()
+
+        Stream<CryptoPaymentMethod> cryptoPaymentMethodStream = CryptoPaymentMethodUtil.getAllCryptoPaymentMethods().stream();
+        Stream<StableCoinPaymentMethod> stableCoinPaymentMethods = StablecoinPaymentMethodUtil.getMajorStableCoinPaymentMethods().stream();
+        List<CryptoAssetItem> items = Stream.concat(cryptoPaymentMethodStream, stableCoinPaymentMethods)
                 .map(CryptoAssetItem::new)
                 .toList();
         model = new CryptoAssetSelectionModel(items);
@@ -58,7 +64,7 @@ public class CryptoAssetSelectionController implements Controller {
                     if (searchLowerCase.isEmpty()) {
                         return true;
                     } else {
-                        return item.getNameAndCode().toLowerCase().contains(searchLowerCase);
+                        return item.relevantStrings().toLowerCase().contains(searchLowerCase);
                     }
                 }
             });
@@ -82,7 +88,8 @@ public class CryptoAssetSelectionController implements Controller {
     void onItemSelected(CryptoAssetItem item) {
         if (item != null) {
             model.getSelectedItem().set(item);
-            model.getSelectedPaymentMethod().set(item.getPaymentMethod());
+            //todo
+            model.getSelectedPaymentMethod().set((CryptoPaymentMethod) item.getPaymentMethod());
         }
     }
 

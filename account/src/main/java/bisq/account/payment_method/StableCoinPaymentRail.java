@@ -26,7 +26,7 @@ import lombok.Getter;
 import java.util.Collections;
 import java.util.List;
 
-public enum StablecoinPaymentRail implements NationalCurrencyPaymentRail {
+public enum StableCoinPaymentRail implements NationalCurrencyPaymentRail {
     USDT_ERC20(StableCoinRepository.USDT_ERC20),
     USDT_TRC20(StableCoinRepository.USDT_TRC20),
     USDT_BEP20(StableCoinRepository.USDT_BEP20),
@@ -48,7 +48,7 @@ public enum StablecoinPaymentRail implements NationalCurrencyPaymentRail {
     @EqualsAndHashCode.Exclude
     private final List<String> currencyCodes;
 
-    StablecoinPaymentRail(StableCoin stableCoin) {
+    StableCoinPaymentRail(StableCoin stableCoin) {
         this.stableCoin = stableCoin;
         tradeCurrencies = Collections.singletonList(stableCoin);
         currencyCodes = Collections.singletonList(stableCoin.getPegCurrencyCode());

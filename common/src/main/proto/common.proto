@@ -61,8 +61,8 @@ message CryptoAsset {
 
 message StableCoin {
   string pegCurrencyCode = 1;
-  string chain = 2;
-  string standard = 3;
+  string network = 2;
+  string tokenStandard = 3;
   string issuer = 4;
 }
 

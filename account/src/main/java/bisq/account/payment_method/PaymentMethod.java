@@ -93,7 +93,7 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
             case FIATPAYMENTMETHOD -> FiatPaymentMethod.fromProto(proto);
             case BITCOINPAYMENTMETHOD -> BitcoinPaymentMethod.fromProto(proto);
             case CRYPTOPAYMENTMETHOD -> CryptoPaymentMethod.fromProto(proto);
-            case STABLECOINPAYMENTMETHOD -> StablecoinPaymentMethod.fromProto(proto);
+            case STABLECOINPAYMENTMETHOD -> StableCoinPaymentMethod.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
@@ -123,5 +123,4 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
     }
 
     protected abstract R getCustomPaymentRail();
-
 }

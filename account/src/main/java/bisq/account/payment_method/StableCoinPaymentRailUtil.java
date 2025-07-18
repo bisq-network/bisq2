@@ -17,18 +17,34 @@
 
 package bisq.account.payment_method;
 
+import bisq.common.asset.StableCoin;
+import bisq.common.asset.StableCoinRepository;
+
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class StablecoinPaymentRailUtil {
+public class StableCoinPaymentRailUtil {
 
-    public static List<StablecoinPaymentRail> getPaymentRails() {
-        return List.of(StablecoinPaymentRail.values());
+    public static List<StableCoinPaymentRail> getPaymentRails() {
+        return List.of(StableCoinPaymentRail.values());
     }
 
-    public static List<StablecoinPaymentRail> getPaymentRails(String currencyCode) {
+    public static Optional<StableCoinPaymentRail> find(StableCoin stableCoin) {
+        return getPaymentRails().stream()
+                .filter(rail -> rail.getStableCoin().equals(stableCoin))
+                .findAny();
+    }
+
+    public static List<StableCoinPaymentRail> getPaymentRails(String currencyCode) {
         return getPaymentRails().stream()
                 .filter(paymentRail -> paymentRail.supportsCurrency(currencyCode))
+                .collect(Collectors.toList());
+    }
+
+    public static List<StableCoinPaymentRail> getMajorStableCoinPaymentRails() {
+        return StableCoinRepository.getMajorStableCoins().stream()
+                .flatMap(asset -> StableCoinPaymentRailUtil.find(asset).stream())
                 .collect(Collectors.toList());
     }
 }
