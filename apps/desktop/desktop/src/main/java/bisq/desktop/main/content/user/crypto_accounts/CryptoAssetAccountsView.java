@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.crypto_accounts;
 
-import bisq.account.accounts.crypto.CryptoAssetAccount;
+import bisq.account.accounts.Account;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
@@ -41,7 +41,7 @@ import org.fxmisc.easybind.Subscription;
 public class CryptoAssetAccountsView extends View<VBox, CryptoAssetAccountsModel, CryptoAssetAccountsController> {
     private final Label headline;
     private final Button createButtonWithAccounts, createButtonNoAccounts, deletedButton;
-    private final AutoCompleteComboBox<CryptoAssetAccount<?>> accountsComboBox;
+    private final AutoCompleteComboBox<Account<?,?>> accountsComboBox;
     private final HBox comboBoxAndCreateButtonHBox;
     private final VBox noAccountsVBox;
     private final Pane accountDisplayPane;
@@ -87,12 +87,12 @@ public class CryptoAssetAccountsView extends View<VBox, CryptoAssetAccountsModel
         accountsComboBox.setPrefWidth(325);
         accountsComboBox.setConverter(new StringConverter<>() {
             @Override
-            public String toString(CryptoAssetAccount<?> account) {
+            public String toString(Account<?,?> account) {
                 return account != null ? account.getAccountName() : "";
             }
 
             @Override
-            public CryptoAssetAccount<?> fromString(String string) {
+            public Account<?,?> fromString(String string) {
                 return null;
             }
         });

@@ -24,8 +24,7 @@ import bisq.account.accounts.crypto.MoneroAccount;
 import bisq.account.accounts.crypto.MoneroAccountPayload;
 import bisq.account.accounts.crypto.OtherCryptoAssetAccount;
 import bisq.account.accounts.crypto.OtherCryptoAssetAccountPayload;
-import bisq.account.payment_method.crypto.CryptoPaymentMethod;
-import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -56,7 +55,7 @@ public class SummaryController implements Controller {
         view = new SummaryView(model, this);
     }
 
-    public void setPaymentMethod(CryptoPaymentMethod paymentMethod) {
+    public void setPaymentMethod(DigitalAssetPaymentMethod paymentMethod) {
         checkNotNull(paymentMethod, "PaymentMethod must not be null");
         model.setPaymentMethod(paymentMethod);
     }
@@ -100,7 +99,7 @@ public class SummaryController implements Controller {
             return;
         }
 
-        Account<? extends PaymentMethod<?>, ?> account;
+        Account<? extends DigitalAssetPaymentMethod, ?> account;
         CryptoAssetAccountPayload accountPayload = model.getAccountPayload();
         if (accountPayload instanceof MoneroAccountPayload moneroAccountPayload) {
             account = new MoneroAccount(StringUtils.createUid(),

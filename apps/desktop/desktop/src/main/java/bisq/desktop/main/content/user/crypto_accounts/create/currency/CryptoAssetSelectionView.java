@@ -49,7 +49,7 @@ import org.fxmisc.easybind.Subscription;
 public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionModel, CryptoAssetSelectionController> {
     private final RichTableView<CryptoAssetItem> richTableView;
     private final ListChangeListener<CryptoAssetItem> listChangeListener;
-    private Subscription searchTextPin, selectedItemPin, selectedTypePin;
+    private Subscription  selectedItemPin, selectedTypePin;
     private Label paymentMethodHeaderLabel;
     private BisqTableColumn<CryptoAssetItem> tokenStandardColumn, networkColumn, pegCurrencyColumn, countryColumn;
 
@@ -125,18 +125,14 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
         });
 
         model.getFilteredList().addListener(listChangeListener);
-
-        richTableView.initialize();
     }
 
     @Override
     protected void onViewDetached() {
         richTableView.dispose();
-        searchTextPin.unsubscribe();
         selectedItemPin.unsubscribe();
+        selectedTypePin.unsubscribe();
         model.getFilteredList().removeListener(listChangeListener);
-
-        richTableView.dispose();
     }
 
     private void configureTableColumns() {

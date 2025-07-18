@@ -21,4 +21,8 @@ public interface DigitalAssetPaymentMethod {
     String getName();
 
     String getId();
+
+    String getDisplayString();
+
+    String getCode();
 }

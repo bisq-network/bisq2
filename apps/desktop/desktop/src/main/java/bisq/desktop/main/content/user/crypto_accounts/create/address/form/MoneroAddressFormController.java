@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.user.crypto_accounts.create.address.form;
 
 import bisq.account.accounts.crypto.MoneroAccountPayload;
-import bisq.account.payment_method.crypto.CryptoPaymentMethod;
+import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -29,7 +29,7 @@ import java.util.Optional;
 
 @Slf4j
 public class MoneroAddressFormController extends AddressFormController<MoneroAddressFormView, MoneroAddressFormModel, MoneroAccountPayload> {
-    public MoneroAddressFormController(ServiceProvider serviceProvider, CryptoPaymentMethod paymentMethod) {
+    public MoneroAddressFormController(ServiceProvider serviceProvider, DigitalAssetPaymentMethod paymentMethod) {
         super(serviceProvider, paymentMethod);
     }
 
@@ -39,7 +39,7 @@ public class MoneroAddressFormController extends AddressFormController<MoneroAdd
     }
 
     @Override
-    protected MoneroAddressFormModel createModel(CryptoPaymentMethod paymentMethod) {
+    protected MoneroAddressFormModel createModel(DigitalAssetPaymentMethod paymentMethod) {
         return new MoneroAddressFormModel(StringUtils.createUid(), paymentMethod);
     }
 

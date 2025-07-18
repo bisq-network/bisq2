@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.crypto_accounts.create.address.form;
 
-import bisq.account.payment_method.crypto.CryptoPaymentMethod;
+import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.common.asset.CryptoAsset;
 import bisq.common.asset.CryptoAssetRepository;
 import bisq.desktop.common.view.Model;
@@ -33,7 +33,7 @@ import lombok.Getter;
 @Getter
 public abstract class AddressFormModel implements Model {
     protected final String id;
-    protected final CryptoPaymentMethod paymentMethod;
+    protected final DigitalAssetPaymentMethod paymentMethod;
     protected final String currencyCode;
     protected final CryptoAsset cryptoAsset;
     protected final boolean isAutoConfSupported;
@@ -52,7 +52,7 @@ public abstract class AddressFormModel implements Model {
     protected final StringProperty autoConfMaxTradeAmount = new SimpleStringProperty();
     protected final StringProperty autoConfExplorerUrls = new SimpleStringProperty();
 
-    public AddressFormModel(String id, CryptoPaymentMethod paymentMethod) {
+    public AddressFormModel(String id, DigitalAssetPaymentMethod paymentMethod) {
         this.id = id;
         this.paymentMethod = paymentMethod;
         currencyCode = paymentMethod.getCode();

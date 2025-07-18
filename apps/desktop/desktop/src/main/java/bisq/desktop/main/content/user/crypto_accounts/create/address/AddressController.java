@@ -73,7 +73,7 @@ public class AddressController implements Controller {
     }
 
     public AddressFormController<?, ?, ?> createController(DigitalAssetPaymentMethod paymentMethod) {
-        if (paymentMethod instanceof CryptoPaymentMethod cryptoPaymentMethod) {
+        if (paymentMethod instanceof DigitalAssetPaymentMethod cryptoPaymentMethod) {
             if (cryptoPaymentMethod.getCode().equals("XMR")) {
                 return new MoneroAddressFormController(serviceProvider, cryptoPaymentMethod);
             } else {

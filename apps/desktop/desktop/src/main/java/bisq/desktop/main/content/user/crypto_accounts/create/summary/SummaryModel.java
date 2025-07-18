@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.user.crypto_accounts.create.summary;
 
 import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
-import bisq.account.payment_method.crypto.CryptoPaymentMethod;
+import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import bisq.desktop.main.content.user.crypto_accounts.create.summary.details.SummaryDetails;
@@ -32,7 +32,7 @@ public class SummaryModel implements Model {
     private final TextMinMaxLengthValidator accountNameValidator = new TextMinMaxLengthValidator(2, 20);
 
     @Setter
-    private CryptoPaymentMethod paymentMethod;
+    private DigitalAssetPaymentMethod paymentMethod;
     @Setter
     private CryptoAssetAccountPayload accountPayload;
     @Setter
