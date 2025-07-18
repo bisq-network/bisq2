@@ -25,7 +25,7 @@ import lombok.ToString;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public final class StableCoin extends Asset {
+public final class StableCoin extends DigitalAsset {
     private final String pegCurrencyCode;
     private final String chain;//TODO use StableCoinChain
     private final String standard; //TODO use StableCoinTokenStandard
@@ -64,12 +64,13 @@ public final class StableCoin extends Asset {
     //todo
     @Override
     public bisq.common.protobuf.Asset.Builder getBuilder(boolean serializeForHash) {
-        return getAssetBuilder().setStableCoin(
-                bisq.common.protobuf.StableCoin.newBuilder()
-                        .setPegCurrencyCode(pegCurrencyCode)
-                        .setChain(chain)
-                        .setStandard(standard)
-                        .setIssuer(issuer));
+        return getAssetBuilder().setDigitalAsset(bisq.common.protobuf.DigitalAsset.newBuilder()
+                .setStableCoin(
+                        bisq.common.protobuf.StableCoin.newBuilder()
+                                .setPegCurrencyCode(pegCurrencyCode)
+                                .setChain(chain)
+                                .setStandard(standard)
+                                .setIssuer(issuer)));
     }
 
     @Override
@@ -78,7 +79,7 @@ public final class StableCoin extends Asset {
     }
 
     public static StableCoin fromProto(bisq.common.protobuf.Asset baseProto) {
-        bisq.common.protobuf.StableCoin stableCoinCurrencyProto = baseProto.getStableCoin();
+        bisq.common.protobuf.StableCoin stableCoinCurrencyProto = baseProto.getDigitalAsset().getStableCoin();
         return new StableCoin(baseProto.getCode(), baseProto.getName(),
                 stableCoinCurrencyProto.getPegCurrencyCode(),
                 stableCoinCurrencyProto.getChain(),
@@ -92,11 +93,15 @@ public final class StableCoin extends Asset {
         return name + " (" + code + ", " + chain + " " + standard + ")";
     }
 
+    @Override
+    public boolean isCustom() {
+        return StableCoinRepository.find(code).isEmpty();
+    }
+
     public String getShortDisplayName() {
         // E.g. USDT_ERC-20)
         return code + "_" + standard;
     }
-
 
     public enum StableCoinChain {
         ETHEREUM("Ethereum"),

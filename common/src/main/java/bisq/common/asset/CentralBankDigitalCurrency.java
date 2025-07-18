@@ -25,7 +25,7 @@ import lombok.ToString;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public final class CentralBankDigitalCurrency extends Asset {
+public final class CentralBankDigitalCurrency extends DigitalAsset {
     private final String pegCurrencyCode;
     private final String countryCode;
 
@@ -41,10 +41,11 @@ public final class CentralBankDigitalCurrency extends Asset {
 
     @Override
     public bisq.common.protobuf.Asset.Builder getBuilder(boolean serializeForHash) {
-        return getAssetBuilder().setCentralBankDigitalCurrency(
-                bisq.common.protobuf.CentralBankDigitalCurrency.newBuilder()
-                        .setPegCurrencyCode(pegCurrencyCode)
-                        .setCountryCode(countryCode));
+        return getAssetBuilder().setDigitalAsset(bisq.common.protobuf.DigitalAsset.newBuilder()
+                .setCentralBankDigitalCurrency(
+                        bisq.common.protobuf.CentralBankDigitalCurrency.newBuilder()
+                                .setPegCurrencyCode(pegCurrencyCode)
+                                .setCountryCode(countryCode)));
     }
 
     @Override
@@ -53,10 +54,15 @@ public final class CentralBankDigitalCurrency extends Asset {
     }
 
     public static CentralBankDigitalCurrency fromProto(bisq.common.protobuf.Asset baseProto) {
-        bisq.common.protobuf.CentralBankDigitalCurrency proto = baseProto.getCentralBankDigitalCurrency();
+        bisq.common.protobuf.CentralBankDigitalCurrency proto = baseProto.getDigitalAsset().getCentralBankDigitalCurrency();
         return new CentralBankDigitalCurrency(baseProto.getCode(), baseProto.getName(),
                 proto.getPegCurrencyCode(),
                 proto.getCountryCode());
+    }
+
+    @Override
+    public boolean isCustom() {
+        return CentralBankDigitalCurrencyRepository.find(code).isEmpty();
     }
 
     @Override

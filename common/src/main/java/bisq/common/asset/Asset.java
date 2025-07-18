@@ -64,10 +64,8 @@ public abstract class Asset implements Comparable<Asset>, PersistableProto {
 
     public static Asset fromProto(bisq.common.protobuf.Asset proto) {
         return switch (proto.getMessageCase()) {
-            case CRYPTOASSET -> CryptoAsset.fromProto(proto);
             case FIATCURRENCY -> FiatCurrency.fromProto(proto);
-            case STABLECOIN -> StableCoin.fromProto(proto);
-            case CENTRALBANKDIGITALCURRENCY -> CentralBankDigitalCurrency.fromProto(proto);
+            case DIGITALASSET -> DigitalAsset.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

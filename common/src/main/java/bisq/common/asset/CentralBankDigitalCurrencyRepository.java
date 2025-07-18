@@ -18,6 +18,7 @@
 package bisq.common.asset;
 
 import java.util.List;
+import java.util.Optional;
 
 public class CentralBankDigitalCurrencyRepository {
     // Fully Launched CBDCs
@@ -76,4 +77,11 @@ public class CentralBankDigitalCurrencyRepository {
     public static List<CentralBankDigitalCurrency> getCentralBankDigitalCurrencies() {
         return List.of(SAND_DOLLAR, E_NAIRA, JAM_DEX, E_CNY, DIGITAL_RUBLE, E_RUPEE);
     }
+
+    public static Optional<CentralBankDigitalCurrency> find(String code) {
+        return getCentralBankDigitalCurrencies().stream()
+                .filter(e -> e.getCode().equals(code))
+                .findAny();
+    }
+
 }

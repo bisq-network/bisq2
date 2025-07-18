@@ -22,6 +22,7 @@ import lombok.Getter;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -113,6 +114,13 @@ public class StableCoinRepository {
             "USDP", Set.of(USDP_ERC20),
             "GUSD", Set.of(GUSD_ERC20)
     );
+
+    public static Optional<StableCoin> find(String code) {
+        return STABLE_COIN_CURRENCY_SET_BY_CODE.values().stream()
+                .flatMap(Collection::stream)
+                .filter(e -> e.getCode().equals(code))
+                .findAny();
+    }
 
     public static List<StableCoin> getMajorStableCoins() {
         return List.of(USDT_ERC20, USDT_TRC20, USDC_ERC20, DAI_ERC20);
