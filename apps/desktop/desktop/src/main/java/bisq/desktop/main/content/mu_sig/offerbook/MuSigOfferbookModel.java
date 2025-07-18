@@ -78,7 +78,7 @@ public class MuSigOfferbookModel implements Model {
     @Setter
     private Predicate<MuSigOfferListItem> paymentMethodFilterPredicate = item -> true;
 
-    private final ObjectProperty<CryptoAsset> selectedBaseCryptoCurrency = new SimpleObjectProperty<>();
+    private final ObjectProperty<CryptoAsset> selectedBaseCryptoAsset = new SimpleObjectProperty<>();
     private final ObservableList<MarketItem> marketItems = FXCollections.observableArrayList();
     private final FilteredList<MarketItem> filteredMarketItems = new FilteredList<>(marketItems);
     private final SortedList<MarketItem> sortedMarketItems = new SortedList<>(filteredMarketItems);

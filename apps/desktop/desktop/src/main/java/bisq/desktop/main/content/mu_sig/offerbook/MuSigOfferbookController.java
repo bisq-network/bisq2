@@ -85,7 +85,7 @@ public class MuSigOfferbookController implements Controller {
     private final AccountService accountService;
     private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin;
     private Subscription selectedMarketItemPin, marketsSearchBoxTextPin, selectedMarketFilterPin, selectedMarketSortTypePin,
-            selectedOffersFilterPin, activeMarketPaymentsCountPin, selectedMarketPricePin, selectedBaseCryptoCurrencyPin;
+            selectedOffersFilterPin, activeMarketPaymentsCountPin, selectedMarketPricePin, selectedBaseCryptoAssetPin;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
         muSigService = serviceProvider.getMuSigService();
@@ -106,7 +106,7 @@ public class MuSigOfferbookController implements Controller {
     @Override
     public void onActivate() {
         // TODO: Save user preference
-        model.getSelectedBaseCryptoCurrency().set(CryptoAssetRepository.BITCOIN);
+        model.getSelectedBaseCryptoAsset().set(CryptoAssetRepository.BITCOIN);
         model.getMarketsSearchBoxText().set("");
 
         offersPin = muSigService.getObservableOffers().addObserver(new CollectionObserver<>() {
@@ -220,7 +220,7 @@ public class MuSigOfferbookController implements Controller {
             }
         });
 
-        selectedBaseCryptoCurrencyPin = EasyBind.subscribe(model.getSelectedBaseCryptoCurrency(), selectedCrypto -> {
+        selectedBaseCryptoAssetPin = EasyBind.subscribe(model.getSelectedBaseCryptoAsset(), selectedCrypto -> {
             if (selectedCrypto != null) {
                 if (selectedCrypto.equals(CryptoAssetRepository.XMR)) {
                     updateQuoteMarketItems(MarketRepository.getAllXmrMarkets());
@@ -319,7 +319,7 @@ public class MuSigOfferbookController implements Controller {
         marketPriceByCurrencyMapPin.unbind();
 
         selectedMarketItemPin.unsubscribe();
-        selectedBaseCryptoCurrencyPin.unsubscribe();
+        selectedBaseCryptoAssetPin.unsubscribe();
         marketsSearchBoxTextPin.unsubscribe();
         selectedMarketFilterPin.unsubscribe();
         selectedMarketSortTypePin.unsubscribe();
@@ -389,8 +389,8 @@ public class MuSigOfferbookController implements Controller {
         settingsService.removeCookie(CookieKey.MU_SIG_OFFER_PAYMENT_FILTERS, getCookieSubKey());
     }
 
-    void updateSelectedBaseCryptoCurrency(CryptoAsset baseCrypto) {
-        UIThread.run(() -> model.getSelectedBaseCryptoCurrency().set(baseCrypto));
+    void updateSelectedBaseCryptoAsset(CryptoAsset baseCrypto) {
+        UIThread.run(() -> model.getSelectedBaseCryptoAsset().set(baseCrypto));
     }
 
     private void updateSelectedMuSigMarket(Market market) {
@@ -475,8 +475,8 @@ public class MuSigOfferbookController implements Controller {
         }
     }
 
-    private String getMarketListTitleString(CryptoAsset cryptoCurrency) {
-        String key = "muSig.offerbook.marketListTitle." + cryptoCurrency.getCode().toLowerCase();
+    private String getMarketListTitleString(CryptoAsset cryptoAsset) {
+        String key = "muSig.offerbook.marketListTitle." + cryptoAsset.getCode().toLowerCase();
         return Res.get(key);
     }
 

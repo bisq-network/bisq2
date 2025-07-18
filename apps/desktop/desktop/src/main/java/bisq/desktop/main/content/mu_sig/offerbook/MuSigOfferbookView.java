@@ -110,7 +110,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
             favouritesRemoveFilterDefaultIcon, favouritesRemoveFilterActiveIcon;
     private Subscription selectedMarketItemPin, marketListViewSelectionPin, favouritesListViewNeedsHeightUpdatePin,
             favouritesListViewSelectionPin, selectedMarketFilterPin, selectedMarketSortTypePin, shouldShowAppliedFiltersPin,
-            selectedOffersFilterPin, activeMarketPaymentsCountPin, selectedBaseCryptoCurrencyPin;
+            selectedOffersFilterPin, activeMarketPaymentsCountPin, selectedBaseCryptoAssetPin;
     private Label paymentsFilterLabel;
 
     public MuSigOfferbookView(MuSigOfferbookModel model, MuSigOfferbookController controller) {
@@ -184,7 +184,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         marketListTitleLabel.textProperty().bind(model.getMarketListTitle());
 
         selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), this::selectedMarketItemChanged);
-        selectedBaseCryptoCurrencyPin = EasyBind.subscribe(model.getSelectedBaseCryptoCurrency(), this::selectedBaseCryptoCurrencyChanged);
+        selectedBaseCryptoAssetPin = EasyBind.subscribe(model.getSelectedBaseCryptoAsset(), this::selectedBaseCryptoAssetChanged);
         marketListViewSelectionPin = EasyBind.subscribe(marketListView.getSelectionModel().selectedItemProperty(), item -> {
             if (item != null) {
                 controller.onSelectMarketItem(item);
@@ -244,8 +244,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         sellToggleButton.setOnAction(e -> model.getSelectedMuSigOffersFilter().set(MuSigFilters.MuSigOffersFilter.BUY));
         myOffersToggleButton.setOnAction(e -> model.getSelectedMuSigOffersFilter().set(MuSigFilters.MuSigOffersFilter.MINE));
 
-        btcMarketsMenuItem.setOnAction(e -> controller.updateSelectedBaseCryptoCurrency(btcMarketsMenuItem.getSelectableItem().orElseThrow()));
-        xmrMarketsMenuItem.setOnAction(e -> controller.updateSelectedBaseCryptoCurrency(xmrMarketsMenuItem.getSelectableItem().orElseThrow()));
+        btcMarketsMenuItem.setOnAction(e -> controller.updateSelectedBaseCryptoAsset(btcMarketsMenuItem.getSelectableItem().orElseThrow()));
+        xmrMarketsMenuItem.setOnAction(e -> controller.updateSelectedBaseCryptoAsset(xmrMarketsMenuItem.getSelectableItem().orElseThrow()));
 
         model.getAvailablePaymentMethods().addListener(availablePaymentsChangeListener);
         updatePaymentsFilterMenu();
@@ -282,7 +282,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         shouldShowAppliedFiltersPin.unsubscribe();
         selectedOffersFilterPin.unsubscribe();
         activeMarketPaymentsCountPin.unsubscribe();
-        selectedBaseCryptoCurrencyPin.unsubscribe();
+        selectedBaseCryptoAssetPin.unsubscribe();
 
         sortByMostOffers.setOnAction(null);
         sortByNameAZ.setOnAction(null);
@@ -720,8 +720,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         }
     }
 
-    private void selectedBaseCryptoCurrencyChanged(CryptoAsset selectedBaseCryptoCurrency) {
-        if (selectedBaseCryptoCurrency != null) {
+    private void selectedBaseCryptoAssetChanged(CryptoAsset selectedBaseCryptoAsset) {
+        if (selectedBaseCryptoAsset != null) {
             Node baseCryptoImage = MarketImageComposition.createMarketLogo(model.getBaseCurrencyIconId().get());
             marketListTitleLabel.setGraphic(baseCryptoImage);
 
@@ -730,8 +730,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                     .filter(item -> item instanceof SelectableMenuItem)
                     .map(item -> (SelectableMenuItem<CryptoAsset>) item)
                     .forEach(selectableMenuItem -> {
-                        selectableMenuItem.getSelectableItem().ifPresent(cryptoCurrency ->
-                                selectableMenuItem.updateSelection(cryptoCurrency.equals(selectedBaseCryptoCurrency)));
+                        selectableMenuItem.getSelectableItem().ifPresent(cryptoAsset ->
+                                selectableMenuItem.updateSelection(cryptoAsset.equals(selectedBaseCryptoAsset)));
             });
         }
     }
