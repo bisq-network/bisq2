@@ -120,7 +120,7 @@ public class SummaryView extends View<StackPane, SummaryModel, SummaryController
                     }
                 });
 
-        cryptoAsset.setText(model.getPaymentMethod().getCurrencyNameAndCode());
+        cryptoAsset.setText(model.getPaymentMethod().getDisplayString());
         address.setText(model.getAccountPayload().getAddress());
 
         accountNameField.setText(model.getDefaultAccountName());

@@ -66,12 +66,12 @@ public class AddressController implements Controller {
     }
 
     public AddressFormController<?, ?, ?> getOrCreateController(CryptoPaymentMethod paymentMethod) {
-        String currencyCode = paymentMethod.getCurrencyCode();
+        String currencyCode = paymentMethod.getCode();
         return model.getControllerCache().computeIfAbsent(currencyCode, k -> createController(paymentMethod));
     }
 
     public AddressFormController<?, ?, ?> createController(CryptoPaymentMethod paymentMethod) {
-        if (paymentMethod.getCurrencyCode().equals("XMR")) {
+        if (paymentMethod.getCode().equals("XMR")) {
             return new MoneroAddressFormController(serviceProvider, paymentMethod);
         } else {
             return new OtherAddressFormController(serviceProvider, paymentMethod);

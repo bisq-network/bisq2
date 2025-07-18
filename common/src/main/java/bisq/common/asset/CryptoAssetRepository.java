@@ -28,22 +28,33 @@ import java.util.stream.Collectors;
 public class CryptoAssetRepository {
     public static final CryptoAsset BITCOIN = new CryptoAsset("BTC", "Bitcoin");
     public static final CryptoAsset XMR = new CryptoAsset("XMR", "Monero");
+    public static final CryptoAsset BSQ = new CryptoAsset("BSQ", "BSQ");
+    public static final CryptoAsset LTC = new CryptoAsset("LTC", "Litecoin");
+    public static final CryptoAsset ETH = new CryptoAsset("ETH", "Ether");
+    public static final CryptoAsset ETC = new CryptoAsset("ETC", "Ether Classic");
+    public static final CryptoAsset L_BTC = new CryptoAsset("L-BTC", "Liquid Bitcoin");
+    public static final CryptoAsset LN_BTC = new CryptoAsset("LN-BTC", "Lightning Network Bitcoin");
+    public static final CryptoAsset GRIN = new CryptoAsset("GRIN", "Grin");
+    public static final CryptoAsset ZEC = new CryptoAsset("ZEC", "Zcash");
+    public static final CryptoAsset DOGE = new CryptoAsset("DOGE", "Dogecoin");
+
+    private static final List<CryptoAsset> CRYPTO_ASSETS = List.of(
+            XMR,
+            BSQ,
+            LTC,
+            ETH,
+            ETC,
+            L_BTC,
+            LN_BTC,
+            GRIN,
+            ZEC,
+            DOGE
+    );
+
     @Setter // Maybe we allow user to set their preferred default?
     @Getter
     private static CryptoAsset defaultCurrency = XMR;
 
-    private static final List<CryptoAsset> CRYPTO_ASSETS = List.of(
-            XMR,
-            new CryptoAsset("BSQ", "BSQ"),
-            new CryptoAsset("LTC", "Litecoin"),
-            new CryptoAsset("ETH", "Ether"),
-            new CryptoAsset("ETC", "Ether Classic"),
-            new CryptoAsset("L-BTC", "Liquid Bitcoin"),
-            new CryptoAsset("LN-BTC", "Lightning Network Bitcoin"),
-            new CryptoAsset("GRIN", "Grin"),
-            new CryptoAsset("ZEC", "Zcash"),
-            new CryptoAsset("DOGE", "Dogecoin")
-    );
 
     private static final Map<String, CryptoAsset> CRYPTO_ASSETS_BY_CODE = CRYPTO_ASSETS.stream()
             .collect(Collectors.toMap(Asset::getCode, e -> e));

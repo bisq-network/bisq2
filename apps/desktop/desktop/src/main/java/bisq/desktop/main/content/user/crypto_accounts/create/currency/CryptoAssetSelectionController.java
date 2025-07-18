@@ -58,7 +58,7 @@ public class CryptoAssetSelectionController implements Controller {
                     if (searchLowerCase.isEmpty()) {
                         return true;
                     } else {
-                        return item.getCurrencyCodeAndDisplayNames().toLowerCase().contains(searchLowerCase);
+                        return item.getNameAndCode().toLowerCase().contains(searchLowerCase);
                     }
                 }
             });

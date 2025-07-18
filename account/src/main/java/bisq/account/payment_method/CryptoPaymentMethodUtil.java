@@ -19,30 +19,48 @@ package bisq.account.payment_method;
 
 import bisq.common.asset.CryptoAssetRepository;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CryptoPaymentMethodUtil {
+    private static final Map<String, CryptoPaymentRail> CRYPTO_PAYMENT_RAIL_BY_CODE = Map.of(
+            "XMR", CryptoPaymentRail.NATIVE_CHAIN,
+            "BSQ", CryptoPaymentRail.SMART_CONTRACT,
+            "LTC", CryptoPaymentRail.NATIVE_CHAIN,
+            "ETH", CryptoPaymentRail.NATIVE_CHAIN,
+            "ETC", CryptoPaymentRail.NATIVE_CHAIN,
+            "L_BTC", CryptoPaymentRail.SIDECHAIN,
+            "LN_BTC", CryptoPaymentRail.LAYER_2,
+            "GRIN", CryptoPaymentRail.NATIVE_CHAIN,
+            "ZEC", CryptoPaymentRail.NATIVE_CHAIN,
+            "DOGE", CryptoPaymentRail.NATIVE_CHAIN
+    );
+
+    private static final List<CryptoPaymentMethod> ALL_CRYPTO_PAYMENT_METHODS = new ArrayList<>();
 
     public static List<CryptoPaymentMethod> getAllCryptoPaymentMethods() {
         return CryptoAssetRepository.getCryptoAssets().stream()
-                .map(currency -> new CryptoPaymentMethod(CryptoPaymentRail.NATIVE_CHAIN, currency.getCode()))
+                .map(asset -> new CryptoPaymentMethod(asset.getCode()))
                 .collect(Collectors.toList());
     }
 
-    public static CryptoPaymentMethod getPaymentMethod(String cryptoPaymentRailName, String currencyCode) {
+    public static CryptoPaymentMethod getPaymentMethod(String cryptoPaymentRailName, String code) {
         try {
             CryptoPaymentRail cryptoPaymentRail = CryptoPaymentRail.valueOf(cryptoPaymentRailName);
-            CryptoPaymentMethod cryptoPaymentMethod = new CryptoPaymentMethod(cryptoPaymentRail, currencyCode);
-            if (!cryptoPaymentMethod.isCustomPaymentMethod()) {
-                return cryptoPaymentMethod;
-            }
+            return new CryptoPaymentMethod(cryptoPaymentRail, code);
         } catch (Throwable ignore) {
+            return CryptoPaymentMethod.fromCustomName(cryptoPaymentRailName, code);
         }
-        return CryptoPaymentMethod.fromCustomName(cryptoPaymentRailName, currencyCode);
     }
 
     public static List<CryptoPaymentRail> getPaymentRails() {
         return List.of(CryptoPaymentRail.values());
     }
+
+    public static CryptoPaymentRail getCryptoPaymentRail(String code) {
+        return CRYPTO_PAYMENT_RAIL_BY_CODE.getOrDefault(code, CryptoPaymentRail.UNDEFINED);
+    }
+
 }

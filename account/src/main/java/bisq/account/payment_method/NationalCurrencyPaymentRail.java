@@ -17,5 +17,8 @@
 
 package bisq.account.payment_method;
 
+/**
+ * Marker interface for PaymentRail based on national currencies like FiatPaymentRail or StablecoinPaymentRail
+ */
 public interface NationalCurrencyPaymentRail extends PaymentRail {
 }

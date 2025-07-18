@@ -19,29 +19,21 @@ package bisq.account.payment_method;
 
 import bisq.common.asset.Asset;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 public class PaymentMethodUtil {
-    public static List<String> getPaymentMethodNames(List<? extends PaymentMethod<?>> paymentMethods) {
-        return paymentMethods.stream()
-                .map(PaymentMethod::getPaymentRailName)
-                .collect(Collectors.toList());
-    }
-
-    public static PaymentMethod<? extends PaymentRail> getPaymentMethod(String name, String currencyCode) {
-        if (Asset.isFiat(currencyCode)) {
+    //todo not used yet
+    public static PaymentMethod<? extends PaymentRail> getPaymentMethod(String name, String code) {
+        if (Asset.isFiat(code)) {
             return FiatPaymentMethodUtil.getPaymentMethod(name);
         } else {
-            if (currencyCode.equals("BTC")) {
+            if (code.equals("BTC")) {
                 return BitcoinPaymentMethodUtil.getPaymentMethod(name);
             } else {
-                return CryptoPaymentMethodUtil.getPaymentMethod(name, currencyCode);
+                return CryptoPaymentMethodUtil.getPaymentMethod(name, code);
             }
         }
     }
 
-    public static PaymentRail getPaymentRail(String name, String currencyCode) {
-        return getPaymentMethod(name, currencyCode).getPaymentRail();
+    public static PaymentRail getPaymentRail(String name, String code) {
+        return getPaymentMethod(name, code).getPaymentRail();
     }
 }
