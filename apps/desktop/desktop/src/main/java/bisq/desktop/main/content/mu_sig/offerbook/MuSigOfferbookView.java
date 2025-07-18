@@ -149,7 +149,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         root.getChildren().add(marketsAndOfferTableHBox);
         root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
 
-        favouriteItemsChangeListener = change -> selectedQuoteMarketItemChanged(model.getSelectedMarketItem().get());
+        favouriteItemsChangeListener = change -> selectedMarketItemChanged(model.getSelectedMarketItem().get());
         toggleChangeListener = (observable, oldValue, newValue) -> {
             if (newValue == null) {
                 updateSelectedOffersFilter(model.getSelectedMuSigOffersFilter().get());
@@ -183,7 +183,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         paymentsFilterLabel.textProperty().bind(model.getPaymentFilterTitle());
         marketListTitleLabel.textProperty().bind(model.getMarketListTitle());
 
-        selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), this::selectedQuoteMarketItemChanged);
+        selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), this::selectedMarketItemChanged);
         selectedBaseCryptoCurrencyPin = EasyBind.subscribe(model.getSelectedBaseCryptoCurrency(), this::selectedBaseCryptoCurrencyChanged);
         marketListViewSelectionPin = EasyBind.subscribe(marketListView.getSelectionModel().selectedItemProperty(), item -> {
             if (item != null) {
@@ -706,7 +706,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         };
     }
 
-    private void selectedQuoteMarketItemChanged(MarketItem selectedItem) {
+    private void selectedMarketItemChanged(MarketItem selectedItem) {
         marketListView.getSelectionModel().clearSelection();
         marketListView.getSelectionModel().select(selectedItem);
         favouritesListView.getSelectionModel().clearSelection();
