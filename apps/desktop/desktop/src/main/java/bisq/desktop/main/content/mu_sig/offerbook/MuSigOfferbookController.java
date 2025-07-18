@@ -154,15 +154,7 @@ public class MuSigOfferbookController implements Controller {
             }
         });
 
-        selectedMarketPin = settingsService.getSelectedMuSigMarket().addObserver(market -> {
-            if (market != null) {
-                UIThread.run(() ->
-                        model.getMarketItems().stream()
-                                .filter(item -> item.getMarket().equals(market))
-                                .findAny()
-                                .ifPresent(item -> model.getSelectedMarketItem().set(item)));
-            }
-        });
+        selectedMarketPin = settingsService.getSelectedMuSigMarket().addObserver(this::updateSelectedMuSigMarket);
 
         favouriteMarketsPin = settingsService.getFavouriteMarkets().addObserver(new CollectionObserver<>() {
             @Override
@@ -232,9 +224,12 @@ public class MuSigOfferbookController implements Controller {
             if (selectedCrypto != null) {
                 if (selectedCrypto.equals(CryptoAssetRepository.XMR)) {
                     updateQuoteMarketItems(MarketRepository.getAllXmrMarkets());
-
+                    // TODO: update with saved user preference
+                    updateSelectedMuSigMarket(MarketRepository.getXmrCryptoMarkets().get(0));
                 } else if (selectedCrypto.equals(CryptoAssetRepository.BITCOIN)) {
                     updateQuoteMarketItems(MarketRepository.getAllFiatMarkets());
+                    // TODO: update with saved user preference
+                    updateSelectedMuSigMarket(MarketRepository.getDefaultBtcFiatMarket());
                 }
                 model.getMarketListTitle().set(getMarketListTitleString(selectedCrypto));
                 model.getBaseCurrencyIconId().set(selectedCrypto.getCode());
@@ -396,6 +391,16 @@ public class MuSigOfferbookController implements Controller {
 
     void updateSelectedBaseCryptoCurrency(CryptoAsset baseCrypto) {
         UIThread.run(() -> model.getSelectedBaseCryptoCurrency().set(baseCrypto));
+    }
+
+    private void updateSelectedMuSigMarket(Market market) {
+        if (market != null) {
+            UIThread.run(() ->
+                    model.getMarketItems().stream()
+                            .filter(item -> item.getMarket().equals(market))
+                            .findAny()
+                            .ifPresent(item -> model.getSelectedMarketItem().set(item)));
+        }
     }
 
     private void updateQuoteMarketItems(List<Market> availableMarkets) {
