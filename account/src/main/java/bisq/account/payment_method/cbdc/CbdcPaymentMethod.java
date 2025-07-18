@@ -17,6 +17,7 @@
 
 package bisq.account.payment_method.cbdc;
 
+import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.asset.Asset;
 import bisq.common.asset.Cbdc;
@@ -33,7 +34,7 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class CbdcPaymentMethod extends PaymentMethod<CbdcPaymentRail> {
+public class CbdcPaymentMethod extends PaymentMethod<CbdcPaymentRail> implements DigitalAssetPaymentMethod {
     public static CbdcPaymentMethod fromPaymentRail(CbdcPaymentRail paymentRail) {
         return new CbdcPaymentMethod(paymentRail);
     }
@@ -73,6 +74,11 @@ public class CbdcPaymentMethod extends PaymentMethod<CbdcPaymentRail> {
     @Override
     public List<Asset> getSupportedCurrencies() {
         return Collections.singletonList(paymentRail.getCbdc());
+    }
+
+    @Override
+    public String getId() {
+        return getCbdc().getCode();
     }
 
     public String getCode() {

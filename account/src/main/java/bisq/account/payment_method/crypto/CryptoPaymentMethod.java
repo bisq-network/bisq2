@@ -17,6 +17,7 @@
 
 package bisq.account.payment_method.crypto;
 
+import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.asset.Asset;
 import bisq.common.asset.CryptoAsset;
@@ -33,7 +34,7 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> {
+public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> implements DigitalAssetPaymentMethod {
     private final String code;
     private final transient boolean isFeatured;
     private final transient CryptoAsset cryptoAsset;
@@ -113,6 +114,11 @@ public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> 
     @Override
     protected CryptoPaymentRail getCustomPaymentRail() {
         return CryptoPaymentRail.CUSTOM;
+    }
+
+    @Override
+    public String getId() {
+        return getCode();
     }
 
     public String getName() {

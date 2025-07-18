@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.crypto_accounts.create.currency;
 
+import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.account.payment_method.cbdc.CbdcPaymentMethod;
 import bisq.account.payment_method.cbdc.CbdcPaymentMethodUtil;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
@@ -83,15 +84,14 @@ public class CryptoAssetSelectionController implements Controller {
         return model.getSelectedPaymentMethod().get() != null;
     }
 
-    public ReadOnlyObjectProperty<CryptoPaymentMethod> getSelectedPaymentMethod() {
+    public ReadOnlyObjectProperty<DigitalAssetPaymentMethod> getSelectedPaymentMethod() {
         return model.getSelectedPaymentMethod();
     }
 
     void onItemSelected(CryptoAssetItem item) {
         if (item != null) {
             model.getSelectedItem().set(item);
-            //todo
-            model.getSelectedPaymentMethod().set((CryptoPaymentMethod) item.getPaymentMethod());
+            model.getSelectedPaymentMethod().set( item.getPaymentMethod());
         }
     }
 

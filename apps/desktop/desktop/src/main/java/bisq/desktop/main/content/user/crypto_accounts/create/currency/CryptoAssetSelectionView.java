@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.crypto_accounts.create.currency;
 
-import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.account.payment_method.cbdc.CbdcPaymentMethod;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.account.payment_method.stable_coin.StableCoinPaymentMethod;
@@ -29,7 +29,6 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.RichTableView;
-import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.i18n.Res;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
@@ -147,7 +146,7 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
                 .title(Res.get("paymentAccounts.crypto.createAccount.paymentMethod.table.ticker"))
                 .minWidth(70)
                 .left()
-                .valueSupplier(CryptoAssetItem::getTicker)
+                .setCellFactory(getTickerWithIconCellFactory())
                 .tooltipSupplier(CryptoAssetItem::getTicker)
                 .build());
 
@@ -192,7 +191,7 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
         richTableView.getColumns().add(countryColumn);
     }
 
-    private Callback<TableColumn<CryptoAssetItem, CryptoAssetItem>, TableCell<CryptoAssetItem, CryptoAssetItem>> getNameWithIconCellFactory() {
+    private Callback<TableColumn<CryptoAssetItem, CryptoAssetItem>, TableCell<CryptoAssetItem, CryptoAssetItem>> getTickerWithIconCellFactory() {
         return column -> new TableCell<>() {
             private final Label label = new Label();
             private final Tooltip tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
@@ -206,16 +205,14 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    PaymentMethod<?> paymentMethod = item.getPaymentMethod();
+                    DigitalAssetPaymentMethod paymentMethod = item.getPaymentMethod();
 
-                    Node icon = !paymentMethod.isCustomPaymentMethod()
-                            ? ImageUtil.getImageViewById(paymentMethod.getPaymentRailName())
-                            : BisqEasyViewUtils.getCustomPaymentMethodIcon(paymentMethod.getDisplayString());
+                    Node icon = ImageUtil.getImageViewById(item.getTicker());
 
                     label.setGraphic(icon);
-                    label.setText(item.getName());
+                    label.setText(item.getTicker());
 
-                    tooltip.setText(item.getName());
+                    tooltip.setText(item.getTicker());
                     label.setTooltip(tooltip);
 
                     setGraphic(label);
@@ -243,11 +240,11 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
             }
         }
 
-        private final PaymentMethod<?> paymentMethod;
+        private final DigitalAssetPaymentMethod paymentMethod;
         private final String ticker, name, tokenStandard, network, pegCurrency, country;
         private final Type type;
 
-        public CryptoAssetItem(PaymentMethod<?> paymentMethod) {
+        public CryptoAssetItem(DigitalAssetPaymentMethod paymentMethod) {
             this.paymentMethod = paymentMethod;
 
             String notAvailable = "-";

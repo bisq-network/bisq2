@@ -84,6 +84,11 @@ public class FiatPaymentMethod extends PaymentMethod<FiatPaymentRail> {
         return paymentRail.getSupportedCurrencies();
     }
 
+    @Override
+    public String getId() {
+        return paymentRailName;
+    }
+
     public List<Country> getSupportedCountries() {
         return paymentRail.getSupportedCountries();
     }

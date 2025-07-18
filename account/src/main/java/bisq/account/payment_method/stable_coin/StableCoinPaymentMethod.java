@@ -17,6 +17,7 @@
 
 package bisq.account.payment_method.stable_coin;
 
+import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.asset.Asset;
 import bisq.common.asset.StableCoin;
@@ -33,7 +34,7 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class StableCoinPaymentMethod extends PaymentMethod<StableCoinPaymentRail> {
+public class StableCoinPaymentMethod extends PaymentMethod<StableCoinPaymentRail> implements DigitalAssetPaymentMethod {
     public static StableCoinPaymentMethod fromPaymentRail(StableCoinPaymentRail paymentRail) {
         return new StableCoinPaymentMethod(paymentRail);
     }
@@ -76,6 +77,11 @@ public class StableCoinPaymentMethod extends PaymentMethod<StableCoinPaymentRail
     @Override
     public List<Asset> getSupportedCurrencies() {
         return Collections.singletonList(paymentRail.getStableCoin());
+    }
+
+    @Override
+    public String getId() {
+        return getStableCoin().getCode();
     }
 
     public String getCode() {

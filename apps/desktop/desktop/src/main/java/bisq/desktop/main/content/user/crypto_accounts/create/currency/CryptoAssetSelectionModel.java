@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.crypto_accounts.create.currency;
 
-import bisq.account.payment_method.crypto.CryptoPaymentMethod;
+import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.components.table.RichTableView;
 import javafx.beans.property.ObjectProperty;
@@ -48,7 +48,7 @@ public class CryptoAssetSelectionModel implements Model {
     private final FilteredList<CryptoAssetItem> filteredList = new FilteredList<>(list);
     private final SortedList<CryptoAssetItem> sortedList = new SortedList<>(filteredList);
     private final ObjectProperty<CryptoAssetItem> selectedItem = new SimpleObjectProperty<>();
-    private final ObjectProperty<CryptoPaymentMethod> selectedPaymentMethod = new SimpleObjectProperty<>();
+    private final ObjectProperty<DigitalAssetPaymentMethod> selectedPaymentMethod = new SimpleObjectProperty<>();
     private final ObjectProperty< CryptoAssetItem.Type> selectedType = new SimpleObjectProperty<>();
     private final StringProperty searchText = new SimpleStringProperty();
     @Setter

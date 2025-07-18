@@ -76,6 +76,8 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
         NetworkDataValidation.validateText(paymentRailName, MAX_NAME_LENGTH);
     }
 
+    public abstract String getId();
+
     public String getDisplayString() {
         return Res.has(paymentRailName) ? Res.get(paymentRailName) : paymentRailName;
     }
