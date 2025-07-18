@@ -826,13 +826,13 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         CryptoAsset btc = CryptoAssetRepository.BITCOIN;
         Label btcMarketLabel = new Label(String.format("%s %s", btc.getCode(), btc.getName()));
         btcMarketLabel.setGraphicTextGap(10);
-        btcMarketLabel.setGraphic(MarketImageComposition.createMarketLogo(btc.getCode()));
+        btcMarketLabel.setGraphic(ImageUtil.getImageViewById("btc-menu"));
         btcMarketsMenuItem = new SelectableMenuItem<>(btc, btcMarketLabel);
 
         CryptoAsset xmr = CryptoAssetRepository.XMR;
         Label xmrMarketLabel = new Label(String.format("%s %s", xmr.getCode(), xmr.getName()));
         xmrMarketLabel.setGraphicTextGap(10);
-        xmrMarketLabel.setGraphic(MarketImageComposition.createMarketLogo(xmr.getCode()));
+        xmrMarketLabel.setGraphic(ImageUtil.getImageViewById("xmr-menu"));
         xmrMarketsMenuItem = new SelectableMenuItem<>(xmr, xmrMarketLabel);
 
         menu.addMenuItems(btcMarketsMenuItem, xmrMarketsMenuItem);
