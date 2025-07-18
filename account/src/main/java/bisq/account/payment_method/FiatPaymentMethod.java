@@ -18,13 +18,16 @@
 package bisq.account.payment_method;
 
 import bisq.common.asset.Asset;
+import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.locale.Country;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @ToString(callSuper = true)
@@ -38,6 +41,7 @@ public class FiatPaymentMethod extends NationalCurrencyPaymentMethod<FiatPayment
     public static FiatPaymentMethod fromCustomName(String customName) {
         return new FiatPaymentMethod(customName);
     }
+
     public static FiatPaymentMethod fromPaymentRailName(String paymentRailName) {
         return new FiatPaymentMethod(FiatPaymentRail.valueOf(paymentRailName));
     }
@@ -45,10 +49,14 @@ public class FiatPaymentMethod extends NationalCurrencyPaymentMethod<FiatPayment
 
     private FiatPaymentMethod(FiatPaymentRail paymentRail) {
         super(paymentRail);
+
+        verify();
     }
 
     private FiatPaymentMethod(String customName) {
         super(customName);
+
+        verify();
     }
 
     @Override
@@ -60,6 +68,7 @@ public class FiatPaymentMethod extends NationalCurrencyPaymentMethod<FiatPayment
     public bisq.account.protobuf.PaymentMethod toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
+
     public static FiatPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
         return FiatPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName());
     }
@@ -76,5 +85,37 @@ public class FiatPaymentMethod extends NationalCurrencyPaymentMethod<FiatPayment
 
     public List<Country> getSupportedCountries() {
         return paymentRail.getSupportedCountries();
+    }
+
+    public String getSupportedCurrencyCodesAsDisplayString() {
+        if (supportsAllFiatCurrencies()) {
+            return Res.get("paymentAccounts.allCurrencies");
+        } else {
+            List<String> currencyCodes = getSupportedCurrencyCodes();
+            if (currencyCodes.size() == 1) {
+                return currencyCodes.stream().findFirst().orElseThrow();
+            } else {
+                return String.join(", ", currencyCodes);
+            }
+        }
+    }
+
+    public String getSupportedCurrencyDisplayNameAndCodeAsDisplayString() {
+        if (supportsAllFiatCurrencies()) {
+            return Res.get("paymentAccounts.allCurrencies");
+        } else {
+            List<String> displayNameAndCode = getSupportedCurrencyDisplayNameAndCode().stream().sorted().collect(Collectors.toList());
+            if (displayNameAndCode.size() == 1) {
+                return displayNameAndCode.stream().findFirst().orElseThrow();
+            } else {
+                return String.join(", ", displayNameAndCode);
+            }
+        }
+    }
+
+    private boolean supportsAllFiatCurrencies() {
+        List<String> currencyCodes = getSupportedCurrencyCodes().stream().sorted().toList();
+        List<String> allCurrencies = FiatCurrencyRepository.getAllFiatCurrencyCodes().stream().sorted().toList();
+        return currencyCodes.equals(allCurrencies);
     }
 }

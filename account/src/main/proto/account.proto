@@ -63,7 +63,7 @@ message FiatPaymentMethod {
 message BitcoinPaymentMethod {
 }
 message CryptoPaymentMethod {
-  string currencyCode = 1;
+  string code = 1;
 }
 message StablecoinPaymentMethod {
 }

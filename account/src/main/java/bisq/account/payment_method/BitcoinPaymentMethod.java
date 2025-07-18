@@ -17,8 +17,8 @@
 
 package bisq.account.payment_method;
 
-import bisq.common.asset.CryptoAssetRepository;
 import bisq.common.asset.Asset;
+import bisq.common.asset.CryptoAssetRepository;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -38,13 +38,16 @@ public class BitcoinPaymentMethod extends PaymentMethod<BitcoinPaymentRail> {
         return new BitcoinPaymentMethod(customName);
     }
 
-
     private BitcoinPaymentMethod(BitcoinPaymentRail paymentRail) {
         super(paymentRail);
+
+        verify();
     }
 
     private BitcoinPaymentMethod(String name) {
         super(name);
+
+        verify();
     }
 
     @Override

@@ -17,7 +17,6 @@
 
 package bisq.account.payment_method;
 
-import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.asset.Asset;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -52,35 +51,29 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
     protected transient final R paymentRail;
 
 
-
     /**
      * @param paymentRail The method to be associated with that payment method
      */
     protected PaymentMethod(R paymentRail) {
         this.paymentRailName = paymentRail.name();
         this.paymentRail = paymentRail;
-
-        NetworkDataValidation.validateText(paymentRailName, MAX_NAME_LENGTH);
     }
 
     /**
-     * @param customName Provide custom payment method name not covered by a Method enum.
-     *                   In that case we set the method to the fallback method (e.g. USER_DEFINED).
+     * @param customPaymentRailName Provide custom payment method name not covered by a Method enum.
      */
-    protected PaymentMethod(String customName) {
-        this.paymentRailName = customName;
+    protected PaymentMethod(String customPaymentRailName) {
+        this.paymentRailName = customPaymentRailName;
         this.paymentRail = getCustomPaymentRail();
-
-        verify();
     }
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateText(paymentRailName, 100);
+        NetworkDataValidation.validateText(paymentRailName, MAX_NAME_LENGTH);
     }
 
     public String getDisplayString() {
-        return  Res.has(paymentRailName) ? Res.get(paymentRailName) : paymentRailName;
+        return Res.has(paymentRailName) ? Res.get(paymentRailName) : paymentRailName;
     }
 
     public String getShortDisplayString() {
@@ -105,13 +98,6 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
         };
     }
 
-    protected abstract R getCustomPaymentRail();
-
-    public abstract List<? extends Asset> getSupportedCurrencies();
-
-    public boolean isCustomPaymentMethod() {
-        return paymentRail.equals(getCustomPaymentRail());
-    }
 
     @Override
     public int compareTo(PaymentMethod<R> o) {
@@ -121,50 +107,21 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
     public List<String> getSupportedCurrencyCodes() {
         return getSupportedCurrencies().stream()
                 .map(Asset::getCode)
-                /*  .sorted()*/
                 .collect(Collectors.toList());
     }
 
     public List<String> getSupportedCurrencyDisplayNameAndCode() {
         return getSupportedCurrencies().stream()
                 .map(Asset::getDisplayNameAndCode)
-                /*.sorted()*/
                 .collect(Collectors.toList());
     }
 
-    public String getSupportedCurrencyCodesAsDisplayString() {
-        if (supportsAllCurrencies()) {
-            return Res.get("paymentAccounts.allCurrencies");
-        } else {
-            List<String> currencyCodes = getSupportedCurrencyCodes();
-            if (currencyCodes.size() == 1) {
-                return currencyCodes.stream().findFirst().orElseThrow();
-            } else {
-                return String.join(", ", currencyCodes);
-            }
-        }
+    public abstract List<? extends Asset> getSupportedCurrencies();
+
+    public boolean isCustomPaymentMethod() {
+        return paymentRail.equals(getCustomPaymentRail());
     }
 
-    public String getSupportedCurrencyDisplayNameAndCodeAsDisplayString() {
-        return getSupportedCurrencyDisplayNameAndCodeAsDisplayString(", ");
-    }
+    protected abstract R getCustomPaymentRail();
 
-    public String getSupportedCurrencyDisplayNameAndCodeAsDisplayString(String delimiter) {
-        if (supportsAllCurrencies()) {
-            return Res.get("paymentAccounts.allCurrencies");
-        } else {
-            List<String> displayNameAndCode = getSupportedCurrencyDisplayNameAndCode().stream().sorted().collect(Collectors.toList());
-            if (displayNameAndCode.size() == 1) {
-                return displayNameAndCode.stream().findFirst().orElseThrow();
-            } else {
-                return String.join(delimiter, displayNameAndCode);
-            }
-        }
-    }
-
-    private boolean supportsAllCurrencies() {
-        List<String> currencyCodes = getSupportedCurrencyCodes().stream().sorted().collect(Collectors.toList());
-        List<String> allCurrencies = FiatCurrencyRepository.getAllFiatCurrencyCodes().stream().sorted().collect(Collectors.toList());
-        return currencyCodes.equals(allCurrencies);
-    }
 }

@@ -144,8 +144,8 @@ public class PaymentMethodSelectionView extends View<VBox, PaymentMethodSelectio
         tableView.getColumns().add(new BisqTableColumn.Builder<PaymentMethodItem>()
                 .title(Res.get("paymentAccounts.createAccount.paymentMethod.table.currencies"))
                 .minWidth(120)
-                .valueSupplier(PaymentMethodItem::getCurrencyCodes)
-                .tooltipSupplier(PaymentMethodItem::getCurrencyCodeAndDisplayNames)
+                .valueSupplier(PaymentMethodItem::getSupportedCurrencyCodes)
+                .tooltipSupplier(PaymentMethodItem::getSupportedNameAndCodes)
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<PaymentMethodItem>()
@@ -229,14 +229,14 @@ public class PaymentMethodSelectionView extends View<VBox, PaymentMethodSelectio
     @Getter
     public static class PaymentMethodItem {
         private final PaymentMethod<?> paymentMethod;
-        private final String name, currencyCodes, currencyCodeAndDisplayNames, countryNames, chargebackRisk;
+        private final String name, supportedCurrencyCodes, supportedNameAndCodes, countryNames, chargebackRisk;
 
-        public PaymentMethodItem(PaymentMethod<?> paymentMethod) {
+        public PaymentMethodItem(FiatPaymentMethod paymentMethod) {
             this.paymentMethod = paymentMethod;
             name = paymentMethod.getDisplayString();
 
-            currencyCodes = paymentMethod.getSupportedCurrencyCodesAsDisplayString();
-            currencyCodeAndDisplayNames = paymentMethod.getSupportedCurrencyDisplayNameAndCodeAsDisplayString();
+            supportedCurrencyCodes = paymentMethod.getSupportedCurrencyCodesAsDisplayString();
+            supportedNameAndCodes = paymentMethod.getSupportedCurrencyDisplayNameAndCodeAsDisplayString();
             List<String> countryCodesList = getCountryCodes(paymentMethod);
             boolean isAllCountries = CountryRepository.matchesAllCountries(countryCodesList);
             countryNames = isAllCountries ? Res.get("paymentAccounts.allCountries") : String.join(", ", getCountryNames(paymentMethod));

@@ -123,8 +123,8 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
                 .title(Res.get("paymentAccounts.createAccount.paymentMethod.table.currencies"))
                 .minWidth(120)
                 .left()
-                .valueSupplier(CryptoAssetItem::getCurrencyCodeAndDisplayNames)
-                .tooltipSupplier(CryptoAssetItem::getCurrencyCodeAndDisplayNames)
+                .valueSupplier(CryptoAssetItem::getNameAndCode)
+                .tooltipSupplier(CryptoAssetItem::getNameAndCode)
                 .build();
         tableView.getColumns().add(column);
 
@@ -176,14 +176,14 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
     @Getter
     public static class CryptoAssetItem {
         private final CryptoPaymentMethod paymentMethod;
-        private final String name, currencyCode, currencyCodeAndDisplayNames;
+        private final String name, currencyCode, nameAndCode;
 
         public CryptoAssetItem(CryptoPaymentMethod paymentMethod) {
             this.paymentMethod = paymentMethod;
             name = paymentMethod.getDisplayString();
 
-            currencyCode = paymentMethod.getCurrencyCode();
-            currencyCodeAndDisplayNames = paymentMethod.getSupportedCurrencyDisplayNameAndCodeAsDisplayString();
+            currencyCode = paymentMethod.getCode();
+            nameAndCode = paymentMethod.getDisplayString();
         }
     }
 }

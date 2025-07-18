@@ -17,9 +17,12 @@
 
 package bisq.account.payment_method;
 
-//TODO Requires more thoughts
+/**
+ * Currently for musig it has no usage, but we still support it for potential future protocols or usage in Bisq Easy.
+ */
 public enum CryptoPaymentRail implements PaymentRail {
     CUSTOM,                  // Custom/user-defined
+    UNDEFINED,               // For user defined assets we do not specify the CryptoPaymentRail as it has atm anyway no usage
     NATIVE_CHAIN,            // Main chain of the asset (e.g. BTC on Bitcoin, ETH on Ethereum)
     SMART_CONTRACT,          // Asset transferred via a smart contract on a host chain (ERC20, TRC20, SPL)
     LAYER_2,                 // Layer 2 (Lightning,...)

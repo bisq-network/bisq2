@@ -17,67 +17,72 @@
 
 package bisq.account.payment_method;
 
-import bisq.common.asset.CryptoAssetRepository;
 import bisq.common.asset.Asset;
+import bisq.common.asset.CryptoAsset;
+import bisq.common.asset.CryptoAssetRepository;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> {
-    private final String currencyCode;
-    private final String currencyName;
+    private final String code;
+    private final transient boolean isFeatured;
+    private final transient CryptoAsset cryptoAsset;
 
-    public static CryptoPaymentMethod fromCustomName(String customName, String currencyCode) {
-        return new CryptoPaymentMethod(customName, currencyCode);
+    public static CryptoPaymentMethod fromCustomName(String customName, String code) {
+        return new CryptoPaymentMethod(customName, code);
     }
 
-    public CryptoPaymentMethod(CryptoPaymentRail cryptoPaymentRail, String currencyCode) {
-        super(cryptoPaymentRail);
-        this.currencyCode = currencyCode;
-        this.currencyName = CryptoAssetRepository.findName(currencyCode).orElse(currencyCode);
+    public CryptoPaymentMethod(String code) {
+        super(CryptoPaymentMethodUtil.getCryptoPaymentRail(code));
+        this.code = code;
+        Optional<CryptoAsset> optionalCryptoAsset = CryptoAssetRepository.find(code);
+        isFeatured = optionalCryptoAsset.isPresent();
+        cryptoAsset = optionalCryptoAsset.orElse(new CryptoAsset(code));
 
         verify();
     }
 
-    private CryptoPaymentMethod(String name, String currencyCode) {
-        super(name);
-        this.currencyCode = currencyCode;
-        this.currencyName = CryptoAssetRepository.findName(currencyCode).orElse(currencyCode);
+    public CryptoPaymentMethod(CryptoPaymentRail cryptoPaymentRail, String code) {
+        super(cryptoPaymentRail);
+        this.code = code;
+        Optional<CryptoAsset> optionalCryptoAsset = CryptoAssetRepository.find(code);
+        isFeatured = optionalCryptoAsset.isPresent();
+        cryptoAsset = optionalCryptoAsset.orElse(new CryptoAsset(code));
+
+        verify();
+    }
+
+    private CryptoPaymentMethod(String customPaymentRailName, String code) {
+        super(customPaymentRailName);
+        this.code = code;
+        Optional<CryptoAsset> optionalCryptoAsset = CryptoAssetRepository.find(code);
+        isFeatured = optionalCryptoAsset.isPresent();
+        cryptoAsset = optionalCryptoAsset.orElse(new CryptoAsset(code));
 
         verify();
     }
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateCode(currencyCode);
-    }
+        super.verify();
 
-    public String getCurrencyNameAndCode() {
-        return currencyName + " (" + currencyCode + ")";
-    }
-
-    @Override
-    public String getDisplayString() {
-        return currencyName;
-    }
-
-    @Override
-    public String getShortDisplayString() {
-        return currencyCode;
+        NetworkDataValidation.validateCode(code);
     }
 
     @Override
     public bisq.account.protobuf.PaymentMethod.Builder getBuilder(boolean serializeForHash) {
         return getPaymentMethodBuilder(serializeForHash).setCryptoPaymentMethod(
                 bisq.account.protobuf.CryptoPaymentMethod.newBuilder()
-                        .setCurrencyCode(currencyCode));
+                        .setCode(code));
     }
 
     @Override
@@ -86,7 +91,22 @@ public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> 
     }
 
     public static CryptoPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
-        return CryptoPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName(), proto.getCryptoPaymentMethod().getCurrencyCode());
+        return new CryptoPaymentMethod(proto.getPaymentRailName(), proto.getCryptoPaymentMethod().getCode());
+    }
+
+    @Override
+    public String getDisplayString() {
+        return cryptoAsset.getDisplayNameAndCode();
+    }
+
+    @Override
+    public String getShortDisplayString() {
+        return code;
+    }
+
+    @Override
+    public List<Asset> getSupportedCurrencies() {
+        return Collections.singletonList(cryptoAsset);
     }
 
     @Override
@@ -94,10 +114,7 @@ public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> 
         return CryptoPaymentRail.CUSTOM;
     }
 
-    @Override
-    public List<Asset> getSupportedCurrencies() {
-        return CryptoAssetRepository.find(currencyCode)
-                .map(e -> List.of((Asset) e))
-                .orElse(new ArrayList<>());
+    public String getName() {
+        return cryptoAsset.getName();
     }
 }

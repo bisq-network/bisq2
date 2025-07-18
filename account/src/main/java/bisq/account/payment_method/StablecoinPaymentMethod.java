@@ -43,6 +43,8 @@ public class StablecoinPaymentMethod extends NationalCurrencyPaymentMethod<Stabl
 
     private StablecoinPaymentMethod(StablecoinPaymentRail paymentRail) {
         super(paymentRail);
+
+        verify();
     }
 
     @Override

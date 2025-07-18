@@ -28,7 +28,7 @@ import java.util.Set;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class CryptoAsset extends Asset {
+public class CryptoAsset extends DigitalAsset {
     //todo for dev
     // private static final Set<String> SUPPORT_AUTO_CONF_CODES = Set.of("XMR");
     private static final Set<String> SUPPORT_AUTO_CONF_CODES = Set.of("XMR", "ETH");
@@ -51,7 +51,7 @@ public class CryptoAsset extends Asset {
 
     @Override
     public bisq.common.protobuf.Asset.Builder getBuilder(boolean serializeForHash) {
-        return getAssetBuilder().setCryptoAsset(bisq.common.protobuf.CryptoAsset.newBuilder());
+        return getAssetBuilder().setDigitalAsset(bisq.common.protobuf.DigitalAsset.newBuilder());
     }
 
     @Override
@@ -64,10 +64,6 @@ public class CryptoAsset extends Asset {
     }
 
     @Override
-    public String getDisplayName() {
-        return name;
-    }
-
     public boolean isCustom() {
         return CryptoAssetRepository.find(code).isEmpty();
     }

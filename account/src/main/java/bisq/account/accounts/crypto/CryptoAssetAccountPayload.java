@@ -21,7 +21,6 @@ import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.CryptoPaymentMethod;
-import bisq.account.payment_method.CryptoPaymentRail;
 import bisq.common.asset.CryptoAssetRepository;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.StringUtils;
@@ -90,12 +89,12 @@ public abstract class CryptoAssetAccountPayload extends AccountPayload<CryptoPay
 
     @Override
     public CryptoPaymentMethod getPaymentMethod() {
-        return new CryptoPaymentMethod(CryptoPaymentRail.NATIVE_CHAIN, currencyCode);
+        return new CryptoPaymentMethod(currencyCode);
     }
 
     @Override
     public String getDefaultAccountName() {
-        return getPaymentMethod().getCurrencyName() + "-" + StringUtils.truncate(address, 8);
+        return getPaymentMethod().getName() + "-" + StringUtils.truncate(address, 8);
     }
 
     @Override

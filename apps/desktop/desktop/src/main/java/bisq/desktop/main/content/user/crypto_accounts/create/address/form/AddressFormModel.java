@@ -55,7 +55,7 @@ public abstract class AddressFormModel implements Model {
     public AddressFormModel(String id, CryptoPaymentMethod paymentMethod) {
         this.id = id;
         this.paymentMethod = paymentMethod;
-        currencyCode = paymentMethod.getCurrencyCode();
+        currencyCode = paymentMethod.getCode();
 
         cryptoAsset = CryptoAssetRepository.findOrCreateCustom(currencyCode);
         isAutoConfSupported = cryptoAsset.isSupportAutoConf();

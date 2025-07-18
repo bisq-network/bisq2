@@ -138,7 +138,7 @@ public abstract class AccountDetails<A extends CryptoAssetAccount<?>> extends VB
         AccountPayload<?> accountPayload = account.getAccountPayload();
 
         Triple<Text, Label, VBox> currencyTriple = getDescriptionValueVBoxTriple(Res.get("paymentAccounts.currency"),
-                account.getPaymentMethod().getCurrencyName());
+                account.getPaymentMethod().getDisplayString());
         gridPane.add(currencyTriple.getThird(), 0, rowIndex);
     }
 

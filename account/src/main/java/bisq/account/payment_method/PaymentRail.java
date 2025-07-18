@@ -17,6 +17,9 @@
 
 package bisq.account.payment_method;
 
+/**
+ * PaymentRail represents the way how an asset is transferred. E.g. Using SEPA for transferring EUR.
+ */
 public interface PaymentRail {
     String name();
 
