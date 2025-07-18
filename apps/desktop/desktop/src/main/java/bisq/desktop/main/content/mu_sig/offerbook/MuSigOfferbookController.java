@@ -22,6 +22,8 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.asset.CryptoAsset;
+import bisq.common.asset.CryptoAssetRepository;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.observable.Pin;
@@ -68,9 +70,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class MuSigOfferbookController implements Controller {
-    private static final String btcCode = "BTC";
-    private static final String xmrCode = "XMR";
-
     @Getter
     private final MuSigOfferbookView view;
     private final MuSigOfferbookModel model;
@@ -86,7 +85,7 @@ public class MuSigOfferbookController implements Controller {
     private final AccountService accountService;
     private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin;
     private Subscription selectedMarketItemPin, marketsSearchBoxTextPin, selectedMarketFilterPin, selectedMarketSortTypePin,
-            selectedOffersFilterPin, activeMarketPaymentsCountPin, selectedMarketPricePin;
+            selectedOffersFilterPin, activeMarketPaymentsCountPin, selectedMarketPricePin, selectedBaseCryptoCurrencyPin;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
         muSigService = serviceProvider.getMuSigService();
@@ -106,15 +105,6 @@ public class MuSigOfferbookController implements Controller {
 
     @Override
     public void onActivate() {
-        List<MarketItem> marketItems = MarketRepository.getAllFiatMarkets().stream()
-                .map(market -> new MarketItem(market,
-                        favouriteMarketsService,
-                        marketPriceService,
-                        userProfileService,
-                        muSigService))
-                .collect(Collectors.toList());
-        model.getMarketItems().setAll(marketItems);
-
         model.getMarketsSearchBoxText().set("");
 
         offersPin = muSigService.getObservableOffers().addObserver(new CollectionObserver<>() {
@@ -205,8 +195,10 @@ public class MuSigOfferbookController implements Controller {
 
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
                 UIThread.run(() -> {
-                    model.setMarketPricePredicate(item -> marketPriceService.getMarketPriceByCurrencyMap().isEmpty() ||
-                            marketPriceService.getMarketPriceByCurrencyMap().containsKey(item.getMarket()));
+                    // TODO: Calculate prices for xmr
+                    model.setMarketPricePredicate(item -> true);
+//                    model.setMarketPricePredicate(item -> marketPriceService.getMarketPriceByCurrencyMap().isEmpty() ||
+//                            marketPriceService.getMarketPriceByCurrencyMap().containsKey(item.getMarket()));
                     updateFilteredMarketItems();
 
                     if (selectedMarketPricePin != null) {
@@ -234,15 +226,28 @@ public class MuSigOfferbookController implements Controller {
             }
         });
 
+        selectedBaseCryptoCurrencyPin = EasyBind.subscribe(model.getSelectedBaseCryptoCurrency(), selectedCrypto -> {
+            if (selectedCrypto != null) {
+                if (selectedCrypto.equals(CryptoAssetRepository.XMR)) {
+                    updateQuoteMarketItems(MarketRepository.getAllXmrMarkets());
+                } else if (selectedCrypto.equals(CryptoAssetRepository.BITCOIN)) {
+                    updateQuoteMarketItems(MarketRepository.getAllFiatMarkets());
+                }
+                model.getMarketListTitle().set(getMarketListTitleString(selectedCrypto));
+                model.getBaseCurrencyIconId().set(selectedCrypto.getCode());
+            } else {
+                model.getMarketListTitle().set("");
+            }
+        });
+
         marketsSearchBoxTextPin = EasyBind.subscribe(model.getMarketsSearchBoxText(), searchText -> {
             if (searchText == null || searchText.trim().isEmpty()) {
                 model.setMarketSearchTextPredicate(item -> true);
             } else {
                 String search = searchText.trim().toLowerCase();
-                model.setMarketSearchTextPredicate(item ->
-                        item != null &&
-                                (item.getMarket().getQuoteCurrencyCode().toLowerCase().contains(search) ||
-                                        item.getMarket().getQuoteCurrencyDisplayName().toLowerCase().contains(search))
+                model.setMarketSearchTextPredicate(item -> item != null
+                        && (item.getMarket().getQuoteCurrencyCode().toLowerCase().contains(search)
+                        || item.getMarket().getQuoteCurrencyDisplayName().toLowerCase().contains(search))
                 );
             }
             updateFilteredMarketItems();
@@ -316,6 +321,7 @@ public class MuSigOfferbookController implements Controller {
         marketPriceByCurrencyMapPin.unbind();
 
         selectedMarketItemPin.unsubscribe();
+        selectedBaseCryptoCurrencyPin.unsubscribe();
         marketsSearchBoxTextPin.unsubscribe();
         selectedMarketFilterPin.unsubscribe();
         selectedMarketSortTypePin.unsubscribe();
@@ -385,6 +391,21 @@ public class MuSigOfferbookController implements Controller {
         settingsService.removeCookie(CookieKey.MU_SIG_OFFER_PAYMENT_FILTERS, getCookieSubKey());
     }
 
+    void updateSelectedBaseCryptoCurrency(CryptoAsset baseCrypto) {
+        UIThread.run(() -> model.getSelectedBaseCryptoCurrency().set(baseCrypto));
+    }
+
+    private void updateQuoteMarketItems(List<Market> availableMarkets) {
+        List<MarketItem> marketItems = availableMarkets.stream()
+                .map(market -> new MarketItem(market,
+                        favouriteMarketsService,
+                        marketPriceService,
+                        userProfileService,
+                        muSigService))
+                .collect(Collectors.toList());
+        model.getMarketItems().setAll(marketItems);
+    }
+
     private void updateActiveMarketPaymentsCount() {
         model.getActiveMarketPaymentsCount().set(model.getSelectedPaymentMethods().size());
     }
@@ -437,26 +458,18 @@ public class MuSigOfferbookController implements Controller {
                 model.getBaseCodeTitle().set(Res.get("muSig.offerbook.table.header.amount", selectedMarket.getBaseCurrencyCode()).toUpperCase());
                 model.getQuoteCodeTitle().set(Res.get("muSig.offerbook.table.header.amount", selectedMarket.getQuoteCurrencyCode()).toUpperCase());
                 model.getPriceTitle().set(Res.get("muSig.offerbook.table.header.price", selectedMarket.getMarketCodes()).toUpperCase());
-                model.getBaseMarketIconId().set(selectedMarket.getBaseCurrencyCode());
-                model.getQuoteMarketIconId().set(selectedMarket.getQuoteCurrencyCode());
-                model.getMarketListTitle().set(getMarketListTitleString(selectedMarket));
+                model.getQuoteCurrencyIconId().set(selectedMarket.getQuoteCurrencyCode());
             }
         } else {
             model.getMarketTitle().set("");
             model.getMarketDescription().set("");
             model.getMarketPrice().set("");
-            model.getMarketListTitle().set("");
         }
     }
 
-    private String getMarketListTitleString(Market market) {
-        if (market.getBaseCurrencyCode().equalsIgnoreCase(btcCode)) {
-            return Res.get("muSig.offerbook.marketListTitle.bitcoin");
-        }
-        if (market.getBaseCurrencyCode().equalsIgnoreCase(xmrCode)) {
-            return Res.get("muSig.offerbook.marketListTitle.xmr");
-        }
-        return "";
+    private String getMarketListTitleString(CryptoAsset cryptoCurrency) {
+        String key = "muSig.offerbook.marketListTitle." + cryptoCurrency.getCode().toLowerCase();
+        return Res.get(key);
     }
 
     private void updateFilteredMarketItems() {
