@@ -17,10 +17,12 @@
 
 package bisq.desktop.main.content.user.crypto_accounts.create.currency;
 
-import bisq.account.payment_method.CryptoPaymentMethod;
-import bisq.account.payment_method.CryptoPaymentMethodUtil;
-import bisq.account.payment_method.StableCoinPaymentMethod;
-import bisq.account.payment_method.StablecoinPaymentMethodUtil;
+import bisq.account.payment_method.cbdc.CbdcPaymentMethod;
+import bisq.account.payment_method.cbdc.CbdcPaymentMethodUtil;
+import bisq.account.payment_method.crypto.CryptoPaymentMethod;
+import bisq.account.payment_method.crypto.CryptoPaymentMethodUtil;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethod;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethodUtil;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.table.RichTableView;
@@ -46,9 +48,11 @@ public class CryptoAssetSelectionController implements Controller {
 
     public CryptoAssetSelectionController() {
         // We use sorting provided by the CryptoAssetRepository with major assets first
-        Stream<CryptoPaymentMethod> cryptoPaymentMethodStream = CryptoPaymentMethodUtil.getAllCryptoPaymentMethods().stream();
-        Stream<StableCoinPaymentMethod> stableCoinPaymentMethods = StablecoinPaymentMethodUtil.getMajorStableCoinPaymentMethods().stream();
-        List<CryptoAssetItem> items = Stream.concat(cryptoPaymentMethodStream, stableCoinPaymentMethods)
+        Stream<CryptoPaymentMethod> cryptoPaymentMethodStream = CryptoPaymentMethodUtil.getPaymentMethods().stream();
+        Stream<StableCoinPaymentMethod> stableCoinPaymentMethods = StableCoinPaymentMethodUtil.getPaymentMethods().stream();
+        Stream<CbdcPaymentMethod> cbdcPaymentMethods = CbdcPaymentMethodUtil.getPaymentMethods().stream();
+        List<CryptoAssetItem> items = Stream.concat(cryptoPaymentMethodStream,
+                        Stream.concat(stableCoinPaymentMethods, cbdcPaymentMethods))
                 .map(CryptoAssetItem::new)
                 .toList();
 

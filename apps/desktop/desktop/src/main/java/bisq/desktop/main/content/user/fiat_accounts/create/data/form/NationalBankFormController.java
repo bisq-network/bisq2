@@ -20,7 +20,7 @@ package bisq.desktop.main.content.user.fiat_accounts.create.data.form;
 import bisq.account.accounts.fiat.BankAccountType;
 import bisq.account.accounts.fiat.BankAccountUtils;
 import bisq.account.accounts.fiat.NationalBankAccountPayload;
-import bisq.account.payment_method.FiatPaymentRailUtil;
+import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
 import bisq.common.asset.FiatCurrency;
 import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.locale.Country;

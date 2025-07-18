@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.payment_method;
+package bisq.account.payment_method.crypto;
 
+import bisq.account.payment_method.PaymentMethod;
 import bisq.common.asset.Asset;
 import bisq.common.asset.CryptoAsset;
 import bisq.common.asset.CryptoAssetRepository;

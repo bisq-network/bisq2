@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.crypto_accounts.create.address.form;
 
-import bisq.account.payment_method.CryptoPaymentMethod;
+import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import lombok.Getter;
 
 @Getter

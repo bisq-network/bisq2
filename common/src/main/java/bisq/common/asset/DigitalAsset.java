@@ -41,7 +41,7 @@ public abstract class DigitalAsset extends Asset {
         return switch (proto.getDigitalAsset().getMessageCase()) {
             case CRYPTOASSET -> CryptoAsset.fromProto(proto);
             case STABLECOIN -> StableCoin.fromProto(proto);
-            case CENTRALBANKDIGITALCURRENCY -> CentralBankDigitalCurrency.fromProto(proto);
+            case CENTRALBANKDIGITALCURRENCY -> Cbdc.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

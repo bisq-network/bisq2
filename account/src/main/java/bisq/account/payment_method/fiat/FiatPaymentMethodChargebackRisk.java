@@ -1,4 +1,4 @@
-package bisq.account.payment_method;
+package bisq.account.payment_method.fiat;
 
 import bisq.i18n.Res;
 import lombok.Getter;

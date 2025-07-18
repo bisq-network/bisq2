@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.payment_method;
+package bisq.account.payment_method.cbdc;
 
+import bisq.account.payment_method.PaymentMethodSpec;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -26,12 +27,12 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class CryptoPaymentMethodSpec extends PaymentMethodSpec<CryptoPaymentMethod> {
-    public CryptoPaymentMethodSpec(CryptoPaymentMethod paymentMethod) {
-        super(paymentMethod);
+public final class CbdcPaymentMethodSpec extends PaymentMethodSpec<CbdcPaymentMethod> {
+    public CbdcPaymentMethodSpec(CbdcPaymentMethod paymentMethod) {
+        this(paymentMethod, Optional.empty());
     }
 
-    public CryptoPaymentMethodSpec(CryptoPaymentMethod paymentMethod, Optional<String> saltedMakerAccountId) {
+    public CbdcPaymentMethodSpec(CbdcPaymentMethod paymentMethod, Optional<String> saltedMakerAccountId) {
         super(paymentMethod, saltedMakerAccountId);
 
         verify();
@@ -45,7 +46,7 @@ public final class CryptoPaymentMethodSpec extends PaymentMethodSpec<CryptoPayme
     @Override
     public bisq.account.protobuf.PaymentMethodSpec.Builder getBuilder(boolean serializeForHash) {
         return getPaymentMethodSpecBuilder(serializeForHash)
-                .setCryptoPaymentMethodSpec(bisq.account.protobuf.CryptoPaymentMethodSpec.newBuilder());
+                .setCbdcPaymentMethodSpec(bisq.account.protobuf.CbdcPaymentMethodSpec.newBuilder());
     }
 
     @Override
@@ -53,8 +54,8 @@ public final class CryptoPaymentMethodSpec extends PaymentMethodSpec<CryptoPayme
         return resolveProto(serializeForHash);
     }
 
-    public static CryptoPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto) {
-        return new CryptoPaymentMethodSpec(CryptoPaymentMethod.fromProto(proto.getPaymentMethod()),
+    public static CbdcPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto) {
+        return new CbdcPaymentMethodSpec(CbdcPaymentMethod.fromProto(proto.getPaymentMethod()),
                 proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
     }
 }

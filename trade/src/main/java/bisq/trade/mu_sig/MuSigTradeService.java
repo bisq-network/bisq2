@@ -43,7 +43,7 @@ import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.options.AccountOption;
 import bisq.offer.options.OfferOptionUtil;
-import bisq.account.payment_method.FiatPaymentMethodSpec;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;

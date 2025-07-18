@@ -24,7 +24,7 @@ import bisq.account.accounts.crypto.MoneroAccount;
 import bisq.account.accounts.crypto.MoneroAccountPayload;
 import bisq.account.accounts.crypto.OtherCryptoAssetAccount;
 import bisq.account.accounts.crypto.OtherCryptoAssetAccountPayload;
-import bisq.account.payment_method.CryptoPaymentMethod;
+import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;

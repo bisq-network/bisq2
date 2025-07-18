@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.utils.ImageUtil;

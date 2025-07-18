@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.select_offer;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.common.market.Market;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;

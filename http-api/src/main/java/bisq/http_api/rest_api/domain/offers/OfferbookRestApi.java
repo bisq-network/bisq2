@@ -19,8 +19,8 @@ package bisq.http_api.rest_api.domain.offers;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentMethodUtil;
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethodUtil;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
 import bisq.bisq_easy.BisqEasyServiceUtil;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;

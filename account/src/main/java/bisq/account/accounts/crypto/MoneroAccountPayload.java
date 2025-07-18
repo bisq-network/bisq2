@@ -17,7 +17,7 @@
 
 package bisq.account.accounts.crypto;
 
-import bisq.account.payment_method.CryptoPaymentMethod;
+import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.common.asset.CryptoAssetRepository;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

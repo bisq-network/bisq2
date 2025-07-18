@@ -15,7 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.payment_method;
+package bisq.account.payment_method.crypto;
+
+import bisq.account.payment_method.PaymentRail;
 
 /**
  * Currently for musig it has no usage, but we still support it for potential future protocols or usage in Bisq Easy.

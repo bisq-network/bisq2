@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.offerbook;
 
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.utils.ImageUtil;

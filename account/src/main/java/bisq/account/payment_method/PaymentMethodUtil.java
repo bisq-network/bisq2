@@ -17,6 +17,8 @@
 
 package bisq.account.payment_method;
 
+import bisq.account.payment_method.crypto.CryptoPaymentMethodUtil;
+import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
 import bisq.common.asset.Asset;
 
 import java.util.List;

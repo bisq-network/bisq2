@@ -17,7 +17,7 @@
 
 package bisq.offer.mu_sig;
 
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.application.BuildVersion;
 import bisq.common.market.Market;
@@ -27,7 +27,7 @@ import bisq.offer.Offer;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.options.OfferOption;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.FiatPaymentMethodSpec;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.PriceSpec;

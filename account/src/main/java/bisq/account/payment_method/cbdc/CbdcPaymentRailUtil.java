@@ -15,36 +15,35 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.payment_method;
+package bisq.account.payment_method.cbdc;
 
-import bisq.common.asset.StableCoin;
-import bisq.common.asset.StableCoinRepository;
+import bisq.common.asset.Cbdc;
+import bisq.common.asset.CbdcRepository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class StableCoinPaymentRailUtil {
-
-    public static List<StableCoinPaymentRail> getPaymentRails() {
-        return List.of(StableCoinPaymentRail.values());
+public class CbdcPaymentRailUtil {
+    public static List<CbdcPaymentRail> getPaymentRails() {
+        return List.of(CbdcPaymentRail.values());
     }
 
-    public static Optional<StableCoinPaymentRail> find(StableCoin stableCoin) {
+    public static Optional<CbdcPaymentRail> find(Cbdc cbdc) {
         return getPaymentRails().stream()
-                .filter(rail -> rail.getStableCoin().equals(stableCoin))
+                .filter(rail -> rail.getCbdc().equals(cbdc))
                 .findAny();
     }
 
-    public static List<StableCoinPaymentRail> getPaymentRails(String currencyCode) {
+    public static List<CbdcPaymentRail> getPaymentRails(String code) {
         return getPaymentRails().stream()
-                .filter(paymentRail -> paymentRail.supportsCurrency(currencyCode))
+                .filter(paymentRail -> paymentRail.getCbdc().getCode().equals(code))
                 .collect(Collectors.toList());
     }
 
-    public static List<StableCoinPaymentRail> getMajorStableCoinPaymentRails() {
-        return StableCoinRepository.getMajorStableCoins().stream()
-                .flatMap(asset -> StableCoinPaymentRailUtil.find(asset).stream())
+    public static List<CbdcPaymentRail> getMajorCbdcPaymentRails() {
+        return CbdcRepository.getMajorCbdcs().stream()
+                .flatMap(asset -> CbdcPaymentRailUtil.find(asset).stream())
                 .collect(Collectors.toList());
     }
 }

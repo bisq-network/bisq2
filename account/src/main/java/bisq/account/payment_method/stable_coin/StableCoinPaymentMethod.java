@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.payment_method;
+package bisq.account.payment_method.stable_coin;
 
+import bisq.account.payment_method.PaymentMethod;
 import bisq.common.asset.Asset;
 import bisq.common.asset.StableCoin;
 import lombok.EqualsAndHashCode;
@@ -24,6 +25,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,7 +33,7 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class StableCoinPaymentMethod extends NationalCurrencyPaymentMethod<StableCoinPaymentRail> {
+public class StableCoinPaymentMethod extends PaymentMethod<StableCoinPaymentRail> {
     public static StableCoinPaymentMethod fromPaymentRail(StableCoinPaymentRail paymentRail) {
         return new StableCoinPaymentMethod(paymentRail);
     }
@@ -60,7 +62,7 @@ public class StableCoinPaymentMethod extends NationalCurrencyPaymentMethod<Stabl
 
     public static StableCoinPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
         return Optional.ofNullable(
-                        StablecoinPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName()))
+                        StableCoinPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName()))
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Unknown stable-coin payment method: " + proto.getPaymentRailName()));
     }
@@ -73,7 +75,7 @@ public class StableCoinPaymentMethod extends NationalCurrencyPaymentMethod<Stabl
 
     @Override
     public List<Asset> getSupportedCurrencies() {
-        return paymentRail.getTradeCurrencies();
+        return Collections.singletonList(paymentRail.getStableCoin());
     }
 
     public String getCode() {

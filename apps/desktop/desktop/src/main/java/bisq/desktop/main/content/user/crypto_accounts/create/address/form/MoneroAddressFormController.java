@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.user.crypto_accounts.create.address.form;
 
 import bisq.account.accounts.crypto.MoneroAccountPayload;
-import bisq.account.payment_method.CryptoPaymentMethod;
+import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;

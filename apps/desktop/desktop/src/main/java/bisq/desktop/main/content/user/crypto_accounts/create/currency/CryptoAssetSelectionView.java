@@ -17,9 +17,12 @@
 
 package bisq.desktop.main.content.user.crypto_accounts.create.currency;
 
-import bisq.account.payment_method.CryptoPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.account.payment_method.StableCoinPaymentMethod;
+import bisq.account.payment_method.cbdc.CbdcPaymentMethod;
+import bisq.account.payment_method.crypto.CryptoPaymentMethod;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethod;
+import bisq.common.asset.FiatCurrencyRepository;
+import bisq.common.locale.CountryRepository;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
@@ -49,7 +52,7 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
     private final ListChangeListener<CryptoAssetItem> listChangeListener;
     private Subscription searchTextPin, selectedItemPin, selectedTypePin;
     private Label paymentMethodHeaderLabel;
-    private BisqTableColumn<CryptoAssetItem> tokenStandardColumn, networkColumn, pegCurrencyColumn;
+    private BisqTableColumn<CryptoAssetItem> tokenStandardColumn, networkColumn, pegCurrencyColumn, countryColumn;
 
     public CryptoAssetSelectionView(CryptoAssetSelectionModel model, CryptoAssetSelectionController controller) {
         super(new VBox(), model, controller);
@@ -104,16 +107,19 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
                         tokenStandardColumn.setVisible(false);
                         networkColumn.setVisible(false);
                         pegCurrencyColumn.setVisible(false);
+                        countryColumn.setVisible(false);
                     }
                     case STABLE_COIN -> {
                         tokenStandardColumn.setVisible(true);
                         networkColumn.setVisible(true);
                         pegCurrencyColumn.setVisible(true);
+                        countryColumn.setVisible(false);
                     }
                     case CBDC -> {
                         tokenStandardColumn.setVisible(false);
                         networkColumn.setVisible(false);
                         pegCurrencyColumn.setVisible(true);
+                        countryColumn.setVisible(true);
                     }
                 }
             }
@@ -139,7 +145,7 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
 
         richTableView.getColumns().add(new BisqTableColumn.Builder<CryptoAssetItem>()
                 .title(Res.get("paymentAccounts.crypto.createAccount.paymentMethod.table.ticker"))
-                .minWidth(100)
+                .minWidth(70)
                 .left()
                 .valueSupplier(CryptoAssetItem::getTicker)
                 .tooltipSupplier(CryptoAssetItem::getTicker)
@@ -148,15 +154,13 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
         richTableView.getColumns().add(new BisqTableColumn.Builder<CryptoAssetItem>()
                 .title(Res.get("paymentAccounts.crypto.createAccount.paymentMethod.table.name"))
                 .minWidth(140)
-                .left()
                 .valueSupplier(CryptoAssetItem::getName)
                 .tooltipSupplier(CryptoAssetItem::getName)
                 .build());
 
         tokenStandardColumn = new BisqTableColumn.Builder<CryptoAssetItem>()
                 .title(Res.get("paymentAccounts.crypto.createAccount.paymentMethod.table.tokenStandard"))
-                .minWidth(140)
-                .left()
+                .minWidth(100)
                 .valueSupplier(CryptoAssetItem::getTokenStandard)
                 .tooltipSupplier(CryptoAssetItem::getTokenStandard)
                 .build();
@@ -164,8 +168,7 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
 
         networkColumn = new BisqTableColumn.Builder<CryptoAssetItem>()
                 .title(Res.get("paymentAccounts.crypto.createAccount.paymentMethod.table.network"))
-                .minWidth(140)
-                .left()
+                .minWidth(100)
                 .valueSupplier(CryptoAssetItem::getNetwork)
                 .tooltipSupplier(CryptoAssetItem::getNetwork)
                 .build();
@@ -173,20 +176,20 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
 
         pegCurrencyColumn = new BisqTableColumn.Builder<CryptoAssetItem>()
                 .title(Res.get("paymentAccounts.crypto.createAccount.paymentMethod.table.pegCurrency"))
-                .minWidth(100)
-                .left()
+                .minWidth(160)
                 .valueSupplier(CryptoAssetItem::getPegCurrency)
                 .tooltipSupplier(CryptoAssetItem::getPegCurrency)
                 .build();
         richTableView.getColumns().add(pegCurrencyColumn);
 
-       /* Node node = column.getGraphic();
-        if (node instanceof Label label) {
-            paymentMethodHeaderLabel = label;
-            searchBoxPane.getChildren().addFirst(label);
-            StackPane.setMargin(label, new Insets(0, 0, 0, 20));
-            column.setGraphic(searchBoxPane);
-        }*/
+        countryColumn = new BisqTableColumn.Builder<CryptoAssetItem>()
+                .title(Res.get("paymentAccounts.crypto.createAccount.paymentMethod.table.country"))
+                .minWidth(140)
+                .right()
+                .valueSupplier(CryptoAssetItem::getCountry)
+                .tooltipSupplier(CryptoAssetItem::getCountry)
+                .build();
+        richTableView.getColumns().add(countryColumn);
     }
 
     private Callback<TableColumn<CryptoAssetItem, CryptoAssetItem>, TableCell<CryptoAssetItem, CryptoAssetItem>> getNameWithIconCellFactory() {
@@ -241,18 +244,20 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
         }
 
         private final PaymentMethod<?> paymentMethod;
-        private final String ticker, name, tokenStandard, network, pegCurrency;
+        private final String ticker, name, tokenStandard, network, pegCurrency, country;
         private final Type type;
 
         public CryptoAssetItem(PaymentMethod<?> paymentMethod) {
             this.paymentMethod = paymentMethod;
 
+            String notAvailable = "-";
             if (paymentMethod instanceof CryptoPaymentMethod cryptoPaymentMethod) {
                 ticker = cryptoPaymentMethod.getCode();
                 name = cryptoPaymentMethod.getName();
-                tokenStandard = "-";
-                network = "-";
-                pegCurrency = "-";
+                tokenStandard = notAvailable;
+                network = notAvailable;
+                pegCurrency = notAvailable;
+                country = notAvailable;
                 type = Type.CRYPTO_CURRENCY;
             } else if (paymentMethod instanceof StableCoinPaymentMethod stablecoinPaymentMethod) {
                 ticker = stablecoinPaymentMethod.getCode();
@@ -260,7 +265,16 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
                 tokenStandard = stablecoinPaymentMethod.getPaymentRail().getStableCoin().getTokenStandard().getDisplayName();
                 network = stablecoinPaymentMethod.getPaymentRail().getStableCoin().getNetwork().getDisplayName();
                 pegCurrency = stablecoinPaymentMethod.getPaymentRail().getStableCoin().getPegCurrencyCode();
+                country = notAvailable;
                 type = Type.STABLE_COIN;
+            } else if (paymentMethod instanceof CbdcPaymentMethod cbdcPaymentMethod) {
+                ticker = cbdcPaymentMethod.getCode();
+                name = cbdcPaymentMethod.getName();
+                tokenStandard = notAvailable;
+                network = notAvailable;
+                pegCurrency = FiatCurrencyRepository.getCodeAndDisplayName(cbdcPaymentMethod.getPaymentRail().getCbdc().getPegCurrencyCode());
+                country = CountryRepository.getNameByCode(cbdcPaymentMethod.getPaymentRail().getCbdc().getCountryCode());
+                type = Type.CBDC;
             } else {
                 throw new UnsupportedOperationException("paymentMethod not supported " + paymentMethod.getClass().getSimpleName());
             }
@@ -271,7 +285,8 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
                     name + ", " +
                     tokenStandard + ", " +
                     network + ", " +
-                    pegCurrency;
+                    pegCurrency + ", " +
+                    country;
         }
     }
 }

@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.ManagedDuration;

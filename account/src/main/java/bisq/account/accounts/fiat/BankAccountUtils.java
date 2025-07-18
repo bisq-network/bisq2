@@ -17,7 +17,7 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.payment_method.FiatPaymentRailUtil;
+import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 

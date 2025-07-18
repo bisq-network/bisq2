@@ -19,7 +19,7 @@ package bisq.desktop.main.content.mu_sig.take_offer;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
@@ -35,7 +35,7 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.FiatPaymentMethodSpec;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
 import lombok.EqualsAndHashCode;

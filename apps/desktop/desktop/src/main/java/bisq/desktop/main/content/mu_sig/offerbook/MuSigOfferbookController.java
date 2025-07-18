@@ -18,9 +18,9 @@
 package bisq.desktop.main.content.mu_sig.offerbook;
 
 import bisq.account.AccountService;
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethodUtil;
-import bisq.account.payment_method.FiatPaymentRail;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
+import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
@@ -49,9 +49,7 @@ import bisq.settings.SettingsService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.banned.RateLimitExceededException;
 import bisq.user.banned.UserProfileBannedException;
-import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
-import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;

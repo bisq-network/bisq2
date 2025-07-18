@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.user.fiat_accounts.create.payment_method;
 
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethodChargebackRisk;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethodChargebackRisk;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;

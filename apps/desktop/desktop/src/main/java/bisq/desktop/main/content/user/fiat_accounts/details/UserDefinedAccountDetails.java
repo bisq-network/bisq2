@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.user.fiat_accounts.details;
 
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
-import bisq.account.payment_method.FiatPaymentRail;
+import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.payment_method;
+package bisq.account.payment_method.stable_coin;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,7 +24,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class StablecoinPaymentMethodUtil {
+public class StableCoinPaymentMethodUtil {
     public static Optional<StableCoinPaymentMethod> findPaymentMethod(String name) {
         try {
             StableCoinPaymentRail paymentRail = StableCoinPaymentRail.valueOf(name);
@@ -57,7 +57,7 @@ public class StablecoinPaymentMethodUtil {
                 .collect(Collectors.toList());
     }
 
-    public static List<StableCoinPaymentMethod> getMajorStableCoinPaymentMethods() {
+    public static List<StableCoinPaymentMethod> getPaymentMethods() {
         return StableCoinPaymentRailUtil.getMajorStableCoinPaymentRails().stream()
                 .map(StableCoinPaymentMethod::fromPaymentRail)
                 .collect(Collectors.toList());

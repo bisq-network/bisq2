@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.user.crypto_accounts.create.summary;
 
 import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
-import bisq.account.payment_method.CryptoPaymentMethod;
+import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import bisq.desktop.main.content.user.crypto_accounts.create.summary.details.SummaryDetails;

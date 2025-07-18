@@ -20,7 +20,7 @@ package bisq.desktop.main.content.mu_sig.create_offer.review;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.AccountUtils;
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;

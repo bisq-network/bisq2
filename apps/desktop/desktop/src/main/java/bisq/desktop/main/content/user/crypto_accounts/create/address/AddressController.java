@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.user.crypto_accounts.create.address;
 
 import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
-import bisq.account.payment_method.CryptoPaymentMethod;
+import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.user.crypto_accounts.create.address.form.AddressFormController;

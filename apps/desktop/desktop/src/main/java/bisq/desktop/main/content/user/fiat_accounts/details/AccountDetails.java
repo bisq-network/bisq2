@@ -22,7 +22,7 @@ import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
-import bisq.account.payment_method.FiatPaymentRail;
+import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.payment_method.PaymentRail;
 import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.data.Triple;

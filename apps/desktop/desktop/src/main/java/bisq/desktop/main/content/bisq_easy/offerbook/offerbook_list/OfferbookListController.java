@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list;
 
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethodUtil;
-import bisq.account.payment_method.FiatPaymentRail;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
+import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.bisq_easy.BisqEasyOfferbookMessageService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
