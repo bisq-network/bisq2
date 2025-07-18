@@ -96,10 +96,7 @@ public class MarketItem {
             long numOffers = muSigService.getOffers().stream()
                     .filter(offer -> {
                         Market offerMarket = offer.getMarket();
-
-                        // TODO: Needs to be dynamic according to base market
-                        // for now we just assume Btc.
-                        boolean isBaseMarket = offerMarket.isBtcFiatMarket() && offerMarket.getBaseCurrencyCode().equals("BTC");
+                        boolean isBaseMarket = offerMarket.getBaseCurrencyCode().equals(market.getBaseCurrencyCode());
                         boolean isQuoteMarket = offerMarket.getQuoteCurrencyCode().equals(market.getQuoteCurrencyCode());
                         return isBaseMarket && isQuoteMarket;
                     })
