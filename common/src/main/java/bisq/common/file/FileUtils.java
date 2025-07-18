@@ -131,10 +131,12 @@ public class FileUtils {
         }
     }
 
+    /**
+     * Deletes a file if it exists. On some operating systems it may not be possible
+     * to remove a file when it is open and in use by this Java virtual machine or other programs
+     */
     public static void deleteFile(File file) throws IOException {
-        if (file.exists()) {
-            Files.delete(file.toPath());
-        }
+        Files.deleteIfExists(file.toPath());
     }
 
     public static void makeDirIfNotExists(String dirName) throws IOException {

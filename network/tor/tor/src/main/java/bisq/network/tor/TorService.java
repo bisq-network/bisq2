@@ -141,15 +141,30 @@ public class TorService implements Service {
         PasswordDigest hashedControlPassword = PasswordDigest.generateDigest();
         Map<String, String> torrcConfigMap = createTorrcConfigFile(torDataDirPath, hashedControlPassword);
 
+        // remove the control port file before we launch tor, just in case it exists from
+        // a previous run
+        Path controlDirPath = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME);
+        Path controlPortFilePath = controlDirPath.resolve("control");
+        try {
+            FileUtils.deleteFile(controlPortFilePath.toFile());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to delete tor control port file: " + controlPortFilePath, e);
+        }
+
+
         var embeddedTorProcess = new EmbeddedTorProcess(torBinaryPath, torDataDirPath);
         torProcess = Optional.of(embeddedTorProcess);
         embeddedTorProcess.start();
 
-        Path controlDirPath = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME);
-        Path controlPortFilePath = controlDirPath.resolve("control");
         return new ControlPortFilePoller(controlPortFilePath)
                 .parsePort()
                 .thenAccept(controlPort -> {
+                    // Remove control port file after we have read the port.
+                    try {
+                        FileUtils.deleteFile(controlPortFilePath.toFile());
+                    } catch (IOException e) {
+                        log.warn("Failed to delete tor control port file after read: {}", controlPortFilePath, e);
+                    }
                     torController.initialize(controlPort);
                     torController.authenticate(hashedControlPassword);
                     torController.bootstrap();
