@@ -27,7 +27,6 @@ import bisq.http_api.rest_api.RestApiService;
 import bisq.http_api.rest_api.domain.chat.trade.TradeChatRestApi;
 import bisq.http_api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
-import bisq.http_api.rest_api.domain.network.NetworkStatsRestApi;
 import bisq.http_api.rest_api.domain.offers.OfferbookRestApi;
 import bisq.http_api.rest_api.domain.payment_accounts.PaymentAccountsRestApi;
 import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
@@ -88,7 +87,6 @@ public class HttpApiService implements Service {
             SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
             PaymentAccountsRestApi paymentAccountsRestApi = new PaymentAccountsRestApi(accountService);
             ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
-            NetworkStatsRestApi networkStatsRestApi = new NetworkStatsRestApi(userService);
             if (restApiConfigEnabled) {
                 var restApiResourceConfig = new RestApiResourceConfig(restApiConfig.getRestApiBaseUrl(),
                         offerbookRestApi,
@@ -98,8 +96,7 @@ public class HttpApiService implements Service {
                         marketPriceRestApi,
                         settingsRestApi,
                         explorerRestApi,
-                        paymentAccountsRestApi,
-                        networkStatsRestApi);
+                        paymentAccountsRestApi);
                 this.restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig));
             } else {
                 this.restApiService = Optional.empty();
@@ -114,8 +111,7 @@ public class HttpApiService implements Service {
                         marketPriceRestApi,
                         settingsRestApi,
                         explorerRestApi,
-                        paymentAccountsRestApi,
-                        networkStatsRestApi);
+                        paymentAccountsRestApi);
                 this.webSocketService = Optional.of(new WebSocketService(webSocketConfig,
                         webSocketConfig.getRestApiBaseAddress(),
                         webSocketResourceConfig,

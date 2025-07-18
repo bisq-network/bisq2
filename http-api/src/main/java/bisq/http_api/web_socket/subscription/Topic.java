@@ -26,5 +26,5 @@ public enum Topic {
     TRADE_CHATS,
     CHAT_REACTIONS,
     USER_REPUTATION,
-    NETWORK_STATS
+    USER_PROFILE_STATS
 }

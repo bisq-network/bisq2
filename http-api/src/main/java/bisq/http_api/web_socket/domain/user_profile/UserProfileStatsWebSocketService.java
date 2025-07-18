@@ -15,12 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.web_socket.domain.network;
-
+package bisq.http_api.web_socket.domain.user_profile;
 
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
-import bisq.http_api.rest_api.domain.network.NetworkStatsResponse;
 import bisq.http_api.web_socket.domain.SimpleObservableWebSocketService;
 import bisq.http_api.web_socket.subscription.SubscriberRepository;
 import bisq.http_api.web_socket.subscription.Topic;
@@ -29,16 +27,14 @@ import bisq.user.profile.UserProfileService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
-
-
 @Slf4j
-public class NetworkStatsWebSocketService extends SimpleObservableWebSocketService<Observable<Integer>, NetworkStatsResponse> {
+public class UserProfileStatsWebSocketService extends SimpleObservableWebSocketService<Observable<Integer>, Integer> {
     private final UserProfileService userProfileService;
 
-    public NetworkStatsWebSocketService(ObjectMapper objectMapper,
-                                        SubscriberRepository subscriberRepository,
-                                        UserService userService) {
-        super(objectMapper, subscriberRepository, Topic.NETWORK_STATS);
+    public UserProfileStatsWebSocketService(ObjectMapper objectMapper,
+                                           SubscriberRepository subscriberRepository,
+                                           UserService userService) {
+        super(objectMapper, subscriberRepository, Topic.USER_PROFILE_STATS);
         this.userProfileService = userService.getUserProfileService();
     }
 
@@ -48,24 +44,20 @@ public class NetworkStatsWebSocketService extends SimpleObservableWebSocketServi
     }
 
     @Override
-    protected NetworkStatsResponse toPayload(Observable<Integer> observable) {
+    protected Integer toPayload(Observable<Integer> observable) {
         try {
-            int totalPublishedProfiles = observable.get();
-            return new NetworkStatsResponse(totalPublishedProfiles);
+            return observable.get();
         } catch (Exception e) {
-            log.error("Error creating network stats payload", e);
-            return new NetworkStatsResponse(0);
+            log.error("Error creating user profile stats payload", e);
+            return 0;
         }
     }
 
     @Override
     protected Pin setupObserver() {
-        // Primary observer for user profiles count changes
         return userProfileService.getNumUserProfiles().addObserver(numProfiles -> {
             log.debug("User profiles count changed to: {}", numProfiles);
             onChange();
         });
     }
-
-
 }
