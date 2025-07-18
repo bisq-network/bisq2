@@ -19,6 +19,7 @@ package bisq.desktop.main.content.user.crypto_accounts.create.currency;
 
 import bisq.account.payment_method.CryptoPaymentMethod;
 import bisq.desktop.common.view.Model;
+import bisq.desktop.components.table.RichTableView;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -27,10 +28,13 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.scene.control.ToggleGroup;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import static bisq.desktop.main.content.user.crypto_accounts.create.currency.CryptoAssetSelectionView.CryptoAssetItem;
 
@@ -38,13 +42,25 @@ import static bisq.desktop.main.content.user.crypto_accounts.create.currency.Cry
 @Getter
 public class CryptoAssetSelectionModel implements Model {
     private final ObservableList<CryptoAssetItem> list = FXCollections.observableArrayList();
+    private final ToggleGroup filterMenuItemToggleGroup;
+    private final List<RichTableView.FilterMenuItem<CryptoAssetItem>> filterMenuItems;
+
     private final FilteredList<CryptoAssetItem> filteredList = new FilteredList<>(list);
     private final SortedList<CryptoAssetItem> sortedList = new SortedList<>(filteredList);
     private final ObjectProperty<CryptoAssetItem> selectedItem = new SimpleObjectProperty<>();
     private final ObjectProperty<CryptoPaymentMethod> selectedPaymentMethod = new SimpleObjectProperty<>();
+    private final ObjectProperty< CryptoAssetItem.Type> selectedType = new SimpleObjectProperty<>();
     private final StringProperty searchText = new SimpleStringProperty();
+    @Setter
+    private Predicate<CryptoAssetItem> filterItemPredicate = e -> true;
+    @Setter
+    private Predicate<CryptoAssetItem> searchStringPredicate = e -> true;
 
-    public CryptoAssetSelectionModel(List<CryptoAssetItem> list) {
-        this.list.setAll(list);
+    public CryptoAssetSelectionModel(List<CryptoAssetItem> items,
+                                     ToggleGroup filterMenuItemToggleGroup,
+                                     List<RichTableView.FilterMenuItem<CryptoAssetItem>> filterMenuItems) {
+        this.list.setAll(items);
+        this.filterMenuItemToggleGroup = filterMenuItemToggleGroup;
+        this.filterMenuItems = filterMenuItems;
     }
 }

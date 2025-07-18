@@ -75,10 +75,9 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
                 controller::applySearchPredicate);
         configTableView();
 
-        VBox contentBox = new VBox(10);
-        contentBox.getStyleClass().add("bisq-common-bg");
         VBox.setVgrow(richTableView, Priority.ALWAYS);
-        contentBox.getChildren().addAll(headlineLabel, richTableView);
+        VBox contentBox = new VBox(10, headlineLabel, richTableView);
+        contentBox.getStyleClass().add("bisq-common-bg");
 
         VBox.setVgrow(contentBox, Priority.ALWAYS);
         root.getChildren().addAll(contentBox);

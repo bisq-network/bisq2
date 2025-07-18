@@ -31,8 +31,8 @@ public class CryptoPaymentMethodUtil {
             "LTC", CryptoPaymentRail.NATIVE_CHAIN,
             "ETH", CryptoPaymentRail.NATIVE_CHAIN,
             "ETC", CryptoPaymentRail.NATIVE_CHAIN,
-            "L_BTC", CryptoPaymentRail.SIDECHAIN,
-            "LN_BTC", CryptoPaymentRail.LAYER_2,
+            "L-BTC", CryptoPaymentRail.SIDECHAIN,
+            "LN-BTC", CryptoPaymentRail.LAYER_2,
             "GRIN", CryptoPaymentRail.NATIVE_CHAIN,
             "ZEC", CryptoPaymentRail.NATIVE_CHAIN,
             "DOGE", CryptoPaymentRail.NATIVE_CHAIN

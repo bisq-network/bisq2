@@ -59,10 +59,4 @@ public class FiatPaymentMethodUtil {
                 .map(FiatPaymentMethod::fromPaymentRail)
                 .collect(Collectors.toList());
     }
-
-    public static List<String> getPaymentMethodNames(List<? extends PaymentMethod<?>> paymentMethods) {
-        return paymentMethods.stream()
-                .map(PaymentMethod::getPaymentRailName)
-                .collect(Collectors.toList());
-    }
 }

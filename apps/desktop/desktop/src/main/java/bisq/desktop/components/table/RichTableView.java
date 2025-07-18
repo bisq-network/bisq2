@@ -25,6 +25,7 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumnBase;
+import javafx.scene.control.TableView;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
@@ -292,6 +293,14 @@ public class RichTableView<T> extends VBox {
 
     private void listItemsChanged() {
         numEntriesLabel.setText(Res.get("component.standardTable.numEntries", tableView.getItems().size()));
+    }
+
+    public BisqTableColumn<T> getSelectionMarkerColumn() {
+        return tableView.getSelectionMarkerColumn();
+    }
+
+    public TableView.TableViewSelectionModel<T> getSelectionModel() {
+        return tableView.getSelectionModel();
     }
 
 
