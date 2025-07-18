@@ -17,7 +17,7 @@
 
 package bisq.account.payment_method;
 
-import bisq.common.currency.TradeCurrency;
+import bisq.common.asset.Asset;
 import bisq.common.locale.Country;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -70,7 +70,7 @@ public class FiatPaymentMethod extends NationalCurrencyPaymentMethod<FiatPayment
     }
 
     @Override
-    public List<? extends TradeCurrency> getSupportedCurrencies() {
+    public List<? extends Asset> getSupportedCurrencies() {
         return paymentRail.getSupportedCurrencies();
     }
 

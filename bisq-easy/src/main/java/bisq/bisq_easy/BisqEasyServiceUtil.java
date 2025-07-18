@@ -20,7 +20,7 @@ package bisq.bisq_easy;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.currency.Market;
+import bisq.common.market.Market;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import bisq.offer.Direction;

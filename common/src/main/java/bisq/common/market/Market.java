@@ -15,9 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.currency;
+package bisq.common.market;
 
-import bisq.common.currency.stable.StableCoinCurrency;
+import bisq.common.asset.FiatCurrency;
+import bisq.common.asset.FiatCurrencyRepository;
+import bisq.common.asset.StableCoin;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.PersistableProto;
 import bisq.common.validation.NetworkDataValidation;
@@ -107,7 +109,7 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
     }
 
     public boolean isBtcStableCoinMarket() {
-        return baseCurrencyCode.equals("BTC") && StableCoinCurrency.isStableCoinCurrency(quoteCurrencyCode);
+        return baseCurrencyCode.equals("BTC") && StableCoin.isStableCoin(quoteCurrencyCode);
     }
 
     public boolean isCrypto() {

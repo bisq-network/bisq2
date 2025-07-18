@@ -29,14 +29,14 @@ import lombok.Getter;
 
 @Getter
 public class TopPanelModel implements Model {
-    private final boolean isWalletEnabled;
+    private final boolean muSigActivated;
     private final ObjectProperty<Coin> balanceAsCoinProperty = new SimpleObjectProperty<>(Coin.fromValue(0, "BTC"));
     private final ObservableValue<String> formattedBalanceProperty = Bindings.createStringBinding(
             () -> AmountFormatter.formatBaseAmount(balanceAsCoinProperty.get()),
             balanceAsCoinProperty
     );
 
-    public TopPanelModel(boolean isWalletEnabled) {
-        this.isWalletEnabled = isWalletEnabled;
+    public TopPanelModel(boolean muSigActivated) {
+        this.muSigActivated = muSigActivated;
     }
 }

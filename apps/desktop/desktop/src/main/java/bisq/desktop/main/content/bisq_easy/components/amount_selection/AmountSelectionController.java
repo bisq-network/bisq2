@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.bisq_easy.components.amount_selection;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.currency.Market;
-import bisq.common.currency.TradeCurrency;
+import bisq.common.market.Market;
+import bisq.common.asset.Asset;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
@@ -226,8 +226,8 @@ public class AmountSelectionController implements Controller {
     }
 
     public void setMinMaxRange(Monetary minRangeValue, Monetary maxRangeValue) {
-        boolean minRangeValueIsFiat = TradeCurrency.isFiat(minRangeValue.getCode());
-        boolean maxRangeValueIsFiat = TradeCurrency.isFiat(maxRangeValue.getCode());
+        boolean minRangeValueIsFiat = Asset.isFiat(minRangeValue.getCode());
+        boolean maxRangeValueIsFiat = Asset.isFiat(maxRangeValue.getCode());
         checkArgument(minRangeValueIsFiat && maxRangeValueIsFiat,
                 "The provided minRangeValue and maxRangeValue must be fiat currencies as useQuoteCurrencyForMinMaxRange is set to true.");
 
@@ -563,8 +563,8 @@ public class AmountSelectionController implements Controller {
 
         Monetary minRangeMonetary = model.getMinRangeMonetary().get();
         Monetary maxRangeMonetary = model.getMaxRangeMonetary().get();
-        boolean isMinRangeMonetaryFiat = TradeCurrency.isFiat(minRangeMonetary.getCode());
-        boolean isMaxRangeMonetaryFiat = TradeCurrency.isFiat(maxRangeMonetary.getCode());
+        boolean isMinRangeMonetaryFiat = Asset.isFiat(minRangeMonetary.getCode());
+        boolean isMaxRangeMonetaryFiat = Asset.isFiat(maxRangeMonetary.getCode());
 
         Monetary minRangeMonetaryAsCoin = !isMinRangeMonetaryFiat ? minRangeMonetary : priceQuote.toBaseSideMonetary(minRangeMonetary);
         model.getMinRangeBaseSideValue().set(minRangeMonetaryAsCoin);

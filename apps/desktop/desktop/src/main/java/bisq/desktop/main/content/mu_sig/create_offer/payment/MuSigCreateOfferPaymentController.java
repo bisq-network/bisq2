@@ -28,7 +28,7 @@ import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.FiatPaymentMethodUtil;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.common.currency.Market;
+import bisq.common.market.Market;
 import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;

@@ -17,7 +17,7 @@
 
 package bisq.account.accounts;
 
-import bisq.account.accounts.crypto.CryptoCurrencyAccountPayload;
+import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
 import bisq.account.accounts.fiat.CashByMailAccountPayload;
 import bisq.account.accounts.fiat.CountryBasedAccountPayload;
 import bisq.account.accounts.fiat.FasterPaymentsAccountPayload;
@@ -86,7 +86,7 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
             case USPOSTALMONEYORDERACCOUNTPAYLOAD -> USPostalMoneyOrderAccountPayload.fromProto(proto);
             case CASHBYMAILACCOUNTPAYLOAD -> CashByMailAccountPayload.fromProto(proto);
             case INTERACETRANSFERACCOUNTPAYLOAD -> InteracETransferAccountPayload.fromProto(proto);
-            case CRYPTOCURRENCYACCOUNTPAYLOAD -> CryptoCurrencyAccountPayload.fromProto(proto);
+            case CRYPTOASSETACCOUNTPAYLOAD -> CryptoAssetAccountPayload.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);
         };

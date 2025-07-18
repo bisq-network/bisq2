@@ -20,7 +20,7 @@ package bisq.trade.bisq_easy.protocol.messages;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
-import bisq.common.currency.Market;
+import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.util.StringUtils;

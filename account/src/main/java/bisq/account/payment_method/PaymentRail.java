@@ -20,7 +20,13 @@ package bisq.account.payment_method;
 public interface PaymentRail {
     String name();
 
-    String getTradeLimit();
+    //todo will not stay here
+    default String getTradeLimit() {
+        return "10000 USD";
+    }
 
-    String getTradeDuration();
+    //todo
+    default String getTradeDuration() {
+        return "24 hours";
+    }
 }

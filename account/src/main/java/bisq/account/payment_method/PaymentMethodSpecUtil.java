@@ -17,7 +17,7 @@
 
 package bisq.account.payment_method;
 
-import bisq.common.currency.TradeCurrency;
+import bisq.common.asset.Asset;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -75,13 +75,13 @@ public class PaymentMethodSpecUtil {
 
     public static List<PaymentMethodSpec<?>> createPaymentMethodSpecs(List<PaymentMethod<?>> paymentMethods,
                                                                       String currencyCode) {
-        if (TradeCurrency.isFiat(currencyCode)) {
+        if (Asset.isFiat(currencyCode)) {
             return paymentMethods.stream()
                     .filter(e -> e instanceof FiatPaymentMethod)
                     .map(e -> (FiatPaymentMethod) e)
                     .map(FiatPaymentMethodSpec::new)
                     .collect(Collectors.toList());
-        } else if (TradeCurrency.isAltcoin(currencyCode)) {
+        } else if (Asset.isAltcoin(currencyCode)) {
             return paymentMethods.stream()
                     .filter(e -> e instanceof CryptoPaymentMethod)
                     .map(e -> (CryptoPaymentMethod) e)
@@ -94,9 +94,9 @@ public class PaymentMethodSpecUtil {
 
     public static PaymentMethodSpec<?> createPaymentMethodSpec(PaymentMethod<?> paymentMethod,
                                                                 String currencyCode) {
-        if (TradeCurrency.isFiat(currencyCode) && paymentMethod instanceof FiatPaymentMethod fiatPaymentMethod) {
+        if (Asset.isFiat(currencyCode) && paymentMethod instanceof FiatPaymentMethod fiatPaymentMethod) {
             return new FiatPaymentMethodSpec(fiatPaymentMethod);
-        } else if (TradeCurrency.isAltcoin(currencyCode) && paymentMethod instanceof CryptoPaymentMethod cryptoPaymentMethod) {
+        } else if (Asset.isAltcoin(currencyCode) && paymentMethod instanceof CryptoPaymentMethod cryptoPaymentMethod) {
             return new CryptoPaymentMethodSpec(cryptoPaymentMethod);
         } else {
             throw new UnsupportedOperationException("createPaymentMethodSpecs only supports fiat and altcoins. CurrencyCode: " + currencyCode);

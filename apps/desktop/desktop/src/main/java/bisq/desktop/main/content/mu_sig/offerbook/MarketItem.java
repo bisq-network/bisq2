@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.mu_sig.offerbook;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.currency.Market;
+import bisq.common.market.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;

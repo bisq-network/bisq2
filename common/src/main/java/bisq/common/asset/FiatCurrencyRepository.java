@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.currency;
+package bisq.common.asset;
 
 import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LocaleRepository;
@@ -65,7 +65,7 @@ public class FiatCurrencyRepository {
         minorCurrencies = new ArrayList<>(currencyByCode.values());
         minorCurrencies.remove(defaultCurrency);
         minorCurrencies.removeAll(majorCurrencies);
-        minorCurrencies.sort(Comparator.comparing(TradeCurrency::getDisplayNameAndCode));
+        minorCurrencies.sort(Comparator.comparing(Asset::getDisplayNameAndCode));
 
         allCurrencies = new ArrayList<>();
         allCurrencies.add(defaultCurrency);
@@ -118,11 +118,11 @@ public class FiatCurrencyRepository {
     }
 
     public static Optional<String> findName(String code) {
-        return Optional.ofNullable(currencyByCode.get(code)).map(TradeCurrency::getName);
+        return Optional.ofNullable(currencyByCode.get(code)).map(Asset::getName);
     }
 
     public static Optional<String> findDisplayName(String code) {
-        return Optional.ofNullable(currencyByCode.get(code)).map(TradeCurrency::getDisplayName);
+        return Optional.ofNullable(currencyByCode.get(code)).map(Asset::getDisplayName);
     }
 
     public static List<String> getAllFiatCurrencyCodes() {

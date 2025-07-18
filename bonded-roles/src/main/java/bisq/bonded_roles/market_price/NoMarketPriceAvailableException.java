@@ -17,7 +17,7 @@
 
 package bisq.bonded_roles.market_price;
 
-import bisq.common.currency.Market;
+import bisq.common.market.Market;
 import lombok.Getter;
 
 @Getter

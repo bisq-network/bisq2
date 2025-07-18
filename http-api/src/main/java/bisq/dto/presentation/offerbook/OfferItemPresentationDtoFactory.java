@@ -21,7 +21,7 @@ package bisq.dto.presentation.offerbook;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
-import bisq.common.currency.Market;
+import bisq.common.market.Market;
 import bisq.dto.DtoMappings;
 import bisq.dto.offer.bisq_easy.BisqEasyOfferDto;
 import bisq.dto.user.profile.UserProfileDto;

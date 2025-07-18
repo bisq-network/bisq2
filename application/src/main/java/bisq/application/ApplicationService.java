@@ -22,7 +22,7 @@ import bisq.common.application.ApplicationVersion;
 import bisq.common.application.DevMode;
 import bisq.common.application.OptionUtils;
 import bisq.common.application.Service;
-import bisq.common.currency.FiatCurrencyRepository;
+import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.file.FileUtils;
 import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LanguageRepository;

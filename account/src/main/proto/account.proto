@@ -107,11 +107,11 @@ message AccountPayload {
     CashByMailAccountPayload cashByMailAccountPayload = 26;
     InteracETransferAccountPayload interacETransferAccountPayload = 27;
 
-    CryptoCurrencyAccountPayload cryptoCurrencyAccountPayload = 100;
+    CryptoAssetAccountPayload cryptoAssetAccountPayload = 100;
   }
 }
 
-message CryptoCurrencyAccountPayload {
+message CryptoAssetAccountPayload {
   string currencyCode = 1;
   string address = 2;
   bool isInstant = 3;
@@ -121,7 +121,7 @@ message CryptoCurrencyAccountPayload {
   optional string autoConfExplorerUrls = 7;
   oneof message {
     MoneroAccountPayload moneroAccountPayload = 10;
-    OtherCryptoCurrencyAccountPayload otherCryptoCurrencyAccountPayload = 11;
+    OtherCryptoAssetAccountPayload otherCryptoAssetAccountPayload = 11;
   }
 }
 
@@ -132,7 +132,7 @@ message MoneroAccountPayload {
   optional uint32 initialSubAddressIndex = 4;
 }
 
-message OtherCryptoCurrencyAccountPayload {
+message OtherCryptoAssetAccountPayload {
 }
 
 message BsqAccountPayload {
@@ -356,21 +356,21 @@ message Account {
     CashByMailAccount cashByMailAccount = 26;
     InteracETransferAccount interacETransferAccount = 27;
 
-    CryptoCurrencyAccount cryptoCurrencyAccount = 100;
+    CryptoAssetAccount cryptoAssetAccount = 100;
   }
 }
 
-message CryptoCurrencyAccount {
+message CryptoAssetAccount {
   oneof message {
     MoneroAccount moneroAccount = 10;
-    OtherCryptoCurrencyAccount otherCryptoCurrencyAccount = 11;
+    OtherCryptoAssetAccount otherCryptoAssetAccount = 11;
   }
 }
 
 message MoneroAccount {
 }
 
-message OtherCryptoCurrencyAccount {
+message OtherCryptoAssetAccount {
 }
 
 

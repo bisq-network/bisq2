@@ -51,7 +51,7 @@ public class SummaryView extends View<StackPane, SummaryModel, SummaryController
     private static final double TOP_PANE_HEIGHT = 55;
     private static final double HEIGHT = 61;
 
-    private final Label cryptoCurrency, address;
+    private final Label cryptoAsset, address;
     private final GridPane gridPane;
     private final VBox accountNameOverlay;
     private final Button accountNameButton;
@@ -78,9 +78,9 @@ public class SummaryView extends View<StackPane, SummaryModel, SummaryController
         gridPane.add(getLine(), 0, rowIndex, 3, 1);
 
         rowIndex++;
-        Triple<Text, Label, VBox> cryptoCurrencyTriple = getDescriptionValueVBoxTriple(Res.get("paymentAccounts.crypto.summary.currencyName"));
-        cryptoCurrency = cryptoCurrencyTriple.getSecond();
-        gridPane.add(cryptoCurrencyTriple.getThird(), 0, rowIndex);
+        Triple<Text, Label, VBox> cryptoAssetTriple = getDescriptionValueVBoxTriple(Res.get("paymentAccounts.crypto.summary.currencyName"));
+        cryptoAsset = cryptoAssetTriple.getSecond();
+        gridPane.add(cryptoAssetTriple.getThird(), 0, rowIndex);
 
         Triple<Text, Label, VBox> addressTriple = getDescriptionValueVBoxTriple(Res.get("paymentAccounts.crypto.address.address"));
         addressDescription = addressTriple.getFirst();
@@ -120,7 +120,7 @@ public class SummaryView extends View<StackPane, SummaryModel, SummaryController
                     }
                 });
 
-        cryptoCurrency.setText(model.getPaymentMethod().getCurrencyNameAndCode());
+        cryptoAsset.setText(model.getPaymentMethod().getCurrencyNameAndCode());
         address.setText(model.getAccountPayload().getAddress());
 
         accountNameField.setText(model.getDefaultAccountName());

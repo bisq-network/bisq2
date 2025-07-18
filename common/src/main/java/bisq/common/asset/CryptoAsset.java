@@ -15,10 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.currency;
+package bisq.common.asset;
 
 
 import bisq.common.validation.Validation;
+import bisq.common.validation.crypto.CryptoAddressValidationRepository;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -27,43 +28,47 @@ import java.util.Set;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class CryptoCurrency extends TradeCurrency {
+public class CryptoAsset extends Asset {
+    //todo for dev
+    // private static final Set<String> SUPPORT_AUTO_CONF_CODES = Set.of("XMR");
     private static final Set<String> SUPPORT_AUTO_CONF_CODES = Set.of("XMR", "ETH");
 
     @Getter
-    @EqualsAndHashCode.Exclude
-    private transient final Validation validation;
+    private transient final Validation addressValidation;
     @Getter
-    @EqualsAndHashCode.Exclude
     private transient final boolean supportAutoConf;
 
     // For custom cryptoCurrencies not listed in Bisq
-    public CryptoCurrency(String code) {
+    public CryptoAsset(String code) {
         this(code, code);
     }
 
-    public CryptoCurrency(String code, String name) {
+    public CryptoAsset(String code, String name) {
         super(code, name);
-        this.validation = CryptoCurrencyValidationRepository.getValidation(code);
+        this.addressValidation = CryptoAddressValidationRepository.getValidation(code);
         supportAutoConf = SUPPORT_AUTO_CONF_CODES.contains(code);
     }
 
     @Override
-    public bisq.common.protobuf.TradeCurrency.Builder getBuilder(boolean serializeForHash) {
-        return getTradeCurrencyBuilder().setCryptoCurrency(bisq.common.protobuf.CryptoCurrency.newBuilder());
+    public bisq.common.protobuf.Asset.Builder getBuilder(boolean serializeForHash) {
+        return getAssetBuilder().setCryptoAsset(bisq.common.protobuf.CryptoAsset.newBuilder());
     }
 
     @Override
-    public bisq.common.protobuf.TradeCurrency toProto(boolean serializeForHash) {
+    public bisq.common.protobuf.Asset toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
 
-    public static CryptoCurrency fromProto(bisq.common.protobuf.TradeCurrency baseProto) {
-        return new CryptoCurrency(baseProto.getCode(), baseProto.getName());
+    public static CryptoAsset fromProto(bisq.common.protobuf.Asset baseProto) {
+        return new CryptoAsset(baseProto.getCode(), baseProto.getName());
     }
 
     @Override
     public String getDisplayName() {
         return name;
+    }
+
+    public boolean isCustom() {
+        return CryptoAssetRepository.find(code).isEmpty();
     }
 }

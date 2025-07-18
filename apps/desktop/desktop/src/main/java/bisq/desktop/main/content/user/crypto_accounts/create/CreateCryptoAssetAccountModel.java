@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Getter
-public class CreateCryptoCurrencyAccountModel extends NavigationModel {
+public class CreateCryptoAssetAccountModel extends NavigationModel {
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
     private final BooleanProperty createAccountButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty();

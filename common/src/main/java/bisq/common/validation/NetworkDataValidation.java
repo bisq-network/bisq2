@@ -130,6 +130,8 @@ public class NetworkDataValidation {
     public static void validateCode(String code) {
         checkArgument(code.length() < 10,
                 "Code too long. code=" + code);
+        checkArgument(code.length() > 1,
+                "Code too short. code=" + code);
     }
 
     public static void validateRequiredCode(String code) {

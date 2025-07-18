@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.crypto_accounts.create.summary.details;
 
-import bisq.account.accounts.crypto.CryptoCurrencyAccountPayload;
+import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
 import bisq.account.payment_method.CryptoPaymentRail;
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.utils.GridPaneUtil;
@@ -30,7 +30,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 
-public class SummaryDetails<P extends CryptoCurrencyAccountPayload> extends GridPane {
+public class SummaryDetails<P extends CryptoAssetAccountPayload> extends GridPane {
     protected static final String DESCRIPTION_STYLE = "trade-wizard-review-description";
     protected static final String VALUE_STYLE = "trade-wizard-review-value";
     protected static final String DETAILS_STYLE = "trade-wizard-review-details";

@@ -17,13 +17,13 @@
 
 package bisq.desktop.main.content.user.crypto_accounts.create.address.form;
 
-import bisq.account.accounts.crypto.CryptoCurrencyAccountPayload;
+import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
 import bisq.account.payment_method.CryptoPaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
-public abstract class AddressFormController<V extends AddressFormView<?, ?>, M extends AddressFormModel, P extends CryptoCurrencyAccountPayload> implements Controller {
+public abstract class AddressFormController<V extends AddressFormView<?, ?>, M extends AddressFormModel, P extends CryptoAssetAccountPayload> implements Controller {
     @Getter
     protected final V view;
     protected final M model;

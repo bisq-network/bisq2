@@ -21,9 +21,6 @@ package bisq.account;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.account.payment_method.PaymentMethodUtil;
-import bisq.account.payment_method.PaymentRail;
-import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
@@ -34,8 +31,6 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -125,16 +120,6 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
     public void setSelectedAccount(Account<? extends PaymentMethod<?>, ?> account) {
         selectedAccountAsObservable().set(account);
         persist();
-    }
-
-    public List<Account<? extends PaymentMethod<?>, ?>> getMatchingAccounts(TradeProtocolType protocolTyp,
-                                                                            String currencyCode) {
-        Set<? extends PaymentRail> paymentMethods =
-                new HashSet<>(PaymentMethodUtil.getPaymentRails(protocolTyp, currencyCode));
-        return persistableStore.getAccountByName().values().stream()
-                .filter(account -> paymentMethods.contains(account.getAccountPayload().getPaymentMethod().getPaymentRail()))
-                .filter(account -> account.getSupportedCurrencyCodes().contains(currencyCode))
-                .collect(Collectors.toList());
     }
 
     public Set<Account<? extends PaymentMethod<?>, ?>> getAccounts(PaymentMethod<?> paymentMethod) {

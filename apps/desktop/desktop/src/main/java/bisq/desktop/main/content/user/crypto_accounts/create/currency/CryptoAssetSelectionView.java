@@ -46,15 +46,15 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class CryptoCurrencySelectionView extends View<VBox, CryptoCurrencySelectionModel, CryptoCurrencySelectionController> {
-    private final BisqTableView<CryptoCurrencyItem> tableView;
+public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionModel, CryptoAssetSelectionController> {
+    private final BisqTableView<CryptoAssetItem> tableView;
     private final SearchBox searchBox;
-    private final ListChangeListener<CryptoCurrencyItem> listChangeListener;
+    private final ListChangeListener<CryptoAssetItem> listChangeListener;
     private final StackPane searchBoxPane;
     private Subscription searchTextPin, selectedItemPin;
     private Label paymentMethodHeaderLabel;
 
-    public CryptoCurrencySelectionView(CryptoCurrencySelectionModel model, CryptoCurrencySelectionController controller) {
+    public CryptoAssetSelectionView(CryptoAssetSelectionModel model, CryptoAssetSelectionController controller) {
         super(new VBox(20), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
@@ -119,12 +119,12 @@ public class CryptoCurrencySelectionView extends View<VBox, CryptoCurrencySelect
     private void configureTableColumns() {
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
 
-        BisqTableColumn<CryptoCurrencyItem> column = new BisqTableColumn.Builder<CryptoCurrencyItem>()
+        BisqTableColumn<CryptoAssetItem> column = new BisqTableColumn.Builder<CryptoAssetItem>()
                 .title(Res.get("paymentAccounts.createAccount.paymentMethod.table.currencies"))
                 .minWidth(120)
                 .left()
-                .valueSupplier(CryptoCurrencyItem::getCurrencyCodeAndDisplayNames)
-                .tooltipSupplier(CryptoCurrencyItem::getCurrencyCodeAndDisplayNames)
+                .valueSupplier(CryptoAssetItem::getCurrencyCodeAndDisplayNames)
+                .tooltipSupplier(CryptoAssetItem::getCurrencyCodeAndDisplayNames)
                 .build();
         tableView.getColumns().add(column);
 
@@ -137,7 +137,7 @@ public class CryptoCurrencySelectionView extends View<VBox, CryptoCurrencySelect
         }
     }
 
-    private Callback<TableColumn<CryptoCurrencyItem, CryptoCurrencyItem>, TableCell<CryptoCurrencyItem, CryptoCurrencyItem>> getNameWithIconCellFactory() {
+    private Callback<TableColumn<CryptoAssetItem, CryptoAssetItem>, TableCell<CryptoAssetItem, CryptoAssetItem>> getNameWithIconCellFactory() {
         return column -> new TableCell<>() {
             private final Label label = new Label();
             private final Tooltip tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
@@ -147,7 +147,7 @@ public class CryptoCurrencySelectionView extends View<VBox, CryptoCurrencySelect
             }
 
             @Override
-            protected void updateItem(CryptoCurrencyItem item, boolean empty) {
+            protected void updateItem(CryptoAssetItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -174,11 +174,11 @@ public class CryptoCurrencySelectionView extends View<VBox, CryptoCurrencySelect
     }
 
     @Getter
-    public static class CryptoCurrencyItem {
+    public static class CryptoAssetItem {
         private final CryptoPaymentMethod paymentMethod;
         private final String name, currencyCode, currencyCodeAndDisplayNames;
 
-        public CryptoCurrencyItem(CryptoPaymentMethod paymentMethod) {
+        public CryptoAssetItem(CryptoPaymentMethod paymentMethod) {
             this.paymentMethod = paymentMethod;
             name = paymentMethod.getDisplayString();
 

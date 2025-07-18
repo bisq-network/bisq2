@@ -19,7 +19,7 @@ package bisq.desktop.main.content.mu_sig.create_offer;
 
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.common.currency.Market;
+import bisq.common.market.Market;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.desktop.ServiceProvider;

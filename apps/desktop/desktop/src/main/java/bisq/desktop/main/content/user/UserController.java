@@ -20,7 +20,7 @@ package bisq.desktop.main.content.user;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
-import bisq.desktop.main.content.user.crypto_accounts.CryptoCurrencyAccountsController;
+import bisq.desktop.main.content.user.crypto_accounts.CryptoAssetAccountsController;
 import bisq.desktop.main.content.user.fiat_accounts.FiatPaymentAccountsController;
 import bisq.desktop.main.content.user.password.PasswordController;
 import bisq.desktop.main.content.user.user_profile.UserProfileController;
@@ -62,7 +62,7 @@ public class UserController extends ContentTabController<UserModel> {
             case USER_PROFILE -> Optional.of(new UserProfileController(serviceProvider));
             case PASSWORD -> Optional.of(new PasswordController(serviceProvider));
             case FIAT_PAYMENT_ACCOUNTS -> Optional.of(new FiatPaymentAccountsController(serviceProvider));
-            case CRYPTO_CURRENCY_ACCOUNTS -> Optional.of(new CryptoCurrencyAccountsController(serviceProvider));
+            case CRYPTO_CURRENCY_ACCOUNTS -> Optional.of(new CryptoAssetAccountsController(serviceProvider));
             default -> Optional.empty();
         };
     }

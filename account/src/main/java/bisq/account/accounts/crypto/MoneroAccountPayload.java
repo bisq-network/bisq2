@@ -19,7 +19,7 @@ package bisq.account.accounts.crypto;
 
 import bisq.account.payment_method.CryptoPaymentMethod;
 import bisq.account.payment_method.CryptoPaymentRail;
-import bisq.common.currency.CryptoCurrencyRepository;
+import bisq.common.asset.CryptoAssetRepository;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -31,7 +31,7 @@ import java.util.Optional;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class MoneroAccountPayload extends CryptoCurrencyAccountPayload {
+public final class MoneroAccountPayload extends CryptoAssetAccountPayload {
     private final boolean useSubAddresses;
     private final Optional<String> privateViewKey;
     private final Optional<Integer> accountIndex;
@@ -90,11 +90,11 @@ public final class MoneroAccountPayload extends CryptoCurrencyAccountPayload {
 
     @Override
     public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
-        bisq.account.protobuf.CryptoCurrencyAccountPayload.Builder builder = getCryptoCurrencyAccountPayloadBuilder(serializeForHash)
+        bisq.account.protobuf.CryptoAssetAccountPayload.Builder builder = getCryptoAssetAccountPayloadBuilder(serializeForHash)
                 .setMoneroAccountPayload(getMoneroAccountPayloadBuilder(serializeForHash));
-        bisq.account.protobuf.CryptoCurrencyAccountPayload cryptoCurrencyAccountPayload = resolveBuilder(builder, serializeForHash).build();
+        bisq.account.protobuf.CryptoAssetAccountPayload cryptoAssetAccountPayload = resolveBuilder(builder, serializeForHash).build();
         return getAccountPayloadBuilder(serializeForHash)
-                .setCryptoCurrencyAccountPayload(cryptoCurrencyAccountPayload);
+                .setCryptoAssetAccountPayload(cryptoAssetAccountPayload);
     }
 
     private bisq.account.protobuf.MoneroAccountPayload.Builder getMoneroAccountPayloadBuilder(
@@ -108,17 +108,17 @@ public final class MoneroAccountPayload extends CryptoCurrencyAccountPayload {
     }
 
     public static MoneroAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var cryptoCurrency = proto.getCryptoCurrencyAccountPayload();
-        var monero = cryptoCurrency.getMoneroAccountPayload();
+        var cryptoAssetAccountPayload = proto.getCryptoAssetAccountPayload();
+        var monero = cryptoAssetAccountPayload.getMoneroAccountPayload();
         return new MoneroAccountPayload(
                 proto.getId(),
-                cryptoCurrency.getCurrencyCode(),
-                cryptoCurrency.getAddress(),
-                cryptoCurrency.getIsInstant(),
-                cryptoCurrency.hasIsAutoConf() ? Optional.of(cryptoCurrency.getIsAutoConf()) : Optional.empty(),
-                cryptoCurrency.hasAutoConfNumConfirmations() ? Optional.of(cryptoCurrency.getAutoConfNumConfirmations()) : Optional.empty(),
-                cryptoCurrency.hasAutoConfMaxTradeAmount() ? Optional.of(cryptoCurrency.getAutoConfMaxTradeAmount()) : Optional.empty(),
-                cryptoCurrency.hasAutoConfExplorerUrls() ? Optional.of(cryptoCurrency.getAutoConfExplorerUrls()) : Optional.empty(),
+                cryptoAssetAccountPayload.getCurrencyCode(),
+                cryptoAssetAccountPayload.getAddress(),
+                cryptoAssetAccountPayload.getIsInstant(),
+                cryptoAssetAccountPayload.hasIsAutoConf() ? Optional.of(cryptoAssetAccountPayload.getIsAutoConf()) : Optional.empty(),
+                cryptoAssetAccountPayload.hasAutoConfNumConfirmations() ? Optional.of(cryptoAssetAccountPayload.getAutoConfNumConfirmations()) : Optional.empty(),
+                cryptoAssetAccountPayload.hasAutoConfMaxTradeAmount() ? Optional.of(cryptoAssetAccountPayload.getAutoConfMaxTradeAmount()) : Optional.empty(),
+                cryptoAssetAccountPayload.hasAutoConfExplorerUrls() ? Optional.of(cryptoAssetAccountPayload.getAutoConfExplorerUrls()) : Optional.empty(),
                 monero.getUseSubAddresses(),
                 monero.hasPrivateViewKey() ? Optional.of(monero.getPrivateViewKey()) : Optional.empty(),
                 monero.hasAccountIndex() ? Optional.of(monero.getAccountIndex()) : Optional.empty(),
@@ -128,7 +128,7 @@ public final class MoneroAccountPayload extends CryptoCurrencyAccountPayload {
 
     @Override
     public CryptoPaymentMethod getPaymentMethod() {
-        return new CryptoPaymentMethod(CryptoPaymentRail.NATIVE_CHAIN, CryptoCurrencyRepository.XMR.getCode());
+        return new CryptoPaymentMethod(CryptoPaymentRail.NATIVE_CHAIN, CryptoAssetRepository.XMR.getCode());
     }
 
   /*  @Override

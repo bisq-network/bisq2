@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.components;
 
-import bisq.common.currency.TradeCurrency;
+import bisq.common.asset.Asset;
 import bisq.common.data.Pair;
 import bisq.common.data.Triple;
 import bisq.desktop.components.containers.Spacer;
@@ -67,7 +67,7 @@ public class MuSigReviewDataDisplay {
 
     public void setToSendCode(String value) {
         controller.model.getToSendCode().set(value);
-        controller.model.getIsSendBtc().set(TradeCurrency.isBtc(value));
+        controller.model.getIsSendBtc().set(Asset.isBtc(value));
     }
 
     public void setToReceiveAmountDescription(String value) {
@@ -76,7 +76,7 @@ public class MuSigReviewDataDisplay {
 
     public void setToReceiveCode(String value) {
         controller.model.getToReceiveCode().set(value);
-        controller.model.getIsReceiveBtc().set(TradeCurrency.isBtc(value));
+        controller.model.getIsReceiveBtc().set(Asset.isBtc(value));
     }
 
     public void setFiatPaymentMethodDescription(String value) {

@@ -18,7 +18,7 @@
 package bisq.settings;
 
 import bisq.common.application.Service;
-import bisq.common.currency.Market;
+import bisq.common.market.Market;
 import bisq.common.observable.collection.ObservableSet;
 import lombok.extern.slf4j.Slf4j;
 

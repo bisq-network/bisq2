@@ -15,27 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.currency.stable;
+package bisq.desktop.components.controls.validator.crypto;
 
-import lombok.Getter;
+import bisq.common.validation.Validation;
+import bisq.desktop.components.controls.validator.ValidatorBase;
 
-public enum StableCoinIssuer {
-    TETHER("Tether Ltd."),
-    CIRCLE("Circle Internet Financial, LLC"),
-    MAKERDAO("MakerDAO"),
-    FIRST_DIGITAL("First Digital Trust Limited"),
-    PAXOS("Paxos Trust Company"),
-    GEMINI("Gemini Trust Company, LLC"),
-    TECHTERYX("Techteryx Ltd."), // issuer of TrueUSD (TUSD)
-    STABLESAT("Galoy Inc."),     // synthetic USD via Stablesats
-    LIGHTNING_LABS("Lightning Labs"), // Taproot Assets experimental issuer
-    FEDIMINT("Fedimint Federation");
-
-    @Getter
-    private final String displayName;
-
-    StableCoinIssuer(String displayName) {
-        this.displayName = displayName;
+public class CryptoAssetValidator extends ValidatorBase {
+    public CryptoAssetValidator(Validation validation) {
+        super(validation);
     }
 }
-

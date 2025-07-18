@@ -17,8 +17,6 @@
 
 package bisq.account.payment_method;
 
-import bisq.account.protocol_type.TradeProtocolType;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,15 +24,6 @@ public class StablecoinPaymentRailUtil {
 
     public static List<StablecoinPaymentRail> getPaymentRails() {
         return List.of(StablecoinPaymentRail.values());
-    }
-
-    public static List<StablecoinPaymentRail> getPaymentRails(TradeProtocolType protocolType) {
-        return switch (protocolType) {
-            case BISQ_EASY, MU_SIG, BISQ_LIGHTNING -> getPaymentRails();
-            case MONERO_SWAP, LIQUID_SWAP, BSQ_SWAP ->
-                    throw new UnsupportedOperationException("No paymentMethods for that protocolType");
-            default -> throw new RuntimeException("Not handled case: protocolType=" + protocolType);
-        };
     }
 
     public static List<StablecoinPaymentRail> getPaymentRails(String currencyCode) {

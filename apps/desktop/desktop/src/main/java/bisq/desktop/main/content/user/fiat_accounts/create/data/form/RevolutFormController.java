@@ -19,8 +19,8 @@ package bisq.desktop.main.content.user.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.RevolutAccountPayload;
 import bisq.account.payment_method.FiatPaymentRailUtil;
-import bisq.common.currency.FiatCurrency;
-import bisq.common.currency.TradeCurrency;
+import bisq.common.asset.FiatCurrency;
+import bisq.common.asset.Asset;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +43,7 @@ public class RevolutFormController extends FormController<RevolutFormView, Revol
     @Override
     protected RevolutFormModel createModel() {
         List<FiatCurrency> revolutCurrencies = FiatPaymentRailUtil.getRevolutCurrencies().stream()
-                .sorted(Comparator.comparing(TradeCurrency::getName))
+                .sorted(Comparator.comparing(Asset::getName))
                 .collect(Collectors.toList());
         return new RevolutFormModel(StringUtils.createUid(), revolutCurrencies);
     }
@@ -63,7 +63,7 @@ public class RevolutFormController extends FormController<RevolutFormView, Revol
         return new RevolutAccountPayload(model.getId(),
                 model.getUserName().get(),
                 model.getSelectedCurrencies().stream()
-                        .map(TradeCurrency::getCode)
+                        .map(Asset::getCode)
                         .collect(Collectors.toList()));
     }
 

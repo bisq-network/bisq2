@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.crypto_accounts.create.address.form;
 
-import bisq.account.accounts.crypto.OtherCryptoCurrencyAccountPayload;
+import bisq.account.accounts.crypto.OtherCryptoAssetAccountPayload;
 import bisq.account.payment_method.CryptoPaymentMethod;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class OtherAddressFormController extends AddressFormController<OtherAddressFormView, OtherAddressFormModel, OtherCryptoCurrencyAccountPayload> {
+public class OtherAddressFormController extends AddressFormController<OtherAddressFormView, OtherAddressFormModel, OtherCryptoAssetAccountPayload> {
     public OtherAddressFormController(ServiceProvider serviceProvider, CryptoPaymentMethod paymentMethod) {
         super(serviceProvider, paymentMethod);
     }
@@ -44,7 +44,7 @@ public class OtherAddressFormController extends AddressFormController<OtherAddre
     }
 
     @Override
-    public OtherCryptoCurrencyAccountPayload createAccountPayload() {
+    public OtherCryptoAssetAccountPayload createAccountPayload() {
         Optional<Boolean> isAutoConf = model.isAutoConfSupported() ? Optional.of(model.getIsAutoConf().get()) : Optional.empty();
         Optional<Integer> autoConfNumConfirmations = model.getAutoConfNumConfirmations().get() == null
                 ? Optional.empty()
@@ -54,7 +54,7 @@ public class OtherAddressFormController extends AddressFormController<OtherAddre
             Monetary amount = AmountParser.parse(model.getAutoConfMaxTradeAmount().get(), "BTC");
             autoConfMaxTradeAmount = Optional.of(amount.getValue());
         }
-        return new OtherCryptoCurrencyAccountPayload(model.getId(),
+        return new OtherCryptoAssetAccountPayload(model.getId(),
                 model.getCurrencyCode(),
                 model.getAddress().get(),
                 model.getIsInstant().get(),

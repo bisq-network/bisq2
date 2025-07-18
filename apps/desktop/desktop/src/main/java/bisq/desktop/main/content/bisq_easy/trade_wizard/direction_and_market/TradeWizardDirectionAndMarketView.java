@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.direction_and_market;
 
-import bisq.common.currency.FiatCurrency;
-import bisq.common.currency.Market;
+import bisq.common.asset.FiatCurrency;
+import bisq.common.market.Market;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;

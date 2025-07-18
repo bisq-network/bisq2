@@ -21,7 +21,7 @@ import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.application.BuildVersion;
-import bisq.common.currency.Market;
+import bisq.common.market.Market;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;

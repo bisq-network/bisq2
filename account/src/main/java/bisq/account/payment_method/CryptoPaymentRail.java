@@ -19,21 +19,13 @@ package bisq.account.payment_method;
 
 //TODO Requires more thoughts
 public enum CryptoPaymentRail implements PaymentRail {
-    CUSTOM,                             // Custom defined payment rail by the user
-    NATIVE_CHAIN,                       // The native chain of that cryptocurrency
-    LN,                                 // Lightning Network
-    LIQUID,                             // Liquid side chain
-    BSQ,                                // BSQ (colored coin on the BTC blockchain)
-    OTHER;
-
-    @Override
-    public String getTradeLimit() {
-        //todo
-        return "10000 USD";
-    }
-
-    @Override
-    public String getTradeDuration() {
-        return "24 hours";
-    }
+    CUSTOM,                  // Custom/user-defined
+    NATIVE_CHAIN,            // Main chain of the asset (e.g. BTC on Bitcoin, ETH on Ethereum)
+    SMART_CONTRACT,          // Asset transferred via a smart contract on a host chain (ERC20, TRC20, SPL)
+    LAYER_2,                 // Layer 2 (Lightning,...)
+    SIDECHAIN,               // Sidechain (Liquid, RBTC,...)
+    WRAPPED_ASSET,           // Cross-chain wrapped assets (WBTC, WETH)
+    CUSTODIAL,               // Off-chain/internal ledger (CEX transfers, PayPal USD)
+    CBDC,                    // CBDC
+    OTHER                    // Catch-all
 }

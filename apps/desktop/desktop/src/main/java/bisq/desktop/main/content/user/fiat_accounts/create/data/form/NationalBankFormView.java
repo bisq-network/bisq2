@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.user.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.BankAccountType;
-import bisq.common.currency.FiatCurrency;
-import bisq.common.currency.TradeCurrency;
+import bisq.common.asset.FiatCurrency;
+import bisq.common.asset.Asset;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
 import bisq.common.util.StringUtils;
@@ -106,7 +106,7 @@ public class NationalBankFormView extends FormView<NationalBankFormModel, Nation
             @Override
             public String toString(FiatCurrency currency) {
                 return Optional.ofNullable(currency)
-                        .map(TradeCurrency::getDisplayNameAndCode)
+                        .map(Asset::getDisplayNameAndCode)
                         .orElse("");
             }
 

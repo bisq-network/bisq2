@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.user.crypto_accounts.details;
 
 import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.crypto.CryptoCurrencyAccount;
-import bisq.account.accounts.crypto.CryptoCurrencyAccountPayload;
+import bisq.account.accounts.crypto.CryptoAssetAccount;
+import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
 import bisq.common.data.Triple;
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -42,7 +42,7 @@ import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class AccountDetails<A extends CryptoCurrencyAccount<?>> extends VBox {
+public abstract class AccountDetails<A extends CryptoAssetAccount<?>> extends VBox {
     protected static final String DESCRIPTION_STYLE = "trade-wizard-review-description";
     protected static final String VALUE_STYLE = "trade-wizard-review-value";
     protected static final String DETAILS_STYLE = "trade-wizard-review-details";
@@ -89,7 +89,7 @@ public abstract class AccountDetails<A extends CryptoCurrencyAccount<?>> extends
     }
 
     protected void addDetails(A account) {
-        CryptoCurrencyAccountPayload accountPayload = account.getAccountPayload();
+        CryptoAssetAccountPayload accountPayload = account.getAccountPayload();
         String address = accountPayload.getAddress();
         addressDescriptionLabel = addDescriptionLabel(Res.get("paymentAccounts.crypto.address.address"));
         addValueLabel(address);

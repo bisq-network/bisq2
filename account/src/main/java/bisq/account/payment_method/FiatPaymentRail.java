@@ -17,9 +17,9 @@
 
 package bisq.account.payment_method;
 
-import bisq.common.currency.FiatCurrency;
-import bisq.common.currency.FiatCurrencyRepository;
-import bisq.common.currency.TradeCurrency;
+import bisq.common.asset.FiatCurrency;
+import bisq.common.asset.FiatCurrencyRepository;
+import bisq.common.asset.Asset;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
 import bisq.i18n.Res;
@@ -236,7 +236,7 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
     private final List<Country> supportedCountries;
     @Getter
     @EqualsAndHashCode.Exclude
-    private final List<? extends TradeCurrency> supportedCurrencies;
+    private final List<? extends Asset> supportedCurrencies;
     @Getter
     @EqualsAndHashCode.Exclude
     private final List<String> supportedCurrencyCodes;
@@ -246,31 +246,31 @@ public enum FiatPaymentRail implements NationalCurrencyPaymentRail {
     private final FiatPaymentMethodChargebackRisk chargebackRisk;
 
     FiatPaymentRail(Country supportedCountry,
-                    List<? extends TradeCurrency> supportedCurrencies,
+                    List<? extends Asset> supportedCurrencies,
                     FiatPaymentMethodChargebackRisk chargebackRisk) {
         this(List.of(supportedCountry), supportedCurrencies, chargebackRisk);
     }
 
     FiatPaymentRail(List<Country> supportedCountries,
-                    TradeCurrency supportedCurrency,
+                    Asset supportedCurrency,
                     FiatPaymentMethodChargebackRisk chargebackRisk) {
         this(supportedCountries, List.of(supportedCurrency), chargebackRisk);
     }
 
     FiatPaymentRail(Country supportedCountry,
-                    TradeCurrency supportedCurrency,
+                    Asset supportedCurrency,
                     FiatPaymentMethodChargebackRisk chargebackRisk) {
         this(List.of(supportedCountry), List.of(supportedCurrency), chargebackRisk);
     }
 
     FiatPaymentRail(List<Country> supportedCountries,
-                    List<? extends TradeCurrency> supportedCurrencies,
+                    List<? extends Asset> supportedCurrencies,
                     FiatPaymentMethodChargebackRisk chargebackRisk) {
         this.supportedCountries = supportedCountries;
         this.supportedCurrencies = supportedCurrencies;
         this.chargebackRisk = chargebackRisk;
 
-        supportedCurrencyCodes = supportedCurrencies.stream().map(TradeCurrency::getCode).collect(Collectors.toList());
+        supportedCurrencyCodes = supportedCurrencies.stream().map(Asset::getCode).collect(Collectors.toList());
         supportedCurrencyCodesAsSet = new HashSet<>(supportedCurrencyCodes);
 
     }

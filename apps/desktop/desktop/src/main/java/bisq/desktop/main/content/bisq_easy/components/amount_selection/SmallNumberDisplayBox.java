@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.bisq_easy.components.amount_selection;
 
-import bisq.common.currency.Market;
-import bisq.common.currency.TradeCurrency;
+import bisq.common.market.Market;
+import bisq.common.asset.Asset;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -108,7 +108,7 @@ public class SmallNumberDisplayBox implements AmountNumberBox {
             model.code.set(model.isBaseCurrency
                     ? model.selectedMarket.getBaseCurrencyCode()
                     : model.selectedMarket.getQuoteCurrencyCode());
-            model.isBtc.set(TradeCurrency.isBtc(model.code.get()));
+            model.isBtc.set(Asset.isBtc(model.code.get()));
         }
     }
 
@@ -211,7 +211,7 @@ public class SmallNumberDisplayBox implements AmountNumberBox {
         }
 
         private void onCodeChanged(String newValue) {
-            model.isBtc.set(TradeCurrency.isBtc(newValue));
+            model.isBtc.set(Asset.isBtc(newValue));
         }
 
         private void onAmountChanged(Monetary newValue) {

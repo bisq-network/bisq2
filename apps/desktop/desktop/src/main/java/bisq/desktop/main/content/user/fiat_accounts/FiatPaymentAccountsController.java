@@ -20,7 +20,7 @@ package bisq.desktop.main.content.user.fiat_accounts;
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.crypto.CryptoCurrencyAccount;
+import bisq.account.accounts.crypto.CryptoAssetAccount;
 import bisq.account.accounts.fiat.F2FAccount;
 import bisq.account.accounts.fiat.FasterPaymentsAccount;
 import bisq.account.accounts.fiat.NationalBankAccount;
@@ -82,7 +82,7 @@ public class FiatPaymentAccountsController implements Controller {
             @Override
             public void add(Account<? extends PaymentMethod<?>, ?> account) {
                 UIThread.run(() -> {
-                    if (!(account instanceof CryptoCurrencyAccount) && !model.getAccounts().contains(account)) {
+                    if (!(account instanceof CryptoAssetAccount) && !model.getAccounts().contains(account)) {
                         model.getAccounts().add(account);
                         accountService.setSelectedAccount(account);
                         updateNoAccountsState();

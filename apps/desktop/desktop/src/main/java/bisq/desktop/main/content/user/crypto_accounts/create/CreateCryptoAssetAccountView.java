@@ -46,7 +46,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class CreateCryptoCurrencyAccountView extends NavigationView<VBox, CreateCryptoCurrencyAccountModel, CreateCryptoCurrencyAccountController> {
+public class CreateCryptoAssetAccountView extends NavigationView<VBox, CreateCryptoAssetAccountModel, CreateCryptoAssetAccountController> {
     private static final double POPUP_HEIGHT = OverlayModel.HEIGHT;
     private static final double TOP_PANE_HEIGHT = 55;
     private static final double BUTTON_HEIGHT = 32;
@@ -62,7 +62,7 @@ public class CreateCryptoCurrencyAccountView extends NavigationView<VBox, Create
     private UIScheduler progressLabelAnimationScheduler;
     private FadeTransition progressLabelAnimation;
 
-    public CreateCryptoCurrencyAccountView(CreateCryptoCurrencyAccountModel model, CreateCryptoCurrencyAccountController controller) {
+    public CreateCryptoAssetAccountView(CreateCryptoAssetAccountModel model, CreateCryptoAssetAccountController controller) {
         super(new VBox(), model, controller);
 
         root.setPrefWidth(OverlayModel.WIDTH);

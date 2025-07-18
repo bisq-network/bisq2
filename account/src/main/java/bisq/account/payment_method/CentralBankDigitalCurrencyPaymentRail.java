@@ -20,7 +20,7 @@ package bisq.account.payment_method;
 import lombok.Getter;
 
 //CBDCPaymentRail
-public enum CentraBankDigitalCurrencyPaymentRail implements NationalCurrencyPaymentRail {
+public enum CentralBankDigitalCurrencyPaymentRail implements NationalCurrencyPaymentRail {
     // Fully Launched Retail CBDCs
     SAND_DOLLAR("BSD", "BS"),       // Bahamas
     E_NAIRA("NGN", "NG"),          // Nigeria
@@ -41,18 +41,8 @@ public enum CentraBankDigitalCurrencyPaymentRail implements NationalCurrencyPaym
     @Getter
     private final String countryCode;
 
-    CentraBankDigitalCurrencyPaymentRail(String peggedCurrency, String countryCode) {
+    CentralBankDigitalCurrencyPaymentRail(String peggedCurrency, String countryCode) {
         this.peggedCurrency = peggedCurrency;
         this.countryCode = countryCode;
-    }
-
-    @Override
-    public String getTradeLimit() {
-        return "";
-    }
-
-    @Override
-    public String getTradeDuration() {
-        return "";
     }
 }

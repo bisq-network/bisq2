@@ -17,8 +17,8 @@
 
 package bisq.account.payment_method;
 
-import bisq.common.currency.CryptoCurrencyRepository;
-import bisq.common.currency.TradeCurrency;
+import bisq.common.asset.CryptoAssetRepository;
+import bisq.common.asset.Asset;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -67,7 +67,7 @@ public class BitcoinPaymentMethod extends PaymentMethod<BitcoinPaymentRail> {
     }
 
     @Override
-    public List<TradeCurrency> getSupportedCurrencies() {
-        return Collections.singletonList(CryptoCurrencyRepository.BITCOIN);
+    public List<Asset> getSupportedCurrencies() {
+        return Collections.singletonList(CryptoAssetRepository.BITCOIN);
     }
 }

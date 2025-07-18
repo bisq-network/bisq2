@@ -22,7 +22,7 @@ import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.CryptoPaymentMethod;
 import bisq.account.payment_method.CryptoPaymentRail;
-import bisq.common.currency.CryptoCurrencyRepository;
+import bisq.common.asset.CryptoAssetRepository;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
@@ -37,7 +37,7 @@ import java.util.Optional;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public abstract class CryptoCurrencyAccountPayload extends AccountPayload<CryptoPaymentMethod> implements SingleCurrencyAccountPayload {
+public abstract class CryptoAssetAccountPayload extends AccountPayload<CryptoPaymentMethod> implements SingleCurrencyAccountPayload {
     protected final String currencyCode;
     protected final String address;
     protected final boolean isInstant;
@@ -46,14 +46,14 @@ public abstract class CryptoCurrencyAccountPayload extends AccountPayload<Crypto
     protected final Optional<Long> autoConfMaxTradeAmount;
     protected final Optional<String> autoConfExplorerUrls;
 
-    public CryptoCurrencyAccountPayload(String id,
-                                        String currencyCode,
-                                        String address,
-                                        boolean isInstant,
-                                        Optional<Boolean> isAutoConf,
-                                        Optional<Integer> autoConfNumConfirmations,
-                                        Optional<Long> autoConfMaxTradeAmount,
-                                        Optional<String> autoConfExplorerUrls) {
+    public CryptoAssetAccountPayload(String id,
+                                     String currencyCode,
+                                     String address,
+                                     boolean isInstant,
+                                     Optional<Boolean> isAutoConf,
+                                     Optional<Integer> autoConfNumConfirmations,
+                                     Optional<Long> autoConfMaxTradeAmount,
+                                     Optional<String> autoConfExplorerUrls) {
         super(id);
         this.currencyCode = currencyCode;
         this.address = address;
@@ -64,12 +64,12 @@ public abstract class CryptoCurrencyAccountPayload extends AccountPayload<Crypto
         this.autoConfExplorerUrls = autoConfExplorerUrls;
     }
 
-    protected bisq.account.protobuf.CryptoCurrencyAccountPayload toCryptoCurrencyAccountPayloadProto(boolean serializeForHash) {
-        return resolveBuilder(getCryptoCurrencyAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    protected bisq.account.protobuf.CryptoAssetAccountPayload toCryptoAssetAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getCryptoAssetAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
-    protected bisq.account.protobuf.CryptoCurrencyAccountPayload.Builder getCryptoCurrencyAccountPayloadBuilder(boolean serializeForHash) {
-        bisq.account.protobuf.CryptoCurrencyAccountPayload.Builder builder = bisq.account.protobuf.CryptoCurrencyAccountPayload.newBuilder()
+    protected bisq.account.protobuf.CryptoAssetAccountPayload.Builder getCryptoAssetAccountPayloadBuilder(boolean serializeForHash) {
+        bisq.account.protobuf.CryptoAssetAccountPayload.Builder builder = bisq.account.protobuf.CryptoAssetAccountPayload.newBuilder()
                 .setCurrencyCode(currencyCode)
                 .setAddress(address)
                 .setIsInstant(isInstant);
@@ -80,10 +80,10 @@ public abstract class CryptoCurrencyAccountPayload extends AccountPayload<Crypto
         return builder;
     }
 
-    public static CryptoCurrencyAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        return switch (proto.getCryptoCurrencyAccountPayload().getMessageCase()) {
+    public static CryptoAssetAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+        return switch (proto.getCryptoAssetAccountPayload().getMessageCase()) {
             case MONEROACCOUNTPAYLOAD -> MoneroAccountPayload.fromProto(proto);
-            case OTHERCRYPTOCURRENCYACCOUNTPAYLOAD -> OtherCryptoCurrencyAccountPayload.fromProto(proto);
+            case OTHERCRYPTOASSETACCOUNTPAYLOAD -> OtherCryptoAssetAccountPayload.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
@@ -107,7 +107,7 @@ public abstract class CryptoCurrencyAccountPayload extends AccountPayload<Crypto
     }
 
     public String getCodeAndDisplayName() {
-        return CryptoCurrencyRepository.findName(currencyCode)
+        return CryptoAssetRepository.findName(currencyCode)
                 .map(name -> currencyCode + " (" + name + ")")
                 .orElse(currencyCode);
     }

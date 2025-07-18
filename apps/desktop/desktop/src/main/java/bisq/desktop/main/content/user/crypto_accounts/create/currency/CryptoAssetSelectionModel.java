@@ -32,19 +32,19 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
-import static bisq.desktop.main.content.user.crypto_accounts.create.currency.CryptoCurrencySelectionView.CryptoCurrencyItem;
+import static bisq.desktop.main.content.user.crypto_accounts.create.currency.CryptoAssetSelectionView.CryptoAssetItem;
 
 @Slf4j
 @Getter
-public class CryptoCurrencySelectionModel implements Model {
-    private final ObservableList<CryptoCurrencyItem> list = FXCollections.observableArrayList();
-    private final FilteredList<CryptoCurrencyItem> filteredList = new FilteredList<>(list);
-    private final SortedList<CryptoCurrencyItem> sortedList = new SortedList<>(filteredList);
-    private final ObjectProperty<CryptoCurrencyItem> selectedItem = new SimpleObjectProperty<>();
+public class CryptoAssetSelectionModel implements Model {
+    private final ObservableList<CryptoAssetItem> list = FXCollections.observableArrayList();
+    private final FilteredList<CryptoAssetItem> filteredList = new FilteredList<>(list);
+    private final SortedList<CryptoAssetItem> sortedList = new SortedList<>(filteredList);
+    private final ObjectProperty<CryptoAssetItem> selectedItem = new SimpleObjectProperty<>();
     private final ObjectProperty<CryptoPaymentMethod> selectedPaymentMethod = new SimpleObjectProperty<>();
     private final StringProperty searchText = new SimpleStringProperty();
 
-    public CryptoCurrencySelectionModel(List<CryptoCurrencyItem> list) {
+    public CryptoAssetSelectionModel(List<CryptoAssetItem> list) {
         this.list.setAll(list);
     }
 }

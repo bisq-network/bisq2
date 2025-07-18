@@ -26,32 +26,32 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class OtherCryptoCurrencyAccount extends CryptoCurrencyAccount<OtherCryptoCurrencyAccountPayload> {
-    public OtherCryptoCurrencyAccount(String id, long creationDate, String accountName, OtherCryptoCurrencyAccountPayload accountPayload) {
+public final class OtherCryptoAssetAccount extends CryptoAssetAccount<OtherCryptoAssetAccountPayload> {
+    public OtherCryptoAssetAccount(String id, long creationDate, String accountName, OtherCryptoAssetAccountPayload accountPayload) {
         super(id, creationDate, accountName, accountPayload);
     }
 
     @Override
     public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
-        bisq.account.protobuf.CryptoCurrencyAccount.Builder builder = getCryptoCurrencyAccountBuilder(serializeForHash)
-                .setOtherCryptoCurrencyAccount(getOtherCryptoCurrencyAccountBuilder(serializeForHash));
-        bisq.account.protobuf.CryptoCurrencyAccount cryptoCurrencyAccount = resolveBuilder(builder, serializeForHash).build();
+        bisq.account.protobuf.CryptoAssetAccount.Builder builder = getCryptoAssetAccountBuilder(serializeForHash)
+                .setOtherCryptoAssetAccount(getOtherCryptoAssetAccountBuilder(serializeForHash));
+        bisq.account.protobuf.CryptoAssetAccount cryptoAssetAccount = resolveBuilder(builder, serializeForHash).build();
         return getAccountBuilder(serializeForHash)
-                .setCryptoCurrencyAccount(cryptoCurrencyAccount);
+                .setCryptoAssetAccount(cryptoAssetAccount);
     }
 
-    private bisq.account.protobuf.OtherCryptoCurrencyAccount.Builder getOtherCryptoCurrencyAccountBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.OtherCryptoCurrencyAccount.newBuilder();
+    private bisq.account.protobuf.OtherCryptoAssetAccount.Builder getOtherCryptoAssetAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.OtherCryptoAssetAccount.newBuilder();
     }
 
-    public static OtherCryptoCurrencyAccount fromProto(bisq.account.protobuf.Account proto) {
-        var cryptoCurrency = proto.getCryptoCurrencyAccount();
-        var monero = cryptoCurrency.getOtherCryptoCurrencyAccount();
-        return new OtherCryptoCurrencyAccount(
+    public static OtherCryptoAssetAccount fromProto(bisq.account.protobuf.Account proto) {
+        var cryptoAssetAccount = proto.getCryptoAssetAccount();
+        var monero = cryptoAssetAccount.getOtherCryptoAssetAccount();
+        return new OtherCryptoAssetAccount(
                 proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
-                OtherCryptoCurrencyAccountPayload.fromProto(proto.getAccountPayload())
+                OtherCryptoAssetAccountPayload.fromProto(proto.getAccountPayload())
         );
     }
 }

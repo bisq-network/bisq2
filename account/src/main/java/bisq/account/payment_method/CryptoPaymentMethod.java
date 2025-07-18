@@ -17,8 +17,8 @@
 
 package bisq.account.payment_method;
 
-import bisq.common.currency.CryptoCurrencyRepository;
-import bisq.common.currency.TradeCurrency;
+import bisq.common.asset.CryptoAssetRepository;
+import bisq.common.asset.Asset;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -41,7 +41,7 @@ public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> 
     public CryptoPaymentMethod(CryptoPaymentRail cryptoPaymentRail, String currencyCode) {
         super(cryptoPaymentRail);
         this.currencyCode = currencyCode;
-        this.currencyName = CryptoCurrencyRepository.findName(currencyCode).orElse(currencyCode);
+        this.currencyName = CryptoAssetRepository.findName(currencyCode).orElse(currencyCode);
 
         verify();
     }
@@ -49,7 +49,7 @@ public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> 
     private CryptoPaymentMethod(String name, String currencyCode) {
         super(name);
         this.currencyCode = currencyCode;
-        this.currencyName = CryptoCurrencyRepository.findName(currencyCode).orElse(currencyCode);
+        this.currencyName = CryptoAssetRepository.findName(currencyCode).orElse(currencyCode);
 
         verify();
     }
@@ -95,9 +95,9 @@ public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> 
     }
 
     @Override
-    public List<TradeCurrency> getSupportedCurrencies() {
-        return CryptoCurrencyRepository.find(currencyCode)
-                .map(e -> List.of((TradeCurrency) e))
+    public List<Asset> getSupportedCurrencies() {
+        return CryptoAssetRepository.find(currencyCode)
+                .map(e -> List.of((Asset) e))
                 .orElse(new ArrayList<>());
     }
 }

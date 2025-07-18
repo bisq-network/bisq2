@@ -17,7 +17,7 @@
 
 package bisq.account.payment_method;
 
-import bisq.common.currency.TradeCurrency;
+import bisq.common.asset.Asset;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -69,7 +69,7 @@ public class StablecoinPaymentMethod extends NationalCurrencyPaymentMethod<Stabl
     }
 
     @Override
-    public List<TradeCurrency> getSupportedCurrencies() {
+    public List<Asset> getSupportedCurrencies() {
         return paymentRail.getTradeCurrencies();
     }
 }

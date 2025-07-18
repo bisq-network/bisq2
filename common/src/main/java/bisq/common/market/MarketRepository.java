@@ -15,8 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.currency;
+package bisq.common.market;
 
+import bisq.common.asset.CryptoAsset;
+import bisq.common.asset.CryptoAssetRepository;
+import bisq.common.asset.FiatCurrencyRepository;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -28,18 +31,18 @@ import java.util.stream.Stream;
 @Slf4j
 public class MarketRepository {
     public static Market getDefaultBtcFiatMarket() {
-        return new Market(CryptoCurrencyRepository.BITCOIN.getCode(),
+        return new Market(CryptoAssetRepository.BITCOIN.getCode(),
                 FiatCurrencyRepository.getDefaultCurrency().getCode(),
-                CryptoCurrencyRepository.BITCOIN.getName(),
+                CryptoAssetRepository.BITCOIN.getName(),
                 FiatCurrencyRepository.getDefaultCurrency().getName()
         );
     }
 
     public static Market getDefaultCryptoBtcMarket() {
-        return new Market(CryptoCurrencyRepository.getDefaultCurrency().getCode(),
-                CryptoCurrencyRepository.BITCOIN.getCode(),
-                CryptoCurrencyRepository.getDefaultCurrency().getName(),
-                CryptoCurrencyRepository.BITCOIN.getName()
+        return new Market(CryptoAssetRepository.getDefaultCurrency().getCode(),
+                CryptoAssetRepository.BITCOIN.getCode(),
+                CryptoAssetRepository.getDefaultCurrency().getName(),
+                CryptoAssetRepository.BITCOIN.getName()
         );
     }
 
@@ -59,15 +62,13 @@ public class MarketRepository {
     }
 
     public static List<Market> getMajorMarkets() {
-        return Stream.concat(getMajorFiatMarkets().stream(), getMajorCryptoCurrencyMarkets().stream())
+        return Stream.concat(getMajorFiatMarkets().stream(), getMajorCryptoAssetMarkets().stream())
                 .distinct()
                 .collect(Collectors.toList());
     }
 
     public static List<Market> getMinorMarkets() {
-        return Stream.concat(getMinorFiatMarkets().stream(), getMinorCryptoCurrencyMarkets().stream())
-                .distinct()
-                .collect(Collectors.toList());
+        return getMinorFiatMarkets();
     }
 
     public static List<Market> getMinorFiatMarkets() {
@@ -91,33 +92,27 @@ public class MarketRepository {
                 .collect(Collectors.toList());
     }
 
-    public static List<Market> getMinorCryptoCurrencyMarkets() {
-        return CryptoCurrencyRepository.getMinorCurrencies().stream()
+
+    public static List<Market> getMajorCryptoAssetMarkets() {
+        return CryptoAssetRepository.getCryptoAssets().stream()
                 .map(currency -> new Market(currency.getCode(), "BTC", currency.getName(), "Bitcoin"))
                 .distinct()
                 .collect(Collectors.toList());
     }
 
-    public static List<Market> getMajorCryptoCurrencyMarkets() {
-        return CryptoCurrencyRepository.getMajorCurrencies().stream()
+    public static List<Market> getAllCryptoAssetMarkets() {
+        return CryptoAssetRepository.getCryptoAssets().stream()
+                .filter(currency -> !currency.equals(CryptoAssetRepository.BITCOIN))
                 .map(currency -> new Market(currency.getCode(), "BTC", currency.getName(), "Bitcoin"))
                 .distinct()
                 .collect(Collectors.toList());
     }
 
-    public static List<Market> getAllCryptoCurrencyMarkets() {
-        return CryptoCurrencyRepository.getALL_CURRENCIES().stream()
-                .filter(currency -> !currency.equals(CryptoCurrencyRepository.BITCOIN))
-                .map(currency -> new Market(currency.getCode(), "BTC", currency.getName(), "Bitcoin"))
-                .distinct()
-                .collect(Collectors.toList());
-    }
-
-    public static List<Market> getAllNonXMRCryptoCurrencyMarkets() {
-        List<CryptoCurrency> allCurrencies = CryptoCurrencyRepository.getALL_CURRENCIES();
+    public static List<Market> getAllNonXMRCryptoAssetMarkets() {
+        List<CryptoAsset> allCurrencies = CryptoAssetRepository.getCryptoAssets();
         return allCurrencies.stream()
-                .filter(currency -> !currency.equals(CryptoCurrencyRepository.BITCOIN))
-                .filter(currency -> !currency.equals(CryptoCurrencyRepository.XMR))
+                .filter(currency -> !currency.equals(CryptoAssetRepository.BITCOIN))
+                .filter(currency -> !currency.equals(CryptoAssetRepository.XMR))
                 .map(currency -> new Market(currency.getCode(), "BTC", currency.getName(), "Bitcoin"))
                 .distinct()
                 .collect(Collectors.toList());
