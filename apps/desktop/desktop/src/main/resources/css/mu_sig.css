@@ -147,3 +147,18 @@
     -fx-min-height: 30;
     -fx-pref-height: 30;
 }
+
+
+/*******************************************************************************
+ *                                                                             *
+ * My offers                                                                   *
+ *                                                                             *
+ ******************************************************************************/
+
+.mu-sig-my-offers-table .table-row-cell:hover .quote-currency-market-logo {
+    -fx-fill: -bisq-dark-grey-50 !important;
+}
+
+.mu-sig-my-offers-table .table-row-cell:selected .quote-currency-market-logo {
+    -fx-fill: -bisq-dark-grey-40 !important;
+}
