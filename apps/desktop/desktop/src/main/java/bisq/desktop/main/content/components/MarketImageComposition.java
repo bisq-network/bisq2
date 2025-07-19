@@ -85,9 +85,7 @@ public class MarketImageComposition {
         StackPane pane = new StackPane();
         pane.setPrefWidth(61);
 
-        Stream<String> stream = baseCurrencyCode.equals("btc")
-                ? Stream.of(baseCurrencyCode, quoteCurrencyCode)
-                : Stream.of(quoteCurrencyCode, baseCurrencyCode);
+        Stream<String> stream = Stream.of(baseCurrencyCode, quoteCurrencyCode);
         stream.forEach(code -> {
             if (quoteCurrencyCode.equals(code)) {
                 double radius = 18;

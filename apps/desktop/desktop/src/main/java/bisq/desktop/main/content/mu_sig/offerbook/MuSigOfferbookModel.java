@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.mu_sig.offerbook;
 
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.common.asset.CryptoAsset;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
 import javafx.beans.property.BooleanProperty;
@@ -51,7 +52,8 @@ public class MuSigOfferbookModel implements Model {
     private final StringProperty baseCodeTitle = new SimpleStringProperty("");
     private final StringProperty quoteCodeTitle = new SimpleStringProperty("");
     private final StringProperty priceTitle = new SimpleStringProperty("");
-    private final StringProperty marketIconId = new SimpleStringProperty("");
+    private final StringProperty baseCurrencyIconId = new SimpleStringProperty("");
+    private final StringProperty quoteCurrencyIconId = new SimpleStringProperty("");
 
     private final Set<String> muSigOfferIds = new HashSet<>();
     private final ObservableList<MuSigOfferListItem> muSigOfferListItems = FXCollections.observableArrayList();
@@ -76,12 +78,15 @@ public class MuSigOfferbookModel implements Model {
     @Setter
     private Predicate<MuSigOfferListItem> paymentMethodFilterPredicate = item -> true;
 
+    private final ObjectProperty<CryptoAsset> selectedBaseCryptoAsset = new SimpleObjectProperty<>();
     private final ObservableList<MarketItem> marketItems = FXCollections.observableArrayList();
     private final FilteredList<MarketItem> filteredMarketItems = new FilteredList<>(marketItems);
     private final SortedList<MarketItem> sortedMarketItems = new SortedList<>(filteredMarketItems);
     private final FilteredList<MarketItem> favouriteMarketItems = new FilteredList<>(marketItems);
     private final SortedList<MarketItem> sortedFavouriteMarketItems = new SortedList<>(favouriteMarketItems, MarketItemUtil.sortByMarketNameAsc());
     private final ObjectProperty<MarketItem> selectedMarketItem = new SimpleObjectProperty<>();
+
+    private final StringProperty marketListTitle = new SimpleStringProperty();
     private final StringProperty marketsSearchBoxText = new SimpleStringProperty();
     private final ObjectProperty<MuSigFilters.MarketFilter> selectedMarketsFilter = new SimpleObjectProperty<>();
     private final ObjectProperty<MarketSortType> selectedMarketSortType = new SimpleObjectProperty<>(MarketSortType.NUM_OFFERS);

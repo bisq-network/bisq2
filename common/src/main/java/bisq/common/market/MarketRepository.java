@@ -38,6 +38,14 @@ public class MarketRepository {
         );
     }
 
+    public static Market getDefaultXmrFiatMarket() {
+        return new Market(CryptoAssetRepository.XMR.getCode(),
+                FiatCurrencyRepository.getDefaultCurrency().getCode(),
+                CryptoAssetRepository.XMR.getName(),
+                FiatCurrencyRepository.getDefaultCurrency().getName()
+        );
+    }
+
     public static Market getDefaultCryptoBtcMarket() {
         return new Market(CryptoAssetRepository.getDefaultCurrency().getCode(),
                 CryptoAssetRepository.BITCOIN.getCode(),
@@ -57,8 +65,8 @@ public class MarketRepository {
         return new Market("BSQ", "BTC", "BSQ", "Bitcoin");
     }
 
-    public static Market getXmrMarket() {
-        return new Market("XMR", "BTC", "Monero", "Bitcoin");
+    public static List<Market> getXmrCryptoMarkets() {
+        return List.of(new Market("XMR", "BTC", "Monero", "Bitcoin"));
     }
 
     public static List<Market> getMajorMarkets() {
@@ -72,15 +80,23 @@ public class MarketRepository {
     }
 
     public static List<Market> getMinorFiatMarkets() {
+        return getMinorFiatMarkets("BTC", "Bitcoin");
+    }
+
+    public static List<Market> getMinorFiatMarkets(String baseCurrencyCode, String baseCurrencyName) {
         return FiatCurrencyRepository.getMinorCurrencies().stream()
-                .map(currency -> new Market("BTC", currency.getCode(), "Bitcoin", currency.getName()))
+                .map(currency -> new Market(baseCurrencyCode, currency.getCode(), baseCurrencyName, currency.getName()))
                 .distinct()
                 .collect(Collectors.toList());
     }
 
     public static List<Market> getMajorFiatMarkets() {
+        return getMajorFiatMarkets("BTC", "Bitcoin");
+    }
+
+    public static List<Market> getMajorFiatMarkets(String baseCurrencyCode, String baseCurrencyName) {
         return FiatCurrencyRepository.getMajorCurrencies().stream()
-                .map(currency -> new Market("BTC", currency.getCode(), "Bitcoin", currency.getName()))
+                .map(currency -> new Market(baseCurrencyCode, currency.getCode(), baseCurrencyName, currency.getName()))
                 .distinct()
                 .collect(Collectors.toList());
     }
@@ -100,6 +116,15 @@ public class MarketRepository {
                 .collect(Collectors.toList());
     }
 
+    public static List<Market> getAllXmrMarkets() {
+        List<Market> list = new ArrayList<>();
+        list.add(getDefaultXmrFiatMarket());
+        list.addAll(getMajorFiatMarkets("XMR", "Monero"));
+        list.addAll(getMinorFiatMarkets("XMR", "Monero"));
+        list.addAll(getXmrCryptoMarkets());
+        return list.stream().distinct().collect(Collectors.toList());
+    }
+
     public static List<Market> getAllCryptoAssetMarkets() {
         return CryptoAssetRepository.getCryptoAssets().stream()
                 .filter(currency -> !currency.equals(CryptoAssetRepository.BITCOIN))
@@ -108,7 +133,7 @@ public class MarketRepository {
                 .collect(Collectors.toList());
     }
 
-    public static List<Market> getAllNonXMRCryptoAssetMarkets() {
+    public static List<Market> getAllNonXMRCryptoCurrencyMarkets() {
         List<CryptoAsset> allCurrencies = CryptoAssetRepository.getCryptoAssets();
         return allCurrencies.stream()
                 .filter(currency -> !currency.equals(CryptoAssetRepository.BITCOIN))
