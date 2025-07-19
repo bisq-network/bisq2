@@ -86,7 +86,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 .left()
                 .comparator(Comparator.comparingLong(MuSigOfferListItem::getTotalScore).reversed())
                 .setCellFactory(MuSigOfferUtil.getUserProfileCellFactory())
-                .minWidth(100)
+                .minWidth(140)
                 .build());
 
         muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
@@ -97,13 +97,20 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 .valueSupplier(MuSigOfferListItem::getOfferId)
                 .build());
 
-        // Date
-//        muSigMyOffersListView.getSortOrder().add(dateColumn);
+        BisqTableColumn<MuSigOfferListItem> dateColumn = new BisqTableColumn.Builder<MuSigOfferListItem>()
+                .title(Res.get("muSig.myOffers.table.header.date"))
+                .left()
+                .minWidth(160)
+                .comparator(Comparator.comparing(MuSigOfferListItem::getOfferDate))
+                .valueSupplier(MuSigOfferListItem::getOfferDate)
+                .build();
+        muSigMyOffersListView.getColumns().add(dateColumn);
+        muSigMyOffersListView.getSortOrder().add(dateColumn);
 
         muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title(Res.get("muSig.myOffers.table.header.offerType"))
                 .left()
-                .minWidth(160)
+                .minWidth(100)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getOfferIntentText))
                 .valueSupplier(MuSigOfferListItem::getOfferIntentText)
                 .build());
@@ -111,7 +118,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
         muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title(Res.get("muSig.myOffers.table.header.baseAmount"))
                 .left()
-                .minWidth(120)
+                .minWidth(170)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getBaseAmountWithSymbol))
                 .valueSupplier(MuSigOfferListItem::getBaseAmountWithSymbol)
                 .build());

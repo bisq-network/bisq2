@@ -67,7 +67,7 @@ public class MuSigOfferListItem {
     private final MarketPriceService marketPriceService;
 
     private final String quoteCurrencyCode, baseAmountAsString, quoteAmountAsString, paymentMethodsAsString,
-            maker, takeOfferButtonText, baseAmountWithSymbol, quoteAmountWithSymbol, offerIntentText, offerId;
+            maker, takeOfferButtonText, baseAmountWithSymbol, quoteAmountWithSymbol, offerIntentText, offerId, offerDate;
     private final boolean isMyOffer, hasAnyMatchingAccount, canTakeOffer;
     private final Market market;
     private final Direction direction;
@@ -113,6 +113,7 @@ public class MuSigOfferListItem {
                 ? Res.get("muSig.myOffers.table.cell.offerType.buying")
                 : Res.get("muSig.myOffers.table.cell.offerType.selling");
         offerId = offer.getShortId().toUpperCase();
+        offerDate = DateFormatter.formatDateTime(offer.getDate());
 
         // ImageUtil.getImageViewById(fiatPaymentMethod.getName());
         paymentMethodsAsString = Joiner.on("\n")
