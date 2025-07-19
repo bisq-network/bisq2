@@ -32,7 +32,7 @@ import bisq.network.tor.controller.TorController;
 import bisq.network.tor.controller.events.events.TorBootstrapEvent;
 import bisq.network.tor.installer.TorInstaller;
 import bisq.network.tor.process.EmbeddedTorProcess;
-import bisq.network.tor.process.control_port.ControlPortFilePoller;
+import bisq.network.tor.process.control_port.ControlPortFileParser;
 import bisq.security.keys.TorKeyPair;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
@@ -141,23 +141,39 @@ public class TorService implements Service {
         PasswordDigest hashedControlPassword = PasswordDigest.generateDigest();
         Map<String, String> torrcConfigMap = createTorrcConfigFile(torDataDirPath, hashedControlPassword);
 
+        // remove the control port file before we launch tor, just in case it exists from
+        // a previous run
+        Path controlDirPath = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME);
+        Path controlPortFilePath = controlDirPath.resolve("control");
+        try {
+            FileUtils.deleteFileAndWait(controlPortFilePath.toFile(), 5000);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete tor control port file", e);
+        }
+
+
         var embeddedTorProcess = new EmbeddedTorProcess(torBinaryPath, torDataDirPath);
         torProcess = Optional.of(embeddedTorProcess);
         embeddedTorProcess.start();
 
-        Path controlDirPath = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME);
-        Path controlPortFilePath = controlDirPath.resolve("control");
-        return new ControlPortFilePoller(controlPortFilePath)
-                .parsePort()
-                .thenAccept(controlPort -> {
-                    torController.initialize(controlPort);
-                    torController.authenticate(hashedControlPassword);
-                    torController.bootstrap();
+        try {
+            FileUtils.waitUntilFileExists(controlPortFilePath.toFile(), 5000);
+        } catch (Exception e) {
+            throw new RuntimeException("Error while waiting for tor control port file to exist", e);
+        }
 
-                    int port = torController.getSocksPort();
-                    torSocksProxyFactory = Optional.of(new TorSocksProxyFactory(port));
-                })
-                .thenApply(nil -> true);
+        int controlPort = ControlPortFileParser.parse(controlPortFilePath);
+
+        FileUtils.deleteOnExit(controlPortFilePath.toFile());
+
+        torController.initialize(controlPort);
+        torController.authenticate(hashedControlPassword);
+        torController.bootstrap();
+
+        int port = torController.getSocksPort();
+        torSocksProxyFactory = Optional.of(new TorSocksProxyFactory(port));
+
+        return CompletableFuture.completedFuture(true);
     }
 
     private boolean evaluateUseExternalTor() {
