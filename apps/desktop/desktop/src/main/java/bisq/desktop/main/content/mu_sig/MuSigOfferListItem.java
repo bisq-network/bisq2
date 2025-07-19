@@ -134,7 +134,7 @@ public class MuSigOfferListItem {
                 );
 
         if (!hasAnyMatchingAccount) {
-            cannotTakeOfferReason = Optional.of(Res.get("muSig.offerbook..table.cell.takeOffer.cannotTakeOfferReason.noAccountForOfferPaymentMethods",
+            cannotTakeOfferReason = Optional.of(Res.get("muSig.offerbook.table.cell.takeOffer.cannotTakeOfferReason.noAccountForOfferPaymentMethods",
                     quoteCurrencyCode));
         }
         canTakeOffer = hasAnyMatchingAccount;
