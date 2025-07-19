@@ -28,13 +28,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class UserProfileStatsWebSocketService extends SimpleObservableWebSocketService<Observable<Integer>, Integer> {
+public class NumUserProfilesWebSocketService extends SimpleObservableWebSocketService<Observable<Integer>, Integer> {
     private final UserProfileService userProfileService;
 
-    public UserProfileStatsWebSocketService(ObjectMapper objectMapper,
+    public NumUserProfilesWebSocketService(ObjectMapper objectMapper,
                                            SubscriberRepository subscriberRepository,
                                            UserService userService) {
-        super(objectMapper, subscriberRepository, Topic.USER_PROFILE_STATS);
+        super(objectMapper, subscriberRepository, Topic.NUM_USER_PROFILES);
         this.userProfileService = userService.getUserProfileService();
     }
 
