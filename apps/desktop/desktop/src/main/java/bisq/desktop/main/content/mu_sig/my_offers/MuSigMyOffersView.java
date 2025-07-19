@@ -137,9 +137,17 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 .comparator(Comparator.comparing(MuSigOfferListItem::getPrice))
                 .valueSupplier(MuSigOfferListItem::getPrice)
                 .tooltipSupplier(MuSigOfferListItem::getPriceTooltip)
-                .minWidth(200)
+                .minWidth(160)
                 .build();
         muSigMyOffersListView.getColumns().add(priceColumn);
+
+        muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+                .title(Res.get("muSig.myOffers.table.header.deposit"))
+                .left()
+                .minWidth(80)
+                .comparator(Comparator.comparing(MuSigOfferListItem::getDeposit))
+                .valueSupplier(MuSigOfferListItem::getDeposit)
+                .build());
 
         muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .left()
