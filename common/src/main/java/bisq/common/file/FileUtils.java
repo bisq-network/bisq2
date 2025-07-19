@@ -135,9 +135,11 @@ public class FileUtils {
     /**
      * Deletes a file if it exists. On some operating systems it may not be possible
      * to remove a file when it is open and in use by this Java virtual machine or other programs
+     *
+     * @see Files#deleteIfExists
      */
-    public static void deleteFile(File file) throws IOException {
-        Files.deleteIfExists(file.toPath());
+    public static boolean deleteFile(File file) throws IOException {
+        return Files.deleteIfExists(file.toPath());
     }
 
     /**
