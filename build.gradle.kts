@@ -3,6 +3,12 @@ plugins {
     id("bisq.gradle.maven_publisher.LocalMavenPublishPlugin")
 }
 
+val gradlew = if (org.gradle.internal.os.OperatingSystem.current().isWindows) {
+    "gradlew.bat"
+} else {
+    "./gradlew"
+}
+
 tasks.register("buildAll") {
     group = "build"
     description = "Build the entire project leaving it ready to work with."
@@ -25,7 +31,7 @@ tasks.register("buildAll") {
         ).forEach {
             exec {
                 println("Executing Build: $it")
-                commandLine("./gradlew", it)
+                commandLine(gradlew, it)
             }
         }
     }
@@ -56,7 +62,7 @@ tasks.register("cleanAll") {
         ).forEach {
             exec {
                 println("Executing Clean: $it")
-                commandLine("./gradlew", it)
+                commandLine(gradlew, it)
             }
         }
     }
@@ -91,7 +97,7 @@ tasks.register("publishAll") {
         ).forEach {
             exec {
                 println("Executing Publish To Maven Local: $it")
-                commandLine("./gradlew", it)
+                commandLine(gradlew, it)
             }
         }
     }
