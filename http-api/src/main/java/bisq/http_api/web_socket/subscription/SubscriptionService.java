@@ -40,6 +40,7 @@ import org.glassfish.grizzly.websockets.WebSocket;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import bisq.http_api.web_socket.domain.user_profile.NumUserProfilesWebSocketService;
 
 @Slf4j
 public class SubscriptionService implements Service {
@@ -53,6 +54,7 @@ public class SubscriptionService implements Service {
     private final TradeChatWebSocketService tradeChatWebSocketService;
     private final ChatReactionsWebSocketService chatReactionsWebSocketService;
     private final ReputationWebSocketService reputationWebSocketService;
+    private final NumUserProfilesWebSocketService numUserProfilesWebSocketService;
 
     public SubscriptionService(ObjectMapper objectMapper,
                                BondedRolesService bondedRolesService,
@@ -76,6 +78,7 @@ public class SubscriptionService implements Service {
                 subscriberRepository,
                 chatService.getBisqEasyOpenTradeChannelService());
         reputationWebSocketService = new ReputationWebSocketService(objectMapper, subscriberRepository, userService.getReputationService());
+        numUserProfilesWebSocketService = new NumUserProfilesWebSocketService(objectMapper, subscriberRepository, userService);
     }
 
     @Override
@@ -87,7 +90,8 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> tradePropertiesWebSocketService.initialize())
                 .thenCompose(e -> tradeChatWebSocketService.initialize())
                 .thenCompose(e -> chatReactionsWebSocketService.initialize())
-                .thenCompose(e -> reputationWebSocketService.initialize());
+                .thenCompose(e -> reputationWebSocketService.initialize())
+                .thenCompose(e -> numUserProfilesWebSocketService.initialize());
     }
 
     @Override
@@ -99,7 +103,8 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> tradePropertiesWebSocketService.shutdown())
                 .thenCompose(e -> tradeChatWebSocketService.shutdown())
                 .thenCompose(e -> chatReactionsWebSocketService.shutdown())
-                .thenCompose(e -> reputationWebSocketService.shutdown());
+                .thenCompose(e -> reputationWebSocketService.shutdown())
+                .thenCompose(e -> numUserProfilesWebSocketService.shutdown());
     }
 
     public void onConnectionClosed(WebSocket webSocket) {
@@ -158,6 +163,9 @@ public class SubscriptionService implements Service {
             }
             case USER_REPUTATION -> {
                 return Optional.of(reputationWebSocketService);
+            }
+            case NUM_USER_PROFILES -> {
+                return Optional.of(numUserProfilesWebSocketService);
             }
         }
         log.warn("No WebSocketService for topic {} found", topic);
