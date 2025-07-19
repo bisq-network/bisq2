@@ -24,21 +24,55 @@ import bisq.wallets.bitcoind.RpcConfig;
 import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.core.model.Utxo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This is just a temporary mock implementation for facilitation wallet UI development.
  * The Bitcoin and Electrum wallet implementations are not maintained, and we will use the BDK wallet for MuSig, thus
  * work to get those working again would be wasted effort.
  */
-public class MockWalletService implements WalletService{
+public class MockWalletService implements WalletService {
+    private static final Logger log = LoggerFactory.getLogger(MockWalletService.class);
+
+    public Observable<Boolean> isWalletInitialized = new Observable<>(false);
+    public Observable<Boolean> isWalletBackedup = new Observable<>(false);
+    private String encryptionPassword = "";
+
+    private boolean shouldFailSeedWords = true;
+    private List<String> seedWords = null;
+
+    public Observable<Boolean> getIsWalletInitialized() {
+        return isWalletInitialized;
+    }
+
+    @Override
+    public Observable<Boolean> getIsWalletBackedup() {
+        return isWalletBackedup;
+    }
+
+    @Override
+    public void setIsWalletBackedup(Boolean value) {
+        isWalletBackedup.set(value);
+    }
+
     @Override
     public CompletableFuture<Boolean> initializeWallet(RpcConfig rpcConfig, Optional<String> walletPassphrase) {
-        return CompletableFuture.completedFuture(true);
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        CompletableFuture.runAsync(() -> {
+                }, CompletableFuture.delayedExecutor(200, TimeUnit.MILLISECONDS))
+                .thenRun(() -> {
+                    isWalletInitialized.set(true);
+                    future.complete(true);
+                });
+        return future;
     }
 
     @Override
@@ -58,17 +92,17 @@ public class MockWalletService implements WalletService{
 
     @Override
     public CompletableFuture<ObservableSet<String>> requestWalletAddresses() {
-        return  CompletableFuture.completedFuture(new ObservableSet<>(Set.of("mock address 1", "mock address 2")));
+        return CompletableFuture.completedFuture(new ObservableSet<>(Set.of("mock address 1", "mock address 2")));
     }
 
     @Override
     public CompletableFuture<List<? extends TransactionInfo>> listTransactions() {
-        return  CompletableFuture.completedFuture(List.of());
+        return CompletableFuture.completedFuture(List.of());
     }
 
     @Override
     public CompletableFuture<List<? extends Utxo>> listUnspent() {
-        return  CompletableFuture.completedFuture(List.of());
+        return CompletableFuture.completedFuture(List.of());
     }
 
     @Override
@@ -99,5 +133,47 @@ public class MockWalletService implements WalletService{
     @Override
     public CompletableFuture<ObservableSet<Transaction>> requestTransactions() {
         return CompletableFuture.completedFuture(new ObservableSet<>(Set.of()));
+    }
+
+    @Override
+    public void setNoEncryption() {
+        // TODO: Set a flag for No encryption
+    }
+
+    @Override
+    public void setEncryptionPassword(String password) {
+        log.debug("setEncryptionPassword: REDACTED");
+        encryptionPassword = password;
+    }
+
+    @Override
+    public CompletableFuture<List<String>> getSeedWords() {
+        if (shouldFailSeedWords) {
+            shouldFailSeedWords = false;
+            return CompletableFuture.failedFuture(new WalletException("Simulated failure: cannot fetch seed words"));
+        }
+
+        // shouldFailSeedWords = true;
+        if (seedWords != null) {
+            return CompletableFuture.completedFuture(seedWords);
+        }
+
+        return CompletableFuture.supplyAsync(() -> {
+                    List<String> words = Arrays.asList("car", "van", "lion", "water", "bero", "cycle",
+                            "love", "key", "system", "wife", "husband", "trade");
+                    seedWords = words;
+                    return words;
+                },
+                CompletableFuture.delayedExecutor(1000, TimeUnit.MILLISECONDS)
+        );
+    }
+
+    // Seed words are to be in memory, only when required like
+    //  * Initializing wallet
+    //  * Showing to user
+    // Once the usage is over, it is to be removed from memory.
+    @Override
+    public void purgeSeedWords() {
+        seedWords = null;
     }
 }
