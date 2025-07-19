@@ -82,9 +82,19 @@ public class MarketImageComposition {
             }
         }
 
+        StackPane pane = getMarketPairIcons(baseCurrencyCode, quoteCurrencyCode);
+
+        if (dedicatedCache.isPresent()) {
+            dedicatedCache.get().put(key, pane);
+        } else {
+            MARKET_IMAGE_CACHE.put(key, pane);
+        }
+        return pane;
+    }
+
+    public static StackPane getMarketPairIcons(String baseCurrencyCode, String quoteCurrencyCode) {
         StackPane pane = new StackPane();
         pane.setPrefWidth(61);
-
         Stream<String> stream = Stream.of(baseCurrencyCode, quoteCurrencyCode);
         stream.forEach(code -> {
             if (quoteCurrencyCode.equals(code)) {
@@ -107,12 +117,6 @@ public class MarketImageComposition {
                 pane.getChildren().add(node);
             }
         });
-
-        if (dedicatedCache.isPresent()) {
-            dedicatedCache.get().put(key, pane);
-        } else {
-            MARKET_IMAGE_CACHE.put(key, pane);
-        }
         return pane;
     }
 

@@ -22,6 +22,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.RichTableView;
+import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
 import bisq.desktop.main.content.mu_sig.MuSigOfferUtil;
 import bisq.i18n.Res;
@@ -34,6 +35,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 
@@ -72,12 +74,22 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
         muSigMyOffersListView.getColumns().add(muSigMyOffersListView.getTableView().getSelectionMarkerColumn());
 
         muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+                .title(Res.get("muSig.myOffers.table.header.market"))
+                .left()
+                .comparator(Comparator.comparing(MuSigOfferListItem::getMarket))
+                .setCellFactory(getMarketCellFactory())
+                .fixWidth(81)
+                .build());
+
+        muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title(Res.get("muSig.myOffers.table.header.myProfile"))
                 .left()
                 .comparator(Comparator.comparingLong(MuSigOfferListItem::getTotalScore).reversed())
                 .setCellFactory(MuSigOfferUtil.getUserProfileCellFactory())
                 .minWidth(100)
                 .build());
+
+        // OfferId
 
         // Date
 //        muSigMyOffersListView.getSortOrder().add(dateColumn);
@@ -234,6 +246,25 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
             private void resetVisibilities() {
                 myOfferActionsMenuBox.setVisible(false);
                 myOfferActionsMenuBox.setManaged(false);
+            }
+        };
+    }
+
+    public static Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>,
+            TableCell<MuSigOfferListItem, MuSigOfferListItem>> getMarketCellFactory() {
+        return column -> new TableCell<>() {
+
+            @Override
+            protected void updateItem(MuSigOfferListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    StackPane tradePairImage = MarketImageComposition.getMarketPairIcons(item.getMarket().getBaseCurrencyCode(),
+                            item.getMarket().getQuoteCurrencyCode());
+                    setGraphic(tradePairImage);
+                } else {
+                    setGraphic(null);
+                }
             }
         };
     }
