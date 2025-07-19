@@ -44,6 +44,7 @@ import java.util.Comparator;
 public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOffersController> {
     private static final double SIDE_PADDING = 40;
 
+    private final Label numOffersLabel;
     private final RichTableView<MuSigOfferListItem> muSigMyOffersListView;
 
     public MuSigMyOffersView(MuSigMyOffersModel model, MuSigMyOffersController controller) {
@@ -51,8 +52,10 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
 
         Label headlineLabel = new Label(Res.get("muSig.myOffers.headline"));
         headlineLabel.getStyleClass().add("bisq-easy-container-headline");
-        HBox headerHBox = new HBox(headlineLabel);
-        headerHBox.setAlignment(Pos.CENTER_LEFT);
+        numOffersLabel = new Label();
+        HBox.setMargin(numOffersLabel, new Insets(0, 0, -5, 0));
+        numOffersLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text", "font-light");
+        HBox headerHBox = new HBox(5, headlineLabel, numOffersLabel);
         headerHBox.getStyleClass().add("chat-container-header");
 
         HBox subheader = new HBox();
@@ -168,6 +171,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
         muSigMyOffersListView.initialize();
         muSigMyOffersListView.resetSearch();
         muSigMyOffersListView.sort();
+        numOffersLabel.textProperty().set(model.getNumOffers());
     }
 
     @Override
