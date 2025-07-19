@@ -89,7 +89,13 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 .minWidth(100)
                 .build());
 
-        // OfferId
+        muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+                .title(Res.get("muSig.myOffers.table.header.offerId"))
+                .left()
+                .minWidth(100)
+                .comparator(Comparator.comparing(MuSigOfferListItem::getOfferId))
+                .valueSupplier(MuSigOfferListItem::getOfferId)
+                .build());
 
         // Date
 //        muSigMyOffersListView.getSortOrder().add(dateColumn);

@@ -67,7 +67,7 @@ public class MuSigOfferListItem {
     private final MarketPriceService marketPriceService;
 
     private final String quoteCurrencyCode, baseAmountAsString, quoteAmountAsString, paymentMethodsAsString,
-            maker, takeOfferButtonText, baseAmountWithSymbol, quoteAmountWithSymbol, offerIntentText;
+            maker, takeOfferButtonText, baseAmountWithSymbol, quoteAmountWithSymbol, offerIntentText, offerId;
     private final boolean isMyOffer, hasAnyMatchingAccount, canTakeOffer;
     private final Market market;
     private final Direction direction;
@@ -76,17 +76,14 @@ public class MuSigOfferListItem {
     private final ReputationScore reputationScore;
     private final long totalScore;
     private final Map<FiatPaymentMethod, Boolean> accountAvailableByPaymentMethod;
+    private final Pin marketPriceByCurrencyMapPin;
 
     private Optional<String> cannotTakeOfferReason = Optional.empty();
-
     private double priceSpecAsPercent = 0;
     private String formattedPercentagePrice = Res.get("data.na"),
             price = Res.get("data.na"),
             priceTooltip = Res.get("data.na");
     private long priceAsLong = 0;
-
-
-    private final Pin marketPriceByCurrencyMapPin;
 
     public MuSigOfferListItem(MuSigOffer offer,
                               MarketPriceService marketPriceService,
@@ -115,6 +112,7 @@ public class MuSigOfferListItem {
         offerIntentText = offer.getDirection().isBuy()
                 ? Res.get("muSig.myOffers.table.cell.offerType.buying")
                 : Res.get("muSig.myOffers.table.cell.offerType.selling");
+        offerId = offer.getShortId().toUpperCase();
 
         // ImageUtil.getImageViewById(fiatPaymentMethod.getName());
         paymentMethodsAsString = Joiner.on("\n")
