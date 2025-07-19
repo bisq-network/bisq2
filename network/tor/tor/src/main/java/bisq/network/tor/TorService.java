@@ -164,12 +164,7 @@ public class TorService implements Service {
 
         int controlPort = ControlPortFileParser.parse(controlPortFilePath);
 
-        // Remove control port file after we have read the port.
-        try {
-            FileUtils.deleteFile(controlPortFilePath.toFile());
-        } catch (IOException e) {
-            log.warn("Failed to delete tor control port file after read: {}", controlPortFilePath, e);
-        }
+        FileUtils.deleteOnExit(controlPortFilePath.toFile());
 
         torController.initialize(controlPort);
         torController.authenticate(hashedControlPassword);
