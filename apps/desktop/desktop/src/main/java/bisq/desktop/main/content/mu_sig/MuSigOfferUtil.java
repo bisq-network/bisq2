@@ -24,8 +24,6 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.desktop.main.content.components.UserProfileDisplay;
-import bisq.offer.price.spec.FixPriceSpec;
-import bisq.offer.price.spec.PriceSpec;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -125,7 +123,7 @@ public class MuSigOfferUtil {
                     Label price = new Label(pricePair.getFirst());
                     // TODO: Change for custom icons
                     Label iconLabel = new Label();
-                    Icons.getIconForLabel(getPriceIcon(item.getPriceSpec()), iconLabel, "1.15em");
+                    Icons.getIconForLabel(getPriceIcon(item.isHasFixPrice()), iconLabel, "1.15em");
                     Label pricePercentage = new Label(pricePair.getSecond());
                     hbox.getChildren().addAll(price, iconLabel, pricePercentage);
 
@@ -139,8 +137,8 @@ public class MuSigOfferUtil {
                 }
             }
 
-            private AwesomeIcon getPriceIcon(PriceSpec priceSpec) {
-                return priceSpec instanceof FixPriceSpec ? AwesomeIcon.LOCK : AwesomeIcon.BAR_CHART;
+            private AwesomeIcon getPriceIcon(boolean hasFixPrice) {
+                return hasFixPrice ? AwesomeIcon.LOCK : AwesomeIcon.BAR_CHART;
             }
         };
     }

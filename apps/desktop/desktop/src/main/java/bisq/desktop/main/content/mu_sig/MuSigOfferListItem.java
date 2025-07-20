@@ -37,6 +37,7 @@ import bisq.offer.mu_sig.MuSigOffer;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.OfferPriceFormatter;
 import bisq.offer.price.PriceUtil;
+import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
@@ -77,7 +78,7 @@ public class MuSigOfferListItem {
     private final UserProfile makerUserProfile;
     private final ReputationScore reputationScore;
     private final long totalScore;
-    private final PriceSpec priceSpec;
+    private final boolean hasFixPrice;
     private final Map<FiatPaymentMethod, Boolean> accountAvailableByPaymentMethod;
     private final Pin marketPriceByCurrencyMapPin;
     private final boolean isBaseAmountBtc;
@@ -103,7 +104,8 @@ public class MuSigOfferListItem {
 
         isMyOffer = identityService.findActiveIdentity(offer.getMakerNetworkId()).isPresent();
         quoteCurrencyCode = offer.getMarket().getQuoteCurrencyCode();
-        priceSpec = offer.getPriceSpec();
+        PriceSpec priceSpec = offer.getPriceSpec();
+        hasFixPrice = priceSpec instanceof FixPriceSpec;
 
         AmountSpec amountSpec = offer.getAmountSpec();
         hasAmountRange = amountSpec instanceof RangeAmountSpec;
