@@ -104,18 +104,7 @@ public class Broadcaster {
         log.debug("Broadcast {} to {} out of {} peers. distributionFactor={}",
                 broadcastMessage.getClass().getSimpleName(), numBroadcasts, numConnections, distributionFactor);
         List<Connection> allConnections = CollectionUtil.toShuffledList(node.getAllActiveConnections());
-        // We don't use parallel() because:
-        // 1. It would suddenly increase network load
-        //    increased network load means higher difficulty in PoW
-        //    and since PoW is a CPU bound task, There's only so much we can do at once
-        //    So doing send attempts sequentially will actually help us prevent spikes
-        //    in the PoW difficulty and less CPU work as a result
-        // 2. We would increase the chance of hitting the connection throttle if we do so
-        //    as throttle time increases with network load.
-        //
-        // keep in mind that broadcasts are limited by the NetworkService's
-        // NETWORK_IO_POOL (and NETWORK_IO_LOW_PRIORITY_POOL for reBroadcasts)
-        // So the following amount of work is still done in parallel in that context
+
         allConnections.stream()
                 .limit(numBroadcasts)
                 .forEach(connection -> {

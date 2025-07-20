@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.IntStream;
 
 
 /**
@@ -81,30 +82,18 @@ public class ChatterboxApplicationService extends SeedNodeApplicationService {
                         // wait 10 seconds before doing anything
                         // to allow things to set up and desktops connect
                         Thread.sleep(10 * 1000);
+                        // we reuse the same mailbox to not cause storage issues
+                        // we just want the network noise
+                        var mailboxRequest = createAddMailboxRequest();
+                        var dataService = this.getNetworkService().getDataService().get();
                         while (true) {
                             try {
-                                var dataService = this.getNetworkService().getDataService().get();
-                                long startTime = System.currentTimeMillis();
-                                var addMailboxRequests = java.util.stream.IntStream.range(0, 2000)
-                                        .parallel()
-                                        .mapToObj(i -> {
-                                            try {
-                                                return createAddMailboxRequest();
-                                            } catch (GeneralSecurityException e) {
-                                                log.error("Failed to create AddMailboxRequest", e);
-                                                return null;
-                                            }
-                                        })
-                                        .filter(java.util.Objects::nonNull)
-                                        .toList();
-                                long duration = System.currentTimeMillis() - startTime;
-                                log.info("Generated {} addMailboxRequests in {} ms", addMailboxRequests.size(), duration);
-                                addMailboxRequests.parallelStream().forEach(request -> 
-                                    dataService.getBroadcasters().parallelStream().forEach(broadcaster -> 
-                                        broadcaster.reBroadcast(request)
-                                    )
+                                IntStream.range(0, 2000).parallel().forEach(i ->
+                                        dataService.getBroadcasters().parallelStream().forEach(broadcaster ->
+                                                broadcaster.reBroadcast(mailboxRequest)
+                                        )
                                 );
-                                Thread.sleep(20 * 1000);
+                                Thread.sleep(60 * 1000);
                             } catch (Exception e) {
                                 log.error("Chatterbox Error", e);
                                 break;
