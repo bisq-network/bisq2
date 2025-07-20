@@ -28,7 +28,6 @@ import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.mu_sig.MuSigService;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.user.banned.BannedUserService;
 import bisq.user.banned.RateLimitExceededException;
 import bisq.user.banned.UserProfileBannedException;
 import bisq.user.identity.UserIdentityService;
@@ -49,7 +48,6 @@ public class MuSigMyOffersController implements Controller {
     private final MarketPriceService marketPriceService;
     private final UserProfileService userProfileService;
     private final IdentityService identityService;
-    private final BannedUserService bannedUserService;
     private final ReputationService reputationService;
     private final AccountService accountService;
 
@@ -59,7 +57,6 @@ public class MuSigMyOffersController implements Controller {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         identityService = serviceProvider.getIdentityService();
-        bannedUserService = serviceProvider.getUserService().getBannedUserService();
         reputationService = serviceProvider.getUserService().getReputationService();
         accountService = serviceProvider.getAccountService();
 
@@ -70,8 +67,8 @@ public class MuSigMyOffersController implements Controller {
     @Override
     public void onActivate() {
         UIThread.run(() -> {
+            Set<String> myUserProfileIds = userIdentityService.getMyUserProfileIds();
             muSigService.getOffers().forEach(muSigOffer -> {
-                Set<String> myUserProfileIds = userIdentityService.getMyUserProfileIds();
                 boolean isMyOffer = myUserProfileIds.contains(muSigOffer.getMakersUserProfileId());
                 if (isMyOffer) {
                     String offerId = muSigOffer.getId();
@@ -89,6 +86,7 @@ public class MuSigMyOffersController implements Controller {
             });
 
             model.setNumOffers(Res.get("muSig.myOffers.numOffers", model.getMuSigMyOffersIds().size()));
+            model.setShouldShowMyProfileColumn(myUserProfileIds.size() > 1);
         });
     }
 

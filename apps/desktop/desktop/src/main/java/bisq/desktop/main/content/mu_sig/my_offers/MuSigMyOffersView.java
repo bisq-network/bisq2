@@ -46,6 +46,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
 
     private final Label numOffersLabel;
     private final RichTableView<MuSigOfferListItem> muSigMyOffersListView;
+    private BisqTableColumn<MuSigOfferListItem> myProfileColumn;
 
     public MuSigMyOffersView(MuSigMyOffersModel model, MuSigMyOffersController controller) {
         super(new VBox(), model, controller);
@@ -84,13 +85,14 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 .fixWidth(81)
                 .build());
 
-        muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
+        myProfileColumn = new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title(Res.get("muSig.myOffers.table.header.myProfile"))
                 .left()
                 .comparator(Comparator.comparingLong(MuSigOfferListItem::getTotalScore).reversed())
                 .setCellFactory(MuSigOfferUtil.getUserProfileCellFactory())
                 .minWidth(140)
-                .build());
+                .build();
+        muSigMyOffersListView.getColumns().add(myProfileColumn);
 
         muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title(Res.get("muSig.myOffers.table.header.offerId"))
@@ -172,6 +174,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
         muSigMyOffersListView.resetSearch();
         muSigMyOffersListView.sort();
         numOffersLabel.textProperty().set(model.getNumOffers());
+        myProfileColumn.visibleProperty().set(model.isShouldShowMyProfileColumn());
     }
 
     @Override
@@ -278,7 +281,6 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
     public static Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>,
             TableCell<MuSigOfferListItem, MuSigOfferListItem>> getMarketCellFactory() {
         return column -> new TableCell<>() {
-
             @Override
             protected void updateItem(MuSigOfferListItem item, boolean empty) {
                 super.updateItem(item, empty);
