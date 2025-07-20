@@ -29,6 +29,7 @@ import bisq.seed_node.SeedNodeApplicationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.concurrent.CompletableFuture;
 
@@ -54,6 +55,23 @@ public class ChatterboxApplicationService extends SeedNodeApplicationService {
         return sb.toString();
     }
 
+    private AddMailboxRequest createAddMailboxRequest() throws GeneralSecurityException {
+        KeyPair keyPairSender;
+        KeyPair keyPairReceiver;
+        keyPairSender = KeyGeneration.generateKeyPair();
+        keyPairReceiver = KeyGeneration.generateKeyPair();
+        var message = generateRandomString(32).getBytes();
+        var randomId = StringUtils.createUid();
+        ConfidentialData confidentialData = HybridEncryption.encryptAndSign(
+                message, keyPairReceiver.getPublic(), keyPairSender
+        );
+        var proto = bisq.network.protobuf.ConfidentialMessage.newBuilder()
+                .setConfidentialData(confidentialData.toProto(false))
+                .setReceiverKeyId(randomId).build();
+        var mailboxData = new MailboxData(new MetaData("chatterbox"), ConfidentialMessage.fromProto(proto));
+        return AddMailboxRequest.from(mailboxData, keyPairSender, keyPairReceiver.getPublic());
+    }
+
     @Override
     public CompletableFuture<Boolean> initialize() {
         return super.initialize().whenComplete((success, throwable) -> {
@@ -63,27 +81,30 @@ public class ChatterboxApplicationService extends SeedNodeApplicationService {
                         // wait 10 seconds before doing anything
                         // to allow things to set up and desktops connect
                         Thread.sleep(10 * 1000);
-                        KeyPair keyPairSender;
-                        KeyPair keyPairReceiver;
-                        keyPairSender = KeyGeneration.generateKeyPair();
-                        keyPairReceiver = KeyGeneration.generateKeyPair();
-                        var message = generateRandomString(32).getBytes();
-                        var randomId = StringUtils.createUid();
-                        ConfidentialData confidentialData = HybridEncryption.encryptAndSign(
-                                message, keyPairReceiver.getPublic(), keyPairSender
-                        );
-                        var proto = bisq.network.protobuf.ConfidentialMessage.newBuilder()
-                                .setConfidentialData(confidentialData.toProto(false))
-                                .setReceiverKeyId(randomId).build();
-                        var mailboxData = new MailboxData(new MetaData("chatterbox"), ConfidentialMessage.fromProto(proto));
-                        var dataService = this.getNetworkService().getDataService().get();
-                        var messageBox = AddMailboxRequest.from(mailboxData, keyPairSender, keyPairReceiver.getPublic());
                         while (true) {
                             try {
-                                for (int i = 0; i < 26000; i++) {
-                                    dataService.getBroadcasters().stream().parallel().forEach(broadcaster -> broadcaster.reBroadcast(messageBox));
-                                }
-                                Thread.sleep(120 * 1000);
+                                var dataService = this.getNetworkService().getDataService().get();
+                                long startTime = System.currentTimeMillis();
+                                var addMailboxRequests = java.util.stream.IntStream.range(0, 2000)
+                                        .parallel()
+                                        .mapToObj(i -> {
+                                            try {
+                                                return createAddMailboxRequest();
+                                            } catch (GeneralSecurityException e) {
+                                                log.error("Failed to create AddMailboxRequest", e);
+                                                return null;
+                                            }
+                                        })
+                                        .filter(java.util.Objects::nonNull)
+                                        .toList();
+                                long duration = System.currentTimeMillis() - startTime;
+                                log.info("Generated {} addMailboxRequests in {} ms", addMailboxRequests.size(), duration);
+                                addMailboxRequests.parallelStream().forEach(request -> 
+                                    dataService.getBroadcasters().parallelStream().forEach(broadcaster -> 
+                                        broadcaster.reBroadcast(request)
+                                    )
+                                );
+                                Thread.sleep(20 * 1000);
                             } catch (Exception e) {
                                 log.error("Chatterbox Error", e);
                                 break;
