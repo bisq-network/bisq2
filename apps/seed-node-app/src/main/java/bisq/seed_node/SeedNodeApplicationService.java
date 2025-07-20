@@ -52,8 +52,8 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
     @Nullable
     private Pin difficultyAdjustmentServicePin;
 
-    public SeedNodeApplicationService(String[] args) {
-        super("seed_node", args);
+    public SeedNodeApplicationService(String configFileName, String[] args) {
+        super(configFileName, args);
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
 
@@ -76,6 +76,10 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
 
         Optional<SeedNodeService.Config> seedNodeConfig = hasConfig("seedNode") ? Optional.of(SeedNodeService.Config.from(getConfig("seedNode"))) : Optional.empty();
         seedNodeService = new SeedNodeService(seedNodeConfig, networkService, identityService, securityService.getKeyBundleService());
+    }
+
+    public SeedNodeApplicationService(String[] args) {
+        this("seed_node", args);
     }
 
     @Override
