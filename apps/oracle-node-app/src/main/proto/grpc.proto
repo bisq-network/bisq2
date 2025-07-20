@@ -1,0 +1,60 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+syntax = "proto3";
+
+package bisq1_bridge;
+
+option java_package = "bisq.oracle_node.bisq1_bridge.protobuf";
+option java_multiple_files = true;
+
+service Bisq1BridgeService {
+  rpc SubscribeBlockData (BlockDataSubscription) returns (stream BlockData);
+}
+
+message BlockDataSubscription {
+}
+
+message BlockData {
+  uint32 height = 1;
+  bytes hash = 2;
+  uint64 time = 3;
+  repeated TxData txData = 4;
+  repeated BurningManData burningManData = 5;
+}
+
+message TxData {
+  string txId = 1;
+  ProofOfBurnData proofOfBurnData = 2;
+  BondedReputationData bondedReputationData = 3;
+}
+
+message BurningManData {
+  string receiverAddress = 1;
+  double cappedBurnAmountShare = 2;
+}
+
+message ProofOfBurnData {
+  uint64 amount = 1;
+  bytes proofOfBurnHash = 2;
+}
+
+message BondedReputationData {
+  uint64 amount = 1;
+  bytes bondedReputationHash = 2;
+  uint32 lockTime = 3;
+}
