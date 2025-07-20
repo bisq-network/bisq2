@@ -339,7 +339,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 .titleProperty(model.getBaseCodeTitle())
                 .minWidth(120)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getBaseAmountAsString))
-                .valueSupplier(MuSigOfferListItem::getBaseAmountAsString)
+                .setCellFactory(MuSigOfferUtil.getBaseAmountCellFactory(false))
                 .build());
 
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()

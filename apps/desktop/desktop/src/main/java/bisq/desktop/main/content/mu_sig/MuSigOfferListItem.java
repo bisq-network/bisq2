@@ -80,12 +80,15 @@ public class MuSigOfferListItem {
     private final PriceSpec priceSpec;
     private final Map<FiatPaymentMethod, Boolean> accountAvailableByPaymentMethod;
     private final Pin marketPriceByCurrencyMapPin;
+    private final boolean isBaseAmountBtc;
+    private final boolean hasAmountRange;
+    private final Pair<String, String> minAndMaxBaseAmountPair;
 
     private Optional<String> cannotTakeOfferReason = Optional.empty();
     private double priceSpecAsPercent = 0;
     private String formattedPercentagePrice = Res.get("data.na"),
-            price = Res.get("data.na"),
-            priceTooltip = Res.get("data.na");
+    price = Res.get("data.na"),
+    priceTooltip = Res.get("data.na");
     private Pair<String, String> pricePair;
     private long priceAsLong = 0;
 
@@ -100,15 +103,20 @@ public class MuSigOfferListItem {
 
         isMyOffer = identityService.findActiveIdentity(offer.getMakerNetworkId()).isPresent();
         quoteCurrencyCode = offer.getMarket().getQuoteCurrencyCode();
+        priceSpec = offer.getPriceSpec();
 
         AmountSpec amountSpec = offer.getAmountSpec();
-        priceSpec = offer.getPriceSpec();
-        boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
+        hasAmountRange = amountSpec instanceof RangeAmountSpec;
         market = offer.getMarket();
+        isBaseAmountBtc = market.getBaseCurrencyCode().equals("BTC");
         baseAmountAsString = OfferAmountFormatter.formatBaseAmount(marketPriceService, offer, false, false);
         baseAmountWithSymbol = String.format("%s %s", baseAmountAsString, market.getBaseCurrencyCode());
         quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, false);
         quoteAmountWithSymbol = String.format("%s %s", quoteAmountAsString, market.getQuoteCurrencyCode());
+        minAndMaxBaseAmountPair = new Pair<>(
+                OfferAmountFormatter.formatBaseSideMinAmount(marketPriceService, offer, false),
+                OfferAmountFormatter.formatBaseSideMaxAmount(marketPriceService, offer, false));
+
         takeOfferButtonText = offer.getDirection().isBuy()
                 ? Res.get("muSig.offerbook.table.cell.offer.intent.sell")
                 : Res.get("muSig.offerbook.table.cell.offer.intent.buy");

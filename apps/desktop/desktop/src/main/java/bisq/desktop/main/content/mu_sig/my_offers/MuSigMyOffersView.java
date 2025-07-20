@@ -123,9 +123,9 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
         muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title(Res.get("muSig.myOffers.table.header.baseAmount"))
                 .left()
-                .minWidth(170)
+                .fixWidth(240)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getBaseAmountWithSymbol))
-                .valueSupplier(MuSigOfferListItem::getBaseAmountWithSymbol)
+                .setCellFactory(MuSigOfferUtil.getBaseAmountCellFactory(true))
                 .build());
 
         muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
@@ -139,7 +139,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
         muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title(Res.get("muSig.myOffers.table.header.price"))
                 .left()
-                .minWidth(160)
+                .fixWidth(200)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getPrice))
                 .setCellFactory(MuSigOfferUtil.getPriceCellFactory())
                 .build());
