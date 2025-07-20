@@ -67,7 +67,8 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
                 Res.get("reputation.table.headline"),
                 model.getFilterItems(),
                 model.getFilterMenuItemToggleGroup(),
-                controller::applySearchPredicate);
+                controller::applySearchPredicate,
+                Res.get("reputation.table.entriesUnit"));
         configTableView();
 
         root.getChildren().addAll(richTableView);

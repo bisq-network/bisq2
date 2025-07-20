@@ -66,7 +66,8 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
                 "",
                 model.getFilterMenuItems(),
                 model.getFilterMenuItemToggleGroup(),
-                controller::onSearchTextChanged);
+                controller::onSearchTextChanged,
+                Res.get("paymentAccounts.crypto.paymentMethod.entriesUnit"));
         richTableView.setPrefHeight(360);
 
         richTableView.getNumEntriesLabel().setVisible(false);

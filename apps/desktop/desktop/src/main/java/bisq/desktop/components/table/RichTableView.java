@@ -87,6 +87,7 @@ public class RichTableView<T> extends VBox {
     private final Hyperlink exportHyperlink;
     private final ChangeListener<Toggle> toggleChangeListener;
     private final ListChangeListener<T> listChangeListener;
+    private final String entriesUnit;
     private Subscription searchTextPin;
     @Setter
     private Optional<List<String>> csvHeaders = Optional.empty();
@@ -98,52 +99,55 @@ public class RichTableView<T> extends VBox {
     }
 
     public RichTableView(ObservableList<T> observableList, String headline) {
-        this(new SortedList<>(observableList), headline);
+        this(new SortedList<>(observableList), Optional.of(headline), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     public RichTableView(SortedList<T> sortedList) {
-        this(sortedList, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+        this(sortedList, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
-    public RichTableView(SortedList<T> sortedList, String headline) {
-        this(sortedList, Optional.of(headline), Optional.empty(), Optional.empty(), Optional.empty());
+    public RichTableView(SortedList<T> sortedList, String headline, String entriesUnit) {
+        this(sortedList, Optional.of(headline), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(entriesUnit));
     }
 
     public RichTableView(SortedList<T> sortedList,
                          String headline,
                          List<FilterMenuItem<T>> filterItems,
                          ToggleGroup toggleGroup) {
-        this(sortedList, Optional.of(headline), Optional.of(filterItems), Optional.of(toggleGroup), Optional.empty());
+        this(sortedList, Optional.of(headline), Optional.of(filterItems), Optional.of(toggleGroup), Optional.empty(), Optional.empty());
     }
 
     public RichTableView(SortedList<T> sortedList,
                          Consumer<String> searchTextHandler) {
-        this(sortedList, Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(searchTextHandler));
+        this(sortedList, Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(searchTextHandler), Optional.empty());
     }
 
     public RichTableView(SortedList<T> sortedList,
                          String headline,
                          Consumer<String> searchTextHandler) {
-        this(sortedList, Optional.of(headline), Optional.empty(), Optional.empty(), Optional.of(searchTextHandler));
+        this(sortedList, Optional.of(headline), Optional.empty(), Optional.empty(), Optional.of(searchTextHandler), Optional.empty());
     }
 
     public RichTableView(SortedList<T> sortedList,
                          String headline,
                          List<FilterMenuItem<T>> filterItems,
                          ToggleGroup toggleGroup,
-                         Consumer<String> searchTextHandler) {
-        this(sortedList, Optional.of(headline), Optional.of(filterItems), Optional.of(toggleGroup), Optional.of(searchTextHandler));
+                         Consumer<String> searchTextHandler,
+                         String entriesUnit) {
+        this(sortedList, Optional.of(headline), Optional.of(filterItems), Optional.of(toggleGroup), Optional.of(searchTextHandler), Optional.of(entriesUnit));
     }
 
     private RichTableView(SortedList<T> sortedList,
                           Optional<String> headline,
                           Optional<List<FilterMenuItem<T>>> filterItems,
                           Optional<ToggleGroup> toggleGroup,
-                          Optional<Consumer<String>> searchTextHandler) {
+                          Optional<Consumer<String>> searchTextHandler,
+                          Optional<String> entriesUnit) {
         this.headline = headline;
         this.filterItems = filterItems;
         this.toggleGroup = toggleGroup;
         this.searchTextHandler = searchTextHandler;
+        this.entriesUnit = entriesUnit.orElse(Res.get("component.standardTable.entriesUnit.generic"));
         if (filterItems.isPresent()) {
             checkArgument(toggleGroup.isPresent(), "filterItems and toggleGroup must be both present or empty");
         }
@@ -312,7 +316,7 @@ public class RichTableView<T> extends VBox {
     }
 
     private void listItemsChanged() {
-        numEntriesLabel.setText(Res.get("component.standardTable.numEntries", tableView.getItems().size()));
+        numEntriesLabel.setText(String.format("(%s %s)", tableView.getItems().size(), entriesUnit.toLowerCase()));
     }
 
     public BisqTableColumn<T> getSelectionMarkerColumn() {
