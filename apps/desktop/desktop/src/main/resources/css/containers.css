@@ -359,6 +359,10 @@
  *                                                                             *
  ******************************************************************************/
 
+.rich-table-view-box {
+    -fx-padding: 0 40 0 40;
+}
+
 .rich-table-view-box .dropdown-offer-rich-table-filter-menu {
     -fx-padding: 3 10 0 10;
     -fx-max-height: 25;

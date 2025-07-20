@@ -88,6 +88,7 @@ public class RichTableView<T> extends VBox {
     private final ChangeListener<Toggle> toggleChangeListener;
     private final ListChangeListener<T> listChangeListener;
     private final String entriesUnit;
+    private final HBox subheader;
     private Subscription searchTextPin;
     @Setter
     private Optional<List<String>> csvHeaders = Optional.empty();
@@ -137,6 +138,14 @@ public class RichTableView<T> extends VBox {
         this(sortedList, Optional.of(headline), Optional.of(filterItems), Optional.of(toggleGroup), Optional.of(searchTextHandler), Optional.of(entriesUnit));
     }
 
+    public RichTableView(SortedList<T> sortedList,
+                         List<FilterMenuItem<T>> filterItems,
+                         ToggleGroup toggleGroup,
+                         Consumer<String> searchTextHandler,
+                         String entriesUnit) {
+        this(sortedList, Optional.empty(), Optional.of(filterItems), Optional.of(toggleGroup), Optional.of(searchTextHandler), Optional.of(entriesUnit));
+    }
+
     private RichTableView(SortedList<T> sortedList,
                           Optional<String> headline,
                           Optional<List<FilterMenuItem<T>>> filterItems,
@@ -172,6 +181,12 @@ public class RichTableView<T> extends VBox {
         HBox headerBox = new HBox(5, headlineLabel, numEntriesLabel, Spacer.fillHBox(), exportHyperlink);
         headerBox.getStyleClass().add("chat-container-header");
 
+        VBox headerWithLineBox = new VBox(headerBox, Layout.hLine());
+        if (headline.isEmpty()) {
+            headerWithLineBox.setVisible(false);
+            headerWithLineBox.setManaged(false);
+        }
+
         // Subheader: contains search + filters
         searchBox = new SearchBox();
         searchBox.setManaged(searchTextHandler.isPresent());
@@ -186,7 +201,7 @@ public class RichTableView<T> extends VBox {
         tooltip = new BisqTooltip();
         filterMenu.setTooltip(tooltip);
 
-        HBox subheader = new HBox(searchBox, Spacer.fillHBox(), filterMenu);
+        subheader = new HBox(searchBox, Spacer.fillHBox(), filterMenu);
         subheader.getStyleClass().add("rich-table-subheader");
         subheader.setAlignment(Pos.CENTER);
         subheader.setPadding(new Insets(0, 20, 0, 20));
@@ -197,8 +212,8 @@ public class RichTableView<T> extends VBox {
         tableView.setMinHeight(200);
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
-        setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
-        getChildren().addAll(headerBox, Layout.hLine(), subheader, tableView);
+//        setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
+        getChildren().addAll(headerWithLineBox, subheader, tableView);
         VBox.setVgrow(this, Priority.ALWAYS);
         getStyleClass().add("rich-table-view-box");
 

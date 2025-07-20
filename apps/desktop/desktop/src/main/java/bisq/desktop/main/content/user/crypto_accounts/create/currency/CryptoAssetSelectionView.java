@@ -50,7 +50,6 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
     private final RichTableView<CryptoAssetItem> richTableView;
     private final ListChangeListener<CryptoAssetItem> listChangeListener;
     private Subscription  selectedItemPin, selectedTypePin;
-    private Label paymentMethodHeaderLabel;
     private BisqTableColumn<CryptoAssetItem> tokenStandardColumn, networkColumn, pegCurrencyColumn, countryColumn;
 
     public CryptoAssetSelectionView(CryptoAssetSelectionModel model, CryptoAssetSelectionController controller) {
@@ -63,7 +62,6 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
         headline.getStyleClass().add("bisq-text-headline-2");
 
         richTableView = new RichTableView<>(model.getSortedList(),
-                "",
                 model.getFilterMenuItems(),
                 model.getFilterMenuItemToggleGroup(),
                 controller::onSearchTextChanged,
@@ -77,7 +75,8 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
 
         configureTableColumns();
 
-        VBox.setMargin(headline, new Insets(10, 0, -20, 0));
+        VBox.setMargin(headline, new Insets(30, 0, 0, 0));
+        VBox.setMargin(richTableView, new Insets(0, 0, 20, 0));
         root.getChildren().addAll(headline, richTableView);
 
         listChangeListener = c -> {
