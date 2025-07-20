@@ -19,8 +19,6 @@ package bisq.desktop.main.content.mu_sig.my_offers;
 
 import bisq.account.AccountService;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.observable.Pin;
-import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -39,7 +37,6 @@ import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -55,7 +52,6 @@ public class MuSigMyOffersController implements Controller {
     private final BannedUserService bannedUserService;
     private final ReputationService reputationService;
     private final AccountService accountService;
-    private Pin offersPin;
 
     public MuSigMyOffersController(ServiceProvider serviceProvider) {
         muSigService = serviceProvider.getMuSigService();
@@ -73,53 +69,26 @@ public class MuSigMyOffersController implements Controller {
 
     @Override
     public void onActivate() {
-        offersPin = muSigService.getObservableOffers().addObserver(new CollectionObserver<>() {
-            @Override
-            public void add(MuSigOffer muSigOffer) {
-                UIThread.run(() -> {
-                    Set<String> myUserProfileIds = userIdentityService.getMyUserProfileIds();
-                    boolean isMyOffer = myUserProfileIds.contains(muSigOffer.getMakersUserProfileId());
-                    if (isMyOffer) {
-                        String offerId = muSigOffer.getId();
-                        if (!model.getMuSigMyOffersIds().contains(offerId)) {
-                            model.getMuSigMyOffersListItems().add(new MuSigOfferListItem(muSigOffer,
-                                    marketPriceService,
-                                    userProfileService,
-                                    identityService,
-                                    reputationService,
-                                    accountService));
-                            model.getMuSigMyOffersIds().add(offerId);
-                            updateFilteredMuSigMyOffersListItems();
-                        }
-                    }
-                });
-            }
-
-            @Override
-            public void remove(Object element) {
-                if (element instanceof MuSigOffer muSigOffer) {
-                    UIThread.run(() -> {
-                        String offerId = muSigOffer.getId();
-                        Optional<MuSigOfferListItem> toRemove = model.getMuSigMyOffersListItems().stream()
-                                .filter(item -> item.getOffer().getId().equals(offerId))
-                                .findAny();
-                        toRemove.ifPresent(offer -> {
-                            model.getMuSigMyOffersListItems().remove(offer);
-                            model.getMuSigMyOffersIds().remove(offerId);
-                        });
+        UIThread.run(() -> {
+            muSigService.getOffers().forEach(muSigOffer -> {
+                Set<String> myUserProfileIds = userIdentityService.getMyUserProfileIds();
+                boolean isMyOffer = myUserProfileIds.contains(muSigOffer.getMakersUserProfileId());
+                if (isMyOffer) {
+                    String offerId = muSigOffer.getId();
+                    if (!model.getMuSigMyOffersIds().contains(offerId)) {
+                        model.getMuSigMyOffersListItems().add(new MuSigOfferListItem(muSigOffer,
+                                marketPriceService,
+                                userProfileService,
+                                identityService,
+                                reputationService,
+                                accountService));
+                        model.getMuSigMyOffersIds().add(offerId);
                         updateFilteredMuSigMyOffersListItems();
-                    });
+                    }
                 }
-            }
+            });
 
-            @Override
-            public void clear() {
-                UIThread.run(() -> {
-                    model.getMuSigMyOffersListItems().clear();
-                    model.getMuSigMyOffersIds().clear();
-                    updateFilteredMuSigMyOffersListItems();
-                });
-            }
+            model.setNumOffers(Res.get("muSig.myOffers.numOffers", model.getMuSigMyOffersIds().size()));
         });
     }
 
@@ -128,8 +97,6 @@ public class MuSigMyOffersController implements Controller {
         model.getMuSigMyOffersListItems().forEach(MuSigOfferListItem::dispose);
         model.getMuSigMyOffersListItems().clear();
         model.getMuSigMyOffersIds().clear();
-
-        offersPin.unbind();
     }
 
     void onRemoveOffer(MuSigOffer muSigOffer) {

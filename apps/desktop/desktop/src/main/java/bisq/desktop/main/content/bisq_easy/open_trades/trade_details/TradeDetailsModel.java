@@ -33,7 +33,6 @@ import java.util.Optional;
 public class TradeDetailsModel extends NavigationModel {
     private BisqEasyTrade trade;
     private BisqEasyOpenTradeChannel channel;
-
     private String tradeDate;
     private Optional<String> tradeDuration = Optional.empty();
     private String me;

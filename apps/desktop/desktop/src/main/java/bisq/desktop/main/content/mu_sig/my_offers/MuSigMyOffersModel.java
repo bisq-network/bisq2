@@ -24,6 +24,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -31,6 +32,9 @@ import java.util.function.Predicate;
 
 @Getter
 public class MuSigMyOffersModel implements Model {
+    @Setter
+    private String numOffers;
+
     private final Set<String> muSigMyOffersIds = new HashSet<>();
     private final ObservableList<MuSigOfferListItem> muSigMyOffersListItems = FXCollections.observableArrayList();
     private final FilteredList<MuSigOfferListItem> filteredMuSigMyOffersListItems = new FilteredList<>(muSigMyOffersListItems);
