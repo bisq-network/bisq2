@@ -1,7 +1,25 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.desktop.components.table;
 
 import bisq.common.encoding.Csv;
 import bisq.common.file.FileUtils;
+import bisq.desktop.common.Layout;
 import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -55,6 +73,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 public class RichTableView<T> extends VBox {
+    private static final double SIDE_PADDING = 40;
+
     private final Optional<String> headline;
     private final Optional<List<FilterMenuItem<T>>> filterItems;
     private final Optional<ToggleGroup> toggleGroup;
@@ -67,7 +87,6 @@ public class RichTableView<T> extends VBox {
     private final Hyperlink exportHyperlink;
     private final ChangeListener<Toggle> toggleChangeListener;
     private final ListChangeListener<T> listChangeListener;
-    private final VBox footerVBox;
     private Subscription searchTextPin;
     @Setter
     private Optional<List<String>> csvHeaders = Optional.empty();
@@ -132,50 +151,51 @@ public class RichTableView<T> extends VBox {
             checkArgument(filterItems.isPresent(), "filterItems and toggleGroup must be both present or empty");
         }
 
+        // Header: contains headline + num entries + export button
         headlineLabel = new Label(headline.orElse(""));
         headlineLabel.setManaged(headline.isPresent());
         headlineLabel.setVisible(headlineLabel.isManaged());
-        headlineLabel.getStyleClass().add("rich-table-headline");
-        headlineLabel.setAlignment(Pos.BASELINE_LEFT);
+        headlineLabel.getStyleClass().add("bisq-easy-container-headline");
 
-        tableView = new BisqTableView<>(sortedList);
-        tableView.getStyleClass().add("rich-table-view");
-        tableView.setMinHeight(200);
+        numEntriesLabel = new Label();
+        HBox.setMargin(numEntriesLabel, new Insets(0, 0, -5, 0));
+        numEntriesLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text", "font-light");
+
+        exportHyperlink = new Hyperlink(Res.get("action.exportAsCsv"));
+        exportHyperlink.getStyleClass().add("rich-table-num-entries");
+        exportHyperlink.setAlignment(Pos.BASELINE_LEFT);
+
+        HBox headerBox = new HBox(5, headlineLabel, numEntriesLabel, Spacer.fillHBox(), exportHyperlink);
+        headerBox.getStyleClass().add("chat-container-header");
+
+        // Subheader: contains search + filters
+        searchBox = new SearchBox();
+        searchBox.setManaged(searchTextHandler.isPresent());
+        searchBox.setVisible(searchBox.isManaged());
+        searchBox.setPrefWidth(200);
 
         filterMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
+        filterMenu.getStyleClass().add("dropdown-offer-rich-table-filter-menu");
         filterMenu.setManaged(filterItems.isPresent());
         filterMenu.setVisible(filterMenu.isManaged());
         filterItems.ifPresent(filterMenu::addMenuItems);
         tooltip = new BisqTooltip();
         filterMenu.setTooltip(tooltip);
 
-        searchBox = new SearchBox();
-        searchBox.setManaged(searchTextHandler.isPresent());
-        searchBox.setVisible(searchBox.isManaged());
-        searchBox.setPrefWidth(90);
-        searchBox.setAlignment(Pos.BASELINE_LEFT);
-        HBox filterBox = new HBox(10, searchBox, filterMenu);
-        filterBox.setAlignment(Pos.BASELINE_LEFT);
+        HBox subheader = new HBox(searchBox, Spacer.fillHBox(), filterMenu);
+        subheader.getStyleClass().add("rich-table-subheader");
+        subheader.setAlignment(Pos.CENTER);
+        subheader.setPadding(new Insets(0, 20, 0, 20));
 
-        HBox headerBox = new HBox(headlineLabel, Spacer.fillHBox(), filterBox);
-        headerBox.setAlignment(Pos.BASELINE_LEFT);
-
-        numEntriesLabel = new Label();
-        numEntriesLabel.getStyleClass().add("rich-table-num-entries");
-        numEntriesLabel.setAlignment(Pos.BASELINE_LEFT);
-
-        exportHyperlink = new Hyperlink(Res.get("action.exportAsCsv"));
-        exportHyperlink.getStyleClass().add("rich-table-num-entries");
-        exportHyperlink.setAlignment(Pos.BASELINE_LEFT);
-
-        HBox.setMargin(exportHyperlink, new Insets(8, 10, 0, 0));
-        footerVBox = new VBox(5, numEntriesLabel, exportHyperlink);
-        footerVBox.setAlignment(Pos.BASELINE_LEFT);
-
-        VBox.setMargin(headerBox, new Insets(0, 0, 5, 0));
+        // TableView
+        tableView = new BisqTableView<>(sortedList);
+        tableView.getStyleClass().add("rich-table-view");
+        tableView.setMinHeight(200);
         VBox.setVgrow(tableView, Priority.ALWAYS);
-        VBox.setMargin(footerVBox, new Insets(10, 0, 0, 0));
-        getChildren().addAll(headerBox, tableView, footerVBox);
+
+        setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
+        getChildren().addAll(headerBox, Layout.hLine(), subheader, tableView);
+        VBox.setVgrow(this, Priority.ALWAYS);
         getStyleClass().add("rich-table-view-box");
 
         listChangeListener = c -> listItemsChanged();

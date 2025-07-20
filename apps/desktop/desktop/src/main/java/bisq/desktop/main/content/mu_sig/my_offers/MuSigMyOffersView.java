@@ -64,8 +64,6 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
         subheader.setAlignment(Pos.CENTER);
 
         muSigMyOffersListView = new RichTableView<>(model.getSortedMuSigMyOffersListItems());
-        muSigMyOffersListView.getFooterVBox().setVisible(false);
-        muSigMyOffersListView.getFooterVBox().setManaged(false);
         muSigMyOffersListView.getStyleClass().add("mu-sig-my-offers-table");
         configMuSigMyOffersListView();
         VBox.setVgrow(muSigMyOffersListView, Priority.ALWAYS);

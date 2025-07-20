@@ -118,8 +118,6 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
         // Offer table
         muSigOfferListView = new RichTableView<>(model.getSortedMuSigOfferListItems());
-        muSigOfferListView.getFooterVBox().setVisible(false);
-        muSigOfferListView.getFooterVBox().setManaged(false);
         configMuSigOfferListView();
 
         // Markets column
