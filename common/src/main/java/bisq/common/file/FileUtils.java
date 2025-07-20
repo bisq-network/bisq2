@@ -51,6 +51,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -131,9 +132,45 @@ public class FileUtils {
         }
     }
 
-    public static void deleteFile(File file) throws IOException {
-        if (file.exists()) {
-            Files.delete(file.toPath());
+    /**
+     * Deletes a file if it exists. On some operating systems it may not be possible
+     * to remove a file when it is open and in use by this Java virtual machine or other programs
+     *
+     * @see Files#deleteIfExists
+     */
+    public static boolean deleteFile(File file) throws IOException {
+        return Files.deleteIfExists(file.toPath());
+    }
+
+    /**
+     * <b>Blocking</b>; delete file and wait until it no longer exists, polling every 50ms.
+     *
+     * @throws InterruptedException if the thread is interrupted while waiting.
+     */
+    public static void deleteFileAndWait(File file, long timeoutMillis) throws IOException, InterruptedException {
+        deleteFile(file);
+        long start = System.currentTimeMillis();
+        while (file.exists()) {
+            if (System.currentTimeMillis() - start > timeoutMillis) {
+                throw new IOException("Failed to delete file within timeout: " + file.getAbsolutePath());
+            }
+            Thread.sleep(50);
+        }
+    }
+
+    /**
+     * <b>Blocking</b>; Waits until the specified file exists, polling every 100ms up to the given timeout.
+     *
+     * @throws InterruptedException if the thread is interrupted while waiting.
+     */
+    public static void waitUntilFileExists(File file,
+                                           long timeoutMillis) throws InterruptedException, TimeoutException {
+        long start = System.currentTimeMillis();
+        while (!file.exists()) {
+            if (System.currentTimeMillis() - start > timeoutMillis) {
+                throw new TimeoutException("File did not exist after " + timeoutMillis + " ms: " + file.getAbsolutePath());
+            }
+            Thread.sleep(100);
         }
     }
 
