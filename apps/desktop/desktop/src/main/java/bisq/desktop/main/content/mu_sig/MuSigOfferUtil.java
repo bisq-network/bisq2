@@ -168,23 +168,23 @@ public class MuSigOfferUtil {
 
                 if (item != null && !empty) {
                     hbox.getChildren().clear();
-                    if (item.isBaseAmountBtc()) {
-                        if (item.isHasAmountRange()) {
-                            Pair<String, String> minAndMaxBaseAmount = item.getMinAndMaxBaseAmountPair();
-                            bitcoinMinAmountDisplay.setBtcAmount(minAndMaxBaseAmount.getFirst());
-                            hbox.getChildren().add(bitcoinMinAmountDisplay);
-                            hbox.getChildren().add(dashLabel);
-                            bitcoinFixedOrMaxAmountDisplay.setBtcAmount(minAndMaxBaseAmount.getSecond());
-                        } else {
-                            bitcoinFixedOrMaxAmountDisplay.setBtcAmount(item.getBaseAmountAsString());
-                        }
-                        hbox.getChildren().add(bitcoinFixedOrMaxAmountDisplay);
-                        setGraphic(hbox);
-                    } else {
+//                    if (item.isBaseAmountBtc()) {
+//                        if (item.isHasAmountRange()) {
+//                            Pair<String, String> minAndMaxBaseAmount = item.getMinAndMaxBaseAmountPair();
+//                            bitcoinMinAmountDisplay.setBtcAmount(minAndMaxBaseAmount.getFirst());
+//                            hbox.getChildren().add(bitcoinMinAmountDisplay);
+//                            hbox.getChildren().add(dashLabel);
+//                            bitcoinFixedOrMaxAmountDisplay.setBtcAmount(minAndMaxBaseAmount.getSecond());
+//                        } else {
+//                            bitcoinFixedOrMaxAmountDisplay.setBtcAmount(item.getBaseAmountAsString());
+//                        }
+//                        hbox.getChildren().add(bitcoinFixedOrMaxAmountDisplay);
+//                        setGraphic(hbox);
+//                    } else {
                         setGraphic(new Label(showSymbol
                                 ? item.getBaseAmountWithSymbol()
                                 : item.getBaseAmountAsString()));
-                    }
+//                    }
                 } else {
                     hbox.getChildren().clear();
                     setGraphic(null);
