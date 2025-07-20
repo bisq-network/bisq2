@@ -18,11 +18,17 @@
 package bisq.desktop.main.content.mu_sig;
 
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.common.data.Pair;
+import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.components.UserProfileDisplay;
+import bisq.offer.price.spec.FixPriceSpec;
+import bisq.offer.price.spec.PriceSpec;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.Tooltip;
@@ -93,6 +99,47 @@ public class MuSigOfferUtil {
                     hbox.getChildren().clear();
                     setGraphic(null);
                 }
+            }
+        };
+    }
+
+    public static Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>,
+            TableCell<MuSigOfferListItem, MuSigOfferListItem>> getPriceCellFactory() {
+        return column -> new TableCell<>() {
+            private final HBox hbox = new HBox(7);
+            private final BisqTooltip tooltip = new BisqTooltip();
+
+            {
+                hbox.setAlignment(Pos.CENTER_LEFT);
+            }
+
+            @Override
+            protected void updateItem(MuSigOfferListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    hbox.getChildren().clear();
+
+                    Pair<String, String> pricePair = item.getPricePair();
+                    Label price = new Label(pricePair.getFirst());
+                    // TODO: Change for custom icons
+                    Label iconLabel = new Label();
+                    Icons.getIconForLabel(getPriceIcon(item.getPriceSpec()), iconLabel, "1.15em");
+                    Label pricePercentage = new Label(pricePair.getSecond());
+                    hbox.getChildren().addAll(price, iconLabel, pricePercentage);
+
+                    tooltip.setText(item.getPriceTooltip());
+                    Tooltip.install(hbox, tooltip);
+                    setGraphic(hbox);
+                } else {
+                    Tooltip.uninstall(hbox, tooltip);
+                    hbox.getChildren().clear();
+                    setGraphic(null);
+                }
+            }
+
+            private AwesomeIcon getPriceIcon(PriceSpec priceSpec) {
+                return priceSpec instanceof FixPriceSpec ? AwesomeIcon.LOCK : AwesomeIcon.BAR_CHART;
             }
         };
     }

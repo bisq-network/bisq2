@@ -329,8 +329,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 .titleProperty(model.getPriceTitle())
                 .left()
                 .comparator(Comparator.comparing(MuSigOfferListItem::getPrice))
-                .valueSupplier(MuSigOfferListItem::getPrice)
-                .tooltipSupplier(MuSigOfferListItem::getPriceTooltip)
+                .setCellFactory(MuSigOfferUtil.getPriceCellFactory())
                 .minWidth(200)
                 .build();
         muSigOfferListView.getColumns().add(priceColumn);

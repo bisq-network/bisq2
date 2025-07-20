@@ -19,6 +19,7 @@ package bisq.offer.price.spec;
 
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.data.Pair;
 import bisq.common.market.Market;
 import bisq.i18n.Res;
 import bisq.offer.price.PriceUtil;
@@ -56,8 +57,8 @@ public class PriceSpecFormatter {
     }
 
     public static String getFormattedPrice(PriceSpec priceSpec,
-                                           MarketPriceService marketPriceService,
-                                           Market market) {
+                                               MarketPriceService marketPriceService,
+                                               Market market) {
         String priceInfo = Res.get("data.na");
         if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
             return PriceFormatter.format(fixPriceSpec.getPriceQuote());
@@ -90,6 +91,45 @@ public class PriceSpecFormatter {
         }
         return PriceFormatter.format(marketPrice.get().getPriceQuote(), true);
 
+    }
+
+    public static Pair<String, String> getFormattedPricePair(PriceSpec priceSpec,
+                                                             MarketPriceService marketPriceService,
+                                                             Market market) {
+        if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
+            String price = PriceFormatter.format(fixPriceSpec.getPriceQuote());
+            return new Pair<>(price, "");
+        }
+
+        String missingPriceInfo = Res.get("data.na");
+        if (market == null) {
+            log.warn("No market price selected");
+            return new Pair<>(missingPriceInfo, "");
+        }
+
+        Optional<MarketPrice> marketPrice = marketPriceService.findMarketPrice(market);
+        if (marketPrice.isEmpty()) {
+            log.warn("No market price available for selected market {}", market);
+            return new Pair<>(missingPriceInfo, "");
+        }
+
+        if (priceSpec instanceof FloatPriceSpec floatPriceSpec) {
+            double percentage = floatPriceSpec.getPercentage();
+            String currentPrice = marketPrice.map(MarketPrice::getPriceQuote)
+                    .map(priceQuote -> PriceUtil.fromMarketPriceMarkup(priceQuote, percentage))
+                    .map(priceQuote -> PriceFormatter.format(priceQuote, true))
+                    .orElse(missingPriceInfo);
+
+            String percentageAsString = PercentageFormatter.formatToPercentWithSymbol(Math.abs(percentage));
+            String percentageInfo = Res.get(percentage >= 0
+                    ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.plus"
+                    : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.minus", percentageAsString);
+
+            return new Pair<>(currentPrice, percentageInfo);
+        }
+
+        // Market price
+        return new Pair<>(PriceFormatter.format(marketPrice.get().getPriceQuote(), true), "MKT");
     }
 
     public static String getFormattedPriceSpecWithOfferPrice(PriceSpec priceSpec, String offerPrice) {
