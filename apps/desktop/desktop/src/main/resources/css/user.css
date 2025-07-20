@@ -194,7 +194,7 @@
 
 .profile-card .profile-card-table-header {
     -fx-pref-height: 8;
-    -fx-background-color: -bisq-dark-grey-30;
+    -fx-background-color: -bisq-dark-grey-10;
     -fx-background-radius: 8 8 0 0;
 }
 
@@ -220,7 +220,7 @@
 }
 
 .profile-card .profile-card-table.table-view .column-header-background {
-    -fx-background-color: -bisq-dark-grey-30;
+    -fx-background-color: -bisq-dark-grey-10;
     -fx-padding: 0 0 3 0;
 }
 
