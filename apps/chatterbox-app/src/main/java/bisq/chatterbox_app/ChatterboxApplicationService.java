@@ -60,7 +60,7 @@ public class ChatterboxApplicationService extends SeedNodeApplicationService {
             if (success) {
                 CompletableFuture.runAsync(() -> {
                     try {
-                        // wait 10 secodns before doing anything
+                        // wait 10 seconds before doing anything
                         // to allow things to set up and desktops connect
                         Thread.sleep(10 * 1000);
                         KeyPair keyPairSender;

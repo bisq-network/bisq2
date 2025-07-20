@@ -28,6 +28,7 @@ import java.util.concurrent.*;
 
 @Slf4j
 public class ExecutorFactory {
+    public static final int LOW_PRIORITY = 2;
     public static final int DEFAULT_PRIORITY = 3;
     private static final Map<String, ThreadFactory> THREAD_FACTORY_BY_NAME = new HashMap<>();
     public static final ExecutorService WORKER_POOL = newFixedThreadPool("Worker-pool");
@@ -75,7 +76,15 @@ public class ExecutorFactory {
                                                       int corePoolSize,
                                                       int maxPoolSize,
                                                       long keepAliveInSeconds) {
-        ThreadFactory threadFactory = getThreadFactory(getNameWithThreadNum(name));
+        return newCachedThreadPool(name, corePoolSize, corePoolSize, keepAliveInSeconds, DEFAULT_PRIORITY);
+    }
+
+    public static ExecutorService newCachedThreadPool(String name,
+                                                      int corePoolSize,
+                                                      int maxPoolSize,
+                                                      long keepAliveInSeconds,
+                                                      int priority) {
+        ThreadFactory threadFactory = getThreadFactory(getNameWithThreadNum(name), priority);
         ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newCachedThreadPool(threadFactory);
         executorService.setKeepAliveTime(keepAliveInSeconds, TimeUnit.SECONDS);
         executorService.setCorePoolSize(corePoolSize);
@@ -112,7 +121,7 @@ public class ExecutorFactory {
                 TimeUnit.SECONDS, workQueue, threadFactory);
     }
 
-    public static ThreadFactory getThreadFactory(String name) {
+    public static ThreadFactory getThreadFactory(String name, int priority) {
         synchronized (THREAD_FACTORY_BY_NAME) {
             return THREAD_FACTORY_BY_NAME.computeIfAbsent(
                     name,
@@ -120,9 +129,13 @@ public class ExecutorFactory {
                             new ThreadFactoryBuilder()
                                     .setNameFormat(name)
                                     .setDaemon(true)
-                                    .setPriority(DEFAULT_PRIORITY)
+                                    .setPriority(priority)
                                     .build());
         }
+    }
+
+    public static ThreadFactory getThreadFactory(String name) {
+        return getThreadFactory(name, DEFAULT_PRIORITY);
     }
 
     private static String getNameWithThreadNum(String name) {

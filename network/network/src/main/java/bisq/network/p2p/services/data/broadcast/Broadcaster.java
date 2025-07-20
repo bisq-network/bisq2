@@ -22,6 +22,7 @@ import bisq.common.util.CollectionUtil;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
+import bisq.network.p2p.node.NodeNotInitializedException;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -44,7 +46,7 @@ public class Broadcaster {
         this.node = node;
 
         retryPolicy = RetryPolicy.<BroadcastResult>builder()
-                .handle(IllegalStateException.class)
+                .handle(NodeNotInitializedException.class)
                 .withBackoff(Duration.ofSeconds(3), Duration.ofSeconds(30))
                 .withJitter(0.25)
                 .withMaxDuration(Duration.ofMinutes(5)).withMaxRetries(10)
@@ -55,8 +57,15 @@ public class Broadcaster {
     }
 
     public CompletableFuture<BroadcastResult> reBroadcast(BroadcastMessage broadcastMessage) {
-        return CompletableFuture.supplyAsync(() -> broadcast(broadcastMessage, 0.75).join(),
-                CompletableFuture.delayedExecutor(RE_BROADCAST_DELAY_MS, TimeUnit.MILLISECONDS));
+        return broadcast(
+                broadcastMessage,
+                0.75,
+                CompletableFuture.delayedExecutor(
+                        RE_BROADCAST_DELAY_MS,
+                        TimeUnit.MILLISECONDS,
+                        NetworkService.NETWORK_IO_LOW_PRIORITY_POOL
+                )
+        );
     }
 
     public CompletableFuture<BroadcastResult> broadcast(BroadcastMessage broadcastMessage) {
@@ -64,19 +73,30 @@ public class Broadcaster {
     }
 
     public CompletableFuture<BroadcastResult> broadcast(BroadcastMessage broadcastMessage, double distributionFactor) {
-        return Failsafe.with(retryPolicy).getAsync(() -> doBroadcast(broadcastMessage, distributionFactor).join());
+        return broadcast(broadcastMessage, distributionFactor, NetworkService.NETWORK_IO_POOL);
     }
 
-    public CompletableFuture<BroadcastResult> doBroadcast(BroadcastMessage broadcastMessage,
-                                                          double distributionFactor) {
+    public CompletableFuture<BroadcastResult> broadcast(BroadcastMessage broadcastMessage,
+                                                        double distributionFactor,
+                                                        Executor executor) {
+        // Failsafe is only used to retry when node is not initialized yet.
+        // if any other error occurs, we don't want to retry the broadcast.
+        return Failsafe
+                .with(retryPolicy)
+                .with(executor)
+                .getAsync(() -> doBroadcast(broadcastMessage, distributionFactor))
+                .orTimeout(BROADCAST_TIMEOUT, TimeUnit.SECONDS);
+    }
+
+    private BroadcastResult doBroadcast(BroadcastMessage broadcastMessage,
+                                        double distributionFactor) {
+        ThreadName.set(this, "broadcast");
         if (!node.isInitialized()) {
-            throw new IllegalStateException("Node not initialized. node=" + node.getNetworkId() +
+            throw new NodeNotInitializedException("Node not initialized. node=" + node.getNetworkId() +
                     "; transportType=" + node.getTransportType());
         }
 
         long ts = System.currentTimeMillis();
-        CompletableFuture<BroadcastResult> future = new CompletableFuture<BroadcastResult>()
-                .orTimeout(BROADCAST_TIMEOUT, TimeUnit.SECONDS);
         AtomicInteger numSuccess = new AtomicInteger(0);
         AtomicInteger numFaults = new AtomicInteger(0);
         long numConnections = node.getAllActiveConnections().count();
@@ -84,25 +104,33 @@ public class Broadcaster {
         log.debug("Broadcast {} to {} out of {} peers. distributionFactor={}",
                 broadcastMessage.getClass().getSimpleName(), numBroadcasts, numConnections, distributionFactor);
         List<Connection> allConnections = CollectionUtil.toShuffledList(node.getAllActiveConnections());
-        NetworkService.NETWORK_IO_POOL.submit(() -> {
-            ThreadName.set(this, "broadcast");
-            allConnections.stream()
-                    .limit(numBroadcasts)
-                    .forEach(connection -> {
-                        log.debug("{} broadcast {} to {}", node, broadcastMessage.getClass().getSimpleName(), connection.getPeerAddress());
-                        try {
-                            node.send(broadcastMessage, connection);
-                            numSuccess.incrementAndGet();
-                        } catch (Exception exception) {
-                            numFaults.incrementAndGet();
-                        }
-                        if (numSuccess.get() + numFaults.get() == numBroadcasts) {
-                            future.complete(new BroadcastResult(numSuccess.get(),
-                                    numFaults.get(),
-                                    System.currentTimeMillis() - ts));
-                        }
-                    });
-        });
-        return future;
+        // We don't use parallel() because:
+        // 1. It would suddenly increase network load
+        //    increased network load means higher difficulty in PoW
+        //    and since PoW is a CPU bound task, There's only so much we can do at once
+        //    So doing send attempts sequentially will actually help us prevent spikes
+        //    in the PoW difficulty and less CPU work as a result
+        // 2. We would increase the chance of hitting the connection throttle if we do so
+        //    as throttle time increases with network load.
+        //
+        // keep in mind that broadcasts are limited by the NetworkService's
+        // NETWORK_IO_POOL (and NETWORK_IO_LOW_PRIORITY_POOL for reBroadcasts)
+        // So the following amount of work is still done in parallel in that context
+        allConnections.stream()
+                .limit(numBroadcasts)
+                .forEach(connection -> {
+                    log.debug("{} broadcast {} to {}", node, broadcastMessage.getClass().getSimpleName(), connection.getPeerAddress());
+                    try {
+                        node.send(broadcastMessage, connection);
+                        numSuccess.incrementAndGet();
+                    } catch (Exception exception) {
+                        numFaults.incrementAndGet();
+                    }
+                });
+        return new BroadcastResult(
+                numSuccess.get(),
+                numFaults.get(),
+                System.currentTimeMillis() - ts
+        );
     }
 }
