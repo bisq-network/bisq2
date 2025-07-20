@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.oracle_node.bisq1_bridge;
+package bisq.oracle_node.bisq1_bridge.http;
 
 import bisq.common.application.DevMode;
 import bisq.common.application.Service;
@@ -27,9 +27,9 @@ import bisq.common.threading.ExecutorFactory;
 import bisq.common.threading.ThreadName;
 import bisq.network.NetworkService;
 import bisq.network.http.BaseHttpClient;
-import bisq.oracle_node.bisq1_bridge.dto.BondedReputationDto;
-import bisq.oracle_node.bisq1_bridge.dto.BondedRoleVerificationDto;
-import bisq.oracle_node.bisq1_bridge.dto.ProofOfBurnDto;
+import bisq.oracle_node.bisq1_bridge.http.dto.BondedReputationDto;
+import bisq.oracle_node.bisq1_bridge.http.dto.BondedRoleVerificationDto;
+import bisq.oracle_node.bisq1_bridge.http.dto.ProofOfBurnDto;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;

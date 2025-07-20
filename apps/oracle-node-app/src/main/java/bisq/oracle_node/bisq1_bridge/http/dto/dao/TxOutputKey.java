@@ -15,29 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.oracle_node.bisq1_bridge.dto.dao;
+package bisq.oracle_node.bisq1_bridge.http.dto.dao;
 
-import lombok.Getter;
+import lombok.Data;
 
-@SuppressWarnings("ALL")
-@Getter
-public enum ScriptType {
-    UNDEFINED("undefined"),
-    // https://github.com/bitcoin/bitcoin/blob/master/src/script/standard.cpp
-    NONSTANDARD("nonstandard"),
-    PUB_KEY("pubkey"),
-    PUB_KEY_HASH("pubkeyhash"),
-    SCRIPT_HASH("scripthash"),
-    MULTISIG("multisig"),
-    NULL_DATA("nulldata"),
-    WITNESS_V0_KEYHASH("witness_v0_keyhash"),
-    WITNESS_V0_SCRIPTHASH("witness_v0_scripthash"),
-    WITNESS_V1_TAPROOT("witness_v1_taproot"),
-    WITNESS_UNKNOWN("witness_unknown");
+@Data
+public final class TxOutputKey {
+    private String txId;
+    private int index;
 
-    private final String name;
-
-    ScriptType(String name) {
-        this.name = name;
+    @Override
+    public String toString() {
+        return txId + ":" + index;
     }
 }

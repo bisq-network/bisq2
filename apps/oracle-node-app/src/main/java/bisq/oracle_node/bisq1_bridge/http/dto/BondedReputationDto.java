@@ -15,13 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.oracle_node.bisq1_bridge.dto.dao;
+package bisq.oracle_node.bisq1_bridge.http.dto;
 
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Minimal data for the reputation use case.
+ * Need to be in sync with the Bisq 1 BondedReputationDto class.
+ */
+@Slf4j
 @Data
-public final class SpentInfo {
-    private long blockHeight;
+public class BondedReputationDto {
+    private long amount;
+    private long blockTime;
+    private String hash;
+    private int blockHeight;
+    private int lockTime;
     private String txId;
-    private int inputIndex;
 }

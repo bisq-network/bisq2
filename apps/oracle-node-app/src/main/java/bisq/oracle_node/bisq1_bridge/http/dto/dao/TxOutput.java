@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.oracle_node.bisq1_bridge.dto.dao;
+package bisq.oracle_node.bisq1_bridge.http.dto.dao;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

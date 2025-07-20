@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.oracle_node.bisq1_bridge.dto;
+package bisq.oracle_node.bisq1_bridge.http.dto;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;

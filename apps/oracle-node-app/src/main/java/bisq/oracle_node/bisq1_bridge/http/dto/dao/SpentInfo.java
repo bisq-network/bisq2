@@ -15,19 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.oracle_node.bisq1_bridge.dto.dao;
+package bisq.oracle_node.bisq1_bridge.http.dto.dao;
 
 import lombok.Data;
 
-import javax.annotation.Nullable;
-import java.util.List;
-
 @Data
-public final class Block {
-    private List<Tx> txs;
-    private int height;
-    private long time; // in ms
-    private String hash;
-    @Nullable // in case of first block in the blockchain
-    private String previousBlockHash;
+public final class SpentInfo {
+    private long blockHeight;
+    private String txId;
+    private int inputIndex;
 }
