@@ -50,6 +50,7 @@ public final class PaymentInitiatedMessage_E_Handler extends MuSigTradeMessageHa
         SwapTxSignatureRequest swapTxSignatureRequest = SwapTxSignatureRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setSwapTxInputPeersPartialSignature(ByteString.copyFrom(peersSwapTxInputPartialSignature))
+                .setSellerReadyToRelease(true) // TODO: Clear this flag to verify only, and make the same RPC call at trade end with the flag set.
                 .build();
         bisq.trade.protobuf.SwapTxSignatureResponse swapTxSignatureResponse = blockingStub.signSwapTx(swapTxSignatureRequest);
         mySwapTxSignatureResponse = SwapTxSignatureResponse.fromProto(swapTxSignatureResponse);
