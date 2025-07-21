@@ -20,6 +20,6 @@ include("http-api-app")
 include("seed-node-app")
 include("oracle-node-app")
 include("node-monitor-web-app")
-include("chatterbox-app")
+include("network-lab")
 
 rootProject.name = "apps"

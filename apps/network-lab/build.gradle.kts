@@ -5,7 +5,7 @@ plugins {
 }
 
 application {
-    mainClass.set("bisq.chatterbox_app.ChatterboxApp")
+    mainClass.set("bisq.network_lab.NetworkLabApp")
 }
 
 dependencies {

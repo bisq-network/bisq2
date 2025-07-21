@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chatterbox_app;
+package bisq.network_lab;
 
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
@@ -40,10 +40,10 @@ import java.util.stream.IntStream;
  */
 @Getter
 @Slf4j
-public class ChatterboxApplicationService extends SeedNodeApplicationService {
+public class NetworkLabApplicationService extends SeedNodeApplicationService {
 
-    public ChatterboxApplicationService(String[] args) {
-        super("chatterbox", args);
+    public NetworkLabApplicationService(String[] args) {
+        super("network_lab", args);
     }
 
     private static String generateRandomString(int length) {
@@ -69,7 +69,7 @@ public class ChatterboxApplicationService extends SeedNodeApplicationService {
         var proto = bisq.network.protobuf.ConfidentialMessage.newBuilder()
                 .setConfidentialData(confidentialData.toProto(false))
                 .setReceiverKeyId(randomId).build();
-        var mailboxData = new MailboxData(new MetaData("chatterbox"), ConfidentialMessage.fromProto(proto));
+        var mailboxData = new MailboxData(new MetaData("networklab"), ConfidentialMessage.fromProto(proto));
         return AddMailboxRequest.from(mailboxData, keyPairSender, keyPairReceiver.getPublic());
     }
 
@@ -95,12 +95,12 @@ public class ChatterboxApplicationService extends SeedNodeApplicationService {
                                 );
                                 Thread.sleep(60 * 1000);
                             } catch (Exception e) {
-                                log.error("Chatterbox Error", e);
+                                log.error("NetworkLab Error", e);
                                 break;
                             }
                         }
                     } catch (Exception e) {
-                        log.error("Chatterbox Error: ", e);
+                        log.error("NetworkLab Error: ", e);
 
                     } finally {
                         this.shutdown();
