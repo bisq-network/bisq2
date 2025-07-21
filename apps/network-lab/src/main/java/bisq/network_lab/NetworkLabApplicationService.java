@@ -18,6 +18,7 @@
 package bisq.network_lab;
 
 import bisq.common.util.StringUtils;
+import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
@@ -92,11 +93,14 @@ public class NetworkLabApplicationService extends SeedNodeApplicationService {
                         var dataService = this.getNetworkService().getDataService().get();
                         while (true) {
                             try {
-                                IntStream.range(0, messageCount).parallel().forEach(i ->
-                                        dataService.getBroadcasters().parallelStream().forEach(broadcaster ->
-                                                broadcaster.reBroadcast(mailboxRequest)
-                                        )
-                                );
+                                long startTime = System.currentTimeMillis();
+                                for (int i = 0; i < messageCount; i++) {
+                                    for (var broadcaster : dataService.getBroadcasters()) {
+                                        broadcaster.reBroadcast(mailboxRequest);
+                                    }
+                                }
+                                long endTime = System.currentTimeMillis();
+                                log.info("Called reBroadcast on {} messages in {} ms", messageCount, (endTime - startTime));
                                 Thread.sleep(waitTimeInSecs * 1000L);
                             } catch (Exception e) {
                                 log.error("NetworkLab Error", e);
@@ -109,7 +113,7 @@ public class NetworkLabApplicationService extends SeedNodeApplicationService {
                     } finally {
                         this.shutdown();
                     }
-                });
+                }, NetworkService.NETWORK_IO_POOL);
             }
         });
     }
