@@ -76,24 +76,28 @@ public class NetworkLabApplicationService extends SeedNodeApplicationService {
     @Override
     public CompletableFuture<Boolean> initialize() {
         return super.initialize().whenComplete((success, throwable) -> {
+            var networkLabConfig = getConfig("networkLab");
+            var initialWaitInSecs = networkLabConfig.getInt("initialWaitInSecs");
+            var messageCount = networkLabConfig.getInt("messageCount");
+            var waitTimeInSecs = networkLabConfig.getInt("waitTimeInSecs");
             if (success) {
                 CompletableFuture.runAsync(() -> {
                     try {
                         // wait 10 seconds before doing anything
                         // to allow things to set up and desktops connect
-                        Thread.sleep(10 * 1000);
+                        Thread.sleep(initialWaitInSecs * 1000L);
                         // we reuse the same mailbox to not cause storage issues
                         // we just want the network noise
                         var mailboxRequest = createAddMailboxRequest();
                         var dataService = this.getNetworkService().getDataService().get();
                         while (true) {
                             try {
-                                IntStream.range(0, 2000).parallel().forEach(i ->
+                                IntStream.range(0, messageCount).parallel().forEach(i ->
                                         dataService.getBroadcasters().parallelStream().forEach(broadcaster ->
                                                 broadcaster.reBroadcast(mailboxRequest)
                                         )
                                 );
-                                Thread.sleep(60 * 1000);
+                                Thread.sleep(waitTimeInSecs * 1000L);
                             } catch (Exception e) {
                                 log.error("NetworkLab Error", e);
                                 break;
