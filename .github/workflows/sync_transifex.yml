@@ -1,14 +1,46 @@
 name: Transifex
 
 on:
+  pull_request:
   workflow_run:
     workflows: [ Build Bisq 2 ]
     types: [ completed ]
 
 jobs:
-  if_merged:
+  verify:
+    name: Verify Transifex configuration
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Verify that .tx/config is in sync with the i18n folder
+        run: |
+          # Extract source files from .tx/config, trimming whitespace
+          config_files=$(grep 'source_file' .tx/config | sed 's/.*= *//' | sed 's|i18n/src/main/resources/||' | sort)
+          # Get actual source files from i18n directory (excluding locale-specific files)
+          i18n_files=$(find i18n/src/main/resources -maxdepth 1 -name "*.properties" | grep -v '_[a-z]\{2\}\(_[A-Z]\{2\}\)*\.properties$' | sed 's|i18n/src/main/resources/||' | sort)
+          
+          echo "Source files found in .tx/config:"
+          echo "$config_files"
+          echo "---------------------"
+          echo "Source files found in i18n/src/main/resources/:"
+          echo "$i18n_files"
+          
+          if [ "$config_files" != "$i18n_files" ]; then
+            echo "::error::.tx/config is out of sync with i18n/src/main/resources/"
+            echo "Please run the following command and commit the changes:"
+            echo "./gradlew apps:desktop:i18n:updateTxConfig"
+            diff -u <(echo "$config_files") <(echo "$i18n_files")
+            exit 1
+          fi
+          echo ".tx/config is in sync with i18n/src/main/resources/"
+
+  push:
     name: Push translation source files to Transifex
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
