@@ -24,26 +24,34 @@ import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
 import bisq.trade.mu_sig.messages.network.PaymentReceivedMessage_F;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.SwapTxSignature;
+import bisq.trade.protobuf.SwapTxSignatureRequest;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class PaymentReceiptConfirmedEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade, PaymentReceiptConfirmedEvent> {
+    private SwapTxSignatureResponse mySwapTxSignatureResponse;
+
     public PaymentReceiptConfirmedEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
     public void process(PaymentReceiptConfirmedEvent event) {
+        mySwapTxSignatureResponse = SwapTxSignatureResponse.fromProto(blockingStub.signSwapTx(SwapTxSignatureRequest.newBuilder()
+                .setTradeId(trade.getId())
+                .setSellerReadyToRelease(true)
+                .build()));
+
         tradeService.startCloseTradeTimeout(trade, new SellersCloseTradeTimeoutEvent());
     }
 
     @Override
     protected void commit() {
+        trade.getMyself().setMySwapTxSignatureResponse(mySwapTxSignatureResponse);
     }
 
     @Override
     protected void sendMessage() {
-        SwapTxSignatureResponse mySwapTxSignatureResponse = trade.getMyself().getMySwapTxSignatureResponse().orElseThrow();
         SwapTxSignature swapTxSignature = SwapTxSignature.from(mySwapTxSignatureResponse);
 
         // TODO simulate storage of swapTx in blockchain

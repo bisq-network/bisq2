@@ -21,7 +21,6 @@ import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.handler.MuSigTradeMessageHandler;
-import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
 import bisq.trade.mu_sig.messages.network.PaymentInitiatedMessage_E;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
 import bisq.trade.protobuf.SwapTxSignatureRequest;
@@ -30,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class PaymentInitiatedMessage_E_Handler extends MuSigTradeMessageHandler<MuSigTrade, PaymentInitiatedMessage_E> {
-    private SwapTxSignatureResponse mySwapTxSignatureResponse;
     private PartialSignatures peersUnRedactedPartialSignatures;
 
     public PaymentInitiatedMessage_E_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
@@ -45,15 +43,17 @@ public final class PaymentInitiatedMessage_E_Handler extends MuSigTradeMessageHa
     protected void process(PaymentInitiatedMessage_E message) {
         byte[] peersSwapTxInputPartialSignature = message.getSwapTxInputPartialSignature();
 
-        // Seller computes Swap Tx signature immediately upon receipt of peersSwapTxInputPartialSignature, instead of waiting until the
-        // end of the trade, to make sure that there's no problem with it and let trade fail otherwise.
+        // Seller computes Swap Tx signature immediately upon receipt of peersSwapTxInputPartialSignature, instead of
+        // waiting until the end of the trade, to make sure that there's no problem with it and let trade fail
+        // otherwise. The server redacts the response data, since we are only verifying the signature, and will call
+        // SignSwapTx again when it is safe to release the escrow.
         SwapTxSignatureRequest swapTxSignatureRequest = SwapTxSignatureRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setSwapTxInputPeersPartialSignature(ByteString.copyFrom(peersSwapTxInputPartialSignature))
-                .setSellerReadyToRelease(true) // TODO: Clear this flag to verify only, and make the same RPC call at trade end with the flag set.
+                .setSellerReadyToRelease(false)
                 .build();
-        bisq.trade.protobuf.SwapTxSignatureResponse swapTxSignatureResponse = blockingStub.signSwapTx(swapTxSignatureRequest);
-        mySwapTxSignatureResponse = SwapTxSignatureResponse.fromProto(swapTxSignatureResponse);
+        //noinspection ResultOfMethodCallIgnored
+        blockingStub.signSwapTx(swapTxSignatureRequest);
 
         // Now we reconstruct the un-redacted PartialSignatures
         PartialSignatures redactedPartialSignatures = trade.getPeer().getPeersPartialSignatures().orElseThrow();
@@ -62,10 +62,7 @@ public final class PaymentInitiatedMessage_E_Handler extends MuSigTradeMessageHa
 
     @Override
     protected void commit() {
-        MuSigTradeParty myself = trade.getMyself();
         MuSigTradeParty peer = trade.getPeer();
-
-        myself.setMySwapTxSignatureResponse(mySwapTxSignatureResponse);
         peer.setPeersPartialSignatures(peersUnRedactedPartialSignatures);
     }
 
