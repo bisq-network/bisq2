@@ -91,8 +91,8 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  */
 @Slf4j
 public class NetworkService implements PersistenceClient<NetworkServiceStore>, Service {
-    public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("Network.IO", 5, 2000, 5);
-    public static final ExecutorService NETWORK_IO_LOW_PRIORITY_POOL = ExecutorFactory.newCachedThreadPool("Network.IO.Low-Priority", 5, 1000, 5, ExecutorFactory.LOW_PRIORITY);
+    public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("Network.IO", 5, 300, 5);
+    public static final ExecutorService NETWORK_IO_LOW_PRIORITY_POOL = ExecutorFactory.newCachedThreadPool("Network.IO.Low-Priority", 5, 300, 5, ExecutorFactory.LOW_PRIORITY);
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("Network.dispatcher");
 
     @Getter
