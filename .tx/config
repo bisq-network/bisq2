@@ -55,15 +55,6 @@ resource_name          = default.properties
 replace_edited_strings = false
 keep_translations      = false
 
-[o:bisq:p:bisq-2:r:payment_methodproperties]
-file_filter            = i18n/src/main/resources/payment_method_<lang>.properties
-source_file            = i18n/src/main/resources/payment_method.properties
-type                   = UNICODEPROPERTIES
-minimum_perc           = 0
-resource_name          = payment_method.properties
-replace_edited_strings = false
-keep_translations      = false
-
 [o:bisq:p:bisq-2:r:settingsproperties]
 file_filter            = i18n/src/main/resources/settings_<lang>.properties
 source_file            = i18n/src/main/resources/settings.properties
