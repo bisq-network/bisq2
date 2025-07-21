@@ -175,6 +175,7 @@ message PartialSignatures {
   bytes peersWarningTxSellerInputPartialSignature = 2;
   bytes peersRedirectTxInputPartialSignature = 3;
   optional bytes swapTxInputPartialSignature = 4;
+  optional bytes swapTxInputSighash = 5;
 }
 
 message SwapTxSignature {

@@ -30,13 +30,16 @@ public final class PartialSignaturesRequest implements Proto {
     private final String tradeId;
     private final NonceSharesMessage peersNonceShares;
     private final List<ReceiverAddressAndAmount> receivers;
+    private final boolean buyerReadyToRelease;
 
     public PartialSignaturesRequest(String tradeId,
                                     NonceSharesMessage peersNonceShares,
-                                    List<ReceiverAddressAndAmount> receivers) {
+                                    List<ReceiverAddressAndAmount> receivers,
+                                    boolean buyerReadyToRelease) {
         this.tradeId = tradeId;
         this.peersNonceShares = peersNonceShares;
         this.receivers = receivers;
+        this.buyerReadyToRelease = buyerReadyToRelease;
     }
 
     @Override
@@ -46,7 +49,8 @@ public final class PartialSignaturesRequest implements Proto {
                 .setPeersNonceShares(peersNonceShares.toProto(serializeForHash))
                 .addAllReceivers(receivers.stream()
                         .map(e -> e.toProto(serializeForHash))
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList()))
+                .setBuyerReadyToRelease(buyerReadyToRelease);
     }
 
     @Override
@@ -59,6 +63,7 @@ public final class PartialSignaturesRequest implements Proto {
                 NonceSharesMessage.fromProto(proto.getPeersNonceShares()),
                 proto.getReceiversList().stream()
                         .map(ReceiverAddressAndAmount::fromProto)
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList()),
+                proto.getBuyerReadyToRelease());
     }
 }

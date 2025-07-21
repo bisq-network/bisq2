@@ -28,17 +28,22 @@ import java.util.Objects;
 public final class SwapTxSignatureRequest implements Proto {
     private final String tradeId;
     private final byte[] swapTxInputPeersPartialSignature;
+    private final boolean sellerReadyToRelease;
 
-    public SwapTxSignatureRequest(String tradeId, byte[] swapTxInputPeersPartialSignature) {
+    public SwapTxSignatureRequest(String tradeId,
+                                  byte[] swapTxInputPeersPartialSignature,
+                                  boolean sellerReadyToRelease) {
         this.tradeId = tradeId;
         this.swapTxInputPeersPartialSignature = swapTxInputPeersPartialSignature;
+        this.sellerReadyToRelease = sellerReadyToRelease;
     }
 
     @Override
     public bisq.trade.protobuf.SwapTxSignatureRequest.Builder getBuilder(boolean serializeForHash) {
         return bisq.trade.protobuf.SwapTxSignatureRequest.newBuilder()
                 .setTradeId(tradeId)
-                .setSwapTxInputPeersPartialSignature(ByteString.copyFrom(swapTxInputPeersPartialSignature));
+                .setSwapTxInputPeersPartialSignature(ByteString.copyFrom(swapTxInputPeersPartialSignature))
+                .setSellerReadyToRelease(sellerReadyToRelease);
     }
 
     @Override
@@ -47,7 +52,9 @@ public final class SwapTxSignatureRequest implements Proto {
     }
 
     public static SwapTxSignatureRequest fromProto(bisq.trade.protobuf.SwapTxSignatureRequest proto) {
-        return new SwapTxSignatureRequest(proto.getTradeId(), proto.getSwapTxInputPeersPartialSignature().toByteArray());
+        return new SwapTxSignatureRequest(proto.getTradeId(),
+                proto.getSwapTxInputPeersPartialSignature().toByteArray(),
+                proto.getSellerReadyToRelease());
     }
 
     @Override
@@ -55,13 +62,15 @@ public final class SwapTxSignatureRequest implements Proto {
         if (!(o instanceof SwapTxSignatureRequest that)) return false;
 
         return Objects.equals(tradeId, that.tradeId) &&
-                Arrays.equals(swapTxInputPeersPartialSignature, that.swapTxInputPeersPartialSignature);
+                Arrays.equals(swapTxInputPeersPartialSignature, that.swapTxInputPeersPartialSignature) &&
+                sellerReadyToRelease == that.sellerReadyToRelease;
     }
 
     @Override
     public int hashCode() {
         int result = Objects.hashCode(tradeId);
         result = 31 * result + Arrays.hashCode(swapTxInputPeersPartialSignature);
+        result = 31 * result + Boolean.hashCode(sellerReadyToRelease);
         return result;
     }
 }

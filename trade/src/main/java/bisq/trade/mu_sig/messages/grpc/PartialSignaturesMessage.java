@@ -33,7 +33,8 @@ public final class PartialSignaturesMessage implements Proto {
                 peersPartialSignatures.getPeersWarningTxBuyerInputPartialSignature(),
                 peersPartialSignatures.getPeersWarningTxSellerInputPartialSignature(),
                 peersPartialSignatures.getPeersRedirectTxInputPartialSignature(),
-                peersPartialSignatures.getSwapTxInputPartialSignature()
+                peersPartialSignatures.getSwapTxInputPartialSignature(),
+                peersPartialSignatures.getSwapTxInputSighash()
         );
     }
 
@@ -41,15 +42,18 @@ public final class PartialSignaturesMessage implements Proto {
     private final byte[] peersWarningTxSellerInputPartialSignature;
     private final byte[] peersRedirectTxInputPartialSignature;
     private final Optional<byte[]> swapTxInputPartialSignature;
+    private final Optional<byte[]> swapTxInputSighash;
 
     public PartialSignaturesMessage(byte[] peersWarningTxBuyerInputPartialSignature,
                                     byte[] peersWarningTxSellerInputPartialSignature,
                                     byte[] peersRedirectTxInputPartialSignature,
-                                    Optional<byte[]> swapTxInputPartialSignature) {
+                                    Optional<byte[]> swapTxInputPartialSignature,
+                                    Optional<byte[]> swapTxInputSighash) {
         this.peersWarningTxBuyerInputPartialSignature = peersWarningTxBuyerInputPartialSignature;
         this.peersWarningTxSellerInputPartialSignature = peersWarningTxSellerInputPartialSignature;
         this.peersRedirectTxInputPartialSignature = peersRedirectTxInputPartialSignature;
         this.swapTxInputPartialSignature = swapTxInputPartialSignature;
+        this.swapTxInputSighash = swapTxInputSighash;
     }
 
     @Override
@@ -59,6 +63,7 @@ public final class PartialSignaturesMessage implements Proto {
                 .setPeersWarningTxSellerInputPartialSignature(ByteString.copyFrom(peersWarningTxSellerInputPartialSignature))
                 .setPeersRedirectTxInputPartialSignature(ByteString.copyFrom(peersRedirectTxInputPartialSignature));
         swapTxInputPartialSignature.ifPresent(e -> builder.setSwapTxInputPartialSignature(ByteString.copyFrom(e)));
+        swapTxInputSighash.ifPresent(e -> builder.setSwapTxInputSighash(ByteString.copyFrom(e)));
         return builder;
     }
 
@@ -73,6 +78,9 @@ public final class PartialSignaturesMessage implements Proto {
                 proto.getPeersRedirectTxInputPartialSignature().toByteArray(),
                 proto.hasSwapTxInputPartialSignature()
                         ? Optional.of(proto.getSwapTxInputPartialSignature().toByteArray())
+                        : Optional.empty(),
+                proto.hasSwapTxInputSighash()
+                        ? Optional.of(proto.getSwapTxInputSighash().toByteArray())
                         : Optional.empty());
     }
 
@@ -84,7 +92,8 @@ public final class PartialSignaturesMessage implements Proto {
         return Arrays.equals(peersWarningTxBuyerInputPartialSignature, that.peersWarningTxBuyerInputPartialSignature) &&
                 Arrays.equals(peersWarningTxSellerInputPartialSignature, that.peersWarningTxSellerInputPartialSignature) &&
                 Arrays.equals(peersRedirectTxInputPartialSignature, that.peersRedirectTxInputPartialSignature) &&
-                OptionalUtils.optionalByteArrayEquals(swapTxInputPartialSignature, that.swapTxInputPartialSignature);
+                OptionalUtils.optionalByteArrayEquals(swapTxInputPartialSignature, that.swapTxInputPartialSignature) &&
+                OptionalUtils.optionalByteArrayEquals(swapTxInputSighash, that.swapTxInputSighash);
     }
 
     @Override
@@ -93,6 +102,7 @@ public final class PartialSignaturesMessage implements Proto {
         result = 31 * result + Arrays.hashCode(peersWarningTxSellerInputPartialSignature);
         result = 31 * result + Arrays.hashCode(peersRedirectTxInputPartialSignature);
         result = 31 * result + swapTxInputPartialSignature.map(Arrays::hashCode).orElse(0);
+        result = 31 * result + swapTxInputSighash.map(Arrays::hashCode).orElse(0);
         return result;
     }
 }
