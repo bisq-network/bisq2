@@ -37,11 +37,9 @@ import bisq.user.reputation.ReputationSource;
 import bisq.user.reputation.data.*;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
@@ -65,23 +63,15 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
                                  ReputationRankingController controller) {
         super(new VBox(), model, controller);
 
-        Label headlineLabel = new Label(Res.get("reputation.table.headline"));
-        headlineLabel.getStyleClass().add("bisq-text-headline-5");
-
         richTableView = new RichTableView<>(model.getSortedList(),
-                "",
+                Res.get("reputation.table.headline"),
                 model.getFilterItems(),
                 model.getFilterMenuItemToggleGroup(),
-                controller::applySearchPredicate);
+                controller::applySearchPredicate,
+                Res.get("reputation.table.entriesUnit"));
         configTableView();
 
-        VBox.setVgrow(richTableView, Priority.ALWAYS);
-        VBox contentBox = new VBox(10, headlineLabel, richTableView);
-        contentBox.getStyleClass().add("bisq-common-bg");
-
-        VBox.setVgrow(contentBox, Priority.ALWAYS);
-        root.getChildren().addAll(contentBox);
-        root.setPadding(new Insets(0, 40, 20, 40));
+        root.getChildren().addAll(richTableView);
     }
 
     @Override
@@ -171,6 +161,8 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
     }
 
     private void configTableView() {
+        richTableView.getColumns().add(richTableView.getTableView().getSelectionMarkerColumn());
+
         richTableView.getColumns().add(IndexColumnUtil.getIndexColumn(model.getSortedList()));
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("reputation.table.columns.userProfile"))

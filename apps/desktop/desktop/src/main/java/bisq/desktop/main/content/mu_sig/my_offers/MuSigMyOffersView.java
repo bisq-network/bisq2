@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.my_offers;
 
-import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -27,9 +26,7 @@ import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
 import bisq.desktop.main.content.mu_sig.MuSigOfferUtil;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
@@ -42,36 +39,20 @@ import javafx.util.Callback;
 import java.util.Comparator;
 
 public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOffersController> {
-    private static final double SIDE_PADDING = 40;
-
-    private final Label numOffersLabel;
     private final RichTableView<MuSigOfferListItem> muSigMyOffersListView;
     private BisqTableColumn<MuSigOfferListItem> myProfileColumn;
 
     public MuSigMyOffersView(MuSigMyOffersModel model, MuSigMyOffersController controller) {
         super(new VBox(), model, controller);
 
-        Label headlineLabel = new Label(Res.get("muSig.myOffers.headline"));
-        headlineLabel.getStyleClass().add("bisq-easy-container-headline");
-        numOffersLabel = new Label();
-        HBox.setMargin(numOffersLabel, new Insets(0, 0, -5, 0));
-        numOffersLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text", "font-light");
-        HBox headerHBox = new HBox(5, headlineLabel, numOffersLabel);
-        headerHBox.getStyleClass().add("chat-container-header");
-
-        HBox subheader = new HBox();
-        subheader.getStyleClass().add("offerbook-subheader");
-        subheader.setAlignment(Pos.CENTER);
-
-        muSigMyOffersListView = new RichTableView<>(model.getSortedMuSigMyOffersListItems());
-        muSigMyOffersListView.getFooterVBox().setVisible(false);
-        muSigMyOffersListView.getFooterVBox().setManaged(false);
+        muSigMyOffersListView = new RichTableView<>(
+                model.getSortedMuSigMyOffersListItems(),
+                Res.get("muSig.myOffers.headline"),
+                Res.get("muSig.myOffers.numOffers"));
         muSigMyOffersListView.getStyleClass().add("mu-sig-my-offers-table");
         configMuSigMyOffersListView();
         VBox.setVgrow(muSigMyOffersListView, Priority.ALWAYS);
-
-        root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
-        root.getChildren().addAll(headerHBox, Layout.hLine(), subheader, muSigMyOffersListView);
+        root.getChildren().addAll(muSigMyOffersListView);
     }
 
     private void configMuSigMyOffersListView() {
@@ -123,7 +104,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
         muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title(Res.get("muSig.myOffers.table.header.baseAmount"))
                 .left()
-                .fixWidth(240)
+                .minWidth(160)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getBaseAmountWithSymbol))
                 .setCellFactory(MuSigOfferUtil.getBaseAmountCellFactory(true))
                 .build());
@@ -171,7 +152,6 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
         muSigMyOffersListView.initialize();
         muSigMyOffersListView.resetSearch();
         muSigMyOffersListView.sort();
-        numOffersLabel.textProperty().set(model.getNumOffers());
         myProfileColumn.visibleProperty().set(model.isShouldShowMyProfileColumn());
     }
 

@@ -359,8 +359,13 @@
  *                                                                             *
  ******************************************************************************/
 
-.rich-table-view-box .dropdown-menu {
-    -fx-padding: 5;
+.rich-table-view-box {
+    -fx-padding: 0 40 0 40;
+}
+
+.rich-table-view-box .dropdown-offer-rich-table-filter-menu {
+    -fx-padding: 3 10 0 10;
+    -fx-max-height: 25;
 }
 
 .rich-table-headline {
@@ -369,10 +374,22 @@
     -fx-text-fill: -fx-light-text-color;
 }
 
+.rich-table-subheader {
+    -fx-background-color: -bisq-dark-grey-30;
+    -fx-background-radius: 0;
+    -fx-max-height: 30;
+    -fx-min-height: 30;
+    -fx-pref-height: 30;
+}
+
+.rich-table-view-box .search-box,
+.rich-table-view-box .search-box-active {
+    -fx-background-color: transparent;
+}
+
 .rich-table-view {
     -fx-background-color: -bisq-dark-grey-20;
     -fx-border-color: transparent;
-    -fx-padding: 0;
 }
 
 .rich-table-view:focused {
@@ -386,13 +403,19 @@
 }
 
 .rich-table-view .column-header {
-    -fx-background-color: -bisq-dark-grey-30;
+    -fx-background-color: -bisq-dark-grey-10;
+    -fx-max-height: 30;
+    -fx-min-height: 30;
+    -fx-pref-height: 30;
+}
+
+.rich-table-view .table-row-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: -bisq-dark-grey;
+    -fx-border-width: 0 0 1 0;
     -fx-background-insets: 0;
-    -fx-padding: 0 1 0 0;
-    -fx-border-width: 0;
-    -fx-border-color: -bisq-dark-grey-30;
-    -fx-border-radius: 0;
-    -fx-background-radius: 0;
+    -fx-padding: 0;
+    -fx-pref-height: 54px;
 }
 
 .rich-table-view .table-row-cell {

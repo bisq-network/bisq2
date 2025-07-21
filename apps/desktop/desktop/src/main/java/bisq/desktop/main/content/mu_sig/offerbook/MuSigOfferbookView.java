@@ -118,8 +118,9 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
         // Offer table
         muSigOfferListView = new RichTableView<>(model.getSortedMuSigOfferListItems());
-        muSigOfferListView.getFooterVBox().setVisible(false);
-        muSigOfferListView.getFooterVBox().setManaged(false);
+        muSigOfferListView.getSubheader().setVisible(false);
+        muSigOfferListView.getSubheader().setManaged(false);
+        muSigOfferListView.getStyleClass().add("muSig-offerbook-table");
         configMuSigOfferListView();
 
         // Markets column
@@ -792,8 +793,6 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         subheader.getStyleClass().add("offerbook-subheader");
         subheader.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(subheader, new Insets(0, 0, 5, 0));
-        VBox.setMargin(muSigOfferListView, new Insets(0, 10, 0, 10));
         offersVBox.getChildren().addAll(headerHBox, Layout.hLine(), subheader, muSigOfferListView);
         offersVBox.getStyleClass().add("bisq-easy-container");
         VBox.setVgrow(muSigOfferListView, Priority.ALWAYS);

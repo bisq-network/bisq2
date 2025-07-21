@@ -14,6 +14,10 @@
  *                                                                             *
  ******************************************************************************/
 
+.muSig-offerbook-table.rich-table-view-box {
+    -fx-padding: 0;
+}
+
 .mu-sig-offerbook-market-title {
     -fx-font-size: 1.2em;
     -fx-text-fill: -fx-light-text-color;
@@ -135,17 +139,6 @@
     -fx-scale-x: 1.4;
     -fx-scale-y: 1.2;
     -fx-translate-y: -9;
-}
-
-.mu-sig-my-offers-table.rich-table-view-box {
-    -fx-padding: -5 0 0 0;
-}
-
-.mu-sig-my-offers-table .rich-table-view .column-header {
-    -fx-background-color: -bisq-dark-grey-10;
-    -fx-max-height: 30;
-    -fx-min-height: 30;
-    -fx-pref-height: 30;
 }
 
 
