@@ -157,27 +157,34 @@ public class BitcoinAmountDisplay extends HBox {
     }
 
     private void formatBtcAmount(String amount) {
-        char decimalSeparator =
-                DecimalFormatSymbols.getInstance(LocaleRepository.getDefaultLocale()).getDecimalSeparator();
+        char decimalSeparator = DecimalFormatSymbols.getInstance(LocaleRepository.getDefaultLocale()).getDecimalSeparator();
 
+        // If the amount does not contain a decimal separator, append it with eight zeros
         if (!amount.contains(String.valueOf(decimalSeparator))) {
             amount = amount + decimalSeparator + "00000000";
         }
 
+        // Split the amount into integer and fractional parts
         String[] parts = amount.split(Pattern.quote(String.valueOf(decimalSeparator)));
 
+        // Extract the integer part, defaulting to "0" if empty
         String integerPartValue = parts.length > 0 ? parts[0] : "";
         if (integerPartValue.isEmpty()) {
             integerPartValue = "0";
         }
+
+        // Extract the fractional part, ensuring it is exactly 8 characters long
         String fractionalPart = parts.length > 1 ? parts[1] : "";
         if (fractionalPart.length() < 8) {
             fractionalPart = fractionalPart + "0".repeat(8 - fractionalPart.length());
         } else if (fractionalPart.length() > 8) {
             fractionalPart = fractionalPart.substring(0, 8);
         }
+
+        // Reverse the fractional part to facilitate chunking
         StringBuilder reversedFractional = new StringBuilder(fractionalPart).reverse();
 
+        // Create a chunked version of the reversed fractional part with spaces every 3 characters
         StringBuilder chunkedReversed = new StringBuilder();
         for (int i = 0; i < reversedFractional.length(); i++) {
             chunkedReversed.append(reversedFractional.charAt(i));
@@ -186,8 +193,10 @@ public class BitcoinAmountDisplay extends HBox {
             }
         }
 
+        // Reverse the chunked string back to its original order
         String formattedFractional = chunkedReversed.reverse().toString();
 
+        // Extract leading zeros from the formatted fractional part
         StringBuilder leadingZerosValue = new StringBuilder();
         int integerValue = Integer.parseInt(integerPartValue);
         int i = 0;
@@ -199,8 +208,10 @@ public class BitcoinAmountDisplay extends HBox {
             }
         }
 
+        // Extract the significant digits from the formatted fractional part
         String significantDigitsValue = formattedFractional.substring(i);
 
+        // Set styles for the integer part based on its value
         if (integerValue > 0) {
             setExclusiveStyle(integerPart, "bitcoin-amount-display-integer-part", "bitcoin-amount-display-integer-part-dimmed");
         } else {
@@ -208,16 +219,15 @@ public class BitcoinAmountDisplay extends HBox {
         }
         integerPart.setText(integerPartValue + decimalSeparator);
 
+        // Set the text and styles for the leading zeros part
         leadingZeros.setText(leadingZerosValue.toString());
-
         if (leadingZerosValue.isEmpty()) {
-            setExclusiveStyle(leadingZeros,
-                    "bitcoin-amount-display-leading-zeros-empty", "bitcoin-amount-display-leading-zeros-dimmed");
+            setExclusiveStyle(leadingZeros, "bitcoin-amount-display-leading-zeros-empty", "bitcoin-amount-display-leading-zeros-dimmed");
         } else {
-            setExclusiveStyle(leadingZeros, "bitcoin-amount-display-leading-zeros-dimmed",
-                    "bitcoin-amount-display-leading-zeros-empty");
+            setExclusiveStyle(leadingZeros, "bitcoin-amount-display-leading-zeros-dimmed", "bitcoin-amount-display-leading-zeros-empty");
         }
 
+        // Set the text for the significant digits part
         significantDigits.setText(significantDigitsValue);
     }
 }

@@ -22,6 +22,7 @@ import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.data.Pair;
 import bisq.common.market.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
@@ -36,6 +37,7 @@ import bisq.offer.mu_sig.MuSigOffer;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.OfferPriceFormatter;
 import bisq.offer.price.PriceUtil;
+import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
@@ -76,14 +78,19 @@ public class MuSigOfferListItem {
     private final UserProfile makerUserProfile;
     private final ReputationScore reputationScore;
     private final long totalScore;
+    private final boolean hasFixPrice;
     private final Map<FiatPaymentMethod, Boolean> accountAvailableByPaymentMethod;
     private final Pin marketPriceByCurrencyMapPin;
+    private final boolean isBaseAmountBtc;
+    private final boolean hasAmountRange;
+    private final Pair<String, String> minAndMaxBaseAmountPair;
 
     private Optional<String> cannotTakeOfferReason = Optional.empty();
     private double priceSpecAsPercent = 0;
     private String formattedPercentagePrice = Res.get("data.na"),
-            price = Res.get("data.na"),
-            priceTooltip = Res.get("data.na");
+    price = Res.get("data.na"),
+    priceTooltip = Res.get("data.na");
+    private Pair<String, String> pricePair;
     private long priceAsLong = 0;
 
     public MuSigOfferListItem(MuSigOffer offer,
@@ -97,15 +104,21 @@ public class MuSigOfferListItem {
 
         isMyOffer = identityService.findActiveIdentity(offer.getMakerNetworkId()).isPresent();
         quoteCurrencyCode = offer.getMarket().getQuoteCurrencyCode();
+        PriceSpec priceSpec = offer.getPriceSpec();
+        hasFixPrice = priceSpec instanceof FixPriceSpec;
 
         AmountSpec amountSpec = offer.getAmountSpec();
-        PriceSpec priceSpec = offer.getPriceSpec();
-        boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
+        hasAmountRange = amountSpec instanceof RangeAmountSpec;
         market = offer.getMarket();
+        isBaseAmountBtc = market.getBaseCurrencyCode().equals("BTC");
         baseAmountAsString = OfferAmountFormatter.formatBaseAmount(marketPriceService, offer, false, false);
         baseAmountWithSymbol = String.format("%s %s", baseAmountAsString, market.getBaseCurrencyCode());
         quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, false);
         quoteAmountWithSymbol = String.format("%s %s", quoteAmountAsString, market.getQuoteCurrencyCode());
+        minAndMaxBaseAmountPair = new Pair<>(
+                OfferAmountFormatter.formatBaseSideMinAmount(marketPriceService, offer, false),
+                OfferAmountFormatter.formatBaseSideMaxAmount(marketPriceService, offer, false));
+
         takeOfferButtonText = offer.getDirection().isBuy()
                 ? Res.get("muSig.offerbook.table.cell.offer.intent.sell")
                 : Res.get("muSig.offerbook.table.cell.offer.intent.buy");
@@ -185,7 +198,7 @@ public class MuSigOfferListItem {
                     PriceSpec priceSpec = offer.getPriceSpec();
                     priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(priceSpec, offerPrice);
                     price = PriceSpecFormatter.getFormattedPrice(priceSpec, marketPriceService, offer.getMarket());
-
+                    pricePair = PriceSpecFormatter.getFormattedPricePair(priceSpec, marketPriceService, offer.getMarket());
                     priceAsLong = PriceUtil.findQuote(marketPriceService, priceSpec, offer.getMarket()).map(PriceQuote::getValue).orElse(0L);
                 });
     }

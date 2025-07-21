@@ -34,6 +34,8 @@ import java.util.function.Predicate;
 public class MuSigMyOffersModel implements Model {
     @Setter
     private String numOffers;
+    @Setter
+    private boolean shouldShowMyProfileColumn;
 
     private final Set<String> muSigMyOffersIds = new HashSet<>();
     private final ObservableList<MuSigOfferListItem> muSigMyOffersListItems = FXCollections.observableArrayList();

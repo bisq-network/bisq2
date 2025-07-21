@@ -329,8 +329,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 .titleProperty(model.getPriceTitle())
                 .left()
                 .comparator(Comparator.comparing(MuSigOfferListItem::getPrice))
-                .valueSupplier(MuSigOfferListItem::getPrice)
-                .tooltipSupplier(MuSigOfferListItem::getPriceTooltip)
+                .setCellFactory(MuSigOfferUtil.getPriceCellFactory())
                 .minWidth(200)
                 .build();
         muSigOfferListView.getColumns().add(priceColumn);
@@ -340,7 +339,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 .titleProperty(model.getBaseCodeTitle())
                 .minWidth(120)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getBaseAmountAsString))
-                .valueSupplier(MuSigOfferListItem::getBaseAmountAsString)
+                .setCellFactory(MuSigOfferUtil.getBaseAmountCellFactory(false))
                 .build());
 
         muSigOfferListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()

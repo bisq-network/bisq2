@@ -18,11 +18,16 @@
 package bisq.desktop.main.content.mu_sig;
 
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.common.data.Pair;
+import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.desktop.main.content.components.UserProfileDisplay;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.Tooltip;
@@ -93,6 +98,106 @@ public class MuSigOfferUtil {
                     hbox.getChildren().clear();
                     setGraphic(null);
                 }
+            }
+        };
+    }
+
+    public static Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>,
+            TableCell<MuSigOfferListItem, MuSigOfferListItem>> getPriceCellFactory() {
+        return column -> new TableCell<>() {
+            private final HBox hbox = new HBox(7);
+            private final BisqTooltip tooltip = new BisqTooltip();
+
+            {
+                hbox.setAlignment(Pos.CENTER_LEFT);
+            }
+
+            @Override
+            protected void updateItem(MuSigOfferListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    hbox.getChildren().clear();
+
+                    Pair<String, String> pricePair = item.getPricePair();
+                    Label price = new Label(pricePair.getFirst());
+                    // TODO: Change for custom icons
+                    Label iconLabel = new Label();
+                    Icons.getIconForLabel(getPriceIcon(item.isHasFixPrice()), iconLabel, "1.15em");
+                    Label pricePercentage = new Label(pricePair.getSecond());
+                    hbox.getChildren().addAll(price, iconLabel, pricePercentage);
+
+                    tooltip.setText(item.getPriceTooltip());
+                    Tooltip.install(hbox, tooltip);
+                    setGraphic(hbox);
+                } else {
+                    Tooltip.uninstall(hbox, tooltip);
+                    hbox.getChildren().clear();
+                    setGraphic(null);
+                }
+            }
+
+            private AwesomeIcon getPriceIcon(boolean hasFixPrice) {
+                return hasFixPrice ? AwesomeIcon.LOCK : AwesomeIcon.BAR_CHART;
+            }
+        };
+    }
+
+    public static Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>,
+            TableCell<MuSigOfferListItem, MuSigOfferListItem>> getBaseAmountCellFactory(boolean showSymbol) {
+        return column -> new TableCell<>() {
+            @SuppressWarnings("UnnecessaryUnicodeEscape")
+            private static final String DASH_SYMBOL = "\u2013"; // Unicode for "–"
+
+            private final BitcoinAmountDisplay bitcoinMinAmountDisplay = new BitcoinAmountDisplay("0", false);
+            private final BitcoinAmountDisplay bitcoinFixedOrMaxAmountDisplay = new BitcoinAmountDisplay("0", showSymbol);
+            private final HBox hbox = new HBox(5);
+            private final Label dashLabel = new Label(DASH_SYMBOL);
+
+            {
+                configureBitcoinAmountDisplay(bitcoinMinAmountDisplay);
+                configureBitcoinAmountDisplay(bitcoinFixedOrMaxAmountDisplay);
+                hbox.setAlignment(Pos.CENTER_LEFT);
+                dashLabel.setAlignment(Pos.CENTER);
+                dashLabel.setStyle("-fx-text-fill: -fx-mid-text-color;");
+            }
+
+            @Override
+            protected void updateItem(MuSigOfferListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    hbox.getChildren().clear();
+//                    if (item.isBaseAmountBtc()) {
+//                        if (item.isHasAmountRange()) {
+//                            Pair<String, String> minAndMaxBaseAmount = item.getMinAndMaxBaseAmountPair();
+//                            bitcoinMinAmountDisplay.setBtcAmount(minAndMaxBaseAmount.getFirst());
+//                            hbox.getChildren().add(bitcoinMinAmountDisplay);
+//                            hbox.getChildren().add(dashLabel);
+//                            bitcoinFixedOrMaxAmountDisplay.setBtcAmount(minAndMaxBaseAmount.getSecond());
+//                        } else {
+//                            bitcoinFixedOrMaxAmountDisplay.setBtcAmount(item.getBaseAmountAsString());
+//                        }
+//                        hbox.getChildren().add(bitcoinFixedOrMaxAmountDisplay);
+//                        setGraphic(hbox);
+//                    } else {
+                        setGraphic(new Label(showSymbol
+                                ? item.getBaseAmountWithSymbol()
+                                : item.getBaseAmountAsString()));
+//                    }
+                } else {
+                    hbox.getChildren().clear();
+                    setGraphic(null);
+                }
+            }
+
+            private void configureBitcoinAmountDisplay(BitcoinAmountDisplay bitcoinAmountDisplay) {
+                bitcoinAmountDisplay.getSignificantDigits().getStyleClass().add("bisq-easy-open-trades-bitcoin-amount-display");
+                bitcoinAmountDisplay.getLeadingZeros().getStyleClass().add("bisq-easy-open-trades-bitcoin-amount-display");
+                bitcoinAmountDisplay.getIntegerPart().getStyleClass().add("bisq-easy-open-trades-bitcoin-amount-display");
+                bitcoinAmountDisplay.setTranslateY(5);
+                bitcoinAmountDisplay.applySmallCompactConfig();
+                bitcoinAmountDisplay.setAlignment(Pos.CENTER_LEFT);
             }
         };
     }
