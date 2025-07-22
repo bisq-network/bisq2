@@ -52,7 +52,7 @@ class ReportHandler implements Connection.Listener {
     CompletableFuture<Report> request() {
         requestTs = System.currentTimeMillis();
         supplyAsync(() -> {
-            ThreadName.set(this, "request");
+            ThreadName.from(this, "request");
             return node.send(new ReportRequest(requestId), connection);
         }, NetworkService.NETWORK_IO_POOL)
                 .whenComplete((c, throwable) -> {

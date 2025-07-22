@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class HttpApiApp extends Executable<HttpApiApplicationService> {
     public static void main(String[] args) {
-        ThreadName.set(HttpApiApp.class, "main");
+        ThreadName.from(HttpApiApp.class, "main");
         new HttpApiApp(args);
     }
 

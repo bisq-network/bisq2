@@ -101,7 +101,7 @@ public class NetworkLoadExchangeService implements Node.Listener {
             NetworkLoadExchangeResponse response = new NetworkLoadExchangeResponse(request.getNonce(),
                     myNetworkLoad);
             NetworkService.NETWORK_IO_POOL.submit(() -> {
-                ThreadName.set(this, "response");
+                ThreadName.from(this, "response");
                 node.send(response, connection);
             });
             log.debug("Sent NetworkLoadResponse with nonce {} and my networkLoad {} to {}. Connection={}",

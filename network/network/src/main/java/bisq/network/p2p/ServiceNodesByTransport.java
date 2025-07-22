@@ -138,7 +138,7 @@ public class ServiceNodesByTransport {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         entry -> supplyAsync(() -> {
-                                    ThreadName.set(this, "getInitializedDefaultNode-" + entry.getKey().name());
+                                    ThreadName.from(this, "getInitializedDefaultNode-" + entry.getKey().name());
                                     return entry.getValue().getInitializedDefaultNode(defaultNetworkId);
                                 },
                                 NETWORK_IO_POOL)));
@@ -165,7 +165,7 @@ public class ServiceNodesByTransport {
 
     public CompletableFuture<Node> supplyInitializedNode(TransportType transportType, NetworkId networkId) {
         return supplyAsync(() -> {
-            ThreadName.set(this, "supplyInitializedNode-" + StringUtils.truncate(networkId.getAddresses(), 10));
+            ThreadName.from(this, "supplyInitializedNode-" + StringUtils.truncate(networkId.getAddresses(), 10));
             ServiceNode serviceNode = map.get(transportType);
             if (serviceNode.isNodeInitialized(networkId)) {
                 return serviceNode.findNode(networkId).orElseThrow();

@@ -71,7 +71,7 @@ public class DeleteOnExitHook {
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            ThreadName.set(DeleteOnExitHook.class, "runHooks");
+            ThreadName.from(DeleteOnExitHook.class, "runHooks");
             runHooks();
         }));
     }

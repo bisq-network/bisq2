@@ -18,41 +18,39 @@
 package bisq.common.threading;
 
 public class ThreadName {
-    public static void set(Object host) {
-        set(host.getClass());
+    // ThreadLocal is not shared across different threads.
+    private static final ThreadLocal<String> originalNameThreadLocal = new ThreadLocal<>();
+
+    public static void from(Object host) {
+        from(host.getClass());
     }
 
-    public static void set(Object host, String details) {
-        set(host.getClass(), details);
+    public static void from(Object host, String details) {
+        from(host.getClass(), details);
     }
 
-    public static void set(Class<?> hostClass) {
-        set(hostClass.getSimpleName());
+    public static void from(Class<?> hostClass) {
+        from(hostClass.getSimpleName());
     }
 
-    public static void set(Class<?> hostClass, String details) {
-        set(hostClass.getSimpleName(), details);
+    public static void from(Class<?> hostClass, String details) {
+        from(hostClass.getSimpleName(), details);
     }
 
-    public static void set(String hostName) {
-        String currentThreadName = getName();
-        if (!currentThreadName.contains(hostName)) {
-            setName(currentThreadName + "." + hostName);
+    public static void from(String hostName, String details) {
+        from(hostName + "." + details);
+    }
+
+    public static void from(String name) {
+        Thread.currentThread().setName(getOriginalName() + ":" + name);
+    }
+
+    public static String getOriginalName() {
+        String originalName = originalNameThreadLocal.get();
+        if (originalName == null) {
+            originalName = Thread.currentThread().getName();
+            originalNameThreadLocal.set(originalName);
         }
-    }
-
-    public static void set(String hostName, String details) {
-        String currentThreadName = getName();
-        if (!currentThreadName.contains(hostName) && !currentThreadName.contains(details)) {
-            setName(currentThreadName + "." + hostName + "." + details);
-        }
-    }
-
-    public static void setName(String name) {
-        Thread.currentThread().setName(name);
-    }
-
-    public static String getName() {
-        return Thread.currentThread().getName();
+        return originalName;
     }
 }

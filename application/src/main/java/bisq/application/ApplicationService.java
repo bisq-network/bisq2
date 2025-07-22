@@ -220,7 +220,7 @@ public abstract class ApplicationService implements Service {
         // Usually we try to avoid adding multiple shutdownHooks as the order of their execution is not
         // defined. In that case the order from other hooks has no impact.
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            ThreadName.set(this, "releaseInstanceLock");
+            ThreadName.from(this, "releaseInstanceLock");
             instanceLockManager.releaseLock();
         }));
     }

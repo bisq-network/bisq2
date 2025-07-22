@@ -30,7 +30,7 @@ import java.nio.file.Path;
 @Slf4j
 public class SeedNodeApp extends Executable<SeedNodeApplicationService> {
     public static void main(String[] args) {
-        ThreadName.set(SeedNodeApp.class, "main");
+        ThreadName.from(SeedNodeApp.class, "main");
         new SeedNodeApp(args);
     }
 

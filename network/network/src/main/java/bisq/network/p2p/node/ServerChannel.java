@@ -75,7 +75,7 @@ public class ServerChannel {
         log.debug("Create server: {}", myAddress);
 
         serverThread = new Thread(() -> {
-            ThreadName.set(this, "start");
+            ThreadName.from(this, "start");
             try {
                 InetSocketAddress socketAddress = new InetSocketAddress(
                         InetAddress.getLocalHost(),

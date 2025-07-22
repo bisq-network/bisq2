@@ -199,7 +199,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             CountDownLatch countDownLatch = new CountDownLatch(1);
             AtomicBoolean peerDetectedOffline = new AtomicBoolean();
             runAsync(() -> {
-                ThreadName.set(this, "isPeerOnline");
+                ThreadName.from(this, "isPeerOnline");
                 // Takes about 3-5 sec.
                 boolean isPeerOnline = nodesById.isPeerOnline(senderNetworkId, address);
                 if (!isPeerOnline) {
@@ -218,7 +218,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
 
             AtomicReference<SendConfidentialMessageResult> altResult = new AtomicReference<>();
             runAsync(() -> {
-                ThreadName.set(this, "send");
+                ThreadName.from(this, "send");
                 try {
                     Connection connection = nodesById.getConnection(senderNetworkId, address);
                     log.info("Creating connection to {} took {} ms", receiverAddress, System.currentTimeMillis() - start);

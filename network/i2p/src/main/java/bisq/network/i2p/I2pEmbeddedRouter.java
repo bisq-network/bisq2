@@ -78,7 +78,7 @@ public class I2pEmbeddedRouter {
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            ThreadName.set(this, "shutdownHook");
+            ThreadName.from(this, "shutdownHook");
             shutdown();
         }));
 

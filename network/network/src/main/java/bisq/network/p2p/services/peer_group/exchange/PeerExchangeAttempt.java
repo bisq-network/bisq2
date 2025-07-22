@@ -157,7 +157,7 @@ public class PeerExchangeAttempt {
 
     private CompletableFuture<Void> doPeerExchangeAsync(Address peerAddress) {
         return supplyAsync(() -> {
-            ThreadName.set(this, "request");
+            ThreadName.from(this, "request");
             String connectionId = null;
             try {
                 Connection connection = node.getConnection(peerAddress);

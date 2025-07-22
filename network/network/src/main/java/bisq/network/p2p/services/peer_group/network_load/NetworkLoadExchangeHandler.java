@@ -57,7 +57,7 @@ class NetworkLoadExchangeHandler implements Connection.Listener {
                 connection.getPeerAddress(), nonce, myNetworkLoad, connection.getId());
         requestTs = System.currentTimeMillis();
         supplyAsync(() -> {
-            ThreadName.set(this, "request-" + StringUtils.truncate(connection.getPeerAddress().toString(), 10));
+            ThreadName.from(this, "request-" + StringUtils.truncate(connection.getPeerAddress().toString(), 10));
             return node.send(new NetworkLoadExchangeRequest(nonce, myNetworkLoad), connection);
         }, NetworkService.NETWORK_IO_POOL)
                 .whenComplete((c, throwable) -> {

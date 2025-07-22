@@ -20,7 +20,7 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
         // Using sun.misc.Signal to handle SIGINT events is not recommended as it is an
         // internal API and adds OS specific dependencies.
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            ThreadName.set(this, "shutdownHook");
+            ThreadName.from(this, "shutdownHook");
             if (!shutDownStarted) {
                 // We must not call System.exit as otherwise we would hang.
                 shutdown(false);

@@ -276,7 +276,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
         return anySuppliedInitializedNode(senderNetworkId)
                 .thenCompose(networkId -> supplyAsync(() -> {
-                            ThreadName.set(this, "confidentialSend");
+                            ThreadName.from(this, "confidentialSend");
                             return serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
                                     receiverNetworkId,
                                     senderKeyPair,
@@ -291,7 +291,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                                     "as the node for the given networkId is not initialized yet. " +
                                     "We call serviceNodesByTransport.confidentialSend() to send the message as mailbox message.");
                             supplyAsync(() -> {
-                                        ThreadName.set(this, "confidentialSend");
+                                        ThreadName.from(this, "confidentialSend");
                                         return serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
                                                 receiverNetworkId,
                                                 senderKeyPair,
@@ -314,7 +314,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                                                                   EnvelopePayloadMessage envelopePayloadMessage,
                                                                   AddressByTransportTypeMap receiver) {
         return supplyAsync(() -> {
-                    ThreadName.set(this, "send");
+                    ThreadName.from(this, "send");
                     return serviceNodesByTransport.send(senderNetworkId, envelopePayloadMessage, receiver);
                 },
                 NETWORK_IO_POOL);
@@ -512,7 +512,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public CompletableFuture<Map<TransportType, Boolean>> isPeerOnline(NetworkId networkId,
                                                                        AddressByTransportTypeMap peer) {
         return supplyAsync(() -> {
-                    ThreadName.set(this, "isPeerOnline");
+                    ThreadName.from(this, "isPeerOnline");
                     return serviceNodesByTransport.isPeerOnline(networkId, peer);
                 },
                 NETWORK_IO_POOL);

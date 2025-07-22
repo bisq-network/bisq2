@@ -73,7 +73,7 @@ public class ReportResponseService implements Node.Listener {
             ReportResponse response = new ReportResponse(request.getRequestId(), report);
             log.info("Received a ReportRequest from {}", connection.getPeerAddress());
             NetworkService.NETWORK_IO_POOL.submit(() -> {
-                ThreadName.set(this, "response");
+                ThreadName.from(this, "response");
                 node.send(response, connection);
             });
         }

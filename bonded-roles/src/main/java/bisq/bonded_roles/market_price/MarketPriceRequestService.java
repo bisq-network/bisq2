@@ -230,7 +230,7 @@ public class MarketPriceRequestService {
         }
 
         return CompletableFuture.runAsync(() -> {
-                    ThreadName.set(this, "request");
+                    ThreadName.from(this, "request");
                     Provider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
                     BaseHttpClient client = networkService.getHttpClient(provider.baseUrl, userAgent, provider.transportType);
                     httpClient = Optional.of(client);

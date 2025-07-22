@@ -45,14 +45,14 @@ public class I2pServer {
         isRunning.set(true);
 
         Thread serverThread = new Thread(() -> {
-            ThreadName.set(this, "listen");
+            ThreadName.from(this, "listen");
             while (isRunning.get()) {
                 try {
                     @SuppressWarnings("resource")
                     I2PSocket socket = serverSocket.accept();
                     if (socket != null) {
                         new Thread(() -> {
-                            ThreadName.set(this, "handle");
+                            ThreadName.from(this, "handle");
                             socketConsumer.accept(socket);
                         }).start();
                     }
