@@ -39,6 +39,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
@@ -73,8 +74,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 public class RichTableView<T> extends VBox {
-    private static final double SIDE_PADDING = 40;
-
     private final Optional<String> headline;
     private final Optional<List<FilterMenuItem<T>>> filterItems;
     private final Optional<ToggleGroup> toggleGroup;
@@ -84,7 +83,7 @@ public class RichTableView<T> extends VBox {
     private final DropdownMenu filterMenu;
     private final BisqTooltip tooltip;
     private final SearchBox searchBox;
-    private final Hyperlink exportHyperlink;
+    private final Button exportButton;
     private final ChangeListener<Toggle> toggleChangeListener;
     private final ListChangeListener<T> listChangeListener;
     private final String entriesUnit;
@@ -174,11 +173,11 @@ public class RichTableView<T> extends VBox {
         HBox.setMargin(numEntriesLabel, new Insets(0, 0, -5, 0));
         numEntriesLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text", "font-light");
 
-        exportHyperlink = new Hyperlink(Res.get("action.exportAsCsv"));
-        exportHyperlink.getStyleClass().add("rich-table-num-entries");
-        exportHyperlink.setAlignment(Pos.BASELINE_LEFT);
+        exportButton = new Button(Res.get("action.exportAsCsv"));
+        exportButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
+        exportButton.getStyleClass().addAll("export-button", "normal-text");
 
-        HBox headerBox = new HBox(5, headlineLabel, numEntriesLabel, Spacer.fillHBox(), exportHyperlink);
+        HBox headerBox = new HBox(5, headlineLabel, numEntriesLabel, Spacer.fillHBox(), exportButton);
         headerBox.getStyleClass().add("chat-container-header");
 
         VBox headerWithLineBox = new VBox(headerBox, Layout.hLine());
@@ -212,7 +211,6 @@ public class RichTableView<T> extends VBox {
         tableView.setMinHeight(200);
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
-//        setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
         getChildren().addAll(headerWithLineBox, subheader, tableView);
         VBox.setVgrow(this, Priority.ALWAYS);
         getStyleClass().add("rich-table-view-box");
@@ -229,7 +227,7 @@ public class RichTableView<T> extends VBox {
         selectedFilterMenuItemChanged();
         filterItems.ifPresent(filterItems -> filterItems.forEach(RichTableView.FilterMenuItem::initialize));
         searchTextHandler.ifPresent(stringConsumer -> searchTextPin = EasyBind.subscribe(searchBox.textProperty(), stringConsumer));
-        exportHyperlink.setOnAction(ev -> {
+        exportButton.setOnAction(ev -> {
             List<String> headers = csvHeaders.orElse(buildCsvHeaders());
             List<List<String>> data = csvData.orElse(buildCsvData());
             String csv = Csv.toCsv(headers, data);
@@ -253,7 +251,7 @@ public class RichTableView<T> extends VBox {
         if (searchTextPin != null) {
             searchTextPin.unsubscribe();
         }
-        exportHyperlink.setOnAction(null);
+        exportButton.setOnAction(null);
     }
 
     public void resetSearch() {

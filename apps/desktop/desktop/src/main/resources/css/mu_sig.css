@@ -14,10 +14,6 @@
  *                                                                             *
  ******************************************************************************/
 
-.muSig-offerbook-table.rich-table-view-box {
-    -fx-padding: 0;
-}
-
 .mu-sig-offerbook-market-title {
     -fx-font-size: 1.2em;
     -fx-text-fill: -fx-light-text-color;

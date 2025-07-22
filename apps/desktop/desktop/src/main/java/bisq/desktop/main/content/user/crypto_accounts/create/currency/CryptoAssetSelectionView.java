@@ -70,8 +70,8 @@ public class CryptoAssetSelectionView extends View<VBox, CryptoAssetSelectionMod
 
         richTableView.getNumEntriesLabel().setVisible(false);
         richTableView.getNumEntriesLabel().setManaged(false);
-        richTableView.getExportHyperlink().setVisible(false);
-        richTableView.getExportHyperlink().setManaged(false);
+        richTableView.getExportButton().setVisible(false);
+        richTableView.getExportButton().setManaged(false);
 
         configureTableColumns();
 
