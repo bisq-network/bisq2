@@ -1,18 +1,65 @@
 name: Transifex
 
 on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.tx/config'
+      - 'i18n/src/main/resources/**.properties'
   workflow_run:
     workflows: [ Build Bisq 2 ]
     types: [ completed ]
 
 jobs:
-  if_merged:
-    name: Push translation source files to Transifex
+  verify:
+    name: Verify Transifex configuration
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
+
+      - name: Verify that .tx/config is in sync with the i18n folder
+        run: |
+          set -euo pipefail
+
+          # Extract source files from .tx/config, trimming whitespace and de-duplicating
+          config_files=$(grep -E '^[[:space:]]*source_file' .tx/config \
+            | sed 's/.*= *//' \
+            | sed 's|i18n/src/main/resources/||' \
+            | sort -u)
+          
+          # Get actual source files from i18n directory (excluding locale-specific files)
+          # The regex is specific to filter out language codes like _es, _pt_BR, or _pcm
+          # while not accidentally filtering out source files with underscores like mu_sig.properties.
+          i18n_files=$(find i18n/src/main/resources -maxdepth 1 -name "*.properties" \
+            | grep -v -E '(_[a-z]{2}(_[A-Z]{2})?|_pcm)\.properties$' \
+            | sed 's|i18n/src/main/resources/||' \
+            | sort -u)
+          
+          echo "Source files found in .tx/config:"
+          echo "$config_files"
+          echo "---------------------"
+          echo "Source files found in i18n/src/main/resources/:"
+          echo "$i18n_files"
+          
+          if [ "$config_files" != "$i18n_files" ]; then
+            echo "::error::.tx/config is out of sync with i18n/src/main/resources/"
+            echo "Please run the following command and commit the changes:"
+            echo "./gradlew apps:desktop:i18n:updateTxConfig"
+            diff -u <(echo "$config_files") <(echo "$i18n_files")
+            exit 1
+          fi
+          echo ".tx/config is in sync with i18n/src/main/resources/"
+
+  push:
+    name: Push translation source files to Transifex
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.workflow_run.head_sha }}
           # Fetch all history so we can check commits properly
           fetch-depth: 0
 
@@ -27,7 +74,7 @@ jobs:
           fi
 
       - name: "Check if TX_TOKEN secret exists"
-        if: "steps.check_commit.outputs.commit_in_main == 'true'"
+        if: steps.check_commit.outputs.commit_in_main == 'true'
         env:
           transifex_secret: ${{ secrets.TX_TOKEN }}
         run: |
@@ -36,14 +83,8 @@ jobs:
             exit 1
           fi
 
-      - name: Checkout at the specific commit
-        if: "steps.check_commit.outputs.commit_in_main == 'true'"
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-
       - name: Push source files using Transifex client
-        if: "steps.check_commit.outputs.commit_in_main == 'true'"
+        if: steps.check_commit.outputs.commit_in_main == 'true'
         uses: transifex/cli-action@v2
         with:
           token: ${{ secrets.TX_TOKEN }}
