@@ -72,13 +72,13 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
 
         // Pricing model selection
         percentagePriceButton = new Button(Res.get("bisqEasy.price.percentage.title"));
-        percentagePriceButton.setGraphicTextGap(8);
         percentagePriceButton.getStyleClass().add("model-selection-item");
+        percentagePriceButton.setGraphicTextGap(8);
         percentagePriceIconGreen = ImageUtil.getImageViewById("chart-icon-green");
         percentagePriceIconGrey = ImageUtil.getImageViewById("chart-icon-grey");
         fixedPriceButton = new Button(Res.get("bisqEasy.price.tradePrice.title"));
-        fixedPriceButton.setGraphicTextGap(8);
         fixedPriceButton.getStyleClass().add("model-selection-item");
+        fixedPriceButton.setGraphicTextGap(8);
         fixedPriceIconGreen = ImageUtil.getImageViewById("lock-icon-green");
         fixedPriceIconGrey = ImageUtil.getImageViewById("lock-icon-grey");
         Label separator = new Label("|");
