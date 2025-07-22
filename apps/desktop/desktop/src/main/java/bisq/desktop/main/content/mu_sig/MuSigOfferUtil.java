@@ -121,9 +121,8 @@ public class MuSigOfferUtil {
 
                     Pair<String, String> pricePair = item.getPricePair();
                     Label price = new Label(pricePair.getFirst());
-                    ImageView icon = ImageUtil.getImageViewById(getPriceIconId(item.isHasFixPrice()));
                     Label iconLabel = new Label();
-                    iconLabel.setGraphic(icon);
+                    iconLabel.setGraphic(ImageUtil.getImageViewById(getPriceIconId(item.isHasFixPrice())));
                     HBox.setMargin(iconLabel, new Insets(-2, 0, 2, 0));
                     Label pricePercentage = new Label(pricePair.getSecond());
                     hbox.getChildren().addAll(price, iconLabel, pricePercentage);
