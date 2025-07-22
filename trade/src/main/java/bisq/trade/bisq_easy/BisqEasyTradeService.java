@@ -168,7 +168,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
             }
         });
 
-        numDaysAfterRedactingTradeDataScheduler = Scheduler.run(this::maybeRedactDataOfCompletedTrades).periodically(1, TimeUnit.HOURS);
+        numDaysAfterRedactingTradeDataScheduler = Scheduler.run(this::maybeRedactDataOfCompletedTrades)
+                .host(this)
+                .periodically(1, TimeUnit.HOURS);
         numDaysAfterRedactingTradeDataPin = settingsService.getNumDaysAfterRedactingTradeData().addObserver(numDays -> maybeRedactDataOfCompletedTrades());
 
         return CompletableFuture.completedFuture(true);

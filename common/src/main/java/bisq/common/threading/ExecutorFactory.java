@@ -22,11 +22,10 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
@@ -35,9 +34,162 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class ExecutorFactory {
-    public static final int DEFAULT_PRIORITY = 3;
-    private static final Map<String, ThreadFactory> THREAD_FACTORY_BY_NAME = new HashMap<>();
+    public static final int DEFAULT_PRIORITY = 5;
     public static final ExecutorService WORKER_POOL = newFixedThreadPool("Worker-pool");
+
+
+    /* --------------------------------------------------------------------- */
+    // Single Thread Executors
+    /* --------------------------------------------------------------------- */
+
+    public static ExecutorService newSingleThreadExecutor(String name) {
+        return Executors.newSingleThreadExecutor(getThreadFactory(name));
+    }
+
+    public static ScheduledExecutorService newSingleThreadScheduledExecutor(String name) {
+        return Executors.newSingleThreadScheduledExecutor(getThreadFactory(name));
+    }
+
+    public static ScheduledExecutorService newSingleThreadScheduledExecutor(ThreadFactory threadFactory) {
+        return Executors.newSingleThreadScheduledExecutor(threadFactory);
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // ThreadPool with fixed thread size
+    /* --------------------------------------------------------------------- */
+
+    /**
+     * Used when queuing is desired.
+     */
+    public static ExecutorService newFixedThreadPool(String name) {
+        return newFixedThreadPool(name, PlatformUtils.availableProcessors());
+    }
+
+    public static ExecutorService newFixedThreadPool(String name, int numThreads) {
+        ThreadFactory threadFactory = getThreadFactory(name);
+        return Executors.newFixedThreadPool(numThreads, threadFactory);
+    }
+
+
+
+    /* --------------------------------------------------------------------- */
+    // Cached ThreadPool
+    /* --------------------------------------------------------------------- */
+
+    /**
+     * Creates a cached thread pool similar to {@link Executors#newCachedThreadPool()}, but allows customization
+     * of {@code corePoolSize}, {@code maxPoolSize}, and {@code keepAliveInSeconds}, which the standard
+     * factory method does not support.
+     * <p>
+     * This thread pool uses a {@link SynchronousQueue}, meaning it does not queue tasks but instead hands them
+     * directly off to available threads. If no threads are available and the pool has not yet reached
+     * {@code maxPoolSize}, a new thread is created. If the pool has reached {@code maxPoolSize}, the task is
+     * rejected and handled by the {@link ThreadPoolExecutor.AbortPolicy}.
+     * <p>
+     * Unlike {@link Executors#newCachedThreadPool()}, which sets {@code corePoolSize = 0} and
+     * {@code maximumPoolSize = Integer.MAX_VALUE}, this method provides control over the thread pool bounds to
+     * better manage system resources and apply safety limits.
+     *
+     * @param name               the thread name prefix
+     * @param corePoolSize       the number of threads to keep alive even when idle
+     * @param maxPoolSize        the maximum number of threads to allow in the pool
+     * @param keepAliveInSeconds the time to keep excess idle threads alive
+     * @return a configured {@link ExecutorService} instance
+     */
+    public static ExecutorService newCachedThreadPool(String name,
+                                                      int corePoolSize,
+                                                      int maxPoolSize,
+                                                      long keepAliveInSeconds) {
+        return new ThreadPoolExecutor(corePoolSize,
+                maxPoolSize,
+                keepAliveInSeconds,
+                TimeUnit.SECONDS,
+                new SynchronousQueue<>(),
+                getThreadFactory(name),
+                new ThreadPoolExecutor.AbortPolicy());
+    }
+
+    public static ExecutorService newCachedThreadPool(String name) {
+        return newCachedThreadPool(name, 1, 100, 5);
+    }
+
+    public static ExecutorService newCachedThreadPool(String name, int poolSize, long keepAliveInSeconds) {
+        return newCachedThreadPool(name, poolSize, poolSize, keepAliveInSeconds);
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // ThreadPool using a bounded queue and caching
+    /* --------------------------------------------------------------------- */
+
+    /**
+     * Creates a thread pool that scales between a minimum and maximum number of threads, with a bounded task queue.
+     * <p>
+     * This pool starts with {@code corePoolSize} threads and can grow up to {@code maxPoolSize}
+     * if the task load exceeds the capacity of the core threads. Idle threads beyond the core size
+     * will be terminated after {@code keepAliveInSeconds}.
+     * <p>
+     * Tasks are submitted to a bounded {@link LinkedBlockingQueue}, and rejected tasks are handled by the provided
+     * {@link RejectedExecutionHandler}.
+     *
+     * <p>This configuration is useful when you want:</p>
+     * <ul>
+     *   <li>Moderate parallelism with resource control</li>
+     *   <li>Thread reuse for performance</li>
+     *   <li>Backpressure through bounded queuing and potential CallerRunsPolicy</li>
+     * </ul>
+     *
+     * @param name               the base name for thread naming (used by the thread factory)
+     * @param corePoolSize       the number of threads to keep in the pool, even if they are idle, unless allowCoreThreadTimeOut is set
+     * @param maxPoolSize        the maximum number of threads to allow in the pool
+     * @param keepAliveInSeconds the time to keep extra threads alive when idle
+     * @param queueCapacity      the maximum number of tasks to queue before applying the {@code handler}
+     * @param handler            the handler to apply when the pool is saturated
+     * @return the configured {@link ExecutorService}
+     */
+
+    public static ExecutorService boundedCachedPool(String name,
+                                                    int corePoolSize,
+                                                    int maxPoolSize,
+                                                    long keepAliveInSeconds,
+                                                    int queueCapacity,
+                                                    RejectedExecutionHandler handler) {
+        return new ThreadPoolExecutor(corePoolSize,
+                maxPoolSize,
+                keepAliveInSeconds,
+                TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(queueCapacity),
+                getThreadFactory(name),
+                handler);
+    }
+
+    public static ExecutorService boundedCachedPool(String name) {
+        return boundedCachedPool(name,
+                1,
+                5,
+                30,
+                100,
+                new ThreadPoolExecutor.AbortPolicy());
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // ThreadFactory
+    /* --------------------------------------------------------------------- */
+
+    public static ThreadFactory getThreadFactory(String name) {
+        return new ThreadFactoryBuilder()
+                .setNameFormat(name + "-%d")
+                .setDaemon(true)
+                .setPriority(DEFAULT_PRIORITY)
+                .build();
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // ShutdownAndAwaitTermination utils
+    /* --------------------------------------------------------------------- */
 
     public static boolean shutdownAndAwaitTermination(ExecutorService executor) {
         return shutdownAndAwaitTermination(executor, 100);
@@ -52,83 +204,4 @@ public class ExecutorFactory {
         return MoreExecutors.shutdownAndAwaitTermination(executor, timeout, unit);
     }
 
-    public static ExecutorService newSingleThreadExecutor(String name) {
-        ThreadFactory threadFactory = getThreadFactory(name);
-        return Executors.newSingleThreadExecutor(threadFactory);
-    }
-
-    public static ScheduledExecutorService newSingleThreadScheduledExecutor(String name) {
-        ThreadFactory threadFactory = getThreadFactory(name);
-        return Executors.newSingleThreadScheduledExecutor(threadFactory);
-    }
-
-    public static ScheduledExecutorService newSingleThreadScheduledExecutor(ThreadFactory threadFactory) {
-        return Executors.newSingleThreadScheduledExecutor(threadFactory);
-    }
-
-    /**
-     * Uses a SynchronousQueue, so each submitted task requires a new thread as no queuing functionality is provided.
-     * To be used when we want to avoid overhead for new thread creation/destruction and no queuing functionality.
-     */
-    public static ExecutorService newCachedThreadPool(String name) {
-        return newCachedThreadPool(name, 1, 100, 5);
-    }
-
-    public static ExecutorService newCachedThreadPool(String name, int poolSize, long keepAliveInSeconds) {
-        return newCachedThreadPool(name, poolSize, poolSize, keepAliveInSeconds);
-    }
-
-    public static ExecutorService newCachedThreadPool(String name,
-                                                      int corePoolSize,
-                                                      int maxPoolSize,
-                                                      long keepAliveInSeconds) {
-        ThreadFactory threadFactory = getThreadFactory(name);
-        ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newCachedThreadPool(threadFactory);
-        executorService.setKeepAliveTime(keepAliveInSeconds, TimeUnit.SECONDS);
-        executorService.setCorePoolSize(corePoolSize);
-        executorService.setMaximumPoolSize(maxPoolSize);
-        return executorService;
-    }
-
-    /**
-     * Used when queuing is desired.
-     */
-    public static ExecutorService newFixedThreadPool(String name) {
-        return newFixedThreadPool(name, PlatformUtils.availableProcessors());
-    }
-
-    public static ExecutorService newFixedThreadPool(String name, int numThreads) {
-        ThreadFactory threadFactory = getThreadFactory(name);
-        return Executors.newFixedThreadPool(numThreads, threadFactory);
-    }
-
-    public static ThreadPoolExecutor getThreadPoolExecutor(String name,
-                                                           int corePoolSize,
-                                                           int maximumPoolSize,
-                                                           long keepAliveTimeInSec) {
-        return getThreadPoolExecutor(name, 1, 10000, 1, new SynchronousQueue<>());
-    }
-
-    public static ThreadPoolExecutor getThreadPoolExecutor(String name,
-                                                           int corePoolSize,
-                                                           int maximumPoolSize,
-                                                           long keepAliveTimeInSec,
-                                                           BlockingQueue<Runnable> workQueue) {
-        ThreadFactory threadFactory = getThreadFactory(name);
-        return new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
-                TimeUnit.SECONDS, workQueue, threadFactory);
-    }
-
-    public static ThreadFactory getThreadFactory(String name) {
-        synchronized (THREAD_FACTORY_BY_NAME) {
-            return THREAD_FACTORY_BY_NAME.computeIfAbsent(
-                    name,
-                    key ->
-                            new ThreadFactoryBuilder()
-                                    .setNameFormat(name+ "-%d")
-                                    .setDaemon(true)
-                                    .setPriority(DEFAULT_PRIORITY)
-                                    .build());
-        }
-    }
 }
