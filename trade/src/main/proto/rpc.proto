@@ -95,6 +95,7 @@ message PartialSignaturesRequest {
   string tradeId = 1;
   NonceSharesMessage peersNonceShares = 2;
   repeated ReceiverAddressAndAmount receivers = 3;
+  bool buyerReadyToRelease = 4;
 }
 
 message PartialSignaturesMessage {
@@ -102,6 +103,7 @@ message PartialSignaturesMessage {
   bytes peersWarningTxSellerInputPartialSignature = 2;
   bytes peersRedirectTxInputPartialSignature = 3;
   optional bytes swapTxInputPartialSignature = 4;
+  optional bytes swapTxInputSighash = 5;
 }
 
 message DepositTxSignatureRequest {
@@ -132,6 +134,7 @@ message TxConfirmationStatus {
 message SwapTxSignatureRequest {
   string tradeId = 1;
   bytes swapTxInputPeersPartialSignature = 2;
+  bool sellerReadyToRelease = 3;
 }
 
 message SwapTxSignatureResponse {
