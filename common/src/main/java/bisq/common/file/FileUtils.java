@@ -202,7 +202,7 @@ public class FileUtils {
     public static void recursiveDeleteOnShutdownHook(Path path) {
         Runtime.getRuntime().addShutdownHook(new Thread(
                 () -> {
-                    ThreadName.set(FileUtils.class, "shutdownHook-" + StringUtils.truncate(path.toString(), 10));
+                    ThreadName.from(FileUtils.class, "shutdownHook-" + StringUtils.truncate(path.toString(), 10));
                     try {
                         Files.walkFileTree(path, new SimpleFileVisitor<>() {
                             @Override

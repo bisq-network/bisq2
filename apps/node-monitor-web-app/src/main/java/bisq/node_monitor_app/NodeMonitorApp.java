@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NodeMonitorApp extends Executable<NodeMonitorApplicationService> {
     public static void main(String[] args) {
-        ThreadName.set(NodeMonitorApp.class, "main");
+        ThreadName.from(NodeMonitorApp.class, "main");
         new NodeMonitorApp(args);
     }
 

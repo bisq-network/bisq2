@@ -54,7 +54,7 @@ class KeepAliveHandler implements Connection.Listener {
                 connection.getPeerAddress(), nonce, connection.getId());
         requestTs = System.currentTimeMillis();
         supplyAsync(() -> {
-            ThreadName.set(this, "ping");
+            ThreadName.from(this, "ping");
             return node.send(new Ping(nonce), connection);
         }, NetworkService.NETWORK_IO_POOL)
                 .whenComplete((c, throwable) -> {

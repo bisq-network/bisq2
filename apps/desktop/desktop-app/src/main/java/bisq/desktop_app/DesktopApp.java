@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DesktopApp {
     public static void main(String[] args) {
-        ThreadName.set(DesktopApp.class, "main");
+        ThreadName.from(DesktopApp.class, "main");
         new DesktopExecutable(args);
     }
 }

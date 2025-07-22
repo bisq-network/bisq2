@@ -69,7 +69,7 @@ public class DesktopAppLauncher {
     private final Options options;
 
     public static void main(String[] args) {
-        ThreadName.set(DesktopAppLauncher.class, "main");
+        ThreadName.from(DesktopAppLauncher.class, "main");
         try {
             new DesktopAppLauncher(args);
         } catch (Exception e) {

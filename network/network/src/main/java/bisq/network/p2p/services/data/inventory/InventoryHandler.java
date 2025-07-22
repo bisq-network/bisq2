@@ -66,7 +66,7 @@ class InventoryHandler implements Connection.Listener {
         log.info("Send InventoryRequest to {} with {}", connection.getPeerAddress(), inventoryFilter.getDetails());
         InventoryRequest inventoryRequest = new InventoryRequest(inventoryFilter, nonce);
         runAsync(() -> {
-            ThreadName.set(this, "request");
+            ThreadName.from(this, "request");
             node.send(inventoryRequest, connection);
         }, NetworkService.NETWORK_IO_POOL)
                 .whenComplete((connection, throwable) -> {

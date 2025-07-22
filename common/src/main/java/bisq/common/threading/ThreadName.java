@@ -21,27 +21,27 @@ public class ThreadName {
     // ThreadLocal is not shared across different threads.
     private static final ThreadLocal<String> originalNameThreadLocal = new ThreadLocal<>();
 
-    public static void set(Object host) {
-        set(host.getClass());
+    public static void from(Object host) {
+        from(host.getClass());
     }
 
-    public static void set(Object host, String details) {
-        set(host.getClass(), details);
+    public static void from(Object host, String details) {
+        from(host.getClass(), details);
     }
 
-    public static void set(Class<?> hostClass) {
-        setName(hostClass.getSimpleName());
+    public static void from(Class<?> hostClass) {
+        from(hostClass.getSimpleName());
     }
 
-    public static void set(Class<?> hostClass, String details) {
-        set(hostClass.getSimpleName(), details);
+    public static void from(Class<?> hostClass, String details) {
+        from(hostClass.getSimpleName(), details);
     }
 
-    public static void set(String hostName, String details) {
-        setName(hostName + "." + details);
+    public static void from(String hostName, String details) {
+        from(hostName + "." + details);
     }
 
-    public static void setName(String name) {
+    public static void from(String name) {
         Thread.currentThread().setName(getOriginalName() + ":" + name);
     }
 

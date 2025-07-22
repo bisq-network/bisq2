@@ -52,7 +52,7 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
     @Override
     protected void launchApplication(String[] args) {
         new Thread(() -> {
-            ThreadName.setName("DesktopExecutable.JavaFXApplication.launch");
+            ThreadName.from("DesktopExecutable.JavaFXApplication.launch");
             Application.launch(JavaFXApplication.class, args); //blocks until app is closed
         }).start();
 

@@ -67,7 +67,7 @@ public class Broadcaster {
                         log.debug("Broadcast {} to {}", broadcastMessage.getClass().getSimpleName(), connection.getPeerAddress());
                         try {
                             return CompletableFuture.supplyAsync(() -> {
-                                        ThreadName.set(this, StringUtils.truncate(connection.getPeerAddress(), 12));
+                                        ThreadName.from(this, StringUtils.truncate(connection.getPeerAddress(), 12));
                                         try {
                                             node.send(broadcastMessage, connection); // Can block with throttle and network IO
                                             return true;

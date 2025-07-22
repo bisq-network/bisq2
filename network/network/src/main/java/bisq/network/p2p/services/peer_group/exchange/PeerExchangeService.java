@@ -108,7 +108,7 @@ public class PeerExchangeService implements Node.Listener {
             List<Peer> myPeers = new ArrayList<>(peerExchangeStrategy.getPeersForReporting(peerAddress));
             peerExchangeStrategy.addReportedPeers(new HashSet<>(request.getPeers()), peerAddress);
             NETWORK_IO_POOL.submit(() -> {
-                ThreadName.set(this, "response");
+                ThreadName.from(this, "response");
                 node.send(new PeerExchangeResponse(request.getNonce(), myPeers), connection);
             });
             log.debug("Sent PeerExchangeResponse with my myPeers {}", myPeers);
@@ -182,7 +182,7 @@ public class PeerExchangeService implements Node.Listener {
 
     public Future<Void> extendPeerGroupAsync() {
         return CompletableFuture.runAsync(() -> {
-            ThreadName.set(this, "extendPeerGroup");
+            ThreadName.from(this, "extendPeerGroup");
             extendPeerGroup();
         }, NETWORK_IO_POOL);
     }
@@ -212,7 +212,7 @@ public class PeerExchangeService implements Node.Listener {
 
     private Future<Void> retryPeerExchangeAsync() {
         return CompletableFuture.runAsync(() -> {
-            ThreadName.set(this, "retryPeerExchange");
+            ThreadName.from(this, "retryPeerExchange");
             retryPeerExchange();
         }, NETWORK_IO_POOL);
     }

@@ -664,7 +664,7 @@ public class Node implements Connection.Handler {
 
     public CompletableFuture<Void> closeConnectionGracefullyAsync(Connection connection, CloseReason closeReason) {
         return runAsync(() -> {
-            ThreadName.set(this, "closeConnection");
+            ThreadName.from(this, "closeConnection");
             closeConnectionGracefully(connection, closeReason);
         }, NetworkService.NETWORK_IO_POOL)
                 .orTimeout(4, SECONDS);

@@ -50,7 +50,7 @@ public class OutboundConnectionMultiplexer implements OutboundConnectionManager.
         outboundConnectionManager.registerListener(this);
 
         var thread = new Thread(() -> {
-            ThreadName.set(this, "workerLoop");
+            ThreadName.from(this, "workerLoop");
             workerLoop();
         });
         workerThread = Optional.of(thread);

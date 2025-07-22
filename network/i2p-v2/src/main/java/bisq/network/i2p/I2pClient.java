@@ -46,7 +46,7 @@ public class I2pClient {
         @SuppressWarnings("resource")
         I2PSocket socket = connect(destination);
         new Thread(() -> {
-            ThreadName.set(this, "handle");
+            ThreadName.from(this, "handle");
             socketConsumer.accept(socket);
         }).start();
     }

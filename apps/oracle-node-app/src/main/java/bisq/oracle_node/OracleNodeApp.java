@@ -30,7 +30,7 @@ import java.nio.file.Path;
 @Slf4j
 public class OracleNodeApp extends Executable<OracleNodeApplicationService> {
     public static void main(String[] args) {
-        ThreadName.set(OracleNodeApp.class, "main");
+        ThreadName.from(OracleNodeApp.class, "main");
         new OracleNodeApp(args);
     }
 

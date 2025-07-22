@@ -92,7 +92,7 @@ public class InventoryResponseService implements Node.Listener {
             InventoryResponse inventoryResponse = new InventoryResponse(requestersVersion, inventory, request.getNonce());
 
             NetworkService.NETWORK_IO_POOL.submit(() -> {
-                ThreadName.set(this, "response");
+                ThreadName.from(this, "response");
                 try {
                     node.send(inventoryResponse, connection);
                     log.info("Successfully sent an InventoryResponse to peer {} with {} kb. Took {} ms",
