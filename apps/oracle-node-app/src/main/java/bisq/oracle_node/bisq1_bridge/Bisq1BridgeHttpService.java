@@ -65,7 +65,7 @@ public class Bisq1BridgeHttpService implements Service {
         }
     }
 
-    private final ExecutorService executorService = ExecutorFactory.newCachedThreadPool("bisq1-bridge-http-thread", 4, 60);
+    private final ExecutorService executorService = ExecutorFactory.newCachedThreadPool("bisq1-bridge-http-thread", 1, 10, 60);
     private final AtomicInteger lastRequestedProofOfBurnBlockHeight = new AtomicInteger(0);
     private final AtomicInteger lastRequestedBondedReputationBlockHeight = new AtomicInteger(0);
     private final NetworkService networkService;

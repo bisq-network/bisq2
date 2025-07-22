@@ -18,11 +18,12 @@
 package bisq.bonded_roles.market_price;
 
 import bisq.common.application.ApplicationVersion;
-import bisq.common.market.Market;
-import bisq.common.market.MarketRepository;
 import bisq.common.asset.Asset;
 import bisq.common.data.Pair;
+import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
 import bisq.common.monetary.PriceQuote;
+import bisq.common.network.TransportType;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.threading.ThreadName;
@@ -31,7 +32,6 @@ import bisq.common.util.CollectionUtil;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
-import bisq.common.network.TransportType;
 import bisq.network.http.BaseHttpClient;
 import bisq.network.http.utils.HttpException;
 import com.google.gson.Gson;
@@ -41,7 +41,13 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
@@ -56,7 +62,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 public class MarketPriceRequestService {
-    private static final ExecutorService POOL = ExecutorFactory.newFixedThreadPool("MarketPrice", 3);
+    private static final ExecutorService EXECUTOR_SERVICE = ExecutorFactory.newSingleThreadExecutor("MarketPriceRequest");
 
     @Getter
     @ToString
@@ -199,7 +205,7 @@ public class MarketPriceRequestService {
     }
 
     private void periodicRequest() {
-        request().whenComplete((result, throwable) -> {
+        requestMarketPrice().whenComplete((result, throwable) -> {
             if (throwable != null) {
                 if (scheduler != null) {
                     scheduler.stop();
@@ -213,15 +219,15 @@ public class MarketPriceRequestService {
         });
     }
 
-    private CompletableFuture<Void> request() {
+    private CompletableFuture<Void> requestMarketPrice() {
         try {
-            return request(new AtomicInteger(0));
+            return requestMarketPrice(new AtomicInteger(0));
         } catch (RejectedExecutionException e) {
             return CompletableFuture.failedFuture(new RejectedExecutionException("Too many requests. Try again later."));
         }
     }
 
-    private CompletableFuture<Void> request(AtomicInteger recursionDepth) {
+    private CompletableFuture<Void> requestMarketPrice(AtomicInteger recursionDepth) {
         if (noProviderAvailable) {
             throw new RuntimeException("No market price provider available");
         }
@@ -230,7 +236,7 @@ public class MarketPriceRequestService {
         }
 
         return CompletableFuture.runAsync(() -> {
-                    ThreadName.from(this, "request");
+                    ThreadName.from("requestMarketPrice");
                     Provider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
                     BaseHttpClient client = networkService.getHttpClient(provider.baseUrl, userAgent, provider.transportType);
                     httpClient = Optional.of(client);
@@ -239,7 +245,7 @@ public class MarketPriceRequestService {
                         int numRecursions = recursionDepth.incrementAndGet();
                         if (numRecursions < numTotalCandidates && failedProviders.size() < numTotalCandidates) {
                             log.warn("We retry the request with new provider {}", selectedProvider.get().getBaseUrl());
-                            request(recursionDepth).join();
+                            requestMarketPrice(recursionDepth).join();
                         } else {
                             log.warn("We exhausted all possible providers and give up");
                             throw new RuntimeException("We failed at all possible providers and give up");
@@ -298,13 +304,13 @@ public class MarketPriceRequestService {
                         int numRecursions = recursionDepth.incrementAndGet();
                         if (numRecursions < numTotalCandidates && failedProviders.size() < numTotalCandidates) {
                             log.warn("We retry the request with new provider {}", selectedProvider.get().getBaseUrl());
-                            request(recursionDepth).join();
+                            requestMarketPrice(recursionDepth).join();
                         } else {
                             log.warn("We exhausted all possible providers and give up");
                             throw new RuntimeException("We failed at all possible providers and give up");
                         }
                     }
-                }, POOL)
+                }, EXECUTOR_SERVICE)
                 .orTimeout(conf.getTimeoutInSeconds(), SECONDS);
     }
 
