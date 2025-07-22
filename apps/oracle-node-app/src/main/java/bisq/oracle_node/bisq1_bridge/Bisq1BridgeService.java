@@ -252,73 +252,109 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
 
     private CompletableFuture<List<ProofOfBurnDto>> requestProofOfBurnTxs() {
         log.info("requestProofOfBurnTxs");
-        return httpService.requestProofOfBurnTxs();
+        try {
+            return httpService.requestProofOfBurnTxs();
+        } catch (Exception e) {
+            log.error("requestProofOfBurnTxs failed", e);
+            return CompletableFuture.failedFuture(e);
+        }
     }
 
     private CompletableFuture<List<BondedReputationDto>> requestBondedReputations() {
         log.info("requestBondedReputations");
-        return httpService.requestBondedReputations();
+        try {
+            return httpService.requestBondedReputations();
+        } catch (Exception e) {
+            log.error("requestBondedReputations failed", e);
+            return CompletableFuture.failedFuture(e);
+        }
     }
 
     private CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnList) {
-        return CompletableFuture.supplyAsync(() -> {
-            ThreadName.set(this, "publishProofOfBurnDtoSet");
-            log.info("publishProofOfBurnDtoSet: proofOfBurnList={}", proofOfBurnList);
-            Stream<AuthorizedProofOfBurnData> stream = proofOfBurnList.stream()
-                    .map(dto -> new AuthorizedProofOfBurnData(
-                            dto.getBlockTime(),
-                            dto.getAmount(),
-                            Hex.decode(dto.getHash()),
-                            dto.getBlockHeight(),
-                            dto.getTxId(),
-                            staticPublicKeysProvided));
-            return CompletableFutureUtils.allOf(stream
-                            .map(this::publishAuthorizedData)
-                            .collect(Collectors.toList()))
-                    .thenApply(results -> !results.contains(false))
-                    .join();
-        }, NetworkService.NETWORK_IO_POOL);
+        try {
+            return CompletableFuture.supplyAsync(() -> {
+                ThreadName.set(this, "publishProofOfBurnDtoSet");
+                log.info("publishProofOfBurnDtoSet: proofOfBurnList={}", proofOfBurnList);
+                Stream<AuthorizedProofOfBurnData> stream = proofOfBurnList.stream()
+                        .map(dto -> new AuthorizedProofOfBurnData(
+                                dto.getBlockTime(),
+                                dto.getAmount(),
+                                Hex.decode(dto.getHash()),
+                                dto.getBlockHeight(),
+                                dto.getTxId(),
+                                staticPublicKeysProvided));
+                return CompletableFutureUtils.allOf(stream
+                                .map(this::publishAuthorizedData)
+                                .collect(Collectors.toList()))
+                        .whenComplete((r, t) -> {
+                            if (t != null) {
+                                log.error("publishProofOfBurnDtoSet failed", t);
+                            }
+                        })
+                        .thenApply(results -> {
+                            boolean b = !results.contains(false);
+                            return b;
+                        })
+                        .join();
+            }, NetworkService.NETWORK_IO_POOL);
+        } catch (Exception e) {
+            log.error("publishProofOfBurnDtoSet failed", e);
+            return CompletableFuture.failedFuture(e);
+        }
     }
 
     private CompletableFuture<Boolean> publishBondedReputationDtoSet(List<BondedReputationDto> bondedReputationList) {
-        return CompletableFuture.supplyAsync(() -> {
-            ThreadName.set(this, "publishBondedReputationDtoSet");
-            log.info("publishBondedReputationDtoSet: bondedReputationList={}", bondedReputationList);
-            Stream<AuthorizedBondedReputationData> stream = bondedReputationList.stream()
-                    .map(dto -> new AuthorizedBondedReputationData(
-                            dto.getBlockTime(),
-                            dto.getAmount(),
-                            Hex.decode(dto.getHash()),
-                            dto.getLockTime(),
-                            dto.getBlockHeight(),
-                            dto.getTxId(),
-                            staticPublicKeysProvided));
-            return CompletableFutureUtils.allOf(stream
-                            .map(this::publishAuthorizedData)
-                            .collect(Collectors.toList()))
-                    .thenApply(results -> !results.contains(false))
-                    .join();
-        }, NetworkService.NETWORK_IO_POOL);
+        try {
+            return CompletableFuture.supplyAsync(() -> {
+                ThreadName.set(this, "publishBondedReputationDtoSet");
+                log.info("publishBondedReputationDtoSet: bondedReputationList={}", bondedReputationList);
+                Stream<AuthorizedBondedReputationData> stream = bondedReputationList.stream()
+                        .map(dto -> new AuthorizedBondedReputationData(
+                                dto.getBlockTime(),
+                                dto.getAmount(),
+                                Hex.decode(dto.getHash()),
+                                dto.getLockTime(),
+                                dto.getBlockHeight(),
+                                dto.getTxId(),
+                                staticPublicKeysProvided));
+                return CompletableFutureUtils.allOf(stream
+                                .map(this::publishAuthorizedData)
+                                .collect(Collectors.toList()))
+                        .thenApply(results -> {
+                            boolean b = !results.contains(false);
+                            return b;
+                        })
+                        .join();
+            }, NetworkService.NETWORK_IO_POOL);
+        } catch (Exception e) {
+            log.error("publishBondedReputationDtoSet failed", e);
+            return CompletableFuture.failedFuture(e);
+        }
     }
 
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
-        return networkService.publishAuthorizedData(data,
-                        identity.getNetworkIdWithKeyPair().getKeyPair(),
-                        authorizedPrivateKey,
-                        authorizedPublicKey)
-                .thenApply(broadCastDataResult -> {
-                    int numSuccess = broadCastDataResult.stream()
-                            .mapToInt(e -> {
-                                try {
-                                    e.join();
-                                    return 1;
-                                } catch (Exception ex) {
-                                    return 0;
-                                }
-                            })
-                            .sum();
-                    return numSuccess == broadCastDataResult.size();
-                });
+        try {
+            return networkService.publishAuthorizedData(data,
+                            identity.getNetworkIdWithKeyPair().getKeyPair(),
+                            authorizedPrivateKey,
+                            authorizedPublicKey)
+                    .thenApply(broadCastDataResult -> {
+                        int numSuccess = broadCastDataResult.stream()
+                                .mapToInt(e -> {
+                                    try {
+                                        e.join();
+                                        return 1;
+                                    } catch (Exception ex) {
+                                        return 0;
+                                    }
+                                })
+                                .sum();
+                        return numSuccess == broadCastDataResult.size();
+                    });
+        } catch (Exception e) {
+            log.error("publishAuthorizedData failed", e);
+            return CompletableFuture.completedFuture(false);
+        }
     }
 
     private CompletableFuture<Boolean> removeAuthorizedData(AuthorizedDistributedData authorizedDistributedData) {
