@@ -32,7 +32,7 @@ jobs:
           # The regex is specific to filter out language codes like _es, _pt_BR, or _pcm
           # while not accidentally filtering out source files with underscores like mu_sig.properties.
           i18n_files=$(find i18n/src/main/resources -maxdepth 1 -name "*.properties" \
-            | grep -v -E '(_[a-z]{2}(_[A-Z]{2})?|_pcm)\\.properties$' \
+            | grep -v -E '(_[a-z]{2}(_[A-Z]{2})?|_pcm)\.properties$' \
             | sed 's|i18n/src/main/resources/||' \
             | sort -u)
           
