@@ -349,7 +349,7 @@
 /* SELL TO */
 .split-button.dropdown-menu.dropdown-offer-list-direction-filter-menu.sell-to-offers .split-button-dropdown-label-box,
 .split-button.dropdown-menu.dropdown-offer-list-direction-filter-menu.sell-to-offers .split-button-dropdown-button {
-    -fx-background-color: -fx-default-red-button;
+    -fx-background-color: -fx-red-button;
 }
 
 .split-button.dropdown-menu.dropdown-offer-list-direction-filter-menu.sell-to-offers .split-button-dropdown-button:hover {
