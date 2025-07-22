@@ -26,6 +26,7 @@ import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
 import bisq.desktop.main.content.mu_sig.MuSigOfferUtil;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -39,6 +40,8 @@ import javafx.util.Callback;
 import java.util.Comparator;
 
 public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOffersController> {
+    private static final double SIDE_PADDING = 40;
+
     private final RichTableView<MuSigOfferListItem> muSigMyOffersListView;
     private BisqTableColumn<MuSigOfferListItem> myProfileColumn;
 
@@ -52,6 +55,8 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
         muSigMyOffersListView.getStyleClass().add("mu-sig-my-offers-table");
         configMuSigMyOffersListView();
         VBox.setVgrow(muSigMyOffersListView, Priority.ALWAYS);
+
+        root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
         root.getChildren().addAll(muSigMyOffersListView);
     }
 

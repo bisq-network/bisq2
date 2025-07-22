@@ -73,8 +73,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 public class RichTableView<T> extends VBox {
-    private static final double SIDE_PADDING = 40;
-
     private final Optional<String> headline;
     private final Optional<List<FilterMenuItem<T>>> filterItems;
     private final Optional<ToggleGroup> toggleGroup;
@@ -212,7 +210,6 @@ public class RichTableView<T> extends VBox {
         tableView.setMinHeight(200);
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
-//        setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
         getChildren().addAll(headerWithLineBox, subheader, tableView);
         VBox.setVgrow(this, Priority.ALWAYS);
         getStyleClass().add("rich-table-view-box");

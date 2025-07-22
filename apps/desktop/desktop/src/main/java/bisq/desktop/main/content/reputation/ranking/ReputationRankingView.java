@@ -37,6 +37,7 @@ import bisq.user.reputation.ReputationSource;
 import bisq.user.reputation.data.*;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
@@ -55,6 +56,8 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class ReputationRankingView extends View<VBox, ReputationRankingModel, ReputationRankingController> {
+    private static final double SIDE_PADDING = 40;
+
     private final RichTableView<ListItem> richTableView;
     private BisqTableColumn<ListItem> scoreColumn, valueColumn;
     private Subscription userProfileIdOfScoreUpdatePin, selectedReputationSourcePin;
@@ -71,6 +74,7 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
                 Res.get("reputation.table.entriesUnit"));
         configTableView();
 
+        root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
         root.getChildren().addAll(richTableView);
     }
 
