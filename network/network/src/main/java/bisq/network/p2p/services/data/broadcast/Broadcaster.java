@@ -35,7 +35,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public class Broadcaster {
     private static final long BROADCAST_TIMEOUT = 90;
-    private static final long RE_BROADCAST_DELAY_MS = 100;
 
     private final Node node;
     private final RetryPolicy<BroadcastResult> retryPolicy;
@@ -55,8 +54,7 @@ public class Broadcaster {
     }
 
     public CompletableFuture<BroadcastResult> reBroadcast(BroadcastMessage broadcastMessage) {
-        return CompletableFuture.supplyAsync(() -> broadcast(broadcastMessage, 0.75).join(),
-                CompletableFuture.delayedExecutor(RE_BROADCAST_DELAY_MS, TimeUnit.MILLISECONDS));
+        return broadcast(broadcastMessage, 0.75);
     }
 
     public CompletableFuture<BroadcastResult> broadcast(BroadcastMessage broadcastMessage) {
