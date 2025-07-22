@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -64,16 +65,24 @@ public class Broadcaster {
             List<CompletableFuture<Boolean>> sendFutures = connections.stream()
                     .map(connection -> {
                         log.debug("Broadcast {} to {}", broadcastMessage.getClass().getSimpleName(), connection.getPeerAddress());
-                        return CompletableFuture.supplyAsync(() -> {
-                                            ThreadName.set(this, "broadcast-to-" + StringUtils.truncate(connection.getPeerAddress(), 8));
-                                            try {
-                                                node.send(broadcastMessage, connection); // Can block with throttle and network IO
-                                                return true;
-                                            } catch (Exception exception) {
-                                                return false;
-                                            }
-                                        },
-                                        NetworkService.NETWORK_IO_POOL);
+                        try {
+                            return CompletableFuture.supplyAsync(() -> {
+                                        ThreadName.set(this, StringUtils.truncate(connection.getPeerAddress(), 12));
+                                        try {
+                                            node.send(broadcastMessage, connection); // Can block with throttle and network IO
+                                            return true;
+                                        } catch (Exception exception) {
+                                            return false;
+                                        }
+                                    },
+                                    NetworkService.NETWORK_IO_POOL);
+                        } catch (RejectedExecutionException e) {
+                            log.error("Executor rejected broadcast task for {}", connection.getPeerAddress(), e);
+                            return CompletableFuture.completedFuture(false);
+                        } catch (Exception e) {
+                            log.error("Broadcast to {} failed.", connection.getPeerAddress(), e);
+                            return CompletableFuture.completedFuture(false);
+                        }
                     }).toList();
             return CompletableFutureUtils.allOf(sendFutures)
                     .thenApply(results -> {
