@@ -17,10 +17,19 @@ jobs:
 
       - name: Verify that .tx/config is in sync with the i18n folder
         run: |
-          # Extract source files from .tx/config, trimming whitespace
-          config_files=$(grep 'source_file' .tx/config | sed 's/.*= *//' | sed 's|i18n/src/main/resources/||' | sort)
+          set -euo pipefail
+
+          # Extract source files from .tx/config, trimming whitespace and de-duplicating
+          config_files=$(grep 'source_file' .tx/config \
+            | sed 's/.*= *//' \
+            | sed 's|i18n/src/main/resources/||' \
+            | sort -u)
+          
           # Get actual source files from i18n directory (excluding locale-specific files)
-          i18n_files=$(find i18n/src/main/resources -maxdepth 1 -name "*.properties" | grep -E -v '(_[a-z]{2,3}|_[a-z]{2}_[A-Z]{2})\.properties$' | sed 's|i18n/src/main/resources/||' | sort)
+          i18n_files=$(find i18n/src/main/resources -maxdepth 1 -name "*.properties" \
+            | grep -v -E '(_[a-z]{2}|_[a-z]{2}_[A-Z]{2}|_[a-z]{2,3})\.properties$' \
+            | sed 's|i18n/src/main/resources/||' \
+            | sort -u)
           
           echo "Source files found in .tx/config:"
           echo "$config_files"
