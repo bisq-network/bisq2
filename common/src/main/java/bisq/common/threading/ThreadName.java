@@ -18,6 +18,9 @@
 package bisq.common.threading;
 
 public class ThreadName {
+    // ThreadLocal is not shared across different threads.
+    private static final ThreadLocal<String> originalNameThreadLocal = new ThreadLocal<>();
+
     public static void set(Object host) {
         set(host.getClass());
     }
@@ -27,32 +30,27 @@ public class ThreadName {
     }
 
     public static void set(Class<?> hostClass) {
-        set(hostClass.getSimpleName());
+        setName(hostClass.getSimpleName());
     }
 
     public static void set(Class<?> hostClass, String details) {
         set(hostClass.getSimpleName(), details);
     }
 
-    public static void set(String hostName) {
-        String currentThreadName = getName();
-        if (!currentThreadName.contains(hostName)) {
-            setName(currentThreadName + "." + hostName);
-        }
-    }
-
     public static void set(String hostName, String details) {
-        String currentThreadName = getName();
-        if (!currentThreadName.contains(hostName) && !currentThreadName.contains(details)) {
-            setName(currentThreadName + "." + hostName + "." + details);
-        }
+        setName(hostName + "." + details);
     }
 
     public static void setName(String name) {
-        Thread.currentThread().setName(name);
+        Thread.currentThread().setName(getOriginalName() + ":" + name);
     }
 
-    public static String getName() {
-        return Thread.currentThread().getName();
+    public static String getOriginalName() {
+        String originalName = originalNameThreadLocal.get();
+        if (originalName == null) {
+            originalName = Thread.currentThread().getName();
+            originalNameThreadLocal.set(originalName);
+        }
+        return originalName;
     }
 }
