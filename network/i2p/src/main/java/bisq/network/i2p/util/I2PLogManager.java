@@ -25,8 +25,7 @@ public class I2PLogManager extends LogManager {
                 log = new I2pLogs2Slf4j(cls);
                 classLogs.put(cls, log);
             }
-        }
-        else {
+        } else {
             log = stringLogs.get(name);
             if (log == null) {
                 log = new I2pLogs2Slf4j(name);
