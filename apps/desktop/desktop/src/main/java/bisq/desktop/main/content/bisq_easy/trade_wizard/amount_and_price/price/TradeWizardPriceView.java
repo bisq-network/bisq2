@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price.price;
 
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.threading.UIScheduler;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.UnorderedList;
@@ -34,6 +35,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -59,6 +61,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     private final Label warningIcon, feedbackSentence, minSliderValue, maxSliderValue;
     private final Slider slider;
     private final Hyperlink showLearnWhyButton;
+    private final ImageView percentagePriceIconGreen, percentagePriceIconGrey, fixedPriceIconGreen, fixedPriceIconGrey;
     private Subscription percentageFocusedPin, useFixPricePin, isOverlayVisible;
 
     public TradeWizardPriceView(TradeWizardPriceModel model,
@@ -68,13 +71,17 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
         this.priceInputBox = priceInput;
 
-        root.setAlignment(Pos.TOP_CENTER);
-
         // Pricing model selection
         percentagePriceButton = new Button(Res.get("bisqEasy.price.percentage.title"));
         percentagePriceButton.getStyleClass().add("model-selection-item");
+        percentagePriceButton.setGraphicTextGap(8);
+        percentagePriceIconGreen = ImageUtil.getImageViewById("chart-icon-green");
+        percentagePriceIconGrey = ImageUtil.getImageViewById("chart-icon-grey");
         fixedPriceButton = new Button(Res.get("bisqEasy.price.tradePrice.title"));
         fixedPriceButton.getStyleClass().add("model-selection-item");
+        fixedPriceButton.setGraphicTextGap(8);
+        fixedPriceIconGreen = ImageUtil.getImageViewById("lock-icon-green");
+        fixedPriceIconGrey = ImageUtil.getImageViewById("lock-icon-grey");
         Label separator = new Label("|");
 
         HBox percentagePriceBox = new HBox(percentagePriceButton);
@@ -136,6 +143,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         overlay = createOverlay();
 
         VBox.setMargin(sliderBox, new Insets(22.5, 0, 0, 0));
+        root.setAlignment(Pos.TOP_CENTER);
         root.getChildren().addAll(pricingModels, fieldsBox, sliderBox, feedbackBox);
         root.getStyleClass().add("bisq-easy-trade-wizard-price-step");
     }
@@ -241,8 +249,12 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         percentagePriceButton.getStyleClass().remove(SELECTED_PRICE_MODEL_STYLE_CLASS);
         if (model.getUseFixPrice().get()) {
             fixedPriceButton.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
+            fixedPriceButton.setGraphic(fixedPriceIconGreen);
+            percentagePriceButton.setGraphic(percentagePriceIconGrey);
         } else {
             percentagePriceButton.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
+            percentagePriceButton.setGraphic(percentagePriceIconGreen);
+            fixedPriceButton.setGraphic(fixedPriceIconGrey);
         }
     }
 
