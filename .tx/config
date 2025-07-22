@@ -10,6 +10,15 @@ resource_name          = academy.properties
 replace_edited_strings = false
 keep_translations      = false
 
+[o:bisq:p:bisq-2:r:accountproperties]
+file_filter            = i18n/src/main/resources/account_<lang>.properties
+source_file            = i18n/src/main/resources/account.properties
+type                   = UNICODEPROPERTIES
+minimum_perc           = 0
+resource_name          = account.properties
+replace_edited_strings = false
+keep_translations      = false
+
 [o:bisq:p:bisq-2:r:applicationproperties]
 file_filter            = i18n/src/main/resources/application_<lang>.properties
 source_file            = i18n/src/main/resources/application.properties

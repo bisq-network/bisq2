@@ -20,7 +20,7 @@ jobs:
           # Extract source files from .tx/config, trimming whitespace
           config_files=$(grep 'source_file' .tx/config | sed 's/.*= *//' | sed 's|i18n/src/main/resources/||' | sort)
           # Get actual source files from i18n directory (excluding locale-specific files)
-          i18n_files=$(find i18n/src/main/resources -maxdepth 1 -name "*.properties" | grep -v '_[a-z]\{2\}\(_[A-Z]\{2\}\)*\.properties$' | sed 's|i18n/src/main/resources/||' | sort)
+          i18n_files=$(find i18n/src/main/resources -maxdepth 1 -name "*.properties" | grep -E -v '(_[a-z]{2,3}|_[a-z]{2}_[A-Z]{2})\.properties$' | sed 's|i18n/src/main/resources/||' | sort)
           
           echo "Source files found in .tx/config:"
           echo "$config_files"
@@ -59,7 +59,7 @@ jobs:
           fi
 
       - name: "Check if TX_TOKEN secret exists"
-        if: "steps.check_commit.outputs.commit_in_main == 'true'"
+        if: steps.check_commit.outputs.commit_in_main == 'true'
         env:
           transifex_secret: ${{ secrets.TX_TOKEN }}
         run: |
@@ -69,13 +69,13 @@ jobs:
           fi
 
       - name: Checkout at the specific commit
-        if: "steps.check_commit.outputs.commit_in_main == 'true'"
+        if: steps.check_commit.outputs.commit_in_main == 'true'
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Push source files using Transifex client
-        if: "steps.check_commit.outputs.commit_in_main == 'true'"
+        if: steps.check_commit.outputs.commit_in_main == 'true'
         uses: transifex/cli-action@v2
         with:
           token: ${{ secrets.TX_TOKEN }}
