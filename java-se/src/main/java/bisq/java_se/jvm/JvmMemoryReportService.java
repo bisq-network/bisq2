@@ -87,21 +87,23 @@ public class JvmMemoryReportService implements MemoryReportService {
             ThreadProfiler threadProfiler = ThreadProfiler.INSTANCE;
             int nameLength = 80;
             String format = "%-5s\t %-8s\t %-" + nameLength + "s\t %-15s\t %-15s\t %-15s\n";
-            String header = String.format(format, "ID", "Priority", "[Group] Name", "State", "Time", "Memory");
+            // Cumulative allocated memory. There is no API for the current memory per thread (requires heap dump or profiler).
+            // See: https://stackoverflow.com/questions/36176593/will-threadmxbeangetthreadallocatedbytes-return-size-of-allocated-memory-or-obj
+            String header = String.format(format, "ID", "Priority", "[Group] Name", "State", "Time", "Cumulative allocated memory");
 
             StringBuilder customBisqThreads = new StringBuilder("Bisq custom threads:\n");
             StringBuilder jvmThreads = new StringBuilder("\nJVM threads:\n");
             customBisqThreads.append(header);
             boolean showJvmThreads = true;
             Thread.getAllStackTraces().keySet().stream()
-                    .sorted(Comparator.comparing(Thread::getId))
+                    .sorted(Comparator.comparing(Thread::threadId))
                     .forEach(thread -> {
                         try {
                             ThreadGroup threadGroup = thread.getThreadGroup();
                             String groupName = threadGroup != null ? threadGroup.getName() : "N/A";
                             String threadName = thread.getName();
                             String fullName = StringUtils.truncate("[" + groupName + "] " + threadName, nameLength);
-                            long threadId = thread.getId();
+                            long threadId = thread.threadId();
                             Optional<Long> threadTime = Optional.empty();
                             try {
                                 threadTime = threadProfiler.getThreadTime(threadId);
