@@ -343,6 +343,30 @@
     -fx-image: url("/images/icons/arrows-right-grey.png");
 }
 
+#chart-icon-green {
+    -fx-image: url("/images/icons/chart-icon-green.png");
+}
+
+#chart-icon-grey {
+    -fx-image: url("/images/icons/chart-icon-grey.png");
+}
+
+#chart-icon-white {
+    -fx-image: url("/images/icons/chart-icon-white.png");
+}
+
+#lock-icon-green {
+    -fx-image: url("/images/icons/lock-icon-green.png");
+}
+
+#lock-icon-grey {
+    -fx-image: url("/images/icons/lock-icon-grey.png");
+}
+
+#lock-icon-white {
+    -fx-image: url("/images/icons/lock-icon-white.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Navigation */

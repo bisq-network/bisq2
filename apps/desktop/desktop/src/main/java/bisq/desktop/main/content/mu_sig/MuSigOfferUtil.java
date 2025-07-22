@@ -19,18 +19,18 @@ package bisq.desktop.main.content.mu_sig;
 
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.common.data.Pair;
-import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.desktop.main.content.components.UserProfileDisplay;
-import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
@@ -121,9 +121,10 @@ public class MuSigOfferUtil {
 
                     Pair<String, String> pricePair = item.getPricePair();
                     Label price = new Label(pricePair.getFirst());
-                    // TODO: Change for custom icons
+                    ImageView icon = ImageUtil.getImageViewById(getPriceIconId(item.isHasFixPrice()));
                     Label iconLabel = new Label();
-                    Icons.getIconForLabel(getPriceIcon(item.isHasFixPrice()), iconLabel, "1.15em");
+                    iconLabel.setGraphic(icon);
+                    HBox.setMargin(iconLabel, new Insets(-2, 0, 2, 0));
                     Label pricePercentage = new Label(pricePair.getSecond());
                     hbox.getChildren().addAll(price, iconLabel, pricePercentage);
 
@@ -137,8 +138,8 @@ public class MuSigOfferUtil {
                 }
             }
 
-            private AwesomeIcon getPriceIcon(boolean hasFixPrice) {
-                return hasFixPrice ? AwesomeIcon.LOCK : AwesomeIcon.BAR_CHART;
+            private String getPriceIconId(boolean hasFixPrice) {
+                return hasFixPrice ? "lock-icon-grey" : "chart-icon-grey";
             }
         };
     }
