@@ -19,93 +19,78 @@ package bisq.network.p2p.services.data.broadcast;
 
 import bisq.common.threading.ThreadName;
 import bisq.common.util.CollectionUtil;
+import bisq.common.util.CompletableFutureUtils;
+import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import dev.failsafe.Failsafe;
-import dev.failsafe.RetryPolicy;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class Broadcaster {
-    private static final long BROADCAST_TIMEOUT = 90;
+    // Timeout for the broadcast to all the target connections. We don't expect that parallel send on multiple connections
+    // will take longer than 10 sec. for all connections.
+    private static final long TIMEOUT = 10;
 
     private final Node node;
-    private final RetryPolicy<BroadcastResult> retryPolicy;
 
     public Broadcaster(Node node) {
         this.node = node;
-
-        retryPolicy = RetryPolicy.<BroadcastResult>builder()
-                .handle(IllegalStateException.class)
-                .withBackoff(Duration.ofSeconds(3), Duration.ofSeconds(30))
-                .withJitter(0.25)
-                .withMaxDuration(Duration.ofMinutes(5)).withMaxRetries(10)
-                .onRetry(e -> log.info("Retry. AttemptCount={}.", e.getAttemptCount()))
-                .onRetriesExceeded(e -> log.warn("Max retries exceeded."))
-                .onSuccess(e -> log.debug("Succeeded."))
-                .build();
     }
 
     public CompletableFuture<BroadcastResult> reBroadcast(BroadcastMessage broadcastMessage) {
-        return broadcast(broadcastMessage, 0.75);
+        return doBroadcast(broadcastMessage, 0.75);
     }
 
     public CompletableFuture<BroadcastResult> broadcast(BroadcastMessage broadcastMessage) {
-        return broadcast(broadcastMessage, 1);
+        return doBroadcast(broadcastMessage, 1);
     }
 
-    public CompletableFuture<BroadcastResult> broadcast(BroadcastMessage broadcastMessage, double distributionFactor) {
-        return Failsafe.with(retryPolicy).getAsync(() -> doBroadcast(broadcastMessage, distributionFactor).join());
-    }
-
-    public CompletableFuture<BroadcastResult> doBroadcast(BroadcastMessage broadcastMessage,
-                                                          double distributionFactor) {
-        if (!node.isInitialized()) {
-            throw new IllegalStateException("Node not initialized. node=" + node.getNetworkId() +
-                    "; transportType=" + node.getTransportType());
-        }
-
-        long ts = System.currentTimeMillis();
-        CompletableFuture<BroadcastResult> future = new CompletableFuture<BroadcastResult>()
-                .orTimeout(BROADCAST_TIMEOUT, TimeUnit.SECONDS);
-        AtomicInteger numSuccess = new AtomicInteger(0);
-        AtomicInteger numFaults = new AtomicInteger(0);
-        long numConnections = node.getAllActiveConnections().count();
-        long numBroadcasts = Math.min(numConnections, Math.round(numConnections * distributionFactor));
-        log.debug("Broadcast {} to {} out of {} peers. distributionFactor={}",
-                broadcastMessage.getClass().getSimpleName(), numBroadcasts, numConnections, distributionFactor);
-        List<Connection> allConnections = CollectionUtil.toShuffledList(node.getAllActiveConnections());
-        List<Connection> connections = allConnections.stream().limit(numBroadcasts).toList();
+    private CompletableFuture<BroadcastResult> doBroadcast(BroadcastMessage broadcastMessage,
+                                                           double distributionFactor) {
+        checkArgument(node.isInitialized(), "Node is expected to be initialized before broadcast is called.");
+        List<Connection> connections = getConnection(distributionFactor);
         if (connections.isEmpty()) {
-            future.complete(new BroadcastResult(numSuccess.get(),
-                    numFaults.get(),
-                    System.currentTimeMillis() - ts));
+            log.info("No connections available for broadcast.");
+            return CompletableFuture.completedFuture(new BroadcastResult(0, 0, 0));
         } else {
-            NetworkService.NETWORK_IO_POOL.submit(() -> {
-                ThreadName.set(this, "broadcast");
-                connections.forEach(connection -> {
-                    log.debug("{} broadcast {} to {}", node, broadcastMessage.getClass().getSimpleName(), connection.getPeerAddress());
-                    try {
-                        node.send(broadcastMessage, connection);
-                        numSuccess.incrementAndGet();
-                    } catch (Exception exception) {
-                        numFaults.incrementAndGet();
-                    }
-                    if (numSuccess.get() + numFaults.get() == numBroadcasts) {
-                        future.complete(new BroadcastResult(numSuccess.get(),
-                                numFaults.get(),
-                                System.currentTimeMillis() - ts));
-                    }
-                });
-            });
+            long ts = System.currentTimeMillis();
+            List<CompletableFuture<Boolean>> sendFutures = connections.stream()
+                    .map(connection -> {
+                        log.debug("Broadcast {} to {}", broadcastMessage.getClass().getSimpleName(), connection.getPeerAddress());
+                        return CompletableFuture.supplyAsync(() -> {
+                                            ThreadName.set(this, "broadcast-to-" + StringUtils.truncate(connection.getPeerAddress(), 8));
+                                            try {
+                                                node.send(broadcastMessage, connection); // Can block with throttle and network IO
+                                                return true;
+                                            } catch (Exception exception) {
+                                                return false;
+                                            }
+                                        },
+                                        NetworkService.NETWORK_IO_POOL);
+                    }).toList();
+            return CompletableFutureUtils.allOf(sendFutures)
+                    .thenApply(results -> {
+                        int numSuccess = (int) results.stream().filter(success -> success).count();
+                        int numFaults = (int) results.stream().filter(success -> !success).count();
+                        long duration = System.currentTimeMillis() - ts;
+                        return new BroadcastResult(numSuccess, numFaults, duration);
+                    })
+                    .orTimeout(TIMEOUT, TimeUnit.SECONDS);
         }
-        return future;
+    }
+
+    private List<Connection> getConnection(double distributionFactor) {
+        List<Connection> allActiveConnections = node.getAllActiveConnections().toList();
+        long numAllConnections = allActiveConnections.size();
+        long broadcastTarget = Math.min(numAllConnections, Math.round(numAllConnections * distributionFactor));
+        List<Connection> allShuffledConnections = CollectionUtil.toShuffledList(allActiveConnections);
+        return allShuffledConnections.stream().limit(broadcastTarget).toList();
     }
 }
