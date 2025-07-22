@@ -2,6 +2,10 @@ name: Transifex
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.tx/config'
+      - 'i18n/src/main/resources/**.properties'
   workflow_run:
     workflows: [ Build Bisq 2 ]
     types: [ completed ]
@@ -10,7 +14,6 @@ jobs:
   verify:
     name: Verify Transifex configuration
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
@@ -20,7 +23,7 @@ jobs:
           set -euo pipefail
 
           # Extract source files from .tx/config, trimming whitespace and de-duplicating
-          config_files=$(grep 'source_file' .tx/config \
+          config_files=$(grep -E '^[[:space:]]*source_file' .tx/config \
             | sed 's/.*= *//' \
             | sed 's|i18n/src/main/resources/||' \
             | sort -u)
@@ -29,7 +32,7 @@ jobs:
           # The regex is specific to filter out language codes like _es, _pt_BR, or _pcm
           # while not accidentally filtering out source files with underscores like mu_sig.properties.
           i18n_files=$(find i18n/src/main/resources -maxdepth 1 -name "*.properties" \
-            | grep -v -E '(_[a-z]{2}(_[A-Z]{2})?|_pcm)\.properties$' \
+            | grep -v -E '(_[a-z]{2}(_[A-Z]{2})?|_pcm)\\.properties$' \
             | sed 's|i18n/src/main/resources/||' \
             | sort -u)
           
@@ -56,6 +59,7 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.workflow_run.head_sha }}
           # Fetch all history so we can check commits properly
           fetch-depth: 0
 
@@ -78,12 +82,6 @@ jobs:
             echo "The secret \"TX_TOKEN\" has not been set; please go to \"settings > secrets and variables\" to create it"
             exit 1
           fi
-
-      - name: Checkout at the specific commit
-        if: steps.check_commit.outputs.commit_in_main == 'true'
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Push source files using Transifex client
         if: steps.check_commit.outputs.commit_in_main == 'true'
