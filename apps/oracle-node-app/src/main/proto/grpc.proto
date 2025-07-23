@@ -17,44 +17,44 @@
 
 syntax = "proto3";
 
-package bisq1_bridge;
+package oracle_node.bisq1_bridge;
 
 option java_package = "bisq.oracle_node.bisq1_bridge.protobuf";
 option java_multiple_files = true;
 
 service Bisq1BridgeService {
-  rpc SubscribeBlockData (BlockDataSubscription) returns (stream BlockData);
+  rpc SubscribeBlockUpdate (BlockSubscription) returns (stream BlockDto);
 }
 
-message BlockDataSubscription {
+message BlockSubscription {
 }
 
-message BlockData {
-  uint32 height = 1;
+message BlockDto {
+  sint32 height = 1;
   bytes hash = 2;
-  uint64 time = 3;
-  repeated TxData txData = 4;
-  repeated BurningManData burningManData = 5;
+  sint64 time = 3;
+  repeated TxDto txDto = 4;
+  repeated BurningManDto burningManDto = 5;
 }
 
-message TxData {
+message TxDto {
   string txId = 1;
-  ProofOfBurnData proofOfBurnData = 2;
-  BondedReputationData bondedReputationData = 3;
+  optional ProofOfBurnDto proofOfBurnDto = 2;
+  optional BondedReputationDto bondedReputationDto = 3;
 }
 
-message BurningManData {
+message BurningManDto {
   string receiverAddress = 1;
   double cappedBurnAmountShare = 2;
 }
 
-message ProofOfBurnData {
-  uint64 amount = 1;
+message ProofOfBurnDto {
+  sint64 amount = 1;
   bytes proofOfBurnHash = 2;
 }
 
-message BondedReputationData {
-  uint64 amount = 1;
+message BondedReputationDto {
+  sint64 amount = 1;
   bytes bondedReputationHash = 2;
-  uint32 lockTime = 3;
+  sint32 lockTime = 3;
 }
