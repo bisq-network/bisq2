@@ -18,6 +18,7 @@
 package bisq.user;
 
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -48,8 +49,9 @@ public class UserService implements Service {
                        NetworkService networkService,
                        BondedRolesService bondedRolesService) {
 
+        AuthorizedBondedRolesService authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
         bannedUserService = new BannedUserService(persistenceService,
-                bondedRolesService.getAuthorizedBondedRolesService());
+                authorizedBondedRolesService);
 
         userProfileService = new UserProfileService(persistenceService, securityService, networkService);
 
@@ -65,7 +67,7 @@ public class UserService implements Service {
                 userIdentityService,
                 userProfileService,
                 bannedUserService,
-                bondedRolesService.getAuthorizedBondedRolesService());
+                authorizedBondedRolesService);
     }
 
     /* --------------------------------------------------------------------- */

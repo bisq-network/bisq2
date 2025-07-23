@@ -103,9 +103,7 @@ public class OracleNodeService implements Service {
 
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
-    @Getter
     private final Bisq1BridgeService bisq1BridgeService;
-    @Getter
     private final TimestampService timestampService;
     private final String bondUserName;
     private final String signatureBase64;
