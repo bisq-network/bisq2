@@ -24,6 +24,7 @@ import bisq.common.encoding.Base64;
 import bisq.common.encoding.Hex;
 import bisq.common.network.TransportType;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.threading.ThreadName;
 import bisq.network.NetworkService;
 import bisq.network.http.BaseHttpClient;
 import bisq.oracle_node.bisq1_bridge.dto.BondedReputationDto;
@@ -65,7 +66,7 @@ public class Bisq1BridgeHttpService implements Service {
         }
     }
 
-    private final ExecutorService executorService = ExecutorFactory.newCachedThreadPool("bisq1-bridge-http-thread", 1, 10, 60);
+    private final ExecutorService executorService = ExecutorFactory.newCachedThreadPool("Bisq1BridgeHttpService", 1, 10, 60);
     private final AtomicInteger lastRequestedProofOfBurnBlockHeight = new AtomicInteger(0);
     private final AtomicInteger lastRequestedBondedReputationBlockHeight = new AtomicInteger(0);
     private final NetworkService networkService;
@@ -107,6 +108,7 @@ public class Bisq1BridgeHttpService implements Service {
 
     public CompletableFuture<List<ProofOfBurnDto>> requestProofOfBurnTxs() {
         return CompletableFuture.supplyAsync(() -> {
+                    ThreadName.from("requestProofOfBurnTxs");
                     try {
                         if (httpClient == null) {
                             throw new IllegalStateException("Bisq1BridgeHttpService is not initialized during calling requestProofOfBurnTxs()");
@@ -136,6 +138,7 @@ public class Bisq1BridgeHttpService implements Service {
 
     public CompletableFuture<List<BondedReputationDto>> requestBondedReputations() {
         return CompletableFuture.supplyAsync(() -> {
+                    ThreadName.from("requestBondedReputations");
                     try {
                         if (httpClient == null) {
                             throw new IllegalStateException("Bisq1BridgeHttpService is not initialized during calling requestBondedReputations()");
@@ -165,6 +168,7 @@ public class Bisq1BridgeHttpService implements Service {
 
     public CompletableFuture<Optional<Long>> requestAccountAgeWitness(String hashAsHex) {
         return CompletableFuture.supplyAsync(() -> {
+            ThreadName.from("requestAccountAgeWitness");
             try {
                 if (httpClient == null) {
                     throw new IllegalStateException("Bisq1BridgeHttpService is not initialized during calling requestAccountAgeWitness()");
@@ -186,6 +190,7 @@ public class Bisq1BridgeHttpService implements Service {
 
     public CompletableFuture<Optional<Long>> requestSignedWitnessDate(String hashAsHex) {
         return CompletableFuture.supplyAsync(() -> {
+            ThreadName.from("requestSignedWitnessDate");
             try {
                 if (httpClient == null) {
                     throw new IllegalStateException("Bisq1BridgeHttpService is not initialized during calling requestSignedWitnessDate()");
@@ -210,6 +215,7 @@ public class Bisq1BridgeHttpService implements Service {
                                                                                       String profileId,
                                                                                       String signatureBase64) {
         return CompletableFuture.supplyAsync(() -> {
+            ThreadName.from("requestBondedRoleVerification");
             if (httpClient == null) {
                 throw new IllegalStateException("Bisq1BridgeHttpService is not initialized during calling requestBondedRoleVerification()");
             }
