@@ -53,6 +53,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -65,6 +66,8 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class ConfidentialMessageService implements Node.Listener, DataService.Listener {
+    private static final ExecutorService EXECUTOR = ExecutorFactory.newFixedThreadPool("ConfidentialMessageService");
+
     public interface Listener {
         void onMessage(EnvelopePayloadMessage envelopePayloadMessage);
 
@@ -98,6 +101,9 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         if (isShutdownInProgress) {
             return;
         }
+
+        ExecutorFactory.shutdownAndAwaitTermination(EXECUTOR, 100);
+
         isShutdownInProgress = true;
         nodesById.removeNodeListener(this);
         dataService.ifPresent(service -> service.removeListener(this));
@@ -417,6 +423,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     private CompletableFuture<Boolean> processConfidentialMessage(ConfidentialMessage confidentialMessage) {
         return keyBundleService.findKeyPair(confidentialMessage.getReceiverKeyId())
                 .map(receiversKeyPair -> supplyAsync(() -> {
+                    ThreadName.from("processConfidentialMessage");
                     try {
                         log.info("Found a matching key for processing confidentialMessage. ReceiverKeyId={}", confidentialMessage.getReceiverKeyId());
                         ConfidentialData confidentialData = confidentialMessage.getConfidentialData();
@@ -445,7 +452,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         log.error("Error at decryption using receiversKeyId={}", confidentialMessage.getReceiverKeyId(), e);
                         throw new RuntimeException(e);
                     }
-                }, ExecutorFactory.WORKER_POOL))
+                }, EXECUTOR))
                 .orElse(CompletableFuture.completedFuture(false)); // We don't have a key for that receiverKeyId
     }
 }
