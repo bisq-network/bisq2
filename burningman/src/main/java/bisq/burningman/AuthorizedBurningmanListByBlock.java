@@ -25,7 +25,6 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -56,27 +55,23 @@ public final class AuthorizedBurningmanListByBlock implements AuthorizedDistribu
     private final int version;
     private final boolean staticPublicKeysProvided;
     private final int blockHeight;
-    private final byte[] blockHash;
     private final List<BurningmanData> burningmanDataList;
 
     public AuthorizedBurningmanListByBlock(boolean staticPublicKeysProvided,
                                            int blockHeight,
-                                           byte[] blockHash,
                                            List<BurningmanData> burningmanDataList
     ) {
-        this(VERSION, staticPublicKeysProvided, blockHeight, blockHash, burningmanDataList);
+        this(VERSION, staticPublicKeysProvided, blockHeight, burningmanDataList);
     }
 
     private AuthorizedBurningmanListByBlock(int version,
                                             boolean staticPublicKeysProvided,
                                             int blockHeight,
-                                            byte[] blockHash,
                                             List<BurningmanData> burningmanDataList
     ) {
         this.version = version;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
         this.blockHeight = blockHeight;
-        this.blockHash = blockHash;
         this.burningmanDataList = burningmanDataList;
 
         verify();
@@ -99,7 +94,6 @@ public final class AuthorizedBurningmanListByBlock implements AuthorizedDistribu
                 .setVersion(version)
                 .setStaticPublicKeysProvided(staticPublicKeysProvided)
                 .setBlockHeight(blockHeight)
-                .setBlockHash(ByteString.copyFrom(blockHash))
                 .addAllBurningmanData(burningmanDataList.stream().map(e -> e.toProto(serializeForHash)).toList());
     }
 
@@ -113,7 +107,6 @@ public final class AuthorizedBurningmanListByBlock implements AuthorizedDistribu
                 proto.getVersion(),
                 proto.getStaticPublicKeysProvided(),
                 proto.getBlockHeight(),
-                proto.getBlockHash().toByteArray(),
                 proto.getBurningmanDataList().stream().map(BurningmanData::fromProto).toList());
     }
 

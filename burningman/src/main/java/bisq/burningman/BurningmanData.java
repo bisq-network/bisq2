@@ -34,7 +34,7 @@ public final class BurningmanData implements NetworkProto {
     private final double cappedBurnAmountShare;
 
     public BurningmanData(String receiverAddress,
-                                           double cappedBurnAmountShare
+                          double cappedBurnAmountShare
     ) {
         this.receiverAddress = receiverAddress;
         this.cappedBurnAmountShare = cappedBurnAmountShare;

@@ -18,7 +18,6 @@
 package bisq.oracle_node.bisq1_bridge.grpc.dto;
 
 import bisq.common.proto.NetworkProto;
-import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,24 +27,17 @@ import java.util.List;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class BlockDto implements NetworkProto {
+public final class BsqBlockDto implements NetworkProto {
     private final int height;
-    private final byte[] hash;
     private final long time;
     private final List<TxDto> txDtoList;
-    private final List<BurningManDto> burningManDtoList;
 
-    public BlockDto(int height,
-                    byte[] hash,
-                    long time,
-                    List<TxDto> txDtoList,
-                    List<BurningManDto> burningManDtoList
-    ) {
+    public BsqBlockDto(int height,
+                       long time,
+                       List<TxDto> txDtoList) {
         this.height = height;
-        this.hash = hash;
         this.time = time;
         this.txDtoList = txDtoList;
-        this.burningManDtoList = burningManDtoList;
     }
 
     @Override
@@ -54,26 +46,22 @@ public class BlockDto implements NetworkProto {
     }
 
     @Override
-    public bisq.oracle_node.bisq1_bridge.protobuf.BlockDto.Builder getBuilder(boolean serializeForHash) {
-        return bisq.oracle_node.bisq1_bridge.protobuf.BlockDto.newBuilder()
+    public bisq.bridge.protobuf.BsqBlockDto.Builder getBuilder(boolean serializeForHash) {
+        return bisq.bridge.protobuf.BsqBlockDto.newBuilder()
                 .setHeight(height)
-                .setHash(ByteString.copyFrom(hash))
                 .setTime(time)
-                .addAllTxDto(txDtoList.stream().map(e -> e.toProto(serializeForHash)).toList())
-                .addAllBurningManDto(burningManDtoList.stream().map(e -> e.toProto(serializeForHash)).toList());
+                .addAllTxDto(txDtoList.stream().map(e -> e.toProto(serializeForHash)).toList());
     }
 
     @Override
-    public bisq.oracle_node.bisq1_bridge.protobuf.BlockDto toProto(boolean serializeForHash) {
+    public bisq.bridge.protobuf.BsqBlockDto toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
 
-    public static BlockDto fromProto(bisq.oracle_node.bisq1_bridge.protobuf.BlockDto proto) {
-        return new BlockDto(proto.getHeight(),
-                proto.getHash().toByteArray(),
+    public static BsqBlockDto fromProto(bisq.bridge.protobuf.BsqBlockDto proto) {
+        return new BsqBlockDto(proto.getHeight(),
                 proto.getTime(),
-                proto.getTxDtoList().stream().map(TxDto::fromProto).toList(),
-                proto.getBurningManDtoList().stream().map(BurningManDto::fromProto).toList()
+                proto.getTxDtoList().stream().map(TxDto::fromProto).toList()
         );
     }
 }

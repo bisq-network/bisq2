@@ -17,7 +17,11 @@
 
 package bisq.oracle_node.bisq1_bridge.grpc;
 
-import bisq.oracle_node.bisq1_bridge.protobuf.*;
+import bisq.bridge.protobuf.AccountAgeWitnessGrpcServiceGrpc;
+import bisq.bridge.protobuf.BondedRoleGrpcServiceGrpc;
+import bisq.bridge.protobuf.BsqBlockGrpcServiceGrpc;
+import bisq.bridge.protobuf.BurningmanGrpcServiceGrpc;
+import bisq.bridge.protobuf.SignedWitnessGrpcServiceGrpc;
 import bisq.common.application.Service;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
@@ -26,16 +30,24 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class GrpcClient implements Service {
     private final String host;
     private final int port;
     private ManagedChannel managedChannel;
+
     @Getter
-    private Bisq1BridgeServiceGrpc.Bisq1BridgeServiceBlockingStub blockingStub;
+    private BsqBlockGrpcServiceGrpc.BsqBlockGrpcServiceStub bsqBlockGrpcService;
     @Getter
-    private Bisq1BridgeServiceGrpc.Bisq1BridgeServiceStub asyncStub;
+    private BurningmanGrpcServiceGrpc.BurningmanGrpcServiceStub burningmanGrpcService;
+    @Getter
+    private AccountAgeWitnessGrpcServiceGrpc.AccountAgeWitnessGrpcServiceBlockingStub accountAgeWitnessGrpcService;
+    @Getter
+    private SignedWitnessGrpcServiceGrpc.SignedWitnessGrpcServiceBlockingStub signedWitnessGrpcService;
+    @Getter
+    private BondedRoleGrpcServiceGrpc.BondedRoleGrpcServiceBlockingStub bondedRoleGrpcService;
 
     public GrpcClient(int port) {
         this("localhost", port);
@@ -53,14 +65,18 @@ public class GrpcClient implements Service {
 
     public CompletableFuture<Boolean> initialize() {
         managedChannel = Grpc.newChannelBuilderForAddress(
-                host,
-                port,
-                InsecureChannelCredentials.create()
-        ).build();
+                        host,
+                        port,
+                        InsecureChannelCredentials.create())
+                .enableRetry()
+                .build();
 
         try {
-            blockingStub = Bisq1BridgeServiceGrpc.newBlockingStub(managedChannel);
-            asyncStub = Bisq1BridgeServiceGrpc.newStub(managedChannel);
+            bsqBlockGrpcService = BsqBlockGrpcServiceGrpc.newStub(managedChannel);
+            burningmanGrpcService = BurningmanGrpcServiceGrpc.newStub(managedChannel);
+            accountAgeWitnessGrpcService = AccountAgeWitnessGrpcServiceGrpc.newBlockingStub(managedChannel);
+            signedWitnessGrpcService = SignedWitnessGrpcServiceGrpc.newBlockingStub(managedChannel);
+            bondedRoleGrpcService = BondedRoleGrpcServiceGrpc.newBlockingStub(managedChannel);
         } catch (Exception e) {
             log.error("Initializing grpc client failed", e);
             dispose();
@@ -79,9 +95,20 @@ public class GrpcClient implements Service {
     private void dispose() {
         if (managedChannel != null) {
             managedChannel.shutdown();
+            try {
+                if (!managedChannel.awaitTermination(500, TimeUnit.MILLISECONDS)) {
+                    managedChannel.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                managedChannel.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
             managedChannel = null;
         }
-        blockingStub = null;
-        asyncStub = null;
+        bsqBlockGrpcService = null;
+        burningmanGrpcService = null;
+        accountAgeWitnessGrpcService = null;
+        signedWitnessGrpcService = null;
+        bondedRoleGrpcService = null;
     }
 }

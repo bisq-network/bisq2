@@ -18,43 +18,39 @@
 package bisq.oracle_node.bisq1_bridge.grpc.dto;
 
 import bisq.common.proto.NetworkProto;
-import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.List;
+
 @Getter
 @EqualsAndHashCode
 @ToString
-public final class ProofOfBurnDto implements NetworkProto {
-    private final long amount;
-    private final byte[] proofOfBurnHash;
+public final class BurningmanBlocks implements NetworkProto {
+    private final List<BurningmanBlockDto> blocks;
 
-    public ProofOfBurnDto(long amount, byte[] proofOfBurnHash) {
-        this.amount = amount;
-        this.proofOfBurnHash = proofOfBurnHash;
+    public BurningmanBlocks(List<BurningmanBlockDto> blocks) {
+        this.blocks = blocks;
     }
 
     @Override
     public void verify() {
-        //   NetworkDataValidation.validateDate(timestamp);
+        //   NetworkDtoValidation.validateDate(timestamp);
     }
 
     @Override
-    public bisq.bridge.protobuf.ProofOfBurnDto.Builder getBuilder(boolean serializeForHash) {
-        return bisq.bridge.protobuf.ProofOfBurnDto.newBuilder()
-                .setAmount(amount)
-                .setProofOfBurnHash(ByteString.copyFrom(proofOfBurnHash));
+    public bisq.bridge.protobuf.BurningmanBlocks.Builder getBuilder(boolean serializeForHash) {
+        return bisq.bridge.protobuf.BurningmanBlocks.newBuilder()
+                .addAllBurningmanBlocks(blocks.stream().map(e -> e.toProto(serializeForHash)).toList());
     }
 
     @Override
-    public bisq.bridge.protobuf.ProofOfBurnDto toProto(boolean serializeForHash) {
+    public bisq.bridge.protobuf.BurningmanBlocks toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
 
-    public static ProofOfBurnDto fromProto(bisq.bridge.protobuf.ProofOfBurnDto proto) {
-        return new ProofOfBurnDto(proto.getAmount(),
-                proto.getProofOfBurnHash().toByteArray()
-        );
+    public static BurningmanBlocks fromProto(bisq.bridge.protobuf.BurningmanBlocks proto) {
+        return new BurningmanBlocks(proto.getBurningmanBlocksList().stream().map(BurningmanBlockDto::fromProto).toList());
     }
 }

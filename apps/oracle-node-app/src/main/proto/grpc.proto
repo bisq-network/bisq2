@@ -17,35 +17,42 @@
 
 syntax = "proto3";
 
-package oracle_node.bisq1_bridge;
+package bisq.bridge.protobuf;
+option java_package = "bisq.bridge.protobuf";
 
-option java_package = "bisq.oracle_node.bisq1_bridge.protobuf";
 option java_multiple_files = true;
 
-service Bisq1BridgeService {
-  rpc SubscribeBlockUpdate (BlockSubscription) returns (stream BlockDto);
+service BsqBlockGrpcService {
+  rpc Subscribe (BsqBlockSubscription) returns (stream BsqBlocks);
+
+  rpc RequestBsqBlock (BsqBlockRequest) returns (BsqBlockResponse);
 }
 
-message BlockSubscription {
+message BsqBlockSubscription {
+  sint32 startBlockHeight = 1;
 }
 
-message BlockDto {
+message BsqBlockRequest {
+  sint32 blockHeight = 1;
+}
+
+message BsqBlockResponse {
+  BsqBlockDto bsqBlocks = 1;
+}
+
+message BsqBlocks {
+  repeated BsqBlockDto bsqBlocks = 1;
+}
+message BsqBlockDto {
   sint32 height = 1;
-  bytes hash = 2;
-  sint64 time = 3;
-  repeated TxDto txDto = 4;
-  repeated BurningManDto burningManDto = 5;
+  sint64 time = 2;
+  repeated TxDto txDto = 3;
 }
 
 message TxDto {
   string txId = 1;
   optional ProofOfBurnDto proofOfBurnDto = 2;
   optional BondedReputationDto bondedReputationDto = 3;
-}
-
-message BurningManDto {
-  string receiverAddress = 1;
-  double cappedBurnAmountShare = 2;
 }
 
 message ProofOfBurnDto {
@@ -57,4 +64,62 @@ message BondedReputationDto {
   sint64 amount = 1;
   bytes bondedReputationHash = 2;
   sint32 lockTime = 3;
+}
+
+service BurningmanGrpcService {
+  rpc Subscribe (BurningmanBlockSubscription) returns (stream BurningmanBlocks);
+}
+
+message BurningmanBlockSubscription {
+}
+
+message BurningmanBlocks {
+  repeated BurningmanBlockDto burningmanBlocks = 1;
+}
+
+message BurningmanBlockDto {
+  sint32 height = 1;
+  repeated BurningmanDto burningmanItems = 2;
+}
+
+message BurningmanDto {
+  string receiverAddress = 1;
+  double cappedBurnAmountShare = 2;
+}
+
+service AccountAgeWitnessGrpcService {
+  rpc RequestAccountAgeWitnessDate (AccountAgeWitnessDateRequest) returns (AccountAgeWitnessDateResponse);
+}
+
+message AccountAgeWitnessDateRequest {
+  string hashAsHex = 1;
+}
+message AccountAgeWitnessDateResponse {
+  sint64 date = 1;
+}
+
+
+service SignedWitnessGrpcService {
+  rpc RequestSignedWitnessDate (SignedWitnessDateRequest) returns (SignedWitnessDateResponse);
+}
+
+message SignedWitnessDateRequest {
+  string hashAsHex = 1;
+}
+message SignedWitnessDateResponse {
+  sint64 date = 1;
+}
+
+
+service BondedRoleGrpcService {
+  rpc RequestBondedRoleVerification (BondedRoleVerificationRequest) returns (BondedRoleVerificationResponse);
+}
+message BondedRoleVerificationRequest {
+  string bondUserName = 1;
+  string roleType = 2;
+  string profileId = 3;
+  string signatureBase64 = 4;
+}
+message BondedRoleVerificationResponse {
+  optional string errorMessage = 1;
 }

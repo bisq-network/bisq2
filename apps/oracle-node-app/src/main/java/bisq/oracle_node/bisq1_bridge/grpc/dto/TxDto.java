@@ -28,7 +28,7 @@ import java.util.Optional;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class TxDto implements NetworkProto {
+public final class TxDto implements NetworkProto {
     private final String txId;
     private final Optional<ProofOfBurnDto> proofOfBurnDto;
     private final Optional<BondedReputationDto> bondedReputationDto;
@@ -47,8 +47,8 @@ public class TxDto implements NetworkProto {
     }
 
     @Override
-    public bisq.oracle_node.bisq1_bridge.protobuf.TxDto.Builder getBuilder(boolean serializeForHash) {
-        bisq.oracle_node.bisq1_bridge.protobuf.TxDto.Builder builder = bisq.oracle_node.bisq1_bridge.protobuf.TxDto.newBuilder()
+    public bisq.bridge.protobuf.TxDto.Builder getBuilder(boolean serializeForHash) {
+        bisq.bridge.protobuf.TxDto.Builder builder = bisq.bridge.protobuf.TxDto.newBuilder()
                 .setTxId(txId);
         proofOfBurnDto.ifPresent(e -> builder
                 .setProofOfBurnDto(e.toProto(serializeForHash)));
@@ -58,11 +58,11 @@ public class TxDto implements NetworkProto {
     }
 
     @Override
-    public bisq.oracle_node.bisq1_bridge.protobuf.TxDto toProto(boolean serializeForHash) {
+    public bisq.bridge.protobuf.TxDto toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
 
-    public static TxDto fromProto(bisq.oracle_node.bisq1_bridge.protobuf.TxDto proto) {
+    public static TxDto fromProto(bisq.bridge.protobuf.TxDto proto) {
         return new TxDto(proto.getTxId(),
                 OptionalUtils.optionalIf(proto.hasProofOfBurnDto(), () -> ProofOfBurnDto.fromProto(proto.getProofOfBurnDto())),
                 OptionalUtils.optionalIf(proto.hasBondedReputationDto(), () -> BondedReputationDto.fromProto(proto.getBondedReputationDto()))

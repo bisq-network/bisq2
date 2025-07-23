@@ -10,6 +10,12 @@ message TimestampStore {
   repeated common.StringLongPair stringLongPairs = 1;
 }
 
+message Bisq1BridgeRequestStore {
+  repeated user.AuthorizeAccountAgeRequest accountAgeRequests = 1;
+  repeated user.AuthorizeSignedWitnessRequest signedWitnessRequests = 2;
+}
+
+// Deprecated
 message Bisq1BridgeStore {
   repeated user.AuthorizeAccountAgeRequest accountAgeRequests = 1;
   repeated user.AuthorizeSignedWitnessRequest signedWitnessRequests = 2;

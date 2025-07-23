@@ -30,6 +30,5 @@ message AuthorizedBurningmanListByBlock {
   sint32 version = 1;
   bool staticPublicKeysProvided = 2;
   sint32 blockHeight = 3;
-  bytes blockHash = 4;
-  repeated BurningmanData burningmanData = 5;
+  repeated BurningmanData burningmanData = 4;
 }

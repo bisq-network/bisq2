@@ -26,7 +26,7 @@ import lombok.ToString;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class BondedReputationDto implements NetworkProto {
+public final class BondedReputationDto implements NetworkProto {
     private final long amount;
     private final byte[] bondedReputationHash;
     private final int lockTime;
@@ -41,19 +41,19 @@ public class BondedReputationDto implements NetworkProto {
     }
 
     @Override
-    public bisq.oracle_node.bisq1_bridge.protobuf.BondedReputationDto.Builder getBuilder(boolean serializeForHash) {
-        return bisq.oracle_node.bisq1_bridge.protobuf.BondedReputationDto.newBuilder()
+    public bisq.bridge.protobuf.BondedReputationDto.Builder getBuilder(boolean serializeForHash) {
+        return bisq.bridge.protobuf.BondedReputationDto.newBuilder()
                 .setAmount(amount)
                 .setBondedReputationHash(ByteString.copyFrom(bondedReputationHash))
                 .setLockTime(lockTime);
     }
 
     @Override
-    public bisq.oracle_node.bisq1_bridge.protobuf.BondedReputationDto toProto(boolean serializeForHash) {
+    public bisq.bridge.protobuf.BondedReputationDto toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
 
-    public static BondedReputationDto fromProto(bisq.oracle_node.bisq1_bridge.protobuf.BondedReputationDto proto) {
+    public static BondedReputationDto fromProto(bisq.bridge.protobuf.BondedReputationDto proto) {
         return new BondedReputationDto(proto.getAmount(),
                 proto.getBondedReputationHash().toByteArray(),
                 proto.getLockTime());

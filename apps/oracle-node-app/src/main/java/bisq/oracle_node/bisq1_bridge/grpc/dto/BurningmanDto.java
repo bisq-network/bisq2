@@ -25,11 +25,11 @@ import lombok.ToString;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class BurningManDto implements NetworkProto {
+public final class BurningmanDto implements NetworkProto {
     private final String receiverAddress;
     private final double cappedBurnAmountShare;
 
-    public BurningManDto(String receiverAddress,
+    public BurningmanDto(String receiverAddress,
                          double cappedBurnAmountShare) {
         this.receiverAddress = receiverAddress;
         this.cappedBurnAmountShare = cappedBurnAmountShare;
@@ -41,19 +41,19 @@ public class BurningManDto implements NetworkProto {
     }
 
     @Override
-    public bisq.oracle_node.bisq1_bridge.protobuf.BurningManDto.Builder getBuilder(boolean serializeForHash) {
-        return bisq.oracle_node.bisq1_bridge.protobuf.BurningManDto.newBuilder()
+    public bisq.bridge.protobuf.BurningmanDto.Builder getBuilder(boolean serializeForHash) {
+        return bisq.bridge.protobuf.BurningmanDto.newBuilder()
                 .setReceiverAddress(receiverAddress)
                 .setCappedBurnAmountShare(cappedBurnAmountShare);
     }
 
     @Override
-    public bisq.oracle_node.bisq1_bridge.protobuf.BurningManDto toProto(boolean serializeForHash) {
+    public bisq.bridge.protobuf.BurningmanDto toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
 
-    public static BurningManDto fromProto(bisq.oracle_node.bisq1_bridge.protobuf.BurningManDto proto) {
-        return new BurningManDto(proto.getReceiverAddress(),
+    public static BurningmanDto fromProto(bisq.bridge.protobuf.BurningmanDto proto) {
+        return new BurningmanDto(proto.getReceiverAddress(),
                 proto.getCappedBurnAmountShare());
     }
 }

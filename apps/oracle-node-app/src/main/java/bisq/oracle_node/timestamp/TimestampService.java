@@ -21,6 +21,7 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.identity.Identity;
+import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -33,7 +34,6 @@ import bisq.persistence.PersistenceService;
 import bisq.user.reputation.data.AuthorizedTimestampData;
 import bisq.user.reputation.requests.AuthorizeTimestampRequest;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.PrivateKey;
@@ -49,19 +49,20 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     @Getter
     private final Persistence<TimestampStore> persistence;
     private final boolean staticPublicKeysProvided;
+    private final IdentityService identityService;
     private final NetworkService networkService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
-    @Setter
-    private Identity identity;
 
     public TimestampService(PersistenceService persistenceService,
+                            IdentityService identityService,
                             NetworkService networkService,
                             AuthorizedBondedRolesService authorizedBondedRolesService,
                             PrivateKey authorizedPrivateKey,
                             PublicKey authorizedPublicKey,
                             boolean staticPublicKeysProvided) {
+        this.identityService = identityService;
         this.networkService = networkService;
         this.authorizedBondedRolesService = authorizedBondedRolesService;
         this.authorizedPrivateKey = authorizedPrivateKey;
@@ -157,6 +158,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     }
 
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
+        Identity identity = identityService.getOrCreateDefaultIdentity();
         return networkService.publishAuthorizedData(data,
                         identity.getNetworkIdWithKeyPair().getKeyPair(),
                         authorizedPrivateKey,

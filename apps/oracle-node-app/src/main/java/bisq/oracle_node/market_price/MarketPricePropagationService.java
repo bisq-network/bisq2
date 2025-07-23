@@ -7,9 +7,9 @@ import bisq.common.application.Service;
 import bisq.common.market.Market;
 import bisq.common.observable.Pin;
 import bisq.identity.Identity;
+import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -20,26 +20,29 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class MarketPricePropagationService implements Service {
+    private final IdentityService identityService;
     private final NetworkService networkService;
     private final MarketPriceRequestService marketPriceRequestService;
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
     private final boolean staticPublicKeysProvided;
-    @Setter
-    private Identity identity;
     @Nullable
     private Pin marketPriceByCurrencyMapPin;
 
-    public MarketPricePropagationService(NetworkService networkService,
+    public MarketPricePropagationService(IdentityService identityService,
+                                         NetworkService networkService,
                                          MarketPriceRequestService marketPriceRequestService,
                                          PrivateKey authorizedPrivateKey,
                                          PublicKey authorizedPublicKey,
                                          boolean staticPublicKeysProvided) {
+        this.identityService = identityService;
         this.networkService = networkService;
         this.marketPriceRequestService = marketPriceRequestService;
         this.authorizedPrivateKey = authorizedPrivateKey;
         this.authorizedPublicKey = authorizedPublicKey;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
+
+        
     }
 
     @Override
@@ -71,6 +74,7 @@ public class MarketPricePropagationService implements Service {
     /* --------------------------------------------------------------------- */
 
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
+        Identity identity = identityService.getOrCreateDefaultIdentity();
         return networkService.publishAuthorizedData(data,
                         identity.getNetworkIdWithKeyPair().getKeyPair(),
                         authorizedPrivateKey,

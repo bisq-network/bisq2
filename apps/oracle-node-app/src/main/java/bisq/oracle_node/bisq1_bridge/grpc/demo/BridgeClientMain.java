@@ -17,20 +17,20 @@
 
 package bisq.oracle_node.bisq1_bridge.grpc.demo;
 
-import bisq.oracle_node.bisq1_bridge.grpc.Bisq1BridgeGrpcClientService;
-import io.grpc.Server;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class Bisq1BridgeGrpcClientDemoApp {
-    private Server server;
-
+public class BridgeClientMain {
     public static void main(String[] args) throws InterruptedException {
-        Bisq1BridgeGrpcClientService.Config config = new Bisq1BridgeGrpcClientService.Config(50051);
-        Bisq1BridgeGrpcClientService bisq1BridgeGrpcClient = new Bisq1BridgeGrpcClientService(config);
-        bisq1BridgeGrpcClient.initialize().join();
-        bisq1BridgeGrpcClient.subscribeBlockUpdate();
+        try {
+            GrpcClient grpcClient = new GrpcClient(50051);
+            BridgeClient bridgeClient = new BridgeClient(grpcClient);
+            bridgeClient.initialize();
 
-        Thread.currentThread().join();
+            // Prevent from terminating
+            Thread.currentThread().join();
+        } catch (Exception e) {
+            log.error("Failed to run BridgeClient", e);
+        }
     }
 }

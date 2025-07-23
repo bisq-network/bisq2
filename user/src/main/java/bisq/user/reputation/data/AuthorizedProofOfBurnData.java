@@ -117,10 +117,13 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
 
     @Override
     public bisq.user.protobuf.AuthorizedProofOfBurnData toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        bisq.user.protobuf.AuthorizedProofOfBurnData authorizedProofOfBurnData = resolveProto(serializeForHash);
+        log.error("AuthorizedProofOfBurnData toProto size {}",authorizedProofOfBurnData.getSerializedSize());
+        return authorizedProofOfBurnData;
     }
 
     public static AuthorizedProofOfBurnData fromProto(bisq.user.protobuf.AuthorizedProofOfBurnData proto) {
+        log.error("AuthorizedProofOfBurnData fromProto size {}",proto.getSerializedSize());
         return new AuthorizedProofOfBurnData(
                 proto.getVersion(),
                 proto.getBlockTime(),
