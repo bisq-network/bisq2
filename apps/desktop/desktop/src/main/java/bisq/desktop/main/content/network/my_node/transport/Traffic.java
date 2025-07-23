@@ -78,15 +78,15 @@ public class Traffic {
                     .ifPresent(networkLoadService -> {
                         NetworkLoad networkLoad = networkLoadService.updateNetworkLoad();
 
-                        model.setDataSent(DataSizeFormatter.formatMB(networkLoadService.getSentBytesOfLastHour()));
-                        model.setTimeSpentSending(TimeFormatter.formatDuration(networkLoadService.getSpentSendMessageTimeOfLastHour()));
-                        model.setNumMessagesSent(String.valueOf(networkLoadService.getNumMessagesSentOfLastHour()));
+                        model.setDataSent(DataSizeFormatter.formatMB(networkLoadService.getSentBytesOfLast5Minutes()));
+                        model.setTimeSpentSending(TimeFormatter.formatDuration(networkLoadService.getSpentSendMessageTimeOfLast5Minutes()));
+                        model.setNumMessagesSent(String.valueOf(networkLoadService.getNumMessagesSentOfLast5Minutes()));
                         model.setSentMessagesDetails(getNumMessagesByClassName(networkLoadService.getNumSentMessagesByClassName()));
                         model.setSentDistributedDataDetails(getNumMessagesByClassName(networkLoadService.getNumSentDistributedDataByClassName()));
 
-                        model.setDataReceived(DataSizeFormatter.formatMB(networkLoadService.getReceivedBytesOfLastHour()));
-                        model.setTimeSpentDeserializing(TimeFormatter.formatDuration(networkLoadService.getDeserializeTimeOfLastHour()));
-                        model.setNumMessagesReceived(String.valueOf(networkLoadService.getNumMessagesReceivedOfLastHour()));
+                        model.setDataReceived(DataSizeFormatter.formatMB(networkLoadService.getReceivedBytesOfLast5Minutes()));
+                        model.setTimeSpentDeserializing(TimeFormatter.formatDuration(networkLoadService.getDeserializeTimeOfLast5Minutes()));
+                        model.setNumMessagesReceived(String.valueOf(networkLoadService.getNumMessagesReceivedOfLast5Minutes()));
                         model.setReceivedMessagesDetails(getNumMessagesByClassName(networkLoadService.getNumReceivedMessagesByClassName()));
                         model.setReceivedDistributedDataDetails(getNumMessagesByClassName(networkLoadService.getNumReceivedDistributedDataByClassName()));
                     });

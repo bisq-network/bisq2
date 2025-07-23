@@ -145,6 +145,32 @@ public class ConnectionMetrics {
         return sumOf(deserializeTimePerMinute);
     }
 
+
+    public long getNumMessagesSentOfLast5Minutes() {
+        return getNumMessagesSentOfLastMinutes(5);
+    }
+
+    public long getSentBytesOfLast5Minutes() {
+        return getSentBytesOfLastMinutes(5);
+    }
+
+    public long getSpentSendMessageTimeOfLast5Minutes() {
+        return getSpentSendMessageTimeOfLastMinutes(5);
+    }
+
+    public long getReceivedBytesOfLast5Minutes() {
+        return getReceivedBytesOfLastMinutes(5);
+    }
+
+    public long getDeserializeTimeOfLast5Minutes() {
+        return getDeserializeTimeOfLastMinutes(5);
+    }
+
+    public long getNumMessagesReceivedOfLast5Minutes() {
+        return getNumMessagesReceivedOfLastMinutes(5);
+    }
+
+
     public long getNumMessagesSentOfLastHour() {
         return getNumMessagesSentOfLastMinutes(60);
     }
