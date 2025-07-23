@@ -1,0 +1,35 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+syntax = "proto3";
+
+package burningman;
+option java_package = "bisq.burningman.protobuf";
+option java_multiple_files = true;
+
+message BurningmanData {
+  string receiverAddress = 1;
+  double cappedBurnAmountShare = 2;
+}
+
+message AuthorizedBurningmanListByBlock {
+  sint32 version = 1;
+  bool staticPublicKeysProvided = 2;
+  sint32 blockHeight = 3;
+  bytes blockHash = 4;
+  repeated BurningmanData burningmanData = 5;
+}

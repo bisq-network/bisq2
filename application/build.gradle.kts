@@ -13,6 +13,7 @@ dependencies {
     implementation(project(":bonded-roles"))
     implementation(project(":offer"))
     implementation(project(":trade"))
+    implementation(project(":burningman"))
 
     implementation("network:network:$version")
 

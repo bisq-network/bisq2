@@ -44,6 +44,7 @@ dependencies {
     implementation("bisq:trade")
     implementation("bisq:bonded-roles")
     implementation("bisq:settings")
+    implementation("bisq:burningman")
     implementation("bisq:user")
     implementation("bisq:chat")
     implementation("bisq:support")
