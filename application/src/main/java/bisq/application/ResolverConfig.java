@@ -25,6 +25,7 @@ import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.AuthorizedDifficultyAdjustmentData;
 import bisq.bonded_roles.security_manager.min_reputation_score.AuthorizedMinRequiredReputationScoreData;
+import bisq.burningman.AuthorizedBurningmanListByBlock;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
@@ -101,6 +102,7 @@ public class ResolverConfig {
         DistributedDataResolver.addResolver("user.AuthorizedTimestampData", AuthorizedTimestampData.getResolver());
         DistributedDataResolver.addResolver("user.BannedUserProfileData", BannedUserProfileData.getResolver());
         DistributedDataResolver.addResolver("offer.MuSigOfferMessage", MuSigOfferMessage.getResolver());
+        DistributedDataResolver.addResolver("burningman.AuthorizedBurningmanListByBlock", AuthorizedBurningmanListByBlock.getResolver());
 
         // Register resolvers for networkMessages 
         // Abstract classes
