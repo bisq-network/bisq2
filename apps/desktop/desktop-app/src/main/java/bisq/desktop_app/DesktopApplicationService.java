@@ -23,6 +23,7 @@ import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
+import bisq.burningman.BurningmanService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
@@ -109,6 +110,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     private final HttpApiService httpApiService;
     private final OpenTradeItemsService openTradeItemsService;
     private final MuSigService muSigService;
+    private final BurningmanService burningmanService;
 
     public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
         super("desktop", args);
@@ -161,6 +163,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
 
         settingsService = new SettingsService(persistenceService);
 
+        burningmanService = new BurningmanService(bondedRolesService.getAuthorizedBondedRolesService());
+
         systemNotificationService = new SystemNotificationService(findSystemNotificationDelegate());
 
         offerService = new OfferService(networkService, identityService, persistenceService);
@@ -180,7 +184,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
 
         TradeService.Config tradeConfig = TradeService.Config.from(getConfig("trade"));
         tradeService = new TradeService(tradeConfig, networkService, identityService, persistenceService, offerService,
-                contractService, supportService, chatService, bondedRolesService, userService, settingsService, accountService);
+                contractService, supportService, chatService, bondedRolesService, userService, settingsService,
+                accountService, burningmanService);
 
         updaterService = new UpdaterService(getConfig(),
                 settingsService,
@@ -305,6 +310,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> contractService.initialize())
                 .thenCompose(result -> userService.initialize())
                 .thenCompose(result -> settingsService.initialize())
+                .thenCompose(result -> burningmanService.initialize())
                 .thenCompose(result -> offerService.initialize())
                 .thenCompose(result -> chatService.initialize())
                 .thenCompose(result -> systemNotificationService.initialize())
@@ -359,6 +365,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> systemNotificationService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> chatService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> offerService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> burningmanService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> settingsService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> userService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> contractService.shutdown().exceptionally(this::logError))
