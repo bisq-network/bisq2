@@ -26,36 +26,35 @@ import lombok.ToString;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class BondedReputationData implements NetworkProto {
+public class ProofOfBurnDto implements NetworkProto {
     private final long amount;
-    private final byte[] bondedReputationHash;
-    private final int lockTime;
+    private final byte[] proofOfBurnHash;
 
-    public BondedReputationData(long amount, byte[] bondedReputationHash, int lockTime) {
+    public ProofOfBurnDto(long amount, byte[] proofOfBurnHash) {
         this.amount = amount;
-        this.bondedReputationHash = bondedReputationHash;
-        this.lockTime = lockTime;
-    }@Override
+        this.proofOfBurnHash = proofOfBurnHash;
+    }
+
+    @Override
     public void verify() {
         //   NetworkDataValidation.validateDate(timestamp);
     }
 
     @Override
-    public bisq.oracle_node.bisq1_bridge.protobuf.BondedReputationData.Builder getBuilder(boolean serializeForHash) {
-        return bisq.oracle_node.bisq1_bridge.protobuf.BondedReputationData.newBuilder()
+    public bisq.oracle_node.bisq1_bridge.protobuf.ProofOfBurnDto.Builder getBuilder(boolean serializeForHash) {
+        return bisq.oracle_node.bisq1_bridge.protobuf.ProofOfBurnDto.newBuilder()
                 .setAmount(amount)
-                .setBondedReputationHash(ByteString.copyFrom(bondedReputationHash))
-                .setLockTime(lockTime);
+                .setProofOfBurnHash(ByteString.copyFrom(proofOfBurnHash));
     }
 
     @Override
-    public bisq.oracle_node.bisq1_bridge.protobuf.BondedReputationData toProto(boolean serializeForHash) {
+    public bisq.oracle_node.bisq1_bridge.protobuf.ProofOfBurnDto toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
 
-    public static BondedReputationData fromProto(bisq.oracle_node.bisq1_bridge.protobuf.BondedReputationData proto) {
-        return new BondedReputationData(proto.getAmount(),
-                proto.getBondedReputationHash().toByteArray(),
-                proto.getLockTime());
+    public static ProofOfBurnDto fromProto(bisq.oracle_node.bisq1_bridge.protobuf.ProofOfBurnDto proto) {
+        return new ProofOfBurnDto(proto.getAmount(),
+                proto.getProofOfBurnHash().toByteArray()
+        );
     }
 }

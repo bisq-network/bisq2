@@ -26,9 +26,10 @@ public class Bisq1BridgeGrpcClientDemoApp {
     private Server server;
 
     public static void main(String[] args) throws InterruptedException {
-        Bisq1BridgeGrpcClientService bisq1BridgeGrpcClient = new Bisq1BridgeGrpcClientService();
+        Bisq1BridgeGrpcClientService.Config config = new Bisq1BridgeGrpcClientService.Config(50051);
+        Bisq1BridgeGrpcClientService bisq1BridgeGrpcClient = new Bisq1BridgeGrpcClientService(config);
         bisq1BridgeGrpcClient.initialize().join();
-        bisq1BridgeGrpcClient.subscribeBlockData();
+        bisq1BridgeGrpcClient.subscribeBlockUpdate();
 
         Thread.currentThread().join();
     }

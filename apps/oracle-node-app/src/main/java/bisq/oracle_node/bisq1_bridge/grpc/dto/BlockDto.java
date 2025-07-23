@@ -28,52 +28,52 @@ import java.util.List;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class BlockData implements NetworkProto {
+public class BlockDto implements NetworkProto {
     private final int height;
     private final byte[] hash;
     private final long time;
-    private final List<TxData> txDataList;
-    private final List<BurningManData> burningManDataList;
+    private final List<TxDto> txDtoList;
+    private final List<BurningManDto> burningManDtoList;
 
-    public BlockData(int height,
-                     byte[] hash,
-                     long time,
-                     List<TxData> txDataList,
-                     List<BurningManData> burningManDataList
+    public BlockDto(int height,
+                    byte[] hash,
+                    long time,
+                    List<TxDto> txDtoList,
+                    List<BurningManDto> burningManDtoList
     ) {
         this.height = height;
         this.hash = hash;
         this.time = time;
-        this.txDataList = txDataList;
-        this.burningManDataList = burningManDataList;
+        this.txDtoList = txDtoList;
+        this.burningManDtoList = burningManDtoList;
     }
 
     @Override
     public void verify() {
-        //   NetworkDataValidation.validateDate(timestamp);
+        //   NetworkDtoValidation.validateDate(timestamp);
     }
 
     @Override
-    public bisq.oracle_node.bisq1_bridge.protobuf.BlockData.Builder getBuilder(boolean serializeForHash) {
-        return bisq.oracle_node.bisq1_bridge.protobuf.BlockData.newBuilder()
+    public bisq.oracle_node.bisq1_bridge.protobuf.BlockDto.Builder getBuilder(boolean serializeForHash) {
+        return bisq.oracle_node.bisq1_bridge.protobuf.BlockDto.newBuilder()
                 .setHeight(height)
                 .setHash(ByteString.copyFrom(hash))
                 .setTime(time)
-                .addAllTxData(txDataList.stream().map(e -> e.toProto(serializeForHash)).toList())
-                .addAllBurningManData(burningManDataList.stream().map(e -> e.toProto(serializeForHash)).toList());
+                .addAllTxDto(txDtoList.stream().map(e -> e.toProto(serializeForHash)).toList())
+                .addAllBurningManDto(burningManDtoList.stream().map(e -> e.toProto(serializeForHash)).toList());
     }
 
     @Override
-    public bisq.oracle_node.bisq1_bridge.protobuf.BlockData toProto(boolean serializeForHash) {
+    public bisq.oracle_node.bisq1_bridge.protobuf.BlockDto toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
 
-    public static BlockData fromProto(bisq.oracle_node.bisq1_bridge.protobuf.BlockData proto) {
-        return new BlockData(proto.getHeight(),
+    public static BlockDto fromProto(bisq.oracle_node.bisq1_bridge.protobuf.BlockDto proto) {
+        return new BlockDto(proto.getHeight(),
                 proto.getHash().toByteArray(),
                 proto.getTime(),
-                proto.getTxDataList().stream().map(TxData::fromProto).toList(),
-                proto.getBurningManDataList().stream().map(BurningManData::fromProto).toList()
+                proto.getTxDtoList().stream().map(TxDto::fromProto).toList(),
+                proto.getBurningManDtoList().stream().map(BurningManDto::fromProto).toList()
         );
     }
 }

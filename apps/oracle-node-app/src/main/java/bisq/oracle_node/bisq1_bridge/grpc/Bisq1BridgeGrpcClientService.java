@@ -18,19 +18,38 @@
 package bisq.oracle_node.bisq1_bridge.grpc;
 
 import bisq.common.application.Service;
-import bisq.oracle_node.bisq1_bridge.grpc.dto.BlockData;
-import bisq.oracle_node.bisq1_bridge.protobuf.BlockDataSubscription;
+import bisq.common.observable.collection.ObservableArray;
+import bisq.oracle_node.bisq1_bridge.grpc.dto.BlockDto;
+import bisq.oracle_node.bisq1_bridge.protobuf.BlockSubscription;
 import io.grpc.stub.StreamObserver;
+import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class Bisq1BridgeGrpcClientService implements Service {
-    private final GrpcClient grpcClient;
+    @Getter
+    @ToString
+    public static final class Config {
+        private final int port;
 
-    public Bisq1BridgeGrpcClientService() {
-        grpcClient = new GrpcClient(50051);
+        public Config(int port) {
+            this.port = port;
+        }
+
+        public static Config from(com.typesafe.config.Config config) {
+            return new Config(config.getInt("port"));
+        }
+    }
+
+    private final GrpcClient grpcClient;
+    @Getter
+    private final ObservableArray<BlockDto> blockDtoList = new ObservableArray<>();
+
+    public Bisq1BridgeGrpcClientService(Config config) {
+        grpcClient = new GrpcClient(config.getPort());
     }
 
     /* --------------------------------------------------------------------- */
@@ -47,24 +66,25 @@ public class Bisq1BridgeGrpcClientService implements Service {
         return grpcClient.shutdown();
     }
 
-    public void subscribeBlockData() {
-        var subscription = BlockDataSubscription.newBuilder()
+    public void subscribeBlockUpdate() {
+        var subscription = BlockSubscription.newBuilder()
                 .build();
-        grpcClient.getAsyncStub().subscribeBlockData(subscription, new StreamObserver<>() {
+        grpcClient.getAsyncStub().subscribeBlockUpdate(subscription, new StreamObserver<>() {
             @Override
-            public void onNext(bisq.oracle_node.bisq1_bridge.protobuf.BlockData proto) {
-                BlockData blockData = BlockData.fromProto(proto);
-                log.info("Received blockData: {}", blockData);
+            public void onNext(bisq.oracle_node.bisq1_bridge.protobuf.BlockDto proto) {
+                BlockDto blockDto = BlockDto.fromProto(proto);
+                blockDtoList.add(blockDto);
+                log.info("Received blockDto: {}", blockDto);
             }
 
             @Override
             public void onError(Throwable throwable) {
-                log.error("Error at BlockDataSubscription", throwable);
+                log.error("Error at BlockDtoSubscription", throwable);
             }
 
             @Override
             public void onCompleted() {
-                log.info("BlockDataSubscription completed");
+                log.info("BlockDtoSubscription completed");
             }
         });
     }

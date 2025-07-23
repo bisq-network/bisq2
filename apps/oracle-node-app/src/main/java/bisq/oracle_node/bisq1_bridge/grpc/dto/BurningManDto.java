@@ -18,7 +18,6 @@
 package bisq.oracle_node.bisq1_bridge.grpc.dto;
 
 import bisq.common.proto.NetworkProto;
-import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -26,13 +25,14 @@ import lombok.ToString;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class ProofOfBurnData implements NetworkProto {
-    private final long amount;
-    private final byte[] proofOfBurnHash;
+public class BurningManDto implements NetworkProto {
+    private final String receiverAddress;
+    private final double cappedBurnAmountShare;
 
-    public ProofOfBurnData(long amount, byte[] proofOfBurnHash) {
-        this.amount = amount;
-        this.proofOfBurnHash = proofOfBurnHash;
+    public BurningManDto(String receiverAddress,
+                         double cappedBurnAmountShare) {
+        this.receiverAddress = receiverAddress;
+        this.cappedBurnAmountShare = cappedBurnAmountShare;
     }
 
     @Override
@@ -41,20 +41,19 @@ public class ProofOfBurnData implements NetworkProto {
     }
 
     @Override
-    public bisq.oracle_node.bisq1_bridge.protobuf.ProofOfBurnData.Builder getBuilder(boolean serializeForHash) {
-        return bisq.oracle_node.bisq1_bridge.protobuf.ProofOfBurnData.newBuilder()
-                .setAmount(amount)
-                .setProofOfBurnHash(ByteString.copyFrom(proofOfBurnHash));
+    public bisq.oracle_node.bisq1_bridge.protobuf.BurningManDto.Builder getBuilder(boolean serializeForHash) {
+        return bisq.oracle_node.bisq1_bridge.protobuf.BurningManDto.newBuilder()
+                .setReceiverAddress(receiverAddress)
+                .setCappedBurnAmountShare(cappedBurnAmountShare);
     }
 
     @Override
-    public bisq.oracle_node.bisq1_bridge.protobuf.ProofOfBurnData toProto(boolean serializeForHash) {
+    public bisq.oracle_node.bisq1_bridge.protobuf.BurningManDto toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
 
-    public static ProofOfBurnData fromProto(bisq.oracle_node.bisq1_bridge.protobuf.ProofOfBurnData proto) {
-        return new ProofOfBurnData(proto.getAmount(),
-                proto.getProofOfBurnHash().toByteArray()
-        );
+    public static BurningManDto fromProto(bisq.oracle_node.bisq1_bridge.protobuf.BurningManDto proto) {
+        return new BurningManDto(proto.getReceiverAddress(),
+                proto.getCappedBurnAmountShare());
     }
 }

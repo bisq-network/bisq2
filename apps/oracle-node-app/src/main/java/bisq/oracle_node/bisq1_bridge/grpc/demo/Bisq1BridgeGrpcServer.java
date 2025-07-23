@@ -18,11 +18,11 @@
 package bisq.oracle_node.bisq1_bridge.grpc.demo;
 
 import bisq.common.application.Service;
-import bisq.oracle_node.bisq1_bridge.grpc.dto.BlockData;
-import bisq.oracle_node.bisq1_bridge.grpc.dto.BurningManData;
-import bisq.oracle_node.bisq1_bridge.grpc.dto.TxData;
+import bisq.oracle_node.bisq1_bridge.grpc.dto.BlockDto;
+import bisq.oracle_node.bisq1_bridge.grpc.dto.BurningManDto;
+import bisq.oracle_node.bisq1_bridge.grpc.dto.TxDto;
 import bisq.oracle_node.bisq1_bridge.protobuf.Bisq1BridgeServiceGrpc;
-import bisq.oracle_node.bisq1_bridge.protobuf.BlockDataSubscription;
+import bisq.oracle_node.bisq1_bridge.protobuf.BlockSubscription;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -64,22 +64,22 @@ public class Bisq1BridgeGrpcServer implements Service {
     }
 
     static class Bisq1BridgeServiceGrpcImpl extends Bisq1BridgeServiceGrpc.Bisq1BridgeServiceImplBase {
-        public void subscribeBlockData(BlockDataSubscription subscription,
-                                       StreamObserver<bisq.oracle_node.bisq1_bridge.protobuf.BlockData> streamObserver) {
+        public void subscribeBlockData(BlockSubscription subscription,
+                                       StreamObserver<bisq.oracle_node.bisq1_bridge.protobuf.BlockDto> streamObserver) {
             CompletableFuture.runAsync(() -> {
                 for (int i = 0; i <= 3; i++) {
                     int height = i;
                     byte[] hash = ("" + i).getBytes();
                     long time = i * 10000;
-                    List<TxData> txDataList = new ArrayList<>();
-                    List<BurningManData> burningManDataList = new ArrayList<>();
+                    List<TxDto> txDataList = new ArrayList<>();
+                    List<BurningManDto> burningManDataList = new ArrayList<>();
 
-                    BlockData blockData = new BlockData(height,
+                    BlockDto blockData = new BlockDto(height,
                             hash,
                             time,
                             txDataList,
                             burningManDataList);
-                    bisq.oracle_node.bisq1_bridge.protobuf.BlockData response = blockData.getBuilder(true).build();
+                    bisq.oracle_node.bisq1_bridge.protobuf.BlockDto response = blockData.getBuilder(true).build();
                     log.info(" observers with new block {}", blockData);
                     streamObserver.onNext(response);
                     try {
