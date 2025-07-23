@@ -57,8 +57,8 @@ public class NetworkLoadService {
     private final Object lock = new Object();
 
     @Getter
-    private long sentBytesOfLastHour, spentSendMessageTimeOfLastHour, numMessagesSentOfLastHour,
-            receivedBytesOfLastHour, deserializeTimeOfLastHour, numMessagesReceivedOfLastHour;
+    private long sentBytesOfLast5Minutes, spentSendMessageTimeOfLast5Minutes, numMessagesSentOfLast5Minutes,
+            receivedBytesOfLast5Minutes, deserializeTimeOfLast5Minutes, numMessagesReceivedOfLast5Minutes;
     @Getter
     private TreeMap<String, AtomicLong> numSentMessagesByClassName, numReceivedMessagesByClassName,
             numSentDistributedDataByClassName, numReceivedDistributedDataByClassName;
@@ -109,24 +109,24 @@ public class NetworkLoadService {
     }
 
     private double calculateLoad(Set<ConnectionMetrics> allConnectionMetrics) {
-        // For metrics of last hour we use metrics from the accumulated connections (closed of past hour).
-        sentBytesOfLastHour = allConnectionMetrics.stream()
-                .mapToLong(ConnectionMetrics::getSentBytesOfLastHour)
+        // For metrics of last 5 minutes we use metrics from the accumulated connections (closed of past 5 minutes).
+        sentBytesOfLast5Minutes = allConnectionMetrics.stream()
+                .mapToLong(ConnectionMetrics::getSentBytesOfLast5Minutes)
                 .sum();
-        spentSendMessageTimeOfLastHour = allConnectionMetrics.stream()
-                .mapToLong(ConnectionMetrics::getSpentSendMessageTimeOfLastHour)
+        spentSendMessageTimeOfLast5Minutes = allConnectionMetrics.stream()
+                .mapToLong(ConnectionMetrics::getSpentSendMessageTimeOfLast5Minutes)
                 .sum();
-        numMessagesSentOfLastHour = allConnectionMetrics.stream()
-                .mapToLong(ConnectionMetrics::getNumMessagesSentOfLastHour)
+        numMessagesSentOfLast5Minutes = allConnectionMetrics.stream()
+                .mapToLong(ConnectionMetrics::getNumMessagesSentOfLast5Minutes)
                 .sum();
-        receivedBytesOfLastHour = allConnectionMetrics.stream()
-                .mapToLong(ConnectionMetrics::getReceivedBytesOfLastHour)
+        receivedBytesOfLast5Minutes = allConnectionMetrics.stream()
+                .mapToLong(ConnectionMetrics::getReceivedBytesOfLast5Minutes)
                 .sum();
-        deserializeTimeOfLastHour = allConnectionMetrics.stream()
-                .mapToLong(ConnectionMetrics::getDeserializeTimeOfLastHour)
+        deserializeTimeOfLast5Minutes = allConnectionMetrics.stream()
+                .mapToLong(ConnectionMetrics::getDeserializeTimeOfLast5Minutes)
                 .sum();
-        numMessagesReceivedOfLastHour = allConnectionMetrics.stream()
-                .mapToLong(ConnectionMetrics::getNumMessagesReceivedOfLastHour)
+        numMessagesReceivedOfLast5Minutes = allConnectionMetrics.stream()
+                .mapToLong(ConnectionMetrics::getNumMessagesReceivedOfLast5Minutes)
                 .sum();
 
         numSentMessagesByClassName = new TreeMap<>();
@@ -194,16 +194,16 @@ public class NetworkLoadService {
                 .append("\nNumber of Connections: ").append(numConnections)
 
                 .append("\nSent messages:")
-                .append("\nData sent in last hour: ").append(ByteUnit.BYTE.toMB(sentBytesOfLastHour)).append(" MB")
-                .append("\nTime for message sending in last hour: ").append(spentSendMessageTimeOfLastHour / 1000d).append(" sec.")
-                .append("\nNumber of messages sent in last hour: ").append(numMessagesSentOfLastHour)
+                .append("\nData sent in last 5 min.: ").append(ByteUnit.BYTE.toMB(sentBytesOfLast5Minutes)).append(" MB")
+                .append("\nTime for message sending in last 5 min.: ").append(spentSendMessageTimeOfLast5Minutes / 1000d).append(" sec.")
+                .append("\nNumber of messages sent in last 5 min.: ").append(numMessagesSentOfLast5Minutes)
                 .append("\nNumber of messages sent by class name:").append(numSentMessagesByClassNameBuilder)
                 .append("\nNumber of distributed data sent by class name:").append(numSentDistributedDataByClassNameBuilder)
 
                 .append("\nReceived messages:")
-                .append("\nData received in last hour: ").append(ByteUnit.BYTE.toMB(receivedBytesOfLastHour)).append(" MB")
-                .append("\nTime for message deserializing in last hour: ").append(deserializeTimeOfLastHour / 1000d).append(" sec.")
-                .append("\nNumber of messages received in last hour: ").append(numMessagesReceivedOfLastHour)
+                .append("\nData received in last 5 min.: ").append(ByteUnit.BYTE.toMB(receivedBytesOfLast5Minutes)).append(" MB")
+                .append("\nTime for message deserializing in last 5 min.: ").append(deserializeTimeOfLast5Minutes / 1000d).append(" sec.")
+                .append("\nNumber of messages received in last 5 min.: ").append(numMessagesReceivedOfLast5Minutes)
                 .append("\nNumber of messages received by class name:").append(numReceivedMessagesByClassNameBuilder)
                 .append("\nNumber of distributed data received by class name:").append(numReceivedDistributedDataByClassNameBuilder)
 
@@ -220,29 +220,29 @@ public class NetworkLoadService {
 
         double MAX_SENT_BYTES = ByteUnit.MB.toBytes(20) * numConnectedPeersFactor;
         double SENT_BYTES_WEIGHT = 0.2;
-        double sentBytesImpact = sentBytesOfLastHour / MAX_SENT_BYTES * SENT_BYTES_WEIGHT;
+        double sentBytesImpact = sentBytesOfLast5Minutes / MAX_SENT_BYTES * SENT_BYTES_WEIGHT;
 
         double MAX_SPENT_SEND_TIME = TimeUnit.MINUTES.toMillis(1) * numConnectedPeersFactor;
         double SPENT_SEND_TIME_WEIGHT = 0.1;
-        double spentSendTimeImpact = spentSendMessageTimeOfLastHour / MAX_SPENT_SEND_TIME * SPENT_SEND_TIME_WEIGHT;
+        double spentSendTimeImpact = spentSendMessageTimeOfLast5Minutes / MAX_SPENT_SEND_TIME * SPENT_SEND_TIME_WEIGHT;
 
         double MAX_NUM_MSG_SENT = 5000 * numConnectedPeersFactor;
         double NUM_MSG_SENT_WEIGHT = 0.1;
-        double numMessagesSentImpact = numMessagesSentOfLastHour / MAX_NUM_MSG_SENT * NUM_MSG_SENT_WEIGHT;
+        double numMessagesSentImpact = numMessagesSentOfLast5Minutes / MAX_NUM_MSG_SENT * NUM_MSG_SENT_WEIGHT;
 
         // We receive about 5 MB when oracle node republishes its data
         double MAX_REC_BYTES = ByteUnit.MB.toBytes(20) * numConnectedPeersFactor;
         double REC_BYTES_WEIGHT = 0.2;
-        double receivedBytesImpact = receivedBytesOfLastHour / MAX_REC_BYTES * REC_BYTES_WEIGHT;
+        double receivedBytesImpact = receivedBytesOfLast5Minutes / MAX_REC_BYTES * REC_BYTES_WEIGHT;
 
         double MAX_DESERIALIZE_TIME = TimeUnit.MINUTES.toMillis(1) * numConnectedPeersFactor;
         double DESERIALIZE_TIME_WEIGHT = 0.1;
-        double deserializeTimeImpact = deserializeTimeOfLastHour / MAX_DESERIALIZE_TIME * DESERIALIZE_TIME_WEIGHT;
+        double deserializeTimeImpact = deserializeTimeOfLast5Minutes / MAX_DESERIALIZE_TIME * DESERIALIZE_TIME_WEIGHT;
 
         // When oracle node republishes its data we get about 2500 messages in about 10 minutes
         double MAX_NUM_MSG_REC = 5000 * numConnectedPeersFactor;
         double NUM_MSG_REC_WEIGHT = 0.1;
-        double numMessagesReceivedImpact = numMessagesReceivedOfLastHour / MAX_NUM_MSG_REC * NUM_MSG_REC_WEIGHT;
+        double numMessagesReceivedImpact = numMessagesReceivedOfLast5Minutes / MAX_NUM_MSG_REC * NUM_MSG_REC_WEIGHT;
 
         // 6MB at Aug 2024 -> 0.018
         double MAX_DB_SIZE = ByteUnit.MB.toBytes(100); // Has no correlation to maxNumConnectedPeers
