@@ -28,6 +28,7 @@ import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.platform.MemoryReportService;
+import bisq.common.threading.ExecutorFactory;
 import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
@@ -65,8 +66,8 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -74,6 +75,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class Bisq1BridgeService implements Service, ConfidentialMessageService.Listener,
         AuthorizedBondedRolesService.Listener, PersistenceClient<Bisq1BridgeStore> {
+    // Currently as July 2025 we have about 150 messages we republish at startup.
+    // To avoid stress to the network we throttle publishing rate for proofOfBurn and bondedReputation data.
+    // With 4 seconds pause we get about 10 minutes until all data is published.
+    private static final long THROTTLE_DELAY = 4000;
+    public static ExecutorService EXECUTOR;
+
     @Getter
     public static class Config {
         private final com.typesafe.config.Config httpService;
@@ -106,7 +113,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     private Identity identity;
 
     @Nullable
-    private Scheduler periodicRequestDoaDataScheduler, initialDelayScheduler;
+    private Scheduler requestDoaDataScheduler, initialDelayScheduler;
 
     public Bisq1BridgeService(Config config,
                               NetworkService networkService,
@@ -138,6 +145,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+        EXECUTOR = ExecutorFactory.newSingleThreadExecutor("Bisq1BridgeService");
         return httpService.initialize()
                 .whenComplete((result, throwable) -> {
                     networkService.getConfidentialMessageServices().stream()
@@ -156,14 +164,17 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        if (periodicRequestDoaDataScheduler != null) {
-            periodicRequestDoaDataScheduler.stop();
-            periodicRequestDoaDataScheduler = null;
+        if (requestDoaDataScheduler != null) {
+            requestDoaDataScheduler.stop();
+            requestDoaDataScheduler = null;
         }
         if (initialDelayScheduler != null) {
             initialDelayScheduler.stop();
             initialDelayScheduler = null;
         }
+
+        ExecutorFactory.shutdownAndAwaitTermination(EXECUTOR, 100);
+
         networkService.removeConfidentialMessageListener(this);
         authorizedBondedRolesService.removeListener(this);
         return httpService.shutdown();
@@ -227,22 +238,30 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     private void initialRepublish() {
         log.info("Start republishAuthorizedBondedRoles");
         republishAuthorizedBondedRoles();
-        memoryReportService.logReport();
         log.info("Completed republishAuthorizedBondedRoles");
+
         log.info("Start request and publish DaoData");
-        requestDaoData().join(); // takes about 6 minutes for 500 items
+        requestDaoData().join();
         memoryReportService.logReport();
         log.info("Completed request and publish DaoData");
-        periodicRequestDoaDataScheduler = Scheduler.run(this::periodicRepublish)
+
+        startRequestDoaDataScheduler();
+    }
+
+    private void startRequestDoaDataScheduler() {
+        if (requestDoaDataScheduler != null) {
+            requestDoaDataScheduler.stop();
+        }
+        requestDoaDataScheduler = Scheduler.run(this::periodicRepublish)
                 .host(this)
                 .runnableName("periodicRepublish")
-                .periodically(5, TimeUnit.SECONDS);
+                .after(5, TimeUnit.SECONDS);
     }
 
     private void periodicRepublish() {
         log.info("periodicRequestDoaDataScheduler: Start requestDoaData");
-        requestDaoData().join();
-        memoryReportService.logReport();
+        requestDaoData().join(); // As we use 4 second throttle this can take quite some time at first request when we get all data.
+        startRequestDoaDataScheduler();
         log.info("periodicRequestDoaDataScheduler: Completed requestDoaData");
     }
 
@@ -273,7 +292,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     private CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnList) {
         try {
             return CompletableFuture.supplyAsync(() -> {
-                ThreadName.from(this, "publishProofOfBurnDtoSet");
+                ThreadName.from("publishProofOfBurnDtoSet");
                 log.info("publishProofOfBurnDtoSet: proofOfBurnList={}", proofOfBurnList);
                 Stream<AuthorizedProofOfBurnData> stream = proofOfBurnList.stream()
                         .map(dto -> new AuthorizedProofOfBurnData(
@@ -284,8 +303,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                                 dto.getTxId(),
                                 staticPublicKeysProvided));
                 return CompletableFutureUtils.allOf(stream
-                                .map(this::publishAuthorizedData)
-                                .collect(Collectors.toList()))
+                                .map(data -> publishAuthorizedData(data, THROTTLE_DELAY)))
                         .whenComplete((r, t) -> {
                             if (t != null) {
                                 log.error("publishProofOfBurnDtoSet failed", t);
@@ -296,7 +314,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                             return b;
                         })
                         .join();
-            }, NetworkService.NETWORK_IO_POOL);
+            }, EXECUTOR);
         } catch (Exception e) {
             log.error("publishProofOfBurnDtoSet failed", e);
             return CompletableFuture.failedFuture(e);
@@ -306,7 +324,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     private CompletableFuture<Boolean> publishBondedReputationDtoSet(List<BondedReputationDto> bondedReputationList) {
         try {
             return CompletableFuture.supplyAsync(() -> {
-                ThreadName.from(this, "publishBondedReputationDtoSet");
+                ThreadName.from("publishBondedReputationDtoSet");
                 log.info("publishBondedReputationDtoSet: bondedReputationList={}", bondedReputationList);
                 Stream<AuthorizedBondedReputationData> stream = bondedReputationList.stream()
                         .map(dto -> new AuthorizedBondedReputationData(
@@ -318,14 +336,13 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                                 dto.getTxId(),
                                 staticPublicKeysProvided));
                 return CompletableFutureUtils.allOf(stream
-                                .map(this::publishAuthorizedData)
-                                .collect(Collectors.toList()))
+                                .map(data -> publishAuthorizedData(data, THROTTLE_DELAY)))
                         .thenApply(results -> {
                             boolean b = !results.contains(false);
                             return b;
                         })
                         .join();
-            }, NetworkService.NETWORK_IO_POOL);
+            }, EXECUTOR);
         } catch (Exception e) {
             log.error("publishBondedReputationDtoSet failed", e);
             return CompletableFuture.failedFuture(e);
@@ -333,6 +350,10 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     }
 
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
+        return publishAuthorizedData(data, 0L);
+    }
+
+    private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data, long throttleDelay) {
         try {
             return networkService.publishAuthorizedData(data,
                             identity.getNetworkIdWithKeyPair().getKeyPair(),
@@ -349,6 +370,12 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                                     }
                                 })
                                 .sum();
+                        if (throttleDelay > 0) {
+                            try {
+                                Thread.sleep(throttleDelay);
+                            } catch (InterruptedException ignore) {
+                            }
+                        }
                         return numSuccess == broadCastDataResult.size();
                     });
         } catch (Exception e) {
