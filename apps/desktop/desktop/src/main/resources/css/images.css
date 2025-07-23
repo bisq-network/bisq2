@@ -1772,3 +1772,19 @@
 #stars-reputation-table {
     -fx-image: url("/images/reputation/rep-table.png");
 }
+
+/* ------------------------------------------------------------------------------------ */
+/* Wallet */
+/* ------------------------------------------------------------------------------------ */
+
+#wallet-protect {
+    -fx-image: url("/images/learn/old/security.png");
+}
+
+#wallet-seed-backup {
+    -fx-image: url("/images/learn/old/wallets@2x.png");
+}
+
+#wallet-seed-verify {
+    -fx-image: url("/images/learn/old/privacy@2x.png");
+}

@@ -32,10 +32,27 @@
     -fx-font-size: 2em;
 }
 
+.very-large-text-2 {
+    -fx-font-size: 2.4em;
+}
+
 .super-large-text {
     -fx-font-size: 4.1em !important;
 }
 
+/*******************************************************************************
+ *                                                                             *
+ * Font weight                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.thin-text {
+    -fx-font-family: "IBM Plex Sans Thin";
+}
+
+.light-text {
+    -fx-font-family: "IBM Plex Sans Light";
+}
 
 /*******************************************************************************
  * Text based                                                                  *
@@ -686,6 +703,15 @@
 /* Used for textarea*/
 .material-text-field:focused .content {
     -fx-background-color: transparent;
+}
+
+/* To center password eye icon in MaterialPasswordField */
+.password-eye-icon {
+    -fx-translate-y: 10px;
+}
+
+.password-smaller-dots {
+    -fx-font-size: 1.0em;
 }
 
 
