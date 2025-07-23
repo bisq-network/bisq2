@@ -35,8 +35,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ExecutorFactory {
     public static final int DEFAULT_PRIORITY = 5;
-    public static final ExecutorService WORKER_POOL = newFixedThreadPool("Worker-pool");
-
 
     /* --------------------------------------------------------------------- */
     // Single Thread Executors
