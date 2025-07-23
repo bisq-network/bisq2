@@ -136,14 +136,14 @@ public class PeerExchangeAttempt {
             boolean requireRetry = tooManyFailures || needsMoreConnections || needsMoreReportedPeers || !isMinSuccessReached;
             if (requireRetry) {
                 if (tooManyFailures) {
-                    log.warn("Require retry of peer exchange because of: tooManyFailures. At instance: {}", this);
+                    log.info("Require retry of peer exchange because of: tooManyFailures. At instance: {}", this);
                 } else if (needsMoreConnections) {
-                    log.warn("Require retry of peer exchange because of: needsMoreConnections. At instance: {}", this);
+                    log.info("Require retry of peer exchange because of: needsMoreConnections. At instance: {}", this);
                 } else {
-                    log.warn("Require retry of peer exchange because of: needsMoreReportedPeers. At instance: {}", this);
+                    log.info("Require retry of peer exchange because of: needsMoreReportedPeers. At instance: {}", this);
                 }
                 if (!isMinSuccessReached) {
-                    log.warn("All peer exchange completed but minSuccessReached not reached.\n" +
+                    log.info("All peer exchange completed but minSuccessReached not reached.\n" +
                                     "numSuccess={}; numFailures={}; numMinSuccess.get()={}; candidates.size()={}. At instance: {}",
                             numSuccess.get(), numFailures.get(), numMinSuccess.get(), candidatesSize, this);
                 }
