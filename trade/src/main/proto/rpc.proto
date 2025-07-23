@@ -59,18 +59,18 @@ message PubKeySharesRequest {
 message PubKeySharesResponse {
   bytes buyerOutputPubKeyShare = 1;
   bytes sellerOutputPubKeyShare = 2;
-  uint32 currentBlockHeight = 3;
+  sint32 currentBlockHeight = 3;
 }
 
 message NonceSharesRequest {
   string tradeId = 1;
   bytes buyerOutputPeersPubKeyShare = 2;
   bytes sellerOutputPeersPubKeyShare = 3;
-  uint64 depositTxFeeRate = 4;       // sats per kwu
-  uint64 preparedTxFeeRate = 5;      // sats per kwu
-  uint64 tradeAmount = 6;            // sats
-  uint64 buyersSecurityDeposit = 7;  // sats
-  uint64 sellersSecurityDeposit = 8; // sats
+  sint64 depositTxFeeRate = 4;       // sats per kwu
+  sint64 preparedTxFeeRate = 5;      // sats per kwu
+  sint64 tradeAmount = 6;            // sats
+  sint64 buyersSecurityDeposit = 7;  // sats
+  sint64 sellersSecurityDeposit = 8; // sats
 }
 
 message NonceSharesMessage {
@@ -88,7 +88,7 @@ message NonceSharesMessage {
 
 message ReceiverAddressAndAmount {
   string address = 1;
-  uint64 amount = 2; // sats
+  sint64 amount = 2; // sats
 }
 
 message PartialSignaturesRequest {
@@ -127,8 +127,8 @@ message SubscribeTxConfirmationStatusRequest {
 
 message TxConfirmationStatus {
   bytes tx = 1;
-  uint32 currentBlockHeight = 2;
-  uint32 numConfirmations = 3;
+  sint32 currentBlockHeight = 2;
+  sint32 numConfirmations = 3;
 }
 
 message SwapTxSignatureRequest {
