@@ -127,7 +127,7 @@
     -fx-red-button: -bisq2-red-lit-10;
     -bisq-red-hover: -bisq2-red;
     -bisq-red-pressed: -bisq2-red-dim-10;
-    -fx-grey-button: -fx-light-text-color;
+    -fx-grey-button: -bisq-mid-grey-10;
     -bisq-grey-hover: -bisq-mid-grey-20;
     -bisq-grey-pressed: -bisq-dark-grey-50;
 
