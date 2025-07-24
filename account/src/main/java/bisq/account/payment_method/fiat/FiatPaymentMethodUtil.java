@@ -47,7 +47,7 @@ public class FiatPaymentMethodUtil {
                 return paymentMethod;
             }
         } catch (Throwable throwable) {
-            log.info("Failed to create FiatPaymentRail from name {}. " +
+            log.debug("Failed to create FiatPaymentRail from name {}. " +
                     "This is expected for custom payment methods", name);
         }
         return FiatPaymentMethod.fromCustomName(name);
