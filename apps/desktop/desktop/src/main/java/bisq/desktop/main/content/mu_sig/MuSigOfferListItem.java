@@ -87,9 +87,8 @@ public class MuSigOfferListItem {
 
     private Optional<String> cannotTakeOfferReason = Optional.empty();
     private double priceSpecAsPercent = 0;
-    private String formattedPercentagePrice = Res.get("data.na"),
-    price = Res.get("data.na"),
-    priceTooltip = Res.get("data.na");
+    private String formattedPercentagePrice = Res.get("data.na"), price = Res.get("data.na"), priceTooltip = Res.get("data.na"),
+            offerPriceWithSpec = Res.get("data.na");
     private Pair<String, String> pricePair;
     private long priceAsLong = 0;
 
@@ -197,6 +196,7 @@ public class MuSigOfferListItem {
                     String offerPrice = OfferPriceFormatter.formatQuote(marketPriceService, offer);
                     PriceSpec priceSpec = offer.getPriceSpec();
                     priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(priceSpec, offerPrice);
+                    offerPriceWithSpec = priceTooltip.replace("\n", ": ");
                     price = PriceSpecFormatter.getFormattedPrice(priceSpec, marketPriceService, offer.getMarket());
                     pricePair = PriceSpecFormatter.getFormattedPricePair(priceSpec, marketPriceService, offer.getMarket());
                     priceAsLong = PriceUtil.findQuote(marketPriceService, priceSpec, offer.getMarket()).map(PriceQuote::getValue).orElse(0L);
