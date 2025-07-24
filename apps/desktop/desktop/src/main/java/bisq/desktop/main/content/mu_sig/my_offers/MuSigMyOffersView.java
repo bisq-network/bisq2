@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.my_offers;
 
-import bisq.common.data.Pair;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -26,8 +25,6 @@ import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
 import bisq.desktop.main.content.mu_sig.MuSigOfferUtil;
 import bisq.i18n.Res;
-import bisq.presentation.formatters.TimeFormatter;
-import bisq.user.reputation.ReputationSource;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -42,10 +39,8 @@ import javafx.util.Callback;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOffersController> {
     private static final double SIDE_PADDING = 40;
@@ -59,7 +54,8 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
         muSigMyOffersListView = new RichTableView<>(
                 model.getSortedMuSigMyOffersListItems(),
                 Res.get("muSig.myOffers.headline"),
-                Res.get("muSig.myOffers.numOffers"));
+                Res.get("muSig.myOffers.numOffers"),
+                controller::applySearchPredicate);
         muSigMyOffersListView.getStyleClass().add("mu-sig-my-offers-table");
         configMuSigMyOffersListView();
         VBox.setVgrow(muSigMyOffersListView, Priority.ALWAYS);
