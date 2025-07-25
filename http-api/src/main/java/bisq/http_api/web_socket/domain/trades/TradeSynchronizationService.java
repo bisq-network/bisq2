@@ -55,17 +55,18 @@ public class TradeSynchronizationService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        log.info("KMP: Starting http-api trade synchronization service");
-        
-        // Start periodic synchronization every 2 minutes
-        scheduler.scheduleWithFixedDelay(this::synchronizeTradeStates, 30, 120, TimeUnit.SECONDS);
-        
+        log.info("Initializing trade synchronization service");
+
+        // Run immediate sync on startup, then every 30 seconds for more responsive updates
+        scheduler.scheduleWithFixedDelay(this::synchronizeTradeStates, 0, 30, TimeUnit.SECONDS);
+
+        log.info("Trade synchronization service scheduled - immediate start, then every 30 seconds");
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        log.info("KMP: Shutting down http-api trade synchronization service");
+        log.info("Shutting down trade synchronization service");
         scheduler.shutdown();
         return CompletableFuture.completedFuture(true);
     }
@@ -75,37 +76,45 @@ public class TradeSynchronizationService implements Service {
      */
     private void synchronizeTradeStates() {
         try {
-            log.debug("KMP: Running http-api trade state synchronization check");
-            
+            log.debug("Running trade state synchronization check");
+
             var openTrades = bisqEasyTradeService.getTrades().stream()
                 .filter(trade -> !trade.getTradeState().isFinalState())
                 .toList();
-            
+
+            log.debug("Found {} total trades, {} open trades",
+                bisqEasyTradeService.getTrades().size(), openTrades.size());
+
             if (openTrades.isEmpty()) {
-                log.debug("KMP: No open trades to synchronize");
+                log.debug("No open trades to synchronize");
                 return;
             }
-            
-            log.debug("KMP: Found {} open trades to check for synchronization", openTrades.size());
-            
+
+            // Log all open trades for debugging
+            openTrades.forEach(trade -> {
+                long age = System.currentTimeMillis() - trade.getContract().getTakeOfferDate();
+                log.debug("Open trade {} - state: {}, age: {}s",
+                    trade.getShortId(), trade.getTradeState(), age/1000);
+            });
+
             int syncCount = 0;
             for (BisqEasyTrade trade : openTrades) {
                 try {
                     if (shouldSynchronizeTrade(trade)) {
-                        log.info("KMP: Trade {} needs synchronization, requesting sync", trade.getShortId());
+                        log.debug("Trade {} needs synchronization, requesting sync", trade.getShortId());
                         requestTradeStateSync(trade);
                         syncCount++;
+                    } else {
+                        log.debug("Trade {} does not need synchronization", trade.getShortId());
                     }
                 } catch (Exception e) {
-                    log.error("KMP: Error checking trade {} for synchronization", trade.getId(), e);
+                    log.error("Error checking trade {} for synchronization", trade.getId(), e);
                 }
             }
-            
-            if (syncCount > 0) {
-                log.info("KMP: Http-api trade synchronization completed - sent {} sync requests", syncCount);
-            }
+
+            log.debug("Trade synchronization completed - sent {} sync requests", syncCount);
         } catch (Exception e) {
-            log.error("KMP: Error during http-api trade state synchronization", e);
+            log.error("Error during trade state synchronization", e);
         }
     }
 
@@ -152,18 +161,18 @@ public class TradeSynchronizationService implements Service {
             var channelOptional = bisqEasyOpenTradeChannelService.findChannel(tradeId);
             
             if (channelOptional.isPresent()) {
-                log.debug("KMP: Sending http-api sync request for trade {}", tradeId);
-                
+                log.debug("Sending sync request for trade {}", tradeId);
+
                 // Send a system message to trigger message processing
-                String syncMessage = "Http-api synchronizing trade state...";
+                String syncMessage = "Synchronizing trade state...";
                 bisqEasyOpenTradeChannelService.sendTradeLogMessage(syncMessage, channelOptional.get());
-                
-                log.debug("KMP: Http-api sync request sent for trade {}", tradeId);
+
+                log.debug("Sync request sent for trade {}", tradeId);
             } else {
-                log.warn("KMP: No channel found for trade {}, cannot request sync", tradeId);
+                log.warn("No channel found for trade {}, cannot request sync", tradeId);
             }
         } catch (Exception e) {
-            log.error("KMP: Error requesting http-api trade state sync for trade {}", trade.getId(), e);
+            log.error("Error requesting trade state sync for trade {}", trade.getId(), e);
         }
     }
 }

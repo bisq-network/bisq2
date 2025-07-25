@@ -30,6 +30,7 @@ import bisq.http_api.web_socket.domain.offers.NumOffersWebSocketService;
 import bisq.http_api.web_socket.domain.offers.OffersWebSocketService;
 import bisq.http_api.web_socket.domain.reputation.ReputationWebSocketService;
 import bisq.http_api.web_socket.domain.trades.TradePropertiesWebSocketService;
+import bisq.http_api.web_socket.domain.trades.TradeSynchronizationService;
 import bisq.http_api.web_socket.domain.trades.TradesWebSocketService;
 import bisq.http_api.web_socket.util.JsonUtil;
 import bisq.trade.TradeService;
@@ -51,6 +52,7 @@ public class SubscriptionService implements Service {
     private final OffersWebSocketService offersWebSocketService;
     private final TradesWebSocketService tradesWebSocketService;
     private final TradePropertiesWebSocketService tradePropertiesWebSocketService;
+    private final TradeSynchronizationService tradeSynchronizationService;
     private final TradeChatWebSocketService tradeChatWebSocketService;
     private final ChatReactionsWebSocketService chatReactionsWebSocketService;
     private final ReputationWebSocketService reputationWebSocketService;
@@ -70,6 +72,9 @@ public class SubscriptionService implements Service {
         offersWebSocketService = new OffersWebSocketService(objectMapper, subscriberRepository, chatService, userService, bondedRolesService);
         tradesWebSocketService = new TradesWebSocketService(objectMapper, subscriberRepository, openTradeItemsService);
         tradePropertiesWebSocketService = new TradePropertiesWebSocketService(objectMapper, subscriberRepository, tradeService);
+        tradeSynchronizationService = new TradeSynchronizationService(
+                tradeService.getBisqEasyTradeService(),
+                chatService.getBisqEasyOpenTradeChannelService());
         tradeChatWebSocketService = new TradeChatWebSocketService(objectMapper,
                 subscriberRepository,
                 chatService.getBisqEasyOpenTradeChannelService(),
@@ -88,6 +93,7 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> offersWebSocketService.initialize())
                 .thenCompose(e -> tradesWebSocketService.initialize())
                 .thenCompose(e -> tradePropertiesWebSocketService.initialize())
+                .thenCompose(e -> tradeSynchronizationService.initialize())
                 .thenCompose(e -> tradeChatWebSocketService.initialize())
                 .thenCompose(e -> chatReactionsWebSocketService.initialize())
                 .thenCompose(e -> reputationWebSocketService.initialize())
@@ -101,6 +107,7 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> offersWebSocketService.shutdown())
                 .thenCompose(e -> tradesWebSocketService.shutdown())
                 .thenCompose(e -> tradePropertiesWebSocketService.shutdown())
+                .thenCompose(e -> tradeSynchronizationService.shutdown())
                 .thenCompose(e -> tradeChatWebSocketService.shutdown())
                 .thenCompose(e -> chatReactionsWebSocketService.shutdown())
                 .thenCompose(e -> reputationWebSocketService.shutdown())
