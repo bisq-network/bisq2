@@ -24,6 +24,7 @@ import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
@@ -67,7 +68,15 @@ public class TradeSynchronizationService implements Service {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("Shutting down trade synchronization service");
-        scheduler.shutdown();
+        scheduler.shutdownNow();
+        try {
+            if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                log.warn("Trade synchronization service did not terminate within timeout");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Interrupted while shutting down trade synchronization service", e);
+        }
         return CompletableFuture.completedFuture(true);
     }
 
@@ -78,7 +87,7 @@ public class TradeSynchronizationService implements Service {
         try {
             log.debug("Running trade state synchronization check");
 
-            var openTrades = bisqEasyTradeService.getTrades().stream()
+            var openTrades = new ArrayList<>(bisqEasyTradeService.getTrades()).stream()
                 .filter(trade -> !trade.getTradeState().isFinalState())
                 .toList();
 
@@ -164,7 +173,8 @@ public class TradeSynchronizationService implements Service {
                 log.debug("Sending sync request for trade {}", tradeId);
 
                 // Send a system message to trigger message processing
-                String syncMessage = "Synchronizing trade state...";
+                // [SYSTEM] prefix ensures this is not visible to end users
+                String syncMessage = "[SYSTEM] Synchronizing trade state...";
                 bisqEasyOpenTradeChannelService.sendTradeLogMessage(syncMessage, channelOptional.get());
 
                 log.debug("Sync request sent for trade {}", tradeId);
