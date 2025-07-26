@@ -19,6 +19,7 @@ package bisq.desktop.main.content.mu_sig.my_offers;
 
 import bisq.account.AccountService;
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -103,6 +104,26 @@ public class MuSigMyOffersController implements Controller {
                 .onAction(() -> doRemoveOffer(muSigOffer))
                 .closeButtonText(Res.get("confirmation.no"))
                 .show();
+    }
+
+    void applySearchPredicate(String searchText) {
+        String string = searchText == null ? "" : searchText.toLowerCase();
+        model.setSearchStringPredicate(item ->
+                StringUtils.isEmpty(string)
+                        || item.getMarket().getMarketDisplayName().toLowerCase().contains(string)
+                        || item.getMakerUserProfile().getUserName().toLowerCase().contains(string)
+                        || item.getOfferId().toLowerCase().contains(string)
+                        || item.getOfferDate().toLowerCase().contains(string)
+                        || item.getBaseAmountAsString().contains(string)
+                        || item.getQuoteAmountAsString().contains(string)
+                        || item.getPrice().contains(string)
+                        || item.getPaymentMethodsAsString().toLowerCase().contains(string));
+        applyPredicates();
+    }
+
+    private void applyPredicates() {
+        model.getFilteredMuSigMyOffersListItems().setPredicate(null);
+        model.getFilteredMuSigMyOffersListItems().setPredicate(model.getMuSigMyOffersListItemsPredicate());
     }
 
     private void doRemoveOffer(MuSigOffer muSigOffer) {

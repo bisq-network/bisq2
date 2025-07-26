@@ -38,6 +38,9 @@ import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 
 import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOffersController> {
     private static final double SIDE_PADDING = 40;
@@ -51,7 +54,8 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
         muSigMyOffersListView = new RichTableView<>(
                 model.getSortedMuSigMyOffersListItems(),
                 Res.get("muSig.myOffers.headline"),
-                Res.get("muSig.myOffers.numOffers"));
+                Res.get("muSig.myOffers.numOffers"),
+                controller::applySearchPredicate);
         muSigMyOffersListView.getStyleClass().add("mu-sig-my-offers-table");
         configMuSigMyOffersListView();
         VBox.setVgrow(muSigMyOffersListView, Priority.ALWAYS);
@@ -69,6 +73,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 .fixWidth(81)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getMarket))
                 .setCellFactory(getMarketCellFactory())
+                .includeForCsv(false)
                 .build());
 
         myProfileColumn = new BisqTableColumn.Builder<MuSigOfferListItem>()
@@ -77,6 +82,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 .minWidth(140)
                 .comparator(Comparator.comparingLong(MuSigOfferListItem::getTotalScore).reversed())
                 .setCellFactory(MuSigOfferUtil.getUserProfileCellFactory())
+                .includeForCsv(false)
                 .build();
         muSigMyOffersListView.getColumns().add(myProfileColumn);
 
@@ -112,6 +118,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 .minWidth(160)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getBaseAmountWithSymbol))
                 .setCellFactory(MuSigOfferUtil.getBaseAmountCellFactory(true))
+                .includeForCsv(false)
                 .build());
 
         muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
@@ -128,6 +135,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 .fixWidth(200)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getPrice))
                 .setCellFactory(MuSigOfferUtil.getPriceCellFactory())
+                .includeForCsv(false)
                 .build());
 
         muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
@@ -144,11 +152,13 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 .minWidth(140)
                 .setCellFactory(MuSigOfferUtil.getPaymentCellFactory())
                 .comparator(Comparator.comparing(MuSigOfferListItem::getPaymentMethodsAsString))
+                .includeForCsv(false)
                 .build());
 
         muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .setCellFactory(getActionButtonsCellFactory())
                 .minWidth(150)
+                .includeForCsv(false)
                 .build());
     }
 
@@ -158,6 +168,40 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
         muSigMyOffersListView.resetSearch();
         muSigMyOffersListView.sort();
         myProfileColumn.visibleProperty().set(model.isShouldShowMyProfileColumn());
+
+        List<String> csvHeaders = muSigMyOffersListView.buildCsvHeaders();
+        csvHeaders.add(Res.get("muSig.myOffers.table.header.market").toUpperCase());
+        csvHeaders.add(Res.get("muSig.myOffers.table.header.myProfile").toUpperCase());
+        csvHeaders.add(Res.get("muSig.myOffers.table.header.baseAmount").toUpperCase());
+        csvHeaders.add(Res.get("muSig.myOffers.table.header.price").toUpperCase());
+        csvHeaders.add(Res.get("muSig.myOffers.table.header.paymentMethods").toUpperCase());
+        muSigMyOffersListView.setCsvHeaders(Optional.of(csvHeaders));
+
+        List<List<String>> csvData = muSigMyOffersListView.getItems().stream()
+                .map(item -> {
+                    List<String> cellDataInRow = muSigMyOffersListView.getBisqTableColumnsForCsv()
+                            .map(bisqTableColumn -> bisqTableColumn.resolveValueForCsv(item))
+                            .collect(Collectors.toList());
+
+                    // Add market
+                    cellDataInRow.add(item.getMarket().getMarketDisplayName());
+
+                    // Add my profile
+                    cellDataInRow.add(item.getMakerUserProfile().getUserName());
+
+                    // Add base amount
+                    cellDataInRow.add(item.getBaseAmountWithSymbol());
+
+                    // Add price
+                    cellDataInRow.add(item.getOfferPriceWithSpec());
+
+                    // Add payment methods
+                    cellDataInRow.add(item.getPaymentMethodsAsString());
+
+                    return cellDataInRow;
+                })
+                .collect(Collectors.toList());
+        muSigMyOffersListView.setCsvData(Optional.of(csvData));
     }
 
     @Override

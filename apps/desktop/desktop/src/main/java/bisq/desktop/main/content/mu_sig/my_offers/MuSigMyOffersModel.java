@@ -43,6 +43,9 @@ public class MuSigMyOffersModel implements Model {
     private final SortedList<MuSigOfferListItem> sortedMuSigMyOffersListItems = new SortedList<>(filteredMuSigMyOffersListItems);
 
     private final Predicate<MuSigOfferListItem> muSigMyOffersListItemsPredicate = item ->
-            getMuSigMyOffersFilterPredicate().test(item);
+            getMuSigMyOffersFilterPredicate().test(item)
+                    && getSearchStringPredicate().test(item);
     private final Predicate<MuSigOfferListItem> muSigMyOffersFilterPredicate = item -> true;
+    @Setter
+    private Predicate<MuSigOfferListItem> searchStringPredicate = item -> true;
 }
