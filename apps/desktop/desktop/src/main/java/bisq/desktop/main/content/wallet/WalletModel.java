@@ -19,8 +19,14 @@ package bisq.desktop.main.content.wallet;
 
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.main.content.ContentTabModel;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import lombok.Getter;
 
 public class WalletModel extends ContentTabModel {
+    @Getter
+    private final BooleanProperty isWalletInitialized = new SimpleBooleanProperty(false);
+
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
         return NavigationTarget.WALLET_DASHBOARD;
