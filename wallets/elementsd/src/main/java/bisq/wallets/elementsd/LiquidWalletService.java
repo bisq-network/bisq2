@@ -27,6 +27,7 @@ import bisq.wallets.bitcoind.RpcConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -72,5 +73,16 @@ public class LiquidWalletService extends AbstractBitcoindWalletService<LiquidWal
     public CompletableFuture<Coin> requestBalance() {
         //todo impl wallet.getBalance request
         return CompletableFuture.completedFuture(balance.get());
+    }
+
+    @Override
+    public void encryptWallet(String password) {
+        // Not implemented yet
+    }
+
+    @Override
+    public CompletableFuture<List<String>> getSeedWords() {
+        // Not implemented yet
+        return CompletableFuture.completedFuture(List.of());
     }
 }

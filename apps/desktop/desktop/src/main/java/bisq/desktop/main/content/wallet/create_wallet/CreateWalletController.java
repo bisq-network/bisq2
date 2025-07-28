@@ -126,7 +126,7 @@ public class CreateWalletController extends NavigationController {
                     return;
                 }
                 String password = createWalletProtectController.getPassword();
-                walletService.setEncryptionPassword(password);
+                walletService.encryptWallet(password);
             }
             model.setAnimateRightOut(false);
             model.getCurrentIndex().set(nextIndex);
@@ -153,7 +153,7 @@ public class CreateWalletController extends NavigationController {
         }
         int nextIndex = model.getCurrentIndex().get() + 1;
         log.info("Skipping protect step, moving to index {}", nextIndex);
-        walletService.setNoEncryption();
+        //walletService.setNoEncryption();
         model.setAnimateRightOut(false);
         model.getCurrentIndex().set(nextIndex);
         NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
@@ -183,7 +183,7 @@ public class CreateWalletController extends NavigationController {
 
     private void closeAndNavigateTo(NavigationTarget navigationTarget) {
         reset();
-        walletService.purgeSeedWords();
+       // walletService.purgeSeedWords();
         walletService.initializeWallet(null, Optional.empty());
         OverlayController.hide(() -> Navigation.navigateTo(navigationTarget));
     }
