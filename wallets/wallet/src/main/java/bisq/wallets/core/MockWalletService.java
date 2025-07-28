@@ -42,26 +42,9 @@ import java.util.concurrent.TimeUnit;
 public class MockWalletService implements WalletService {
     private static final Logger log = LoggerFactory.getLogger(MockWalletService.class);
 
-    public Observable<Boolean> isWalletInitialized = new Observable<>(false);
-    public Observable<Boolean> isWalletBackedup = new Observable<>(false);
     private String encryptionPassword = "";
-
     private boolean shouldFailSeedWords = true;
     private List<String> seedWords = null;
-
-    public Observable<Boolean> getIsWalletInitialized() {
-        return isWalletInitialized;
-    }
-
-    @Override
-    public Observable<Boolean> getIsWalletBackedup() {
-        return isWalletBackedup;
-    }
-
-    @Override
-    public void setIsWalletBackedup(Boolean value) {
-        isWalletBackedup.set(value);
-    }
 
     @Override
     public CompletableFuture<Boolean> initializeWallet(RpcConfig rpcConfig, Optional<String> walletPassphrase) {
@@ -69,7 +52,6 @@ public class MockWalletService implements WalletService {
         CompletableFuture.runAsync(() -> {
                 }, CompletableFuture.delayedExecutor(200, TimeUnit.MILLISECONDS))
                 .thenRun(() -> {
-                    isWalletInitialized.set(true);
                     future.complete(true);
                 });
         return future;
@@ -136,12 +118,7 @@ public class MockWalletService implements WalletService {
     }
 
     @Override
-    public void setNoEncryption() {
-        // TODO: Set a flag for No encryption
-    }
-
-    @Override
-    public void setEncryptionPassword(String password) {
+    public void encryptWallet(String password) {
         log.debug("setEncryptionPassword: REDACTED");
         encryptionPassword = password;
     }
@@ -166,14 +143,5 @@ public class MockWalletService implements WalletService {
                 },
                 CompletableFuture.delayedExecutor(1000, TimeUnit.MILLISECONDS)
         );
-    }
-
-    // Seed words are to be in memory, only when required like
-    //  * Initializing wallet
-    //  * Showing to user
-    // Once the usage is over, it is to be removed from memory.
-    @Override
-    public void purgeSeedWords() {
-        seedWords = null;
     }
 }

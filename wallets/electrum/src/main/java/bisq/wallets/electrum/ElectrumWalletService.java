@@ -152,6 +152,17 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
     }
 
     @Override
+    public void encryptWallet(String password) {
+        // Not implemented yet
+    }
+
+    @Override
+    public CompletableFuture<List<String>> getSeedWords() {
+        // Not implemented yet
+        return CompletableFuture.completedFuture(List.of());
+    }
+
+    @Override
     public CompletableFuture<String> getUnusedAddress() {
         return CompletableFuture.supplyAsync(() -> {
             String receiveAddress = wallet.getUnusedAddress();
