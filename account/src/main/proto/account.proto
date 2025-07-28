@@ -122,8 +122,8 @@ message CryptoAssetAccountPayload {
   string address = 2;
   bool isInstant = 3;
   optional bool isAutoConf = 4;
-  optional uint32 autoConfNumConfirmations = 5;
-  optional uint64 autoConfMaxTradeAmount = 6;
+  optional sint32 autoConfNumConfirmations = 5;
+  optional sint64 autoConfMaxTradeAmount = 6;
   optional string autoConfExplorerUrls = 7;
   oneof message {
     MoneroAccountPayload moneroAccountPayload = 10;
@@ -134,8 +134,8 @@ message CryptoAssetAccountPayload {
 message MoneroAccountPayload {
   bool useSubAddresses = 1;
   optional string privateViewKey = 2;
-  optional uint32 accountIndex = 3;
-  optional uint32 initialSubAddressIndex = 4;
+  optional sint32 accountIndex = 3;
+  optional sint32 initialSubAddressIndex = 4;
 }
 
 message OtherCryptoAssetAccountPayload {
