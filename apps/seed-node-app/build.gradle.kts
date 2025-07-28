@@ -13,6 +13,7 @@ dependencies {
     implementation("bisq:security")
     implementation("bisq:bonded-roles")
     implementation("bisq:identity")
+    implementation("bisq:burningman")
     implementation("bisq:user")
     implementation("bisq:application")
     implementation("bisq:evolution")

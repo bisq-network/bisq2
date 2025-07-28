@@ -8,6 +8,7 @@ dependencies {
     implementation(project(":security"))
     implementation(project(":i18n"))
     implementation(project(":identity"))
+    implementation(project(":burningman"))
     implementation(project(":account"))
     implementation(project(":presentation"))
     implementation(project(":bonded-roles"))
