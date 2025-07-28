@@ -15,17 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.oracle_node.bisq1_bridge.dto.dao;
+syntax = "proto3";
 
-import lombok.Data;
+package burningman;
+option java_package = "bisq.burningman.protobuf";
+option java_multiple_files = true;
 
-import javax.annotation.Nullable;
+message BurningmanData {
+  string receiverAddress = 1;
+  double cappedBurnAmountShare = 2;
+}
 
-@Data
-public final class TxInput {
-    private String connectedTxOutputTxId;
-    private int connectedTxOutputIndex;
-    @Nullable
-    private String pubKey; // as hex
-    private TxOutputKey connectedTxOutputKey;
+message AuthorizedBurningmanListByBlock {
+  sint32 version = 1;
+  bool staticPublicKeysProvided = 2;
+  sint32 blockHeight = 3;
+  repeated BurningmanData burningmanData = 4;
 }
