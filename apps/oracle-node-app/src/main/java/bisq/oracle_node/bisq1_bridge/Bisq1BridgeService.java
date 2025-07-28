@@ -74,7 +74,7 @@ public class Bisq1BridgeService implements Service {
     private final BsqBlockGrpcService bsqBlockGrpcService;
     private final BurningmanGrpcService burningmanGrpcService;
     private final Bisq1BridgeRequestService bisq1BridgeRequestService;
-    private final BlockingQueue<AuthorizedDistributedData> queue = new LinkedBlockingQueue<>(1000);
+    private final BlockingQueue<AuthorizedDistributedData> queue = new LinkedBlockingQueue<>(10000);
     private ScheduledExecutorService executor;
 
     public Bisq1BridgeService(Config config,

@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
@@ -74,13 +75,7 @@ public final class AuthorizedBurningmanListByBlock implements AuthorizedDistribu
 
     @Override
     public void verify() {
-     /*   checkArgument(amount > 0);
-        NetworkDataValidation.validateDate(blockTime);
-        NetworkDataValidation.validateHash(hash);
-        if (version > 0) {
-            NetworkDataValidation.validateBtcTxId(txId);
-            checkArgument(blockHeight > 0);
-        }*/
+        checkArgument(burningmanDataList.size() < 1000);
     }
 
     @Override

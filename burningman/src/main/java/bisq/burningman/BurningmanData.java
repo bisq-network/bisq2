@@ -18,6 +18,7 @@
 package bisq.burningman;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.validation.NetworkDataValidation;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -46,13 +47,7 @@ public final class BurningmanData implements NetworkProto {
 
     @Override
     public void verify() {
-     /*   checkArgument(amount > 0);
-        NetworkDataValidation.validateDate(blockTime);
-        NetworkDataValidation.validateHash(hash);
-        if (version > 0) {
-            NetworkDataValidation.validateBtcTxId(txId);
-            checkArgument(blockHeight > 0);
-        }*/
+        NetworkDataValidation.validateBtcAddress(receiverAddress);
     }
 
     @Override
