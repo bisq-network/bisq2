@@ -21,6 +21,7 @@ import bisq.account.AccountService;
 import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.burningman.BurningmanService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;
@@ -86,6 +87,7 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
     private final BisqEasyService bisqEasyService;
     private final HttpApiService httpApiService;
     private final OpenTradeItemsService openTradeItemsService;
+    private final BurningmanService burningmanService;
     @Nullable
     private Pin difficultyAdjustmentServicePin;
 
@@ -129,6 +131,8 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
 
         contractService = new ContractService(securityService);
 
+        burningmanService = new BurningmanService(bondedRolesService.getAuthorizedBondedRolesService());
+
         userService = new UserService(persistenceService,
                 securityService,
                 identityService,
@@ -152,7 +156,8 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
 
         TradeService.Config tradeConfig = TradeService.Config.from(getConfig("trade"));
         tradeService = new TradeService(tradeConfig, networkService, identityService, persistenceService, offerService,
-                contractService, supportService, chatService, bondedRolesService, userService, settingsService, accountService);
+                contractService, supportService, chatService, bondedRolesService, userService, settingsService,
+                accountService,burningmanService);
 
         bisqEasyService = new BisqEasyService(persistenceService,
                 securityService,
@@ -223,6 +228,7 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> accountService.initialize())
                 .thenCompose(result -> contractService.initialize())
                 .thenCompose(result -> userService.initialize())
+                .thenCompose(result -> burningmanService.initialize())
                 .thenCompose(result -> settingsService.initialize())
                 .thenCompose(result -> systemNotificationService.initialize())
                 .thenCompose(result -> offerService.initialize())
@@ -273,6 +279,7 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> offerService.shutdown())
                 .thenCompose(result -> systemNotificationService.shutdown())
                 .thenCompose(result -> settingsService.shutdown())
+                .thenCompose(result -> burningmanService.shutdown())
                 .thenCompose(result -> userService.shutdown())
                 .thenCompose(result -> contractService.shutdown())
                 .thenCompose(result -> accountService.shutdown())

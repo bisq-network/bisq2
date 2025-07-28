@@ -19,6 +19,7 @@ package bisq.trade;
 
 import bisq.account.AccountService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.burningman.BurningmanService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.contract.ContractService;
@@ -29,6 +30,7 @@ import bisq.persistence.PersistenceService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
+import bisq.trade.mu_sig.DelayedPayoutTxReceiverService;
 import bisq.trade.mu_sig.MuSigTradeService;
 import bisq.user.UserService;
 import lombok.Getter;
@@ -65,6 +67,8 @@ public class TradeService implements Service, ServiceProvider {
     private final SettingsService settingsService;
     private final AccountService accountService;
     private final MuSigTradeService muSigTradeService;
+    private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
+    private final BurningmanService burningmanService;
 
     public TradeService(Config config,
                         NetworkService networkService,
@@ -77,7 +81,8 @@ public class TradeService implements Service, ServiceProvider {
                         BondedRolesService bondedRolesService,
                         UserService userService,
                         SettingsService settingsService,
-                        AccountService accountService) {
+                        AccountService accountService,
+                        BurningmanService burningmanService) {
         this.networkService = networkService;
         this.identityService = identityService;
         this.persistenceService = persistenceService;
@@ -89,6 +94,9 @@ public class TradeService implements Service, ServiceProvider {
         this.userService = userService;
         this.settingsService = settingsService;
         this.accountService = accountService;
+        this.burningmanService = burningmanService;
+
+        delayedPayoutTxReceiverService = new DelayedPayoutTxReceiverService(burningmanService);
 
         bisqEasyTradeService = new BisqEasyTradeService(this);
         muSigTradeService = new MuSigTradeService(MuSigTradeService.Config.from(config.getMuSigConfig()),
@@ -102,13 +110,15 @@ public class TradeService implements Service, ServiceProvider {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return bisqEasyTradeService.initialize();
+        return delayedPayoutTxReceiverService.initialize()
+                .thenCompose(result -> bisqEasyTradeService.initialize());
 
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        return bisqEasyTradeService.shutdown();
+        return delayedPayoutTxReceiverService.shutdown()
+                .thenCompose(result -> bisqEasyTradeService.shutdown());
     }
 
     public CompletableFuture<Boolean> initializeMuSigTradeService() {

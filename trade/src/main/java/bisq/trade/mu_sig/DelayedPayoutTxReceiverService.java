@@ -15,17 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.oracle_node.bisq1_bridge.dto.dao;
+package bisq.trade.mu_sig;
 
-import lombok.Data;
+import bisq.burningman.BurningmanService;
+import bisq.common.application.Service;
 
-@Data
-public final class TxOutputKey {
-    private String txId;
-    private int index;
+public class DelayedPayoutTxReceiverService implements Service {
+    private final BurningmanService burningmanService;
 
-    @Override
-    public String toString() {
-        return txId + ":" + index;
+    public DelayedPayoutTxReceiverService(BurningmanService burningmanService) {
+        this.burningmanService = burningmanService;
     }
 }

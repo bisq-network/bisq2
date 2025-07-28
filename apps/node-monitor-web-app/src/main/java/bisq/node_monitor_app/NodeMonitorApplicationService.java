@@ -21,6 +21,7 @@ import bisq.account.AccountService;
 import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.burningman.BurningmanService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;
@@ -83,6 +84,7 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
     private final TradeService tradeService;
     private final BisqEasyService bisqEasyService;
     private final NodeMonitorService nodeMonitorService;
+    private final BurningmanService burningmanService;
     private Optional<RestApiService> restApiService = Optional.empty();
     @Nullable
     private Pin difficultyAdjustmentServicePin;
@@ -133,6 +135,8 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                 networkService,
                 bondedRolesService);
 
+        burningmanService = new BurningmanService(bondedRolesService.getAuthorizedBondedRolesService());
+
         settingsService = new SettingsService(persistenceService);
 
         systemNotificationService = new SystemNotificationService(findSystemNotificationDelegate());
@@ -150,7 +154,8 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
 
         TradeService.Config tradeConfig = TradeService.Config.from(getConfig("trade"));
         tradeService = new TradeService(tradeConfig, networkService, identityService, persistenceService, offerService,
-                contractService, supportService, chatService, bondedRolesService, userService, settingsService, accountService);
+                contractService, supportService, chatService, bondedRolesService, userService, settingsService,
+                accountService,burningmanService);
 
         bisqEasyService = new BisqEasyService(persistenceService,
                 securityService,
@@ -211,6 +216,7 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> accountService.initialize())
                 .thenCompose(result -> contractService.initialize())
                 .thenCompose(result -> userService.initialize())
+                .thenCompose(result -> burningmanService.initialize())
                 .thenCompose(result -> settingsService.initialize())
                 .thenCompose(result -> systemNotificationService.initialize())
                 .thenCompose(result -> offerService.initialize())
@@ -260,6 +266,7 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> offerService.shutdown())
                 .thenCompose(result -> systemNotificationService.shutdown())
                 .thenCompose(result -> settingsService.shutdown())
+                .thenCompose(result -> burningmanService.shutdown())
                 .thenCompose(result -> userService.shutdown())
                 .thenCompose(result -> contractService.shutdown())
                 .thenCompose(result -> accountService.shutdown())
