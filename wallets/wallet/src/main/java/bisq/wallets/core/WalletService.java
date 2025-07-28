@@ -31,10 +31,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public interface WalletService extends Service {
-    Observable<Boolean> getIsWalletInitialized();
-    Observable<Boolean> getIsWalletBackedup();
-    void setIsWalletBackedup(Boolean value);
-
     CompletableFuture<Boolean> initializeWallet(RpcConfig rpcConfig, Optional<String> walletPassphrase);
 
     boolean isWalletReady();
@@ -61,9 +57,29 @@ public interface WalletService extends Service {
 
     CompletableFuture<ObservableSet<Transaction>> requestTransactions();
 
-    void setNoEncryption();
-    void setEncryptionPassword(String password);
 
-    CompletableFuture<List<String>> getSeedWords();
-    void purgeSeedWords();
+    // TODO re-evaluate methods
+    default Observable<Boolean> getIsWalletInitialized() {
+        return null;
+    }
+
+    default Observable<Boolean> getIsWalletBackedup() {
+        return null;
+    }
+
+    default void setIsWalletBackedup(Boolean value) {
+    }
+
+    default void setNoEncryption() {
+    }
+
+    default void setEncryptionPassword(String password) {
+    }
+
+    default CompletableFuture<List<String>> getSeedWords() {
+        return null;
+    }
+
+    default void purgeSeedWords() {
+    }
 }
