@@ -89,11 +89,11 @@ message BisqEasyContract {
 
 // MuSig
 message MuSigContract {
-  uint64 baseSideAmount = 1;
-  uint64 quoteSideAmount = 2;
+  sint64 baseSideAmount = 1;
+  sint64 quoteSideAmount = 2;
   account.PaymentMethodSpec baseSidePaymentMethodSpec = 3;
   account.PaymentMethodSpec quoteSidePaymentMethodSpec = 4;
   optional user.UserProfile mediator = 5;
   offer.PriceSpec priceSpec =6;
-  uint64 marketPrice =7;
+  sint64 marketPrice =7;
 }

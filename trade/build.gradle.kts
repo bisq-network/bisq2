@@ -10,6 +10,7 @@ dependencies {
     implementation(project(":security"))
     implementation(project(":identity"))
     implementation(project(":user"))
+    implementation(project(":burningman"))
     implementation(project(":account"))
     implementation(project(":offer"))
     implementation(project(":contract"))

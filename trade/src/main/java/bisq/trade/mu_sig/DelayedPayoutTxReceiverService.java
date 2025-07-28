@@ -15,20 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.oracle_node.bisq1_bridge.dto;
+package bisq.trade.mu_sig;
 
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
+import bisq.burningman.BurningmanService;
+import bisq.common.application.Service;
 
-import javax.annotation.Nullable;
+public class DelayedPayoutTxReceiverService implements Service {
+    private final BurningmanService burningmanService;
 
-/**
- * Minimal data required for bonded roles use case.
- * Need to be in sync with the Bisq 1 BondedRoleDto class.
- */
-@Slf4j
-@Data
-public class BondedRoleVerificationDto {
-    @Nullable
-    private final String errorMessage;
+    public DelayedPayoutTxReceiverService(BurningmanService burningmanService) {
+        this.burningmanService = burningmanService;
+    }
 }

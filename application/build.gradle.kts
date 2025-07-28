@@ -8,6 +8,7 @@ dependencies {
     implementation(project(":security"))
     implementation(project(":settings"))
     implementation(project(":user"))
+    implementation(project(":burningman"))
     implementation(project(":chat"))
     implementation(project(":support"))
     implementation(project(":bonded-roles"))
