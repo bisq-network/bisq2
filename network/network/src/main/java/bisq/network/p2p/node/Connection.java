@@ -17,13 +17,12 @@
 
 package bisq.network.p2p.node;
 
-import bisq.common.threading.ThreadName;
-import bisq.common.util.ExceptionUtil;
-import bisq.common.util.StringUtils;
-import bisq.network.NetworkService;
 import bisq.common.network.Address;
 import bisq.common.network.DefaultPeerSocket;
 import bisq.common.network.PeerSocket;
+import bisq.common.util.ExceptionUtil;
+import bisq.common.util.StringUtils;
+import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
@@ -125,7 +124,6 @@ public abstract class Connection {
         }
 
         inputHandlerFuture = NetworkService.NETWORK_IO_POOL.submit(() -> {
-            ThreadName.from(this, "read-" + getThreadNameId());
             try {
                 while (isInputStreamActive()) {
                     var proto = networkEnvelopeSocket.receiveNextEnvelope();

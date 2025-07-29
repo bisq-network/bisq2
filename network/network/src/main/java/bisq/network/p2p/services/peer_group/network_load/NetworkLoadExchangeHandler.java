@@ -17,9 +17,7 @@
 
 package bisq.network.p2p.services.peer_group.network_load;
 
-import bisq.common.threading.ThreadName;
 import bisq.common.util.MathUtils;
-import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -56,10 +54,7 @@ class NetworkLoadExchangeHandler implements Connection.Listener {
         log.info("Send NetworkLoadRequest to {} with nonce {} and my networkLoad {}. Connection={}",
                 connection.getPeerAddress(), nonce, myNetworkLoad, connection.getId());
         requestTs = System.currentTimeMillis();
-        supplyAsync(() -> {
-            ThreadName.from(this, "request-" + StringUtils.truncate(connection.getPeerAddress().toString(), 10));
-            return node.send(new NetworkLoadExchangeRequest(nonce, myNetworkLoad), connection);
-        }, NetworkService.NETWORK_IO_POOL)
+        supplyAsync(() -> node.send(new NetworkLoadExchangeRequest(nonce, myNetworkLoad), connection), NetworkService.NETWORK_IO_POOL)
                 .whenComplete((c, throwable) -> {
                     if (throwable != null) {
                         future.completeExceptionally(throwable);

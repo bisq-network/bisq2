@@ -17,10 +17,8 @@
 
 package bisq.network.p2p.services.data.broadcast;
 
-import bisq.common.threading.ThreadName;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -67,7 +65,6 @@ public class Broadcaster {
                         log.debug("Broadcast {} to {}", broadcastMessage.getClass().getSimpleName(), connection.getPeerAddress());
                         try {
                             return CompletableFuture.supplyAsync(() -> {
-                                        ThreadName.from(this, StringUtils.truncate(connection.getPeerAddress(), 12));
                                         try {
                                             node.send(broadcastMessage, connection); // Can block with throttle and network IO
                                             return true;
