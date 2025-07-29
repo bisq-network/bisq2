@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.services.peer_group.keep_alive;
 
-import bisq.common.threading.ThreadName;
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -53,10 +52,7 @@ class KeepAliveHandler implements Connection.Listener {
         log.info("Send Ping to {} with nonce {}. Connection={}",
                 connection.getPeerAddress(), nonce, connection.getId());
         requestTs = System.currentTimeMillis();
-        supplyAsync(() -> {
-            ThreadName.from(this, "ping");
-            return node.send(new Ping(nonce), connection);
-        }, NetworkService.NETWORK_IO_POOL)
+        supplyAsync(() -> node.send(new Ping(nonce), connection), NetworkService.NETWORK_IO_POOL)
                 .whenComplete((c, throwable) -> {
                     if (throwable != null) {
                         future.completeExceptionally(throwable);

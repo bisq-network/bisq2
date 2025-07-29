@@ -17,10 +17,8 @@
 
 package bisq.network.p2p.node;
 
-import bisq.common.threading.ThreadName;
-import bisq.common.util.StringUtils;
-import bisq.network.NetworkService;
 import bisq.common.network.Address;
+import bisq.network.NetworkService;
 import bisq.network.p2p.node.transport.ServerSocketResult;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -46,17 +44,13 @@ public final class Server {
         address = serverSocketResult.getAddress();
         log.debug("Create server: {}", serverSocketResult);
         future = NetworkService.NETWORK_IO_POOL.submit(() -> {
-            ThreadName.from(this, "listen-" + StringUtils.truncate(serverSocketResult.getAddress().toString()));
             try {
                 while (isNotStopped()) {
                     Socket socket = serverSocket.accept();
                     log.debug("Accepted new connection on server: {}", serverSocketResult);
                     if (isNotStopped()) {
                         // Call handler on new thread
-                        NetworkService.NETWORK_IO_POOL.submit(() -> {
-                            ThreadName.from(this, "handle-" + StringUtils.truncate(serverSocketResult.getAddress().toString()));
-                            socketHandler.accept(socket);
-                        });
+                        NetworkService.NETWORK_IO_POOL.submit(() -> socketHandler.accept(socket));
                     }
                 }
             } catch (IOException e) {

@@ -20,8 +20,6 @@ package bisq.common.file;
 import bisq.common.jvm.DeleteOnExitHook;
 import bisq.common.observable.Observable;
 import bisq.common.platform.OS;
-import bisq.common.threading.ThreadName;
-import bisq.common.util.StringUtils;
 import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
 
@@ -202,7 +200,7 @@ public class FileUtils {
     public static void recursiveDeleteOnShutdownHook(Path path) {
         Runtime.getRuntime().addShutdownHook(new Thread(
                 () -> {
-                    ThreadName.from(FileUtils.class, "shutdownHook-" + StringUtils.truncate(path.toString(), 10));
+                    Thread.currentThread().setName("ShutdownHook.recursiveDelete");
                     try {
                         Files.walkFileTree(path, new SimpleFileVisitor<>() {
                             @Override

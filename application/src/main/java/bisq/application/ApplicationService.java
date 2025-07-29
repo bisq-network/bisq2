@@ -30,7 +30,6 @@ import bisq.common.locale.LocaleRepository;
 import bisq.common.logging.AsciiLogo;
 import bisq.common.logging.LogSetup;
 import bisq.common.observable.Observable;
-import bisq.common.threading.ThreadName;
 import bisq.common.util.ExceptionUtil;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
@@ -220,7 +219,7 @@ public abstract class ApplicationService implements Service {
         // Usually we try to avoid adding multiple shutdownHooks as the order of their execution is not
         // defined. In that case the order from other hooks has no impact.
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            ThreadName.from(this, "releaseInstanceLock");
+            Thread.currentThread().setName("InstanceLockManager.releaseLock");
             instanceLockManager.releaseLock();
         }));
     }

@@ -1,6 +1,5 @@
 package bisq.network.i2p;
 
-import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
 import bisq.network.i2p.util.I2PLogManager;
 import lombok.Getter;
@@ -78,7 +77,7 @@ public class I2pEmbeddedRouter {
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            ThreadName.from(this, "shutdownHook");
+            Thread.currentThread().setName("I2pEmbeddedRouter.shutdownHook");
             shutdown();
         }));
 

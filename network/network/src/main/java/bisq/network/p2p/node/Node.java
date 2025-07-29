@@ -22,7 +22,6 @@ import bisq.common.network.Address;
 import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
-import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.ExceptionUtil;
@@ -47,18 +46,30 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.net.*;
+import java.net.ConnectException;
+import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static bisq.network.NetworkService.DISPATCHER;
-import static bisq.network.p2p.node.ConnectionException.Reason.*;
-import static bisq.network.p2p.node.Node.State.*;
+import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
+import static bisq.network.p2p.node.ConnectionException.Reason.HANDSHAKE_FAILED;
+import static bisq.network.p2p.node.Node.State.STARTING;
+import static bisq.network.p2p.node.Node.State.STOPPING;
+import static bisq.network.p2p.node.Node.State.TERMINATED;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -664,10 +675,8 @@ public class Node implements Connection.Handler {
 
     public CompletableFuture<Void> closeConnectionGracefullyAsync(Connection connection, CloseReason closeReason) {
         return runAsync(() -> {
-            ThreadName.from(this, "closeConnection");
             closeConnectionGracefully(connection, closeReason);
-        }, NetworkService.NETWORK_IO_POOL)
-                .orTimeout(4, SECONDS);
+        }, NetworkService.NETWORK_IO_POOL).orTimeout(4, SECONDS);
     }
 
     public void closeConnectionGracefully(Connection connection, CloseReason closeReason) {

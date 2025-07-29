@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.node;
 
-import bisq.common.threading.ThreadName;
 import bisq.common.network.Address;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
@@ -33,7 +32,11 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 public class ServerChannel {
@@ -75,7 +78,7 @@ public class ServerChannel {
         log.debug("Create server: {}", myAddress);
 
         serverThread = new Thread(() -> {
-            ThreadName.from(this, "start");
+            Thread.currentThread().setName("ServerChannel.start");
             try {
                 InetSocketAddress socketAddress = new InetSocketAddress(
                         InetAddress.getLocalHost(),

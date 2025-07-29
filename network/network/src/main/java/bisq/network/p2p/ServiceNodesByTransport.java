@@ -25,9 +25,7 @@ import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.platform.MemoryReportService;
-import bisq.common.threading.ThreadName;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.common.util.StringUtils;
 import bisq.network.SendMessageResult;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -53,7 +51,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.security.KeyPair;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -137,11 +140,8 @@ public class ServiceNodesByTransport {
     public Map<TransportType, CompletableFuture<Node>> getInitializedDefaultNodeByTransport(NetworkId defaultNetworkId) {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> supplyAsync(() -> {
-                                    ThreadName.from(this, "getInitializedDefaultNode-" + entry.getKey().name());
-                                    return entry.getValue().getInitializedDefaultNode(defaultNetworkId);
-                                },
-                                NETWORK_IO_POOL)));
+                        entry -> supplyAsync(() ->
+                                entry.getValue().getInitializedDefaultNode(defaultNetworkId), NETWORK_IO_POOL)));
     }
 
     public CompletableFuture<List<Boolean>> shutdown() {
@@ -165,7 +165,6 @@ public class ServiceNodesByTransport {
 
     public CompletableFuture<Node> supplyInitializedNode(TransportType transportType, NetworkId networkId) {
         return supplyAsync(() -> {
-            ThreadName.from(this, "supplyInitializedNode-" + StringUtils.truncate(networkId.getAddresses(), 10));
             ServiceNode serviceNode = map.get(transportType);
             if (serviceNode.isNodeInitialized(networkId)) {
                 return serviceNode.findNode(networkId).orElseThrow();
@@ -299,6 +298,7 @@ public class ServiceNodesByTransport {
     public Collection<ServiceNode> getAllServiceNodes() {
         return map.values();
     }
+
     public Map<TransportType, ServiceNode> getServiceNodesByTransport() {
         return map;
     }
