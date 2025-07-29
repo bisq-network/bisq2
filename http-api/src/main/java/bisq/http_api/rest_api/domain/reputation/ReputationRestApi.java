@@ -105,15 +105,7 @@ public class ReputationRestApi extends RestApiBase {
             }
 
             Optional<Long> profileAge = reputationService.getProfileAgeService().getProfileAge(userProfile.get());
-            if (profileAge.isPresent()) {
-                return buildOkResponse(profileAge.get());
-            } else {
-                // Return explicit null as JSON string to avoid empty response body
-                return Response.status(Response.Status.OK)
-                        .entity("null")
-                        .type("application/json")
-                        .build();
-            }
+            return buildOkResponse(profileAge.orElse(null));
         } catch (Exception e) {
             log.error("Error getting profile age for userProfileId: " + userProfileId, e);
             return buildErrorResponse("Error getting profile age: " + e.getMessage());
