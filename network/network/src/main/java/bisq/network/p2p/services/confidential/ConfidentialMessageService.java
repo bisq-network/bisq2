@@ -423,7 +423,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     private CompletableFuture<Boolean> processConfidentialMessage(ConfidentialMessage confidentialMessage) {
         return keyBundleService.findKeyPair(confidentialMessage.getReceiverKeyId())
                 .map(receiversKeyPair -> supplyAsync(() -> {
-                    ThreadName.from("processConfidentialMessage");
                     try {
                         log.info("Found a matching key for processing confidentialMessage. ReceiverKeyId={}", confidentialMessage.getReceiverKeyId());
                         ConfidentialData confidentialData = confidentialMessage.getConfidentialData();

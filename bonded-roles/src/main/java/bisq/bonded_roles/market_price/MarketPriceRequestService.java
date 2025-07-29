@@ -26,7 +26,6 @@ import bisq.common.monetary.PriceQuote;
 import bisq.common.network.TransportType;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
-import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.ExceptionUtil;
@@ -62,7 +61,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 public class MarketPriceRequestService {
-    private static final ExecutorService EXECUTOR_SERVICE = ExecutorFactory.newSingleThreadExecutor("MarketPriceRequest");
+    private static final ExecutorService EXECUTOR = ExecutorFactory.newSingleThreadExecutor("MarketPriceRequestService");
 
     @Getter
     @ToString
@@ -189,6 +188,9 @@ public class MarketPriceRequestService {
         if (scheduler != null) {
             scheduler.stop();
         }
+
+        ExecutorFactory.shutdownAndAwaitTermination(EXECUTOR, 100);
+
         return httpClient.map(BaseHttpClient::shutdown)
                 .orElse(CompletableFuture.completedFuture(true));
     }
@@ -236,7 +238,6 @@ public class MarketPriceRequestService {
         }
 
         return CompletableFuture.runAsync(() -> {
-                    ThreadName.from("requestMarketPrice");
                     Provider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
                     BaseHttpClient client = networkService.getHttpClient(provider.baseUrl, userAgent, provider.transportType);
                     httpClient = Optional.of(client);
@@ -310,7 +311,7 @@ public class MarketPriceRequestService {
                             throw new RuntimeException("We failed at all possible providers and give up");
                         }
                     }
-                }, EXECUTOR_SERVICE)
+                }, EXECUTOR)
                 .orTimeout(conf.getTimeoutInSeconds(), SECONDS);
     }
 
