@@ -44,8 +44,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 /**
  * Represents an inbound or outbound connection to a peer node.
  * Listens for messages from the peer.
@@ -127,11 +125,16 @@ public abstract class Connection {
             try {
                 while (isInputStreamActive()) {
                     var proto = networkEnvelopeSocket.receiveNextEnvelope();
-                    // parsing might need some time wo we check again if connection is still active
+                    if (proto == null) {
+                        log.info("Proto from networkEnvelopeSocket.receiveNextEnvelope() is null. " +
+                                "This is expected if the input stream has reached EOF.");
+                        return;
+                    }
+
+                    // receiveNextEnvelope might need some time wo we check again if connection is still active
                     if (!isInputStreamActive()) {
                         return;
                     }
-                    checkNotNull(proto, "Proto from NetworkEnvelope.parseDelimitedFrom(inputStream) must not be null");
 
                     connectionThrottle.throttleReceiveMessage();
                     // ThrottleReceiveMessage can cause a delay by Thread.sleep
