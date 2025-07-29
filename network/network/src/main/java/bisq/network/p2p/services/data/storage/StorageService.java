@@ -344,7 +344,7 @@ public class StorageService {
                 .thenApply(store -> {
                     DataStorageResult dataStorageResult = store.remove(request);
                     if (dataStorageResult.isSuccess()) {
-                        return Optional.of(dataStorageResult.getRemovedData());
+                        return Optional.ofNullable(dataStorageResult.getRemovedData());
                     } else {
                         if (dataStorageResult.isSevereFailure()) {
                             log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", dataStorageResult);
@@ -359,7 +359,7 @@ public class StorageService {
                 .thenApply(store -> {
                     DataStorageResult dataStorageResult = store.remove(request);
                     if (dataStorageResult.isSuccess()) {
-                        return Optional.of(dataStorageResult.getRemovedData());
+                        return Optional.ofNullable(dataStorageResult.getRemovedData());
                     } else {
                         if (dataStorageResult.isSevereFailure()) {
                             log.warn("RemoveAuthenticatedDataRequest was not added to store. Result={}", dataStorageResult);
