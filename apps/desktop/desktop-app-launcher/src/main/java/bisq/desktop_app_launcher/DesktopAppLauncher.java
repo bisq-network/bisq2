@@ -20,7 +20,6 @@ package bisq.desktop_app_launcher;
 import bisq.common.application.BuildVersion;
 import bisq.common.logging.LogSetup;
 import bisq.common.platform.PlatformUtils;
-import bisq.common.threading.ThreadName;
 import bisq.common.util.ExceptionUtil;
 import bisq.desktop_app.DesktopApp;
 import bisq.evolution.updater.DownloadedFilesVerification;
@@ -38,7 +37,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
-import static bisq.evolution.updater.UpdaterUtils.*;
+import static bisq.evolution.updater.UpdaterUtils.UPDATES_DIR;
+import static bisq.evolution.updater.UpdaterUtils.readVersionFromVersionFile;
 
 /**
  * We ship the binary with the current version of the DesktopApp and with the JRE.
@@ -69,7 +69,7 @@ public class DesktopAppLauncher {
     private final Options options;
 
     public static void main(String[] args) {
-        ThreadName.from(DesktopAppLauncher.class, "main");
+        Thread.currentThread().setName("DesktopAppLauncher.main");
         try {
             new DesktopAppLauncher(args);
         } catch (Exception e) {

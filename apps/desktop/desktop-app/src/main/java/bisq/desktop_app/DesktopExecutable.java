@@ -18,7 +18,6 @@
 package bisq.desktop_app;
 
 import bisq.application.Executable;
-import bisq.common.threading.ThreadName;
 import bisq.desktop.DesktopController;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
@@ -52,7 +51,7 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
     @Override
     protected void launchApplication(String[] args) {
         new Thread(() -> {
-            ThreadName.from("DesktopExecutable.JavaFXApplication.launch");
+            Thread.currentThread().setName("JavaFXApplication.launch");
             Application.launch(JavaFXApplication.class, args); //blocks until app is closed
         }).start();
 

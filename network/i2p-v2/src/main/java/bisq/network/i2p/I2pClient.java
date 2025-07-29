@@ -17,7 +17,6 @@
 
 package bisq.network.i2p;
 
-import bisq.common.threading.ThreadName;
 import bisq.network.i2p.exceptions.CannotConnectToI2pDestination;
 import bisq.network.i2p.exceptions.I2pDestinationOffline;
 import bisq.network.i2p.exceptions.InvalidI2pDestination;
@@ -46,7 +45,7 @@ public class I2pClient {
         @SuppressWarnings("resource")
         I2PSocket socket = connect(destination);
         new Thread(() -> {
-            ThreadName.from(this, "handle");
+            Thread.currentThread().setName("I2pClient.socketHandler");
             socketConsumer.accept(socket);
         }).start();
     }

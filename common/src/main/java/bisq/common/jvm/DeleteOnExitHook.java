@@ -44,7 +44,6 @@
 package bisq.common.jvm;
 
 import bisq.common.file.FileUtils;
-import bisq.common.threading.ThreadName;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -71,7 +70,7 @@ public class DeleteOnExitHook {
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            ThreadName.from(DeleteOnExitHook.class, "runHooks");
+            Thread.currentThread().setName("DeleteOnExitHook.runHooks");
             runHooks();
         }));
     }

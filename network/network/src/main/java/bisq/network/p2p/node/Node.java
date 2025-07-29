@@ -666,8 +666,7 @@ public class Node implements Connection.Handler {
         return runAsync(() -> {
             ThreadName.from(this, "closeConnection");
             closeConnectionGracefully(connection, closeReason);
-        }, NetworkService.NETWORK_IO_POOL)
-                .orTimeout(4, SECONDS);
+        }, NetworkService.NETWORK_IO_POOL).orTimeout(4, SECONDS);
     }
 
     public void closeConnectionGracefully(Connection connection, CloseReason closeReason) {

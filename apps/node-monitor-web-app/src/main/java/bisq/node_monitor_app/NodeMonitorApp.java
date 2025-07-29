@@ -18,7 +18,6 @@
 package bisq.node_monitor_app;
 
 import bisq.application.Executable;
-import bisq.common.threading.ThreadName;
 import bisq.http_api.rest_api.util.StaticFileHandler;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NodeMonitorApp extends Executable<NodeMonitorApplicationService> {
     public static void main(String[] args) {
-        ThreadName.from(NodeMonitorApp.class, "main");
+        Thread.currentThread().setName("NodeMonitorApp.main");
         new NodeMonitorApp(args);
     }
 

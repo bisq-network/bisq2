@@ -17,7 +17,6 @@
 
 package bisq.network.i2p;
 
-import bisq.common.threading.ThreadName;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.I2PException;
 import net.i2p.client.streaming.I2PServerSocket;
@@ -45,14 +44,14 @@ public class I2pServer {
         isRunning.set(true);
 
         Thread serverThread = new Thread(() -> {
-            ThreadName.from(this, "listen");
+            Thread.currentThread().setName("I2pServer.listen");
             while (isRunning.get()) {
                 try {
                     @SuppressWarnings("resource")
                     I2PSocket socket = serverSocket.accept();
                     if (socket != null) {
                         new Thread(() -> {
-                            ThreadName.from(this, "handle");
+                            Thread.currentThread().setName("I2pServer.handleNewSocket");
                             socketConsumer.accept(socket);
                         }).start();
                     }

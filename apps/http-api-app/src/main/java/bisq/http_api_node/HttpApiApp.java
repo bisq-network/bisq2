@@ -18,7 +18,6 @@
 package bisq.http_api_node;
 
 import bisq.application.Executable;
-import bisq.common.threading.ThreadName;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -29,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class HttpApiApp extends Executable<HttpApiApplicationService> {
     public static void main(String[] args) {
-        ThreadName.from(HttpApiApp.class, "main");
+        Thread.currentThread().setName("HttpApiApp.main");
         new HttpApiApp(args);
     }
 

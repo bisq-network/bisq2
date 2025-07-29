@@ -1,9 +1,8 @@
 package bisq.network.tor.controller;
 
-import bisq.common.threading.ThreadName;
-import bisq.network.tor.controller.events.events.TorBootstrapEvent;
 import bisq.network.tor.controller.events.events.EventType;
 import bisq.network.tor.controller.events.events.HsDescEvent;
+import bisq.network.tor.controller.events.events.TorBootstrapEvent;
 import bisq.network.tor.controller.events.listener.BootstrapEventListener;
 import bisq.network.tor.controller.events.listener.HsDescEventListener;
 import lombok.Getter;
@@ -33,7 +32,7 @@ public class TorControlReader implements AutoCloseable {
 
     public void start(InputStream inputStream) {
         Thread thread = new Thread(() -> {
-            ThreadName.from("TorControlReader.start");
+            Thread.currentThread().setName("TorControlReader.start");
             try {
                 var bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.US_ASCII));
 
