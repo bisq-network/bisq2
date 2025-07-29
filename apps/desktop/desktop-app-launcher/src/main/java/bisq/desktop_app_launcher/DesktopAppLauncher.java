@@ -71,6 +71,7 @@ public class DesktopAppLauncher {
     public static void main(String[] args) {
         Thread.currentThread().setName("DesktopAppLauncher.main");
         try {
+            System.setProperty("javafx.sg.warn", "false");
             new DesktopAppLauncher(args);
         } catch (Exception e) {
             log.error("Error at launch", e);

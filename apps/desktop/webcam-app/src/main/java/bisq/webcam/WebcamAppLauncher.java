@@ -8,6 +8,7 @@ public class WebcamAppLauncher {
     public static void main(String[] args) {
         Thread.currentThread().setName("WebcamAppLauncher.main");
         new Thread(() -> {
+            System.setProperty("javafx.sg.warn", "false");
             Thread.currentThread().setName("WebcamAppLauncher.JavaFXApplication.launch");
             Application.launch(WebcamApp.class, args); //blocks until app is closed
         }).start();
