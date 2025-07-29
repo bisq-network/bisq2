@@ -66,10 +66,11 @@ public class SignedWitnessGrpcService implements Service {
         long witnessSignDate = request.getWitnessSignDate();
         String profileId = request.getProfileId();
         String hashAsHex = request.getHashAsHex();
+        long accountAgeWitnessDate = request.getAccountAgeWitnessDate();
         byte[] signature = Base64.getDecoder().decode(request.getSignatureBase64());
         String pubKeyBase64 = request.getPubKeyBase64();
 
-        String messageString = profileId + hashAsHex + witnessSignDate;
+        String messageString = profileId + hashAsHex + accountAgeWitnessDate + witnessSignDate;
         byte[] message = messageString.getBytes(StandardCharsets.UTF_8);
         PublicKey publicKey = KeyGeneration.generatePublic(Base64.getDecoder().decode(pubKeyBase64), KeyGeneration.DSA);
         boolean isValid = SignatureUtil.verify(message,
