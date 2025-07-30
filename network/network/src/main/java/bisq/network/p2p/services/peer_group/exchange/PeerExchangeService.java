@@ -171,7 +171,9 @@ public class PeerExchangeService implements Node.Listener {
                 retryPeerExchangeAsync();
             }
         } catch (InterruptedException e) {
-            log.warn("minSuccessReachedLatch.await failed. {}", ExceptionUtil.getRootCauseMessage(e));
+            log.warn("Thread got interrupted at minSuccessReachedLatch.await in the startInitialPeerExchange method",  e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
+
             retryPeerExchangeAsync();
         }
     }
@@ -224,7 +226,9 @@ public class PeerExchangeService implements Node.Listener {
             try {
                 log.info("Retry peer exchange after {} sec.", delay / 1000);
                 Thread.sleep(delay);
-            } catch (InterruptedException ignore) {
+            } catch (InterruptedException e) {
+                log.warn("Thread got interrupted at retryPeerExchange method", e);
+                Thread.currentThread().interrupt(); // Restore interrupted state
             }
         } else {
             log.info("Retry peer exchange");

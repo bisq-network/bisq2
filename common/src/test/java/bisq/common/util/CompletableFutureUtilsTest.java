@@ -66,6 +66,7 @@ public class CompletableFutureUtilsTest {
                 return val;
             } catch (InterruptedException e) {
                 log.error("Interrupted: {}", e.getMessage(), e);
+                Thread.currentThread().interrupt(); // Restore interrupted state
                 return false;
             }
         });
@@ -78,6 +79,7 @@ public class CompletableFutureUtilsTest {
                 log.info("{} (waited {} ms)", msg, sleepMs);
             } catch (InterruptedException e) {
                 log.error("Interrupted: {}", e.getMessage(), e);
+                Thread.currentThread().interrupt(); // Restore interrupted state
             }
         });
     }
@@ -198,6 +200,7 @@ public class CompletableFutureUtilsTest {
                 Thread.sleep(sleepMs);
                 return value;
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Restore interrupted state
                 throw new RuntimeException(e);
             }
         });
@@ -209,6 +212,7 @@ public class CompletableFutureUtilsTest {
                 Thread.sleep(sleepMs);
                 throw new RuntimeException("forced failure");
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Restore interrupted state
                 throw new RuntimeException(e);
             }
         });

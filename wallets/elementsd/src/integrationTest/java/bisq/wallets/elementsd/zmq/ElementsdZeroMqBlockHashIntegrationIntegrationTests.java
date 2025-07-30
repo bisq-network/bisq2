@@ -63,6 +63,7 @@ public class ElementsdZeroMqBlockHashIntegrationIntegrationTests extends SharedE
                         }
                     }
                 } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt(); // Restore interrupted state
                     throw new RuntimeException(e);
                 }
             }

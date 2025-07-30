@@ -98,6 +98,8 @@ public class I2pEmbeddedRouter {
                 //noinspection BusyWait
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
+                log.warn("Thread got interrupted at getManager method", e);
+                Thread.currentThread().interrupt(); // Restore interrupted state
                 throw new RuntimeException(e);
             }
         }
@@ -114,7 +116,8 @@ public class I2pEmbeddedRouter {
                     throw new IOException("Router died while starting");
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.warn("Thread got interrupted at getManager method", e);
+                Thread.currentThread().interrupt(); // Restore interrupted state
             }
         }
 
@@ -187,7 +190,8 @@ public class I2pEmbeddedRouter {
                         throw new IOException("Router died while starting");
                     }
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    log.warn("Thread got interrupted at startEmbeddedRouter method", e);
+                    Thread.currentThread().interrupt(); // Restore interrupted state
                 }
             }
 

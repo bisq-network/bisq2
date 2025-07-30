@@ -140,7 +140,8 @@ public class UserIdentityRestApi extends RestApiBase {
             UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(userProfile);
             asyncResponse.resume(buildResponse(Response.Status.CREATED, new CreateUserIdentityResponse(userProfileDto)));
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            log.warn("Thread got interrupted at createUserIdentity method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
             asyncResponse.resume(buildErrorResponse("Thread was interrupted."));
         } catch (IllegalArgumentException e) {
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));

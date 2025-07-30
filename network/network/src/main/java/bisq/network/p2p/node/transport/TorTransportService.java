@@ -28,6 +28,7 @@ import java.util.concurrent.ExecutionException;
 public class TorTransportService implements TransportService {
     private static TorService torService;
 
+    private final int socketTimeout;
     @Getter
     public final Observable<TransportState> transportState = new Observable<>(TransportState.NEW);
     @Getter
@@ -38,6 +39,7 @@ public class TorTransportService implements TransportService {
     public final ObservableHashMap<NetworkId, Long> initializedServerSocketTimestampByNetworkId = new ObservableHashMap<>();
 
     public TorTransportService(TransportConfig config) {
+        socketTimeout = config.getSocketTimeout();
         if (torService == null) {
             setTransportState(TransportState.NEW);
             torService = new TorService((TorTransportConfig) config);
@@ -74,8 +76,11 @@ public class TorTransportService implements TransportService {
             ServerSocket serverSocket = torService.publishOnionService(port, torKeyPair).get();
             initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
             return new ServerSocketResult(serverSocket, address);
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+        } catch (InterruptedException e) {
+            log.warn("Thread got interrupted at getServerSocket method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
+            throw new ConnectionException(e);
+        } catch (ExecutionException e) {
             throw new ConnectionException(e);
         }
     }
@@ -85,6 +90,7 @@ public class TorTransportService implements TransportService {
         long ts = System.currentTimeMillis();
         log.info("Start creating tor socket to {}", address);
         Socket socket = torService.getSocket(null); // Blocking call. Takes 5-15 sec usually.
+        socket.setSoTimeout(socketTimeout);
         InetSocketAddress inetSocketAddress = InetSocketAddress.createUnresolved(address.getHost(), address.getPort());
         try {
             socket.connect(inetSocketAddress);

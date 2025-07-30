@@ -48,7 +48,9 @@ public class NetworkUtils {
                 try {
                     log.warn("We had already used port {}. We try again after a short break.", port);
                     Thread.sleep(20);
-                } catch (InterruptedException ignore) {
+                } catch (InterruptedException e) {
+                    log.warn("Thread got interrupted at findFreeSystemPort method", e);
+                    Thread.currentThread().interrupt(); // Restore interrupted state
                 }
                 return findFreeSystemPort();
             } else {

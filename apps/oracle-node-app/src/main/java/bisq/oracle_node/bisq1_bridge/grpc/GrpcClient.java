@@ -106,8 +106,10 @@ public class GrpcClient implements Service {
                     managedChannel.shutdownNow();
                 }
             } catch (InterruptedException e) {
+                log.warn("Thread got interrupted at dispose method", e);
+                Thread.currentThread().interrupt(); // Restore interrupted state
+
                 managedChannel.shutdownNow();
-                Thread.currentThread().interrupt();
             }
             managedChannel = null;
         }

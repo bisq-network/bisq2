@@ -227,7 +227,9 @@ public class BisqEasyService implements Service {
                                 // We delay up to 2 seconds before continuing shutdown process. Usually we only have 1 pending message...
                                 long delay = Math.min(2000, size * 300L);
                                 Thread.sleep(delay);
-                            } catch (InterruptedException ignore) {
+                            } catch (InterruptedException e) {
+                                log.warn("Thread got interrupted at getStorePendingMessagesInMailboxFuture method", e);
+                                Thread.currentThread().interrupt(); // Restore interrupted state
                             }
                         }
                         return true;

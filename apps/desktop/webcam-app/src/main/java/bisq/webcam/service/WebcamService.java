@@ -103,7 +103,9 @@ public class WebcamService implements Service {
                         try {
                             //noinspection BusyWait
                             Thread.sleep(100);
-                        } catch (InterruptedException ignore) {
+                        } catch (InterruptedException e) {
+                            log.warn("Thread got interrupted at shutdown", e);
+                            Thread.currentThread().interrupt(); // Restore interrupted state
                         }
                     }
                     return true;
@@ -147,7 +149,13 @@ public class WebcamService implements Service {
                     }
                     qrCodeProcessor.process(capturedFrame).ifPresent(qrCode::set);
                     capturedImage.set(frameToImageConverter.convert(capturedFrame));
-                } catch (FrameGrabber.Exception | InterruptedException e) {
+                } catch (InterruptedException e) {
+                    log.warn("Thread got interrupted at startFrameCapture method", e);
+                    Thread.currentThread().interrupt(); // Restore interrupted state
+
+                    exception.set(e);
+                    throw new FrameCaptureException(e);
+                } catch (FrameGrabber.Exception e) {
                     exception.set(e);
                     throw new FrameCaptureException(e);
                 }

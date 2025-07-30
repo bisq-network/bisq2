@@ -101,7 +101,10 @@ public class PeerConnectionsManager {
             CompletableFuture<OutboundConnectionChannel> connection = outboundConnectionMultiplexer.get().getConnection(address);
             try {
                 return connection.get(2, MINUTES);
-            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            } catch (InterruptedException e) {
+                log.warn("Couldn't connect to {}. Thread was interrupted at throttle method", address, e);
+                Thread.currentThread().interrupt(); // Restore interrupted state
+            } catch (ExecutionException | TimeoutException e) {
                 log.warn("Couldn't connect to {}", address);
             }
         }

@@ -44,8 +44,7 @@ public class TorTransportConfig implements TransportConfig {
                 config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
                 (int) TimeUnit.SECONDS.toMillis(config.getInt("bootstrapTimeout")),
                 (int) TimeUnit.SECONDS.toMillis(config.getInt("hsUploadTimeout")),
-                (int) TimeUnit.SECONDS.toMillis(config.getInt("defaultNodeSocketTimeout")),
-                (int) TimeUnit.SECONDS.toMillis(config.getInt("userNodeSocketTimeout")),
+                (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
                 config.getBoolean("testNetwork"),
                 parseDirectoryAuthorities(config.getList("directoryAuthorities")),
                 parseTorrcOverrideConfig(config.getConfig("torrcOverrides")),
@@ -92,8 +91,7 @@ public class TorTransportConfig implements TransportConfig {
     private final int defaultNodePort;
     private final int bootstrapTimeout; // in ms
     private final int hsUploadTimeout; // in ms
-    private final int defaultNodeSocketTimeout; // in ms
-    private final int userNodeSocketTimeout; // in ms
+    private final int socketTimeout; // in ms
     private final boolean isTestNetwork;
     private final Set<DirectoryAuthority> directoryAuthorities;
     private final Map<String, String> torrcOverrides;
@@ -105,8 +103,7 @@ public class TorTransportConfig implements TransportConfig {
                               int defaultNodePort,
                               int bootstrapTimeout,
                               int hsUploadTimeout,
-                              int defaultNodeSocketTimeout,
-                              int userNodeSocketTimeout,
+                              int socketTimeout,
                               boolean isTestNetwork,
                               Set<DirectoryAuthority> directoryAuthorities,
                               Map<String, String> torrcOverrides,
@@ -117,8 +114,7 @@ public class TorTransportConfig implements TransportConfig {
         this.defaultNodePort = defaultNodePort;
         this.bootstrapTimeout = bootstrapTimeout;
         this.hsUploadTimeout = hsUploadTimeout;
-        this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
-        this.userNodeSocketTimeout = userNodeSocketTimeout;
+        this.socketTimeout = socketTimeout;
         this.isTestNetwork = isTestNetwork;
         this.directoryAuthorities = directoryAuthorities;
         this.torrcOverrides = torrcOverrides;

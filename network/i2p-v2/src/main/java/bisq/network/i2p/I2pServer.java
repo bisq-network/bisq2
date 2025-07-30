@@ -82,6 +82,8 @@ public class I2pServer {
             try {
                 thread.join(timeout);
             } catch (InterruptedException e) {
+                log.warn("Thread got interrupted at waitForServerThreadShutdown method", e);
+                Thread.currentThread().interrupt(); // Restore interrupted state
                 throw new RuntimeException(e);
             }
         });

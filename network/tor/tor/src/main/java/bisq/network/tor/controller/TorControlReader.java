@@ -97,6 +97,8 @@ public class TorControlReader implements AutoCloseable {
         try {
             return replies.take();
         } catch (InterruptedException e) {
+            log.warn("Thread got interrupted at readLine method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
             throw new RuntimeException(e);
         }
     }

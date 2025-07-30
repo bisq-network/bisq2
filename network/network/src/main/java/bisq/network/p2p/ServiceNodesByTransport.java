@@ -106,8 +106,7 @@ public class ServiceNodesByTransport {
                     supportedTransportTypes,
                     features,
                     transportConfig,
-                    transportConfig.getDefaultNodeSocketTimeout(),
-                    transportConfig.getUserNodeSocketTimeout(),
+                    transportConfig.getSocketTimeout(),
                     transportConfig.getDevModeDelayInMs(),
                     transportConfig.getSendMessageThrottleTime(),
                     transportConfig.getReceiveMessageThrottleTime());

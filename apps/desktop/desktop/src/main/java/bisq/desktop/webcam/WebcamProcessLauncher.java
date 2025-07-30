@@ -94,8 +94,11 @@ public class WebcamProcessLauncher {
             boolean terminatedGraceFully = false;
             try {
                 terminatedGraceFully = process.waitFor(2, TimeUnit.SECONDS);
-            } catch (InterruptedException ignore) {
+            } catch (InterruptedException e) {
+                log.warn("Thread got interrupted at shutdown", e);
+                Thread.currentThread().interrupt(); // Restore interrupted state
             }
+
             if (process.isAlive()) {
                 log.warn("Stopping webcam app process gracefully did not terminate it. We destroy it forcibly.");
                 process.destroyForcibly();

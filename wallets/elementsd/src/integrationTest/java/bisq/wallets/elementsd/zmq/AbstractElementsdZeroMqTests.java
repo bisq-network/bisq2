@@ -101,6 +101,7 @@ public class AbstractElementsdZeroMqTests extends SharedElementsdInstanceTests {
                 }
 
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Restore interrupted state
                 e.printStackTrace();
             }
         }).join(TWO_MINUTES_IN_MILLIS);

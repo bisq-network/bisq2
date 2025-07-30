@@ -279,7 +279,9 @@ public class PeerGroupManager implements Node.Listener {
             maybeCreateConnections();
             maybeRemoveReportedPeers();
             maybeRemovePersistedPeers();
-        } catch (InterruptedException ignore) {
+        } catch (InterruptedException e) {
+            log.warn("Thread got interrupted at doHouseKeeping method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
         }
     }
 

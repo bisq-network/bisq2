@@ -50,7 +50,8 @@ public class DaemonService extends DaemonGrpc.DaemonImplBase {
                 log.error("Tor is still bootstrapping after 2 minutes.");
             }
         } catch (InterruptedException e) {
-            log.error("Thread was interrupted. This shouldn't happen!");
+            log.warn("Thread got interrupted at bootstrapTor method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
         }
     }
 

@@ -119,7 +119,8 @@ public class ExplorerRestApi extends RestApiBase {
             log.info("Explorer request result: {}. json={}", explorerTxDto, new ObjectMapper().writeValueAsString(explorerTxDto));
             asyncResponse.resume(buildResponse(Response.Status.OK, explorerTxDto));
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            log.warn("Thread got interrupted at getTx method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
             asyncResponse.resume(buildErrorResponse("Thread was interrupted."));
         } catch (Exception e) {
             Throwable rootCause = ExceptionUtil.getRootCause(e);

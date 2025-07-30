@@ -132,7 +132,8 @@ public class OfferbookRestApi extends RestApiBase {
             bisqEasyOfferbookChannelService.deleteChatMessage(offerbookMessage, userIdentity.getNetworkIdWithKeyPair()).get();
             asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            log.warn("Thread got interrupted at deleteOffer method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
             asyncResponse.resume(buildErrorResponse("Thread was interrupted."));
         } catch (ExecutionException e) {
             asyncResponse.resume(buildErrorResponse("Failed to delete the offer: " + e.getCause().getMessage()));
@@ -206,7 +207,8 @@ public class OfferbookRestApi extends RestApiBase {
             bisqEasyOfferbookChannelService.publishChatMessage(myOfferMessage, userIdentity).get();
             asyncResponse.resume(buildResponse(Response.Status.CREATED, new CreateOfferResponse(bisqEasyOffer.getId())));
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            log.warn("Thread got interrupted at createOffer method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
             asyncResponse.resume(buildErrorResponse("Thread was interrupted."));
         } catch (IllegalArgumentException e) {
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));

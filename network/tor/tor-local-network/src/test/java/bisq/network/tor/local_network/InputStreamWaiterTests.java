@@ -17,7 +17,6 @@
 
 package bisq.network.tor.local_network;
 
-import bisq.network.tor.local_network.InputStreamWaiter;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -70,7 +69,11 @@ public class InputStreamWaiterTests {
 
                 String remainingString = "phrase:";
                 pipedOutputStream.write(remainingString.getBytes(StandardCharsets.UTF_8));
-            } catch (IOException | InterruptedException e) {
+            } catch (InterruptedException e) {
+                log.warn("Thread got interrupted at waitForPasswordPromptPartialReads method", e);
+                Thread.currentThread().interrupt(); // Restore interrupted state
+                throw new RuntimeException(e);
+            } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         });

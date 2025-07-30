@@ -124,7 +124,9 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
         try {
             // Avoid that the main thread is exiting
             Thread.currentThread().join();
-        } catch (InterruptedException ignore) {
+        } catch (InterruptedException e) {
+            log.warn("Thread got interrupted at keepRunning method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
         }
     }
 }

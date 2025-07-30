@@ -2,12 +2,12 @@ package bisq.network.p2p.node.transport;
 
 import bisq.common.facades.FacadeProvider;
 import bisq.common.network.Address;
-import bisq.common.network.clear_net_address_types.ClearNetAddressType;
-import bisq.common.network.clear_net_address_types.AndroidEmulatorAddressTypeFacade;
-import bisq.common.network.clear_net_address_types.LANAddressTypeFacade;
-import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
+import bisq.common.network.clear_net_address_types.AndroidEmulatorAddressTypeFacade;
+import bisq.common.network.clear_net_address_types.ClearNetAddressType;
+import bisq.common.network.clear_net_address_types.LANAddressTypeFacade;
+import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.network.identity.NetworkId;
@@ -31,7 +31,6 @@ import static bisq.common.facades.FacadeProvider.getClearNetAddressTypeFacade;
 
 @Slf4j
 public class ClearNetTransportService implements TransportService {
-
     @Getter
     @ToString
     @EqualsAndHashCode
@@ -39,8 +38,7 @@ public class ClearNetTransportService implements TransportService {
         public static Config from(Path dataDir, com.typesafe.config.Config config) {
             return new Config(dataDir,
                     config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
-                    (int) TimeUnit.SECONDS.toMillis(config.getInt("defaultNodeSocketTimeout")),
-                    (int) TimeUnit.SECONDS.toMillis(config.getInt("userNodeSocketTimeout")),
+                    (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
                     config.getInt("devModeDelayInMs"),
                     config.getInt("sendMessageThrottleTime"),
                     config.getInt("receiveMessageThrottleTime"),
@@ -51,8 +49,7 @@ public class ClearNetTransportService implements TransportService {
 
         private final Path dataDir;
         private final int defaultNodePort;
-        private final int defaultNodeSocketTimeout;
-        private final int userNodeSocketTimeout;
+        private final int socketTimeout;
         private final int devModeDelayInMs;
         private final int sendMessageThrottleTime;
         private final int receiveMessageThrottleTime;
@@ -61,8 +58,7 @@ public class ClearNetTransportService implements TransportService {
 
         public Config(Path dataDir,
                       int defaultNodePort,
-                      int defaultNodeSocketTimeout,
-                      int userNodeSocketTimeout,
+                      int socketTimeout,
                       int devModeDelayInMs,
                       int sendMessageThrottleTime,
                       int receiveMessageThrottleTime,
@@ -70,8 +66,7 @@ public class ClearNetTransportService implements TransportService {
                       ClearNetAddressType clearNetAddressType) {
             this.dataDir = dataDir;
             this.defaultNodePort = defaultNodePort;
-            this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
-            this.userNodeSocketTimeout = userNodeSocketTimeout;
+            this.socketTimeout = socketTimeout;
             this.devModeDelayInMs = devModeDelayInMs;
             this.sendMessageThrottleTime = sendMessageThrottleTime;
             this.receiveMessageThrottleTime = receiveMessageThrottleTime;
@@ -79,7 +74,7 @@ public class ClearNetTransportService implements TransportService {
             this.clearNetAddressType = clearNetAddressType;
         }
     }
-
+    private final int socketTimeout;
     private final int devModeDelayInMs;
     private final int connectTimeoutMs;
     private boolean initializeCalled;
@@ -93,6 +88,7 @@ public class ClearNetTransportService implements TransportService {
     public final ObservableHashMap<NetworkId, Long> initializedServerSocketTimestampByNetworkId = new ObservableHashMap<>();
 
     public ClearNetTransportService(TransportConfig config) {
+        socketTimeout = config.getSocketTimeout();
         devModeDelayInMs = config.getDevModeDelayInMs();
         connectTimeoutMs = ((Config) config).getConnectTimeoutMs();
         setTransportState(TransportState.NEW);
@@ -162,6 +158,7 @@ public class ClearNetTransportService implements TransportService {
         log.debug("Create new Socket to {}", address);
         maybeSimulateDelay();
         Socket socket = new Socket();
+        socket.setSoTimeout(socketTimeout);
         socket.connect(new InetSocketAddress(address.getHost(), address.getPort()), connectTimeoutMs);
 
         return socket;

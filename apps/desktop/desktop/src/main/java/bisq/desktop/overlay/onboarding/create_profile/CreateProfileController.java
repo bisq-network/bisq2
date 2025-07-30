@@ -192,6 +192,8 @@ public class CreateProfileController implements Controller {
             // Limit to 200-2000 ms
             Thread.sleep(Math.min(2000, Math.max(200, (200 + random - powDuration))));
         } catch (InterruptedException e) {
+            log.warn("Thread got interrupted at createSimulatedDelay method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
             throw new RuntimeException(e);
         }
     }
