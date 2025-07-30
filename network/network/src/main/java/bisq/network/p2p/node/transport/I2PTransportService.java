@@ -137,7 +137,9 @@ public class I2PTransportService implements TransportService {
                 try {
                     //noinspection BusyWait
                     Thread.sleep(1000);
-                } catch (InterruptedException ignore) {
+                } catch (InterruptedException e) {
+                    log.warn("Thread got interrupted at initialize method", e);
+                    Thread.currentThread().interrupt(); // Restore interrupted state
                 }
             }
             i2pClient = getClient(true);

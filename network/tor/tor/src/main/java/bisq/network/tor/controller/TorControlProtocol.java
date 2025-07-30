@@ -46,7 +46,7 @@ public class TorControlProtocol implements AutoCloseable {
             this.torControlReader.start(this.controlSocket.getInputStream());
             log.info("TorControlProtocol initialized successfully for port {}", port);
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            Thread.currentThread().interrupt();  // Restore interrupted state
             log.error("TorControlProtocol initialization for port {} was interrupted.", port, e);
             close();
             throw new CannotConnectWithTorException(e);

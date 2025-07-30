@@ -123,7 +123,11 @@ public class ElectrumBinaryExtractor {
             if (!isSuccess) {
                 throw new ElectrumExtractionFailedException("Could not copy Electrum.app to data directory.");
             }
-        } catch (InterruptedException | IOException e) {
+        } catch (InterruptedException e) {
+            log.warn("Thread got interrupted at unpackZipFileWithUnzipCommand method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
+            throw new ElectrumExtractionFailedException("Could not copy Electrum.app to data directory.");
+        } catch (IOException e) {
             throw new ElectrumExtractionFailedException("Could not copy Electrum.app to data directory.");
         }
     }

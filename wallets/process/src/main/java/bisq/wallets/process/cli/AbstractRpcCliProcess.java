@@ -17,12 +17,15 @@
 
 package bisq.wallets.process.cli;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
+@Slf4j
 public abstract class AbstractRpcCliProcess {
     private final CliProcessConfig cliProcessConfig;
 
@@ -36,6 +39,12 @@ public abstract class AbstractRpcCliProcess {
     }
 
     private Process runCliProcess(String... args) {
+        String errorMessage = String.format(
+                "`%s %s %s` did not succeed.",
+                cliProcessConfig.getBinaryName(),
+                cliProcessConfig.getDefaultArgs(),
+                String.join(" ", args)
+        );
         try {
             List<String> allArgs = createArgsList(args);
             Process process = new ProcessBuilder(allArgs).start();
@@ -46,13 +55,12 @@ public abstract class AbstractRpcCliProcess {
             }
 
             return process;
-        } catch (IOException | InterruptedException e) {
-            String errorMessage = String.format(
-                    "`%s %s %s` did not succeed.",
-                    cliProcessConfig.getBinaryName(),
-                    cliProcessConfig.getDefaultArgs(),
-                    String.join(" ", args)
-            );
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Restore interrupted state
+            log.warn("Thread got interrupted at runCliProcess method", e);
+
+            throw new CliCommandFailedException(errorMessage, e);
+        } catch (IOException e) {
             throw new CliCommandFailedException(errorMessage, e);
         }
     }

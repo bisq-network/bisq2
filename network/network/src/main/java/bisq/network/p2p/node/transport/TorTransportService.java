@@ -76,8 +76,11 @@ public class TorTransportService implements TransportService {
             ServerSocket serverSocket = torService.publishOnionService(port, torKeyPair).get();
             initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
             return new ServerSocketResult(serverSocket, address);
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+        } catch (InterruptedException e) {
+            log.warn("Thread got interrupted at getServerSocket method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
+            throw new ConnectionException(e);
+        } catch (ExecutionException e) {
             throw new ConnectionException(e);
         }
     }

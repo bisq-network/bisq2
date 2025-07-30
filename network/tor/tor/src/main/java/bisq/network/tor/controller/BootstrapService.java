@@ -68,6 +68,8 @@ public class BootstrapService extends BootstrapEventListener {
                             throw new TorBootstrapFailedException("Could not bootstrap Tor in " + timeout / 1000 + " seconds");
                         }
                     } catch (InterruptedException e) {
+                        log.warn("Thread got interrupted at bootstrap method", e);
+                        Thread.currentThread().interrupt(); // Restore interrupted state
                         throw new TorBootstrapFailedException(e);
                     }
                 }, MoreExecutors.directExecutor())

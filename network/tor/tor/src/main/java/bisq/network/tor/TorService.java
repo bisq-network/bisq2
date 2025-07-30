@@ -236,8 +236,11 @@ public class TorService implements Service {
                     System.currentTimeMillis() - ts, onionAddress, port);
 
             return CompletableFuture.completedFuture(localServerSocket);
-
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
+            log.warn("Can't create onion service. Thread got interrupted at publishOnionService method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
+            return CompletableFuture.failedFuture(e);
+        } catch (IOException e) {
             log.error("Can't create onion service", e);
             return CompletableFuture.failedFuture(e);
         }
@@ -246,7 +249,11 @@ public class TorService implements Service {
     public boolean isOnionServiceOnline(String onionUrl) {
         try {
             return torController.isOnionServiceOnline(onionUrl).get(1, TimeUnit.MINUTES);
-        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+        } catch (InterruptedException e) {
+            log.warn("Thread got interrupted at isOnionServiceOnline method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
+            throw new RuntimeException(e);
+        } catch (ExecutionException | TimeoutException e) {
             throw new RuntimeException(e);
         }
     }

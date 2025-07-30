@@ -83,6 +83,8 @@ public class EmbeddedTorProcess {
                     log.info("Tor process has exited successfully");
                 }
             } catch (InterruptedException e) {
+                log.warn("Thread got interrupted at waitUntilExited method", e);
+                Thread.currentThread().interrupt(); // Restore interrupted state
                 throw new CouldNotWaitForTorShutdownException(e);
             }
         });

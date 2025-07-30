@@ -245,7 +245,10 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
         electrumNotifyWebServer.startServer();
         try {
             requestWalletAddresses().get().forEach(this::monitorAddress);
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
+            log.warn("requestWalletAddresses failed. Thread got interrupted at initializeReceiveAddressMonitor method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
+        } catch (ExecutionException e) {
             log.error("requestWalletAddresses failed. ", e);
         }
     }

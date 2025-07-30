@@ -74,7 +74,10 @@ public class FileCreationWatcher {
                     log.warn("File watcher is no longer valid.");
                 }
             }
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
+            log.error("Couldn't watch directory: {}. Thread got interrupted at waitForNewFile method", directoryToWatch.toAbsolutePath(), e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
+        } catch (IOException e) {
             log.error("Couldn't watch directory: {}", directoryToWatch.toAbsolutePath(), e);
         }
 

@@ -66,6 +66,8 @@ public class CameraDeviceLookupDefault implements CameraDeviceLookup {
                     throw new WebcamException(ErrorCode.EXECUTION_EXCEPTION, e);
                 }
             } catch (InterruptedException e) {
+                log.warn("Thread got interrupted at find method", e);
+                Thread.currentThread().interrupt(); // Restore interrupted state
                 throw new WebcamException(ErrorCode.INTERRUPTED_EXCEPTION, e);
             }
 
@@ -83,6 +85,8 @@ public class CameraDeviceLookupDefault implements CameraDeviceLookup {
                         throw new WebcamException(ErrorCode.EXECUTION_EXCEPTION, e);
                     }
                 } catch (InterruptedException e) {
+                    log.warn("Thread got interrupted at find method", e);
+                    Thread.currentThread().interrupt(); // Restore interrupted state
                     throw new WebcamException(ErrorCode.INTERRUPTED_EXCEPTION, e);
                 }
             } while (deviceNumber.get() < numDevices.get());
