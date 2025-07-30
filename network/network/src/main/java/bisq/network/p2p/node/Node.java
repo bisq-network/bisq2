@@ -119,8 +119,7 @@ public class Node implements Connection.Handler {
         private final Set<TransportType> supportedTransportTypes;
         private final Set<Feature> features;
         private final TransportConfig transportConfig;
-        private final int defaultNodeSocketTimeout; // in ms
-        private final int userNodeSocketTimeout; // in ms
+        private final int socketTimeout; // in ms
         private final int devModeDelayInMs;
         private final int sendMessageThrottleTime;
         private final int receiveMessageThrottleTime;
@@ -129,8 +128,7 @@ public class Node implements Connection.Handler {
                       Set<TransportType> supportedTransportTypes,
                       Set<Feature> features,
                       TransportConfig transportConfig,
-                      int defaultNodeSocketTimeout,
-                      int userNodeSocketTimeout,
+                      int socketTimeout,
                       int devModeDelayInMs,
                       int sendMessageThrottleTime,
                       int receiveMessageThrottleTime) {
@@ -138,8 +136,7 @@ public class Node implements Connection.Handler {
             this.supportedTransportTypes = supportedTransportTypes;
             this.features = features;
             this.transportConfig = transportConfig;
-            this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
-            this.userNodeSocketTimeout = userNodeSocketTimeout;
+            this.socketTimeout = socketTimeout;
             this.devModeDelayInMs = devModeDelayInMs;
             this.sendMessageThrottleTime = sendMessageThrottleTime;
             this.receiveMessageThrottleTime = receiveMessageThrottleTime;
@@ -195,7 +192,7 @@ public class Node implements Connection.Handler {
         transportType = config.getTransportType();
         supportedTransportTypes = config.getSupportedTransportTypes();
         features = config.getFeatures();
-        socketTimeout = isDefaultNode ? config.getDefaultNodeSocketTimeout() : config.getUserNodeSocketTimeout();
+        socketTimeout = config.getSocketTimeout();
         devModeDelayInMs = config.getDevModeDelayInMs();
         this.banList = banList;
         this.transportService = transportService;
@@ -256,6 +253,7 @@ public class Node implements Connection.Handler {
         ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, keyBundle);
         myCapability = Optional.of(Capability.myCapability(serverSocketResult.getAddress(), new ArrayList<>(supportedTransportTypes), new ArrayList<>(features)));
         server = Optional.of(new Server(serverSocketResult,
+                socketTimeout,
                 socket -> onClientSocket(socket, serverSocketResult, myCapability.get()),
                 exception -> {
                     handleException(exception);
@@ -265,17 +263,17 @@ public class Node implements Connection.Handler {
     }
 
     private void onClientSocket(Socket socket, ServerSocketResult serverSocketResult, Capability myCapability) {
-        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket,
-                banList,
-                socketTimeout,
-                myCapability,
-                authorizationService,
-                keyBundle);
-        connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
-        log.debug("Inbound handshake request at: {}", myCapability.getAddress());
+        ConnectionHandshake connectionHandshake = null;
         try {
+            connectionHandshake = new ConnectionHandshake(socket,
+                    banList,
+                    myCapability,
+                    authorizationService,
+                    keyBundle);
+            connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
+            log.debug("Inbound handshake request at: {}", myCapability.getAddress());
+
             ConnectionHandshake.Result result = connectionHandshake.onSocket(networkLoadSnapshot.getCurrentNetworkLoad()); // Blocking call
-            connectionHandshakes.remove(connectionHandshake.getId());
 
             Address address = result.getPeersCapability().getAddress();
             log.debug("Inbound handshake completed: Initiated by {} to {}", address, myCapability.getAddress());
@@ -311,14 +309,17 @@ public class Node implements Connection.Handler {
                 }
             }));
         } catch (Throwable throwable) {
-            connectionHandshake.shutdown();
-            connectionHandshakes.remove(connectionHandshake.getId());
             try {
                 socket.close();
             } catch (IOException ignore) {
             }
 
             handleException(throwable);
+        } finally {
+            if (connectionHandshake != null) {
+                connectionHandshake.shutdown();
+                connectionHandshakes.remove(connectionHandshake.getId());
+            }
         }
     }
 
@@ -460,10 +461,16 @@ public class Node implements Connection.Handler {
             return outboundConnectionsByAddress.get(address);
         }
 
-        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket, banList, socketTimeout, myCapability, authorizationService, keyBundle);
-        connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
-        log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
+        ConnectionHandshake connectionHandshake = null;
         try {
+            connectionHandshake = new ConnectionHandshake(socket,
+                    banList,
+                    myCapability,
+                    authorizationService,
+                    keyBundle);
+
+            connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
+            log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
             ConnectionHandshake.Result result = connectionHandshake.start(networkLoadSnapshot.getCurrentNetworkLoad(), address); // Blocking call
             connectionHandshakes.remove(connectionHandshake.getId());
             log.debug("Outbound handshake completed: Initiated by {} to {}", myCapability.getAddress(), address);
@@ -512,8 +519,6 @@ public class Node implements Connection.Handler {
             }));
             return connection;
         } catch (Throwable throwable) {
-            connectionHandshake.shutdown();
-            connectionHandshakes.remove(connectionHandshake.getId());
             try {
                 socket.close();
             } catch (IOException ignore) {
@@ -521,6 +526,11 @@ public class Node implements Connection.Handler {
 
             handleException(throwable);
             throw new ConnectionException(ConnectionException.Reason.HANDSHAKE_FAILED, throwable);
+        } finally {
+            if (connectionHandshake != null) {
+                connectionHandshake.shutdown();
+                connectionHandshakes.remove(connectionHandshake.getId());
+            }
         }
     }
 
@@ -788,9 +798,10 @@ public class Node implements Connection.Handler {
         } else if (exception instanceof UnknownHostException) {
             log.warn("UnknownHostException. Might happen if we try to connect to wrong network type.", exception);
         } else if (exception instanceof SocketTimeoutException) {
-            log.info("Exception: {}", ExceptionUtil.getRootCauseMessage(exception));
-        } else if (exception instanceof ConnectionException) {
-            ConnectionException connectionException = (ConnectionException) exception;
+            log.info("SocketTimeoutException: {}", ExceptionUtil.getRootCauseMessage(exception));
+        } else if (exception instanceof IOException) {
+            log.info("IOException: {}", ExceptionUtil.getRootCauseMessage(exception));
+        } else if (exception instanceof ConnectionException connectionException) {
             if (connectionException.getCause() instanceof SocketTimeoutException) {
                 handleException(connectionException.getCause());
                 return;
@@ -804,7 +815,8 @@ public class Node implements Connection.Handler {
                         log.warn(msg, exception);
                         break;
                     case PROTOBUF_IS_NULL:
-                        log.info("Exception: {}", ExceptionUtil.getRootCauseMessage(exception));
+                        // This is usually the case when inputStream reach EOF
+                        log.debug("Exception: {}", ExceptionUtil.getRootCauseMessage(exception));
                         break;
                     case AUTHORIZATION_FAILED:
                     case ONION_ADDRESS_VERIFICATION_FAILED:

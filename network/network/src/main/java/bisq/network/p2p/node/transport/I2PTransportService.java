@@ -34,8 +34,7 @@ public class I2PTransportService implements TransportService {
         public static Config from(Path dataDir, com.typesafe.config.Config config) {
             return new Config(dataDir,
                     config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
-                    (int) TimeUnit.SECONDS.toMillis(config.getInt("defaultNodeSocketTimeout")),
-                    (int) TimeUnit.SECONDS.toMillis(config.getInt("userNodeSocketTimeout")),
+                    (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
                     config.getInt("inboundKBytesPerSecond"),
                     config.getInt("outboundKBytesPerSecond"),
                     config.getInt("bandwidthSharePercentage"),
@@ -48,8 +47,7 @@ public class I2PTransportService implements TransportService {
         }
 
         private final int defaultNodePort;
-        private final int defaultNodeSocketTimeout;
-        private final int userNodeSocketTimeout;
+        private final int socketTimeout;
         private final int inboundKBytesPerSecond;
         private final int outboundKBytesPerSecond;
         private final int bandwidthSharePercentage;
@@ -63,8 +61,7 @@ public class I2PTransportService implements TransportService {
 
         public Config(Path dataDir,
                       int defaultNodePort,
-                      int defaultNodeSocketTimeout,
-                      int userNodeSocketTimeout,
+                      int socketTimeout,
                       int inboundKBytesPerSecond,
                       int outboundKBytesPerSecond,
                       int bandwidthSharePercentage,
@@ -76,8 +73,7 @@ public class I2PTransportService implements TransportService {
                       int receiveMessageThrottleTime) {
             this.dataDir = dataDir;
             this.defaultNodePort = defaultNodePort;
-            this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
-            this.userNodeSocketTimeout = userNodeSocketTimeout;
+            this.socketTimeout = socketTimeout;
             this.inboundKBytesPerSecond = inboundKBytesPerSecond;
             this.outboundKBytesPerSecond = outboundKBytesPerSecond;
             this.bandwidthSharePercentage = bandwidthSharePercentage;
@@ -90,6 +86,7 @@ public class I2PTransportService implements TransportService {
         }
     }
 
+    private final int socketTimeout;
     private final String i2pDirPath;
     private I2pClient i2pClient;
     private boolean initializeCalled;
@@ -110,6 +107,7 @@ public class I2PTransportService implements TransportService {
 
         // Failed to get config generic...
         this.config = (I2PTransportService.Config) config;
+        socketTimeout = config.getSocketTimeout();
 
         i2pDirPath = config.getDataDir().toAbsolutePath().toString();
         log.info("I2PTransport using i2pDirPath: {}", i2pDirPath);
@@ -185,7 +183,7 @@ public class I2PTransportService implements TransportService {
         return I2pClient.getI2pClient(i2pDirPath,
                 config.getI2cpHost(),
                 config.getI2cpPort(),
-                config.getDefaultNodeSocketTimeout(),
+                config.getSocketTimeout(),
                 isEmbeddedRouter);
     }
 
@@ -213,7 +211,6 @@ public class I2PTransportService implements TransportService {
             log.debug("ServerSocket created. SessionId={}, destination={}", sessionId, destination);
             return new ServerSocketResult(serverSocket, address);
         } catch (Exception exception) {
-            exception.printStackTrace();
             throw new ConnectionException(exception);
         }
     }
@@ -225,6 +222,7 @@ public class I2PTransportService implements TransportService {
             log.debug("Create new Socket to {} with sessionId={}", address, sessionId);
             long ts = System.currentTimeMillis();
             Socket socket = i2pClient.getSocket(address.getHost(), sessionId);
+            socket.setSoTimeout(socketTimeout);
             log.info("I2P socket to {} created. Took {} ms", address, System.currentTimeMillis() - ts);
             return socket;
         } catch (IOException exception) {

@@ -41,6 +41,7 @@ public final class Server {
     public final ExecutorService executor;
 
     Server(ServerSocketResult serverSocketResult,
+           int socketTimeout,
            Consumer<Socket> socketHandler,
            Consumer<Exception> exceptionHandler) {
         serverSocket = serverSocketResult.getServerSocket();
@@ -51,6 +52,7 @@ public final class Server {
             try {
                 while (isNotStopped()) {
                     Socket socket = serverSocket.accept();
+                    socket.setSoTimeout(socketTimeout);
                     log.debug("Accepted new connection on server: {}", serverSocketResult);
                     if (isNotStopped()) {
                         // Call handler on new thread

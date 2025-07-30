@@ -45,7 +45,10 @@ import java.net.Socket;
 import java.util.Optional;
 import java.util.Set;
 
-import static bisq.network.p2p.node.ConnectionException.Reason.*;
+import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
+import static bisq.network.p2p.node.ConnectionException.Reason.AUTHORIZATION_FAILED;
+import static bisq.network.p2p.node.ConnectionException.Reason.ONION_ADDRESS_VERIFICATION_FAILED;
+import static bisq.network.p2p.node.ConnectionException.Reason.PROTOBUF_IS_NULL;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -61,7 +64,7 @@ public final class ConnectionHandshake {
     private final Capability capability;
     private final AuthorizationService authorizationService;
     private final KeyBundle myKeyBundle;
-    private NetworkEnvelopeSocket networkEnvelopeSocket;
+    private final NetworkEnvelopeSocket networkEnvelopeSocket;
 
     @Getter
     @ToString
@@ -189,25 +192,16 @@ public final class ConnectionHandshake {
 
     public ConnectionHandshake(Socket socket,
                                BanList banList,
-                               int socketTimeout,
                                Capability capability,
                                AuthorizationService authorizationService,
-                               KeyBundle myKeyBundle) {
+                               KeyBundle myKeyBundle) throws IOException {
         this.banList = banList;
         this.capability = capability;
         this.authorizationService = authorizationService;
         this.myKeyBundle = myKeyBundle;
 
-        try {
-            // socket.setTcpNoDelay(true);
-            // socket.setSoLinger(true, 100);
-            socket.setSoTimeout(socketTimeout);
-
-            PeerSocket peerSocket = new DefaultPeerSocket(socket);
-            this.networkEnvelopeSocket = new NetworkEnvelopeSocket(peerSocket);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        PeerSocket peerSocket = new DefaultPeerSocket(socket);
+        this.networkEnvelopeSocket = new NetworkEnvelopeSocket(peerSocket);
     }
 
     // Client side protocol
@@ -282,6 +276,7 @@ public final class ConnectionHandshake {
             if (e instanceof ConnectionException) {
                 throw (ConnectionException) e;
             } else {
+                // May be SocketTimeoutException, IOException or unexpected Exception
                 throw new ConnectionException(e);
             }
         }
@@ -291,7 +286,7 @@ public final class ConnectionHandshake {
     public Result onSocket(NetworkLoad myNetworkLoad) {
         try {
             ConnectionMetrics connectionMetrics = new ConnectionMetrics();
-            bisq.network.protobuf.NetworkEnvelope requestProto = networkEnvelopeSocket.receiveNextEnvelope();
+            bisq.network.protobuf.NetworkEnvelope requestProto = networkEnvelopeSocket.receiveNextEnvelope(); // Blocking
             if (requestProto == null) {
                 throw new ConnectionException(PROTOBUF_IS_NULL,
                         "Request NetworkEnvelope protobuf is null");
@@ -308,17 +303,20 @@ public final class ConnectionHandshake {
             }
             Capability requestersCapability = request.getCapability();
             Address peerAddress = requestersCapability.getAddress();
+
+            //TODO banList not implemented yet to get set banned addresses.
             if (banList.isBanned(peerAddress)) {
                 throw new ConnectionException(ADDRESS_BANNED, "PeerAddress is banned. address=" + peerAddress);
             }
 
             Address myAddress = capability.getAddress();
-            // As the request did not know our load at the initial request, they used the NetworkLoad.INITIAL_LOAD for the
-            // AuthorizationToken.
+            // As the request did not know our load at the initial request, they used the NetworkLoad.INITIAL_LOAD for the AuthorizationToken.
+            // ConnectionId is used only for guarding against pow re-use but as we do not have a connection yet, we just pass a random UID.
+            String connectionId = StringUtils.createUid();
             boolean isAuthorized = authorizationService.isAuthorized(request,
                     requestNetworkEnvelope.getAuthorizationToken(),
                     NetworkLoad.INITIAL_NETWORK_LOAD,
-                    StringUtils.createUid(),
+                    connectionId,
                     myAddress.getFullAddress());
             if (!isAuthorized) {
                 throw new ConnectionException(AUTHORIZATION_FAILED, "Authorization of inbound connection request failed. AuthorizationToken=" + requestNetworkEnvelope.getAuthorizationToken());
@@ -342,7 +340,7 @@ public final class ConnectionHandshake {
                     requestersCapability.getFeatures());
             NetworkEnvelope responseNetworkEnvelope = new NetworkEnvelope(token, response);
             long startSendTs = System.currentTimeMillis();
-            networkEnvelopeSocket.send(responseNetworkEnvelope);
+            networkEnvelopeSocket.send(responseNetworkEnvelope); // Blocking
             connectionMetrics.onSent(responseNetworkEnvelope, System.currentTimeMillis() - startSendTs);
             connectionMetrics.addRtt(System.currentTimeMillis() - ts);
             return new Result(requestersCapability, request.getNetworkLoad(), connectionMetrics);
