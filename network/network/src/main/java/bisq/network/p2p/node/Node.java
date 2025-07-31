@@ -167,6 +167,7 @@ public class Node implements Connection.Handler {
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Map<String, ConnectionHandshake> connectionHandshakes = new ConcurrentHashMap<>();
     private Optional<Server> server = Optional.empty();
+    @Getter
     private Optional<Capability> myCapability = Optional.empty();
     @Getter
     public final AtomicReference<State> state = new AtomicReference<>(State.NEW);
@@ -217,7 +218,7 @@ public class Node implements Connection.Handler {
                 } else {
                     log.debug("We are now in RUNNING state");
                 }
-            }  catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 log.warn("Thread got interrupted at initialize method", e);
                 Thread.currentThread().interrupt(); // Restore interrupted state
             }

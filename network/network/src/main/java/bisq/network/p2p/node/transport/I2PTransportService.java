@@ -237,4 +237,8 @@ public class I2PTransportService implements TransportService {
     public boolean isPeerOnline(Address address) {
         throw new UnsupportedOperationException("isPeerOnline needs to be implemented for I2P.");
     }
+
+    public TransportType getTransportType() {
+        return TransportType.I2P;
+    }
 }

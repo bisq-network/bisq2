@@ -82,6 +82,7 @@ public class DataService implements StorageService.Listener {
     @Getter
     private final StorageService storageService;
     private final Set<DataService.Listener> listeners = new CopyOnWriteArraySet<>();
+    @Getter
     private final Set<Broadcaster> broadcasters = new CopyOnWriteArraySet<>();
 
     public DataService(PersistenceService persistenceService) {

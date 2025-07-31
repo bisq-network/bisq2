@@ -81,4 +81,6 @@ public interface TransportService {
     ObservableHashMap<NetworkId, Long> getInitializeServerSocketTimestampByNetworkId();
 
     ObservableHashMap<NetworkId, Long> getInitializedServerSocketTimestampByNetworkId();
+
+    TransportType getTransportType();
 }

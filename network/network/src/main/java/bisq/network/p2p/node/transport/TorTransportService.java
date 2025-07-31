@@ -114,4 +114,8 @@ public class TorTransportService implements TransportService {
     public Observable<Boolean> getUseExternalTor() {
         return torService.getUseExternalTor();
     }
+
+    public TransportType getTransportType() {
+        return TransportType.TOR;
+    }
 }
