@@ -166,7 +166,7 @@ jobs:
             first_lang=false
           done
           json_output+=']}'
-          echo "t_matrix=$json_output" >> $GITHUB_OUTPUT
+          printf 't_matrix=%s\n' "$json_output" >> "$GITHUB_OUTPUT"
 
       - name: Push source files to Transifex
         if: steps.calculate-pushes.outputs.s_args != ''
@@ -183,6 +183,12 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.calculate_and_push_sources.outputs.t_matrix) }}
     steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          # Re-use the same commit as the triggering workflow_run
+          ref: ${{ github.event.workflow_run.head_sha }}
+
       - name: Push ${{ matrix.lang }} translations
         uses: transifex/cli-action@v2
         with:
