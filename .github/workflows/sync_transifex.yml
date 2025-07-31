@@ -13,11 +13,13 @@ on:
 jobs:
   verify:
     name: Verify Transifex configuration
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.event.workflow_run.head_sha }}
 
       - name: Verify that .tx/config is in sync with the i18n folder
         run: |
@@ -47,6 +49,7 @@ jobs:
   push:
     name: Push translation files to Transifex
     if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    needs: verify
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
