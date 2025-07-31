@@ -84,7 +84,12 @@ jobs:
           set -euo pipefail
           
           echo "Installing Transifex CLI..."
-          curl -sSL --fail https://raw.githubusercontent.com/transifex/cli/v1.6.17/install.sh | bash   # ← pin to a known tag / commit
+          # curl -sSL --fail https://raw.githubusercontent.com/transifex/cli/v1.6.17/install.sh | bash   # ← pin to a known tag / commit
+          # Download installer and verify checksum before executing
+          url=https://raw.githubusercontent.com/transifex/cli/v1.6.17/install.sh
+          curl -sSL --fail "$url" -o install.sh
+          echo "39fe480b525880aa842a097f8315100c3d5a19233a71befec904ce319205d392  install.sh" | sha256sum -c -
+          bash install.sh
           # Optionally verify checksum:
           # echo "<expected-sha256>  install.sh" | sha256sum -c -
           echo "Finding changed files..."
