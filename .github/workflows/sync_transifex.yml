@@ -52,7 +52,7 @@ jobs:
     needs: verify
     runs-on: ubuntu-latest
     outputs:
-      t_matrix: ${{ steps.calculate-pushes.outputs.t_matrix }}
+      t_matrix: ${{ steps.calculate-pushes.outputs.t_matrix || '{"include":[]}' }}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
