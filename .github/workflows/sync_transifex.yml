@@ -2,7 +2,7 @@ name: Transifex
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [ opened, synchronize, reopened ]
     paths:
       - '.tx/config'
       - 'i18n/src/main/resources/**.properties'
@@ -82,16 +82,12 @@ jobs:
           TX_TOKEN: ${{ secrets.TX_TOKEN }}
         run: |
           set -euo pipefail
-          
           echo "Installing Transifex CLI..."
-          # curl -sSL --fail https://raw.githubusercontent.com/transifex/cli/v1.6.17/install.sh | bash   # ← pin to a known tag / commit
           # Download installer and verify checksum before executing
           url=https://raw.githubusercontent.com/transifex/cli/v1.6.17/install.sh
           curl -sSL --fail "$url" -o install.sh
           echo "39fe480b525880aa842a097f8315100c3d5a19233a71befec904ce319205d392  install.sh" | sha256sum -c -
           bash install.sh
-          # Optionally verify checksum:
-          # echo "<expected-sha256>  install.sh" | sha256sum -c -
           echo "Finding changed files..."
           # Use git diff-tree for merge commits. The `^!` gets the combined diff against all parents.
           # This gives us the changes that were introduced by the merge.
@@ -155,7 +151,6 @@ jobs:
                     }
                 }
               ' .tx/config)
-
               if [[ -n "$resource_slug_line" ]] && [[ "$resource_slug_line" =~ ^\[o:.*:p:(.*):r:(.*)\]$ ]]; then
                 project_slug="${BASH_REMATCH[1]}"
                 resource_slug="${BASH_REMATCH[2]}"
