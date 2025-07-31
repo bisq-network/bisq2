@@ -92,9 +92,9 @@ jobs:
           echo "39fe480b525880aa842a097f8315100c3d5a19233a71befec904ce319205d392  install.sh" | sha256sum -c -
           bash install.sh
           echo "Finding changed files..."
-          # Use git diff-tree for merge commits. The `^!` gets the combined diff against all parents.
           # This gives us the changes that were introduced by the merge.
-          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.event.workflow_run.head_sha }}^!)
+          # We compare the merge commit with its first parent to get the list of files.
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.workflow_run.head_sha }}~1 ${{ github.event.workflow_run.head_sha }})
           echo "Files changed in the merge:"
           echo "$CHANGED_FILES"
           # --- Handle SOURCE file pushes (-s) ---
