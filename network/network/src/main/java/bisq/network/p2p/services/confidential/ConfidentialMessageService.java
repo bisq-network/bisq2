@@ -46,7 +46,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -80,7 +79,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     @Getter
-    private final Set<EnvelopePayloadMessage> processedEnvelopePayloadMessages = new HashSet<>();
+    private final Set<EnvelopePayloadMessage> processedEnvelopePayloadMessages = new CopyOnWriteArraySet<>();
     private volatile boolean isShutdownInProgress;
 
     public ConfidentialMessageService(NodesById nodesById,
