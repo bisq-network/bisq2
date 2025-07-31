@@ -98,53 +98,48 @@ jobs:
           CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.event.workflow_run.head_sha }}^!)
           echo "Files changed in the merge:"
           echo "$CHANGED_FILES"
-          
           # --- Handle SOURCE file pushes (-s) ---
-          push_s_args=""
+          push_s_args=() # Use an array for clarity
           if echo "${CHANGED_FILES}" | grep -q -x ".tx/config"; then
             echo "::notice:: .tx/config changed. Pushing all source files."
-            push_s_args="-s"
+            push_s_args=("-s")
           else
-            CHANGED_SOURCE_FILES=$(echo "${CHANGED_FILES}" | grep -E 'i18n/src/main/resources/.*\.properties$' | grep -v -E '(_[a-z]{2}(_[A-Z]{2})?|_pcm)\.properties$' || true)
+            # Filter for any .properties file in the repo, excluding locale-specific ones.
+            # The -- ensures filenames are not treated as options.
+            CHANGED_SOURCE_FILES=$(echo "${CHANGED_FILES}" | grep -E '\.properties$' | grep -v -E '(_[a-z]{2}(_[A-Z]{2})?|_pcm)\.properties$' -- || true)
             if [ -n "$CHANGED_SOURCE_FILES" ]; then
-              resources_found=false
               for file in $CHANGED_SOURCE_FILES; do
                 # Find the resource slug for the source file
                 resource_slug_line=$(awk -v file="$file" '
                   $0 ~ /^\[o:.*:p:.*:r:.*\]$/ {resource=$0}
                   $0 ~ ("source_file[[:space:]]*=[[:space:]]*" file "$") {print resource}
                 ' .tx/config)
-                
                 if [[ -n "$resource_slug_line" ]] && [[ "$resource_slug_line" =~ ^\[o:.*:p:(.*):r:(.*)\]$ ]]; then
-                  if ! $resources_found; then
-                    push_s_args="-s"
-                    resources_found=true
+                  if [ ${#push_s_args[@]} -eq 0 ]; then
+                    push_s_args=("-s") # Add -s only once
                   fi
                   project_slug="${BASH_REMATCH[1]}"
                   resource_slug="${BASH_REMATCH[2]}"
-                  push_s_args="$push_s_args --resource ${project_slug}.${resource_slug}"
+                  push_s_args+=("--resource" "${project_slug}.${resource_slug}")
                 else
                   echo "::warning::Could not find resource slug for changed source file: $file"
                 fi
               done
             fi
           fi
-          
-          if [ -n "$push_s_args" ]; then
-            echo "Pushing source files with args: $push_s_args"
-            tx push $push_s_args --no-interactive
+          if [ ${#push_s_args[@]} -gt 0 ]; then
+            echo "Pushing source files with args: ${push_s_args[*]}"
+            tx push "${push_s_args[@]}" --no-interactive
           else
             echo "No source files to push."
           fi
-
           # --- Handle TRANSLATION file pushes (-t) ---
-          CHANGED_TRANSLATION_FILES=$(echo "${CHANGED_FILES}" | grep -E 'i18n/src/main/resources/.*\.properties$' | grep -E '(_[a-z]{2}(_[A-Z]{2})?|_pcm)\.properties$' || true)
+          CHANGED_TRANSLATION_FILES=$(echo "${CHANGED_FILES}" | grep -E 'i18n/src/main/resources/.*\.properties$' | grep -E '(_[a-z]{2}(_[A-Z]{2})?|_pcm)\.properties$' -- || true)
           if [ -n "$CHANGED_TRANSLATION_FILES" ]; then
             echo "Found changed translation files to push:"
             echo "$CHANGED_TRANSLATION_FILES"
             for file in $CHANGED_TRANSLATION_FILES; do
               lang=$(echo "$file" | sed -E 's/.*_([a-z]{2}(_[A-Z]{2})?|pcm)\.properties$/\1/')
-              
               # Find the resource for the translation file by matching the file_filter pattern
               resource_slug_line=$(awk -v file="$file" -v lang="$lang" '
                 BEGIN{FS="="}
