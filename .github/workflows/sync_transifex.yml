@@ -13,6 +13,7 @@ on:
 jobs:
   verify:
     name: Verify Transifex configuration
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
@@ -29,18 +30,10 @@ jobs:
             | sort -u)
           
           # Get actual source files from i18n directory (excluding locale-specific files)
-          # The regex is specific to filter out language codes like _es, _pt_BR, or _pcm
-          # while not accidentally filtering out source files with underscores like mu_sig.properties.
           i18n_files=$(find i18n/src/main/resources -maxdepth 1 -name "*.properties" \
             | grep -v -E '(_[a-z]{2}(_[A-Z]{2})?|_pcm)\.properties$' \
             | sed 's|i18n/src/main/resources/||' \
             | sort -u)
-          
-          echo "Source files found in .tx/config:"
-          echo "$config_files"
-          echo "---------------------"
-          echo "Source files found in i18n/src/main/resources/:"
-          echo "$i18n_files"
           
           if [ "$config_files" != "$i18n_files" ]; then
             echo "::error::.tx/config is out of sync with i18n/src/main/resources/"
@@ -52,9 +45,9 @@ jobs:
           echo ".tx/config is in sync with i18n/src/main/resources/"
 
   push:
-    name: Push translation source files to Transifex
-    runs-on: ubuntu-latest
+    name: Push translation files to Transifex
     if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
@@ -83,9 +76,90 @@ jobs:
             exit 1
           fi
 
-      - name: Push source files using Transifex client
+      - name: Push changed files to Transifex
         if: steps.check_commit.outputs.commit_in_main == 'true'
-        uses: transifex/cli-action@v2
-        with:
-          token: ${{ secrets.TX_TOKEN }}
-          args: push -s
+        env:
+          TX_TOKEN: ${{ secrets.TX_TOKEN }}
+        run: |
+          set -euo pipefail
+          
+          echo "Installing Transifex CLI..."
+          curl -o- https://raw.githubusercontent.com/transifex/cli/master/install.sh | bash
+          
+          echo "Finding changed files..."
+          # Use git diff-tree for merge commits. The `^!` gets the combined diff against all parents.
+          # This gives us the changes that were introduced by the merge.
+          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.event.workflow_run.head_sha }}^!)
+          echo "Files changed in the merge:"
+          echo "$CHANGED_FILES"
+          
+          # --- Handle SOURCE file pushes (-s) ---
+          push_s_args=""
+          if echo "${CHANGED_FILES}" | grep -q -x ".tx/config"; then
+            echo "::notice:: .tx/config changed. Pushing all source files."
+            push_s_args="-s"
+          else
+            CHANGED_SOURCE_FILES=$(echo "${CHANGED_FILES}" | grep -E 'i18n/src/main/resources/.*\.properties$' | grep -v -E '(_[a-z]{2}(_[A-Z]{2})?|_pcm)\.properties$' || true)
+            if [ -n "$CHANGED_SOURCE_FILES" ]; then
+              push_s_args="-s"
+              for file in $CHANGED_SOURCE_FILES; do
+                # Find the resource slug for the source file
+                resource_slug_line=$(awk -v file="$file" '
+                  $0 ~ /^\[o:.*:p:.*:r:.*\]$/ {resource=$0}
+                  $0 ~ ("source_file[[:space:]]*=[[:space:]]*" file "$") {print resource}
+                ' .tx/config)
+                
+                if [[ -n "$resource_slug_line" ]] && [[ "$resource_slug_line" =~ ^\[o:.*:p:(.*):r:(.*)\]$ ]]; then
+                  project_slug="${BASH_REMATCH[1]}"
+                  resource_slug="${BASH_REMATCH[2]}"
+                  push_s_args="$push_s_args --resource ${project_slug}.${resource_slug}"
+                else
+                  echo "::warning::Could not find resource slug for changed source file: $file"
+                fi
+              done
+            fi
+          fi
+          
+          if [ -n "$push_s_args" ]; then
+            echo "Pushing source files with args: $push_s_args"
+            tx push $push_s_args --no-interactive
+          else
+            echo "No source files to push."
+          fi
+
+          # --- Handle TRANSLATION file pushes (-t) ---
+          CHANGED_TRANSLATION_FILES=$(echo "${CHANGED_FILES}" | grep -E 'i18n/src/main/resources/.*\.properties$' | grep -E '(_[a-z]{2}(_[A-Z]{2})?|_pcm)\.properties$' || true)
+          if [ -n "$CHANGED_TRANSLATION_FILES" ]; then
+            echo "Found changed translation files to push:"
+            echo "$CHANGED_TRANSLATION_FILES"
+            for file in $CHANGED_TRANSLATION_FILES; do
+              lang=$(echo "$file" | sed -E 's/.*_([a-z]{2}(_[A-Z]{2})?|pcm)\.properties$/\1/')
+              
+              # Find the resource for the translation file by matching the file_filter pattern
+              resource_slug_line=$(awk -v file="$file" -v lang="$lang" '
+                BEGIN{FS="="}
+                $0 ~ /^\[o:.*:p:.*:r:.*\]$/ {resource=$0}
+                $1 ~ /^[[:space:]]*file_filter/ {
+                    # Build the expected filename from the pattern and the detected language
+                    filter_path=$2;
+                    gsub(/^[[:space:]]+|[[:space:]]+$/, "", filter_path); # trim whitespace
+                    gsub(/<lang>/, lang, filter_path);
+                    if (filter_path == file) {
+                        print resource;
+                        exit; # Exit after first match
+                    }
+                }
+              ' .tx/config)
+
+              if [[ -n "$resource_slug_line" ]] && [[ "$resource_slug_line" =~ ^\[o:.*:p:(.*):r:(.*)\]$ ]]; then
+                project_slug="${BASH_REMATCH[1]}"
+                resource_slug="${BASH_REMATCH[2]}"
+                echo "Pushing translation for resource ${project_slug}.${resource_slug}, lang ${lang}"
+                tx push -t -r "${project_slug}.${resource_slug}" -l "${lang}" --no-interactive
+              else
+                echo "::warning::Could not find resource slug for changed translation file: $file"
+              fi
+            done
+          else
+            echo "No translation files to push."
+          fi
