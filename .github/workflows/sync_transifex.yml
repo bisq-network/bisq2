@@ -94,6 +94,7 @@ jobs:
           echo "Finding changed files..."
           # This gives us the changes that were introduced by the merge.
           # We compare the merge commit with its first parent to get the list of files.
+          # Note: This is reliable for standard PR merges but may not handle octopus merges.
           CHANGED_FILES=$(git diff --name-only ${{ github.event.workflow_run.head_sha }}~1 ${{ github.event.workflow_run.head_sha }})
           echo "Files changed in the merge:"
           echo "$CHANGED_FILES"
