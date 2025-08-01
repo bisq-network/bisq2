@@ -179,12 +179,12 @@ public class NetworkInfo {
 
                             @Override
                             public void onConnection(Connection connection) {
-                                onNumConnectionsChanged(type, node);
+                                UIThread.run(() -> onNumConnectionsChanged(type, node));
                             }
 
                             @Override
                             public void onDisconnect(Connection connection, CloseReason closeReason) {
-                                onNumConnectionsChanged(type, node);
+                                UIThread.run(() -> onNumConnectionsChanged(type, node));
                             }
                         });
 
@@ -215,20 +215,18 @@ public class NetworkInfo {
         }
 
         private void onNumConnectionsChanged(TransportType transportType, Node node) {
-            UIThread.run(() -> {
-                String value = String.valueOf(node.getNumConnections());
-                switch (transportType) {
-                    case CLEAR:
-                        model.getClearNetNumConnections().set(value);
-                        break;
-                    case TOR:
-                        model.getTorNumConnections().set(value);
-                        break;
-                    case I2P:
-                        model.getI2pNumConnections().set(value);
-                        break;
-                }
-            });
+            String value = String.valueOf(node.getNumConnections());
+            switch (transportType) {
+                case CLEAR:
+                    model.getClearNetNumConnections().set(value);
+                    break;
+                case TOR:
+                    model.getTorNumConnections().set(value);
+                    break;
+                case I2P:
+                    model.getI2pNumConnections().set(value);
+                    break;
+            }
         }
     }
 
