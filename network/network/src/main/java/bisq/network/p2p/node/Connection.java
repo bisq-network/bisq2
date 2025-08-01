@@ -44,6 +44,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 
+import static bisq.network.NetworkService.DISPATCHER;
+
 /**
  * Represents an inbound or outbound connection to a peer node.
  * Listens for messages from the peer.
@@ -151,11 +153,9 @@ public abstract class Connection {
                     log.debug("Received message: {} at: {}",
                             StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
                     requestResponseManager.onReceived(envelopePayloadMessage);
-                    NetworkService.DISPATCHER.submit(() -> {
+                    DISPATCHER.submit(() -> {
                         if (isInputStreamActive()) {
-                            handler.handleNetworkMessage(envelopePayloadMessage,
-                                    networkEnvelope.getAuthorizationToken(),
-                                    this);
+                            handler.handleNetworkMessage(envelopePayloadMessage, networkEnvelope.getAuthorizationToken(), this);
                         }
                     });
                 }
@@ -177,7 +177,6 @@ public abstract class Connection {
     /* --------------------------------------------------------------------- */
     // Public API
     /* --------------------------------------------------------------------- */
-
 
     public void addListener(Listener listener) {
         listeners.add(listener);
@@ -291,27 +290,13 @@ public abstract class Connection {
             networkEnvelopeSocket.close();
         } catch (IOException ignore) {
         }
-        NetworkService.DISPATCHER.submit(() -> {
-            handler.handleConnectionClosed(this, closeReason);
-            listeners.forEach(listener -> {
-                try {
-                    listener.onConnectionClosed(closeReason);
-                } catch (Exception e) {
-                    log.error("Calling onConnectionClosed at listener {} failed", listener, e);
-                }
-            });
-            listeners.clear();
-        });
+        DISPATCHER.submit(() -> handler.handleConnectionClosed(this, closeReason));
+        listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onConnectionClosed(closeReason)));
+        listeners.clear();
     }
 
     void notifyListeners(EnvelopePayloadMessage envelopePayloadMessage) {
-        listeners.forEach(listener -> {
-            try {
-                listener.onNetworkMessage(envelopePayloadMessage);
-            } catch (Exception e) {
-                log.error("Calling onNetworkMessage at listener {} failed", listener, e);
-            }
-        });
+        listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onNetworkMessage(envelopePayloadMessage)));
     }
 
     AtomicInteger getSentMessageCounter() {

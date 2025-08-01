@@ -433,14 +433,15 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         if (wasNotPresent) {
                             PublicKey senderPublicKey = KeyGeneration.generatePublic(confidentialData.getSenderPublicKey());
                             log.info("Decrypted confidentialMessage. decryptedEnvelopePayloadMessage={}", decryptedEnvelopePayloadMessage.getClass().getSimpleName());
-                            runAsync(() -> listeners.forEach(listener -> {
+
+                            listeners.forEach(listener -> DISPATCHER.submit(() -> {
                                 try {
                                     listener.onMessage(decryptedEnvelopePayloadMessage);
                                     listener.onConfidentialMessage(decryptedEnvelopePayloadMessage, senderPublicKey);
                                 } catch (Exception e) {
                                     log.error("Calling onMessage(decryptedEnvelopePayloadMessage, senderPublicKey) at messageListener {} failed", listener, e);
                                 }
-                            }), DISPATCHER);
+                            }));
                         }
                         return true;
                     } catch (Exception e) {

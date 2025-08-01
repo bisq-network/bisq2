@@ -17,9 +17,8 @@
 
 package bisq.network.p2p.node;
 
-import bisq.common.util.StringUtils;
-import bisq.network.NetworkService;
 import bisq.common.network.Address;
+import bisq.common.util.StringUtils;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
@@ -34,6 +33,8 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static bisq.network.NetworkService.DISPATCHER;
+
 /**
  * Represents an inbound or outbound connection to a peer node.
  * Listens for messages from the peer.
@@ -44,7 +45,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public abstract class ConnectionChannel {
     interface Handler {
-        void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken, ConnectionChannel connectionChannel);
+        void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage,
+                                  AuthorizationToken authorizationToken,
+                                  ConnectionChannel connectionChannel);
 
         void handleConnectionClosed(ConnectionChannel connectionChannel, CloseReason closeReason);
     }
@@ -142,26 +145,12 @@ public abstract class ConnectionChannel {
             networkEnvelopeSocketChannel.close();
         } catch (IOException ignore) {
         }
-        NetworkService.DISPATCHER.submit(() -> {
-            listeners.forEach(listener -> {
-                try {
-                    listener.onConnectionClosed(closeReason);
-                } catch (Exception e) {
-                    log.error("Calling onConnectionClosed at listener {} failed", listener, e);
-                }
-            });
-            listeners.clear();
-        });
+        listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onConnectionClosed(closeReason)));
+        listeners.clear();
     }
 
     void notifyListeners(EnvelopePayloadMessage envelopePayloadMessage) {
-        listeners.forEach(listener -> {
-            try {
-                listener.onNetworkMessage(envelopePayloadMessage);
-            } catch (Exception e) {
-                log.error("Calling onNetworkMessage at listener {} failed", listener, e);
-            }
-        });
+        listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onNetworkMessage(envelopePayloadMessage)));
     }
 
     public void addListener(Listener listener) {

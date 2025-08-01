@@ -22,7 +22,6 @@ import bisq.common.network.Address;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.platform.MemoryReportService;
-import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -61,8 +60,8 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import static bisq.network.NetworkService.DISPATCHER;
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.concurrent.CompletableFuture.runAsync;
 
 /**
  * Creates nodesById, the default node and the services according to the Config.
@@ -287,6 +286,7 @@ public class ServiceNode implements Node.Listener {
         dataNetworkService.ifPresent(DataNetworkService::shutdown);
         inventoryService.ifPresent(InventoryService::shutdown);
         confidentialMessageService.ifPresent(ConfidentialMessageService::shutdown);
+        listeners.clear();
         return nodesById.shutdown()
                 .thenCompose(result -> transportService.shutdown())
                 .whenComplete((result, throwable) -> setState(State.TERMINATED));
@@ -369,13 +369,7 @@ public class ServiceNode implements Node.Listener {
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
         log.info("New state {}", newState);
-        runAsync(() -> listeners.forEach(listener -> {
-            try {
-                listener.onStateChanged(newState);
-            } catch (Exception e) {
-                log.error("Calling onMessage at onStateChanged {} failed", listener, e);
-            }
-        }), NetworkService.DISPATCHER);
+        listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onStateChanged(newState)));
     }
 
     CompletableFuture<Report> requestReport(Address address) {
