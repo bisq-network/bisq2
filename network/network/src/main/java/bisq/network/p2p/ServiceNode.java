@@ -22,6 +22,7 @@ import bisq.common.network.Address;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.platform.MemoryReportService;
+import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -188,13 +189,7 @@ public class ServiceNode implements Node.Listener {
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-        confidentialMessageListeners.forEach(listener -> {
-            try {
-                listener.onMessage(envelopePayloadMessage);
-            } catch (Exception e) {
-                log.error("Calling onMessage at messageListener {} failed", listener, e);
-            }
-        });
+        confidentialMessageListeners.forEach(listener -> NetworkService.DISPATCHER.submit(() -> listener.onMessage(envelopePayloadMessage)));
     }
 
     @Override
@@ -287,6 +282,7 @@ public class ServiceNode implements Node.Listener {
         inventoryService.ifPresent(InventoryService::shutdown);
         confidentialMessageService.ifPresent(ConfidentialMessageService::shutdown);
         listeners.clear();
+        confidentialMessageListeners.clear();
         return nodesById.shutdown()
                 .thenCompose(result -> transportService.shutdown())
                 .whenComplete((result, throwable) -> setState(State.TERMINATED));

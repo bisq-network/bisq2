@@ -48,6 +48,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static bisq.network.NetworkService.DISPATCHER;
+
 @Slf4j
 public class OutboundConnectionManager {
     public interface Listener {
@@ -174,13 +176,7 @@ public class OutboundConnectionManager {
             );
 
             connectionByChannel.put(socketChannel, outboundConnectionChannel);
-            listeners.forEach(listener -> {
-                try {
-                    listener.onNewConnection(outboundConnectionChannel);
-                } catch (Exception e) {
-                    log.error("Calling onNewConnection at listener {} failed", listener, e);
-                }
-            });
+            listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onNewConnection(outboundConnectionChannel)));
 
             CompletableFuture<OutboundConnectionChannel> completableFuture =
                     completableFutureByPeerAddress.get(peerCapability.getAddress());

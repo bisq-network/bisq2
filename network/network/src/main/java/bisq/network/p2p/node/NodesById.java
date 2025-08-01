@@ -18,8 +18,8 @@
 package bisq.network.p2p.node;
 
 
-import bisq.common.util.CompletableFutureUtils;
 import bisq.common.network.Address;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
@@ -29,10 +29,17 @@ import bisq.network.p2p.services.peer_group.BanList;
 import bisq.security.keys.KeyBundleService;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import static bisq.network.NetworkService.DISPATCHER;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -80,13 +87,7 @@ public class NodesById implements Node.Listener {
         Node node = new Node(networkId, isDefaultNode, nodeConfig, banList, keyBundleService, transportService, networkLoadSnapshot, authorizationService);
         map.put(networkId, node);
         node.addListener(this);
-        listeners.forEach(listener -> {
-            try {
-                listener.onNodeAdded(node);
-            } catch (Exception e) {
-                log.error("Calling onNodeAdded at listener {} failed", listener, e);
-            }
-        });
+        listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onNodeAdded(node)));
         return node;
     }
 
@@ -167,55 +168,25 @@ public class NodesById implements Node.Listener {
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-        nodeListeners.forEach(listener -> {
-            try {
-                listener.onMessage(envelopePayloadMessage, connection, networkId);
-            } catch (Exception e) {
-                log.error("Calling onMessage at listener {} failed", listener, e);
-            }
-        });
+        nodeListeners.forEach(listener -> DISPATCHER.submit(() -> listener.onMessage(envelopePayloadMessage, connection, networkId)));
     }
 
     @Override
     public void onConnection(Connection connection) {
-        nodeListeners.forEach(listener -> {
-            try {
-                listener.onConnection(connection);
-            } catch (Exception e) {
-                log.error("Calling onConnection at listener {} failed", listener, e);
-            }
-        });
+        nodeListeners.forEach(listener -> DISPATCHER.submit(() -> listener.onConnection(connection)));
     }
 
     @Override
     public void onDisconnect(Connection connection, CloseReason closeReason) {
-        nodeListeners.forEach(listener -> {
-            try {
-                listener.onDisconnect(connection, closeReason);
-            } catch (Exception e) {
-                log.error("Calling onDisconnect at listener {} failed", listener, e);
-            }
-        });
+        nodeListeners.forEach(listener -> DISPATCHER.submit(() -> listener.onDisconnect(connection, closeReason)));
     }
 
     @Override
     public void onShutdown(Node node) {
         map.remove(node.getNetworkId());
         node.removeListener(this);
-        listeners.forEach(listener -> {
-            try {
-                listener.onNodeRemoved(node);
-            } catch (Exception e) {
-                log.error("Calling onNodeRemoved at listener {} failed", listener, e);
-            }
-        });
-        nodeListeners.forEach(listener -> {
-            try {
-                listener.onShutdown(node);
-            } catch (Exception e) {
-                log.error("Calling onShutdown at listener {} failed", listener, e);
-            }
-        });
+        listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onNodeRemoved(node)));
+        nodeListeners.forEach(listener -> DISPATCHER.submit(() -> listener.onShutdown(node)));
     }
 
 
