@@ -78,20 +78,20 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof CommonPublicChatMessage) {
-            processRemovedMessage((CommonPublicChatMessage) distributedData);
-        } else if (distributedData instanceof CommonPublicChatMessageReaction) {
-            processRemovedReaction((CommonPublicChatMessageReaction) distributedData);
+        if (distributedData instanceof CommonPublicChatMessage commonPublicChatMessage) {
+            NetworkService.HANDLER_POOL.submit(() -> processRemovedMessage(commonPublicChatMessage));
+        } else if (distributedData instanceof CommonPublicChatMessageReaction commonPublicChatMessageReaction) {
+            NetworkService.HANDLER_POOL.submit(() -> processRemovedReaction(commonPublicChatMessageReaction));
         }
     }
 
     @Override
     protected void handleAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof CommonPublicChatMessage) {
-            processAddedMessage((CommonPublicChatMessage) distributedData);
-        } else if (distributedData instanceof CommonPublicChatMessageReaction) {
-            processAddedReaction((CommonPublicChatMessageReaction) distributedData);
+        if (distributedData instanceof CommonPublicChatMessage commonPublicChatMessage) {
+            NetworkService.HANDLER_POOL.submit(() -> processAddedMessage(commonPublicChatMessage));
+        } else if (distributedData instanceof CommonPublicChatMessageReaction commonPublicChatMessageReaction) {
+            NetworkService.HANDLER_POOL.submit(() -> processAddedReaction(commonPublicChatMessageReaction));
         }
     }
 

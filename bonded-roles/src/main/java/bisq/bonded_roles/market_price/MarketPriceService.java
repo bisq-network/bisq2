@@ -22,9 +22,9 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.common.application.Service;
+import bisq.common.encoding.Hex;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
-import bisq.common.encoding.Hex;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
@@ -105,9 +105,8 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedMarketPriceData) {
-            if (isAuthorized(authorizedData)) {
-                AuthorizedMarketPriceData authorizedMarketPriceData = (AuthorizedMarketPriceData) authorizedData.getAuthorizedDistributedData();
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedMarketPriceData authorizedMarketPriceData && isAuthorized(authorizedData)) {
+            NetworkService.HANDLER_POOL.submit(() -> {
                 String authorizedDataPubKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
                 marketPriceProvidingOracle = authorizedBondedRolesService.getBondedRoles().stream()
                         .map(BondedRole::getAuthorizedBondedRole)
@@ -117,7 +116,7 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
                         .peek(e -> e.getValue().setSource(MarketPrice.Source.PROPAGATED_IN_NETWORK))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                 applyNewMap(map);
-            }
+            });
         }
     }
 

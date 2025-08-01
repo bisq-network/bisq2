@@ -95,14 +95,14 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
-            processUserProfileAddedOrRefreshed(userProfile);
+            NetworkService.HANDLER_POOL.submit(() -> processUserProfileAddedOrRefreshed(userProfile));
         }
     }
 
     @Override
     public void onAuthenticatedDataRefreshed(AuthenticatedData authenticatedData) {
         if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
-            processUserProfileAddedOrRefreshed(userProfile);
+            NetworkService.HANDLER_POOL.submit(() -> processUserProfileAddedOrRefreshed(userProfile));
         }
     }
 

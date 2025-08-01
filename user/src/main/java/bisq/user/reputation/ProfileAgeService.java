@@ -113,10 +113,9 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
 
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedTimestampData) {
-            if (isAuthorized(authorizedData)) {
-                AuthorizedTimestampData timestampData = (AuthorizedTimestampData) authorizedData.getAuthorizedDistributedData();
-                String userProfileId = timestampData.getProfileId();
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedTimestampData authorizedTimestampData && isAuthorized(authorizedData)) {
+            NetworkService.HANDLER_POOL.submit(() -> {
+                String userProfileId = authorizedTimestampData.getProfileId();
                 userProfileService.findUserProfile(userProfileId)
                         .map(this::getUserProfileKey)
                         .ifPresent(dataSetByHash::remove);
@@ -124,7 +123,7 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
                     scoreByUserProfileId.remove(userProfileId);
                     userProfileIdScorePair.set(new Pair<>(userProfileId, 0L));
                 }
-            }
+            });
         }
     }
 

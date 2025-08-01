@@ -22,6 +22,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.timer.RateLimiter;
+import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.DbSubDirectory;
@@ -78,23 +79,21 @@ public class BannedUserService implements PersistenceClient<BannedUserStore>, Se
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof BannedUserProfileData) {
-            if (isAuthorized(authorizedData)) {
-                BannedUserProfileData bannedUserProfileData = (BannedUserProfileData) authorizedData.getAuthorizedDistributedData();
+        if (authorizedData.getAuthorizedDistributedData() instanceof BannedUserProfileData bannedUserProfileData && isAuthorized(authorizedData)) {
+            NetworkService.HANDLER_POOL.submit(() -> {
                 getBannedUserProfileDataSet().add(bannedUserProfileData);
                 persist();
-            }
+            });
         }
     }
 
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof BannedUserProfileData) {
-            if (isAuthorized(authorizedData)) {
-                BannedUserProfileData bannedUserProfileData = (BannedUserProfileData) authorizedData.getAuthorizedDistributedData();
+        if (authorizedData.getAuthorizedDistributedData() instanceof BannedUserProfileData bannedUserProfileData && isAuthorized(authorizedData)) {
+            NetworkService.HANDLER_POOL.submit(() -> {
                 getBannedUserProfileDataSet().remove(bannedUserProfileData);
                 persist();
-            }
+            });
         }
     }
 

@@ -119,16 +119,15 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedTimestampData) {
-            if (isAuthorized(authorizedData)) {
-                AuthorizedTimestampData authorizedTimestampData = (AuthorizedTimestampData) authorizedData.getAuthorizedDistributedData();
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedTimestampData authorizedTimestampData && isAuthorized(authorizedData)) {
+            NetworkService.HANDLER_POOL.submit(() -> {
                 // We might get data published from other oracle nodes and put it into our local store.
                 String profileId = authorizedTimestampData.getProfileId();
                 if (!persistableStore.getTimestampsByProfileId().containsKey(profileId)) {
                     persistableStore.getTimestampsByProfileId().put(profileId, authorizedTimestampData.getDate());
                     persist();
                 }
-            }
+            });
         }
     }
 

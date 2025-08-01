@@ -73,20 +73,20 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof BisqEasyOfferbookMessage) {
-            processRemovedMessage((BisqEasyOfferbookMessage) distributedData);
-        } else if (distributedData instanceof BisqEasyOfferbookMessageReaction) {
-            processRemovedReaction((BisqEasyOfferbookMessageReaction) distributedData);
+        if (distributedData instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+            NetworkService.HANDLER_POOL.submit(() ->  processRemovedMessage(bisqEasyOfferbookMessage));
+        } else if (distributedData instanceof BisqEasyOfferbookMessageReaction bisqEasyOfferbookMessageReaction) {
+            NetworkService.HANDLER_POOL.submit(() -> processRemovedReaction(bisqEasyOfferbookMessageReaction));
         }
     }
 
     @Override
     protected void handleAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof BisqEasyOfferbookMessage) {
-            processAddedMessage((BisqEasyOfferbookMessage) distributedData);
-        } else if (distributedData instanceof BisqEasyOfferbookMessageReaction) {
-            processAddedReaction((BisqEasyOfferbookMessageReaction) distributedData);
+        if (distributedData instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+            NetworkService.HANDLER_POOL.submit(() -> processAddedMessage(bisqEasyOfferbookMessage));
+        } else if (distributedData instanceof BisqEasyOfferbookMessageReaction bisqEasyOfferbookMessageReaction) {
+            NetworkService.HANDLER_POOL.submit(() -> processAddedReaction(bisqEasyOfferbookMessageReaction));
         }
     }
 

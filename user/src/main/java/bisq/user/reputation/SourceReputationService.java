@@ -132,12 +132,14 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
-        findRelevantData(authorizedData.getAuthorizedDistributedData())
-                .ifPresent(data -> {
-                    if (isAuthorized(authorizedData) && isDataValid(data)) {
-                        handleAddedAuthorizedDistributedData(data);
-                    }
-                });
+        NetworkService.HANDLER_POOL.submit(() -> {
+            findRelevantData(authorizedData.getAuthorizedDistributedData())
+                    .ifPresent(data -> {
+                        if (isAuthorized(authorizedData) && isDataValid(data)) {
+                            handleAddedAuthorizedDistributedData(data);
+                        }
+                    });
+        });
     }
 
     protected boolean isDataValid(T data) {

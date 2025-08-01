@@ -22,6 +22,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.network.NetworkService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import lombok.Getter;
@@ -70,23 +71,21 @@ public class DifficultyAdjustmentService implements Service, AuthorizedBondedRol
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedDifficultyAdjustmentData) {
-            if (isAuthorized(authorizedData)) {
-                AuthorizedDifficultyAdjustmentData authorizedDifficultyAdjustmentData = (AuthorizedDifficultyAdjustmentData) authorizedData.getAuthorizedDistributedData();
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedDifficultyAdjustmentData authorizedDifficultyAdjustmentData && isAuthorized(authorizedData)) {
+            NetworkService.HANDLER_POOL.submit(() -> {
                 authorizedDifficultyAdjustmentDataSet.add(authorizedDifficultyAdjustmentData);
                 updateMostRecentValueOrDefault();
-            }
+            });
         }
     }
 
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedDifficultyAdjustmentData) {
-            if (isAuthorized(authorizedData)) {
-                AuthorizedDifficultyAdjustmentData authorizedDifficultyAdjustmentData = (AuthorizedDifficultyAdjustmentData) authorizedData.getAuthorizedDistributedData();
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedDifficultyAdjustmentData authorizedDifficultyAdjustmentData && isAuthorized(authorizedData)) {
+            NetworkService.HANDLER_POOL.submit(() -> {
                 authorizedDifficultyAdjustmentDataSet.remove(authorizedDifficultyAdjustmentData);
                 updateMostRecentValueOrDefault();
-            }
+            });
         }
     }
 

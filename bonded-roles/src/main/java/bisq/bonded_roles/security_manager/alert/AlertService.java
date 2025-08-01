@@ -22,6 +22,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -63,23 +64,21 @@ public class AlertService implements Service, AuthorizedBondedRolesService.Liste
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedAlertData) {
-            if (isAuthorized(authorizedData)) {
-                AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) authorizedData.getAuthorizedDistributedData();
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedAlertData authorizedAlertData && isAuthorized(authorizedData)) {
+            NetworkService.HANDLER_POOL.submit(() -> {
                 authorizedAlertDataSet.add(authorizedAlertData);
                 maybeApplyBannedState(authorizedAlertData, true);
-            }
+            });
         }
     }
 
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedAlertData) {
-            if (isAuthorized(authorizedData)) {
-                AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) authorizedData.getAuthorizedDistributedData();
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedAlertData authorizedAlertData && isAuthorized(authorizedData)) {
+            NetworkService.HANDLER_POOL.submit(() -> {
                 authorizedAlertDataSet.remove(authorizedAlertData);
                 maybeApplyBannedState(authorizedAlertData, false);
-            }
+            });
         }
     }
 

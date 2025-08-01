@@ -95,6 +95,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  */
 @Slf4j
 public class NetworkService implements PersistenceClient<NetworkServiceStore>, Service {
+    public static final ExecutorService HANDLER_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.worker", 3, 20, 60);
     public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.IO", 15, 100, 60);
     // It is expected that we consume 1-2 threads, but in case we run into a blocking or long waiting thread we can burst up to 20 threads.
     public static final ExecutorService DISPATCHER = ExecutorFactory.newCachedThreadPool("NetworkService.dispatcher", 1, 20, 60);

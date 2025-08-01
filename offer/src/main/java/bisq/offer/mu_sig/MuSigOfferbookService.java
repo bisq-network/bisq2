@@ -26,7 +26,6 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.offer.Offer;
 import lombok.extern.slf4j.Slf4j;
@@ -73,17 +72,15 @@ public class MuSigOfferbookService implements Service, DataService.Listener {
 
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof MuSigOfferMessage) {
-            processAddedMuSigOfferMessage((MuSigOfferMessage) distributedData);
+        if (authenticatedData.getDistributedData() instanceof MuSigOfferMessage muSigOfferMessage) {
+            NetworkService.HANDLER_POOL.submit(() -> processAddedMuSigOfferMessage(muSigOfferMessage));
         }
     }
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-        DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof MuSigOfferMessage) {
-            processRemovedMuSigOfferMessage((MuSigOfferMessage) distributedData);
+        if (authenticatedData.getDistributedData() instanceof MuSigOfferMessage muSigOfferMessage) {
+            NetworkService.HANDLER_POOL.submit(() -> processRemovedMuSigOfferMessage(muSigOfferMessage));
         }
     }
 

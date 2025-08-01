@@ -108,10 +108,9 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
 
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedAccountAgeData) {
-            if (isAuthorized(authorizedData)) {
-                AuthorizedAccountAgeData data = (AuthorizedAccountAgeData) authorizedData.getAuthorizedDistributedData();
-                String userProfileId = data.getProfileId();
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedAccountAgeData authorizedAccountAgeData && isAuthorized(authorizedData)) {
+            NetworkService.HANDLER_POOL.submit(() -> {
+                String userProfileId = authorizedAccountAgeData.getProfileId();
                 userProfileService.findUserProfile(userProfileId)
                         .map(this::getUserProfileKey)
                         .ifPresent(dataSetByHash::remove);
@@ -119,7 +118,7 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
                     scoreByUserProfileId.remove(userProfileId);
                     userProfileIdScorePair.set(new Pair<>(userProfileId, 0L));
                 }
-            }
+            });
         }
     }
 

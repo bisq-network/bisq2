@@ -203,50 +203,56 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
-        AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
-        log.debug("onAuthorizedDataAdded {}", data.getClass().getSimpleName());
-        if (data instanceof AuthorizedOracleNode) {
-            authorizedOracleNodes.add((AuthorizedOracleNode) data);
-            reProcessFailedAuthorizedData();
-        } else if (data instanceof AuthorizedBondedRole) {
-            log.debug("BondedRoleType {}", ((AuthorizedBondedRole) data).getBondedRoleType());
-            validateBondedRole(authorizedData, (AuthorizedBondedRole) data).ifPresent(authorizedBondedRole -> {
-                bondedRoles.add(new BondedRole(authorizedBondedRole));
-                if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
-                    networkService.addSeedNodeAddressByTransport(authorizedBondedRole.getAddressByTransportTypeMap().orElseThrow());
+        NetworkService.HANDLER_POOL.submit(() -> {
+            AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
+            log.debug("onAuthorizedDataAdded {}", data.getClass().getSimpleName());
+            if (data instanceof AuthorizedOracleNode authorizedOracleNode) {
+                authorizedOracleNodes.add(authorizedOracleNode);
+                reProcessFailedAuthorizedData();
+            } else if (data instanceof AuthorizedBondedRole authorizedBondedRole) {
+                log.debug("BondedRoleType {}", authorizedBondedRole.getBondedRoleType());
+                if (validateBondedRole(authorizedData)) {
+                    bondedRoles.add(new BondedRole(authorizedBondedRole));
+                    if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
+                        networkService.addSeedNodeAddressByTransport(authorizedBondedRole.getAddressByTransportTypeMap().orElseThrow());
+                    }
+                }
+                reProcessFailedAuthorizedData();
+            }
+            listeners.forEach(listener -> {
+                try {
+                    listener.onAuthorizedDataAdded(authorizedData);
+                } catch (Exception e) {
+                    log.error("Error at listener.onAuthorizedDataAdded. listener={}", listener, e);
                 }
             });
-            reProcessFailedAuthorizedData();
-        }
-        listeners.forEach(listener -> {
-            try {
-                listener.onAuthorizedDataAdded(authorizedData);
-            } catch (Exception e) {
-                log.error("Error at listener.onAuthorizedDataAdded. listener={}", listener, e);
-            }
         });
     }
 
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
-        if (data instanceof AuthorizedOracleNode) {
-            authorizedOracleNodes.remove((AuthorizedOracleNode) data);
-        } else if (data instanceof AuthorizedBondedRole) {
-            validateBondedRole(authorizedData, (AuthorizedBondedRole) data).ifPresent(authorizedBondedRole -> {
-                Optional<BondedRole> toRemove = bondedRoles.stream().filter(bondedRole -> bondedRole.getAuthorizedBondedRole().equals(authorizedBondedRole)).findAny();
-                toRemove.ifPresent(bondedRoles::remove);
-                if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
-                    networkService.removeSeedNodeAddressByTransport(authorizedBondedRole.getAddressByTransportTypeMap().orElseThrow());
+        NetworkService.HANDLER_POOL.submit(() -> {
+            AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
+            if (data instanceof AuthorizedOracleNode authorizedOracleNode) {
+                authorizedOracleNodes.remove(authorizedOracleNode);
+            } else if (data instanceof AuthorizedBondedRole authorizedBondedRole) {
+                if (validateBondedRole(authorizedData)) {
+                    Optional<BondedRole> toRemove = bondedRoles.stream()
+                            .filter(bondedRole -> bondedRole.getAuthorizedBondedRole().equals(authorizedBondedRole))
+                            .findAny();
+                    toRemove.ifPresent(bondedRoles::remove);
+                    if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
+                        networkService.removeSeedNodeAddressByTransport(authorizedBondedRole.getAddressByTransportTypeMap().orElseThrow());
+                    }
+                }
+            }
+            listeners.forEach(listener -> {
+                try {
+                    listener.onAuthorizedDataRemoved(authorizedData);
+                } catch (Exception e) {
+                    log.error("Error at onAuthorizedDataAdded", e);
                 }
             });
-        }
-        listeners.forEach(listener -> {
-            try {
-                listener.onAuthorizedDataRemoved(authorizedData);
-            } catch (Exception e) {
-                log.error("Error at onAuthorizedDataAdded", e);
-            }
         });
     }
 
@@ -360,15 +366,10 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         }
     }
 
-    private Optional<AuthorizedBondedRole> validateBondedRole(AuthorizedData authorizedData,
-                                                              AuthorizedBondedRole authorizedBondedRole) {
+    private boolean validateBondedRole(AuthorizedData authorizedData) {
         // AuthorizedBondedRoles are published only by an oracle node. The oracle node use either a hard coded pubKey
         // or has been authorized by another already authorized oracle node. There need to be at least one root node 
         // with a hard coded pubKey.
-        if (hasAuthorizedPubKey(authorizedData, BondedRoleType.ORACLE_NODE)) {
-            return Optional.of(authorizedBondedRole);
-        } else {
-            return Optional.empty();
-        }
+        return hasAuthorizedPubKey(authorizedData, BondedRoleType.ORACLE_NODE);
     }
 }

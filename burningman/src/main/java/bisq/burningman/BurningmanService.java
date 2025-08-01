@@ -22,6 +22,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.burningman.fee.FeeReceiverService;
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -66,19 +67,15 @@ public class BurningmanService implements Service, AuthorizedBondedRolesService.
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedBurningmanListByBlock authorizedBurningmanData) {
-            if (isAuthorized(authorizedData)) {
-                authorizedBurningmanListByBlockSet.add(authorizedBurningmanData);
-            }
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedBurningmanListByBlock authorizedBurningmanData && isAuthorized(authorizedData)) {
+            NetworkService.HANDLER_POOL.submit(() -> authorizedBurningmanListByBlockSet.add(authorizedBurningmanData));
         }
     }
 
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedBurningmanListByBlock authorizedBurningmanData) {
-            if (isAuthorized(authorizedData)) {
-                authorizedBurningmanListByBlockSet.remove(authorizedBurningmanData);
-            }
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedBurningmanListByBlock authorizedBurningmanData && isAuthorized(authorizedData)) {
+            NetworkService.HANDLER_POOL.submit(() -> authorizedBurningmanListByBlockSet.remove(authorizedBurningmanData));
         }
     }
 

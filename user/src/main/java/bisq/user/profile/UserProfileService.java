@@ -92,21 +92,21 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
-            processUserProfileAddedOrRefreshed(userProfile);
+            NetworkService.HANDLER_POOL.submit(() -> processUserProfileAddedOrRefreshed(userProfile));
         }
     }
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
-            processUserProfileRemoved(userProfile);
+            NetworkService.HANDLER_POOL.submit(() -> processUserProfileRemoved(userProfile));
         }
     }
 
     @Override
     public void onAuthenticatedDataRefreshed(AuthenticatedData authenticatedData) {
         if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
-            processUserProfileAddedOrRefreshed(userProfile);
+            NetworkService.HANDLER_POOL.submit(() -> processUserProfileAddedOrRefreshed(userProfile));
         }
     }
 
