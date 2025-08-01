@@ -86,18 +86,22 @@ public class ConnectionBurstTestCase extends BaseTestCase {
         HashMap<TransportService, HashSet<Address>> serviceMap = new HashMap<>();
         try {
             networkService.getServiceNodesByTransport()
-                    .getAllServiceNodes().stream().forEach(node -> {
-                        TransportService transportService = node.getTransportService();
+                    .getAllServiceNodes().forEach(node -> {
                         List<Address> address = node.getDefaultNode()
                                 .getAllConnections()
                                 .parallel()
                                 .map(Connection::getPeerAddress).toList();
-                        synchronized (serviceMap) {
-                            serviceMap.computeIfAbsent(transportService, k -> new HashSet<>()).addAll(address);
-                        }
+                        serviceMap.computeIfAbsent(
+                                node.getTransportService(),
+                                k -> new HashSet<>()
+                        ).addAll(address);
                     });
         } catch (Exception e) {
             log.error("ConnectionBurst: Error", e);
+            return;
+        }
+        if (serviceMap.isEmpty() || serviceMap.values().stream().allMatch(HashSet::isEmpty)) {
+            log.info("ConnectionBurst: No service or no address found in serviceMap");
             return;
         }
         serviceMap.entrySet().stream().parallel().forEach(entry -> {
