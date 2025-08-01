@@ -79,6 +79,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
+import static bisq.network.NetworkService.HANDLER_POOL;
 import static com.google.common.base.Preconditions.checkArgument;
 
 //TODO Consider to use async calls at handle (CompletableFuture.runAsync(()...)
@@ -203,7 +204,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof BisqEasyTradeMessage bisqEasyTradeMessage) {
-            NetworkService.NETWORK_IO_POOL.submit(() -> {
+            HANDLER_POOL.submit(() -> {
                 verifyTradingNotOnHalt();
                 verifyMinVersionForTrading();
 

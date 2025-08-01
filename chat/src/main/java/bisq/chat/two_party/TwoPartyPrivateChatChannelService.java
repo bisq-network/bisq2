@@ -42,6 +42,8 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import static bisq.network.NetworkService.HANDLER_POOL;
+
 @Slf4j
 public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService<TwoPartyPrivateChatMessageReaction,
         TwoPartyPrivateChatMessage, TwoPartyPrivateChatChannel, TwoPartyPrivateChatChannelStore> {
@@ -70,9 +72,9 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof TwoPartyPrivateChatMessage twoPartyPrivateChatMessage) {
-            NetworkService.NETWORK_IO_POOL.submit(() -> processMessage(twoPartyPrivateChatMessage));
+            HANDLER_POOL.submit(() -> processMessage(twoPartyPrivateChatMessage));
         } else if (envelopePayloadMessage instanceof TwoPartyPrivateChatMessageReaction twoPartyPrivateChatMessageReaction) {
-            NetworkService.NETWORK_IO_POOL.submit(() -> processMessageReaction(twoPartyPrivateChatMessageReaction));
+            HANDLER_POOL.submit(() -> processMessageReaction(twoPartyPrivateChatMessageReaction));
         }
     }
 

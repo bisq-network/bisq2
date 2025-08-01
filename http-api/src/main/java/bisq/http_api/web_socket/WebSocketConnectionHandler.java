@@ -21,7 +21,6 @@ package bisq.http_api.web_socket;
 import bisq.common.application.Service;
 import bisq.http_api.web_socket.rest_api_proxy.WebSocketRestApiService;
 import bisq.http_api.web_socket.subscription.SubscriptionService;
-import bisq.network.NetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.websockets.DataFrame;
 import org.glassfish.grizzly.websockets.WebSocket;
@@ -29,6 +28,8 @@ import org.glassfish.grizzly.websockets.WebSocketApplication;
 
 import java.net.http.HttpClient;
 import java.util.concurrent.CompletableFuture;
+
+import static bisq.network.NetworkService.HANDLER_POOL;
 
 @Slf4j
 public class WebSocketConnectionHandler extends WebSocketApplication implements Service {
@@ -78,6 +79,6 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
             } else {
                 log.error("No service found for handling message: {}", message);
             }
-        }, NetworkService.NETWORK_IO_POOL);
+        }, HANDLER_POOL);
     }
 }

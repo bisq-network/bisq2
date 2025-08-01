@@ -84,6 +84,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
+import static bisq.network.NetworkService.HANDLER_POOL;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -250,7 +251,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof MuSigTradeMessage muSigTradeMessage) {
-            NetworkService.NETWORK_IO_POOL.submit(() -> {
+            HANDLER_POOL.submit(() -> {
                 verifyTradingNotOnHalt();
                 verifyMinVersionForTrading();
 

@@ -49,6 +49,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
+import static bisq.network.NetworkService.HANDLER_POOL;
+
 /**
  * Service used by mediators
  */
@@ -105,7 +107,7 @@ public class MediatorService implements PersistenceClient<MediatorStore>, Servic
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof MediationRequest mediationRequest) {
-            NetworkService.NETWORK_IO_POOL.submit(() -> processMediationRequest(mediationRequest));
+            HANDLER_POOL.submit(() -> processMediationRequest(mediationRequest));
         }
     }
 

@@ -53,6 +53,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import static bisq.network.NetworkService.HANDLER_POOL;
+
 @Slf4j
 public class Bisq1BridgeRequestService implements Service, PersistenceClient<Bisq1BridgeRequestStore>, ConfidentialMessageService.Listener {
     @Getter
@@ -145,16 +147,16 @@ public class Bisq1BridgeRequestService implements Service, PersistenceClient<Bis
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof AuthorizeAccountAgeRequest request) {
-            NetworkService.NETWORK_IO_POOL.submit(() -> processAuthorizeAccountAgeRequest(request));
+            HANDLER_POOL.submit(() -> processAuthorizeAccountAgeRequest(request));
         } else if (envelopePayloadMessage instanceof AuthorizeSignedWitnessRequest request) {
-            NetworkService.NETWORK_IO_POOL.submit(() -> processAuthorizeSignedWitnessRequest(request));
+            HANDLER_POOL.submit(() -> processAuthorizeSignedWitnessRequest(request));
         }
     }
 
     @Override
     public void onConfidentialMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey) {
         if (envelopePayloadMessage instanceof BondedRoleRegistrationRequest request) {
-            NetworkService.NETWORK_IO_POOL.submit(() -> processBondedRoleRegistrationRequest(senderPublicKey, request));
+            HANDLER_POOL.submit(() -> processBondedRoleRegistrationRequest(senderPublicKey, request));
         }
     }
 

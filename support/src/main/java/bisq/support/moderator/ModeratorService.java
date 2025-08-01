@@ -57,6 +57,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+import static bisq.network.NetworkService.HANDLER_POOL;
+
 @Slf4j
 public class ModeratorService implements PersistenceClient<ModeratorStore>, Service, ConfidentialMessageService.Listener {
     @Getter
@@ -147,7 +149,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof ReportToModeratorMessage reportToModeratorMessage) {
-            NetworkService.NETWORK_IO_POOL.submit(() -> processReportToModeratorMessage(reportToModeratorMessage));
+            HANDLER_POOL.submit(() -> processReportToModeratorMessage(reportToModeratorMessage));
         }
     }
 

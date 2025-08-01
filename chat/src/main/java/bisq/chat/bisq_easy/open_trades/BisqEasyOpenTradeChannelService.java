@@ -50,6 +50,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static bisq.network.NetworkService.HANDLER_POOL;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -78,7 +79,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage) {
-            NetworkService.NETWORK_IO_POOL.submit(() -> {
+            HANDLER_POOL.submit(() -> {
                 processMessage(bisqEasyOpenTradeMessage);
                 if (!pendingMessages.isEmpty()) {
                     log.info("Processing pendingMessages messages");
@@ -86,7 +87,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                 }
             });
         } else if (envelopePayloadMessage instanceof BisqEasyOpenTradeMessageReaction bisqEasyOpenTradeMessageReaction) {
-            NetworkService.NETWORK_IO_POOL.submit(() -> processMessageReaction(bisqEasyOpenTradeMessageReaction));
+            HANDLER_POOL.submit(() -> processMessageReaction(bisqEasyOpenTradeMessageReaction));
         }
     }
 

@@ -60,6 +60,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
+import static bisq.network.NetworkService.HANDLER_POOL;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -128,7 +129,7 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof MediatorsResponse mediatorsResponse) {
-            NetworkService.NETWORK_IO_POOL.submit(() -> processMediationResponse(mediatorsResponse));
+            HANDLER_POOL.submit(() -> processMediationResponse(mediatorsResponse));
         }
     }
 

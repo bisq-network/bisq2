@@ -41,6 +41,8 @@ import java.security.PublicKey;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
+import static bisq.network.NetworkService.HANDLER_POOL;
+
 @Slf4j
 public class TimestampService implements Service, PersistenceClient<TimestampStore>,
         ConfidentialMessageService.Listener, AuthorizedBondedRolesService.Listener {
@@ -108,7 +110,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof AuthorizeTimestampRequest request) {
-            NetworkService.NETWORK_IO_POOL.submit(() -> processAuthorizeTimestampRequest(request));
+            HANDLER_POOL.submit(() -> processAuthorizeTimestampRequest(request));
         }
     }
 
@@ -120,7 +122,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
         if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedTimestampData authorizedTimestampData && isAuthorized(authorizedData)) {
-            NetworkService.HANDLER_POOL.submit(() -> {
+            HANDLER_POOL.submit(() -> {
                 // We might get data published from other oracle nodes and put it into our local store.
                 String profileId = authorizedTimestampData.getProfileId();
                 if (!persistableStore.getTimestampsByProfileId().containsKey(profileId)) {
