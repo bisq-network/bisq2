@@ -21,7 +21,6 @@ package bisq.network.p2p.services.data.storage;
 import bisq.common.data.ByteArray;
 import bisq.common.proto.NetworkStorageWhiteList;
 import bisq.common.util.StringUtils;
-import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.RemoveDataRequest;
@@ -441,7 +440,7 @@ public class StorageService {
             dataStore.addListener(listener);
             authenticatedDataStoresListeners.put(storeKey, listener);
             authenticatedDataStores.put(storeKey, dataStore);
-            return dataStore.readPersisted().thenApplyAsync(store -> dataStore, NetworkService.DISPATCHER);
+            return dataStore.readPersisted().thenApplyAsync(store -> dataStore);
         } else {
             return CompletableFuture.completedFuture(authenticatedDataStores.get(storeKey));
         }

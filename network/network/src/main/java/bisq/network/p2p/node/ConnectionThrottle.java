@@ -110,6 +110,7 @@ public class ConnectionThrottle {
             } catch (InterruptedException e) {
                 log.warn("Thread got interrupted at throttle method", e);
                 Thread.currentThread().interrupt(); // Restore interrupted state
+                throw new ConnectionException(e);
             }
         }
         timestamp.set(now);
