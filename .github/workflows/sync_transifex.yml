@@ -99,7 +99,7 @@ jobs:
             echo "::notice:: .tx/config changed. Pushing all source files."
             s_args="push -s"
           else
-            push_s_args=()
+            s_resources="" # This will be the comma-separated list
             CHANGED_SOURCE_FILES=$(echo "${CHANGED_FILES}" | grep -E '\.properties$' | grep -v -E '(_[a-z]{2}(_[A-Z]{2})?|_pcm)\.properties$' -- || true)
             if [ -n "$CHANGED_SOURCE_FILES" ]; then
               for file in $CHANGED_SOURCE_FILES; do
@@ -108,19 +108,23 @@ jobs:
                   $0 ~ ("source_file[[:space:]]*=[[:space:]]*" file "$") {print resource}
                 ' .tx/config)
                 if [[ -n "$resource_slug_line" ]] && [[ "$resource_slug_line" =~ ^\[o:.*:p:(.*):r:(.*)\]$ ]]; then
-                  if [ ${#push_s_args[@]} -eq 0 ]; then
-                    push_s_args+=("push" "-s") # Add push -s only once
-                  fi
                   project_slug="${BASH_REMATCH[1]}"
                   resource_slug="${BASH_REMATCH[2]}"
-                  push_s_args+=("--resource" "${project_slug}.${resource_slug}")
+                  full_resource_id="${project_slug}.${resource_slug}"
+                  if [[ -z "$s_resources" ]]; then
+                      s_resources="$full_resource_id"
+                  else
+                      s_resources+=",$full_resource_id"
+                  fi
                 else
                   echo "::warning::Could not find resource slug for changed source file: $file"
                 fi
               done
             fi
-            # Join array elements into a single string
-            s_args=$(echo "${push_s_args[*]}")
+            # If we found any resources, construct the final args string
+            if [[ -n "$s_resources" ]]; then
+              s_args="push -s -r $s_resources"
+            fi
           fi
           echo "s_args=$s_args" >> $GITHUB_OUTPUT
 
