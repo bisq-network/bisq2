@@ -38,12 +38,14 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class MailboxDataStorageService extends DataStorageService<MailboxRequest> {
+    // TODO rename with Handler as only used by StorageService (see https://github.com/bisq-network/bisq2/issues/3691)
     public interface Listener {
         void onAdded(MailboxData mailboxData);
 
         void onRemoved(MailboxData mailboxData);
     }
 
+    // TODO Use a field for a single handler as only one listener is used by StorageService
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Object mapAccessLock = new Object();
 
