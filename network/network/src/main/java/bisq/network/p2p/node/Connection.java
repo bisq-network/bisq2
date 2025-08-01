@@ -164,9 +164,7 @@ public abstract class Connection {
                                     this);
                             if (isMessageAuthorized) {
                                 handler.handleNetworkMessage(envelopePayloadMessage, this);
-                                if (!(envelopePayloadMessage instanceof CloseConnectionMessage)) {
-                                    listeners.forEach(listener -> listener.onNetworkMessage(envelopePayloadMessage));
-                                }
+                                listeners.forEach(listener -> listener.onNetworkMessage(envelopePayloadMessage));
                             }
                         }
                     });
