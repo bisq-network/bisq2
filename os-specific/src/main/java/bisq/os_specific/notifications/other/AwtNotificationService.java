@@ -42,7 +42,7 @@ public class AwtNotificationService implements OsSpecificNotificationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        initializationExecutor = ExecutorFactory.newSingleThreadExecutor("initialize-NotificationService");
+        initializationExecutor = ExecutorFactory.newSingleThreadExecutor("AwtNotificationService");
         CompletableFuture.runAsync(() -> {
             try {
                 checkArgument(SystemTray.isSupported(), "SystemTray is not supported");
