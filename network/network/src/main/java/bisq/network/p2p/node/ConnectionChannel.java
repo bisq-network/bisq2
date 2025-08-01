@@ -17,9 +17,9 @@
 
 package bisq.network.p2p.node;
 
+import bisq.common.network.Address;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
-import bisq.common.network.Address;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
@@ -44,7 +44,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public abstract class ConnectionChannel {
     interface Handler {
-        void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken, ConnectionChannel connectionChannel);
+        void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage,
+                                  AuthorizationToken authorizationToken,
+                                  ConnectionChannel connectionChannel);
 
         void handleConnectionClosed(ConnectionChannel connectionChannel, CloseReason closeReason);
     }

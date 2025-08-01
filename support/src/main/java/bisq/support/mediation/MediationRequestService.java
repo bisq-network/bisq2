@@ -122,7 +122,7 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    // ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override

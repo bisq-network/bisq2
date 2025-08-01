@@ -572,6 +572,7 @@ public class Node implements Connection.Handler {
             //TODO See https://github.com/bisq-network/bisq2/issues/3693
             // banList.add(connection.getPeerAddress(), BanList.Reason.AUTHORIZATION_FAILED);
         }
+
         return isAuthorized;
     }
 

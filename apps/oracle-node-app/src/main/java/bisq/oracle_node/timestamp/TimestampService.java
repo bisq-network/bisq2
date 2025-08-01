@@ -102,7 +102,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    // ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override

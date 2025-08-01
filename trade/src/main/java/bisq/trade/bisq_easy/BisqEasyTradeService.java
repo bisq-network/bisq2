@@ -197,7 +197,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    // ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override
