@@ -115,6 +115,7 @@ public class TorTransportService implements TransportService {
         return torService.getUseExternalTor();
     }
 
+    @Override
     public TransportType getTransportType() {
         return TransportType.TOR;
     }

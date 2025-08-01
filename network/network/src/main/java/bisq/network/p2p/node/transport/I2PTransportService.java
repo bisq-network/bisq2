@@ -238,6 +238,7 @@ public class I2PTransportService implements TransportService {
         throw new UnsupportedOperationException("isPeerOnline needs to be implemented for I2P.");
     }
 
+    @Override
     public TransportType getTransportType() {
         return TransportType.I2P;
     }

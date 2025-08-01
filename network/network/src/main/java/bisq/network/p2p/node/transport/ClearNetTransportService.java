@@ -184,6 +184,7 @@ public class ClearNetTransportService implements TransportService {
         }
     }
 
+    @Override
     public TransportType getTransportType() {
         return TransportType.CLEAR;
     }

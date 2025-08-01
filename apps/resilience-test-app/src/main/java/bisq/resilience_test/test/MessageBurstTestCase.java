@@ -17,6 +17,7 @@
 
 package bisq.resilience_test.test;
 
+import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
@@ -77,7 +78,7 @@ public class MessageBurstTestCase extends BaseTestCase {
             }
             log.info("submitted {} messages to be re broadcasted", messageCount);
         } catch (Exception e) {
-            log.error("MessageBurst: ", e);
+            log.error("MessageBurst: Error", e);
         }
     }
 
@@ -96,7 +97,7 @@ public class MessageBurstTestCase extends BaseTestCase {
         KeyPair keyPairReceiver;
         keyPairReceiver = KeyGeneration.generateKeyPair();
         var message = generateRandomString(32).getBytes();
-        var randomId = "ae6e5c207877909ad4506408dcb62293e19b3fa9"; // StringUtils.createUid();
+        var randomId = StringUtils.createUid();
         ConfidentialData confidentialData = HybridEncryption.encryptAndSign(
                 message, keyPairReceiver.getPublic(), keyPairSender
         );

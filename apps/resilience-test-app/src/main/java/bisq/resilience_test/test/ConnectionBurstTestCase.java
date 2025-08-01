@@ -36,11 +36,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 @Slf4j
 public class ConnectionBurstTestCase extends BaseTestCase {
-    
+
     private final NetworkService networkService;
     private final IdentityService identityService;
     private int connectionCount = 1000;
@@ -86,9 +88,6 @@ public class ConnectionBurstTestCase extends BaseTestCase {
             networkService.getServiceNodesByTransport()
                     .getAllServiceNodes().stream().forEach(node -> {
                         TransportService transportService = node.getTransportService();
-                        if (node.getNetworkLoadService().isEmpty()) {
-                            throw new RuntimeException("node.getNetworkLoadService() isEmpty");
-                        }
                         List<Address> address = node.getDefaultNode()
                                 .getAllConnections()
                                 .parallel()
@@ -98,7 +97,7 @@ public class ConnectionBurstTestCase extends BaseTestCase {
                         }
                     });
         } catch (Exception e) {
-            log.error("ConnectionBurst: ", e.toString());
+            log.error("ConnectionBurst: Error", e);
             return;
         }
         serviceMap.entrySet().stream().parallel().forEach(entry -> {
@@ -111,15 +110,19 @@ public class ConnectionBurstTestCase extends BaseTestCase {
                     try {
                         socket = transportService.getSocket(address); // blocking, and we are in ForkJoinPool.
                     } catch (IOException e) {
-                        log.info("ConnectionBurst: failed to getSocket of `{}`, reason: {}", address.toString(), e.toString());
+                        log.info("ConnectionBurst: failed to getSocket of `{}`", address.toString(), e);
                         return;
                     }
 
                     if (socketSilenceInSecs > 0) {
+                        CompletableFuture<Void> delay = CompletableFuture.runAsync(() -> {
+                                },
+                                CompletableFuture.delayedExecutor(socketSilenceInSecs, TimeUnit.SECONDS)
+                        );
                         try {
-                            Thread.sleep(socketSilenceInSecs * 1000L);
-                        } catch (InterruptedException e) {
-                            log.error("ConnectionBurst: we got interrupted while sleeping for socket silence");
+                            delay.join();
+                        } catch (Exception e) {
+                            log.error("ConnectionBurst: interrupted while waiting", e.getCause());
                             return;
                         }
                     }
@@ -134,9 +137,9 @@ public class ConnectionBurstTestCase extends BaseTestCase {
                                     networkService.getServiceNodesByTransport().getAuthorizationService(),
                                     identityService.getOrCreateDefaultIdentity().getKeyBundle());
                             log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
-                            ConnectionHandshake.Result result = connectionHandshake.start(new NetworkLoadSnapshot().getCurrentNetworkLoad(), address); // Blocking call
+                            connectionHandshake.start(new NetworkLoadSnapshot().getCurrentNetworkLoad(), address); // Blocking call
                         } catch (Exception e) {
-                            log.error("ConnectionBurst: Error at performing handshake: {}", e.toString());
+                            log.error("ConnectionBurst: Error at performing handshake", e);
                         }
                         if (silenceAfterHandshakeInSecs > 0) {
                             try {
@@ -158,12 +161,12 @@ public class ConnectionBurstTestCase extends BaseTestCase {
     }
 
     private HashMap<TransportType, Optional<Capability>> getAllTransportCapabilities() {
-        HashMap<TransportType, Optional<Capability>> typeMap = new HashMap<>();
-        networkService.getServiceNodesByTransport()
-                .getAllServiceNodes().forEach(sn ->
-                        typeMap.put(sn.getTransportType(), sn.getDefaultNode().getMyCapability())
-                );
-        return typeMap;
+        return networkService.getServiceNodesByTransport()
+                .getAllServiceNodes().stream()
+                .collect(HashMap::new,
+                        (map, sn) ->
+                                map.put(sn.getTransportType(), sn.getDefaultNode().getMyCapability()),
+                        HashMap::putAll);
     }
 
     private boolean isCapabilitiesPresent(HashMap<TransportType, Optional<Capability>> typeCapabilities) {

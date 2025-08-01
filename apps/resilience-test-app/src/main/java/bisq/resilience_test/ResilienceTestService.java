@@ -78,9 +78,10 @@ public class ResilienceTestService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.allOf(
-                (CompletableFuture<?>) testCases.stream().map(BaseTestCase::shutdown)
-        ).handle((ignored, ex) -> true);
+        CompletableFuture<?>[] futures = testCases.stream()
+                .map(BaseTestCase::shutdown)
+                .toArray(CompletableFuture[]::new);
+        return CompletableFuture.allOf(futures).handle((ignored, ex) -> true);
     }
 
 }
