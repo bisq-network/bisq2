@@ -22,7 +22,6 @@ import bisq.common.network.Address;
 import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
-import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
@@ -588,7 +587,7 @@ public class Node implements Connection.Handler {
 
         maybeSimulateDelay();
 
-        checkForOrphanedConnection(envelopePayloadMessage, connection);
+        closeIfOrphanedConnection(envelopePayloadMessage, connection);
 
         if (envelopePayloadMessage instanceof CloseConnectionMessage closeConnectionMessage) {
             log.debug("Received CloseConnectionMessage from {} with reason: {}",
@@ -598,23 +597,6 @@ public class Node implements Connection.Handler {
 
         // Even we get a CloseConnectionMessage we notify listeners as we want to track it for instance for metrics
         listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onMessage(envelopePayloadMessage, connection, networkId)));
-    }
-
-    private void checkForOrphanedConnection(EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
-        if (findConnection(connection).isEmpty()) {
-            // TODO for now we delay the shutdown call to not introduce a bigger change in behaviour.
-            //  We need to test more to see if that case happens and why, and if there might be valid listeners.
-            log.warn("We got handleNetworkMessage called from an orphaned connection which is not managed by our\n" +
-                            "outboundConnectionsByAddress or inboundConnectionsByAddress maps.\n" +
-                            "We close after a short delay that connection to avoid memory leaks.\n" +
-                            "We still notify listeners as its is unclear yet if there are valid listeners in that case.\n" +
-                            "envelopePayloadMessage={} connection={}",
-                    StringUtils.truncate(envelopePayloadMessage), connection);
-            Scheduler.run(() -> connection.shutdown(CloseReason.ORPHANED_CONNECTION))
-                    .host(this)
-                    .runnableName("shutdownOrphanedConnection")
-                    .after(100);
-        }
     }
 
     public void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage,
@@ -837,6 +819,17 @@ public class Node implements Connection.Handler {
 
     private boolean isShutdown() {
         return getState().get() == STOPPING || getState().get() == TERMINATED;
+    }
+
+    private void closeIfOrphanedConnection(EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
+        if (findConnection(connection).isEmpty()) {
+            log.warn("We got handleNetworkMessage called from an orphaned connection which is not managed by our\n" +
+                            "outboundConnectionsByAddress or inboundConnectionsByAddress maps.\n" +
+                            "We close that connection to avoid memory leaks.\n" +
+                            "envelopePayloadMessage={} connection={}",
+                    StringUtils.truncate(envelopePayloadMessage), connection);
+            NETWORK_IO_POOL.submit(() -> connection.shutdown(CloseReason.ORPHANED_CONNECTION));
+        }
     }
 
     // Only used for clearnet
