@@ -52,6 +52,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -63,7 +64,12 @@ import static java.util.concurrent.CompletableFuture.runAsync;
 
 @Slf4j
 public class ConfidentialMessageService implements Node.Listener, DataService.Listener {
-    private static final ExecutorService EXECUTOR = ExecutorFactory.newFixedThreadPool("ConfidentialMessageService");
+    private static final ExecutorService EXECUTOR = ExecutorFactory.boundedCachedPool("ConfidentialMessageService",
+            1,
+            20,
+            60,
+            1000,
+            new ThreadPoolExecutor.AbortPolicy());
 
     public interface Listener {
         void onMessage(EnvelopePayloadMessage envelopePayloadMessage);
