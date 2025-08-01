@@ -52,6 +52,9 @@ public class MessageBurstTestCase extends BaseTestCase {
         optionalConfig.ifPresent(config -> {
             if (config.hasPath("messageCount")) {
                 messageCount = config.getInt("messageCount");
+                if (messageCount < 0) {
+                    throw new IllegalArgumentException("messageCount must be non-negative");
+                }
             }
             if (config.hasPath("sameMessage")) {
                 sameMessage = config.getBoolean("sameMessage");

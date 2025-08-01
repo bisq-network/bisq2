@@ -59,15 +59,24 @@ public class ConnectionBurstTestCase extends BaseTestCase {
         optionalConfig.ifPresent(config -> {
             if (config.hasPath("connectionCount")) {
                 connectionCount = config.getInt("connectionCount");
+                if (connectionCount < 0) {
+                    throw new IllegalArgumentException("connectionCount must be non-negative");
+                }
             }
             if (config.hasPath("socketSilenceInSecs")) {
                 socketSilenceInSecs = config.getInt("socketSilenceInSecs");
+                if (socketSilenceInSecs < 0) {
+                    throw new IllegalArgumentException("socketSilenceInSecs must be non-negative");
+                }
             }
             if (config.hasPath("doHandshake")) {
                 doHandshake = config.getBoolean("doHandshake");
             }
             if (config.hasPath("silenceAfterHandshakeInSecs")) {
                 silenceAfterHandshakeInSecs = config.getInt("silenceAfterHandshakeInSecs");
+                if (silenceAfterHandshakeInSecs < 0) {
+                    throw new IllegalArgumentException("silenceAfterHandshakeInSecs must be non-negative");
+                }
             }
         });
     }
@@ -110,54 +119,48 @@ public class ConnectionBurstTestCase extends BaseTestCase {
 
             addressList.stream().parallel().forEach(address -> {
                 IntStream.range(0, connectionCount).parallel().forEach(i -> {
-                    Socket socket;
-                    try {
-                        socket = transportService.getSocket(address); // blocking, and we are in ForkJoinPool.
-                    } catch (IOException e) {
-                        log.info("ConnectionBurst: failed to getSocket of `{}`", address.toString(), e);
-                        return;
-                    }
-
-                    if (socketSilenceInSecs > 0) {
-                        CompletableFuture<Void> delay = CompletableFuture.runAsync(() -> {
-                                },
-                                CompletableFuture.delayedExecutor(socketSilenceInSecs, TimeUnit.SECONDS)
-                        );
-                        try {
-                            delay.join();
-                        } catch (Exception e) {
-                            log.error("ConnectionBurst: interrupted while waiting", e.getCause());
-                            return;
-                        }
-                    }
-
-                    if (doHandshake) {
-                        try {
-                            var myCapability = capsMapPresent.get(transportService.getTransportType());
-
-                            ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket,
-                                    new BanList(),
-                                    myCapability,
-                                    networkService.getServiceNodesByTransport().getAuthorizationService(),
-                                    identityService.getOrCreateDefaultIdentity().getKeyBundle());
-                            log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
-                            connectionHandshake.start(new NetworkLoadSnapshot().getCurrentNetworkLoad(), address); // Blocking call
-                        } catch (Exception e) {
-                            log.error("ConnectionBurst: Error at performing handshake", e);
-                        }
-                        if (silenceAfterHandshakeInSecs > 0) {
+                    try (Socket socket = transportService.getSocket(address)) { // blocking, and we are in ForkJoinPool.
+                        if (socketSilenceInSecs > 0) {
+                            CompletableFuture<Void> delay = CompletableFuture.runAsync(() -> {
+                                    },
+                                    CompletableFuture.delayedExecutor(socketSilenceInSecs, TimeUnit.SECONDS)
+                            );
                             try {
-                                Thread.sleep(silenceAfterHandshakeInSecs * 1000L);
-                            } catch (InterruptedException e) {
-                                log.error("ConnectionBurst: we got interrupted while sleeping for handshake silence");
+                                delay.join();
+                            } catch (Exception e) {
+                                log.error("ConnectionBurst: interrupted while waiting", e.getCause());
+                                return;
                             }
                         }
-                    }
 
-                    try {
-                        socket.close();
+                        if (doHandshake) {
+                            try {
+                                var myCapability = capsMapPresent.get(transportService.getTransportType());
+
+                                ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket,
+                                        new BanList(),
+                                        myCapability,
+                                        networkService.getServiceNodesByTransport().getAuthorizationService(),
+                                        identityService.getOrCreateDefaultIdentity().getKeyBundle());
+                                log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
+                                connectionHandshake.start(new NetworkLoadSnapshot().getCurrentNetworkLoad(), address); // Blocking call
+                            } catch (Exception e) {
+                                log.error("ConnectionBurst: Error at performing handshake", e);
+                            }
+                            if (silenceAfterHandshakeInSecs > 0) {
+                                CompletableFuture<Void> delay = CompletableFuture.runAsync(() -> {
+                                        },
+                                        CompletableFuture.delayedExecutor(silenceAfterHandshakeInSecs, TimeUnit.SECONDS)
+                                );
+                                try {
+                                    delay.join();
+                                } catch (Exception e) {
+                                    log.error("ConnectionBurst: we got interrupted while sleeping for handshake silence");
+                                }
+                            }
+                        }
                     } catch (IOException e) {
-                        //ignore
+                        log.info("ConnectionBurst: failed to getSocket of `{}`", address.toString(), e);
                     }
                 });
             });
