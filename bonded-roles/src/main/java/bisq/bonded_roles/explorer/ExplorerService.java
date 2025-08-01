@@ -50,7 +50,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 public class ExplorerService {
-    public static final ExecutorService POOL = ExecutorFactory.newCachedThreadPool("BlockExplorerService.pool", 2, 6, 60);
+    public static final ExecutorService POOL = ExecutorFactory.newCachedThreadPool("ExplorerService", 2, 6, 60);
 
     @Getter
     @ToString
