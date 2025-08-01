@@ -559,22 +559,12 @@ public class Node implements Connection.Handler {
         if (isShutdown()) {
             return;
         }
+
         maybeSimulateDelay();
+
+        checkForOrphanedConnection(envelopePayloadMessage, connection);
+
         String myAddress = findMyAddress().orElseThrow().getFullAddress();
-        if (findConnection(connection).isEmpty()) {
-            // TODO for now we delay the shutdown call to not introduce a bigger change in behaviour.
-            //  We need to test more to see if that case happens and why, and if there might be valid listeners.
-            log.warn("We got handleNetworkMessage called from an orphaned connection which is not managed by our\n" +
-                            "outboundConnectionsByAddress or inboundConnectionsByAddress maps.\n" +
-                            "We close after a short delay that connection to avoid memory leaks.\n" +
-                            "We still notify listeners as its is unclear yet if there are valid listeners in that case.\n" +
-                            "envelopePayloadMessage={} connection={}",
-                    StringUtils.truncate(envelopePayloadMessage), connection);
-            Scheduler.run(() -> connection.shutdown(CloseReason.ORPHANED_CONNECTION))
-                    .host(this)
-                    .runnableName("shutdownOrphanedConnection")
-                    .after(100);
-        }
         boolean isAuthorized = authorizationService.isAuthorized(envelopePayloadMessage,
                 authorizationToken,
                 networkLoadSnapshot.getCurrentNetworkLoad(),
@@ -594,6 +584,23 @@ public class Node implements Connection.Handler {
             // TODO should we shutdown the connection?
             //todo (Critical) should we add the connection to the ban list in that case or close the connection?
             log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(envelopePayloadMessage.toString()));
+        }
+    }
+
+    private void checkForOrphanedConnection(EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
+        if (findConnection(connection).isEmpty()) {
+            // TODO for now we delay the shutdown call to not introduce a bigger change in behaviour.
+            //  We need to test more to see if that case happens and why, and if there might be valid listeners.
+            log.warn("We got handleNetworkMessage called from an orphaned connection which is not managed by our\n" +
+                            "outboundConnectionsByAddress or inboundConnectionsByAddress maps.\n" +
+                            "We close after a short delay that connection to avoid memory leaks.\n" +
+                            "We still notify listeners as its is unclear yet if there are valid listeners in that case.\n" +
+                            "envelopePayloadMessage={} connection={}",
+                    StringUtils.truncate(envelopePayloadMessage), connection);
+            Scheduler.run(() -> connection.shutdown(CloseReason.ORPHANED_CONNECTION))
+                    .host(this)
+                    .runnableName("shutdownOrphanedConnection")
+                    .after(100);
         }
     }
 
