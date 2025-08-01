@@ -156,15 +156,13 @@ public abstract class Connection {
                     log.debug("Received message: {} at: {}",
                             StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
                     requestResponseManager.onReceived(envelopePayloadMessage);
-                    DISPATCHER.submit(() -> {
-                        if (isInputStreamActive()) {
-                            boolean isMessageAuthorized = handler.isMessageAuthorized(envelopePayloadMessage, networkEnvelope.getAuthorizationToken(), this);
-                            if (isMessageAuthorized) {
-                                handler.handleNetworkMessage(envelopePayloadMessage, this);
-                                listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onNetworkMessage(envelopePayloadMessage)));
-                            }
+                    if (isInputStreamActive()) {
+                        boolean isMessageAuthorized = handler.isMessageAuthorized(envelopePayloadMessage, networkEnvelope.getAuthorizationToken(), this);
+                        if (isMessageAuthorized) {
+                            handler.handleNetworkMessage(envelopePayloadMessage, this);
+                            listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onNetworkMessage(envelopePayloadMessage)));
                         }
-                    });
+                    }
                 }
             } catch (Exception exception) {
                 //todo (deferred) StreamCorruptedException from i2p at shutdown. prob it send some text data at shut down

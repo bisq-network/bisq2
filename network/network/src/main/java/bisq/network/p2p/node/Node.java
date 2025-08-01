@@ -65,6 +65,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static bisq.network.NetworkService.DISPATCHER;
+import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
 import static bisq.network.p2p.node.ConnectionException.Reason.HANDSHAKE_FAILED;
 import static bisq.network.p2p.node.Node.State.STARTING;
@@ -592,7 +593,7 @@ public class Node implements Connection.Handler {
         if (envelopePayloadMessage instanceof CloseConnectionMessage closeConnectionMessage) {
             log.debug("Received CloseConnectionMessage from {} with reason: {}",
                     connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
-            closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
+            NETWORK_IO_POOL.submit(() -> closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name())));
         }
 
         // Even we get a CloseConnectionMessage we notify listeners as we want to track it for instance for metrics
