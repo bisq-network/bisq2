@@ -581,9 +581,11 @@ public class Node implements Connection.Handler {
                 connection.getId(),
                 myAddress);
         if (!isAuthorized) {
-            // TODO should we shutdown the connection?
-            //todo (Critical) should we add the connection to the ban list in that case or close the connection?
-            log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(envelopePayloadMessage.toString()));
+            log.warn("Message authorization failed. Peer={}; Message={}", connection.getPeerAddress(), StringUtils.truncate(envelopePayloadMessage.toString()));
+            connection.shutdown(CloseReason.AUTHORIZATION_FAILED);
+
+            //TODO See https://github.com/bisq-network/bisq2/issues/3693
+            // banList.add(connection.getPeerAddress(), BanList.Reason.AUTHORIZATION_FAILED);
         }
         return isAuthorized;
     }
