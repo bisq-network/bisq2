@@ -599,34 +599,6 @@ public class Node implements Connection.Handler {
         listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onMessage(envelopePayloadMessage, connection, networkId)));
     }
 
-    public void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage,
-                                     AuthorizationToken authorizationToken,
-                                     ConnectionChannel connection) {
-        if (isShutdown()) {
-            return;
-        }
-        String myAddress = findMyAddress().orElseThrow().getFullAddress();
-        boolean isAuthorized = authorizationService.isAuthorized(envelopePayloadMessage,
-                authorizationToken,
-                networkLoadSnapshot.getCurrentNetworkLoad(),
-                networkLoadSnapshot.getPreviousNetworkLoad(),
-                connection.getId(),
-                myAddress);
-        if (isAuthorized) {
-            if (envelopePayloadMessage instanceof CloseConnectionMessage closeConnectionMessage) {
-                log.debug("Received CloseConnectionMessage from {} with reason: {}", connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
-                // closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
-            } else {
-                // We got called from Connection on the dispatcher thread, so no mapping needed here.
-                connection.notifyListeners(envelopePayloadMessage);
-            }
-        } else {
-            //todo (Critical) should we add the connection to the ban list in that case or close the connection?
-            log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(envelopePayloadMessage.toString()));
-        }
-    }
-
-
     @Override
     public void handleConnectionClosed(Connection connection, CloseReason closeReason) {
         Address peerAddress = connection.getPeerAddress();
@@ -651,6 +623,35 @@ public class Node implements Connection.Handler {
             listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onDisconnect(connection, closeReason)));
         }
     }
+
+    // Called by Inbound/Outbound ConnectionsManagers which are not used yet.
+    void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage,
+                              AuthorizationToken authorizationToken,
+                              ConnectionChannel connection) {
+        if (isShutdown()) {
+            return;
+        }
+        String myAddress = findMyAddress().orElseThrow().getFullAddress();
+        boolean isAuthorized = authorizationService.isAuthorized(envelopePayloadMessage,
+                authorizationToken,
+                networkLoadSnapshot.getCurrentNetworkLoad(),
+                networkLoadSnapshot.getPreviousNetworkLoad(),
+                connection.getId(),
+                myAddress);
+        if (isAuthorized) {
+            if (envelopePayloadMessage instanceof CloseConnectionMessage closeConnectionMessage) {
+                log.debug("Received CloseConnectionMessage from {} with reason: {}", connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
+                // closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
+            } else {
+                // We got called from Connection on the dispatcher thread, so no mapping needed here.
+                connection.notifyListeners(envelopePayloadMessage);
+            }
+        } else {
+            //todo (Critical) should we add the connection to the ban list in that case or close the connection?
+            log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(envelopePayloadMessage.toString()));
+        }
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Close
