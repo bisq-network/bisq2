@@ -35,10 +35,12 @@ import java.util.concurrent.CopyOnWriteArraySet;
  */
 @Slf4j
 public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOnlyDataRequest> {
+    // TODO rename with Handler as only used by StorageService (see https://github.com/bisq-network/bisq2/issues/3691)
     public interface Listener {
         void onAppended(AppendOnlyData appendOnlyData);
     }
 
+    // TODO Use a field for a single handler as only one listener is used by StorageService
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Object mapAccessLock = new Object();
 

@@ -68,6 +68,7 @@ import static bisq.network.p2p.services.data.storage.StoreType.MAILBOX_DATA_STOR
 
 @Slf4j
 public class StorageService {
+    // TODO Use a field for a single handler as only one listener is used by DataService
     public interface Listener {
         void onAdded(StorageData storageData);
 
@@ -80,6 +81,7 @@ public class StorageService {
     final Map<String, MailboxDataStorageService> mailboxStores = new ConcurrentHashMap<>();
     final Map<String, AppendOnlyDataStorageService> appendOnlyDataStores = new ConcurrentHashMap<>();
 
+    // TODO Use a field for a single handler as only one listener is used by DataService
     private final Map<String, AuthenticatedDataStorageService.Listener> authenticatedDataStoresListeners = new HashMap<>();
     private final Map<String, MailboxDataStorageService.Listener> mailboxStoresListeners = new HashMap<>();
     private final Map<String, AppendOnlyDataStorageService.Listener> appendOnlyDataStoresListeners = new HashMap<>();

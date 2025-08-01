@@ -46,6 +46,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class AuthenticatedDataStorageService extends DataStorageService<AuthenticatedDataRequest> {
+    // TODO rename with Handler as only used by StorageService (see https://github.com/bisq-network/bisq2/issues/3691)
     public interface Listener {
         void onAdded(AuthenticatedData authenticatedData);
 
@@ -55,6 +56,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         }
     }
 
+    // TODO Use a field for a single handler as only one listener is used by StorageService
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Object mapAccessLock = new Object();
 
