@@ -147,7 +147,7 @@ jobs:
                 project_slug="${BASH_REMATCH[1]}"
                 resource_slug="${BASH_REMATCH[2]}"
                 full_resource_id="${project_slug}.${resource_slug}"
-                if ! [[ -v "lang_resources[$lang]" ]]; then
+                if [[ ! -v lang_resources[$lang] ]]; then
                     lang_resources[$lang]="$full_resource_id"
                 else
                     lang_resources[$lang]+=",$full_resource_id"
