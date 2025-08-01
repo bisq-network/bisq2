@@ -552,6 +552,30 @@ public class Node implements Connection.Handler {
     // Connection.Handler
     /* --------------------------------------------------------------------- */
 
+    private boolean isMessageAuthorized(EnvelopePayloadMessage envelopePayloadMessage,
+                                       AuthorizationToken authorizationToken,
+                                       Connection connection) {
+        if (isShutdown()) {
+            return false;
+        }
+
+        Optional<Address> optionalAddress = findMyAddress();
+        checkArgument(optionalAddress.isPresent(), "My address must be present");
+        String myAddress = optionalAddress.get().getFullAddress();
+        boolean isAuthorized = authorizationService.isAuthorized(envelopePayloadMessage,
+                authorizationToken,
+                networkLoadSnapshot.getCurrentNetworkLoad(),
+                networkLoadSnapshot.getPreviousNetworkLoad(),
+                connection.getId(),
+                myAddress);
+        if (!isAuthorized) {
+            // TODO should we shutdown the connection?
+            //todo (Critical) should we add the connection to the ban list in that case or close the connection?
+            log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(envelopePayloadMessage.toString()));
+        }
+        return isAuthorized;
+    }
+
     @Override
     public void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage,
                                      AuthorizationToken authorizationToken,
@@ -564,16 +588,10 @@ public class Node implements Connection.Handler {
 
         checkForOrphanedConnection(envelopePayloadMessage, connection);
 
-        Optional<Address> optionalAddress = findMyAddress();
-        checkArgument(optionalAddress.isPresent(), "My address must be present");
-        String myAddress = optionalAddress.get().getFullAddress();
+        boolean isAuthorized = isMessageAuthorized(envelopePayloadMessage,
+                 authorizationToken,
+                 connection);
 
-        boolean isAuthorized = authorizationService.isAuthorized(envelopePayloadMessage,
-                authorizationToken,
-                networkLoadSnapshot.getCurrentNetworkLoad(),
-                networkLoadSnapshot.getPreviousNetworkLoad(),
-                connection.getId(),
-                myAddress);
         if (isAuthorized) {
             if (envelopePayloadMessage instanceof CloseConnectionMessage closeConnectionMessage) {
                 log.debug("Received CloseConnectionMessage from {} with reason: {}",
@@ -583,10 +601,6 @@ public class Node implements Connection.Handler {
                 connection.notifyListeners(envelopePayloadMessage);
                 listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onMessage(envelopePayloadMessage, connection, networkId)));
             }
-        } else {
-            // TODO should we shutdown the connection?
-            //todo (Critical) should we add the connection to the ban list in that case or close the connection?
-            log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(envelopePayloadMessage.toString()));
         }
     }
 
