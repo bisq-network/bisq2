@@ -60,7 +60,6 @@ import static bisq.network.NetworkService.DISPATCHER;
 import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class ConfidentialMessageService implements Node.Listener, DataService.Listener {
@@ -116,8 +115,8 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-        if (envelopePayloadMessage instanceof ConfidentialMessage) {
-            processConfidentialMessage((ConfidentialMessage) envelopePayloadMessage);
+        if (envelopePayloadMessage instanceof ConfidentialMessage confidentialMessage) {
+            EXECUTOR.submit(() -> processConfidentialMessage(confidentialMessage));
         }
     }
 
@@ -137,7 +136,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     @Override
     public void onMailboxDataAdded(MailboxData mailboxData) {
         ConfidentialMessage confidentialMessage = mailboxData.getConfidentialMessage();
-        processConfidentialMessage(confidentialMessage)
+        CompletableFuture.supplyAsync(() -> processConfidentialMessage(confidentialMessage), EXECUTOR)
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
                         if (result) {
@@ -416,9 +415,9 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         }
     }
 
-    private CompletableFuture<Boolean> processConfidentialMessage(ConfidentialMessage confidentialMessage) {
+    private Boolean processConfidentialMessage(ConfidentialMessage confidentialMessage) {
         return keyBundleService.findKeyPair(confidentialMessage.getReceiverKeyId())
-                .map(receiversKeyPair -> supplyAsync(() -> {
+                .map(receiversKeyPair -> {
                     try {
                         log.info("Found a matching key for processing confidentialMessage. ReceiverKeyId={}", confidentialMessage.getReceiverKeyId());
                         ConfidentialData confidentialData = confidentialMessage.getConfidentialData();
@@ -447,7 +446,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         log.error("Error at decryption using receiversKeyId={}", confidentialMessage.getReceiverKeyId(), e);
                         throw new RuntimeException(e);
                     }
-                }, EXECUTOR))
-                .orElse(CompletableFuture.completedFuture(false)); // We don't have a key for that receiverKeyId
+                })
+                .orElse(false); // We don't have a key for that receiverKeyId
     }
 }
