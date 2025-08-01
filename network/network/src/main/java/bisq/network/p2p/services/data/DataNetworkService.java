@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data;
 
+import bisq.common.threading.ExecutorFactory;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -25,12 +26,16 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.broadcast.Broadcaster;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.ExecutorService;
+
 /**
  * The network service for each transport used for the dataService to delegate received messages from any transport
  * and to add the Broadcaster for any transport to the data service.
  */
 @Slf4j
 public class DataNetworkService implements Node.Listener {
+    public static final ExecutorService EXECUTOR = ExecutorFactory.newCachedThreadPool("DataNetworkService", 1, 20, 60);
+
     private final Node node;
     private final DataService dataService;
     private final Broadcaster broadcaster;
@@ -56,9 +61,9 @@ public class DataNetworkService implements Node.Listener {
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
         if (envelopePayloadMessage instanceof AddDataRequest) {
-            dataService.processAddDataRequest((AddDataRequest) envelopePayloadMessage, true);
+            EXECUTOR.submit(() -> dataService.processAddDataRequest((AddDataRequest) envelopePayloadMessage, true));
         } else if (envelopePayloadMessage instanceof RemoveDataRequest) {
-            dataService.processRemoveDataRequest((RemoveDataRequest) envelopePayloadMessage, true);
+            EXECUTOR.submit(() -> dataService.processRemoveDataRequest((RemoveDataRequest) envelopePayloadMessage, true));
         }
     }
 
