@@ -51,6 +51,7 @@ public class DataNetworkService implements Node.Listener {
     public void shutdown() {
         node.removeListener(this);
         dataService.removeBroadcaster(broadcaster);
+        ExecutorFactory.shutdownAndAwaitTermination(EXECUTOR);
     }
 
 
