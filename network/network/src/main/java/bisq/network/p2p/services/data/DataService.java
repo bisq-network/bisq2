@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data;
 
+import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.broadcast.Broadcaster;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.StorageData;
@@ -103,88 +104,34 @@ public class DataService implements StorageService.Listener {
 
     @Override
     public void onAdded(StorageData storageData) {
-        if (storageData instanceof AuthorizedData) {
-            listeners.forEach(listener -> {
-                try {
-                    listener.onAuthorizedDataAdded((AuthorizedData) storageData);
-                } catch (Exception e) {
-                    log.error("Calling onAuthorizedDataAdded at listener {} failed", listener, e);
-                }
-            });
-        } else if (storageData instanceof AuthenticatedData) {
-            listeners.forEach(listener -> {
-                try {
-                    listener.onAuthenticatedDataAdded((AuthenticatedData) storageData);
-                } catch (Exception e) {
-                    log.error("Calling onAuthenticatedDataAdded at listener {} failed", listener, e);
-                }
-            });
-        } else if (storageData instanceof MailboxData) {
-            listeners.forEach(listener -> {
-                try {
-                    listener.onMailboxDataAdded((MailboxData) storageData);
-                } catch (Exception e) {
-                    log.error("Calling onMailboxDataAdded at listener {} failed", listener, e);
-                }
-            });
-        } else if (storageData instanceof AppendOnlyData) {
-            listeners.forEach(listener -> {
-                try {
-                    listener.onAppendOnlyDataAdded((AppendOnlyData) storageData);
-                } catch (Exception e) {
-                    log.error("Calling onAppendOnlyDataAdded at listener {} failed", listener, e);
-                }
-            });
+        if (storageData instanceof AuthorizedData authorizedData) {
+            listeners.forEach(listener -> NetworkService.DISPATCHER.submit(() -> listener.onAuthorizedDataAdded(authorizedData)));
+        } else if (storageData instanceof AuthenticatedData authenticatedData) {
+            listeners.forEach(listener -> NetworkService.DISPATCHER.submit(() -> listener.onAuthenticatedDataAdded(authenticatedData)));
+        } else if (storageData instanceof MailboxData mailboxData) {
+            listeners.forEach(listener -> NetworkService.DISPATCHER.submit(() -> listener.onMailboxDataAdded(mailboxData)));
+        } else if (storageData instanceof AppendOnlyData appendOnlyData) {
+            listeners.forEach(listener -> NetworkService.DISPATCHER.submit(() -> listener.onAppendOnlyDataAdded(appendOnlyData)));
         }
     }
 
     @Override
     public void onRemoved(StorageData storageData) {
-        if (storageData instanceof AuthorizedData) {
-            listeners.forEach(listener -> {
-                try {
-                    listener.onAuthorizedDataRemoved((AuthorizedData) storageData);
-                } catch (Exception e) {
-                    log.error("Calling onAuthorizedDataRemoved at listener {} failed", listener, e);
-                }
-            });
-        } else if (storageData instanceof AuthenticatedData) {
-            listeners.forEach(listener -> {
-                try {
-                    listener.onAuthenticatedDataRemoved((AuthenticatedData) storageData);
-                } catch (Exception e) {
-                    log.error("Calling onAuthenticatedDataRemoved at listener {} failed", listener, e);
-                }
-            });
-        } else if (storageData instanceof MailboxData) {
-            listeners.forEach(listener -> {
-                try {
-                    listener.onMailboxDataRemoved((MailboxData) storageData);
-                } catch (Exception e) {
-                    log.error("Calling onMailboxDataRemoved at listener {} failed", listener, e);
-                }
-            });
+        if (storageData instanceof AuthorizedData authorizedData) {
+            listeners.forEach(listener -> NetworkService.DISPATCHER.submit(() -> listener.onAuthorizedDataRemoved(authorizedData)));
+        } else if (storageData instanceof AuthenticatedData authenticatedData) {
+            listeners.forEach(listener -> NetworkService.DISPATCHER.submit(() -> listener.onAuthenticatedDataRemoved(authenticatedData)));
+        } else if (storageData instanceof MailboxData mailboxData) {
+            listeners.forEach(listener -> NetworkService.DISPATCHER.submit(() -> listener.onMailboxDataRemoved(mailboxData)));
         }
     }
 
     @Override
     public void onRefreshed(StorageData storageData) {
-        if (storageData instanceof AuthorizedData) {
-            listeners.forEach(listener -> {
-                try {
-                    listener.onAuthorizedDataRefreshed((AuthorizedData) storageData);
-                } catch (Exception e) {
-                    log.error("Calling onAuthorizedDataRefreshed at listener {} failed", listener, e);
-                }
-            });
-        } else if (storageData instanceof AuthenticatedData) {
-            listeners.forEach(listener -> {
-                try {
-                    listener.onAuthenticatedDataRefreshed((AuthenticatedData) storageData);
-                } catch (Exception e) {
-                    log.error("Calling onAuthenticatedDataRefreshed at listener {} failed", listener, e);
-                }
-            });
+        if (storageData instanceof AuthorizedData authorizedData) {
+            listeners.forEach(listener -> NetworkService.DISPATCHER.submit(() -> listener.onAuthorizedDataRefreshed(authorizedData)));
+        } else if (storageData instanceof AuthenticatedData authenticatedData) {
+            listeners.forEach(listener -> NetworkService.DISPATCHER.submit(() -> listener.onAuthenticatedDataRefreshed(authenticatedData)));
         }
     }
 

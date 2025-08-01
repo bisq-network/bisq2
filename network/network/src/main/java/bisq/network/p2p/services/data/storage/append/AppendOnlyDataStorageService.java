@@ -75,13 +75,7 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
             map.put(byteArray, addAppendOnlyDataRequest);
         }
         persist();
-        listeners.forEach(listener -> {
-            try {
-                listener.onAppended(appendOnlyData);
-            } catch (Exception e) {
-                log.error("Calling onAppended at listener {} failed", listener, e);
-            }
-        });
+        listeners.forEach(listener -> listener.onAppended(appendOnlyData));
         return new DataStorageResult(true);
     }
 

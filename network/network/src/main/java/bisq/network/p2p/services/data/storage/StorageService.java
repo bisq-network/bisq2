@@ -106,35 +106,17 @@ public class StorageService {
                             AuthenticatedDataStorageService.Listener listener = new AuthenticatedDataStorageService.Listener() {
                                 @Override
                                 public void onAdded(AuthenticatedData authenticatedData) {
-                                    listeners.forEach(listener -> {
-                                        try {
-                                            listener.onAdded(authenticatedData);
-                                        } catch (Exception e) {
-                                            log.error("Calling onAdded at listener {} failed", listener, e);
-                                        }
-                                    });
+                                    listeners.forEach(listener -> listener.onAdded(authenticatedData));
                                 }
 
                                 @Override
                                 public void onRemoved(AuthenticatedData authenticatedData) {
-                                    listeners.forEach(listener -> {
-                                        try {
-                                            listener.onRemoved(authenticatedData);
-                                        } catch (Exception e) {
-                                            log.error("Calling onRemoved at listener {} failed", listener, e);
-                                        }
-                                    });
+                                    listeners.forEach(listener -> listener.onRemoved(authenticatedData));
                                 }
 
                                 @Override
                                 public void onRefreshed(AuthenticatedData authenticatedData) {
-                                    listeners.forEach(listener -> {
-                                        try {
-                                            listener.onRefreshed(authenticatedData);
-                                        } catch (Exception e) {
-                                            log.error("Calling onRefresh at listener {} failed", listener, e);
-                                        }
-                                    });
+                                    listeners.forEach(listener -> listener.onRefreshed(authenticatedData));
                                 }
                             };
                             dataStore.addListener(listener);
@@ -151,24 +133,12 @@ public class StorageService {
                             MailboxDataStorageService.Listener listener = new MailboxDataStorageService.Listener() {
                                 @Override
                                 public void onAdded(MailboxData mailboxData) {
-                                    listeners.forEach(listener -> {
-                                        try {
-                                            listener.onAdded(mailboxData);
-                                        } catch (Exception e) {
-                                            log.error("Calling onAdded at listener {} failed", listener, e);
-                                        }
-                                    });
+                                    listeners.forEach(listener -> listener.onAdded(mailboxData));
                                 }
 
                                 @Override
                                 public void onRemoved(MailboxData mailboxData) {
-                                    listeners.forEach(listener -> {
-                                        try {
-                                            listener.onRemoved(mailboxData);
-                                        } catch (Exception e) {
-                                            log.error("Calling onRemoved at listener {} failed", listener, e);
-                                        }
-                                    });
+                                    listeners.forEach(listener -> listener.onRemoved(mailboxData));
                                 }
                             };
                             dataStore.addListener(listener);
@@ -183,13 +153,12 @@ public class StorageService {
                 getExistingStoreKeys(directory)
                         .forEach(storeKey -> {
                             AppendOnlyDataStorageService dataStore = new AppendOnlyDataStorageService(persistenceService, appendStoreName, storeKey);
-                            AppendOnlyDataStorageService.Listener listener = appendOnlyData -> listeners.forEach(l -> {
-                                try {
-                                    l.onAdded(appendOnlyData);
-                                } catch (Exception e) {
-                                    log.error("Calling onAdded at listener {} failed", l, e);
+                            AppendOnlyDataStorageService.Listener listener = new AppendOnlyDataStorageService.Listener() {
+                                @Override
+                                public void onAppended(AppendOnlyData appendOnlyData) {
+                                    listeners.forEach(listener -> listener.onAdded(appendOnlyData));
                                 }
-                            });
+                            };
                             dataStore.addListener(listener);
                             appendOnlyDataStoresListeners.put(storeKey, listener);
                             appendOnlyDataStores.put(storeKey, dataStore);
@@ -416,24 +385,12 @@ public class StorageService {
             AuthenticatedDataStorageService.Listener listener = new AuthenticatedDataStorageService.Listener() {
                 @Override
                 public void onAdded(AuthenticatedData authenticatedData) {
-                    listeners.forEach(listener -> {
-                        try {
-                            listener.onAdded(authenticatedData);
-                        } catch (Exception e) {
-                            log.error("Calling onAdded at listener {} failed", listener, e);
-                        }
-                    });
+                    listeners.forEach(listener -> listener.onAdded(authenticatedData));
                 }
 
                 @Override
                 public void onRemoved(AuthenticatedData authenticatedData) {
-                    listeners.forEach(listener -> {
-                        try {
-                            listener.onRemoved(authenticatedData);
-                        } catch (Exception e) {
-                            log.error("Calling onRemoved at listener {} failed", listener, e);
-                        }
-                    });
+                    listeners.forEach(listener -> listener.onRemoved(authenticatedData));
                 }
             };
 
@@ -456,24 +413,12 @@ public class StorageService {
             MailboxDataStorageService.Listener listener = new MailboxDataStorageService.Listener() {
                 @Override
                 public void onAdded(MailboxData mailboxData) {
-                    listeners.forEach(listener -> {
-                        try {
-                            listener.onAdded(mailboxData);
-                        } catch (Exception e) {
-                            log.error("Calling onAdded at listener {} failed", listener, e);
-                        }
-                    });
+                    listeners.forEach(listener -> listener.onAdded(mailboxData));
                 }
 
                 @Override
                 public void onRemoved(MailboxData mailboxData) {
-                    listeners.forEach(listener -> {
-                        try {
-                            listener.onRemoved(mailboxData);
-                        } catch (Exception e) {
-                            log.error("Calling onRemoved at listener {} failed", listener, e);
-                        }
-                    });
+                    listeners.forEach(listener -> listener.onRemoved(mailboxData));
                 }
             };
 
@@ -492,13 +437,12 @@ public class StorageService {
                     APPEND_ONLY_DATA_STORE.getStoreName(),
                     storeKey);
 
-            AppendOnlyDataStorageService.Listener listener = appendOnlyData -> listeners.forEach(l -> {
-                try {
-                    l.onAdded(appendOnlyData);
-                } catch (Exception e) {
-                    log.error("Calling onAdded at listener {} failed", l, e);
+            AppendOnlyDataStorageService.Listener listener = new AppendOnlyDataStorageService.Listener() {
+                @Override
+                public void onAppended(AppendOnlyData appendOnlyData) {
+                    listeners.forEach(listener -> listener.onAdded(appendOnlyData));
                 }
-            });
+            };
 
             dataStore.addListener(listener);
             appendOnlyDataStoresListeners.put(storeKey, listener);

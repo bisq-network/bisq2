@@ -148,13 +148,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
         persist();
 
-        listeners.forEach(listener -> {
-            try {
-                listener.onAdded(authenticatedData);
-            } catch (Exception e) {
-                log.error("Calling onAdded at listener {} failed", listener, e);
-            }
-        });
+        listeners.forEach(listener -> listener.onAdded(authenticatedData));
         maybeLogMapState("add success", persistableStore);
         return new DataStorageResult(true);
     }
@@ -228,13 +222,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
         persist();
 
-        listeners.forEach(listener -> {
-            try {
-                listener.onRemoved(authenticatedDataFromMap);
-            } catch (Exception e) {
-                log.error("Calling onRemoved at listener {} failed", listener, e);
-            }
-        });
+        listeners.forEach(listener -> listener.onRemoved(authenticatedDataFromMap));
         maybeLogMapState("remove success", persistableStore);
         return new DataStorageResult(true).removedData(authenticatedDataFromMap);
     }
@@ -291,13 +279,10 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         }
 
         persist();
-        listeners.forEach(listener -> {
-            try {
-                listener.onRefreshed(updatedRequest.getAuthenticatedSequentialData().getAuthenticatedData());
-            } catch (Exception e) {
-                log.error("Calling onRefreshed at listener {} failed", listener, e);
-            }
-        });
+
+        AuthenticatedData authenticatedData = updatedRequest.getAuthenticatedSequentialData().getAuthenticatedData();
+        listeners.forEach(listener -> listener.onRefreshed(authenticatedData));
+
         maybeLogMapState("refresh success", persistableStore);
         return new DataStorageResult(true);
     }
@@ -340,13 +325,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 persistableStore.getMap().remove(entry.getKey());
                 if (entry.getValue() instanceof AddAuthenticatedDataRequest) {
                     AuthenticatedData data = ((AddAuthenticatedDataRequest) entry.getValue()).getAuthenticatedSequentialData().getAuthenticatedData();
-                    listeners.forEach(listener -> {
-                        try {
-                            listener.onRemoved(data);
-                        } catch (Exception e) {
-                            log.error("Calling onRemoved at listener {} failed", listener, e);
-                        }
-                    });
+                    listeners.forEach(listener -> listener.onRemoved(data));
                 }
             });
         }
