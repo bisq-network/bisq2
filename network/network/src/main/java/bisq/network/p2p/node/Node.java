@@ -593,9 +593,10 @@ public class Node implements Connection.Handler {
             log.debug("Received CloseConnectionMessage from {} with reason: {}",
                     connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
             closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
-        } else {
-            listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onMessage(envelopePayloadMessage, connection, networkId)));
         }
+
+        // Even we get a CloseConnectionMessage we notify listeners as we want to track it for instance for metrics
+        listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onMessage(envelopePayloadMessage, connection, networkId)));
     }
 
     private void checkForOrphanedConnection(EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {

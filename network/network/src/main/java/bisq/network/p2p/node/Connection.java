@@ -161,9 +161,7 @@ public abstract class Connection {
                             boolean isMessageAuthorized = handler.isMessageAuthorized(envelopePayloadMessage, networkEnvelope.getAuthorizationToken(), this);
                             if (isMessageAuthorized) {
                                 handler.handleNetworkMessage(envelopePayloadMessage, this);
-                                if (!(envelopePayloadMessage instanceof CloseConnectionMessage)) {
-                                    listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onNetworkMessage(envelopePayloadMessage)));
-                                }
+                                listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onNetworkMessage(envelopePayloadMessage)));
                             }
                         }
                     });
