@@ -99,7 +99,7 @@ public class MediatorService implements PersistenceClient<MediatorStore>, Servic
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    // ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override

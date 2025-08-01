@@ -41,6 +41,7 @@ public enum CloseReason {
     TOO_MANY_CONNECTIONS(true),
     BANNED(false),
     ORPHANED_CONNECTION(false),
+    AUTHORIZATION_FAILED(false),
     EXCEPTION(false);
 
     private final boolean isGraceful;

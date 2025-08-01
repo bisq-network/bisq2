@@ -72,7 +72,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    // ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override

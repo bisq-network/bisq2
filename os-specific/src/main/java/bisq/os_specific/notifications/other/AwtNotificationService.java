@@ -35,14 +35,14 @@ public class AwtNotificationService implements OsSpecificNotificationService {
     private boolean isSupported;
     private TrayIcon trayIcon;
     @Nullable
-    private ExecutorService initializationExecutor;
+    private ExecutorService executor;
 
     public AwtNotificationService() {
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        initializationExecutor = ExecutorFactory.newSingleThreadExecutor("initialize-NotificationService");
+        executor = ExecutorFactory.newSingleThreadExecutor("AwtNotificationService");
         CompletableFuture.runAsync(() -> {
             try {
                 checkArgument(SystemTray.isSupported(), "SystemTray is not supported");
@@ -56,7 +56,7 @@ public class AwtNotificationService implements OsSpecificNotificationService {
                 log.warn("AwtNotificationService not supported.", e);
                 isSupported = false;
             }
-        }, initializationExecutor);
+        }, executor);
         return CompletableFuture.completedFuture(true);
     }
 
@@ -70,9 +70,9 @@ public class AwtNotificationService implements OsSpecificNotificationService {
             }
             trayIcon = null;
         }
-        if (initializationExecutor != null) {
-            initializationExecutor.shutdownNow();
-            initializationExecutor = null;
+
+        if (executor != null) {
+            ExecutorFactory.shutdownAndAwaitTermination(executor);
         }
         return CompletableFuture.completedFuture(true);
     }

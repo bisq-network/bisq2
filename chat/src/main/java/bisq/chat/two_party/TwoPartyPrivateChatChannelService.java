@@ -64,7 +64,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    // ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override

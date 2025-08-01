@@ -141,7 +141,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    // ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override

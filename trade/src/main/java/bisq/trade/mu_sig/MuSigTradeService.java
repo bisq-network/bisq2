@@ -244,7 +244,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    // ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override

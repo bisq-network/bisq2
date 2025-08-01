@@ -71,7 +71,7 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    // ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override

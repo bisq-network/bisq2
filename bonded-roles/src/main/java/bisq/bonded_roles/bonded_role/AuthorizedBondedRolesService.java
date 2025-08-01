@@ -245,7 +245,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
             try {
                 listener.onAuthorizedDataRemoved(authorizedData);
             } catch (Exception e) {
-                log.error("Error at onAuthorizedDataAdded", e);
+                log.error("Error at onAuthorizedDataRemoved", e);
             }
         });
     }

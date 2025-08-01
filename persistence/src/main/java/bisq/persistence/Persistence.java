@@ -33,7 +33,7 @@ import java.util.function.Consumer;
 @Slf4j
 public class Persistence<T extends PersistableStore<T>> {
     public static final String EXTENSION = ".protobuf";
-    private static final ExecutorService EXECUTOR_SERVICE = ExecutorFactory.newSingleThreadExecutor("Persistence");
+    private static final ExecutorService EXECUTOR = ExecutorFactory.newSingleThreadExecutor("Persistence");
 
     @Getter
     private final Path storePath;
@@ -55,11 +55,11 @@ public class Persistence<T extends PersistableStore<T>> {
     }
 
     public CompletableFuture<Optional<T>> readAsync() {
-        return CompletableFuture.supplyAsync(persistableStoreReaderWriter::read, EXECUTOR_SERVICE);
+        return CompletableFuture.supplyAsync(persistableStoreReaderWriter::read, EXECUTOR);
     }
 
     public CompletableFuture<Void> persistAsync(T serializable) {
-        return CompletableFuture.runAsync(() -> persist(serializable), EXECUTOR_SERVICE);
+        return CompletableFuture.runAsync(() -> persist(serializable), EXECUTOR);
     }
 
     protected void persist(T persistableStore) {
@@ -67,6 +67,6 @@ public class Persistence<T extends PersistableStore<T>> {
     }
 
     public CompletableFuture<Void> pruneBackups() {
-        return CompletableFuture.runAsync(persistableStoreReaderWriter::pruneBackups, EXECUTOR_SERVICE);
+        return CompletableFuture.runAsync(persistableStoreReaderWriter::pruneBackups, EXECUTOR);
     }
 }
