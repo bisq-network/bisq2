@@ -60,7 +60,6 @@ import static bisq.network.NetworkService.DISPATCHER;
 import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class ConfidentialMessageService implements Node.Listener, DataService.Listener {
@@ -117,7 +116,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
         if (envelopePayloadMessage instanceof ConfidentialMessage) {
-            processConfidentialMessage((ConfidentialMessage) envelopePayloadMessage);
+            EXECUTOR.submit(() -> processConfidentialMessage((ConfidentialMessage) envelopePayloadMessage));
         }
     }
 
@@ -137,7 +136,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     @Override
     public void onMailboxDataAdded(MailboxData mailboxData) {
         ConfidentialMessage confidentialMessage = mailboxData.getConfidentialMessage();
-        processConfidentialMessage(confidentialMessage)
+        CompletableFuture.supplyAsync(() -> processConfidentialMessage(confidentialMessage), EXECUTOR)
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
                         if (result) {
@@ -416,39 +415,40 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         }
     }
 
-    private CompletableFuture<Boolean> processConfidentialMessage(ConfidentialMessage confidentialMessage) {
+    private Boolean processConfidentialMessage(ConfidentialMessage confidentialMessage) {
         return keyBundleService.findKeyPair(confidentialMessage.getReceiverKeyId())
-                .map(receiversKeyPair -> supplyAsync(() -> {
-                    try {
-                        log.info("Found a matching key for processing confidentialMessage. ReceiverKeyId={}", confidentialMessage.getReceiverKeyId());
-                        ConfidentialData confidentialData = confidentialMessage.getConfidentialData();
-                        byte[] decryptedBytes = HybridEncryption.decryptAndVerify(confidentialData, receiversKeyPair);
-                        bisq.network.protobuf.EnvelopePayloadMessage decryptedProto = bisq.network.protobuf.EnvelopePayloadMessage.parseFrom(decryptedBytes);
-                        EnvelopePayloadMessage decryptedEnvelopePayloadMessage = EnvelopePayloadMessage.fromProto(decryptedProto);
+                .map(receiversKeyPair -> {
+                            try {
+                                log.info("Found a matching key for processing confidentialMessage. ReceiverKeyId={}", confidentialMessage.getReceiverKeyId());
+                                ConfidentialData confidentialData = confidentialMessage.getConfidentialData();
+                                byte[] decryptedBytes = HybridEncryption.decryptAndVerify(confidentialData, receiversKeyPair);
+                                bisq.network.protobuf.EnvelopePayloadMessage decryptedProto = bisq.network.protobuf.EnvelopePayloadMessage.parseFrom(decryptedBytes);
+                                EnvelopePayloadMessage decryptedEnvelopePayloadMessage = EnvelopePayloadMessage.fromProto(decryptedProto);
 
-                        // For backward compatibility we send 2 versions of mailbox data, thus we will receive each
-                        // mailbox data 2 times. We do not want that client code need to deal with duplications,
-                        // thus we filter here out the duplicated message.
-                        boolean wasNotPresent = processedEnvelopePayloadMessages.add(decryptedEnvelopePayloadMessage);
-                        if (wasNotPresent) {
-                            PublicKey senderPublicKey = KeyGeneration.generatePublic(confidentialData.getSenderPublicKey());
-                            log.info("Decrypted confidentialMessage. decryptedEnvelopePayloadMessage={}", decryptedEnvelopePayloadMessage.getClass().getSimpleName());
+                                // For backward compatibility we send 2 versions of mailbox data, thus we will receive each
+                                // mailbox data 2 times. We do not want that client code need to deal with duplications,
+                                // thus we filter here out the duplicated message.
+                                boolean wasNotPresent = processedEnvelopePayloadMessages.add(decryptedEnvelopePayloadMessage);
+                                if (wasNotPresent) {
+                                    PublicKey senderPublicKey = KeyGeneration.generatePublic(confidentialData.getSenderPublicKey());
+                                    log.info("Decrypted confidentialMessage. decryptedEnvelopePayloadMessage={}", decryptedEnvelopePayloadMessage.getClass().getSimpleName());
 
-                            listeners.forEach(listener -> DISPATCHER.submit(() -> {
-                                try {
-                                    listener.onMessage(decryptedEnvelopePayloadMessage);
-                                    listener.onConfidentialMessage(decryptedEnvelopePayloadMessage, senderPublicKey);
-                                } catch (Exception e) {
-                                    log.error("Calling onMessage(decryptedEnvelopePayloadMessage, senderPublicKey) at messageListener {} failed", listener, e);
+                                    listeners.forEach(listener -> DISPATCHER.submit(() -> {
+                                        try {
+                                            listener.onMessage(decryptedEnvelopePayloadMessage);
+                                            listener.onConfidentialMessage(decryptedEnvelopePayloadMessage, senderPublicKey);
+                                        } catch (Exception e) {
+                                            log.error("Calling onMessage(decryptedEnvelopePayloadMessage, senderPublicKey) at messageListener {} failed", listener, e);
+                                        }
+                                    }));
                                 }
-                            }));
+                                return true;
+                            } catch (Exception e) {
+                                log.error("Error at decryption using receiversKeyId={}", confidentialMessage.getReceiverKeyId(), e);
+                                throw new RuntimeException(e);
+                            }
                         }
-                        return true;
-                    } catch (Exception e) {
-                        log.error("Error at decryption using receiversKeyId={}", confidentialMessage.getReceiverKeyId(), e);
-                        throw new RuntimeException(e);
-                    }
-                }, EXECUTOR))
-                .orElse(CompletableFuture.completedFuture(false)); // We don't have a key for that receiverKeyId
+                )
+                .orElse(false); // We don't have a key for that receiverKeyId
     }
 }
