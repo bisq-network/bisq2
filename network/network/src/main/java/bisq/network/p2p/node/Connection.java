@@ -44,6 +44,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 
+import static bisq.network.NetworkService.DISPATCHER;
+
 /**
  * Represents an inbound or outbound connection to a peer node.
  * Listens for messages from the peer.
@@ -62,8 +64,11 @@ public abstract class Connection {
     }
 
     protected interface Handler {
+        boolean isMessageAuthorized(EnvelopePayloadMessage envelopePayloadMessage,
+                                    AuthorizationToken authorizationToken,
+                                    Connection connection);
+
         void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage,
-                                  AuthorizationToken authorizationToken,
                                   Connection connection);
 
         void handleConnectionClosed(Connection connection, CloseReason closeReason);
@@ -151,11 +156,18 @@ public abstract class Connection {
                     log.debug("Received message: {} at: {}",
                             StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
                     requestResponseManager.onReceived(envelopePayloadMessage);
-                    NetworkService.DISPATCHER.submit(() -> {
+
+                    DISPATCHER.submit(() -> {
                         if (isInputStreamActive()) {
-                            handler.handleNetworkMessage(envelopePayloadMessage,
+                            boolean isMessageAuthorized = handler.isMessageAuthorized(envelopePayloadMessage,
                                     networkEnvelope.getAuthorizationToken(),
                                     this);
+                            if (isMessageAuthorized) {
+                                handler.handleNetworkMessage(envelopePayloadMessage, this);
+                                if (!(envelopePayloadMessage instanceof CloseConnectionMessage)) {
+                                    listeners.forEach(listener -> listener.onNetworkMessage(envelopePayloadMessage));
+                                }
+                            }
                         }
                     });
                 }
@@ -177,7 +189,6 @@ public abstract class Connection {
     /* --------------------------------------------------------------------- */
     // Public API
     /* --------------------------------------------------------------------- */
-
 
     public void addListener(Listener listener) {
         listeners.add(listener);
@@ -301,16 +312,6 @@ public abstract class Connection {
                 }
             });
             listeners.clear();
-        });
-    }
-
-    void notifyListeners(EnvelopePayloadMessage envelopePayloadMessage) {
-        listeners.forEach(listener -> {
-            try {
-                listener.onNetworkMessage(envelopePayloadMessage);
-            } catch (Exception e) {
-                log.error("Calling onNetworkMessage at listener {} failed", listener, e);
-            }
         });
     }
 

@@ -217,7 +217,7 @@ public class Node implements Connection.Handler {
                 } else {
                     log.debug("We are now in RUNNING state");
                 }
-            }  catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 log.warn("Thread got interrupted at initialize method", e);
                 Thread.currentThread().interrupt(); // Restore interrupted state
             }
@@ -326,10 +326,10 @@ public class Node implements Connection.Handler {
     }
 
     public void onNewIncomingConnection(InboundConnectionChannel inboundConnectionChannel) {
-        //noinspection EmptyTryBlock
-        try {
-            // inboundConnectionsByAddress.put(inboundConnectionChannel.getPeerAddress(), inboundConnectionChannel);
-            // DISPATCHER.submit(() -> listeners.forEach(listener -> listener.onConnection(inboundConnectionChannel)));
+        // Not used yet and inboundConnectionChannel is not matching expected type in the listener
+       /* try {
+            inboundConnectionsByAddress.put(inboundConnectionChannel.getPeerAddress(), inboundConnectionChannel);
+            listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onConnection(inboundConnectionChannel)));
         } catch (Throwable throwable) {
             try {
                 inboundConnectionChannel.getNetworkEnvelopeSocketChannel().close();
@@ -337,7 +337,7 @@ public class Node implements Connection.Handler {
             }
 
             handleException(throwable);
-        }
+        }*/
     }
 
 
@@ -564,7 +564,8 @@ public class Node implements Connection.Handler {
     // Connection.Handler
     /* --------------------------------------------------------------------- */
 
-    private boolean isMessageAuthorized(EnvelopePayloadMessage envelopePayloadMessage,
+    @Override
+    public boolean isMessageAuthorized(EnvelopePayloadMessage envelopePayloadMessage,
                                        AuthorizationToken authorizationToken,
                                        Connection connection) {
         if (isShutdown()) {
@@ -590,7 +591,6 @@ public class Node implements Connection.Handler {
 
     @Override
     public void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage,
-                                     AuthorizationToken authorizationToken,
                                      Connection connection) {
         if (isShutdown()) {
             return;
@@ -600,26 +600,18 @@ public class Node implements Connection.Handler {
 
         checkForOrphanedConnection(envelopePayloadMessage, connection);
 
-        boolean isAuthorized = isMessageAuthorized(envelopePayloadMessage,
-                 authorizationToken,
-                 connection);
-
-        if (isAuthorized) {
-            if (envelopePayloadMessage instanceof CloseConnectionMessage closeConnectionMessage) {
-                log.debug("Received CloseConnectionMessage from {} with reason: {}",
-                        connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
-                closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
-            } else {
-                // We got called from Connection on the dispatcher thread, so no mapping needed here.
-                connection.notifyListeners(envelopePayloadMessage);
-                listeners.forEach(listener -> {
-                    try {
-                        listener.onMessage(envelopePayloadMessage, connection, networkId);
-                    } catch (Exception e) {
-                        log.error("Calling onMessage at listener {} failed", listener, e);
-                    }
-                });
-            }
+        if (envelopePayloadMessage instanceof CloseConnectionMessage closeConnectionMessage) {
+            log.debug("Received CloseConnectionMessage from {} with reason: {}",
+                    connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
+            closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
+        } else {
+            listeners.forEach(listener -> {
+                try {
+                    listener.onMessage(envelopePayloadMessage, connection, networkId);
+                } catch (Exception e) {
+                    log.error("Calling onMessage at listener {} failed", listener, e);
+                }
+            });
         }
     }
 
