@@ -20,6 +20,7 @@ package bisq.trade.mu_sig;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
@@ -43,7 +44,6 @@ import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.options.AccountOption;
 import bisq.offer.options.OfferOptionUtil;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -244,25 +244,27 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    //  ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof MuSigTradeMessage muSigTradeMessage) {
-            verifyTradingNotOnHalt();
-            verifyMinVersionForTrading();
+            NetworkService.NETWORK_IO_POOL.submit(() -> {
+                verifyTradingNotOnHalt();
+                verifyMinVersionForTrading();
 
-            if (bannedUserService.isUserProfileBanned(muSigTradeMessage.getSender())) {
-                log.warn("Message ignored as sender is banned");
-                return;
-            }
+                if (bannedUserService.isUserProfileBanned(muSigTradeMessage.getSender())) {
+                    log.warn("Message ignored as sender is banned");
+                    return;
+                }
 
-            if (muSigTradeMessage instanceof SetupTradeMessage_A) {
-                handleMuSigTakeOfferMessage((SetupTradeMessage_A) muSigTradeMessage);
-            } else {
-                handleMuSigTradeMessage(muSigTradeMessage);
-            }
+                if (muSigTradeMessage instanceof SetupTradeMessage_A) {
+                    handleMuSigTakeOfferMessage((SetupTradeMessage_A) muSigTradeMessage);
+                } else {
+                    handleMuSigTradeMessage(muSigTradeMessage);
+                }
+            });
         }
     }
 

@@ -145,16 +145,16 @@ public class Bisq1BridgeRequestService implements Service, PersistenceClient<Bis
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof AuthorizeAccountAgeRequest request) {
-            processAuthorizeAccountAgeRequest(request);
+            NetworkService.NETWORK_IO_POOL.submit(() -> processAuthorizeAccountAgeRequest(request));
         } else if (envelopePayloadMessage instanceof AuthorizeSignedWitnessRequest request) {
-            processAuthorizeSignedWitnessRequest(request);
+            NetworkService.NETWORK_IO_POOL.submit(() -> processAuthorizeSignedWitnessRequest(request));
         }
     }
 
     @Override
     public void onConfidentialMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey) {
         if (envelopePayloadMessage instanceof BondedRoleRegistrationRequest request) {
-            processBondedRoleRegistrationRequest(senderPublicKey, request);
+            NetworkService.NETWORK_IO_POOL.submit(() -> processBondedRoleRegistrationRequest(senderPublicKey, request));
         }
     }
 

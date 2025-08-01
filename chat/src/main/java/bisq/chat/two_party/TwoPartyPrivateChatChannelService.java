@@ -64,15 +64,15 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    //  ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof TwoPartyPrivateChatMessage) {
-            processMessage((TwoPartyPrivateChatMessage) envelopePayloadMessage);
-        } else if (envelopePayloadMessage instanceof TwoPartyPrivateChatMessageReaction) {
-            processMessageReaction((TwoPartyPrivateChatMessageReaction) envelopePayloadMessage);
+        if (envelopePayloadMessage instanceof TwoPartyPrivateChatMessage twoPartyPrivateChatMessage) {
+            NetworkService.NETWORK_IO_POOL.submit(() -> processMessage(twoPartyPrivateChatMessage));
+        } else if (envelopePayloadMessage instanceof TwoPartyPrivateChatMessageReaction twoPartyPrivateChatMessageReaction) {
+            NetworkService.NETWORK_IO_POOL.submit(() -> processMessageReaction(twoPartyPrivateChatMessageReaction));
         }
     }
 

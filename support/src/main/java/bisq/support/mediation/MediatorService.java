@@ -99,13 +99,13 @@ public class MediatorService implements PersistenceClient<MediatorStore>, Servic
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    //  ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof MediationRequest) {
-            processMediationRequest((MediationRequest) envelopePayloadMessage);
+        if (envelopePayloadMessage instanceof MediationRequest mediationRequest) {
+            NetworkService.NETWORK_IO_POOL.submit(() -> processMediationRequest(mediationRequest));
         }
     }
 

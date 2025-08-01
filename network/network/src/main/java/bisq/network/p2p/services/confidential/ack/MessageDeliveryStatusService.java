@@ -113,10 +113,10 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof AckRequestingMessage) {
-            processAckRequestingMessage((AckRequestingMessage) envelopePayloadMessage);
-        } else if (envelopePayloadMessage instanceof AckMessage) {
-            processAckMessage((AckMessage) envelopePayloadMessage);
+        if (envelopePayloadMessage instanceof AckRequestingMessage ackRequestingMessage) {
+            NetworkService.NETWORK_IO_POOL.submit(() -> processAckRequestingMessage(ackRequestingMessage));
+        } else if (envelopePayloadMessage instanceof AckMessage ackMessage) {
+            NetworkService.NETWORK_IO_POOL.submit(() -> processAckMessage(ackMessage));
         }
     }
 

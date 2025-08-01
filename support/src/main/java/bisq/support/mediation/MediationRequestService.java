@@ -122,13 +122,13 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    //  ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof MediatorsResponse) {
-            processMediationResponse((MediatorsResponse) envelopePayloadMessage);
+        if (envelopePayloadMessage instanceof MediatorsResponse mediatorsResponse) {
+            NetworkService.NETWORK_IO_POOL.submit(() -> processMediationResponse(mediatorsResponse));
         }
     }
 
@@ -156,9 +156,10 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
                 mediatorNetworkId,
                 myUserIdentity.getNetworkIdWithKeyPair());
     }
+
     public void requestMediation(MuSigOpenTradeChannel channel,
                                  MuSigContract contract) {
-       // checkArgument(channel.getMuSigOffer().equals(contract.getOffer()));
+        // checkArgument(channel.getMuSigOffer().equals(contract.getOffer()));
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         checkArgument(!bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile()));
 

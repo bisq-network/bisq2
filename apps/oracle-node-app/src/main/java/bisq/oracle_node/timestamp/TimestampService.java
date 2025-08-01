@@ -102,13 +102,13 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    // ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof AuthorizeTimestampRequest) {
-            processAuthorizeTimestampRequest((AuthorizeTimestampRequest) envelopePayloadMessage);
+        if (envelopePayloadMessage instanceof AuthorizeTimestampRequest request) {
+            NetworkService.NETWORK_IO_POOL.submit(() -> processAuthorizeTimestampRequest(request));
         }
     }
 

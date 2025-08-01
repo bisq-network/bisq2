@@ -71,19 +71,21 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    //  ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof MuSigOpenTradeMessage) {
-            processMessage((MuSigOpenTradeMessage) envelopePayloadMessage);
-            if (!pendingMessages.isEmpty()) {
-                log.info("Processing pendingMessages messages");
-                pendingMessages.forEach(this::processMessage);
-            }
-        } else if (envelopePayloadMessage instanceof MuSigOpenTradeMessageReaction) {
-            processMessageReaction((MuSigOpenTradeMessageReaction) envelopePayloadMessage);
+        if (envelopePayloadMessage instanceof MuSigOpenTradeMessage muSigOpenTradeMessage) {
+            NetworkService.NETWORK_IO_POOL.submit(() -> {
+                processMessage(muSigOpenTradeMessage);
+                if (!pendingMessages.isEmpty()) {
+                    log.info("Processing pendingMessages messages");
+                    pendingMessages.forEach(this::processMessage);
+                }
+            });
+        } else if (envelopePayloadMessage instanceof MuSigOpenTradeMessageReaction muSigOpenTradeMessageReaction) {
+            NetworkService.NETWORK_IO_POOL.submit(() -> processMessageReaction(muSigOpenTradeMessageReaction));
         }
     }
 

@@ -141,13 +141,13 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    //  ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof ReportToModeratorMessage) {
-            processReportToModeratorMessage((ReportToModeratorMessage) envelopePayloadMessage);
+        if (envelopePayloadMessage instanceof ReportToModeratorMessage reportToModeratorMessage) {
+            NetworkService.NETWORK_IO_POOL.submit(() -> processReportToModeratorMessage(reportToModeratorMessage));
         }
     }
 

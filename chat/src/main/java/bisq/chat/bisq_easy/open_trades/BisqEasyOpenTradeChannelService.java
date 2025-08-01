@@ -72,19 +72,21 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    // ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof BisqEasyOpenTradeMessage) {
-            processMessage((BisqEasyOpenTradeMessage) envelopePayloadMessage);
-            if (!pendingMessages.isEmpty()) {
-                log.info("Processing pendingMessages messages");
-                pendingMessages.forEach(this::processMessage);
-            }
-        } else if (envelopePayloadMessage instanceof BisqEasyOpenTradeMessageReaction) {
-            processMessageReaction((BisqEasyOpenTradeMessageReaction) envelopePayloadMessage);
+        if (envelopePayloadMessage instanceof BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage) {
+            NetworkService.NETWORK_IO_POOL.submit(() -> {
+                processMessage(bisqEasyOpenTradeMessage);
+                if (!pendingMessages.isEmpty()) {
+                    log.info("Processing pendingMessages messages");
+                    pendingMessages.forEach(this::processMessage);
+                }
+            });
+        } else if (envelopePayloadMessage instanceof BisqEasyOpenTradeMessageReaction bisqEasyOpenTradeMessageReaction) {
+            NetworkService.NETWORK_IO_POOL.submit(() -> processMessageReaction(bisqEasyOpenTradeMessageReaction));
         }
     }
 

@@ -17,6 +17,8 @@
 
 package bisq.trade.bisq_easy;
 
+import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
@@ -38,8 +40,6 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -197,25 +197,27 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    //  ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof BisqEasyTradeMessage bisqEasyTradeMessage) {
-            verifyTradingNotOnHalt();
-            verifyMinVersionForTrading();
+            NetworkService.NETWORK_IO_POOL.submit(() -> {
+                verifyTradingNotOnHalt();
+                verifyMinVersionForTrading();
 
-            if (bannedUserService.isUserProfileBanned(bisqEasyTradeMessage.getSender())) {
-                log.warn("Message ignored as sender is banned");
-                return;
-            }
+                if (bannedUserService.isUserProfileBanned(bisqEasyTradeMessage.getSender())) {
+                    log.warn("Message ignored as sender is banned");
+                    return;
+                }
 
-            if (bisqEasyTradeMessage instanceof BisqEasyTakeOfferRequest) {
-                handleBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) bisqEasyTradeMessage);
-            } else {
-                handleBisqEasyTradeMessage(bisqEasyTradeMessage);
-            }
+                if (bisqEasyTradeMessage instanceof BisqEasyTakeOfferRequest) {
+                    handleBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) bisqEasyTradeMessage);
+                } else {
+                    handleBisqEasyTradeMessage(bisqEasyTradeMessage);
+                }
+            });
         }
     }
 
