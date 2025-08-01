@@ -552,7 +552,8 @@ public class Node implements Connection.Handler {
     // Connection.Handler
     /* --------------------------------------------------------------------- */
 
-    private boolean isMessageAuthorized(EnvelopePayloadMessage envelopePayloadMessage,
+    @Override
+    public boolean isMessageAuthorized(EnvelopePayloadMessage envelopePayloadMessage,
                                        AuthorizationToken authorizationToken,
                                        Connection connection) {
         if (isShutdown()) {
@@ -573,12 +574,12 @@ public class Node implements Connection.Handler {
             //todo (Critical) should we add the connection to the ban list in that case or close the connection?
             log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(envelopePayloadMessage.toString()));
         }
+
         return isAuthorized;
     }
 
     @Override
     public void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage,
-                                     AuthorizationToken authorizationToken,
                                      Connection connection) {
         if (isShutdown()) {
             return;
@@ -588,19 +589,12 @@ public class Node implements Connection.Handler {
 
         checkForOrphanedConnection(envelopePayloadMessage, connection);
 
-        boolean isAuthorized = isMessageAuthorized(envelopePayloadMessage,
-                 authorizationToken,
-                 connection);
-
-        if (isAuthorized) {
-            if (envelopePayloadMessage instanceof CloseConnectionMessage closeConnectionMessage) {
-                log.debug("Received CloseConnectionMessage from {} with reason: {}",
-                        connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
-                closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
-            } else {
-                connection.notifyListeners(envelopePayloadMessage);
-                listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onMessage(envelopePayloadMessage, connection, networkId)));
-            }
+        if (envelopePayloadMessage instanceof CloseConnectionMessage closeConnectionMessage) {
+            log.debug("Received CloseConnectionMessage from {} with reason: {}",
+                    connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
+            closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
+        } else {
+            listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onMessage(envelopePayloadMessage, connection, networkId)));
         }
     }
 

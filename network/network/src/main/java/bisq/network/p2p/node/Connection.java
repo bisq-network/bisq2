@@ -64,8 +64,11 @@ public abstract class Connection {
     }
 
     protected interface Handler {
+        boolean isMessageAuthorized(EnvelopePayloadMessage envelopePayloadMessage,
+                                    AuthorizationToken authorizationToken,
+                                    Connection connection);
+
         void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage,
-                                  AuthorizationToken authorizationToken,
                                   Connection connection);
 
         void handleConnectionClosed(Connection connection, CloseReason closeReason);
@@ -155,7 +158,13 @@ public abstract class Connection {
                     requestResponseManager.onReceived(envelopePayloadMessage);
                     DISPATCHER.submit(() -> {
                         if (isInputStreamActive()) {
-                            handler.handleNetworkMessage(envelopePayloadMessage, networkEnvelope.getAuthorizationToken(), this);
+                            boolean isMessageAuthorized = handler.isMessageAuthorized(envelopePayloadMessage, networkEnvelope.getAuthorizationToken(), this);
+                            if (isMessageAuthorized) {
+                                handler.handleNetworkMessage(envelopePayloadMessage, this);
+                                if (!(envelopePayloadMessage instanceof CloseConnectionMessage)) {
+                                    listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onNetworkMessage(envelopePayloadMessage)));
+                                }
+                            }
                         }
                     });
                 }
@@ -293,10 +302,6 @@ public abstract class Connection {
         DISPATCHER.submit(() -> handler.handleConnectionClosed(this, closeReason));
         listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onConnectionClosed(closeReason)));
         listeners.clear();
-    }
-
-    void notifyListeners(EnvelopePayloadMessage envelopePayloadMessage) {
-        listeners.forEach(listener -> DISPATCHER.submit(() -> listener.onNetworkMessage(envelopePayloadMessage)));
     }
 
     AtomicInteger getSentMessageCounter() {
