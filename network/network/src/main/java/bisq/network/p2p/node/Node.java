@@ -564,7 +564,10 @@ public class Node implements Connection.Handler {
 
         checkForOrphanedConnection(envelopePayloadMessage, connection);
 
-        String myAddress = findMyAddress().orElseThrow().getFullAddress();
+        Optional<Address> optionalAddress = findMyAddress();
+        checkArgument(optionalAddress.isPresent(), "My address must be present");
+        String myAddress = optionalAddress.get().getFullAddress();
+
         boolean isAuthorized = authorizationService.isAuthorized(envelopePayloadMessage,
                 authorizationToken,
                 networkLoadSnapshot.getCurrentNetworkLoad(),
