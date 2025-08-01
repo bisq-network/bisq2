@@ -74,6 +74,10 @@ class InventoryHandler implements Connection.Listener {
         return future;
     }
 
+    /* --------------------------------------------------------------------- */
+    // Connection.Listener implementation
+    /* --------------------------------------------------------------------- */
+
     @Override
     public void onNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof InventoryResponse response) {
@@ -87,6 +91,16 @@ class InventoryHandler implements Connection.Listener {
                         connection.getPeerAddress().getFullAddress());
             }
         }
+    }
+
+    @Override
+    public void onConnectionClosed(CloseReason closeReason) {
+        dispose();
+    }
+
+    void dispose() {
+        removeListeners();
+        future.cancel(true);
     }
 
     private void printReceivedInventory(InventoryResponse response) {
@@ -139,16 +153,6 @@ class InventoryHandler implements Connection.Listener {
                         "\n##########################################################################################\n{}" +
                         "\n##########################################################################################",
                 size, connection.getPeerAddress().getFullAddress(), passed, maxSizeReached, report);
-    }
-
-    @Override
-    public void onConnectionClosed(CloseReason closeReason) {
-        dispose();
-    }
-
-    void dispose() {
-        removeListeners();
-        future.cancel(true);
     }
 
     private void removeListeners() {

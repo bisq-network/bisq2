@@ -60,6 +60,11 @@ class ReportHandler implements Connection.Listener {
         return future;
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Connection.Listener implementation
+    /* --------------------------------------------------------------------- */
+
     @Override
     public void onNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof ReportResponse response) {

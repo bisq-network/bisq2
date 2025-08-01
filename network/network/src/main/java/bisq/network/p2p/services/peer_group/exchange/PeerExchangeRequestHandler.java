@@ -62,6 +62,11 @@ class PeerExchangeRequestHandler implements Connection.Listener {
         return future;
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Connection.Listener implementation
+    /* --------------------------------------------------------------------- */
+
     @Override
     public void onNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof PeerExchangeResponse response) {
@@ -87,6 +92,7 @@ class PeerExchangeRequestHandler implements Connection.Listener {
     public void onConnectionClosed(CloseReason closeReason) {
         dispose();
     }
+
 
     void dispose() {
         removeListeners();
