@@ -49,6 +49,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -108,7 +109,8 @@ public class InventoryRequestService implements Node.Listener {
         if (!allDataReceived.get() &&
                 canUseCandidate(connection) &&
                 requestHandlerMap.size() < config.getMaxPendingRequestsAtStartup()) {
-            requestInventoryFromFreshConnection(connection);
+            //TODO requires further refactoring to avoid unneeded threads in follow up code
+            NETWORK_IO_POOL.submit(() -> requestInventoryFromFreshConnection(connection));
         }
     }
 
