@@ -18,7 +18,6 @@
 package bisq.network.p2p.services.reporting;
 
 import bisq.common.platform.MemoryReportService;
-import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -30,6 +29,8 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.TreeMap;
+
+import static bisq.network.NetworkService.NETWORK_IO_POOL;
 
 /**
  * Sends a request for NetworkLoad to our peers. We add our own NetworkLoad in the request.
@@ -68,10 +69,12 @@ public class ReportResponseService implements Node.Listener {
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
         if (envelopePayloadMessage instanceof ReportRequest request) {
-            Report report = createStorageReport();
-            ReportResponse response = new ReportResponse(request.getRequestId(), report);
-            log.info("Received a ReportRequest from {}", connection.getPeerAddress());
-            NetworkService.NETWORK_IO_POOL.submit(() -> node.send(response, connection));
+            NETWORK_IO_POOL.submit(() -> {
+                Report report = createStorageReport();
+                ReportResponse response = new ReportResponse(request.getRequestId(), report);
+                log.info("Received a ReportRequest from {}", connection.getPeerAddress());
+                node.send(response, connection);
+            });
         }
     }
 

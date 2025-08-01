@@ -103,11 +103,13 @@ public class PeerExchangeService implements Node.Listener {
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
         if (envelopePayloadMessage instanceof PeerExchangeRequest request) {
-            Address peerAddress = connection.getPeerAddress();
-            List<Peer> myPeers = new ArrayList<>(peerExchangeStrategy.getPeersForReporting(peerAddress));
-            peerExchangeStrategy.addReportedPeers(new HashSet<>(request.getPeers()), peerAddress);
-            CompletableFuture.runAsync(() -> node.send(new PeerExchangeResponse(request.getNonce(), myPeers), connection), NETWORK_IO_POOL);
-            log.debug("Sent PeerExchangeResponse with my myPeers {}", myPeers);
+            NETWORK_IO_POOL.submit(() -> {
+                Address peerAddress = connection.getPeerAddress();
+                List<Peer> myPeers = new ArrayList<>(peerExchangeStrategy.getPeersForReporting(peerAddress));
+                peerExchangeStrategy.addReportedPeers(new HashSet<>(request.getPeers()), peerAddress);
+                node.send(new PeerExchangeResponse(request.getNonce(), myPeers), connection);
+                log.debug("Sent PeerExchangeResponse with my myPeers {}", myPeers);
+            });
         }
     }
 
@@ -171,7 +173,7 @@ public class PeerExchangeService implements Node.Listener {
                 retryPeerExchangeAsync();
             }
         } catch (InterruptedException e) {
-            log.warn("Thread got interrupted at minSuccessReachedLatch.await in the startInitialPeerExchange method",  e);
+            log.warn("Thread got interrupted at minSuccessReachedLatch.await in the startInitialPeerExchange method", e);
             Thread.currentThread().interrupt(); // Restore interrupted state
 
             retryPeerExchangeAsync();
