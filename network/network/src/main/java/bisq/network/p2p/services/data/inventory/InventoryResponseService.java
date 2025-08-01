@@ -33,12 +33,15 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 import java.util.function.Predicate;
 
+import static bisq.network.NetworkService.NETWORK_IO_POOL;
+
 @Slf4j
 public class InventoryResponseService implements Node.Listener {
     private final Node node;
     private final Map<InventoryFilterType, FilterService<? extends InventoryFilter>> filterServiceMap;
 
-    InventoryResponseService(Node node, Map<InventoryFilterType, FilterService<? extends InventoryFilter>> filterServiceMap) {
+    InventoryResponseService(Node node,
+                             Map<InventoryFilterType, FilterService<? extends InventoryFilter>> filterServiceMap) {
         this.node = node;
         this.filterServiceMap = filterServiceMap;
 
@@ -57,7 +60,8 @@ public class InventoryResponseService implements Node.Listener {
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
         if (envelopePayloadMessage instanceof InventoryRequest request) {
-            handleInventoryRequest(request, connection);
+            //TODO requires further refactoring to avoid unneeded threads in follow up code
+            NETWORK_IO_POOL.submit(() -> handleInventoryRequest(request, connection));
         }
     }
 
