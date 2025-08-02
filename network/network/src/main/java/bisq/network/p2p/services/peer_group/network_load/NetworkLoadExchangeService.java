@@ -103,10 +103,11 @@ public class NetworkLoadExchangeService implements Node.Listener {
                     .whenComplete((result, throwable) -> {
                         if (throwable != null) {
                             log.warn("Sending {} to {} failed. {}", response.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
+                        } else {
+                            log.debug("Sent NetworkLoadResponse with nonce {} and my networkLoad {} to {}. Connection={}",
+                                    request.getNonce(), myNetworkLoad, connection.getPeerAddress(), connection.getId());
                         }
                     });
-            log.debug("Sent NetworkLoadResponse with nonce {} and my networkLoad {} to {}. Connection={}",
-                    request.getNonce(), myNetworkLoad, connection.getPeerAddress(), connection.getId());
         }
     }
 

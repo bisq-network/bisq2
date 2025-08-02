@@ -110,9 +110,10 @@ public class KeepAliveService implements Node.Listener {
                     .whenComplete((result, throwable) -> {
                         if (throwable != null) {
                             log.warn("Sending {} to {} failed. {}", response.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
+                        } else {
+                            log.debug("{} sent Pong with nonce {} to {}. Connection={}", node, ping.getNonce(), connection.getPeerAddress(), connection.getId());
                         }
                     });
-            log.debug("{} sent Pong with nonce {} to {}. Connection={}", node, ping.getNonce(), connection.getPeerAddress(), connection.getId());
         }
     }
 

@@ -111,9 +111,10 @@ public class PeerExchangeService implements Node.Listener {
                     .whenComplete((result, throwable) -> {
                         if (throwable != null) {
                             log.warn("Sending {} to {} failed. {}", response.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
+                        } else {
+                            log.debug("Sent PeerExchangeResponse with my myPeers {}", myPeers);
                         }
                     });
-            log.debug("Sent PeerExchangeResponse with my myPeers {}", myPeers);
         }
     }
 
