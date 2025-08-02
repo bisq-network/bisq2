@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 import java.util.Arrays;
 
 import static bisq.common.platform.PlatformUtils.EXIT_FAILURE;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class DesktopExecutable extends Executable<DesktopApplicationService> {
@@ -80,12 +81,19 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
                 });
     }
 
+    @Override
+    protected void onApplicationLaunched() {
+        supplyAsync(() -> applicationService.initialize().join())
+                .whenComplete(this::onApplicationServiceInitialized);
+    }
+
+    @Override
     protected void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
         if (desktopController == null) {
             UIThread.run(() -> new Popup().error(throwable).show());
             return;
         }
-        Platform.runLater(() -> desktopController.onApplicationServiceInitialized(result, throwable));
+        UIThread.run(() -> desktopController.onApplicationServiceInitialized(result, throwable));
     }
 
     @Override
