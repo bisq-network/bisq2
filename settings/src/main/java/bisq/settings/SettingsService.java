@@ -20,11 +20,11 @@ package bisq.settings;
 import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.asset.FiatCurrencyRepository;
-import bisq.common.market.Market;
 import bisq.common.data.ByteUnit;
 import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.locale.LocaleRepository;
+import bisq.common.market.Market;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.observable.ReadOnlyObservable;
@@ -86,6 +86,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     // Service
     /* --------------------------------------------------------------------- */
 
+    @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         if (isInitialized) {
@@ -126,6 +127,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return CompletableFuture.completedFuture(true);
     }
 
+    @Override
     public CompletableFuture<Boolean> shutdown() {
         if (!isInitialized) {
             return CompletableFuture.completedFuture(true);

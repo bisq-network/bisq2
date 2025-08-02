@@ -57,6 +57,7 @@ public class AlertService implements Service, AuthorizedBondedRolesService.Liste
         return CompletableFuture.completedFuture(true);
     }
 
+
     /* --------------------------------------------------------------------- */
     // AuthorizedBondedRolesService.Listener
     /* --------------------------------------------------------------------- */

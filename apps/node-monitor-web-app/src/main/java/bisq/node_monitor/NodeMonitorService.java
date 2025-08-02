@@ -50,16 +50,6 @@ public class NodeMonitorService implements Service {
         this.bondedRolesService = bondedRolesService;
     }
 
-    @Override
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-    @Override
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
-    }
-
     public List<String> getAddressList() {
         try {
             Set<Address> bannedAddresses = bondedRolesService.getAuthorizedBondedRolesService().getBondedRoles().stream()

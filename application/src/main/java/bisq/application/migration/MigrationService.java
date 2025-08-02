@@ -37,11 +37,6 @@ public class MigrationService implements Service {
         return CompletableFuture.completedFuture(true);
     }
 
-    @Override
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
-    }
-
     Version getDataDirVersion() {
         if (!dataDirVersionFile.exists()) {
             return VERSION_BEFORE_MIGRATION_SERVICE_INTRODUCED;

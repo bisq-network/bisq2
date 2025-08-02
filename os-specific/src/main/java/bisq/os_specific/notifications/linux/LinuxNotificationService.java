@@ -88,11 +88,6 @@ public class LinuxNotificationService implements OsSpecificNotificationService {
     }
 
     @Override
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-    @Override
     public void show(String title, String message) {
         if (isSupported) {
             Boolean useTransientNotifications = settingsService.getCookie().asBoolean(CookieKey.USE_TRANSIENT_NOTIFICATIONS)
