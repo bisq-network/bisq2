@@ -62,14 +62,20 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
     private Pin marketPriceByCurrencyMapPin;
     @Getter
     private Optional<AuthorizedBondedRole> marketPriceProvidingOracle = Optional.empty();
+    private final boolean enabled;
 
     public MarketPriceService(com.typesafe.config.Config marketPrice,
                               PersistenceService persistenceService,
                               NetworkService networkService,
                               AuthorizedBondedRolesService authorizedBondedRolesService) {
+        this.enabled = !marketPrice.hasPath("enabled") || marketPrice.getBoolean("enabled");
         this.authorizedBondedRolesService = authorizedBondedRolesService;
-        marketPriceRequestService = new MarketPriceRequestService(MarketPriceRequestService.Config.from(marketPrice), networkService);
-        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
+        marketPriceRequestService = this.enabled
+                ? new MarketPriceRequestService(MarketPriceRequestService.Config.from(marketPrice), networkService)
+                : null;
+        persistence = this.enabled
+                ? persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore)
+                : null;
     }
 
 
@@ -79,6 +85,10 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+
+        if (!this.enabled) {
+            return CompletableFuture.completedFuture(true);
+        }
 
         authorizedBondedRolesService.addListener(this);
 
@@ -91,6 +101,10 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        if (!this.enabled) {
+            return CompletableFuture.completedFuture(true);
+        }
+
         if (marketPriceByCurrencyMapPin != null) {
             marketPriceByCurrencyMapPin.unbind();
         }
