@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.reporting;
 
 import bisq.common.platform.MemoryReportService;
+import bisq.common.util.ExceptionUtil;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -73,7 +74,7 @@ public class ReportResponseService implements Node.Listener {
             node.sendAsync(response, connection)
                     .whenComplete((result, throwable) -> {
                         if (throwable != null) {
-                            log.error("Sending {} to {} failed.", response.getClass().getSimpleName(), connection.getPeerAddress(), throwable);
+                            log.warn("Sending {} to {} failed. {}", response.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
                         }
                     });
         }

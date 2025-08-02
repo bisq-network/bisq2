@@ -110,7 +110,7 @@ public class PeerExchangeService implements Node.Listener {
             node.sendAsync(response, connection)
                     .whenComplete((result, throwable) -> {
                         if (throwable != null) {
-                            log.error("Sending {} to {} failed.", response.getClass().getSimpleName(), connection.getPeerAddress(), throwable);
+                            log.warn("Sending {} to {} failed. {}", response.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
                         }
                     });
             log.debug("Sent PeerExchangeResponse with my myPeers {}", myPeers);

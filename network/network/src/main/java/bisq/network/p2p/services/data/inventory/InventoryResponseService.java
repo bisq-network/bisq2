@@ -19,7 +19,6 @@ package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.data.ByteUnit;
 import bisq.common.util.ExceptionUtil;
-import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -38,7 +37,8 @@ public class InventoryResponseService implements Node.Listener {
     private final Node node;
     private final Map<InventoryFilterType, FilterService<? extends InventoryFilter>> filterServiceMap;
 
-    InventoryResponseService(Node node, Map<InventoryFilterType, FilterService<? extends InventoryFilter>> filterServiceMap) {
+    InventoryResponseService(Node node,
+                             Map<InventoryFilterType, FilterService<? extends InventoryFilter>> filterServiceMap) {
         this.node = node;
         this.filterServiceMap = filterServiceMap;
 
@@ -88,20 +88,18 @@ public class InventoryResponseService implements Node.Listener {
             Inventory inventory = filterService.createInventory(inventoryFilter, predicate);
 
             // The requestersVersion param can be removed once there are no old nodes expected in the network anymore.
-            InventoryResponse inventoryResponse = new InventoryResponse(requestersVersion, inventory, request.getNonce());
-
-            NetworkService.NETWORK_IO_POOL.submit(() -> {
-                try {
-                    node.send(inventoryResponse, connection);
-                    log.info("Successfully sent an InventoryResponse to peer {} with {} kb. Took {} ms",
-                            connection.getPeerAddress(),
-                            ByteUnit.BYTE.toKB(inventory.getSerializedSize()),
-                            System.currentTimeMillis() - ts);
-                } catch (Exception e) {
-                    log.warn("Error at sending InventoryResponse to {}. {}", connection.getPeerAddress(),
-                            ExceptionUtil.getRootCauseMessage(e));
-                }
-            });
+            InventoryResponse response = new InventoryResponse(requestersVersion, inventory, request.getNonce());
+            node.sendAsync(response, connection)
+                    .whenComplete((result, throwable) -> {
+                        if (throwable != null) {
+                            log.warn("Sending {} to {} failed. {}", response.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
+                        } else {
+                            log.info("Successfully sent an InventoryResponse to peer {} with {} kb. Took {} ms",
+                                    connection.getPeerAddress(),
+                                    ByteUnit.BYTE.toKB(inventory.getSerializedSize()),
+                                    System.currentTimeMillis() - ts);
+                        }
+                    });
         } else {
             log.warn("We got an inventoryRequest with filterType {} which we do not support." +
                             "This should never happen if our feature entries are correct and if the peers code is executed as expected.",

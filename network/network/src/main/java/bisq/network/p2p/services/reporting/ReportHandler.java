@@ -17,8 +17,8 @@
 
 package bisq.network.p2p.services.reporting;
 
+import bisq.common.util.ExceptionUtil;
 import bisq.common.util.MathUtils;
-import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -28,8 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Getter
 @Slf4j
@@ -50,9 +48,12 @@ class ReportHandler implements Connection.Listener {
 
     CompletableFuture<Report> request() {
         requestTs = System.currentTimeMillis();
-        supplyAsync(() -> node.send(new ReportRequest(requestId), connection), NetworkService.NETWORK_IO_POOL)
-                .whenComplete((c, throwable) -> {
+
+        ReportRequest request = new ReportRequest(requestId);
+        node.sendAsync(request, connection)
+                .whenComplete((result, throwable) -> {
                     if (throwable != null) {
+                        log.warn("Sending {} to {} failed. {}", request.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
                         future.completeExceptionally(throwable);
                         dispose();
                     }

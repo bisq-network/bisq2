@@ -17,8 +17,8 @@
 
 package bisq.network.p2p.services.peer_group.network_load;
 
+import bisq.common.util.ExceptionUtil;
 import bisq.common.util.MathUtils;
-import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -29,8 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Getter
 @Slf4j
@@ -54,9 +52,11 @@ class NetworkLoadExchangeHandler implements Connection.Listener {
         log.info("Send NetworkLoadRequest to {} with nonce {} and my networkLoad {}. Connection={}",
                 connection.getPeerAddress(), nonce, myNetworkLoad, connection.getId());
         requestTs = System.currentTimeMillis();
-        supplyAsync(() -> node.send(new NetworkLoadExchangeRequest(nonce, myNetworkLoad), connection), NetworkService.NETWORK_IO_POOL)
-                .whenComplete((c, throwable) -> {
+        NetworkLoadExchangeRequest request = new NetworkLoadExchangeRequest(nonce, myNetworkLoad);
+        node.sendAsync(request, connection)
+                .whenComplete((result, throwable) -> {
                     if (throwable != null) {
+                        log.warn("Sending {} to {} failed. {}", request.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
                         future.completeExceptionally(throwable);
                         dispose();
                     }
