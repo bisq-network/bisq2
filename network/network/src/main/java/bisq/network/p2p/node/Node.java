@@ -250,7 +250,7 @@ public class Node implements Connection.Handler {
     }
 
     private void createServerAndListen() {
-        ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, keyBundle);
+        ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, keyBundle); // blocking
         myCapability = Optional.of(Capability.myCapability(serverSocketResult.getAddress(), new ArrayList<>(supportedTransportTypes), new ArrayList<>(features)));
         server = Optional.of(new Server(serverSocketResult,
                 socketTimeout,
@@ -662,8 +662,13 @@ public class Node implements Connection.Handler {
         connection.stopListening();
         return sendAsync(new CloseConnectionMessage(closeReason), connection)
                 .orTimeout(100, TimeUnit.MILLISECONDS)
-                .whenComplete((r, t) -> {
-                    connection.shutdown(CloseReason.CLOSE_MSG_SENT.details(closeReason.name()));
+                .whenComplete((con, throwable) -> {
+                    if (throwable != null) {
+                        log.warn("Failed to send close message: {}", ExceptionUtil.getRootCauseMessage(throwable));
+                        connection.shutdown(closeReason);
+                    } else {
+                        connection.shutdown(CloseReason.CLOSE_MSG_SENT.details(closeReason.name()));
+                    }
                 });
     }
 

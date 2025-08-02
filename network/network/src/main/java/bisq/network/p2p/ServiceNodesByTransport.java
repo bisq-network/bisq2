@@ -26,6 +26,7 @@ import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.platform.MemoryReportService;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.network.NetworkExecutors;
 import bisq.network.SendMessageResult;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -61,7 +62,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
@@ -139,7 +139,7 @@ public class ServiceNodesByTransport {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         entry -> supplyAsync(() ->
-                                entry.getValue().getInitializedDefaultNode(defaultNetworkId), NETWORK_IO_POOL)));
+                                entry.getValue().getInitializedDefaultNode(defaultNetworkId), NetworkExecutors.getNetworkNodeExecutor())));
     }
 
     public CompletableFuture<List<Boolean>> shutdown() {
@@ -169,7 +169,7 @@ public class ServiceNodesByTransport {
             } else {
                 return serviceNode.initializeNode(networkId);
             }
-        }, NETWORK_IO_POOL);
+        }, NetworkExecutors.getNetworkNodeExecutor());
     }
 
     public void addSeedNodes(Set<AddressByTransportTypeMap> seedNodeMaps) {

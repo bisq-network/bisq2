@@ -19,6 +19,7 @@ package bisq.network;
 
 import bisq.common.threading.CallerRunsPolicyWithLogging;
 import bisq.common.threading.DiscardNewestPolicy;
+import bisq.common.threading.DiscardOldestPolicy;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.threading.MaxSizeAwareDeque;
 import bisq.common.threading.MaxSizeAwareQueue;
@@ -36,6 +37,8 @@ public class NetworkExecutors {
     @Getter
     private static ThreadPoolExecutor networkSendExecutor;
     @Getter
+    private static ThreadPoolExecutor networkNodeExecutor;
+    @Getter
     private static ThreadPoolExecutor networkWorkerExecutor;
     private static volatile boolean isInitialized;
 
@@ -43,6 +46,7 @@ public class NetworkExecutors {
         checkArgument(!isInitialized, "initialize must not be called twice");
         networkReadExecutor = createNetworkReadExecutor();
         networkSendExecutor = createNetworkSendExecutor();
+        networkNodeExecutor = createNetworkNodeExecutor();
         networkWorkerExecutor = createNetworkWorkerExecutor();
         isInitialized = true;
     }
@@ -51,12 +55,34 @@ public class NetworkExecutors {
         if (isInitialized) {
             ExecutorFactory.shutdownAndAwaitTermination(networkReadExecutor);
             ExecutorFactory.shutdownAndAwaitTermination(networkSendExecutor);
+            ExecutorFactory.shutdownAndAwaitTermination(networkNodeExecutor);
             ExecutorFactory.shutdownAndAwaitTermination(networkWorkerExecutor);
             networkReadExecutor = null;
             networkSendExecutor = null;
+            networkNodeExecutor = null;
+            networkWorkerExecutor = null;
             isInitialized = false;
         }
     }
+
+    /**
+     * Used for initializing the transportService, initializing the node and used as the blocking server thread.
+     * @return
+     */
+    private static ThreadPoolExecutor createNetworkNodeExecutor() {
+        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(10);
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                1,
+                10,
+                10,
+                TimeUnit.SECONDS,
+                queue,
+                ExecutorFactory.getThreadFactory("Network.node"),
+                new DiscardOldestPolicy());
+        queue.setExecutor(executor);
+        return executor;
+    }
+
 
     private static ThreadPoolExecutor createNetworkWorkerExecutor() {
         MaxSizeAwareQueue queue = new MaxSizeAwareQueue(1000);
