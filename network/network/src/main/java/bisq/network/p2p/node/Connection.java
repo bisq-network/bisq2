@@ -22,6 +22,7 @@ import bisq.common.network.DefaultPeerSocket;
 import bisq.common.network.PeerSocket;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
+import bisq.network.NetworkExecutors;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
@@ -126,10 +127,17 @@ public abstract class Connection {
             return;
         }
 
-        inputHandlerFuture = NetworkService.NETWORK_IO_POOL.submit(() -> {
+        inputHandlerFuture = NetworkExecutors.CONNECTION_READ.submit(() -> {
             try {
+                long readTs = 0;
                 while (isInputStreamActive()) {
+                    if (readTs != 0) {
+                        log.info("Processing message took {} ms. Wait for new message from {}. ", System.currentTimeMillis() - readTs, getPeerAddress());
+                    } else {
+                        log.info("Wait for new message from {}", getPeerAddress());
+                    }
                     var proto = networkEnvelopeSocket.receiveNextEnvelope();
+                    readTs = System.currentTimeMillis();
                     if (proto == null) {
                         log.info("Proto from networkEnvelopeSocket.receiveNextEnvelope() is null. " +
                                 "This is expected if the input stream has reached EOF.");
