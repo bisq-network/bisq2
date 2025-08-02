@@ -66,6 +66,12 @@ public class NetworkExecutors {
      * We use a higher queue capacity to allow network bursts to some extent.
      * We use the CallerRunsPolicy thus putting backpressure on the caller in case we exceed the queue capacity.
      * This pool must be used only for sending messages to the network, either in Connection or in ConnectionHandshake.
+     *
+     * Sending a message start with creating the handshake which starts with creating the socket which is a blocking operation.
+     * Then sending the message (blocking) and waiting for the response (blocking read). After successful handshake we create the connection.
+     * Every send after that will only have the blocking send operation, but there is a throttle to avoid network burst with a Thread.sleep.
+     * Thus, the send operation can take  longer as the actual network IO operation.
+     * This whole process is all covered by that executor.
      */
     private static ThreadPoolExecutor createNetworkSendExecutor() {
         MaxSizeAwareQueue queue = new MaxSizeAwareQueue(1000);
