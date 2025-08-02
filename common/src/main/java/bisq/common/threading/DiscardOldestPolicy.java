@@ -19,21 +19,34 @@ package bisq.common.threading;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 
 @Slf4j
 public class DiscardOldestPolicy implements RejectedExecutionHandler {
+    private static final ThreadLocal<Boolean> retrying = ThreadLocal.withInitial(() -> false);
+
     @Override
     public void rejectedExecution(Runnable runnable, ThreadPoolExecutor executor) {
         if (executor.isShutdown()) {
             log.warn("Executor was already shut down");
             return;
         }
-
-        log.warn("Task rejected as queue is full. We remove the oldest task from the queue and retry to execute the current task.");
-        executor.getQueue().poll();
-        executor.execute(runnable); // retry execution with current task
+        if (retrying.get()) {
+            log.warn("Recursive rejection detected. Dropping task.");
+            return;
+        }
+        retrying.set(true);
+        try {
+            log.warn("Task rejected as queue is full. We remove the oldest task from the queue and retry to execute the current task.");
+            executor.getQueue().poll();
+            executor.execute(runnable); // retry execution with current task
+        } catch (RejectedExecutionException e) {
+            log.warn("Retry also failed. Dropping task.");
+        } finally {
+            retrying.remove();
+        }
     }
 }
 

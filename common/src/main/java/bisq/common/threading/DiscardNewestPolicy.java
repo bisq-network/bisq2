@@ -21,28 +21,42 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Deque;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 
 @Slf4j
 public class DiscardNewestPolicy implements RejectedExecutionHandler {
+    private static final ThreadLocal<Boolean> retrying = ThreadLocal.withInitial(() -> false);
+
     @Override
     public void rejectedExecution(Runnable runnable, ThreadPoolExecutor executor) {
         if (executor.isShutdown()) {
             log.warn("Executor was already shut down");
             return;
         }
-        BlockingQueue<Runnable> queue = executor.getQueue();
-        if (queue instanceof Deque<?> deque) {
-            log.warn("Task rejected as queue is full. We remove the newest task from the deque and retry to execute the current task.");
-            deque.pollLast(); // remove newest
-            executor.execute(runnable); // retry execution with current task
-        } else {
-            log.warn("Task rejected as queue is full. Queue is not type of Deque. We remove the oldest task instead of the intended policy to remove the newest.");
-            queue.poll();
-            executor.execute(runnable); // retry execution with current task
-            // Fallback to default discard if not a Deque
-            // or just silently drop
+        if (retrying.get()) {
+            log.warn("Recursive rejection detected. Dropping task.");
+            return;
+        }
+        retrying.set(true);
+        try {
+            BlockingQueue<Runnable> queue = executor.getQueue();
+            if (queue instanceof Deque<?> deque) {
+                log.warn("Task rejected as queue is full. We remove the newest task from the deque and retry to execute the current task.");
+                deque.pollLast(); // remove newest
+                executor.execute(runnable); // retry execution with current task
+            } else {
+                log.warn("Task rejected as queue is full. Queue is not type of Deque. We remove the oldest task instead of the intended policy to remove the newest.");
+                queue.poll();
+                executor.execute(runnable); // retry execution with current task
+                // Fallback to default discard if not a Deque
+                // or just silently drop
+            }
+        } catch (RejectedExecutionException e) {
+            log.warn("Retry also failed. Dropping task.");
+        } finally {
+            retrying.remove();
         }
     }
 }
