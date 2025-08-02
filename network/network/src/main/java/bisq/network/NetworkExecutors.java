@@ -27,17 +27,33 @@ import lombok.Getter;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 // TODO use config to set core pool sized
 public class NetworkExecutors {
     @Getter
     private static ThreadPoolExecutor networkReadExecutor;
     @Getter
     private static ThreadPoolExecutor networkSendExecutor;
+    private static volatile boolean isInitialized;
 
     public static void initialize() {
+        checkArgument(!isInitialized, "initialize must not be called twice");
         networkReadExecutor = createNetworkReadExecutor();
         networkSendExecutor = createNetworkSendExecutor();
+        isInitialized = true;
     }
+
+    public static void shutdown() {
+        if (isInitialized) {
+            ExecutorFactory.shutdownAndAwaitTermination(networkReadExecutor);
+            ExecutorFactory.shutdownAndAwaitTermination(networkSendExecutor);
+            networkReadExecutor = null;
+            networkSendExecutor = null;
+            isInitialized = false;
+        }
+    }
+
 
     /**
      * We keep a core pool size of 12 which reflects the target peer group.
@@ -66,7 +82,7 @@ public class NetworkExecutors {
      * We use a higher queue capacity to allow network bursts to some extent.
      * We use the CallerRunsPolicy thus putting backpressure on the caller in case we exceed the queue capacity.
      * This pool must be used only for sending messages to the network, either in Connection or in ConnectionHandshake.
-     *
+     * <p>
      * Sending a message start with creating the handshake which starts with creating the socket which is a blocking operation.
      * Then sending the message (blocking) and waiting for the response (blocking read). After successful handshake we create the connection.
      * Every send after that will only have the blocking send operation, but there is a throttle to avoid network burst with a Thread.sleep.
@@ -85,9 +101,5 @@ public class NetworkExecutors {
                 new CallerRunsPolicyWithLogging());
         queue.setExecutor(executor);
         return executor;
-    }
-
-    public static void shutdown() {
-        ExecutorFactory.shutdownAndAwaitTermination(networkReadExecutor);
     }
 }
