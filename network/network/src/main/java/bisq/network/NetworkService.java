@@ -190,6 +190,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+        NetworkExecutors.initialize();
 
         NetworkId defaultNetworkId = networkIdService.getOrCreateDefaultNetworkId();
         Map<TransportType, CompletableFuture<Node>> map = serviceNodesByTransport.getInitializedDefaultNodeByTransport(defaultNetworkId);
@@ -218,7 +219,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                     return true;
                 })
                 .thenCompose(result -> serviceNodesByTransport.shutdown()
-                        .thenApply(list -> list.stream().filter(e -> e).count() == supportedTransportTypes.size()));
+                        .thenApply(list -> list.stream().filter(e -> e).count() == supportedTransportTypes.size()))
+                .whenComplete((r, t) -> NetworkExecutors.shutdown());
     }
 
 
