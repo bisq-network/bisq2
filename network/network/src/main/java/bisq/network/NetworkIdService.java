@@ -74,19 +74,6 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
 
 
     /* --------------------------------------------------------------------- */
-    // Service
-    /* --------------------------------------------------------------------- */
-
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-
-    /* --------------------------------------------------------------------- */
     // API
     /* --------------------------------------------------------------------- */
 

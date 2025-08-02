@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -37,25 +36,6 @@ public class ContractService implements Service {
     public ContractService(SecurityService securityService) {
     }
 
-
-    /* --------------------------------------------------------------------- */
-    // Service
-    /* --------------------------------------------------------------------- */
-
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.completedFuture(true);
-
-    }
-
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // API
-    /* --------------------------------------------------------------------- */
-
     public <T extends Offer<?, ?>> ContractSignatureData signContract(Contract<T> contract, KeyPair keyPair)
             throws GeneralSecurityException {
         byte[] contractHash = getContractHash(contract);
@@ -63,7 +43,8 @@ public class ContractService implements Service {
         return new ContractSignatureData(contractHash, signature, keyPair.getPublic());
     }
 
-    public <T extends Offer<?, ?>> boolean verifyContractSignature(Contract<T> contract, ContractSignatureData signatureData)
+    public <T extends Offer<?, ?>> boolean verifyContractSignature(Contract<T> contract,
+                                                                   ContractSignatureData signatureData)
             throws GeneralSecurityException {
         byte[] contractHash = signatureData.getContractHash();
         checkArgument(Arrays.equals(contractHash, getContractHash(contract)),
@@ -74,5 +55,4 @@ public class ContractService implements Service {
     private <T extends Offer<?, ?>> byte[] getContractHash(Contract<T> contract) {
         return DigestUtil.hash(contract.serializeForHash());
     }
-
 }

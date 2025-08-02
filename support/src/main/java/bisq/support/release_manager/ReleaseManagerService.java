@@ -67,24 +67,7 @@ public class ReleaseManagerService implements Service {
 
 
     /* --------------------------------------------------------------------- */
-    // Service
-
-    /* --------------------------------------------------------------------- */
-
-    @Override
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-    @Override
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-
-    /* --------------------------------------------------------------------- */
     // API
-
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> publishReleaseNotification(boolean isPreRelease,

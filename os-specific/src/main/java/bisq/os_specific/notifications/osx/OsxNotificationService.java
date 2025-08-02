@@ -54,11 +54,6 @@ public class OsxNotificationService implements OsSpecificNotificationService {
     }
 
     @Override
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-    @Override
     public void show(String title, String message) {
         if (isSupported) {
             ID notification = Foundation.invoke(Foundation.getObjcClass("NSUserNotification"), "new");

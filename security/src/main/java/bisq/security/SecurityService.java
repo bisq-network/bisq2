@@ -69,13 +69,9 @@ public class SecurityService implements Service {
         equihashProofOfWorkService = new EquihashProofOfWorkService();
     }
 
+    @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         return keyBundleService.initialize();
-    }
-
-    @Override
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
     }
 }
