@@ -77,6 +77,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
@@ -205,7 +206,10 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                     } else {
                         return false;
                     }
-                });
+                })
+                // We complete on a network thread and switch to ForkJoinPool.commonPool to prevent network threads
+                // from being tied up during subsequent service initialization steps.
+                .thenComposeAsync(CompletableFuture::completedFuture, ForkJoinPool.commonPool());
     }
 
     public CompletableFuture<Boolean> shutdown() {

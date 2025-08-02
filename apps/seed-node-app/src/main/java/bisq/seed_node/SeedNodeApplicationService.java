@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
@@ -80,7 +81,8 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return memoryReportService.initialize()
+        // Move initialization work off the current thread and use a ForkJoinPool.commonPool instead.
+        return supplyAsync(() -> memoryReportService.initialize()
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
@@ -89,6 +91,7 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (success) {
+                        // todo move to a service class
                         difficultyAdjustmentServicePin = bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault ->
                                 networkService.getNetworkLoadServices().forEach(networkLoadService ->
                                         networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
@@ -96,7 +99,8 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
                     } else {
                         log.error("Initializing SeedNodeApplicationService failed", throwable);
                     }
-                });
+                }))
+                .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 
     @Override
@@ -107,7 +111,7 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
             difficultyAdjustmentServicePin.unbind();
             difficultyAdjustmentServicePin = null;
         }
-
+        // Move shutdown work off the current thread and use a ForkJoinPool.commonPool instead.
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> seedNodeService.shutdown()
                 .thenCompose(result -> bondedRolesService.shutdown())
@@ -125,7 +129,7 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
                         return false;
                     }
                     return true;
-                })
-                .join());
+                }))
+                .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 }

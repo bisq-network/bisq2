@@ -64,6 +64,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
@@ -275,10 +276,11 @@ public class DesktopApplicationService extends JavaSeApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return memoryReportService.initialize()
+        // Move initialization work off the current thread and use a ForkJoinPool.commonPool instead.
+        return supplyAsync(() -> memoryReportService.initialize()
                 .thenCompose(result -> securityService.initialize()
                         .whenComplete((r, t) -> setState(State.INITIALIZE_NETWORK)))
-                .thenCompose(result -> supplyAsync(() -> networkService.initialize().join())
+                .thenCompose(result -> networkService.initialize()
                         .whenComplete((r, t) -> setState(State.INITIALIZE_WALLET)))
                 .thenCompose(result -> walletService.map(Service::initialize)
                         .orElse(CompletableFuture.completedFuture(true))
@@ -321,12 +323,14 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                     }
                     setState(State.FAILED);
                     return false;
-                });
+                }))
+                .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
+        // Move shutdown work off the current thread and use a ForkJoinPool.commonPool instead.
         // We shut down services in opposite order as they are initialized
         // In case a shutdown method completes exceptionally we log the error and map the result to `false` to not
         // interrupt the shutdown sequence.
@@ -371,8 +375,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                         shutDownErrorMessage.set(ExceptionUtil.getRootCauseMessage(throwable));
                     }
                     return false;
-                })
-                .join());
+                }))
+                .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 
     private Optional<OsSpecificNotificationService> findSystemNotificationDelegate() {

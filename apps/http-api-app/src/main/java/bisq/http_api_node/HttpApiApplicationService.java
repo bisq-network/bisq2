@@ -26,7 +26,6 @@ import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;
 import bisq.common.platform.OS;
-import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
 import bisq.http_api.HttpApiService;
 import bisq.http_api.rest_api.RestApiService;
@@ -58,6 +57,7 @@ import java.awt.*;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
@@ -157,7 +157,7 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
         TradeService.Config tradeConfig = TradeService.Config.from(getConfig("trade"));
         tradeService = new TradeService(tradeConfig, networkService, identityService, persistenceService, offerService,
                 contractService, supportService, chatService, bondedRolesService, userService, settingsService,
-                accountService,burningmanService);
+                accountService, burningmanService);
 
         bisqEasyService = new BisqEasyService(persistenceService,
                 securityService,
@@ -195,34 +195,15 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return memoryReportService.initialize()
-                .thenCompose(result -> securityService.initialize())
-                .thenCompose(result -> {
-                    setState(State.INITIALIZE_NETWORK);
-
-                    CompletableFuture<Boolean> networkFuture = networkService.initialize();
-                    CompletableFuture<Boolean> walletFuture = walletService.map(Service::initialize)
-                            .orElse(CompletableFuture.completedFuture(true));
-
-                    networkFuture.whenComplete((r, throwable) -> {
-                        if (throwable != null) {
-                            log.error("Error at networkFuture.initialize", throwable);
-                        } else if (!walletFuture.isDone()) {
-                            setState(State.INITIALIZE_WALLET);
-                        }
-                    });
-                    walletFuture.whenComplete((r, throwable) -> {
-                        if (throwable != null) {
-                            log.error("Error at walletService.initialize", throwable);
-                        }
-                    });
-                    return CompletableFutureUtils.allOf(walletFuture, networkFuture).thenApply(list -> true);
-                })
-                .whenComplete((r, throwable) -> {
-                    if (throwable == null) {
-                        setState(State.INITIALIZE_SERVICES);
-                    }
-                })
+        // Move initialization work off the current thread and use a ForkJoinPool.commonPool instead.
+        return supplyAsync(() -> memoryReportService.initialize()
+                .thenCompose(result -> securityService.initialize()
+                        .whenComplete((r, t) -> setState(State.INITIALIZE_NETWORK)))
+                .thenCompose(result -> networkService.initialize()
+                        .whenComplete((r, t) -> setState(State.INITIALIZE_WALLET)))
+                .thenCompose(result -> walletService.map(Service::initialize)
+                        .orElse(CompletableFuture.completedFuture(true))
+                        .whenComplete((r, t) -> setState(State.INITIALIZE_SERVICES)))
                 .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> bondedRolesService.initialize())
                 .thenCompose(result -> accountService.initialize())
@@ -259,7 +240,8 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                         setState(State.FAILED);
                         log.error("Initializing applicationService failed", throwable);
                     }
-                });
+                }))
+                .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 
     @Override
@@ -269,6 +251,7 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
             difficultyAdjustmentServicePin = null;
         }
 
+        // Move shutdown work off the current thread and use a ForkJoinPool.commonPool instead.
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> httpApiService.shutdown()
                 .thenCompose(result -> openTradeItemsService.shutdown())
@@ -291,8 +274,17 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> securityService.shutdown())
                 .thenCompose(result -> memoryReportService.shutdown())
                 .orTimeout(10, TimeUnit.SECONDS)
-                .handle((result, throwable) -> throwable == null)
-                .join());
+                .handle((result, throwable) -> {
+                    if (throwable != null) {
+                        log.error("Error at shutdown", throwable);
+                        return false;
+                    } else if (!result) {
+                        log.error("Shutdown resulted with false");
+                        return false;
+                    }
+                    return true;
+                }))
+                .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 
     public KeyBundleService getKeyBundleService() {
