@@ -166,6 +166,7 @@ public class Node implements Connection.Handler {
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Map<String, ConnectionHandshake> connectionHandshakes = new ConcurrentHashMap<>();
     private Optional<Server> server = Optional.empty();
+    @Getter
     private Optional<Capability> myCapability = Optional.empty();
     @Getter
     public final AtomicReference<State> state = new AtomicReference<>(State.NEW);

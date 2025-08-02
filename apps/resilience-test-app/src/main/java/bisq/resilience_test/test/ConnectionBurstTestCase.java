@@ -1,0 +1,141 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.resilience_test.test;
+
+import bisq.common.network.TransportType;
+import bisq.identity.IdentityService;
+import bisq.network.NetworkService;
+import bisq.network.p2p.ServiceNode;
+import bisq.network.p2p.node.Connection;
+import bisq.network.p2p.node.Node;
+import bisq.network.p2p.node.handshake.ConnectionHandshake;
+import bisq.network.p2p.node.network_load.NetworkLoad;
+import bisq.network.p2p.services.peer_group.BanList;
+import com.typesafe.config.Config;
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.IOException;
+import java.net.Socket;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.IntStream;
+
+@Slf4j
+public class ConnectionBurstTestCase extends BaseTestCase {
+
+    private final NetworkService networkService;
+    private final IdentityService identityService;
+    private int connectionCount = 1000;
+    private int socketSilenceInSecs = 10;
+    private boolean doHandshake = false;
+    private int silenceAfterHandshakeInSecs = 0;
+
+    public ConnectionBurstTestCase(Optional<Config> optionalConfig,
+                                   NetworkService networkService,
+                                   IdentityService identityService) {
+        super(optionalConfig);
+        this.networkService = networkService;
+        this.identityService = identityService;
+        optionalConfig.ifPresent(config -> {
+            if (config.hasPath("connectionCount")) {
+                connectionCount = config.getInt("connectionCount");
+                if (connectionCount < 0) {
+                    throw new IllegalArgumentException("connectionCount must be non-negative");
+                }
+            }
+            if (config.hasPath("socketSilenceInSecs")) {
+                socketSilenceInSecs = config.getInt("socketSilenceInSecs");
+                if (socketSilenceInSecs < 0) {
+                    throw new IllegalArgumentException("socketSilenceInSecs must be non-negative");
+                }
+            }
+            if (config.hasPath("doHandshake")) {
+                doHandshake = config.getBoolean("doHandshake");
+            }
+            if (config.hasPath("silenceAfterHandshakeInSecs")) {
+                silenceAfterHandshakeInSecs = config.getInt("silenceAfterHandshakeInSecs");
+                if (silenceAfterHandshakeInSecs < 0) {
+                    throw new IllegalArgumentException("silenceAfterHandshakeInSecs must be non-negative");
+                }
+            }
+        });
+    }
+
+    protected void run() {
+        Map<TransportType, ServiceNode> serviceNodesByTransport = networkService.getServiceNodesByTransport().getServiceNodesByTransport();
+        networkService.getInitializedDefaultNodeByTransport().forEach(((transportType, future) -> {
+            try {
+                Node node = future.get();
+                node.getMyCapability()
+                        .ifPresentOrElse(myCapability -> {
+                            CompletableFuture.runAsync(() -> {
+                                var addressList = node.getAllConnections().map(Connection::getPeerAddress).toList();
+                                if (addressList.isEmpty()) {
+                                    log.info("ConnectionBurst: node `{}` has no connections", node);
+                                    return;
+                                }
+                                addressList.stream().parallel().forEach(address -> {
+                                    IntStream.range(0, connectionCount).parallel().forEach(i -> {
+                                        var transportService = serviceNodesByTransport.get(transportType).getTransportService();
+                                        try (Socket socket = transportService.getSocket(address)) { // blocking, and we are in ForkJoinPool.
+                                            if (socketSilenceInSecs > 0) {
+                                                try {
+                                                    Thread.sleep(socketSilenceInSecs * 1000L);
+                                                } catch (Exception e) {
+                                                    log.error("ConnectionBurst: interrupted while waiting", e.getCause());
+                                                    return;
+                                                }
+                                            }
+
+                                            if (doHandshake) {
+                                                try {
+                                                    ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket,
+                                                            new BanList(),
+                                                            myCapability,
+                                                            networkService.getServiceNodesByTransport().getAuthorizationService(),
+                                                            identityService.getOrCreateDefaultIdentity().getKeyBundle());
+                                                    log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
+                                                    connectionHandshake.start(new NetworkLoad(), address); // Blocking call
+                                                } catch (Exception e) {
+                                                    log.error("ConnectionBurst: Error at performing handshake", e);
+                                                }
+                                                if (silenceAfterHandshakeInSecs > 0) {
+                                                    try {
+                                                        Thread.sleep(silenceAfterHandshakeInSecs * 1000L);
+                                                    } catch (Exception e) {
+                                                        log.error("ConnectionBurst: we got interrupted while sleeping for handshake silence");
+                                                    }
+                                                }
+                                            }
+                                        } catch (IOException e) {
+                                            log.info("ConnectionBurst: failed to getSocket of `{}`", address.toString(), e);
+                                        }
+                                    });
+                                });
+                            });
+                        }, () -> {
+                            log.info("ConnectionBurst: myCapability for node `{}` is not present yet", node);
+                        });
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }));
+    }
+}

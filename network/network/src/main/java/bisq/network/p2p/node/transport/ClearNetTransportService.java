@@ -74,6 +74,7 @@ public class ClearNetTransportService implements TransportService {
             this.clearNetAddressType = clearNetAddressType;
         }
     }
+
     private final int socketTimeout;
     private final int devModeDelayInMs;
     private final int connectTimeoutMs;
@@ -181,5 +182,10 @@ public class ClearNetTransportService implements TransportService {
                 log.error("Exception", t);
             }
         }
+    }
+
+    @Override
+    public TransportType getTransportType() {
+        return TransportType.CLEAR;
     }
 }
