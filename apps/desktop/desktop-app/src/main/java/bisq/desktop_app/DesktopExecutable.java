@@ -80,12 +80,13 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
                 });
     }
 
+    @Override
     protected void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
         if (desktopController == null) {
             UIThread.run(() -> new Popup().error(throwable).show());
             return;
         }
-        Platform.runLater(() -> desktopController.onApplicationServiceInitialized(result, throwable));
+        UIThread.run(() -> desktopController.onApplicationServiceInitialized(result, throwable));
     }
 
     @Override
