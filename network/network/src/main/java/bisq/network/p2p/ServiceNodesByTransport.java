@@ -29,7 +29,6 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.network.SendMessageResult;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
@@ -216,21 +215,6 @@ public class ServiceNodesByTransport {
             }
         });
         return sendMessageResult;
-    }
-
-    public Map<TransportType, Connection> send(NetworkId senderNetworkId,
-                                               EnvelopePayloadMessage envelopePayloadMessage,
-                                               AddressByTransportTypeMap receiver) {
-        return receiver.entrySet().stream().map(entry -> {
-                    TransportType transportType = entry.getKey();
-                    if (map.containsKey(transportType)) {
-                        return new Pair<>(transportType, map.get(transportType).send(senderNetworkId, envelopePayloadMessage, entry.getValue()));
-                    } else {
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
     }
 
     public void addConfidentialMessageListener(ConfidentialMessageService.Listener listener) {

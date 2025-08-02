@@ -35,7 +35,6 @@ import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.ServiceNodesByTransport;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
-import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -303,19 +302,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                         }
                     }
                 });
-    }
-
-    // TODO (low prio): Not used. Consider to remove it so it wont get used accidentally.
-
-    /**
-     * Send message via given senderNodeId to the supported network types of the addresses specified at
-     * receiverAddressByNetworkType as direct, unencrypted message. If peer is offline it will not be stored as
-     * mailbox message.
-     */
-    public CompletableFuture<Map<TransportType, Connection>> send(NetworkId senderNetworkId,
-                                                                  EnvelopePayloadMessage envelopePayloadMessage,
-                                                                  AddressByTransportTypeMap receiver) {
-        return supplyAsync(() -> serviceNodesByTransport.send(senderNetworkId, envelopePayloadMessage, receiver), NETWORK_IO_POOL);
     }
 
 

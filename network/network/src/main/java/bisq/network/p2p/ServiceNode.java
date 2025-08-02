@@ -327,10 +327,6 @@ public class ServiceNode implements Node.Listener {
         return confidentialMessageService.get().send(envelopePayloadMessage, receiverNetworkId, address, receiverPubKey, senderKeyPair, senderNetworkId);
     }
 
-    Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Address address) {
-        return nodesById.send(senderNetworkId, envelopePayloadMessage, address);
-    }
-
     void addConfidentialMessageListener(ConfidentialMessageService.Listener listener) {
         confidentialMessageListeners.add(listener);
         confidentialMessageService.ifPresent(service -> service.addListener(listener));

@@ -100,10 +100,6 @@ public class NodesById implements Node.Listener {
         return getOrCreateNode(networkId).getConnection(address);
     }
 
-    public Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Address address) {
-        return getOrCreateNode(senderNetworkId).send(envelopePayloadMessage, address);
-    }
-
     public Connection send(NetworkId senderNetworkId,
                            EnvelopePayloadMessage envelopePayloadMessage,
                            Connection connection) {

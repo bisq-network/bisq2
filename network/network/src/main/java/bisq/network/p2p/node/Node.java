@@ -330,18 +330,15 @@ public class Node implements Connection.Handler {
     // Send
     /* --------------------------------------------------------------------- */
 
-
     public CompletableFuture<Connection> sendAsync(EnvelopePayloadMessage envelopePayloadMessage, Address address) {
         try {
-            return CompletableFuture.supplyAsync(() -> send(envelopePayloadMessage, address), NetworkExecutors.getNetworkSendExecutor());
+            return CompletableFuture.supplyAsync(() -> {
+                Connection connection = getConnection(address);
+                return send(envelopePayloadMessage, connection);
+            }, NetworkExecutors.getNetworkSendExecutor());
         } catch (Exception e) {
             return CompletableFuture.failedFuture(e);
         }
-    }
-
-    public Connection send(EnvelopePayloadMessage envelopePayloadMessage, Address address) {
-        Connection connection = getConnection(address);
-        return send(envelopePayloadMessage, connection);
     }
 
     public CompletableFuture<Connection> sendAsync(EnvelopePayloadMessage envelopePayloadMessage,
@@ -353,7 +350,7 @@ public class Node implements Connection.Handler {
         }
     }
 
-    public Connection send(EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
+    Connection send(EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
         if (connection.isStopped()) {
             log.debug("Send message failed as connection is already stopped {}", this);
             throw new ConnectionClosedException(connection);
