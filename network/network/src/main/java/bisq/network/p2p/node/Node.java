@@ -418,17 +418,17 @@ public class Node implements Connection.Handler {
     private CompletableFuture<Connection> createOutboundConnectionAsync(Address address) {
         log.debug("Create outbound connection to {}", address);
         // myCapability is set once we have start our sever which happens in initialize()
-        return CompletableFuture.supplyAsync(() ->
-                myCapability.map(capability -> createOutboundConnection(address, capability))
-                        .orElseGet(() -> {
-                            int port = networkId.getAddressByTransportTypeMap().get(transportType).getPort();
-                            log.warn("We create an outbound connection but we have not initialized our server. " +
-                                    "We create a server on port {} now but clients better control node " +
-                                    "life cycle themselves.", port);
-                            initialize();
-                            checkArgument(myCapability.isPresent(), "myCapability must be present after initializeServer got called");
-                            return createOutboundConnection(address, myCapability.get());
-                        }), NetworkExecutors.getNetworkNodeExecutor());
+        return myCapability.map(capability -> CompletableFuture.supplyAsync(() ->
+                        createOutboundConnection(address, capability), NetworkExecutors.getNetworkSendExecutor()))
+                .orElseGet(() -> CompletableFuture.supplyAsync(() -> {
+                    int port = networkId.getAddressByTransportTypeMap().get(transportType).getPort();
+                    log.warn("We create an outbound connection but we have not initialized our server. " +
+                            "We create a server on port {} now but clients better control node " +
+                            "life cycle themselves.", port);
+                    initialize();
+                    checkArgument(myCapability.isPresent(), "myCapability must be present after initializeServer got called");
+                    return createOutboundConnection(address, myCapability.get());
+                }, NetworkExecutors.getNetworkNodeExecutor()));
     }
 
     private Connection createOutboundConnection(Address address, Capability myCapability) {
