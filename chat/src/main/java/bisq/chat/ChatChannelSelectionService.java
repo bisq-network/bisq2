@@ -17,6 +17,7 @@
 
 package bisq.chat;
 
+import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.util.StringUtils;
 import bisq.persistence.DbSubDirectory;
@@ -26,12 +27,11 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 @Slf4j
 @Getter
-public abstract class ChatChannelSelectionService implements PersistenceClient<ChatChannelSelectionStore> {
+public abstract class ChatChannelSelectionService implements PersistenceClient<ChatChannelSelectionStore>, Service {
     protected final ChatChannelSelectionStore persistableStore = new ChatChannelSelectionStore();
     protected final Persistence<ChatChannelSelectionStore> persistence;
     protected final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();
@@ -51,14 +51,6 @@ public abstract class ChatChannelSelectionService implements PersistenceClient<C
                 .filter(channel -> channel.getId().equals(persistableStore.getSelectedChannelId()))
                 .findAny()
                 .orElse(null));
-    }
-
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
     }
 
     public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {

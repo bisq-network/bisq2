@@ -43,19 +43,6 @@ public class MyMuSigOffersService implements PersistenceClient<MyMuSigOffersStor
 
 
     /* --------------------------------------------------------------------- */
-    // Service
-    /* --------------------------------------------------------------------- */
-
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-
-    /* --------------------------------------------------------------------- */
     // API
     /* --------------------------------------------------------------------- */
 

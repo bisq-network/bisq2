@@ -79,12 +79,4 @@ public class FavouriteMarketsService implements Service {
     private void persist() {
         settingsService.persist();
     }
-
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
-    }
 }
