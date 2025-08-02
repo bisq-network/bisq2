@@ -106,8 +106,15 @@ public class PeerExchangeService implements Node.Listener {
             Address peerAddress = connection.getPeerAddress();
             List<Peer> myPeers = new ArrayList<>(peerExchangeStrategy.getPeersForReporting(peerAddress));
             peerExchangeStrategy.addReportedPeers(new HashSet<>(request.getPeers()), peerAddress);
-            CompletableFuture.runAsync(() -> node.send(new PeerExchangeResponse(request.getNonce(), myPeers), connection), NETWORK_IO_POOL);
-            log.debug("Sent PeerExchangeResponse with my myPeers {}", myPeers);
+            PeerExchangeResponse response = new PeerExchangeResponse(request.getNonce(), myPeers);
+            node.sendAsync(response, connection)
+                    .whenComplete((result, throwable) -> {
+                        if (throwable != null) {
+                            log.warn("Sending {} to {} failed. {}", response.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
+                        } else {
+                            log.debug("Sent PeerExchangeResponse with my myPeers {}", myPeers);
+                        }
+                    });
         }
     }
 
@@ -171,7 +178,7 @@ public class PeerExchangeService implements Node.Listener {
                 retryPeerExchangeAsync();
             }
         } catch (InterruptedException e) {
-            log.warn("Thread got interrupted at minSuccessReachedLatch.await in the startInitialPeerExchange method",  e);
+            log.warn("Thread got interrupted at minSuccessReachedLatch.await in the startInitialPeerExchange method", e);
             Thread.currentThread().interrupt(); // Restore interrupted state
 
             retryPeerExchangeAsync();

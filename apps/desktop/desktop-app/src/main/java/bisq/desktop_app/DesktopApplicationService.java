@@ -28,7 +28,6 @@ import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.platform.OS;
-import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.ExceptionUtil;
 import bisq.contract.ContractService;
 import bisq.desktop.ServiceProvider;
@@ -277,33 +276,13 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     @Override
     public CompletableFuture<Boolean> initialize() {
         return memoryReportService.initialize()
-                .thenCompose(result -> securityService.initialize())
-                .thenCompose(result -> {
-                    setState(State.INITIALIZE_NETWORK);
-
-                    CompletableFuture<Boolean> networkFuture = networkService.initialize();
-                    CompletableFuture<Boolean> walletFuture = walletService.map(Service::initialize)
-                            .orElse(CompletableFuture.completedFuture(true));
-
-                    networkFuture.whenComplete((r, throwable) -> {
-                        if (throwable != null) {
-                            log.error("Error at networkFuture.initialize", throwable);
-                        } else if (!walletFuture.isDone()) {
-                            setState(State.INITIALIZE_WALLET);
-                        }
-                    });
-                    walletFuture.whenComplete((r, throwable) -> {
-                        if (throwable != null) {
-                            log.error("Error at walletService.initialize", throwable);
-                        }
-                    });
-                    return CompletableFutureUtils.allOf(walletFuture, networkFuture).thenApply(list -> true);
-                })
-                .whenComplete((r, throwable) -> {
-                    if (throwable == null) {
-                        setState(State.INITIALIZE_SERVICES);
-                    }
-                })
+                .thenCompose(result -> securityService.initialize()
+                        .whenComplete((r, t) -> setState(State.INITIALIZE_NETWORK)))
+                .thenCompose(result -> supplyAsync(() -> networkService.initialize().join())
+                        .whenComplete((r, t) -> setState(State.INITIALIZE_WALLET)))
+                .thenCompose(result -> walletService.map(Service::initialize)
+                        .orElse(CompletableFuture.completedFuture(true))
+                        .whenComplete((r, t) -> setState(State.INITIALIZE_SERVICES)))
                 .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> bondedRolesService.initialize())
                 .thenCompose(result -> accountService.initialize())
@@ -395,7 +374,6 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 })
                 .join());
     }
-
 
     private Optional<OsSpecificNotificationService> findSystemNotificationDelegate() {
         try {

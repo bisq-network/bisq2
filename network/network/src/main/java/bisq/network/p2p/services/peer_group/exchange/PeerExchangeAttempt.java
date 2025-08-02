@@ -184,7 +184,7 @@ public class PeerExchangeAttempt {
                 }
                 throw exception;
             }
-        }, NETWORK_IO_POOL);
+        }, NETWORK_IO_POOL); //todo use new pool
     }
 
     @Override

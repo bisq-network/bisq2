@@ -42,19 +42,6 @@ public class OfferService implements Service {
         muSigOfferService = new MuSigOfferService(persistenceService, networkService, identityService);
     }
 
-
-    /* --------------------------------------------------------------------- */
-    // Service
-    /* --------------------------------------------------------------------- */
-
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
-    }
-
     public CompletableFuture<Boolean> initializeMuSigOfferService() {
         log.info("initialize MuSigTradeService");
         return muSigOfferService.initialize();

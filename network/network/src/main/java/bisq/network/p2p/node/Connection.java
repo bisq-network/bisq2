@@ -127,7 +127,7 @@ public abstract class Connection {
             return;
         }
 
-        inputHandlerFuture = NetworkExecutors.CONNECTION_READ.submit(() -> {
+        inputHandlerFuture = NetworkExecutors.getNetworkReadExecutor().submit(() -> {
             try {
                 long readTs = 0;
                 while (isInputStreamActive()) {

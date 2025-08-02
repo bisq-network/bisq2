@@ -47,20 +47,6 @@ public class BisqEasyOfferbookMessageService implements Service {
         this.bisqEasySellersReputationBasedTradeAmountService = bisqEasySellersReputationBasedTradeAmountService;
     }
 
-
-    /* --------------------------------------------------------------------- */
-    // Service
-    /* --------------------------------------------------------------------- */
-
-    public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
-        return CompletableFuture.completedFuture(true);
-    }
-
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
-    }
-
     public Stream<BisqEasyOffer> getAllOffers() {
         return bisqEasyOfferbookChannelService.getChannels().stream().flatMap(this::getOffers);
     }

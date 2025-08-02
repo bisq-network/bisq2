@@ -17,14 +17,23 @@
 
 package bisq.common.application;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.CompletableFuture;
 
 public interface Service {
     default CompletableFuture<Boolean> initialize() {
+        getLogger().info("initialize");
         return CompletableFuture.completedFuture(true);
     }
 
     default CompletableFuture<Boolean> shutdown() {
+        getLogger().info("shutdown");
         return CompletableFuture.completedFuture(true);
+    }
+
+    private Logger getLogger() {
+        return LoggerFactory.getLogger(getClass().getSimpleName());
     }
 }

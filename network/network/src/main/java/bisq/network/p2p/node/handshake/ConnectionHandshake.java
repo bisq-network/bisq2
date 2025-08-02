@@ -285,6 +285,7 @@ public final class ConnectionHandshake {
     // Server side protocol
     public Result onSocket(NetworkLoad myNetworkLoad) {
         try {
+            // We get called from the Server's socketHandler callback on the NetworkRead thread
             ConnectionMetrics connectionMetrics = new ConnectionMetrics();
             bisq.network.protobuf.NetworkEnvelope requestProto = networkEnvelopeSocket.receiveNextEnvelope(); // Blocking
             if (requestProto == null) {

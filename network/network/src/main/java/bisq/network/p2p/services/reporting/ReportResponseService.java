@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.reporting;
 
 import bisq.common.platform.MemoryReportService;
-import bisq.network.NetworkService;
+import bisq.common.util.ExceptionUtil;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -31,10 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.TreeMap;
 
-/**
- * Sends a request for NetworkLoad to our peers. We add our own NetworkLoad in the request.
- * We do not user a config here as we want to have the same behaviour in the network to avoid stale networkLoad states.
- */
 @Slf4j
 public class ReportResponseService implements Node.Listener {
     private static final long TIMEOUT_SEC = 120;
@@ -71,7 +67,12 @@ public class ReportResponseService implements Node.Listener {
             Report report = createStorageReport();
             ReportResponse response = new ReportResponse(request.getRequestId(), report);
             log.info("Received a ReportRequest from {}", connection.getPeerAddress());
-            NetworkService.NETWORK_IO_POOL.submit(() -> node.send(response, connection));
+            node.sendAsync(response, connection)
+                    .whenComplete((result, throwable) -> {
+                        if (throwable != null) {
+                            log.warn("Sending {} to {} failed. {}", response.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
+                        }
+                    });
         }
     }
 

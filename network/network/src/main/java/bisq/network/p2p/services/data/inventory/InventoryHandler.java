@@ -18,8 +18,8 @@
 package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.data.ByteUnit;
+import bisq.common.util.ExceptionUtil;
 import bisq.common.util.MathUtils;
-import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -41,8 +41,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static java.util.concurrent.CompletableFuture.runAsync;
-
 @Getter
 @Slf4j
 class InventoryHandler implements Connection.Listener {
@@ -63,10 +61,11 @@ class InventoryHandler implements Connection.Listener {
     CompletableFuture<Inventory> request(InventoryFilter inventoryFilter) {
         requestTs = System.currentTimeMillis();
         log.info("Send InventoryRequest to {} with {}", connection.getPeerAddress(), inventoryFilter.getDetails());
-        InventoryRequest inventoryRequest = new InventoryRequest(inventoryFilter, nonce);
-        runAsync(() -> node.send(inventoryRequest, connection), NetworkService.NETWORK_IO_POOL)
-                .whenComplete((connection, throwable) -> {
+        InventoryRequest request = new InventoryRequest(inventoryFilter, nonce);
+        node.sendAsync(request, connection)
+                .whenComplete((result, throwable) -> {
                     if (throwable != null) {
+                        log.warn("Sending {} to {} failed. {}", request.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
                         future.completeExceptionally(throwable);
                         removeListeners();
                     }
