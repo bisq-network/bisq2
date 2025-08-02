@@ -18,8 +18,8 @@
 package bisq.network.p2p.node;
 
 
-import bisq.common.util.CompletableFutureUtils;
 import bisq.common.network.Address;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
@@ -29,8 +29,14 @@ import bisq.network.p2p.services.peer_group.BanList;
 import bisq.security.keys.KeyBundleService;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -98,6 +104,10 @@ public class NodesById implements Node.Listener {
 
     public Connection getConnection(NetworkId networkId, Address address) {
         return getOrCreateNode(networkId).getConnection(address);
+    }
+
+    public CompletableFuture<Connection> getConnectionAsync(NetworkId networkId, Address address) {
+        return getOrCreateNode(networkId).getConnectionAsync(address);
     }
 
     public Connection send(NetworkId senderNetworkId,

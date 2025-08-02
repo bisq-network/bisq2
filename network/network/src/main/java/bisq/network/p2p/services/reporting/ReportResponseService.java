@@ -31,10 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.TreeMap;
 
-/**
- * Sends a request for NetworkLoad to our peers. We add our own NetworkLoad in the request.
- * We do not user a config here as we want to have the same behaviour in the network to avoid stale networkLoad states.
- */
 @Slf4j
 public class ReportResponseService implements Node.Listener {
     private static final long TIMEOUT_SEC = 120;
