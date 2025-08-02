@@ -17,27 +17,24 @@
 
 package bisq.resilience_test.test;
 
-import bisq.common.network.Address;
 import bisq.common.network.TransportType;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.Capability;
+import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.Connection;
+import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
-import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
-import bisq.network.p2p.node.transport.TransportService;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peer_group.BanList;
 import com.typesafe.config.Config;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.IntStream;
 
 @Slf4j
@@ -82,101 +79,63 @@ public class ConnectionBurstTestCase extends BaseTestCase {
     }
 
     protected void run() {
-        var capsMap = getAllTransportCapabilities();
-        if (!isCapabilitiesPresent(capsMap)) {
-            log.info("ConnectionBurst: our Capabilities for default nodes are not present yet");
-            return;
-        }
-        // Convert to HashMap<TransportType, Capability>
-        HashMap<TransportType, Capability> capsMapPresent = new HashMap<>();
-        capsMap.forEach((key, value) ->
-                capsMapPresent.put(key, value.get()));
-
-        HashMap<TransportService, HashSet<Address>> serviceMap = new HashMap<>();
-        try {
-            networkService.getServiceNodesByTransport()
-                    .getAllServiceNodes().forEach(node -> {
-                        List<Address> address = node.getDefaultNode()
-                                .getAllConnections()
-                                .parallel()
-                                .map(Connection::getPeerAddress).toList();
-                        serviceMap.computeIfAbsent(
-                                node.getTransportService(),
-                                k -> new HashSet<>()
-                        ).addAll(address);
-                    });
-        } catch (Exception e) {
-            log.error("ConnectionBurst: Error", e);
-            return;
-        }
-        if (serviceMap.isEmpty() || serviceMap.values().stream().allMatch(HashSet::isEmpty)) {
-            log.info("ConnectionBurst: No service or no address found in serviceMap");
-            return;
-        }
-        serviceMap.entrySet().stream().parallel().forEach(entry -> {
-            var transportService = entry.getKey();
-            var addressList = entry.getValue();
-
-            addressList.stream().parallel().forEach(address -> {
-                IntStream.range(0, connectionCount).parallel().forEach(i -> {
-                    try (Socket socket = transportService.getSocket(address)) { // blocking, and we are in ForkJoinPool.
-                        if (socketSilenceInSecs > 0) {
-                            CompletableFuture<Void> delay = CompletableFuture.runAsync(() -> {
-                                    },
-                                    CompletableFuture.delayedExecutor(socketSilenceInSecs, TimeUnit.SECONDS)
-                            );
-                            try {
-                                delay.join();
-                            } catch (Exception e) {
-                                log.error("ConnectionBurst: interrupted while waiting", e.getCause());
-                                return;
-                            }
-                        }
-
-                        if (doHandshake) {
-                            try {
-                                var myCapability = capsMapPresent.get(transportService.getTransportType());
-
-                                ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket,
-                                        new BanList(),
-                                        myCapability,
-                                        networkService.getServiceNodesByTransport().getAuthorizationService(),
-                                        identityService.getOrCreateDefaultIdentity().getKeyBundle());
-                                log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
-                                connectionHandshake.start(new NetworkLoadSnapshot().getCurrentNetworkLoad(), address); // Blocking call
-                            } catch (Exception e) {
-                                log.error("ConnectionBurst: Error at performing handshake", e);
-                            }
-                            if (silenceAfterHandshakeInSecs > 0) {
-                                CompletableFuture<Void> delay = CompletableFuture.runAsync(() -> {
-                                        },
-                                        CompletableFuture.delayedExecutor(silenceAfterHandshakeInSecs, TimeUnit.SECONDS)
-                                );
-                                try {
-                                    delay.join();
-                                } catch (Exception e) {
-                                    log.error("ConnectionBurst: we got interrupted while sleeping for handshake silence");
+        Map<TransportType, ServiceNode> serviceNodesByTransport = networkService.getServiceNodesByTransport().getServiceNodesByTransport();
+        networkService.getInitializedDefaultNodeByTransport().forEach(((transportType, future) -> {
+            try {
+                Node node = future.get();
+                node.getMyCapability()
+                        .ifPresentOrElse(myCapability -> {
+                            CompletableFuture.runAsync(() -> {
+                                var addressList = node.getAllConnections().map(Connection::getPeerAddress).toList();
+                                if (addressList.isEmpty()) {
+                                    log.info("ConnectionBurst: node `{}` has no connections", node);
+                                    return;
                                 }
-                            }
-                        }
-                    } catch (IOException e) {
-                        log.info("ConnectionBurst: failed to getSocket of `{}`", address.toString(), e);
-                    }
-                });
-            });
-        });
-    }
+                                addressList.stream().parallel().forEach(address -> {
+                                    IntStream.range(0, connectionCount).parallel().forEach(i -> {
+                                        var transportService = serviceNodesByTransport.get(transportType).getTransportService();
+                                        try (Socket socket = transportService.getSocket(address)) { // blocking, and we are in ForkJoinPool.
+                                            if (socketSilenceInSecs > 0) {
+                                                try {
+                                                    Thread.sleep(socketSilenceInSecs * 1000L);
+                                                } catch (Exception e) {
+                                                    log.error("ConnectionBurst: interrupted while waiting", e.getCause());
+                                                    return;
+                                                }
+                                            }
 
-    private HashMap<TransportType, Optional<Capability>> getAllTransportCapabilities() {
-        return networkService.getServiceNodesByTransport()
-                .getAllServiceNodes().stream()
-                .collect(HashMap::new,
-                        (map, sn) ->
-                                map.put(sn.getTransportType(), sn.getDefaultNode().getMyCapability()),
-                        HashMap::putAll);
-    }
-
-    private boolean isCapabilitiesPresent(HashMap<TransportType, Optional<Capability>> typeCapabilities) {
-        return typeCapabilities.values().stream().allMatch(Optional::isPresent);
+                                            if (doHandshake) {
+                                                try {
+                                                    ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket,
+                                                            new BanList(),
+                                                            myCapability,
+                                                            networkService.getServiceNodesByTransport().getAuthorizationService(),
+                                                            identityService.getOrCreateDefaultIdentity().getKeyBundle());
+                                                    log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
+                                                    connectionHandshake.start(new NetworkLoad(), address); // Blocking call
+                                                } catch (Exception e) {
+                                                    log.error("ConnectionBurst: Error at performing handshake", e);
+                                                }
+                                                if (silenceAfterHandshakeInSecs > 0) {
+                                                    try {
+                                                        Thread.sleep(silenceAfterHandshakeInSecs * 1000L);
+                                                    } catch (Exception e) {
+                                                        log.error("ConnectionBurst: we got interrupted while sleeping for handshake silence");
+                                                    }
+                                                }
+                                            }
+                                        } catch (IOException e) {
+                                            log.info("ConnectionBurst: failed to getSocket of `{}`", address.toString(), e);
+                                        }
+                                    });
+                                });
+                            });
+                        }, () -> {
+                            log.info("ConnectionBurst: myCapability for node `{}` is not present yet", node);
+                        });
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }));
     }
 }

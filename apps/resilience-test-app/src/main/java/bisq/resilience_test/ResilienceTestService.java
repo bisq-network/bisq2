@@ -18,11 +18,12 @@
 package bisq.resilience_test;
 
 import bisq.common.application.Service;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.resilience_test.test.BaseTestCase;
+import bisq.resilience_test.test.BroadcastBurstTestCase;
 import bisq.resilience_test.test.ConnectionBurstTestCase;
-import bisq.resilience_test.test.MessageBurstTestCase;
 import bisq.user.reputation.ReputationDataUtil;
 import com.typesafe.config.Config;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,7 @@ public class ResilienceTestService implements Service {
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final Optional<Config> optionalConfig;
-    private List<BaseTestCase> testCases = new ArrayList<>();
+    private final List<BaseTestCase> testCases = new ArrayList<>();
 
     public ResilienceTestService(Optional<Config> optionalConfig,
                                  NetworkService networkService,
@@ -53,11 +54,13 @@ public class ResilienceTestService implements Service {
 
         if (optionalConfig.isPresent()) {
             var config = optionalConfig.get();
-            testCases.add(new MessageBurstTestCase(getConfig(config, "messageBurst"), networkService, identityService));
+            testCases.add(new BroadcastBurstTestCase(getConfig(config, "broadcastBurst"), networkService, identityService));
             testCases.add(new ConnectionBurstTestCase(getConfig(config, "connectionBurst"), networkService, identityService));
         }
         if (testCases.isEmpty() || testCases.stream().noneMatch(BaseTestCase::isEnabled)) {
-            return getInvalidConfigFuture();
+            return CompletableFuture.failedFuture(
+                    new RuntimeException("No resilience test settings were enabled. shutting down...")
+            );
         } else {
             testCases.stream().filter(BaseTestCase::isEnabled).forEach(BaseTestCase::start);
         }
@@ -72,16 +75,11 @@ public class ResilienceTestService implements Service {
         return Optional.empty();
     }
 
-    private CompletableFuture<Boolean> getInvalidConfigFuture() {
-        return CompletableFuture.failedFuture(new RuntimeException("No resilience test settings were enabled. shutting down..."));
-    }
-
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        CompletableFuture<?>[] futures = testCases.stream()
-                .map(BaseTestCase::shutdown)
-                .toArray(CompletableFuture[]::new);
-        return CompletableFuture.allOf(futures).handle((ignored, ex) -> true);
+        return CompletableFutureUtils.allOf(
+                testCases.stream().map(BaseTestCase::shutdown)
+        ).thenApply(result -> true);
     }
 
 }

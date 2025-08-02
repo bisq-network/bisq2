@@ -36,16 +36,16 @@ import java.util.Optional;
 import java.util.Random;
 
 @Slf4j
-public class MessageBurstTestCase extends BaseTestCase {
+public class BroadcastBurstTestCase extends BaseTestCase {
 
     private final NetworkService networkService;
     private final IdentityService identityService;
     private int messageCount = 1000;
     private boolean sameMessage = true;
 
-    public MessageBurstTestCase(Optional<Config> optionalConfig,
-                                NetworkService networkService,
-                                IdentityService identityService) {
+    public BroadcastBurstTestCase(Optional<Config> optionalConfig,
+                                  NetworkService networkService,
+                                  IdentityService identityService) {
         super(optionalConfig);
         this.networkService = networkService;
         this.identityService = identityService;
@@ -81,7 +81,7 @@ public class MessageBurstTestCase extends BaseTestCase {
             }
             log.info("submitted {} messages to be re broadcasted", messageCount);
         } catch (Exception e) {
-            log.error("MessageBurst: Error", e);
+            log.error("BroadcastBurst: Error", e);
         }
     }
 

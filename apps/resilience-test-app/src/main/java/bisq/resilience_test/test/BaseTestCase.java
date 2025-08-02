@@ -41,13 +41,13 @@ public abstract class BaseTestCase {
         optionalConfig.ifPresent(config -> {
             isEnabled = config.hasPath("enabled") && config.getBoolean("enabled");
             if (config.hasPath("initialDelaySecs")) {
-                this.initialDelaySecs = config.getInt("initialDelaySecs");
+                initialDelaySecs = config.getInt("initialDelaySecs");
                 if (initialDelaySecs < 0) {
                     throw new IllegalArgumentException("initialDelaySecs must be non-negative");
                 }
             }
             if (config.hasPath("intervalDelaySecs")) {
-                this.intervalDelaySecs = config.getInt("intervalDelaySecs");
+                intervalDelaySecs = config.getInt("intervalDelaySecs");
                 if (intervalDelaySecs < 0) {
                     throw new IllegalArgumentException("initialDelaySecs must be non-negative");
                 }
