@@ -332,7 +332,11 @@ public class Node implements Connection.Handler {
 
 
     public CompletableFuture<Connection> sendAsync(EnvelopePayloadMessage envelopePayloadMessage, Address address) {
-        return CompletableFuture.supplyAsync(() -> send(envelopePayloadMessage, address), NetworkExecutors.getNetworkSendExecutor());
+        try {
+            return CompletableFuture.supplyAsync(() -> send(envelopePayloadMessage, address), NetworkExecutors.getNetworkSendExecutor());
+        } catch (Exception e) {
+            return CompletableFuture.failedFuture(e);
+        }
     }
 
     public Connection send(EnvelopePayloadMessage envelopePayloadMessage, Address address) {
@@ -342,7 +346,11 @@ public class Node implements Connection.Handler {
 
     public CompletableFuture<Connection> sendAsync(EnvelopePayloadMessage envelopePayloadMessage,
                                                    Connection connection) {
-        return CompletableFuture.supplyAsync(() -> send(envelopePayloadMessage, connection), NetworkExecutors.getNetworkSendExecutor());
+        try {
+            return CompletableFuture.supplyAsync(() -> send(envelopePayloadMessage, connection), NetworkExecutors.getNetworkSendExecutor());
+        } catch (Exception e) {
+            return CompletableFuture.failedFuture(e);
+        }
     }
 
     public Connection send(EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
