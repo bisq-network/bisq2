@@ -35,12 +35,15 @@ public class NetworkExecutors {
     private static ThreadPoolExecutor networkReadExecutor;
     @Getter
     private static ThreadPoolExecutor networkSendExecutor;
+    @Getter
+    private static ThreadPoolExecutor networkWorkerExecutor;
     private static volatile boolean isInitialized;
 
     public static void initialize() {
         checkArgument(!isInitialized, "initialize must not be called twice");
         networkReadExecutor = createNetworkReadExecutor();
         networkSendExecutor = createNetworkSendExecutor();
+        networkWorkerExecutor = createNetworkWorkerExecutor();
         isInitialized = true;
     }
 
@@ -48,13 +51,26 @@ public class NetworkExecutors {
         if (isInitialized) {
             ExecutorFactory.shutdownAndAwaitTermination(networkReadExecutor);
             ExecutorFactory.shutdownAndAwaitTermination(networkSendExecutor);
+            ExecutorFactory.shutdownAndAwaitTermination(networkWorkerExecutor);
             networkReadExecutor = null;
             networkSendExecutor = null;
             isInitialized = false;
         }
     }
 
-
+    private static ThreadPoolExecutor createNetworkWorkerExecutor() {
+        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(1000);
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                9,
+                20,
+                10,
+                TimeUnit.SECONDS,
+                queue,
+                ExecutorFactory.getThreadFactory("Network.worker"),
+                new CallerRunsPolicyWithLogging());
+        queue.setExecutor(executor);
+        return executor;
+    }
     /**
      * We keep a core pool size of 12 which reflects the target peer group.
      * We allow up to 40 threads which a keepAlive time of 30 seconds for the threads outside the core pool size.

@@ -64,14 +64,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static bisq.network.NetworkService.DISPATCHER;
-import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
 import static bisq.network.p2p.node.ConnectionException.Reason.HANDSHAKE_FAILED;
 import static bisq.network.p2p.node.Node.State.STARTING;
 import static bisq.network.p2p.node.Node.State.STOPPING;
 import static bisq.network.p2p.node.Node.State.TERMINATED;
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
@@ -659,21 +657,14 @@ public class Node implements Connection.Handler {
         connection.shutdown(closeReason);
     }
 
-    public CompletableFuture<Void> closeConnectionGracefullyAsync(Connection connection, CloseReason closeReason) {
-        return runAsync(() -> {
-            closeConnectionGracefully(connection, closeReason);
-        }, NETWORK_IO_POOL).orTimeout(4, SECONDS);
-    }
-
-    public void closeConnectionGracefully(Connection connection, CloseReason closeReason) {
+    public CompletableFuture<Connection> closeConnectionGracefullyAsync(Connection connection,
+                                                                        CloseReason closeReason) {
         connection.stopListening();
-        send(new CloseConnectionMessage(closeReason), connection);
-        try {
-            // Give a bit of delay before we close the connection.
-            Thread.sleep(100);
-        } catch (Throwable ignore) {
-        }
-        connection.shutdown(CloseReason.CLOSE_MSG_SENT.details(closeReason.name()));
+        return sendAsync(new CloseConnectionMessage(closeReason), connection)
+                .orTimeout(100, TimeUnit.MILLISECONDS)
+                .whenComplete((r, t) -> {
+                    connection.shutdown(CloseReason.CLOSE_MSG_SENT.details(closeReason.name()));
+                });
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -685,7 +676,7 @@ public class Node implements Connection.Handler {
 
         server.ifPresent(Server::shutdown);
         connectionHandshakes.values().forEach(ConnectionHandshake::shutdown);
-        Stream<CompletableFuture<Void>> futures = getAllConnections()
+        Stream<CompletableFuture<Connection>> futures = getAllConnections()
                 .map(connection -> closeConnectionGracefullyAsync(connection, CloseReason.SHUTDOWN));
         return CompletableFutureUtils.allOf(futures)
                 .orTimeout(10, SECONDS)
@@ -835,7 +826,7 @@ public class Node implements Connection.Handler {
                             "We close that connection to avoid memory leaks.\n" +
                             "envelopePayloadMessage={} connection={}",
                     StringUtils.truncate(envelopePayloadMessage), connection);
-            NETWORK_IO_POOL.submit(() -> connection.shutdown(CloseReason.ORPHANED_CONNECTION));
+            connection.shutdown(CloseReason.ORPHANED_CONNECTION);
         }
     }
 
