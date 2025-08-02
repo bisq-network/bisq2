@@ -17,30 +17,71 @@
 
 package bisq.network;
 
+import bisq.common.threading.CallerRunsPolicyWithLogging;
 import bisq.common.threading.DiscardNewestPolicy;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.threading.MaxSizeAwareDeque;
+import bisq.common.threading.MaxSizeAwareQueue;
+import lombok.Getter;
 
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+// TODO use config to set core pool sized
 public class NetworkExecutors {
-    public static ThreadPoolExecutor CONNECTION_READ;
+    @Getter
+    private static ThreadPoolExecutor networkReadExecutor;
+    @Getter
+    private static ThreadPoolExecutor networkSendExecutor;
 
     public static void initialize() {
+        networkReadExecutor = createNetworkReadExecutor();
+        networkSendExecutor = createNetworkSendExecutor();
+    }
+
+    /**
+     * We keep a core pool size of 12 which reflects the target peer group.
+     * We allow up to 40 threads which a keepAlive time of 30 seconds for the threads outside the core pool size.
+     * If all threads are busy, we add up to 20 tasks into a deque. Once that gets full we drop the newest added task.
+     * We choose the newest instead of dropping the oldest as it might serve better for protecting against attacks.
+     * This executor must only be used for direct network read operations, which happen in Connection and ConnectionHandshake.
+     */
+    private static ThreadPoolExecutor createNetworkReadExecutor() {
         MaxSizeAwareDeque deque = new MaxSizeAwareDeque(20);
-        CONNECTION_READ = new ThreadPoolExecutor(
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 12,
                 40,
                 30,
                 TimeUnit.SECONDS,
                 deque,
-                ExecutorFactory.getThreadFactory("Connection.read"),
+                ExecutorFactory.getThreadFactory("Network.read"),
                 new DiscardNewestPolicy());
-        deque.setExecutor(CONNECTION_READ);
+        deque.setExecutor(executor);
+        return executor;
+    }
+
+    /**
+     * The core pool size is aligned to the broadcasters peer group size of 75% of the peer group (target 12),
+     * thus resulting in 9 in case we broadcast our own message.
+     * We use a higher queue capacity to allow network bursts to some extent.
+     * We use the CallerRunsPolicy thus putting backpressure on the caller in case we exceed the queue capacity.
+     * This pool must be used only for sending messages to the network, either in Connection or in ConnectionHandshake.
+     */
+    private static ThreadPoolExecutor createNetworkSendExecutor() {
+        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(1000);
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                9,
+                20,
+                10,
+                TimeUnit.SECONDS,
+                queue,
+                ExecutorFactory.getThreadFactory("Network.send"),
+                new CallerRunsPolicyWithLogging());
+        queue.setExecutor(executor);
+        return executor;
     }
 
     public static void shutdown() {
-        ExecutorFactory.shutdownAndAwaitTermination(CONNECTION_READ);
+        ExecutorFactory.shutdownAndAwaitTermination(networkReadExecutor);
     }
 }
