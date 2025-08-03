@@ -172,7 +172,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             // In case the node is not yet initialized, we send the message as mailbox messsage for
             // faster delivery. We do not try to create the connection here, as we would expect the node to be
             // initialized first.
-            if (!nodesById.isNodeInitialized(senderNetworkId)) {
+            if (nodeNotInitialized(senderNetworkId)) {
                 return storeInMailbox(envelopePayloadMessage,
                         receiverPubKey,
                         senderKeyPair,
@@ -182,10 +182,10 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             }
 
             // In case the connection is not yet created, we send the message as mailbox messsage for
-            // faster delivery. We call getConnection to trigger the creation of the connection but ignore
-            // the result with potential exceptions (e.g. if peer is offline).
-            if (!nodesById.findNode(senderNetworkId).orElseThrow().hasConnection(address)) {
-                nodesById.getConnectionAsync(senderNetworkId, address);
+            // faster delivery.
+            Optional<Node> node = nodesById.findNode(senderNetworkId);
+            checkArgument(node.isPresent(), "Node is expected to be present if isNodeInitialized was true");
+            if (connectionNotYetCreated(senderNetworkId, address, node.get())) {
                 return storeInMailbox(envelopePayloadMessage,
                         receiverPubKey,
                         senderKeyPair,
@@ -286,6 +286,20 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                     receiverAddress,
                     start);
         }
+    }
+
+    private boolean nodeNotInitialized(NetworkId senderNetworkId) {
+        return !nodesById.isNodeInitialized(senderNetworkId);
+    }
+
+    private boolean connectionNotYetCreated(NetworkId senderNetworkId, Address address, Node node) {
+        if (!node.hasConnection(address)) {
+            // We call getConnection to trigger the creation of the connection but ignore
+            // the result with potential exceptions (e.g. if peer is offline).
+            nodesById.getConnectionAsync(senderNetworkId, address);
+            return true;
+        }
+        return false;
     }
 
     public Optional<SendConfidentialMessageResult> flushPendingMessagesToMailboxAtShutdown(ResendMessageData pendingMessage,
