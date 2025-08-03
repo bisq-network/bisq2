@@ -330,7 +330,7 @@ public class Node implements Connection.Handler {
 
     public CompletableFuture<Connection> sendAsync(EnvelopePayloadMessage envelopePayloadMessage, Address address) {
         try {
-            return getConnectionAsync(address)
+            return getOrCreateConnectionAsync(address)
                     .thenCompose(connection -> sendAsync(envelopePayloadMessage, connection));
         } catch (Exception e) {
             return CompletableFuture.failedFuture(e);
@@ -374,7 +374,7 @@ public class Node implements Connection.Handler {
     // Connection
     /* --------------------------------------------------------------------- */
 
-    public Connection getConnection(Address address) {
+    public Connection getOrCreateConnection(Address address) {
         if (outboundConnectionsByAddress.containsKey(address)) {
             return outboundConnectionsByAddress.get(address);
         } else if (inboundConnectionsByAddress.containsKey(address)) {
@@ -384,7 +384,7 @@ public class Node implements Connection.Handler {
         }
     }
 
-    public CompletableFuture<Connection> getConnectionAsync(Address address) {
+    public CompletableFuture<Connection> getOrCreateConnectionAsync(Address address) {
         if (outboundConnectionsByAddress.containsKey(address)) {
             return CompletableFuture.completedFuture(outboundConnectionsByAddress.get(address));
         } else if (inboundConnectionsByAddress.containsKey(address)) {

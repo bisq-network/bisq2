@@ -81,7 +81,7 @@ public class ReportRequestService implements Node.Listener {
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Report> request(Address address) {
-        Connection connection = node.getConnection(address);
+        Connection connection = node.getOrCreateConnection(address);
         String key = connection.getId();
         if (requestHandlerMap.containsKey(key)) {
             log.info("requestHandlerMap contains {}. " +

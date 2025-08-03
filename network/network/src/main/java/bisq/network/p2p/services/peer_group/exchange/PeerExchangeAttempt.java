@@ -158,7 +158,7 @@ public class PeerExchangeAttempt {
         return supplyAsync(() -> {
             String connectionId = null;
             try {
-                Connection connection = node.getConnection(peerAddress);
+                Connection connection = node.getOrCreateConnection(peerAddress);
                 connectionId = connection.getId();
                 checkArgument(!requestHandlerMap.containsKey(connectionId), "We have a pending request for that connection");
 
