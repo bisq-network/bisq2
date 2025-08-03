@@ -19,6 +19,7 @@ package bisq.network.p2p.services.peer_group.exchange;
 
 import bisq.common.network.Address;
 import bisq.common.observable.Pin;
+import bisq.common.timer.Scheduler;
 import bisq.common.util.ExceptionUtil;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -36,12 +37,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static bisq.network.NetworkService.NETWORK_IO_POOL;
 
 /**
  * Responsible for executing the peer exchange protocol with set of peers.
@@ -64,6 +62,7 @@ public class PeerExchangeService implements Node.Listener {
     @Nullable
     private Pin minSuccessReachedPin;
     private volatile boolean isShutdownInProgress;
+    private Scheduler retryScheduler;
 
     public PeerExchangeService(Node node, PeerExchangeStrategy peerExchangeStrategy) {
         this.node = node;
@@ -76,6 +75,10 @@ public class PeerExchangeService implements Node.Listener {
     public void shutdown() {
         if (isShutdownInProgress) {
             return;
+        }
+        if (retryScheduler != null) {
+            retryScheduler.stop();
+            retryScheduler = null;
         }
 
         isShutdownInProgress = true;
@@ -132,6 +135,7 @@ public class PeerExchangeService implements Node.Listener {
     /* --------------------------------------------------------------------- */
 
     public void startInitialPeerExchange() {
+        // Runs in NetworkNode thread
         log.info("Start initial peer exchange");
 
         List<Address> candidates = peerExchangeStrategy.getAddressesForInitialPeerExchange();
@@ -165,7 +169,7 @@ public class PeerExchangeService implements Node.Listener {
                         if (minSuccessReachedLatch.getCount() > 0) {
                             minSuccessReachedLatch.countDown();
                         }
-                        retryPeerExchangeAsync();
+                        maybeRetryPeerExchange();
                     }
                 });
 
@@ -175,87 +179,105 @@ public class PeerExchangeService implements Node.Listener {
             if (hadTimeout) {
                 log.info("Initial peer exchange did not reach min success in 90 sec. " +
                         "We retry asynchronously and return to the caller.");
-                retryPeerExchangeAsync();
+                maybeRetryPeerExchange();
             }
         } catch (InterruptedException e) {
             log.warn("Thread got interrupted at minSuccessReachedLatch.await in the startInitialPeerExchange method", e);
             Thread.currentThread().interrupt(); // Restore interrupted state
 
-            retryPeerExchangeAsync();
+            maybeRetryPeerExchange();
         }
     }
 
-    public Future<Void> extendPeerGroupAsync() {
-        return CompletableFuture.runAsync(this::extendPeerGroup, NETWORK_IO_POOL);
-    }
-
-    private void extendPeerGroup() {
+    public CompletableFuture<Boolean> extendPeerGroupAsync() {
         if (isShutdownInProgress) {
-            return;
+            return CompletableFuture.completedFuture(false);
         }
         if (extendPeerGroupPeerExchangeAttempt.get().isPresent()) {
             log.info("We have a pending extendPeerGroupPeerExchangeAttempt. We ignore the extendPeerGroup call.");
-            return;
+            return CompletableFuture.completedFuture(false);
         }
         log.info("Extend peer group");
         PeerExchangeAttempt attempt = new PeerExchangeAttempt(node, peerExchangeStrategy, "extendPeerGroupPeerExchangeAttempt");
         extendPeerGroupPeerExchangeAttempt.set(Optional.of(attempt));
         List<Address> candidates = peerExchangeStrategy.getAddressesForExtendingPeerGroup();
         try {
-            boolean success = attempt.startAsync(candidates.size() / 2, candidates).get();
-            if (!success) {
-                log.warn("extendPeerGroupPeerExchangeAttempt completed unsuccessful.");
-            }
+            return attempt.startAsync(candidates.size() / 2, candidates)
+                    .whenComplete((success, throwable) -> {
+                        if (throwable != null || success == null || !success) {
+                            log.warn("extendPeerGroupPeerExchangeAttempt completed unsuccessful.");
+                        }
+                        extendPeerGroupPeerExchangeAttempt.set(Optional.empty());
+                    });
         } catch (Exception e) {
             log.warn("extendPeerGroupPeerExchangeAttempt failed. {}", ExceptionUtil.getRootCauseMessage(e));
+            extendPeerGroupPeerExchangeAttempt.set(Optional.empty());
+            return CompletableFuture.failedFuture(e);
         }
-        extendPeerGroupPeerExchangeAttempt.set(Optional.empty());
     }
 
-    private Future<Void> retryPeerExchangeAsync() {
-        return CompletableFuture.runAsync(this::retryPeerExchange, NETWORK_IO_POOL);
+    private void maybeRetryPeerExchange() {
+        if (shouldRetryPeerExchange()) {
+            retryPeerExchange();
+        }
     }
 
-    private void retryPeerExchange() {
+    private boolean shouldRetryPeerExchange() {
         if (isShutdownInProgress) {
-            return;
+            return false;
         }
         if (retryPeerExchangeAttempt.get().isPresent()) {
             log.info("We have a pending retryPeerExchangeAttempt. We ignore the retryPeerExchange call.");
-            return;
+            return false;
         }
         if (numRetryAttempts.get() > MAX_RETRY_ATTEMPTS) {
             log.warn("We have retried the peer exchange {} times without success and give up.", MAX_RETRY_ATTEMPTS);
-            return;
+            return false;
         }
-        long delay = 1000L * numRetryAttempts.get() * numRetryAttempts.get();
-        if (delay > 0) {
-            try {
-                log.info("Retry peer exchange after {} sec.", delay / 1000);
-                Thread.sleep(delay);
-            } catch (InterruptedException e) {
-                log.warn("Thread got interrupted at retryPeerExchange method", e);
-                Thread.currentThread().interrupt(); // Restore interrupted state
-            }
-        } else {
-            log.info("Retry peer exchange");
-        }
-        numRetryAttempts.incrementAndGet();
+        return true;
+    }
 
-        PeerExchangeAttempt attempt = new PeerExchangeAttempt(node, peerExchangeStrategy, "retryPeerExchangeAttempt");
-        retryPeerExchangeAttempt.set(Optional.of(attempt));
-        List<Address> candidates = peerExchangeStrategy.getAddressesForRetryPeerExchange();
-        try {
-            boolean success = attempt.startAsync(candidates.size() / 2, candidates).get();
-            if (!success) {
-                log.warn("retryPeerExchangeAttempt completed unsuccessful.");
-                retryPeerExchangeAttempt.set(Optional.empty());
-                retryPeerExchangeAsync();
-            }
-        } catch (Exception e) {
-            log.warn("retryPeerExchangeAttempt failed. {}", ExceptionUtil.getRootCauseMessage(e));
-            retryPeerExchangeAttempt.set(Optional.empty());
-            retryPeerExchangeAsync();
+    private CompletableFuture<Boolean> retryPeerExchange() {
+        return delayRetryPeerExchangeAsync()
+                .thenCompose(nil -> {
+                    try {
+                        numRetryAttempts.incrementAndGet();
+                        PeerExchangeAttempt attempt = new PeerExchangeAttempt(node, peerExchangeStrategy, "retryPeerExchangeAttempt");
+                        retryPeerExchangeAttempt.set(Optional.of(attempt));
+                        List<Address> candidates = peerExchangeStrategy.getAddressesForRetryPeerExchange();
+                        return attempt.startAsync(candidates.size() / 2, candidates)
+                                .whenComplete((success, throwable) -> {
+                                    if (throwable != null || success == null || !success) {
+                                        log.warn("retryPeerExchangeAttempt completed unsuccessful.");
+                                        maybeRetryPeerExchange();
+                                    }
+                                    retryPeerExchangeAttempt.set(Optional.empty());
+                                });
+                    } catch (Exception e) {
+                        log.warn("retryPeerExchangeAttempt failed. {}", ExceptionUtil.getRootCauseMessage(e));
+                        retryPeerExchangeAttempt.set(Optional.empty());
+                        maybeRetryPeerExchange();
+                        return CompletableFuture.failedFuture(e);
+                    }
+                });
+    }
+
+    private CompletableFuture<Void> delayRetryPeerExchangeAsync() {
+        long delay = 1000L * numRetryAttempts.get() * numRetryAttempts.get();
+        if (delay == 0) {
+            return CompletableFuture.completedFuture(null);
         }
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        if (retryScheduler == null) {
+            retryScheduler = Scheduler.run(() -> {
+                        log.info("Retry peer exchange{}", delay > 0 ? " after " + (delay / 1000) + " sec." : "");
+                        future.complete(null);
+                        retryScheduler = null;
+                    })
+                    .host(this)
+                    .runnableName("retryPeerExchange")
+                    .after(delay);
+        }
+        return future;
     }
 }
