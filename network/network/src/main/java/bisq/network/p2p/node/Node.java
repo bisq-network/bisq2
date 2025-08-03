@@ -616,8 +616,13 @@ public class Node implements Connection.Handler {
         return (int) getAllActiveConnections().count();
     }
 
+    CompletableFuture<Boolean> isPeerOnlineAsync(Address address) {
+        // TODO is NetworkNodeExecutor the best choice here?
+        return CompletableFuture.supplyAsync(() -> isPeerOnline(address), NetworkExecutors.getNetworkNodeExecutor());
+    }
+
     boolean isPeerOnline(Address address) {
-        return transportService.isPeerOnline(address);
+        return transportService.isPeerOnline(address); // Can be blocking
     }
 
 

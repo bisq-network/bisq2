@@ -104,7 +104,7 @@ public class TorTransportService implements TransportService {
 
     @Override
     public boolean isPeerOnline(Address address) {
-        return torService.isOnionServiceOnline(address.getHost());
+        return torService.isOnionServiceOnline(address.getHost()); // Can be blocking
     }
 
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {
