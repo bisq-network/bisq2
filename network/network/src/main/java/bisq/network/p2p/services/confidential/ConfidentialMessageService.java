@@ -183,14 +183,9 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
 
             // In case the connection is not yet created, we send the message as mailbox messsage for
             // faster delivery. We call getConnection to trigger the creation of the connection but ignore
-            // exceptions (e.g. if peer is offline).
+            // the result with potential exceptions (e.g. if peer is offline).
             if (!nodesById.findNode(senderNetworkId).orElseThrow().hasConnection(address)) {
-                CompletableFuture.runAsync(() -> {
-                    try {
-                        nodesById.getConnection(senderNetworkId, address);
-                    } catch (Exception ignore) {
-                    }
-                }, NETWORK_IO_POOL);
+                nodesById.getConnectionAsync(senderNetworkId, address);
                 return storeInMailbox(envelopePayloadMessage,
                         receiverPubKey,
                         senderKeyPair,
