@@ -116,6 +116,12 @@ public class NodesById implements Node.Listener {
         return getOrCreateNode(senderNetworkId).send(envelopePayloadMessage, connection);
     }
 
+    public CompletableFuture<Connection> sendAsync(NetworkId senderNetworkId,
+                                                   EnvelopePayloadMessage envelopePayloadMessage,
+                                                   Connection connection) {
+        return getOrCreateNode(senderNetworkId).sendAsync(envelopePayloadMessage, connection);
+    }
+
     public CompletableFuture<Boolean> shutdown() {
         Stream<CompletableFuture<Boolean>> futures = map.values().stream().map(Node::shutdown);
         return CompletableFutureUtils.allOf(futures)
