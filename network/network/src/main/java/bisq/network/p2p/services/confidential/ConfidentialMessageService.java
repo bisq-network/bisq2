@@ -218,7 +218,39 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
 
         checkPeerOnlineAsync(address, senderNetworkId, start, peerDetectedOffline, countDownLatch);
 
-        SendConfidentialMessageResult result;
+        trySendInParallel(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNetworkId, start,
+                receiverAddress, altResult, countDownLatch, peerDetectedOffline);
+
+        // The connection timeout is 120 seconds, we add a bit more here as it should never get triggered anyway.
+        boolean notTimedOut = countDownLatch.await(150, TimeUnit.SECONDS);
+        checkArgument(notTimedOut, "Neither isPeerOffline resulted in a true result nor we got a connection created in 150 seconds. receiverAddress=" + receiverAddress);
+
+        if (peerDetectedOffline.get()) {
+            // We got the result that the peer's onion service is not published in the tor network, thus it is likely that the peer is offline.
+            // It could be though the case that the connection creation running in parallel succeeds, and even we continue with sending a mailbox message
+            // the normal message sending succeeded. The peer would then get the message received 2 times, which does not cause harm.
+            // The result we return to the caller though contains the mailbox result. When the peer gets the ACK message the delivery state gets cleaned up.
+            throw new RuntimeException("peerDetectedOffline. receiverAddress=" + receiverAddress);
+        } else if (altResult.get() != null) {
+            // The countDownLatch was triggered by the getConnectionFuture's result.
+            // It can be either sentResult or storeMailBoxMessageResult
+            handleResult(envelopePayloadMessage, altResult.get());
+            return altResult.get();
+        } else {
+            throw new RuntimeException("Could not create connection. receiverAddress=" + receiverAddress);
+        }
+    }
+
+    private void trySendInParallel(EnvelopePayloadMessage envelopePayloadMessage,
+                           Address address,
+                           PubKey receiverPubKey,
+                           KeyPair senderKeyPair,
+                           NetworkId senderNetworkId,
+                           long start,
+                           String receiverAddress,
+                           AtomicReference<SendConfidentialMessageResult> altResult,
+                           CountDownLatch countDownLatch,
+                           AtomicBoolean peerDetectedOffline) {
         runAsync(() -> {
             try {
                 Connection connection = nodesById.getConnection(senderNetworkId, address);
@@ -244,25 +276,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             }
             countDownLatch.countDown();
         }, NETWORK_IO_POOL);
-
-        // The connection timeout is 120 seconds, we add a bit more here as it should never get triggered anyway.
-        boolean notTimedOut = countDownLatch.await(150, TimeUnit.SECONDS);
-        checkArgument(notTimedOut, "Neither isPeerOffline resulted in a true result nor we got a connection created in 150 seconds. receiverAddress=" + receiverAddress);
-
-        if (peerDetectedOffline.get()) {
-            // We got the result that the peer's onion service is not published in the tor network, thus it is likely that the peer is offline.
-            // It could be though the case that the connection creation running in parallel succeeds, and even we continue with sending a mailbox message
-            // the normal message sending succeeded. The peer would then get the message received 2 times, which does not cause harm.
-            // The result we return to the caller though contains the mailbox result. When the peer gets the ACK message the delivery state gets cleaned up.
-            throw new RuntimeException("peerDetectedOffline. receiverAddress=" + receiverAddress);
-        } else if (altResult.get() != null) {
-            // The countDownLatch was triggered by the getConnectionFuture's result.
-            // It can be either sentResult or storeMailBoxMessageResult
-            handleResult(envelopePayloadMessage, altResult.get());
-            return altResult.get();
-        } else {
-            throw new RuntimeException("Could not create connection. receiverAddress=" + receiverAddress);
-        }
     }
 
     private void checkPeerOnlineAsync(Address address,
