@@ -234,22 +234,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                             log.info("We had detected that the peer is offline, but we succeeded to create a connection and send the message. receiverAddress={}", receiverAddress);
                         }
                     } catch (Exception exception) {
-                        if (isShutdownInProgress) {
-                            // We have stored in mailbox when shutdown started. The pending message can be ignored.
-                            altResult.set(new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED));
-                        }
-                        if (countDownLatch.getCount() == 1) {
-                            SendConfidentialMessageResult storeMailBoxMessageResult = storeInMailbox(envelopePayloadMessage,
-                                    receiverPubKey,
-                                    senderKeyPair,
-                                    exception.getMessage(),
-                                    confidentialMessage);
-                            log.info("Stored message to mailbox {} after {} ms", receiverAddress, System.currentTimeMillis() - start);
-                            altResult.set(storeMailBoxMessageResult);
-                        } else {
-                            log.info("We had detected that the peer is offline, but we succeeded to create a connection but failed sending the message. " +
-                                    "As we already stored the message to mailbox from the offline detection we ignore that case. receiverAddress={}", receiverAddress);
-                        }
+                        handleSendFailure(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, altResult, countDownLatch, confidentialMessage, receiverAddress, start);
                     }
                 } catch (Exception exception) {
                     if (!isShutdownInProgress) {
@@ -288,6 +273,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         }
     }
 
+
     private boolean nodeNotInitialized(NetworkId senderNetworkId) {
         return !nodesById.isNodeInitialized(senderNetworkId);
     }
@@ -300,6 +286,33 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             return true;
         }
         return false;
+    }
+
+    private void handleSendFailure(EnvelopePayloadMessage envelopePayloadMessage,
+                                   PubKey receiverPubKey,
+                                   KeyPair senderKeyPair,
+                                   Exception exception,
+                                   AtomicReference<SendConfidentialMessageResult> altResult,
+                                   CountDownLatch countDownLatch,
+                                   ConfidentialMessage confidentialMessage,
+                                   String receiverAddress,
+                                   long start) {
+        if (isShutdownInProgress) {
+            // We have stored in mailbox when shutdown started. The pending message can be ignored.
+            altResult.set(new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED));
+        }
+        if (countDownLatch.getCount() == 1) {
+            SendConfidentialMessageResult fallbackResult = storeInMailbox(envelopePayloadMessage,
+                    receiverPubKey,
+                    senderKeyPair,
+                    exception.getMessage(),
+                    confidentialMessage);
+            log.info("Stored message to mailbox {} after {} ms", receiverAddress, System.currentTimeMillis() - start);
+            altResult.set(fallbackResult);
+        } else {
+            log.info("We had detected that the peer is offline, but we succeeded to create a connection but failed sending the message. " +
+                    "As we already stored the message to mailbox from the offline detection we ignore that case. receiverAddress={}", receiverAddress);
+        }
     }
 
     public Optional<SendConfidentialMessageResult> flushPendingMessagesToMailboxAtShutdown(ResendMessageData pendingMessage,
