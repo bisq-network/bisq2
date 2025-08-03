@@ -314,7 +314,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                     }
                     return Optional.of(sentResult);
                 } catch (Exception exception) {
-                    return handleSendFailure(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, countDownLatch, isPeerOnlineFuture, confidentialMessage, receiverAddress, start);
+                    return handleSendFailure(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, isPeerOnlineFuture, confidentialMessage, receiverAddress, start);
                 }
             } catch (Exception exception) {
                 if (!isShutdownInProgress) {
@@ -333,7 +333,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                                                       PubKey receiverPubKey,
                                                                       KeyPair senderKeyPair,
                                                                       Exception exception,
-                                                                      CountDownLatch countDownLatch,
                                                                       CompletableFuture<Boolean> isPeerOnlineFuture,
                                                                       ConfidentialMessage confidentialMessage,
                                                                       String receiverAddress,
@@ -342,9 +341,12 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             // We have stored in mailbox when shutdown started. The pending message can be ignored.
             return Optional.of(new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED));
         }
-        boolean peerMaybeOnline = !isPeerOnlineFuture.isDone() || isPeerOnlineFuture.join();
-        //if (peerMaybeOnline) {
-        if (countDownLatch.getCount() == 1) {
+        boolean detectedOffLine = isPeerOnlineFuture.isDone() && isPeerOnlineFuture.join() == null || !isPeerOnlineFuture.join();
+        if (detectedOffLine) {
+            log.info("We had detected that the peer is offline, but we succeeded to create a connection but failed sending the message. " +
+                    "As we already stored the message to mailbox from the offline detection we ignore that case. receiverAddress={}", receiverAddress);
+            return Optional.empty();
+        } else {
             SendConfidentialMessageResult fallbackResult = storeInMailbox(envelopePayloadMessage,
                     receiverPubKey,
                     senderKeyPair,
@@ -352,10 +354,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                     confidentialMessage);
             log.info("Stored message to mailbox {} after {} ms", receiverAddress, System.currentTimeMillis() - start);
             return Optional.of(fallbackResult);
-        } else {
-            log.info("We had detected that the peer is offline, but we succeeded to create a connection but failed sending the message. " +
-                    "As we already stored the message to mailbox from the offline detection we ignore that case. receiverAddress={}", receiverAddress);
-            return Optional.empty();
         }
     }
 
