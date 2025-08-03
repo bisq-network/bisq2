@@ -321,7 +321,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                 }
                 return Optional.empty();
             }
-        }, NetworkExecutors.getNetworkSendExecutor());
+        }, NetworkExecutors.getSendExecutor());
     }
 
 

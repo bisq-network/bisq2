@@ -127,7 +127,7 @@ public abstract class Connection {
             return;
         }
 
-        inputHandlerFuture = NetworkExecutors.getNetworkReadExecutor().submit(() -> {
+        inputHandlerFuture = NetworkExecutors.getReadExecutor().submit(() -> {
             try {
                 long readTs = 0;
                 while (isInputStreamActive()) {
@@ -165,7 +165,7 @@ public abstract class Connection {
                             StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
                     requestResponseManager.onReceived(envelopePayloadMessage);
 
-                    DISPATCHER.submit(() -> {
+                    DISPATCHER.submit(() -> { // Runs in Network.read thread
                         if (isInputStreamActive()) {
                             boolean isMessageAuthorized = handler.isMessageAuthorized(envelopePayloadMessage,
                                     networkEnvelope.getAuthorizationToken(),
@@ -308,7 +308,7 @@ public abstract class Connection {
             networkEnvelopeSocket.close();
         } catch (IOException ignore) {
         }
-        NetworkService.DISPATCHER.submit(() -> {
+        NetworkService.DISPATCHER.submit(() -> { // Runs in dispatcher thread
             handler.handleConnectionClosed(this, closeReason);
             listeners.forEach(listener -> {
                 try {

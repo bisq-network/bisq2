@@ -139,7 +139,7 @@ public class ServiceNodesByTransport {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         entry -> supplyAsync(() ->
-                                entry.getValue().getInitializedDefaultNode(defaultNetworkId), NetworkExecutors.getNetworkNodeExecutor())));
+                                entry.getValue().getInitializedDefaultNode(defaultNetworkId), NetworkExecutors.getNodeExecutor())));
     }
 
     public CompletableFuture<List<Boolean>> shutdown() {
@@ -169,7 +169,7 @@ public class ServiceNodesByTransport {
             } else {
                 return serviceNode.initializeNode(networkId);
             }
-        }, NetworkExecutors.getNetworkNodeExecutor());
+        }, NetworkExecutors.getNodeExecutor());
     }
 
     public void addSeedNodes(Set<AddressByTransportTypeMap> seedNodeMaps) {

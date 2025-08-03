@@ -493,7 +493,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     public CompletableFuture<Map<TransportType, Boolean>> isPeerOnline(NetworkId networkId,
                                                                        AddressByTransportTypeMap peer) {
-        return supplyAsync(() -> serviceNodesByTransport.isPeerOnline(networkId, peer), NetworkExecutors.getNetworkNodeExecutor());
+        return supplyAsync(() -> serviceNodesByTransport.isPeerOnline(networkId, peer), NetworkExecutors.getNodeExecutor());
     }
 
 

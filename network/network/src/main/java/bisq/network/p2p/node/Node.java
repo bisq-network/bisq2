@@ -301,7 +301,7 @@ public class Node implements Connection.Handler {
                     this,
                     this::handleException);
             inboundConnectionsByAddress.put(connection.getPeerAddress(), connection);
-            DISPATCHER.submit(() -> listeners.forEach(listener -> {
+            DISPATCHER.submit(() -> listeners.forEach(listener -> { // Runs in NetworkNode thread
                 try {
                     listener.onConnection(connection);
                 } catch (Exception e) {
@@ -340,7 +340,7 @@ public class Node implements Connection.Handler {
     public CompletableFuture<Connection> sendAsync(EnvelopePayloadMessage envelopePayloadMessage,
                                                    Connection connection) {
         try {
-            return CompletableFuture.supplyAsync(() -> send(envelopePayloadMessage, connection), NetworkExecutors.getNetworkSendExecutor());
+            return CompletableFuture.supplyAsync(() -> send(envelopePayloadMessage, connection), NetworkExecutors.getSendExecutor());
         } catch (Exception e) {
             return CompletableFuture.failedFuture(e);
         }
@@ -429,7 +429,7 @@ public class Node implements Connection.Handler {
         log.debug("Create outbound connection to {}", address);
         // myCapability is set once we have start our sever which happens in initialize()
         return myCapability.map(capability -> CompletableFuture.supplyAsync(() ->
-                        createOutboundConnection(address, capability), NetworkExecutors.getNetworkSendExecutor()))
+                        createOutboundConnection(address, capability), NetworkExecutors.getSendExecutor()))
                 .orElseGet(() -> CompletableFuture.supplyAsync(() -> {
                     int port = networkId.getAddressByTransportTypeMap().get(transportType).getPort();
                     log.warn("We create an outbound connection but we have not initialized our server. " +
@@ -438,7 +438,7 @@ public class Node implements Connection.Handler {
                     initialize();
                     checkArgument(myCapability.isPresent(), "myCapability must be present after initializeServer got called");
                     return createOutboundConnection(address, myCapability.get());
-                }, NetworkExecutors.getNetworkNodeExecutor()));
+                }, NetworkExecutors.getNodeExecutor()));
     }
 
     private Connection createOutboundConnection(Address address, Capability myCapability) {
@@ -528,7 +528,7 @@ public class Node implements Connection.Handler {
             outboundConnectionsByAddress.put(address, connection);
 
             OutboundConnection finalConnection = connection;
-            DISPATCHER.submit(() -> listeners.forEach(listener -> {
+            DISPATCHER.submit(() -> listeners.forEach(listener -> { // Runs in Network.send thread
                 try {
                     listener.onConnection(finalConnection);
                 } catch (Exception e) {
@@ -628,7 +628,7 @@ public class Node implements Connection.Handler {
 
     CompletableFuture<Boolean> isPeerOnlineAsync(Address address) {
         // TODO is NetworkNodeExecutor the best choice here?
-        return CompletableFuture.supplyAsync(() -> isPeerOnline(address), NetworkExecutors.getNetworkNodeExecutor());
+        return CompletableFuture.supplyAsync(() -> isPeerOnline(address), NetworkExecutors.getNodeExecutor());
     }
 
     boolean isPeerOnline(Address address) {

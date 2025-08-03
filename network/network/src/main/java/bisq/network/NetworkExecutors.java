@@ -33,34 +33,36 @@ import static com.google.common.base.Preconditions.checkArgument;
 // TODO use config to set core pool sized
 public class NetworkExecutors {
     @Getter
-    private static ThreadPoolExecutor networkReadExecutor;
+    private static ThreadPoolExecutor readExecutor;
     @Getter
-    private static ThreadPoolExecutor networkSendExecutor;
+    private static ThreadPoolExecutor sendExecutor;
     @Getter
-    private static ThreadPoolExecutor networkNodeExecutor;
+    private static ThreadPoolExecutor nodeExecutor;
     @Getter
-    private static ThreadPoolExecutor networkWorkerExecutor;
+    private static ThreadPoolExecutor notifyExecutor;
     private static volatile boolean isInitialized;
 
     public static void initialize() {
         checkArgument(!isInitialized, "initialize must not be called twice");
-        networkReadExecutor = createNetworkReadExecutor();
-        networkSendExecutor = createNetworkSendExecutor();
-        networkNodeExecutor = createNetworkNodeExecutor();
-        networkWorkerExecutor = createNetworkWorkerExecutor();
+        readExecutor = createReadExecutor();
+        sendExecutor = createSendExecutor();
+        nodeExecutor = createNodeExecutor();
+        notifyExecutor = createNotifyExecutor();
         isInitialized = true;
     }
 
     public static void shutdown() {
         if (isInitialized) {
-            ExecutorFactory.shutdownAndAwaitTermination(networkReadExecutor);
-            ExecutorFactory.shutdownAndAwaitTermination(networkSendExecutor);
-            ExecutorFactory.shutdownAndAwaitTermination(networkNodeExecutor);
-            ExecutorFactory.shutdownAndAwaitTermination(networkWorkerExecutor);
-            networkReadExecutor = null;
-            networkSendExecutor = null;
-            networkNodeExecutor = null;
-            networkWorkerExecutor = null;
+            ExecutorFactory.shutdownAndAwaitTermination(readExecutor);
+            ExecutorFactory.shutdownAndAwaitTermination(sendExecutor);
+            ExecutorFactory.shutdownAndAwaitTermination(nodeExecutor);
+            ExecutorFactory.shutdownAndAwaitTermination(notifyExecutor);
+
+            readExecutor = null;
+            sendExecutor = null;
+            nodeExecutor = null;
+            notifyExecutor = null;
+
             isInitialized = false;
         }
     }
@@ -69,7 +71,7 @@ public class NetworkExecutors {
      * Used for initializing the transportService, initializing the node and used as the blocking server thread.
      * @return
      */
-    private static ThreadPoolExecutor createNetworkNodeExecutor() {
+    private static ThreadPoolExecutor createNodeExecutor() {
         MaxSizeAwareQueue queue = new MaxSizeAwareQueue(10);
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 1,
@@ -84,15 +86,15 @@ public class NetworkExecutors {
     }
 
 
-    private static ThreadPoolExecutor createNetworkWorkerExecutor() {
+    private static ThreadPoolExecutor createNotifyExecutor() {
         MaxSizeAwareQueue queue = new MaxSizeAwareQueue(1000);
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
-                9,
-                20,
+                2,
+                4,
                 10,
                 TimeUnit.SECONDS,
                 queue,
-                ExecutorFactory.getThreadFactory("Network.worker"),
+                ExecutorFactory.getThreadFactory("Network.notify"),
                 new CallerRunsPolicyWithLogging());
         queue.setExecutor(executor);
         return executor;
@@ -104,7 +106,7 @@ public class NetworkExecutors {
      * We choose the newest instead of dropping the oldest as it might serve better for protecting against attacks.
      * This executor must only be used for direct network read operations, which happen in Connection and ConnectionHandshake.
      */
-    private static ThreadPoolExecutor createNetworkReadExecutor() {
+    private static ThreadPoolExecutor createReadExecutor() {
         MaxSizeAwareDeque deque = new MaxSizeAwareDeque(20);
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 12,
@@ -131,7 +133,7 @@ public class NetworkExecutors {
      * Thus, the send operation can take  longer as the actual network IO operation.
      * This whole process is all covered by that executor.
      */
-    private static ThreadPoolExecutor createNetworkSendExecutor() {
+    private static ThreadPoolExecutor createSendExecutor() {
         MaxSizeAwareQueue queue = new MaxSizeAwareQueue(1000);
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 9,

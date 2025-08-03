@@ -423,7 +423,7 @@ public class PeerGroupManager implements Node.Listener {
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
         log.info("New state {}", newState);
-        runAsync(() -> listeners.forEach(listener -> {
+        runAsync(() -> listeners.forEach(listener -> { // Runs in ForkJoinPool.commonPool thread
             try {
                 listener.onStateChanged(newState);
             } catch (Exception e) {
