@@ -230,7 +230,13 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                                             Connection connection) throws InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
 
-        CompletableFuture<Boolean> isPeerOnlineFuture = isPeerOnlineAsync(address, senderNetworkId, start, countDownLatch);
+        CompletableFuture<Boolean> isPeerOnlineFuture = isPeerOnlineAsync(address, senderNetworkId, start);
+
+        isPeerOnlineFuture.whenComplete((isPeerOnline, t) -> {
+            if (isPeerOnline == null || !isPeerOnline) {
+                countDownLatch.countDown();
+            }
+        });
 
         CompletableFuture<Optional<SendConfidentialMessageResult>> resultFuture = trySendInParallel(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNetworkId, start,
                 receiverAddress, countDownLatch, isPeerOnlineFuture, connection);
@@ -263,8 +269,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
 
     private CompletableFuture<Boolean> isPeerOnlineAsync(Address address,
                                                          NetworkId senderNetworkId,
-                                                         long start,
-                                                         CountDownLatch countDownLatch) {
+                                                         long start) {
         return nodesById.isPeerOnlineAsync(senderNetworkId, address)
                 .whenComplete((isPeerOnline, throwable) -> {
                     // Can take about 3-5 sec.
@@ -276,7 +281,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                     if (isPeerOnline == null || !isPeerOnline) {
                         log.info("Peer is detected as offline. We store the message as mailbox message. Request for isPeerOnline completed after {} ms",
                                 System.currentTimeMillis() - start);
-                        countDownLatch.countDown();
                     } else {
                         log.info("Peer is not detected offline. We wait for the connection creation has been successful and try to send the message. " +
                                         "Request for isPeerOnline completed after {} ms",
