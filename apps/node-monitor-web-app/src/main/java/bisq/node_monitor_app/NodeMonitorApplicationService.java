@@ -185,14 +185,21 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
     public CompletableFuture<Boolean> initialize() {
         // Move initialization work off the current thread and use a ForkJoinPool.commonPool instead.
         return supplyAsync(() -> memoryReportService.initialize()
-                .thenCompose(result -> securityService.initialize()
-                        .whenComplete((r, t) -> setState(State.INITIALIZE_NETWORK)))
-                .thenCompose(result -> networkService.initialize()
-                        .whenComplete((r, t) -> setState(State.INITIALIZE_WALLET)))
-                .thenCompose(result -> walletService.map(Service::initialize)
-                        .orElse(CompletableFuture.completedFuture(true))
-                        .whenComplete((r, t) -> setState(State.INITIALIZE_SERVICES)))
-                .thenCompose(result -> identityService.initialize())
+                .thenCompose(result -> securityService.initialize())
+                .thenCompose(result -> {
+                    setState(State.INITIALIZE_NETWORK);
+                    return networkService.initialize();
+                })
+                .thenCompose(result -> walletService
+                        .map(walletService -> {
+                            setState(State.INITIALIZE_WALLET);
+                            return walletService.initialize();
+                        })
+                        .orElseGet(() -> CompletableFuture.completedFuture(true)))
+                .thenCompose(result -> {
+                    setState(State.INITIALIZE_SERVICES);
+                    return identityService.initialize();
+                })
                 .thenCompose(result -> bondedRolesService.initialize())
                 .thenCompose(result -> accountService.initialize())
                 .thenCompose(result -> contractService.initialize())
