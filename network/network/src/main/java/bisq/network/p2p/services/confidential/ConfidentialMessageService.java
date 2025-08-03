@@ -20,6 +20,7 @@ package bisq.network.p2p.services.confidential;
 import bisq.common.network.Address;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.network.NetworkExecutors;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -55,7 +56,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static bisq.network.NetworkService.DISPATCHER;
-import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
@@ -158,13 +158,13 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     // API
     /* --------------------------------------------------------------------- */
 
+    // We get called from NetworkService on the NetworkNodeExecutor thread
     public SendConfidentialMessageResult send(EnvelopePayloadMessage envelopePayloadMessage,
                                               NetworkId receiverNetworkId,
                                               Address address,
                                               PubKey receiverPubKey,
                                               KeyPair senderKeyPair,
                                               NetworkId senderNetworkId) {
-        SendConfidentialMessageResult result;
         String receiverAddress = receiverNetworkId.getAddresses();
         long start = System.currentTimeMillis();
         try {
@@ -195,7 +195,15 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
 
             Optional<Connection> connection = node.get().findConnection(address);
             checkArgument(connection.isPresent(), "Connection is expected to be present at that stage");
-            return trySendOrFallback(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNetworkId, start, receiverAddress, connection.get());
+            // Blocking call
+            return trySendIfPeerNotOffline(envelopePayloadMessage,
+                    address,
+                    receiverPubKey,
+                    senderKeyPair,
+                    senderNetworkId,
+                    start,
+                    receiverAddress,
+                    connection.get());
         } catch (Exception exception) {
             return storeInMailbox(envelopePayloadMessage,
                     receiverPubKey,
@@ -220,14 +228,14 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         return false;
     }
 
-    private SendConfidentialMessageResult trySendOrFallback(EnvelopePayloadMessage envelopePayloadMessage,
-                                                            Address address,
-                                                            PubKey receiverPubKey,
-                                                            KeyPair senderKeyPair,
-                                                            NetworkId senderNetworkId,
-                                                            long start,
-                                                            String receiverAddress,
-                                                            Connection connection) {
+    private SendConfidentialMessageResult trySendIfPeerNotOffline(EnvelopePayloadMessage envelopePayloadMessage,
+                                                                  Address address,
+                                                                  PubKey receiverPubKey,
+                                                                  KeyPair senderKeyPair,
+                                                                  NetworkId senderNetworkId,
+                                                                  long start,
+                                                                  String receiverAddress,
+                                                                  Connection connection) {
         CompletableFuture<Boolean> isPeerOfflineFuture = isPeerOnlineAsync(address, senderNetworkId, start)
                 .handle((isPeerOnline, throwable) -> {
                     if (throwable != null) return null;
@@ -238,12 +246,13 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                     return CompletableFuture.completedFuture(true);
                 });
 
-        CompletableFuture<Optional<SendConfidentialMessageResult>> resultFuture = trySendInParallel(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNetworkId, start,
+        CompletableFuture<Optional<SendConfidentialMessageResult>> sendMessageFuture = trySendAsync(envelopePayloadMessage, receiverPubKey, senderKeyPair, senderNetworkId, start,
                 receiverAddress, isPeerOfflineFuture, connection)
                 .exceptionally(e -> Optional.empty());
 
         // The connection timeout is 120 seconds, we add a bit more here as it should never get triggered anyway.
-        CompletableFuture.anyOf(isPeerOfflineFuture, resultFuture)
+        // We get called from NetworkService on the NetworkNodeExecutor thread, thus the blocking join() call is ok.
+        CompletableFuture.anyOf(isPeerOfflineFuture, sendMessageFuture)
                 .orTimeout(150, TimeUnit.SECONDS)
                 .whenComplete((ignore, throwable) -> {
                     if (throwable instanceof TimeoutException timeoutException) {
@@ -259,8 +268,8 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             // the normal message sending succeeded. The peer would then get the message received 2 times, which does not cause harm.
             // The result we return to the caller though contains the mailbox result. When the peer gets the ACK message the delivery state gets cleaned up.
             throw new RuntimeException("peerDetectedOffline. receiverAddress=" + receiverAddress);
-        } else if (resultFuture.isDone()) {
-            Optional<SendConfidentialMessageResult> result = resultFuture.join();
+        } else if (sendMessageFuture.isDone()) {
+            Optional<SendConfidentialMessageResult> result = sendMessageFuture.join();
             if (result.isPresent()) {
                 // The countDownLatch was triggered by the getConnectionFuture's result.
                 // It can be either sentResult or storeMailBoxMessageResult
@@ -278,7 +287,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     private CompletableFuture<Boolean> isPeerOnlineAsync(Address address,
                                                          NetworkId senderNetworkId,
                                                          long start) {
-        return nodesById.isPeerOnlineAsync(senderNetworkId, address)
+        return nodesById.isPeerOnlineAsync(senderNetworkId, address) // Runs in NetworkNodeExecutor
                 .whenComplete((isPeerOnline, throwable) -> {
                     // Can take about 3-5 sec.
                     if (throwable != null) {
@@ -297,18 +306,16 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                 });
     }
 
-    private CompletableFuture<Optional<SendConfidentialMessageResult>> trySendInParallel(EnvelopePayloadMessage envelopePayloadMessage,
-                                                                                         Address address,
-                                                                                         PubKey receiverPubKey,
-                                                                                         KeyPair senderKeyPair,
-                                                                                         NetworkId senderNetworkId,
-                                                                                         long start,
-                                                                                         String receiverAddress,
-                                                                                         CompletableFuture<Boolean> isPeerOfflineFuture,
-                                                                                         Connection connection) {
+    private CompletableFuture<Optional<SendConfidentialMessageResult>> trySendAsync(EnvelopePayloadMessage envelopePayloadMessage,
+                                                                                    PubKey receiverPubKey,
+                                                                                    KeyPair senderKeyPair,
+                                                                                    NetworkId senderNetworkId,
+                                                                                    long start,
+                                                                                    String receiverAddress,
+                                                                                    CompletableFuture<Boolean> isPeerOfflineFuture,
+                                                                                    Connection connection) {
         return supplyAsync(() -> {
             try {
-                // getConfidentialMessage use encryptAndSign thus it might take a bit
                 ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
                 try {
                     nodesById.send(senderNetworkId, confidentialMessage, connection);
@@ -320,7 +327,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                     }
                     return Optional.of(sentResult);
                 } catch (Exception exception) {
-                    return handleSendFailure(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, isPeerOfflineFuture, confidentialMessage, receiverAddress, start);
+                    return maybeStoreInMailbox(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, isPeerOfflineFuture, confidentialMessage, receiverAddress, start);
                 }
             } catch (Exception exception) {
                 if (!isShutdownInProgress) {
@@ -328,18 +335,18 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                 }
                 return Optional.empty();
             }
-        }, NETWORK_IO_POOL);
+        }, NetworkExecutors.getNetworkSendExecutor());
     }
 
 
-    private Optional<SendConfidentialMessageResult> handleSendFailure(EnvelopePayloadMessage envelopePayloadMessage,
-                                                                      PubKey receiverPubKey,
-                                                                      KeyPair senderKeyPair,
-                                                                      Exception exception,
-                                                                      CompletableFuture<Boolean> isPeerOfflineFuture,
-                                                                      ConfidentialMessage confidentialMessage,
-                                                                      String receiverAddress,
-                                                                      long start) {
+    private Optional<SendConfidentialMessageResult> maybeStoreInMailbox(EnvelopePayloadMessage envelopePayloadMessage,
+                                                                        PubKey receiverPubKey,
+                                                                        KeyPair senderKeyPair,
+                                                                        Exception exception,
+                                                                        CompletableFuture<Boolean> isPeerOfflineFuture,
+                                                                        ConfidentialMessage confidentialMessage,
+                                                                        String receiverAddress,
+                                                                        long start) {
         if (isShutdownInProgress) {
             // We have stored in mailbox when shutdown started. The pending message can be ignored.
             return Optional.of(new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED));
@@ -350,13 +357,13 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                     "As we already stored the message to mailbox from the offline detection we ignore that case. receiverAddress={}", receiverAddress);
             return Optional.empty();
         } else {
-            SendConfidentialMessageResult fallbackResult = storeInMailbox(envelopePayloadMessage,
+            SendConfidentialMessageResult result = storeInMailbox(envelopePayloadMessage,
                     receiverPubKey,
                     senderKeyPair,
                     exception.getMessage(),
                     confidentialMessage);
             log.info("Stored message to mailbox {} after {} ms", receiverAddress, System.currentTimeMillis() - start);
-            return Optional.of(fallbackResult);
+            return Optional.of(result);
         }
     }
 
