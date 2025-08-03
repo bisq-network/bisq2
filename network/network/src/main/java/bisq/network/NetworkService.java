@@ -283,27 +283,22 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                             System.currentTimeMillis())));
         }
 
-        return anySuppliedInitializedNode(senderNetworkId)
-                .thenCompose(networkId -> supplyAsync(() ->
-                                serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
-                                        receiverNetworkId,
-                                        senderKeyPair,
-                                        senderNetworkId),
-                        NETWORK_IO_POOL))
+        return anySuppliedInitializedNode(senderNetworkId) // Runs in NetworkNodeExecutor
+                .thenApply(networkId ->
+                        serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
+                                receiverNetworkId,
+                                senderKeyPair,
+                                senderNetworkId))
                 .orTimeout(2, TimeUnit.SECONDS)
                 .whenComplete((result, throwable) -> {
-                    if (throwable != null) {
-                        if (throwable instanceof TimeoutException) {
-                            log.warn("TimeoutException at confidentialSend, likely caused by the anySuppliedInitializedNode() method " +
-                                    "as the node for the given networkId is not initialized yet. " +
-                                    "We call serviceNodesByTransport.confidentialSend() to send the message as mailbox message.");
-                            supplyAsync(() ->
-                                            serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
-                                                    receiverNetworkId,
-                                                    senderKeyPair,
-                                                    senderNetworkId),
-                                    NETWORK_IO_POOL);
-                        }
+                    if (throwable instanceof TimeoutException) {
+                        log.warn("TimeoutException at confidentialSend, likely caused by the anySuppliedInitializedNode() method " +
+                                "as the node for the given networkId is not initialized yet. " +
+                                "We call serviceNodesByTransport.confidentialSend() to send the message as mailbox message.");
+                        serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
+                                receiverNetworkId,
+                                senderKeyPair,
+                                senderNetworkId);
                     }
                 });
     }
