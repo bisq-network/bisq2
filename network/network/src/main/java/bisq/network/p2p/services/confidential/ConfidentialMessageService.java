@@ -56,7 +56,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static bisq.network.NetworkService.DISPATCHER;
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
@@ -171,20 +170,24 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             // In case the node is not yet initialized, we send the message as mailbox messsage for
             // faster delivery. We do not try to create the connection here, as we would expect the node to be
             // initialized first.
-            if (nodeNotInitialized(senderNetworkId)) {
+            Optional<Node> node = nodesById.findNode(senderNetworkId);
+            if (node.isEmpty() || !node.get().isInitialized()) {
                 return storeInMailbox(envelopePayloadMessage,
                         receiverPubKey,
                         senderKeyPair,
-                        "Node is not initialized yet.",
+                        "Node is not created or not initialized yet.",
                         receiverAddress,
                         start);
             }
 
             // In case the connection is not yet created, we send the message as mailbox messsage for
             // faster delivery.
-            Optional<Node> node = nodesById.findNode(senderNetworkId);
-            checkArgument(node.isPresent(), "Node is expected to be present at that stage");
-            if (connectionNotYetCreated(senderNetworkId, address, node.get())) {
+            Optional<Connection> connection = node.get().findConnection(address);
+            if (connection.isEmpty()) {
+                // We call getConnection to trigger the creation of the connection but ignore
+                // the result with potential exceptions (e.g. if peer is offline).
+                nodesById.getOrCreateConnectionAsync(senderNetworkId, address);
+
                 return storeInMailbox(envelopePayloadMessage,
                         receiverPubKey,
                         senderKeyPair,
@@ -193,8 +196,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         start);
             }
 
-            Optional<Connection> connection = node.get().findConnection(address);
-            checkArgument(connection.isPresent(), "Connection is expected to be present at that stage");
             // Blocking call
             return trySendIfPeerNotOffline(envelopePayloadMessage,
                     address,
@@ -212,20 +213,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                     receiverAddress,
                     start);
         }
-    }
-
-    private boolean nodeNotInitialized(NetworkId senderNetworkId) {
-        return !nodesById.isNodeInitialized(senderNetworkId);
-    }
-
-    private boolean connectionNotYetCreated(NetworkId senderNetworkId, Address address, Node node) {
-        if (!node.hasConnection(address)) {
-            // We call getConnection to trigger the creation of the connection but ignore
-            // the result with potential exceptions (e.g. if peer is offline).
-            nodesById.getOrCreateConnectionAsync(senderNetworkId, address);
-            return true;
-        }
-        return false;
     }
 
     private SendConfidentialMessageResult trySendIfPeerNotOffline(EnvelopePayloadMessage envelopePayloadMessage,
@@ -299,8 +286,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         log.info("Peer is detected as offline. We store the message as mailbox message. Request for isPeerOnline completed after {} ms",
                                 System.currentTimeMillis() - start);
                     } else {
-                        log.info("Peer is not detected offline. We wait for the connection creation has been successful and try to send the message. " +
-                                        "Request for isPeerOnline completed after {} ms",
+                        log.info("Peer is not detected offline. We try to send the message. Request for isPeerOnline completed after {} ms",
                                 System.currentTimeMillis() - start);
                     }
                 });
