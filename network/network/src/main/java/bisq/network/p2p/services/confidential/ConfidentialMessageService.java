@@ -194,57 +194,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         start);
             }
 
-            CountDownLatch countDownLatch = new CountDownLatch(1);
-            AtomicBoolean peerDetectedOffline = new AtomicBoolean();
-
-            checkPeerOnlineAsync(address, senderNetworkId, start, peerDetectedOffline, countDownLatch);
-
-            AtomicReference<SendConfidentialMessageResult> altResult = new AtomicReference<>();
-            runAsync(() -> {
-                try {
-                    Connection connection = nodesById.getConnection(senderNetworkId, address);
-                    log.info("Creating connection to {} took {} ms", receiverAddress, System.currentTimeMillis() - start);
-                    // We got a valid connection and try to send the message. If send fails we store in mailbox in case envelopePayloadMessage is a MailboxMessage
-                    ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
-                    try {
-                        nodesById.send(senderNetworkId, confidentialMessage, connection);
-                        log.info("Sent message to {} after {} ms", receiverAddress, System.currentTimeMillis() - start);
-                        SendConfidentialMessageResult sentResult = new SendConfidentialMessageResult(MessageDeliveryStatus.SENT);
-                        altResult.set(sentResult);
-
-                        if (countDownLatch.getCount() == 0) {
-                            log.info("We had detected that the peer is offline, but we succeeded to create a connection and send the message. receiverAddress={}", receiverAddress);
-                        }
-                    } catch (Exception exception) {
-                        handleSendFailure(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, altResult, countDownLatch, confidentialMessage, receiverAddress, start);
-                    }
-                } catch (Exception exception) {
-                    if (!isShutdownInProgress) {
-                        log.info("Creating connection to {} failed. peerDetectedOffline={}", receiverAddress, peerDetectedOffline.get());
-                    }
-                }
-                countDownLatch.countDown();
-            }, NETWORK_IO_POOL);
-
-            // The connection timeout is 120 seconds, we add a bit more here as it should never get triggered anyway.
-            boolean notTimedOut = countDownLatch.await(150, TimeUnit.SECONDS);
-            checkArgument(notTimedOut, "Neither isPeerOffline resulted in a true result nor we got a connection created in 150 seconds. receiverAddress=" + receiverAddress);
-
-            if (peerDetectedOffline.get()) {
-                // We got the result that the peer's onion service is not published in the tor network, thus it is likely that the peer is offline.
-                // It could be though the case that the connection creation running in parallel succeeds, and even we continue with sending a mailbox message
-                // the normal message sending succeeded. The peer would then get the message received 2 times, which does not cause harm.
-                // The result we return to the caller though contains the mailbox result. When the peer gets the ACK message the delivery state gets cleaned up.
-                throw new RuntimeException("peerDetectedOffline. receiverAddress=" + receiverAddress);
-            } else if (altResult.get() != null) {
-                // The countDownLatch was triggered by the getConnectionFuture's result.
-                // It can be either sentResult or storeMailBoxMessageResult
-                result = altResult.get();
-            } else {
-                throw new RuntimeException("Could not create connection. receiverAddress=" + receiverAddress);
-            }
-            handleResult(envelopePayloadMessage, result);
-            return result;
+            return trySendOrFallback(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNetworkId, start, receiverAddress);
         } catch (Exception exception) {
             return storeInMailbox(envelopePayloadMessage,
                     receiverPubKey,
@@ -252,6 +202,66 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                     exception.getMessage(),
                     receiverAddress,
                     start);
+        }
+    }
+
+    private SendConfidentialMessageResult trySendOrFallback(EnvelopePayloadMessage envelopePayloadMessage,
+                                                            Address address,
+                                                            PubKey receiverPubKey,
+                                                            KeyPair senderKeyPair,
+                                                            NetworkId senderNetworkId,
+                                                            long start,
+                                                            String receiverAddress) throws InterruptedException {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        AtomicBoolean peerDetectedOffline = new AtomicBoolean();
+        AtomicReference<SendConfidentialMessageResult> altResult = new AtomicReference<>();
+
+        checkPeerOnlineAsync(address, senderNetworkId, start, peerDetectedOffline, countDownLatch);
+
+        SendConfidentialMessageResult result;
+        runAsync(() -> {
+            try {
+                Connection connection = nodesById.getConnection(senderNetworkId, address);
+                log.info("Creating connection to {} took {} ms", receiverAddress, System.currentTimeMillis() - start);
+                // We got a valid connection and try to send the message. If send fails we store in mailbox in case envelopePayloadMessage is a MailboxMessage
+                ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
+                try {
+                    nodesById.send(senderNetworkId, confidentialMessage, connection);
+                    log.info("Sent message to {} after {} ms", receiverAddress, System.currentTimeMillis() - start);
+                    SendConfidentialMessageResult sentResult = new SendConfidentialMessageResult(MessageDeliveryStatus.SENT);
+                    altResult.set(sentResult);
+
+                    if (countDownLatch.getCount() == 0) {
+                        log.info("We had detected that the peer is offline, but we succeeded to create a connection and send the message. receiverAddress={}", receiverAddress);
+                    }
+                } catch (Exception exception) {
+                    handleSendFailure(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, altResult, countDownLatch, confidentialMessage, receiverAddress, start);
+                }
+            } catch (Exception exception) {
+                if (!isShutdownInProgress) {
+                    log.info("Creating connection to {} failed. peerDetectedOffline={}", receiverAddress, peerDetectedOffline.get());
+                }
+            }
+            countDownLatch.countDown();
+        }, NETWORK_IO_POOL);
+
+        // The connection timeout is 120 seconds, we add a bit more here as it should never get triggered anyway.
+        boolean notTimedOut = countDownLatch.await(150, TimeUnit.SECONDS);
+        checkArgument(notTimedOut, "Neither isPeerOffline resulted in a true result nor we got a connection created in 150 seconds. receiverAddress=" + receiverAddress);
+
+        if (peerDetectedOffline.get()) {
+            // We got the result that the peer's onion service is not published in the tor network, thus it is likely that the peer is offline.
+            // It could be though the case that the connection creation running in parallel succeeds, and even we continue with sending a mailbox message
+            // the normal message sending succeeded. The peer would then get the message received 2 times, which does not cause harm.
+            // The result we return to the caller though contains the mailbox result. When the peer gets the ACK message the delivery state gets cleaned up.
+            throw new RuntimeException("peerDetectedOffline. receiverAddress=" + receiverAddress);
+        } else if (altResult.get() != null) {
+            // The countDownLatch was triggered by the getConnectionFuture's result.
+            // It can be either sentResult or storeMailBoxMessageResult
+            handleResult(envelopePayloadMessage, altResult.get());
+            return altResult.get();
+        } else {
+            throw new RuntimeException("Could not create connection. receiverAddress=" + receiverAddress);
         }
     }
 
