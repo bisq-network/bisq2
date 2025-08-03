@@ -53,7 +53,6 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static bisq.network.NetworkService.DISPATCHER;
@@ -228,16 +227,17 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                                             String receiverAddress) throws InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
 
-        AtomicBoolean peerDetectedOffline = isPeerDetectedOfflineAsync(address, senderNetworkId, start, countDownLatch);
+        CompletableFuture<Boolean> isPeerOnlineFuture = isPeerOnlineAsync(address, senderNetworkId, start, countDownLatch);
 
         AtomicReference<SendConfidentialMessageResult> result = trySendInParallel(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNetworkId, start,
-                receiverAddress, countDownLatch, peerDetectedOffline);
+                receiverAddress, countDownLatch, isPeerOnlineFuture);
 
         // The connection timeout is 120 seconds, we add a bit more here as it should never get triggered anyway.
         boolean notTimedOut = countDownLatch.await(150, TimeUnit.SECONDS);
         checkArgument(notTimedOut, "Neither isPeerOffline resulted in a true result nor we got a connection created in 150 seconds. receiverAddress=" + receiverAddress);
 
-        if (peerDetectedOffline.get()) {
+        boolean peerDetectedOffline = !isPeerOnlineFuture.isDone() || !isPeerOnlineFuture.join();
+        if (peerDetectedOffline) {
             // We got the result that the peer's onion service is not published in the tor network, thus it is likely that the peer is offline.
             // It could be though the case that the connection creation running in parallel succeeds, and even we continue with sending a mailbox message
             // the normal message sending succeeded. The peer would then get the message received 2 times, which does not cause harm.
@@ -253,12 +253,11 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         }
     }
 
-    private AtomicBoolean isPeerDetectedOfflineAsync(Address address,
-                                                     NetworkId senderNetworkId,
-                                                     long start,
-                                                     CountDownLatch countDownLatch) {
-        AtomicBoolean peerDetectedOffline = new AtomicBoolean();
-        nodesById.isPeerOnlineAsync(senderNetworkId, address)
+    private CompletableFuture<Boolean> isPeerOnlineAsync(Address address,
+                                                         NetworkId senderNetworkId,
+                                                         long start,
+                                                         CountDownLatch countDownLatch) {
+        return nodesById.isPeerOnlineAsync(senderNetworkId, address)
                 .whenComplete((isPeerOnline, throwable) -> {
                     // Can take about 3-5 sec.
                     if (throwable != null) {
@@ -269,7 +268,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                     if (isPeerOnline == null || !isPeerOnline) {
                         log.info("Peer is detected as offline. We store the message as mailbox message. Request for isPeerOnline completed after {} ms",
                                 System.currentTimeMillis() - start);
-                        peerDetectedOffline.set(true);
                         countDownLatch.countDown();
                     } else {
                         log.info("Peer is not detected offline. We wait for the connection creation has been successful and try to send the message. " +
@@ -277,7 +275,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                 System.currentTimeMillis() - start);
                     }
                 });
-        return peerDetectedOffline;
     }
 
     private AtomicReference<SendConfidentialMessageResult> trySendInParallel(EnvelopePayloadMessage envelopePayloadMessage,
@@ -288,7 +285,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                                                              long start,
                                                                              String receiverAddress,
                                                                              CountDownLatch countDownLatch,
-                                                                             AtomicBoolean peerDetectedOffline) {
+                                                                             CompletableFuture<Boolean> isPeerOnlineFuture) {
         AtomicReference<SendConfidentialMessageResult> result = new AtomicReference<>();
         runAsync(() -> {
             try {
@@ -310,7 +307,8 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                 }
             } catch (Exception exception) {
                 if (!isShutdownInProgress) {
-                    log.info("Creating connection to {} failed. peerDetectedOffline={}", receiverAddress, peerDetectedOffline.get());
+                    boolean peerDetectedOffline = !isPeerOnlineFuture.isDone() || !isPeerOnlineFuture.join();
+                    log.info("Creating connection to {} failed. peerDetectedOffline={}", receiverAddress, peerDetectedOffline);
                 }
             } finally {
                 countDownLatch.countDown();
