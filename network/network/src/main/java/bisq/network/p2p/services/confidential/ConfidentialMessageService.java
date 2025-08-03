@@ -214,7 +214,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         if (!node.hasConnection(address)) {
             // We call getConnection to trigger the creation of the connection but ignore
             // the result with potential exceptions (e.g. if peer is offline).
-            nodesById.getConnectionAsync(senderNetworkId, address);
+            nodesById.getOrCreateConnectionAsync(senderNetworkId, address);
             return true;
         }
         return false;

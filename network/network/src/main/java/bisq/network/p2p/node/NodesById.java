@@ -102,12 +102,12 @@ public class NodesById implements Node.Listener {
         return node;
     }
 
-    public Connection getConnection(NetworkId networkId, Address address) {
-        return getOrCreateNode(networkId).getConnection(address);
+    public Connection getOrCreateConnection(NetworkId networkId, Address address) {
+        return getOrCreateNode(networkId).getOrCreateConnection(address);
     }
 
-    public CompletableFuture<Connection> getConnectionAsync(NetworkId networkId, Address address) {
-        return getOrCreateNode(networkId).getConnectionAsync(address);
+    public CompletableFuture<Connection> getOrCreateConnectionAsync(NetworkId networkId, Address address) {
+        return getOrCreateNode(networkId).getOrCreateConnectionAsync(address);
     }
 
     public Connection send(NetworkId senderNetworkId,
