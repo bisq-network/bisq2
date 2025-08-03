@@ -406,6 +406,16 @@ public class Node implements Connection.Handler {
         }
     }
 
+    public Optional<Connection> findConnection(Address address) {
+        if (outboundConnectionsByAddress.containsKey(address)) {
+            return Optional.of(outboundConnectionsByAddress.get(address));
+        } else if (inboundConnectionsByAddress.containsKey(address)) {
+            return Optional.of(inboundConnectionsByAddress.get(address));
+        } else {
+            return Optional.empty();
+        }
+    }
+
 
     /* --------------------------------------------------------------------- */
     // OutboundConnection

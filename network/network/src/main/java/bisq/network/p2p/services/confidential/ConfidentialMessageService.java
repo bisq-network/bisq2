@@ -183,7 +183,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             // In case the connection is not yet created, we send the message as mailbox messsage for
             // faster delivery.
             Optional<Node> node = nodesById.findNode(senderNetworkId);
-            checkArgument(node.isPresent(), "Node is expected to be present if isNodeInitialized was true");
+            checkArgument(node.isPresent(), "Node is expected to be present at that stage");
             if (connectionNotYetCreated(senderNetworkId, address, node.get())) {
                 return storeInMailbox(envelopePayloadMessage,
                         receiverPubKey,
@@ -193,7 +193,9 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         start);
             }
 
-            return trySendOrFallback(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNetworkId, start, receiverAddress);
+            Optional<Connection> connection = node.get().findConnection(address);
+            checkArgument(connection.isPresent(), "Connection is expected to be present at that stage");
+            return trySendOrFallback(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNetworkId, start, receiverAddress, connection.get());
         } catch (Exception exception) {
             return storeInMailbox(envelopePayloadMessage,
                     receiverPubKey,
@@ -224,13 +226,18 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                                             KeyPair senderKeyPair,
                                                             NetworkId senderNetworkId,
                                                             long start,
-                                                            String receiverAddress) throws InterruptedException {
+                                                            String receiverAddress,
+                                                            Connection connection) throws InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
 
         CompletableFuture<Boolean> isPeerOnlineFuture = isPeerOnlineAsync(address, senderNetworkId, start, countDownLatch);
 
         CompletableFuture<Optional<SendConfidentialMessageResult>> resultFuture = trySendInParallel(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNetworkId, start,
-                receiverAddress, countDownLatch, isPeerOnlineFuture);
+                receiverAddress, countDownLatch, isPeerOnlineFuture, connection);
+
+       /* CompletableFuture.anyOf(isPeerOnlineFuture, resultFuture)
+                .orTimeout(150, TimeUnit.SECONDS)
+                .join();*/
 
         // The connection timeout is 120 seconds, we add a bit more here as it should never get triggered anyway.
         boolean notTimedOut = countDownLatch.await(150, TimeUnit.SECONDS);
@@ -286,24 +293,24 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                                                                          long start,
                                                                                          String receiverAddress,
                                                                                          CountDownLatch countDownLatch,
-                                                                                         CompletableFuture<Boolean> isPeerOnlineFuture) {
+                                                                                         CompletableFuture<Boolean> isPeerOnlineFuture,
+                                                                                         Connection connection) {
         return supplyAsync(() -> {
             try {
-                Connection connection = nodesById.getConnection(senderNetworkId, address);
-                log.info("Creating connection to {} took {} ms", receiverAddress, System.currentTimeMillis() - start);
-                // We got a valid connection and try to send the message. If send fails we store in mailbox in case envelopePayloadMessage is a MailboxMessage
+                // getConfidentialMessage use encryptAndSign thus it might take a bit
                 ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
                 try {
                     nodesById.send(senderNetworkId, confidentialMessage, connection);
                     log.info("Sent message to {} after {} ms", receiverAddress, System.currentTimeMillis() - start);
                     SendConfidentialMessageResult sentResult = new SendConfidentialMessageResult(MessageDeliveryStatus.SENT);
-
+                    boolean peerDetectedOffline = !isPeerOnlineFuture.isDone() || !isPeerOnlineFuture.join();
+                    // if (peerDetectedOffline) {
                     if (countDownLatch.getCount() == 0) {
                         log.info("We had detected that the peer is offline, but we succeeded to create a connection and send the message. receiverAddress={}", receiverAddress);
                     }
                     return Optional.of(sentResult);
                 } catch (Exception exception) {
-                    return handleSendFailure(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, countDownLatch, confidentialMessage, receiverAddress, start);
+                    return handleSendFailure(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, countDownLatch, isPeerOnlineFuture, confidentialMessage, receiverAddress, start);
                 }
             } catch (Exception exception) {
                 if (!isShutdownInProgress) {
@@ -323,6 +330,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                                                       KeyPair senderKeyPair,
                                                                       Exception exception,
                                                                       CountDownLatch countDownLatch,
+                                                                      CompletableFuture<Boolean> isPeerOnlineFuture,
                                                                       ConfidentialMessage confidentialMessage,
                                                                       String receiverAddress,
                                                                       long start) {
@@ -330,6 +338,8 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             // We have stored in mailbox when shutdown started. The pending message can be ignored.
             return Optional.of(new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED));
         }
+        boolean peerMaybeOnline = !isPeerOnlineFuture.isDone() || isPeerOnlineFuture.join();
+        //if (peerMaybeOnline) {
         if (countDownLatch.getCount() == 1) {
             SendConfidentialMessageResult fallbackResult = storeInMailbox(envelopePayloadMessage,
                     receiverPubKey,
