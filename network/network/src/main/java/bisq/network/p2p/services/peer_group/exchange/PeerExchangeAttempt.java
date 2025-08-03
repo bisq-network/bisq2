@@ -20,7 +20,6 @@ package bisq.network.p2p.services.peer_group.exchange;
 import bisq.common.network.Address;
 import bisq.common.observable.Observable;
 import bisq.common.util.ExceptionUtil;
-import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peer_group.Peer;
 import com.google.common.base.Joiner;
@@ -37,9 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 @Getter
@@ -155,36 +152,32 @@ public class PeerExchangeAttempt {
     }
 
     private CompletableFuture<Void> doPeerExchangeAsync(Address peerAddress) {
-        return supplyAsync(() -> {
-            String connectionId = null;
-            try {
-                Connection connection = node.getOrCreateConnection(peerAddress);
-                connectionId = connection.getId();
-                checkArgument(!requestHandlerMap.containsKey(connectionId), "We have a pending request for that connection");
+        return node.getOrCreateConnectionAsync(peerAddress)
+                .thenAccept(connection -> {
+                    String connectionId = connection.getId();
+                    try {
+                        checkArgument(!requestHandlerMap.containsKey(connectionId), "We have a pending request for that connection");
 
-                PeerExchangeRequestHandler handler = new PeerExchangeRequestHandler(node, connection);
-                requestHandlerMap.put(connectionId, handler);
-                Set<Peer> myPeers = peerExchangeStrategy.getPeersForReporting(peerAddress);
+                        PeerExchangeRequestHandler handler = new PeerExchangeRequestHandler(node, connection);
+                        requestHandlerMap.put(connectionId, handler);
+                        Set<Peer> myPeers = peerExchangeStrategy.getPeersForReporting(peerAddress);
 
-                // We request and wait blocking for response
-                Set<Peer> reportedPeers = handler.request(myPeers).join();
-                log.info("Completed peer exchange with {} and received {} reportedPeers. At instance: {}", peerAddress, reportedPeers.size(), this);
-                peerExchangeStrategy.addReportedPeers(reportedPeers, peerAddress);
-                requestHandlerMap.remove(connectionId);
-                return null;
-            } catch (Exception exception) {
-                if (!isShutdownInProgress.get()) {
-                    log.warn("Peer exchange with {} failed. {}. At instance: {}", peerAddress, ExceptionUtil.getRootCauseMessage(exception), this);
-                }
-                if (connectionId != null) {
-                    if (requestHandlerMap.containsKey(connectionId)) {
-                        requestHandlerMap.get(connectionId).dispose();
+                        // We request and wait blocking for response
+                        Set<Peer> reportedPeers = handler.request(myPeers).join();
+                        log.info("Completed peer exchange with {} and received {} reportedPeers. At instance: {}", peerAddress, reportedPeers.size(), this);
+                        peerExchangeStrategy.addReportedPeers(reportedPeers, peerAddress);
                         requestHandlerMap.remove(connectionId);
+                    } catch (Exception exception) {
+                        if (!isShutdownInProgress.get()) {
+                            log.warn("Peer exchange with {} failed. {}. At instance: {}", peerAddress, ExceptionUtil.getRootCauseMessage(exception), this);
+                        }
+                        if (requestHandlerMap.containsKey(connectionId)) {
+                            requestHandlerMap.get(connectionId).dispose();
+                            requestHandlerMap.remove(connectionId);
+                        }
+                        throw exception;
                     }
-                }
-                throw exception;
-            }
-        }, NETWORK_IO_POOL); //todo use new pool
+                });
     }
 
     @Override
