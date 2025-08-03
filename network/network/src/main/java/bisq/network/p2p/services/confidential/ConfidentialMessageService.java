@@ -197,25 +197,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             CountDownLatch countDownLatch = new CountDownLatch(1);
             AtomicBoolean peerDetectedOffline = new AtomicBoolean();
 
-            // Takes about 3-5 sec.
-            nodesById.isPeerOnlineAsync(senderNetworkId, address)
-                    .whenComplete((isPeerOnline, throwable) -> {
-                        if (throwable != null) {
-                            log.error("Requesting online status of peer failed", throwable);
-                            return;
-                        }
-
-                        if (isPeerOnline == null && !isPeerOnline) {
-                            log.info("Peer is detected as offline. We store the message as mailbox message. Request for isPeerOnline completed after {} ms",
-                                    System.currentTimeMillis() - start);
-                            peerDetectedOffline.set(true);
-                            countDownLatch.countDown();
-                        } else {
-                            log.info("Peer is not detected offline. We wait for the connection creation has been successful and try to send the message. " +
-                                            "Request for isPeerOnline completed after {} ms",
-                                    System.currentTimeMillis() - start);
-                        }
-                    });
+            checkPeerOnlineAsync(address, senderNetworkId, start, peerDetectedOffline, countDownLatch);
 
             AtomicReference<SendConfidentialMessageResult> altResult = new AtomicReference<>();
             runAsync(() -> {
@@ -271,6 +253,32 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                     receiverAddress,
                     start);
         }
+    }
+
+    private void checkPeerOnlineAsync(Address address,
+                                      NetworkId senderNetworkId,
+                                      long start,
+                                      AtomicBoolean peerDetectedOffline,
+                                      CountDownLatch countDownLatch) {
+        nodesById.isPeerOnlineAsync(senderNetworkId, address)
+                .whenComplete((isPeerOnline, throwable) -> {
+                    // Can take about 3-5 sec.
+                    if (throwable != null) {
+                        log.error("Requesting online status of peer failed", throwable);
+                        return;
+                    }
+
+                    if (isPeerOnline == null || !isPeerOnline) {
+                        log.info("Peer is detected as offline. We store the message as mailbox message. Request for isPeerOnline completed after {} ms",
+                                System.currentTimeMillis() - start);
+                        peerDetectedOffline.set(true);
+                        countDownLatch.countDown();
+                    } else {
+                        log.info("Peer is not detected offline. We wait for the connection creation has been successful and try to send the message. " +
+                                        "Request for isPeerOnline completed after {} ms",
+                                System.currentTimeMillis() - start);
+                    }
+                });
     }
 
 
