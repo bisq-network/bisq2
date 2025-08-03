@@ -209,9 +209,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                             log.info("Peer is detected as offline. We store the message as mailbox message. Request for isPeerOnline completed after {} ms",
                                     System.currentTimeMillis() - start);
                             peerDetectedOffline.set(true);
-                            if (countDownLatch.getCount() > 0) {
-                                countDownLatch.countDown();
-                            }
+                            countDownLatch.countDown();
                         } else {
                             log.info("Peer is not detected offline. We wait for the connection creation has been successful and try to send the message. " +
                                             "Request for isPeerOnline completed after {} ms",
@@ -258,9 +256,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         log.info("Creating connection to {} failed. peerDetectedOffline={}", receiverAddress, peerDetectedOffline.get());
                     }
                 }
-                if (countDownLatch.getCount() > 0) {
-                    countDownLatch.countDown();
-                }
+                countDownLatch.countDown();
             }, NETWORK_IO_POOL);
 
             // The connection timeout is 120 seconds, we add a bit more here as it should never get triggered anyway.
