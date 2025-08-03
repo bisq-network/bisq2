@@ -205,6 +205,20 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         }
     }
 
+    private boolean nodeNotInitialized(NetworkId senderNetworkId) {
+        return !nodesById.isNodeInitialized(senderNetworkId);
+    }
+
+    private boolean connectionNotYetCreated(NetworkId senderNetworkId, Address address, Node node) {
+        if (!node.hasConnection(address)) {
+            // We call getConnection to trigger the creation of the connection but ignore
+            // the result with potential exceptions (e.g. if peer is offline).
+            nodesById.getConnectionAsync(senderNetworkId, address);
+            return true;
+        }
+        return false;
+    }
+
     private SendConfidentialMessageResult trySendOrFallback(EnvelopePayloadMessage envelopePayloadMessage,
                                                             Address address,
                                                             PubKey receiverPubKey,
@@ -213,9 +227,8 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                                             long start,
                                                             String receiverAddress) throws InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
-        AtomicBoolean peerDetectedOffline = new AtomicBoolean();
 
-        checkPeerOnlineAsync(address, senderNetworkId, start, peerDetectedOffline, countDownLatch);
+        AtomicBoolean peerDetectedOffline = isPeerDetectedOfflineAsync(address, senderNetworkId, start, countDownLatch);
 
         AtomicReference<SendConfidentialMessageResult> result = trySendInParallel(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNetworkId, start,
                 receiverAddress, countDownLatch, peerDetectedOffline);
@@ -238,6 +251,33 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         } else {
             throw new RuntimeException("Could not create connection. receiverAddress=" + receiverAddress);
         }
+    }
+
+    private AtomicBoolean isPeerDetectedOfflineAsync(Address address,
+                                                     NetworkId senderNetworkId,
+                                                     long start,
+                                                     CountDownLatch countDownLatch) {
+        AtomicBoolean peerDetectedOffline = new AtomicBoolean();
+        nodesById.isPeerOnlineAsync(senderNetworkId, address)
+                .whenComplete((isPeerOnline, throwable) -> {
+                    // Can take about 3-5 sec.
+                    if (throwable != null) {
+                        log.error("Requesting online status of peer failed", throwable);
+                        return;
+                    }
+
+                    if (isPeerOnline == null || !isPeerOnline) {
+                        log.info("Peer is detected as offline. We store the message as mailbox message. Request for isPeerOnline completed after {} ms",
+                                System.currentTimeMillis() - start);
+                        peerDetectedOffline.set(true);
+                        countDownLatch.countDown();
+                    } else {
+                        log.info("Peer is not detected offline. We wait for the connection creation has been successful and try to send the message. " +
+                                        "Request for isPeerOnline completed after {} ms",
+                                System.currentTimeMillis() - start);
+                    }
+                });
+        return peerDetectedOffline;
     }
 
     private AtomicReference<SendConfidentialMessageResult> trySendInParallel(EnvelopePayloadMessage envelopePayloadMessage,
@@ -272,52 +312,13 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                 if (!isShutdownInProgress) {
                     log.info("Creating connection to {} failed. peerDetectedOffline={}", receiverAddress, peerDetectedOffline.get());
                 }
+            } finally {
+                countDownLatch.countDown();
             }
-            countDownLatch.countDown();
         }, NETWORK_IO_POOL);
         return result;
     }
 
-    private void checkPeerOnlineAsync(Address address,
-                                      NetworkId senderNetworkId,
-                                      long start,
-                                      AtomicBoolean peerDetectedOffline,
-                                      CountDownLatch countDownLatch) {
-        nodesById.isPeerOnlineAsync(senderNetworkId, address)
-                .whenComplete((isPeerOnline, throwable) -> {
-                    // Can take about 3-5 sec.
-                    if (throwable != null) {
-                        log.error("Requesting online status of peer failed", throwable);
-                        return;
-                    }
-
-                    if (isPeerOnline == null || !isPeerOnline) {
-                        log.info("Peer is detected as offline. We store the message as mailbox message. Request for isPeerOnline completed after {} ms",
-                                System.currentTimeMillis() - start);
-                        peerDetectedOffline.set(true);
-                        countDownLatch.countDown();
-                    } else {
-                        log.info("Peer is not detected offline. We wait for the connection creation has been successful and try to send the message. " +
-                                        "Request for isPeerOnline completed after {} ms",
-                                System.currentTimeMillis() - start);
-                    }
-                });
-    }
-
-
-    private boolean nodeNotInitialized(NetworkId senderNetworkId) {
-        return !nodesById.isNodeInitialized(senderNetworkId);
-    }
-
-    private boolean connectionNotYetCreated(NetworkId senderNetworkId, Address address, Node node) {
-        if (!node.hasConnection(address)) {
-            // We call getConnection to trigger the creation of the connection but ignore
-            // the result with potential exceptions (e.g. if peer is offline).
-            nodesById.getConnectionAsync(senderNetworkId, address);
-            return true;
-        }
-        return false;
-    }
 
     private void handleSendFailure(EnvelopePayloadMessage envelopePayloadMessage,
                                    PubKey receiverPubKey,
