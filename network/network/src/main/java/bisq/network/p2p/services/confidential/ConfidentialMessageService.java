@@ -232,14 +232,18 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
 
         CompletableFuture<Boolean> isPeerOnlineFuture = isPeerOnlineAsync(address, senderNetworkId, start);
 
-        isPeerOnlineFuture.whenComplete((isPeerOnline, t) -> {
+        isPeerOnlineFuture.whenComplete((isPeerOnline, throwable) -> {
             if (isPeerOnline == null || !isPeerOnline) {
                 countDownLatch.countDown();
             }
         });
 
         CompletableFuture<Optional<SendConfidentialMessageResult>> resultFuture = trySendInParallel(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNetworkId, start,
-                receiverAddress, countDownLatch, isPeerOnlineFuture, connection);
+                receiverAddress, isPeerOnlineFuture, connection);
+
+        resultFuture.whenComplete((result, throwable) -> {
+            countDownLatch.countDown();
+        });
 
        /* CompletableFuture.anyOf(isPeerOnlineFuture, resultFuture)
                 .orTimeout(150, TimeUnit.SECONDS)
@@ -296,7 +300,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                                                                          NetworkId senderNetworkId,
                                                                                          long start,
                                                                                          String receiverAddress,
-                                                                                         CountDownLatch countDownLatch,
                                                                                          CompletableFuture<Boolean> isPeerOnlineFuture,
                                                                                          Connection connection) {
         return supplyAsync(() -> {
@@ -321,8 +324,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                     log.info("Creating connection to {} failed. peerDetectedOffline={}", receiverAddress, peerDetectedOffline);
                 }
                 return Optional.empty();
-            } finally {
-                countDownLatch.countDown();
             }
         }, NETWORK_IO_POOL);
     }
