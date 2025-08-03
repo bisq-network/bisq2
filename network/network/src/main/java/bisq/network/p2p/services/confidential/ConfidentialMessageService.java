@@ -307,9 +307,8 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                     nodesById.send(senderNetworkId, confidentialMessage, connection);
                     log.info("Sent message to {} after {} ms", receiverAddress, System.currentTimeMillis() - start);
                     SendConfidentialMessageResult sentResult = new SendConfidentialMessageResult(MessageDeliveryStatus.SENT);
-                    boolean peerDetectedOffline = !isPeerOnlineFuture.isDone() || !isPeerOnlineFuture.join();
-                    // if (peerDetectedOffline) {
-                    if (countDownLatch.getCount() == 0) {
+                    boolean detectedOffLine = isPeerOnlineFuture.isDone() && (isPeerOnlineFuture.join() == null || !isPeerOnlineFuture.join());
+                    if (detectedOffLine) {
                         log.info("We had detected that the peer is offline, but we succeeded to create a connection and send the message. receiverAddress={}", receiverAddress);
                     }
                     return Optional.of(sentResult);
@@ -341,7 +340,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             // We have stored in mailbox when shutdown started. The pending message can be ignored.
             return Optional.of(new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED));
         }
-        boolean detectedOffLine = isPeerOnlineFuture.isDone() && isPeerOnlineFuture.join() == null || !isPeerOnlineFuture.join();
+        boolean detectedOffLine = isPeerOnlineFuture.isDone() && (isPeerOnlineFuture.join() == null || !isPeerOnlineFuture.join());
         if (detectedOffLine) {
             log.info("We had detected that the peer is offline, but we succeeded to create a connection but failed sending the message. " +
                     "As we already stored the message to mailbox from the offline detection we ignore that case. receiverAddress={}", receiverAddress);
