@@ -56,7 +56,7 @@ public final class Server {
                     log.debug("Accepted new connection on server: {}", serverSocketResult);
                     if (isNotStopped()) {
                         // Call handler on new thread
-                        NetworkExecutors.getNotifyExecutor().submit(() -> socketHandler.accept(socket));
+                        NetworkExecutors.getSendExecutor().submit(() -> socketHandler.accept(socket));
                     }
                 }
             } catch (IOException e) {

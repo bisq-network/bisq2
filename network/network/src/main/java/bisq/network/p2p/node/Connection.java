@@ -168,7 +168,7 @@ public abstract class Connection {
                                 networkEnvelope.getAuthorizationToken(),
                                 this);
                         if (isMessageAuthorized) {
-                            NetworkExecutors.getNotifyExecutor().submit(() -> handler.handleNetworkMessage(envelopePayloadMessage, this));
+                            NetworkExecutors.getSendExecutor().submit(() -> handler.handleNetworkMessage(envelopePayloadMessage, this));
                             listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onNetworkMessage(envelopePayloadMessage)));
                         }
                     }
@@ -304,7 +304,7 @@ public abstract class Connection {
             networkEnvelopeSocket.close();
         } catch (IOException ignore) {
         }
-        NetworkExecutors.getNotifyExecutor().submit(() -> handler.handleConnectionClosed(this, closeReason));
+        NetworkExecutors.getSendExecutor().submit(() -> handler.handleConnectionClosed(this, closeReason));
         listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnectionClosed(closeReason)));
         listeners.clear();
     }

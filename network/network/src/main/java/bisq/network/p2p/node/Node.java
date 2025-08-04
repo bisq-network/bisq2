@@ -63,7 +63,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
-
 import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
 import static bisq.network.p2p.node.ConnectionException.Reason.HANDSHAKE_FAILED;
 import static bisq.network.p2p.node.Node.State.STARTING;
@@ -283,6 +282,9 @@ public class Node implements Connection.Handler {
                 log.warn("Have already an InboundConnection from {}. This can happen when a " +
                         "handshake was in progress while we received a new connection from that address. " +
                         "We will close the socket of that new connection and use the existing instead.", address);
+
+                // TODO maybe better
+                // inboundConnectionsByAddress.get(address).shutdown(CloseReason.DUPLICATE_CONNECTION);
                 try {
                     socket.close();
                 } catch (IOException ignore) {
@@ -614,8 +616,7 @@ public class Node implements Connection.Handler {
     }
 
     CompletableFuture<Boolean> isPeerOnlineAsync(Address address) {
-        // TODO is NetworkNodeExecutor the best choice here?
-        return CompletableFuture.supplyAsync(() -> isPeerOnline(address), NetworkExecutors.getNodeExecutor());
+        return CompletableFuture.supplyAsync(() -> isPeerOnline(address), NetworkExecutors.getSendExecutor());
     }
 
     boolean isPeerOnline(Address address) {
