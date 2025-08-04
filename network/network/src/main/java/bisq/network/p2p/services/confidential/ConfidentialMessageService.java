@@ -55,8 +55,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static bisq.network.NetworkService.DISPATCHER;
-import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
@@ -498,14 +496,10 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             if (wasNotPresent) {
                 PublicKey senderPublicKey = KeyGeneration.generatePublic(confidentialData.getSenderPublicKey());
                 log.info("Decrypted confidentialMessage. decryptedEnvelopePayloadMessage={}", decryptedEnvelopePayloadMessage.getClass().getSimpleName());
-                runAsync(() -> listeners.forEach(listener -> {
-                    try {
-                        listener.onMessage(decryptedEnvelopePayloadMessage);
-                        listener.onConfidentialMessage(decryptedEnvelopePayloadMessage, senderPublicKey);
-                    } catch (Exception e) {
-                        log.error("Calling onMessage(decryptedEnvelopePayloadMessage, senderPublicKey) at messageListener {} failed", listener, e);
-                    }
-                }), DISPATCHER);
+                listeners.forEach(listener -> {
+                    NetworkExecutors.getNotifyExecutor().submit(() -> listener.onMessage(decryptedEnvelopePayloadMessage));
+                    NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConfidentialMessage(decryptedEnvelopePayloadMessage, senderPublicKey));
+                });
             }
             return true;
         } catch (Exception e) {

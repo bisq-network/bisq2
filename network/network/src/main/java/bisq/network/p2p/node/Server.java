@@ -47,7 +47,7 @@ public final class Server {
         serverSocket = serverSocketResult.getServerSocket();
         address = serverSocketResult.getAddress();
         log.debug("Create server: {}", serverSocketResult);
-        executor = ExecutorFactory.newSingleThreadExecutor("Server.listen-" + StringUtils.truncate(serverSocketResult.getAddress(), 8));
+        executor = ExecutorFactory.newSingleThreadExecutor("Server.listen-" + StringUtils.truncate(serverSocketResult.getAddress(), 16));
         executor.submit(() -> {
             try {
                 while (isNotStopped()) {
@@ -56,7 +56,7 @@ public final class Server {
                     log.debug("Accepted new connection on server: {}", serverSocketResult);
                     if (isNotStopped()) {
                         // Call handler on new thread
-                        NetworkExecutors.getNodeExecutor().submit(() -> socketHandler.accept(socket));
+                        NetworkExecutors.getNotifyExecutor().submit(() -> socketHandler.accept(socket));
                     }
                 }
             } catch (IOException e) {

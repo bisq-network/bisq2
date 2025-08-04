@@ -21,7 +21,7 @@ import bisq.common.network.Address;
 import bisq.common.observable.Observable;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
-import bisq.network.NetworkService;
+import bisq.network.NetworkExecutors;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -48,7 +48,6 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -423,13 +422,7 @@ public class PeerGroupManager implements Node.Listener {
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
         log.info("New state {}", newState);
-        runAsync(() -> listeners.forEach(listener -> { // Runs in ForkJoinPool.commonPool thread
-            try {
-                listener.onStateChanged(newState);
-            } catch (Exception e) {
-                log.error("Calling onStateChanged at listener {} failed", listener, e);
-            }
-        }), NetworkService.DISPATCHER);
+        listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onStateChanged(newState)));
     }
 
 

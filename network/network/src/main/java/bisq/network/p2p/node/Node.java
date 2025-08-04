@@ -63,7 +63,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
-import static bisq.network.NetworkService.DISPATCHER;
+
 import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
 import static bisq.network.p2p.node.ConnectionException.Reason.HANDSHAKE_FAILED;
 import static bisq.network.p2p.node.Node.State.STARTING;
@@ -301,13 +301,7 @@ public class Node implements Connection.Handler {
                     this,
                     this::handleException);
             inboundConnectionsByAddress.put(connection.getPeerAddress(), connection);
-            DISPATCHER.submit(() -> listeners.forEach(listener -> { // Runs in NetworkNode thread
-                try {
-                    listener.onConnection(connection);
-                } catch (Exception e) {
-                    log.error("Calling onConnection at listener {} failed", listener, e);
-                }
-            }));
+            listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnection(connection)));
         } catch (Throwable throwable) {
             try {
                 socket.close();
@@ -528,14 +522,7 @@ public class Node implements Connection.Handler {
             outboundConnectionsByAddress.put(address, connection);
 
             OutboundConnection finalConnection = connection;
-            DISPATCHER.submit(() -> listeners.forEach(listener -> { // Runs in Network.send thread
-                try {
-                    listener.onConnection(finalConnection);
-                } catch (Exception e) {
-                    log.error("Calling onConnection at listener {} failed", listener, e);
-                }
-            }));
-
+            listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnection(finalConnection)));
             return connection;
         } catch (Exception exception) {
             log.error("Creating outbound connection failed", exception);

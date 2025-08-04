@@ -19,7 +19,7 @@ package bisq.network.p2p.node;
 
 import bisq.common.network.Address;
 import bisq.common.util.StringUtils;
-import bisq.network.NetworkService;
+import bisq.network.NetworkExecutors;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
@@ -144,16 +144,8 @@ public abstract class ConnectionChannel {
             networkEnvelopeSocketChannel.close();
         } catch (IOException ignore) {
         }
-        NetworkService.DISPATCHER.submit(() -> {
-            listeners.forEach(listener -> {
-                try {
-                    listener.onConnectionClosed(closeReason);
-                } catch (Exception e) {
-                    log.error("Calling onConnectionClosed at listener {} failed", listener, e);
-                }
-            });
-            listeners.clear();
-        });
+        listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnectionClosed(closeReason)));
+        listeners.clear();
     }
 
     void notifyListeners(EnvelopePayloadMessage envelopePayloadMessage) {
