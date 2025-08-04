@@ -48,6 +48,7 @@ public class NetworkExecutors {
         sendExecutor = createSendExecutor();
         nodeExecutor = createNodeExecutor();
         notifyExecutor = createNotifyExecutor();
+
         isInitialized = true;
     }
 
@@ -72,10 +73,10 @@ public class NetworkExecutors {
      * @return
      */
     private static ThreadPoolExecutor createNodeExecutor() {
-        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(10);
+        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(100);
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 1,
-                10,
+                20,
                 10,
                 TimeUnit.SECONDS,
                 queue,
@@ -89,9 +90,9 @@ public class NetworkExecutors {
     private static ThreadPoolExecutor createNotifyExecutor() {
         MaxSizeAwareQueue queue = new MaxSizeAwareQueue(1000);
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
-                2,
+                1,
                 4,
-                10,
+                30,
                 TimeUnit.SECONDS,
                 queue,
                 ExecutorFactory.getThreadFactoryWithCounter("Network.notify"),
@@ -109,10 +110,10 @@ public class NetworkExecutors {
      * This executor must only be used for direct network read operations, which happen in Connection and ConnectionHandshake.
      */
     private static ThreadPoolExecutor createReadExecutor() {
-        MaxSizeAwareDeque deque = new MaxSizeAwareDeque(20);
+        MaxSizeAwareDeque deque = new MaxSizeAwareDeque(100);
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 12,
-                40,
+                30,
                 30,
                 TimeUnit.SECONDS,
                 deque,
@@ -141,7 +142,7 @@ public class NetworkExecutors {
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 9,
                 20,
-                10,
+                30,
                 TimeUnit.SECONDS,
                 queue,
                 ExecutorFactory.getThreadFactoryWithCounter("Network.send"),
