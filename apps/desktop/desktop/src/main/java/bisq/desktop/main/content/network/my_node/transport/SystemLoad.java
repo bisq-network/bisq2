@@ -142,7 +142,7 @@ public class SystemLoad {
             pow.getStyleClass().add("network-details-view");
             pow.setPadding(new Insets(10));
             pow.setAlignment(Pos.TOP_LEFT);
-            pow.setPrefWidth(4000);
+            pow.setMaxWidth(Double.MAX_VALUE);
 
             Label systemLoadHeadline = new Label(Res.get("network.transport.systemLoad.headline"));
             systemLoadHeadline.getStyleClass().add("rich-table-headline");
@@ -151,7 +151,7 @@ public class SystemLoad {
             systemLoad.getStyleClass().add("network-details-view");
             systemLoad.setPadding(new Insets(10));
             systemLoad.setAlignment(Pos.TOP_LEFT);
-            systemLoad.setPrefWidth(4000);
+            systemLoad.setMaxWidth(Double.MAX_VALUE);
 
             VBox.setMargin(systemLoadHeadline, new Insets(15, 0, 0, 0));
             root.getChildren().addAll(powHeadline, pow, systemLoadHeadline, systemLoad);

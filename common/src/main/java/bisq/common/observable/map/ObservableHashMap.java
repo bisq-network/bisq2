@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Function;
 
 /**
  * A thread-safe observable map based on {@link java.util.concurrent.ConcurrentHashMap}.
@@ -146,6 +147,15 @@ public class ObservableHashMap<K, V> implements Map<K, V>, ReadOnlyObservableMap
     @Override
     public Set<Entry<K, V>> entrySet() {
         return map.entrySet();
+    }
+
+    @Override
+    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+        return map.computeIfAbsent(key, k -> {
+            V value = mappingFunction.apply(k);
+            observers.forEach(observer -> observer.put(k, value));
+            return value;
+        });
     }
 
     @Override

@@ -23,6 +23,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -147,6 +148,12 @@ public class Scheduler implements TaskScheduler {
     public void stop() {
         stopped = true;
         executor.ifPresent(ExecutorFactory::shutdownAndAwaitTermination);
+        executor = Optional.empty();
+    }
+
+    public void shutdownNow() {
+        stopped = true;
+        executor.ifPresent(ExecutorService::shutdownNow);
         executor = Optional.empty();
     }
 }

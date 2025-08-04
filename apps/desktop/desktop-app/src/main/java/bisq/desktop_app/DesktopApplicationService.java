@@ -252,7 +252,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 alertNotificationsService,
                 favouriteMarketsService,
                 dontShowAgainService,
-                webcamAppService);
+                webcamAppService,
+                memoryReportService);
 
         openTradeItemsService = new OpenTradeItemsService(chatService, tradeService, userService);
 

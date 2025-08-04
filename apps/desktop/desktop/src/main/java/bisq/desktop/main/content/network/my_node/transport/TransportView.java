@@ -32,7 +32,8 @@ public class TransportView extends View<VBox, TransportModel, TransportControlle
                          TransportController controller,
                          Pane traffic,
                          Pane systemLoad,
-                         Pane connectionAndNodes) {
+                         Pane connectionAndNodes,
+                         Pane numThreadStatistics) {
         super(new VBox(25), model, controller);
 
         Label headline = SettingsViewUtils.getHeadline(Res.get("network.transport.headline." + model.getTransportType().name()));
@@ -46,7 +47,8 @@ public class TransportView extends View<VBox, TransportModel, TransportControlle
                 myAddress,
                 connectionAndNodes,
                 traffic,
-                systemLoad);
+                systemLoad,
+                numThreadStatistics);
     }
 
     @Override
