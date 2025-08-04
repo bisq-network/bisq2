@@ -79,7 +79,7 @@ public class NetworkExecutors {
                 10,
                 TimeUnit.SECONDS,
                 queue,
-                ExecutorFactory.getThreadFactory("Network.node"),
+                ExecutorFactory.getThreadFactoryWithCounter("Network.node"),
                 new DiscardOldestPolicy());
         queue.setExecutor(executor);
         return executor;
@@ -94,11 +94,13 @@ public class NetworkExecutors {
                 10,
                 TimeUnit.SECONDS,
                 queue,
-                ExecutorFactory.getThreadFactory("Network.notify"),
+                ExecutorFactory.getThreadFactoryWithCounter("Network.notify"),
                 new CallerRunsPolicyWithLogging());
         queue.setExecutor(executor);
         return executor;
     }
+
+
     /**
      * We keep a core pool size of 12 which reflects the target peer group.
      * We allow up to 40 threads which a keepAlive time of 30 seconds for the threads outside the core pool size.
@@ -114,11 +116,12 @@ public class NetworkExecutors {
                 30,
                 TimeUnit.SECONDS,
                 deque,
-                ExecutorFactory.getThreadFactory("Network.read"),
+                ExecutorFactory.getThreadFactoryWithCounter("Network.read"),
                 new DiscardNewestPolicy());
         deque.setExecutor(executor);
         return executor;
     }
+
 
     /**
      * The core pool size is aligned to the broadcasters peer group size of 75% of the peer group (target 12),
@@ -141,7 +144,7 @@ public class NetworkExecutors {
                 10,
                 TimeUnit.SECONDS,
                 queue,
-                ExecutorFactory.getThreadFactory("Network.send"),
+                ExecutorFactory.getThreadFactoryWithCounter("Network.send"),
                 new CallerRunsPolicyWithLogging());
         queue.setExecutor(executor);
         return executor;
