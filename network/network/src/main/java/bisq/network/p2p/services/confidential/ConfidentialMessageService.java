@@ -59,7 +59,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class ConfidentialMessageService implements Node.Listener, DataService.Listener {
-    private static final ExecutorService EXECUTOR = ExecutorFactory.newFixedThreadPool("ConfidentialMessageService");
+    private static final ExecutorService EXECUTOR = ExecutorFactory.newSingleThreadExecutor("ConfidentialMessageService");
 
     public interface Listener {
         void onMessage(EnvelopePayloadMessage envelopePayloadMessage);
