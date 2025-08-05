@@ -35,12 +35,14 @@ import javax.annotation.Nullable;
 import java.lang.management.ManagementFactory;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class JvmMemoryReportService implements MemoryReportService {
@@ -119,12 +121,22 @@ public class JvmMemoryReportService implements MemoryReportService {
             }
         });
         long now = System.currentTimeMillis();
-        long cutOffDate = now - MAX_AGE_NUM_POOL_THREADS;
         numPoolThreadsByThreadName.forEach((poolName, numThreads) -> {
             ObservableHashMap<Long, AtomicInteger> history = historicalNumThreadsByThreadName.computeIfAbsent(poolName, k -> new ObservableHashMap<>());
             history.put(now, numThreads);
-            history.entrySet().removeIf(entry -> entry.getKey() < cutOffDate);
         });
+
+        long cutOffDate = now - MAX_AGE_NUM_POOL_THREADS;
+        Set<String> poolNamesToRemove = new HashSet<>();
+        historicalNumThreadsByThreadName.forEach((key, history) -> {
+            Set<Long> timeStampsToRemove = history.keySet().stream().filter(timeStamp -> timeStamp <= cutOffDate).collect(Collectors.toSet());
+            timeStampsToRemove.forEach(history::remove);
+
+            if (history.isEmpty()) {
+                poolNamesToRemove.add(key);
+            }
+        });
+        poolNamesToRemove.forEach(historicalNumThreadsByThreadName::remove);
 
         /*log.debug("historicalNumThreadsByThreadName " + historicalNumThreadsByThreadName.entrySet().stream()
                 .filter(e -> e.getKey().equals("Network.notify"))

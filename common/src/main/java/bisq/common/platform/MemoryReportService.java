@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public interface MemoryReportService extends Service {
-    int NUM_POOL_THREADS_UPDATE_INTERVAL_SEC = 1;
+    int NUM_POOL_THREADS_UPDATE_INTERVAL_SEC = 10;
     long MAX_AGE_NUM_POOL_THREADS = TimeUnit.HOURS.toMillis(1); // We want the keep data for the past hour
 
     void logReport();
