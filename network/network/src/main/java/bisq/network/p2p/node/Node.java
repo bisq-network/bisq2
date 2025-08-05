@@ -281,15 +281,8 @@ public class Node implements Connection.Handler {
             if (inboundConnectionsByAddress.containsKey(address)) {
                 log.warn("Have already an InboundConnection from {}. This can happen when a " +
                         "handshake was in progress while we received a new connection from that address. " +
-                        "We will close the socket of that new connection and use the existing instead.", address);
-
-                // TODO maybe better
-                // inboundConnectionsByAddress.get(address).shutdown(CloseReason.DUPLICATE_CONNECTION);
-                try {
-                    socket.close();
-                } catch (IOException ignore) {
-                }
-                return;
+                        "We close the existing connection (instead of closing the new socket) as the existing connection might be a stale connection.", address);
+                inboundConnectionsByAddress.get(address).shutdown(CloseReason.MAYBE_STALE_CONNECTION);
             }
 
             NetworkLoadSnapshot peersNetworkLoadSnapshot = new NetworkLoadSnapshot(result.getPeersNetworkLoad());
