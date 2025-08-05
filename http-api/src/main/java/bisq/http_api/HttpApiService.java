@@ -33,6 +33,7 @@ import bisq.http_api.rest_api.domain.reputation.ReputationRestApi;
 import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
 import bisq.http_api.rest_api.domain.trades.TradeRestApi;
 import bisq.http_api.rest_api.domain.user_identity.UserIdentityRestApi;
+import bisq.http_api.rest_api.domain.user_profile.UserProfileRestApi;
 import bisq.http_api.web_socket.WebSocketRestApiResourceConfig;
 import bisq.http_api.web_socket.WebSocketService;
 import bisq.http_api.web_socket.domain.OpenTradeItemsService;
@@ -87,6 +88,7 @@ public class HttpApiService implements Service {
             MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
             SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
             PaymentAccountsRestApi paymentAccountsRestApi = new PaymentAccountsRestApi(accountService);
+            UserProfileRestApi userProfileRestApi = new UserProfileRestApi(userService.getUserProfileService());
             ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
             ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
             if (restApiConfigEnabled) {
@@ -99,7 +101,8 @@ public class HttpApiService implements Service {
                         settingsRestApi,
                         explorerRestApi,
                         paymentAccountsRestApi,
-                        reputationRestApi);
+                        reputationRestApi,
+                        userProfileRestApi);
                 this.restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig));
             } else {
                 this.restApiService = Optional.empty();
@@ -115,7 +118,8 @@ public class HttpApiService implements Service {
                         settingsRestApi,
                         explorerRestApi,
                         paymentAccountsRestApi,
-                        reputationRestApi);
+                        reputationRestApi,
+                        userProfileRestApi);
                 this.webSocketService = Optional.of(new WebSocketService(webSocketConfig,
                         webSocketConfig.getRestApiBaseAddress(),
                         webSocketResourceConfig,

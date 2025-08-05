@@ -31,6 +31,7 @@ import bisq.user.identity.NymIdGenerator;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -47,6 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.KeyPair;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -62,7 +64,10 @@ public class UserIdentityRestApi extends RestApiBase {
     private final SecurityService securityService;
     private final UserIdentityService userIdentityService;
 
-    public UserIdentityRestApi(SecurityService securityService, UserIdentityService userIdentityService) {
+    public UserIdentityRestApi(
+            SecurityService securityService,
+            UserIdentityService userIdentityService
+    ) {
         this.securityService = securityService;
         this.userIdentityService = userIdentityService;
     }
@@ -229,4 +234,5 @@ public class UserIdentityRestApi extends RestApiBase {
         UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(selectedUserIdentity.getUserProfile());
         return buildOkResponse(userProfileDto);
     }
+
 }
