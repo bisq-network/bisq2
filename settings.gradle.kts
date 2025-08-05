@@ -47,6 +47,7 @@ include("settings")
 include("support")
 include("trade")
 include("user")
+include("wallet")
 
 includeBuild("apps")
 includeBuild("network")
