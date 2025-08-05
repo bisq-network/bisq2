@@ -66,7 +66,7 @@ public class Broadcaster {
                                     if (throwable == null) {
                                         return true;
                                     } else {
-                                        log.error("Broadcast to {} failed.", connection.getPeerAddress(), throwable);
+                                        log.info("Broadcast to {} failed.", connection.getPeerAddress(), throwable);
                                         return false;
                                     }
                                 });
