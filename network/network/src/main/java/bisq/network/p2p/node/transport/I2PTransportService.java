@@ -6,7 +6,7 @@ import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.util.NetworkUtils;
-import bisq.network.NetworkService;
+import bisq.network.NetworkExecutors;
 import bisq.network.i2p.I2pClient;
 import bisq.network.i2p.I2pEmbeddedRouter;
 import bisq.network.identity.NetworkId;
@@ -164,7 +164,7 @@ public class I2PTransportService implements TransportService {
         if (i2pClient == null) {
             return CompletableFuture.completedFuture(true);
         }
-        return CompletableFuture.runAsync(i2pClient::shutdown, NetworkService.NETWORK_IO_POOL)
+        return CompletableFuture.runAsync(i2pClient::shutdown, NetworkExecutors.getSendExecutor())
                 .thenApply(nil -> true)
                 .whenComplete((result, throwable) -> setTransportState(TransportState.TERMINATED));
     }

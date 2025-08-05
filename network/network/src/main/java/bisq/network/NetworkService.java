@@ -25,7 +25,6 @@ import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.platform.MemoryReportService;
-import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.http.BaseHttpClient;
 import bisq.network.http.HttpClientsByTransport;
@@ -35,7 +34,6 @@ import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.ServiceNodesByTransport;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
-import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -77,7 +75,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
@@ -95,9 +93,6 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  */
 @Slf4j
 public class NetworkService implements PersistenceClient<NetworkServiceStore>, Service {
-    public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.IO", 5, 3000, 5);
-    public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
-
     @Getter
     private final NetworkServiceStore persistableStore = new NetworkServiceStore();
     private final Optional<String> socks5ProxyAddress; // Optional proxy address of external tor instance
@@ -206,7 +201,10 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                     } else {
                         return false;
                     }
-                });
+                })
+                // We complete on a network thread and switch to ForkJoinPool.commonPool to prevent network threads
+                // from being tied up during subsequent service initialization steps.
+                .thenComposeAsync(CompletableFuture::completedFuture, ForkJoinPool.commonPool());
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -280,42 +278,24 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                             System.currentTimeMillis())));
         }
 
-        return anySuppliedInitializedNode(senderNetworkId)
-                .thenCompose(networkId -> supplyAsync(() ->
-                                serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
-                                        receiverNetworkId,
-                                        senderKeyPair,
-                                        senderNetworkId),
-                        NETWORK_IO_POOL))
+        return anySuppliedInitializedNode(senderNetworkId) // Runs in NetworkNodeExecutor
+                .thenApply(networkId ->
+                        serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
+                                receiverNetworkId,
+                                senderKeyPair,
+                                senderNetworkId))
                 .orTimeout(2, TimeUnit.SECONDS)
                 .whenComplete((result, throwable) -> {
-                    if (throwable != null) {
-                        if (throwable instanceof TimeoutException) {
-                            log.warn("TimeoutException at confidentialSend, likely caused by the anySuppliedInitializedNode() method " +
-                                    "as the node for the given networkId is not initialized yet. " +
-                                    "We call serviceNodesByTransport.confidentialSend() to send the message as mailbox message.");
-                            supplyAsync(() ->
-                                            serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
-                                                    receiverNetworkId,
-                                                    senderKeyPair,
-                                                    senderNetworkId),
-                                    NETWORK_IO_POOL);
-                        }
+                    if (throwable instanceof TimeoutException) {
+                        log.warn("TimeoutException at confidentialSend, likely caused by the anySuppliedInitializedNode() method " +
+                                "as the node for the given networkId is not initialized yet. " +
+                                "We call serviceNodesByTransport.confidentialSend() to send the message as mailbox message.");
+                        serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
+                                receiverNetworkId,
+                                senderKeyPair,
+                                senderNetworkId);
                     }
                 });
-    }
-
-    // TODO (low prio): Not used. Consider to remove it so it wont get used accidentally.
-
-    /**
-     * Send message via given senderNodeId to the supported network types of the addresses specified at
-     * receiverAddressByNetworkType as direct, unencrypted message. If peer is offline it will not be stored as
-     * mailbox message.
-     */
-    public CompletableFuture<Map<TransportType, Connection>> send(NetworkId senderNetworkId,
-                                                                  EnvelopePayloadMessage envelopePayloadMessage,
-                                                                  AddressByTransportTypeMap receiver) {
-        return supplyAsync(() -> serviceNodesByTransport.send(senderNetworkId, envelopePayloadMessage, receiver), NETWORK_IO_POOL);
     }
 
 
@@ -509,7 +489,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     public CompletableFuture<Map<TransportType, Boolean>> isPeerOnline(NetworkId networkId,
                                                                        AddressByTransportTypeMap peer) {
-        return supplyAsync(() -> serviceNodesByTransport.isPeerOnline(networkId, peer), NETWORK_IO_POOL);
+        return supplyAsync(() -> serviceNodesByTransport.isPeerOnline(networkId, peer), NetworkExecutors.getNodeExecutor());
     }
 
 

@@ -25,10 +25,8 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.burningman.BurningmanService;
 import bisq.chat.ChatService;
-import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.platform.OS;
-import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.ExceptionUtil;
 import bisq.contract.ContractService;
 import bisq.desktop.ServiceProvider;
@@ -65,6 +63,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
@@ -253,7 +252,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 alertNotificationsService,
                 favouriteMarketsService,
                 dontShowAgainService,
-                webcamAppService);
+                webcamAppService,
+                memoryReportService);
 
         openTradeItemsService = new OpenTradeItemsService(chatService, tradeService, userService);
 
@@ -276,35 +276,23 @@ public class DesktopApplicationService extends JavaSeApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return memoryReportService.initialize()
+        // Move initialization work off the current thread and use a ForkJoinPool.commonPool instead.
+        return supplyAsync(() -> memoryReportService.initialize()
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> {
                     setState(State.INITIALIZE_NETWORK);
-
-                    CompletableFuture<Boolean> networkFuture = networkService.initialize();
-                    CompletableFuture<Boolean> walletFuture = walletService.map(Service::initialize)
-                            .orElse(CompletableFuture.completedFuture(true));
-
-                    networkFuture.whenComplete((r, throwable) -> {
-                        if (throwable != null) {
-                            log.error("Error at networkFuture.initialize", throwable);
-                        } else if (!walletFuture.isDone()) {
+                    return networkService.initialize();
+                })
+                .thenCompose(result -> walletService
+                        .map(walletService -> {
                             setState(State.INITIALIZE_WALLET);
-                        }
-                    });
-                    walletFuture.whenComplete((r, throwable) -> {
-                        if (throwable != null) {
-                            log.error("Error at walletService.initialize", throwable);
-                        }
-                    });
-                    return CompletableFutureUtils.allOf(walletFuture, networkFuture).thenApply(list -> true);
+                            return walletService.initialize();
+                        })
+                        .orElseGet(() -> CompletableFuture.completedFuture(true)))
+                .thenCompose(result -> {
+                    setState(State.INITIALIZE_SERVICES);
+                    return identityService.initialize();
                 })
-                .whenComplete((r, throwable) -> {
-                    if (throwable == null) {
-                        setState(State.INITIALIZE_SERVICES);
-                    }
-                })
-                .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> bondedRolesService.initialize())
                 .thenCompose(result -> accountService.initialize())
                 .thenCompose(result -> contractService.initialize())
@@ -342,12 +330,14 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                     }
                     setState(State.FAILED);
                     return false;
-                });
+                }))
+                .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
+        // Move shutdown work off the current thread and use a ForkJoinPool.commonPool instead.
         // We shut down services in opposite order as they are initialized
         // In case a shutdown method completes exceptionally we log the error and map the result to `false` to not
         // interrupt the shutdown sequence.
@@ -392,10 +382,9 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                         shutDownErrorMessage.set(ExceptionUtil.getRootCauseMessage(throwable));
                     }
                     return false;
-                })
-                .join());
+                }))
+                .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
-
 
     private Optional<OsSpecificNotificationService> findSystemNotificationDelegate() {
         try {

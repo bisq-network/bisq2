@@ -19,14 +19,12 @@ package bisq.network.p2p.services.data.broadcast;
 
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.network.NetworkService;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -63,23 +61,15 @@ public class Broadcaster {
             List<CompletableFuture<Boolean>> sendFutures = connections.stream()
                     .map(connection -> {
                         log.debug("Broadcast {} to {}", broadcastMessage.getClass().getSimpleName(), connection.getPeerAddress());
-                        try {
-                            return CompletableFuture.supplyAsync(() -> {
-                                        try {
-                                            node.send(broadcastMessage, connection); // Can block with throttle and network IO
-                                            return true;
-                                        } catch (Exception exception) {
-                                            return false;
-                                        }
-                                    },
-                                    NetworkService.NETWORK_IO_POOL);
-                        } catch (RejectedExecutionException e) {
-                            log.error("Executor rejected broadcast task for {}", connection.getPeerAddress(), e);
-                            return CompletableFuture.completedFuture(false);
-                        } catch (Exception e) {
-                            log.error("Broadcast to {} failed.", connection.getPeerAddress(), e);
-                            return CompletableFuture.completedFuture(false);
-                        }
+                        return node.sendAsync(broadcastMessage, connection)
+                                .handle((result, throwable) -> {
+                                    if (throwable == null) {
+                                        return true;
+                                    } else {
+                                        log.info("Broadcast to {} failed.", connection.getPeerAddress(), throwable);
+                                        return false;
+                                    }
+                                });
                     }).toList();
             return CompletableFutureUtils.allOf(sendFutures)
                     .thenApply(results -> {

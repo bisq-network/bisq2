@@ -22,7 +22,7 @@ import bisq.common.network.Address;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.platform.MemoryReportService;
-import bisq.network.NetworkService;
+import bisq.network.NetworkExecutors;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -62,7 +62,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.concurrent.CompletableFuture.runAsync;
 
 /**
  * Creates nodesById, the default node and the services according to the Config.
@@ -327,10 +326,6 @@ public class ServiceNode implements Node.Listener {
         return confidentialMessageService.get().send(envelopePayloadMessage, receiverNetworkId, address, receiverPubKey, senderKeyPair, senderNetworkId);
     }
 
-    Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Address address) {
-        return nodesById.send(senderNetworkId, envelopePayloadMessage, address);
-    }
-
     void addConfidentialMessageListener(ConfidentialMessageService.Listener listener) {
         confidentialMessageListeners.add(listener);
         confidentialMessageService.ifPresent(service -> service.addListener(listener));
@@ -369,13 +364,7 @@ public class ServiceNode implements Node.Listener {
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
         log.info("New state {}", newState);
-        runAsync(() -> listeners.forEach(listener -> {
-            try {
-                listener.onStateChanged(newState);
-            } catch (Exception e) {
-                log.error("Calling onMessage at onStateChanged {} failed", listener, e);
-            }
-        }), NetworkService.DISPATCHER);
+        listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onStateChanged(newState)));
     }
 
     CompletableFuture<Report> requestReport(Address address) {

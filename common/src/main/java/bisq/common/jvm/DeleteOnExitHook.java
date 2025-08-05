@@ -116,7 +116,8 @@ public class DeleteOnExitHook {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            if (!(new File(filename)).delete()) {
+            File file = new File(filename);
+            if (file.exists() && !file.delete()) {
                 log.warn("Deleting {} failed", filename);
             }
         }

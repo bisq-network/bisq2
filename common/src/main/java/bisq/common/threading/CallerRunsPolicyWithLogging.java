@@ -15,7 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.reporting;
+package bisq.common.threading;
 
-public class ReportService {
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
+
+@Slf4j
+public class CallerRunsPolicyWithLogging implements RejectedExecutionHandler {
+    public CallerRunsPolicyWithLogging() {
+    }
+
+    public void rejectedExecution(Runnable runnable, ThreadPoolExecutor executor) {
+        if (executor.isShutdown()) {
+            log.warn("Executor was already shut down");
+            return;
+        }
+        log.warn("Task rejected. We run the task on the calling thread instead.");
+        runnable.run();
+    }
 }

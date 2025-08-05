@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
@@ -86,7 +87,8 @@ public class OracleNodeApplicationService extends JavaSeApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return memoryReportService.initialize()
+        // Move initialization work off the current thread and use a ForkJoinPool.commonPool instead.
+        return supplyAsync(() -> memoryReportService.initialize()
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
@@ -104,7 +106,8 @@ public class OracleNodeApplicationService extends JavaSeApplicationService {
                     } else {
                         log.error("Initializing networkApplicationService failed", throwable);
                     }
-                });
+                }))
+                .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 
     @Override
@@ -113,6 +116,8 @@ public class OracleNodeApplicationService extends JavaSeApplicationService {
             difficultyAdjustmentServicePin.unbind();
             difficultyAdjustmentServicePin = null;
         }
+
+        // Move shutdown work off the current thread and use a ForkJoinPool.commonPool instead.
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> oracleNodeService.shutdown()
                 .thenCompose(result -> bondedRolesService.shutdown())
@@ -120,8 +125,17 @@ public class OracleNodeApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> networkService.shutdown())
                 .thenCompose(result -> securityService.shutdown())
                 .thenCompose(result -> memoryReportService.shutdown())
-                .orTimeout(2, TimeUnit.MINUTES)
-                .handle((result, throwable) -> throwable == null)
-                .join());
+                .orTimeout(10, TimeUnit.SECONDS)
+                .handle((result, throwable) -> {
+                    if (throwable != null) {
+                        log.error("Error at shutdown", throwable);
+                        return false;
+                    } else if (!result) {
+                        log.error("Shutdown resulted with false");
+                        return false;
+                    }
+                    return true;
+                }))
+                .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 }

@@ -23,7 +23,6 @@ import bisq.common.network.PeerSocket;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkExecutors;
-import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
@@ -45,7 +44,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 
-import static bisq.network.NetworkService.DISPATCHER;
 
 /**
  * Represents an inbound or outbound connection to a peer node.
@@ -127,14 +125,14 @@ public abstract class Connection {
             return;
         }
 
-        inputHandlerFuture = NetworkExecutors.CONNECTION_READ.submit(() -> {
+        inputHandlerFuture = NetworkExecutors.getReadExecutor().submit(() -> {
             try {
                 long readTs = 0;
                 while (isInputStreamActive()) {
                     if (readTs != 0) {
-                        log.info("Processing message took {} ms. Wait for new message from {}. ", System.currentTimeMillis() - readTs, getPeerAddress());
+                        log.debug("Processing message took {} ms. Wait for new message from {}. ", System.currentTimeMillis() - readTs, getPeerAddress());
                     } else {
-                        log.info("Wait for new message from {}", getPeerAddress());
+                        log.debug("Wait for new message from {}", getPeerAddress());
                     }
                     var proto = networkEnvelopeSocket.receiveNextEnvelope();
                     readTs = System.currentTimeMillis();
@@ -165,17 +163,15 @@ public abstract class Connection {
                             StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
                     requestResponseManager.onReceived(envelopePayloadMessage);
 
-                    DISPATCHER.submit(() -> {
-                        if (isInputStreamActive()) {
-                            boolean isMessageAuthorized = handler.isMessageAuthorized(envelopePayloadMessage,
-                                    networkEnvelope.getAuthorizationToken(),
-                                    this);
-                            if (isMessageAuthorized) {
-                                handler.handleNetworkMessage(envelopePayloadMessage, this);
-                                listeners.forEach(listener -> listener.onNetworkMessage(envelopePayloadMessage));
-                            }
+                    if (isInputStreamActive()) {
+                        boolean isMessageAuthorized = handler.isMessageAuthorized(envelopePayloadMessage,
+                                networkEnvelope.getAuthorizationToken(),
+                                this);
+                        if (isMessageAuthorized) {
+                            NetworkExecutors.getSendExecutor().submit(() -> handler.handleNetworkMessage(envelopePayloadMessage, this));
+                            listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onNetworkMessage(envelopePayloadMessage)));
                         }
-                    });
+                    }
                 }
             } catch (Exception exception) {
                 //todo (deferred) StreamCorruptedException from i2p at shutdown. prob it send some text data at shut down
@@ -308,17 +304,9 @@ public abstract class Connection {
             networkEnvelopeSocket.close();
         } catch (IOException ignore) {
         }
-        NetworkService.DISPATCHER.submit(() -> {
-            handler.handleConnectionClosed(this, closeReason);
-            listeners.forEach(listener -> {
-                try {
-                    listener.onConnectionClosed(closeReason);
-                } catch (Exception e) {
-                    log.error("Calling onConnectionClosed at listener {} failed", listener, e);
-                }
-            });
-            listeners.clear();
-        });
+        NetworkExecutors.getSendExecutor().submit(() -> handler.handleConnectionClosed(this, closeReason));
+        listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnectionClosed(closeReason)));
+        listeners.clear();
     }
 
     AtomicInteger getSentMessageCounter() {

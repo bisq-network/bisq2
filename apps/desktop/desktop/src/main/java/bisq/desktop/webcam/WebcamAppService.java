@@ -77,11 +77,6 @@ public class WebcamAppService implements Service {
     }
 
     @Override
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-    @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         state.set(STOPPING);

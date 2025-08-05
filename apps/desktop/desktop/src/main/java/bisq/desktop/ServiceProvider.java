@@ -24,8 +24,10 @@ import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
+import bisq.common.platform.MemoryReportService;
 import bisq.contract.ContractService;
 import bisq.desktop.webcam.WebcamAppService;
+import bisq.evolution.updater.UpdaterService;
 import bisq.identity.IdentityService;
 import bisq.mu_sig.MuSigService;
 import bisq.network.NetworkService;
@@ -38,7 +40,6 @@ import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
-import bisq.evolution.updater.UpdaterService;
 import bisq.user.UserService;
 import bisq.wallets.core.WalletService;
 import lombok.Getter;
@@ -73,6 +74,7 @@ public class ServiceProvider {
     private final FavouriteMarketsService favouriteMarketsService;
     private final DontShowAgainService dontShowAgainService;
     private final WebcamAppService webcamAppService;
+    private final MemoryReportService memoryReportService;
 
     public ServiceProvider(ShutDownHandler shutDownHandler,
                            ApplicationService.Config config,
@@ -97,7 +99,8 @@ public class ServiceProvider {
                            AlertNotificationsService alertNotificationsService,
                            FavouriteMarketsService favouriteMarketsService,
                            DontShowAgainService dontShowAgainService,
-                           WebcamAppService webcamAppService) {
+                           WebcamAppService webcamAppService,
+                           MemoryReportService memoryReportService) {
         this.shutDownHandler = shutDownHandler;
         this.config = config;
         this.persistenceService = persistenceService;
@@ -122,5 +125,6 @@ public class ServiceProvider {
         this.favouriteMarketsService = favouriteMarketsService;
         this.dontShowAgainService = dontShowAgainService;
         this.webcamAppService = webcamAppService;
+        this.memoryReportService = memoryReportService;
     }
 }

@@ -65,7 +65,7 @@ public class ExecutorFactory {
     }
 
     public static ExecutorService newFixedThreadPool(String name, int numThreads) {
-        ThreadFactory threadFactory = getThreadFactory(name);
+        ThreadFactory threadFactory = numThreads == 1 ? getThreadFactory(name) : getThreadFactoryWithCounter(name);
         return Executors.newFixedThreadPool(numThreads, threadFactory);
     }
 
@@ -104,7 +104,7 @@ public class ExecutorFactory {
                 keepAliveInSeconds,
                 TimeUnit.SECONDS,
                 new SynchronousQueue<>(),
-                getThreadFactory(name),
+                getThreadFactoryWithCounter(name),
                 new ThreadPoolExecutor.AbortPolicy());
     }
 
@@ -158,7 +158,7 @@ public class ExecutorFactory {
                 keepAliveInSeconds,
                 TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(queueCapacity),
-                getThreadFactory(name),
+                getThreadFactoryWithCounter(name),
                 handler);
     }
 
@@ -176,9 +176,13 @@ public class ExecutorFactory {
     // ThreadFactory
     /* --------------------------------------------------------------------- */
 
+    public static ThreadFactory getThreadFactoryWithCounter(String name) {
+        return getThreadFactory(name + "-%d");
+    }
+
     public static ThreadFactory getThreadFactory(String name) {
         return new ThreadFactoryBuilder()
-                .setNameFormat(name + "-%d")
+                .setNameFormat(name)
                 .setDaemon(true)
                 .setPriority(DEFAULT_PRIORITY)
                 .build();

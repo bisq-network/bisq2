@@ -21,7 +21,7 @@ import bisq.common.network.Address;
 import bisq.common.observable.Observable;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
-import bisq.network.NetworkService;
+import bisq.network.NetworkExecutors;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -48,7 +48,6 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -203,7 +202,7 @@ public class PeerGroupManager implements Node.Listener {
 
     @Override
     public void onDisconnect(Connection connection, CloseReason closeReason) {
-        maybeCreateConnectionsScheduler.ifPresent(Scheduler::stop);
+        maybeCreateConnectionsScheduler.ifPresent(Scheduler::shutdownNow);
         maybeCreateConnectionsScheduler = Optional.of(Scheduler.run(this::maybeCreateConnections)
                 .host(this)
                 .runnableName("maybeCreateConnections")
@@ -309,7 +308,7 @@ public class PeerGroupManager implements Node.Listener {
                 .peek(inbound -> log.info("{}: Send CloseConnectionMessage as we have an " +
                                 "outbound connection with the same address.",
                         inbound.getPeerAddress()))
-                .forEach(inbound -> node.closeConnectionGracefully(inbound, CloseReason.DUPLICATE_CONNECTION));
+                .forEach(inbound -> node.closeConnectionGracefullyAsync(inbound, CloseReason.DUPLICATE_CONNECTION));
     }
 
 
@@ -324,7 +323,7 @@ public class PeerGroupManager implements Node.Listener {
                 .peek(connection -> log.info("{}: Send CloseConnectionMessage as we have too " +
                                 "many connections to seeds.",
                         connection.getPeerAddress()))
-                .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_CONNECTIONS_TO_SEEDS));
+                .forEach(connection -> node.closeConnectionGracefullyAsync(connection, CloseReason.TOO_MANY_CONNECTIONS_TO_SEEDS));
     }
 
     private void maybeCloseAgedConnections() {
@@ -339,7 +338,7 @@ public class PeerGroupManager implements Node.Listener {
                 .peek(connection -> log.info("{}: Send CloseConnectionMessage as the connection age " +
                                 "is too old.",
                         connection.getPeerAddress()))
-                .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.AGED_CONNECTION));
+                .forEach(connection -> node.closeConnectionGracefullyAsync(connection, CloseReason.AGED_CONNECTION));
     }
 
     private void maybeCloseExceedingInboundConnections() {
@@ -350,7 +349,7 @@ public class PeerGroupManager implements Node.Listener {
                 .skip(peerGroupService.getMaxInboundConnections())
                 .peek(connection -> log.info("{}: Send CloseConnectionMessage as we have too many inbound connections.",
                         connection.getPeerAddress()))
-                .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_INBOUND_CONNECTIONS));
+                .forEach(connection -> node.closeConnectionGracefullyAsync(connection, CloseReason.TOO_MANY_INBOUND_CONNECTIONS));
     }
 
     private void maybeCloseExceedingConnections() {
@@ -361,7 +360,7 @@ public class PeerGroupManager implements Node.Listener {
                 .skip(peerGroupService.getMaxNumConnectedPeers())
                 .peek(connection -> log.info("{}: Send CloseConnectionMessage as we have too many connections.",
                         connection.getPeerAddress()))
-                .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_CONNECTIONS));
+                .forEach(connection -> node.closeConnectionGracefullyAsync(connection, CloseReason.TOO_MANY_CONNECTIONS));
     }
 
     private void maybeCreateConnections() {
@@ -423,13 +422,7 @@ public class PeerGroupManager implements Node.Listener {
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
         log.info("New state {}", newState);
-        runAsync(() -> listeners.forEach(listener -> {
-            try {
-                listener.onStateChanged(newState);
-            } catch (Exception e) {
-                log.error("Calling onStateChanged at listener {} failed", listener, e);
-            }
-        }), NetworkService.DISPATCHER);
+        listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onStateChanged(newState)));
     }
 
 

@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.peer_group.exchange;
 
+import bisq.common.util.ExceptionUtil;
 import bisq.common.util.MathUtils;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -52,13 +53,16 @@ class PeerExchangeRequestHandler implements Connection.Listener {
         log.debug("{} send PeerExchangeRequest to {} with {} peers",
                 node, connection.getPeerAddress(), peersForPeerExchange.size());
         requestTs = System.currentTimeMillis();
-        try {
-            // We get called from the IO thread, so we do not use the async send method
-            node.send(new PeerExchangeRequest(nonce, new ArrayList<>(peersForPeerExchange)), connection);
-        } catch (Throwable throwable) {
-            future.completeExceptionally(throwable);
-            dispose();
-        }
+
+        PeerExchangeRequest request = new PeerExchangeRequest(nonce, new ArrayList<>(peersForPeerExchange));
+        node.sendAsync(request, connection)
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        log.warn("Sending {} to {} failed. {}", request.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
+                        future.completeExceptionally(throwable);
+                        dispose();
+                    }
+                });
         return future;
     }
 

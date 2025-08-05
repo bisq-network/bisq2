@@ -18,8 +18,8 @@
 package bisq.network.p2p.node;
 
 
-import bisq.common.util.CompletableFutureUtils;
 import bisq.common.network.Address;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
@@ -29,8 +29,14 @@ import bisq.network.p2p.services.peer_group.BanList;
 import bisq.security.keys.KeyBundleService;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -96,18 +102,24 @@ public class NodesById implements Node.Listener {
         return node;
     }
 
-    public Connection getConnection(NetworkId networkId, Address address) {
-        return getOrCreateNode(networkId).getConnection(address);
+    public Connection getOrCreateConnection(NetworkId networkId, Address address) {
+        return getOrCreateNode(networkId).getOrCreateConnection(address);
     }
 
-    public Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Address address) {
-        return getOrCreateNode(senderNetworkId).send(envelopePayloadMessage, address);
+    public CompletableFuture<Connection> getOrCreateConnectionAsync(NetworkId networkId, Address address) {
+        return getOrCreateNode(networkId).getOrCreateConnectionAsync(address);
     }
 
     public Connection send(NetworkId senderNetworkId,
                            EnvelopePayloadMessage envelopePayloadMessage,
                            Connection connection) {
         return getOrCreateNode(senderNetworkId).send(envelopePayloadMessage, connection);
+    }
+
+    public CompletableFuture<Connection> sendAsync(NetworkId senderNetworkId,
+                                                   EnvelopePayloadMessage envelopePayloadMessage,
+                                                   Connection connection) {
+        return getOrCreateNode(senderNetworkId).sendAsync(envelopePayloadMessage, connection);
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -138,6 +150,10 @@ public class NodesById implements Node.Listener {
 
     public boolean isPeerOnline(NetworkId networkId, Address address) {
         return getOrCreateNode(networkId).isPeerOnline(address);
+    }
+
+    public CompletableFuture<Boolean> isPeerOnlineAsync(NetworkId networkId, Address address) {
+        return getOrCreateNode(networkId).isPeerOnlineAsync(address);
     }
 
     public Collection<Node> getAllNodes() {

@@ -17,30 +17,137 @@
 
 package bisq.network;
 
+import bisq.common.threading.CallerRunsPolicyWithLogging;
 import bisq.common.threading.DiscardNewestPolicy;
+import bisq.common.threading.DiscardOldestPolicy;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.threading.MaxSizeAwareDeque;
+import bisq.common.threading.MaxSizeAwareQueue;
+import lombok.Getter;
 
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+// TODO use config to set core pool sized
 public class NetworkExecutors {
-    public static ThreadPoolExecutor CONNECTION_READ;
+    @Getter
+    private static ThreadPoolExecutor readExecutor;
+    @Getter
+    private static ThreadPoolExecutor sendExecutor;
+    @Getter
+    private static ThreadPoolExecutor nodeExecutor;
+    @Getter
+    private static ThreadPoolExecutor notifyExecutor;
+    private static volatile boolean isInitialized;
 
     public static void initialize() {
-        MaxSizeAwareDeque deque = new MaxSizeAwareDeque(20);
-        CONNECTION_READ = new ThreadPoolExecutor(
-                12,
-                40,
-                30,
-                TimeUnit.SECONDS,
-                deque,
-                ExecutorFactory.getThreadFactory("Connection.read"),
-                new DiscardNewestPolicy());
-        deque.setExecutor(CONNECTION_READ);
+        checkArgument(!isInitialized, "initialize must not be called twice");
+        readExecutor = createReadExecutor();
+        sendExecutor = createSendExecutor();
+        nodeExecutor = createNodeExecutor();
+        notifyExecutor = createNotifyExecutor();
+
+        isInitialized = true;
     }
 
     public static void shutdown() {
-        ExecutorFactory.shutdownAndAwaitTermination(CONNECTION_READ);
+        if (isInitialized) {
+            ExecutorFactory.shutdownAndAwaitTermination(readExecutor);
+            ExecutorFactory.shutdownAndAwaitTermination(sendExecutor);
+            ExecutorFactory.shutdownAndAwaitTermination(nodeExecutor);
+            ExecutorFactory.shutdownAndAwaitTermination(notifyExecutor);
+
+            readExecutor = null;
+            sendExecutor = null;
+            nodeExecutor = null;
+            notifyExecutor = null;
+
+            isInitialized = false;
+        }
+    }
+
+    /**
+     * Used for initializing the transportService, initializing the node and used as the blocking server thread.
+     * @return
+     */
+    private static ThreadPoolExecutor createNodeExecutor() {
+        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(100);
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                1,
+                20,
+                10,
+                TimeUnit.SECONDS,
+                queue,
+                ExecutorFactory.getThreadFactoryWithCounter("Network.node"),
+                new DiscardOldestPolicy());
+        queue.setExecutor(executor);
+        return executor;
+    }
+
+
+    private static ThreadPoolExecutor createNotifyExecutor() {
+        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(1000);
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                1,
+                4,
+                30,
+                TimeUnit.SECONDS,
+                queue,
+                ExecutorFactory.getThreadFactoryWithCounter("Network.notify"),
+                new CallerRunsPolicyWithLogging());
+        queue.setExecutor(executor);
+        return executor;
+    }
+
+
+    /**
+     * We keep a core pool size of 12 which reflects the target peer group.
+     * We allow up to 40 threads which a keepAlive time of 30 seconds for the threads outside the core pool size.
+     * If all threads are busy, we add up to 20 tasks into a deque. Once that gets full we drop the newest added task.
+     * We choose the newest instead of dropping the oldest as it might serve better for protecting against attacks.
+     * This executor must only be used for direct network read operations, which happen in Connection and ConnectionHandshake.
+     */
+    private static ThreadPoolExecutor createReadExecutor() {
+        MaxSizeAwareDeque deque = new MaxSizeAwareDeque(100);
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                12,
+                30,
+                30,
+                TimeUnit.SECONDS,
+                deque,
+                ExecutorFactory.getThreadFactoryWithCounter("Network.read"),
+                new DiscardNewestPolicy());
+        deque.setExecutor(executor);
+        return executor;
+    }
+
+
+    /**
+     * The core pool size is aligned to the broadcasters peer group size of 75% of the peer group (target 12),
+     * thus resulting in 9 in case we broadcast our own message.
+     * We use a higher queue capacity to allow network bursts to some extent.
+     * We use the CallerRunsPolicy thus putting backpressure on the caller in case we exceed the queue capacity.
+     * This pool must be used only for sending messages to the network, either in Connection or in ConnectionHandshake.
+     * <p>
+     * Sending a message start with creating the handshake which starts with creating the socket which is a blocking operation.
+     * Then sending the message (blocking) and waiting for the response (blocking read). After successful handshake we create the connection.
+     * Every send after that will only have the blocking send operation, but there is a throttle to avoid network burst with a Thread.sleep.
+     * Thus, the send operation can take  longer as the actual network IO operation.
+     * This whole process is all covered by that executor.
+     */
+    private static ThreadPoolExecutor createSendExecutor() {
+        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(1000);
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                9,
+                20,
+                30,
+                TimeUnit.SECONDS,
+                queue,
+                ExecutorFactory.getThreadFactoryWithCounter("Network.send"),
+                new CallerRunsPolicyWithLogging());
+        queue.setExecutor(executor);
+        return executor;
     }
 }

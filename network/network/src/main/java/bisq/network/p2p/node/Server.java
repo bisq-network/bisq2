@@ -20,7 +20,7 @@ package bisq.network.p2p.node;
 import bisq.common.network.Address;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.StringUtils;
-import bisq.network.NetworkService;
+import bisq.network.NetworkExecutors;
 import bisq.network.p2p.node.transport.ServerSocketResult;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +47,7 @@ public final class Server {
         serverSocket = serverSocketResult.getServerSocket();
         address = serverSocketResult.getAddress();
         log.debug("Create server: {}", serverSocketResult);
-        executor = ExecutorFactory.newSingleThreadExecutor("Server.listen-" + StringUtils.truncate(serverSocketResult.getAddress(), 8));
+        executor = ExecutorFactory.newSingleThreadExecutor("Server.listen-" + StringUtils.truncate(serverSocketResult.getAddress(), 16));
         executor.submit(() -> {
             try {
                 while (isNotStopped()) {
@@ -56,7 +56,7 @@ public final class Server {
                     log.debug("Accepted new connection on server: {}", serverSocketResult);
                     if (isNotStopped()) {
                         // Call handler on new thread
-                        NetworkService.NETWORK_IO_POOL.submit(() -> socketHandler.accept(socket));
+                        NetworkExecutors.getSendExecutor().submit(() -> socketHandler.accept(socket));
                     }
                 }
             } catch (IOException e) {

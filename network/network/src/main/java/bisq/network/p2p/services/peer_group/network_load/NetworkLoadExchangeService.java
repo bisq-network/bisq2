@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.peer_group.network_load;
 
 import bisq.common.timer.Scheduler;
-import bisq.network.NetworkService;
+import bisq.common.util.ExceptionUtil;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -99,9 +99,15 @@ public class NetworkLoadExchangeService implements Node.Listener {
             NetworkLoad myNetworkLoad = node.getNetworkLoadSnapshot().getCurrentNetworkLoad();
             NetworkLoadExchangeResponse response = new NetworkLoadExchangeResponse(request.getNonce(),
                     myNetworkLoad);
-            NetworkService.NETWORK_IO_POOL.submit(() -> node.send(response, connection));
-            log.debug("Sent NetworkLoadResponse with nonce {} and my networkLoad {} to {}. Connection={}",
-                    request.getNonce(), myNetworkLoad, connection.getPeerAddress(), connection.getId());
+            node.sendAsync(response, connection)
+                    .whenComplete((result, throwable) -> {
+                        if (throwable != null) {
+                            log.warn("Sending {} to {} failed. {}", response.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
+                        } else {
+                            log.debug("Sent NetworkLoadResponse with nonce {} and my networkLoad {} to {}. Connection={}",
+                                    request.getNonce(), myNetworkLoad, connection.getPeerAddress(), connection.getId());
+                        }
+                    });
         }
     }
 

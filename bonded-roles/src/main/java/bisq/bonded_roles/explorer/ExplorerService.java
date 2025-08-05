@@ -19,6 +19,7 @@ package bisq.bonded_roles.explorer;
 
 import bisq.bonded_roles.explorer.dto.Tx;
 import bisq.common.application.ApplicationVersion;
+import bisq.common.application.Service;
 import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
@@ -49,7 +50,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 // TODO We should support same registration model via oracle node as used with other nodes
 
 @Slf4j
-public class ExplorerService {
+public class ExplorerService implements Service {
     private static final ExecutorService POOL = ExecutorFactory.newCachedThreadPool("ExplorerService", 1, 5, 60);
 
     @Getter
@@ -162,10 +163,6 @@ public class ExplorerService {
         } else {
             selectedProvider.set(selectNextProvider());
         }
-    }
-
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {

@@ -25,6 +25,7 @@ import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
+import bisq.network.NetworkExecutors;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
@@ -62,15 +63,12 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
-import static bisq.network.NetworkService.DISPATCHER;
-import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
 import static bisq.network.p2p.node.ConnectionException.Reason.HANDSHAKE_FAILED;
 import static bisq.network.p2p.node.Node.State.STARTING;
 import static bisq.network.p2p.node.Node.State.STOPPING;
 import static bisq.network.p2p.node.Node.State.TERMINATED;
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
@@ -251,7 +249,7 @@ public class Node implements Connection.Handler {
     }
 
     private void createServerAndListen() {
-        ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, keyBundle);
+        ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, keyBundle); // blocking
         myCapability = Optional.of(Capability.myCapability(serverSocketResult.getAddress(), new ArrayList<>(supportedTransportTypes), new ArrayList<>(features)));
         server = Optional.of(new Server(serverSocketResult,
                 socketTimeout,
@@ -283,12 +281,8 @@ public class Node implements Connection.Handler {
             if (inboundConnectionsByAddress.containsKey(address)) {
                 log.warn("Have already an InboundConnection from {}. This can happen when a " +
                         "handshake was in progress while we received a new connection from that address. " +
-                        "We will close the socket of that new connection and use the existing instead.", address);
-                try {
-                    socket.close();
-                } catch (IOException ignore) {
-                }
-                return;
+                        "We close the existing connection (instead of closing the new socket) as the existing connection might be a stale connection.", address);
+                inboundConnectionsByAddress.get(address).shutdown(CloseReason.MAYBE_STALE_CONNECTION);
             }
 
             NetworkLoadSnapshot peersNetworkLoadSnapshot = new NetworkLoadSnapshot(result.getPeersNetworkLoad());
@@ -302,13 +296,7 @@ public class Node implements Connection.Handler {
                     this,
                     this::handleException);
             inboundConnectionsByAddress.put(connection.getPeerAddress(), connection);
-            DISPATCHER.submit(() -> listeners.forEach(listener -> {
-                try {
-                    listener.onConnection(connection);
-                } catch (Exception e) {
-                    log.error("Calling onConnection at listener {} failed", listener, e);
-                }
-            }));
+            listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnection(connection)));
         } catch (Throwable throwable) {
             try {
                 socket.close();
@@ -329,12 +317,25 @@ public class Node implements Connection.Handler {
     // Send
     /* --------------------------------------------------------------------- */
 
-    public Connection send(EnvelopePayloadMessage envelopePayloadMessage, Address address) {
-        Connection connection = getConnection(address);
-        return send(envelopePayloadMessage, connection);
+    public CompletableFuture<Connection> sendAsync(EnvelopePayloadMessage envelopePayloadMessage, Address address) {
+        try {
+            return getOrCreateConnectionAsync(address)
+                    .thenCompose(connection -> sendAsync(envelopePayloadMessage, connection));
+        } catch (Exception e) {
+            return CompletableFuture.failedFuture(e);
+        }
     }
 
-    public Connection send(EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
+    public CompletableFuture<Connection> sendAsync(EnvelopePayloadMessage envelopePayloadMessage,
+                                                   Connection connection) {
+        try {
+            return CompletableFuture.supplyAsync(() -> send(envelopePayloadMessage, connection), NetworkExecutors.getSendExecutor());
+        } catch (Exception e) {
+            return CompletableFuture.failedFuture(e);
+        }
+    }
+
+    Connection send(EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
         if (connection.isStopped()) {
             log.debug("Send message failed as connection is already stopped {}", this);
             throw new ConnectionClosedException(connection);
@@ -362,13 +363,23 @@ public class Node implements Connection.Handler {
     // Connection
     /* --------------------------------------------------------------------- */
 
-    public Connection getConnection(Address address) {
+    public Connection getOrCreateConnection(Address address) {
         if (outboundConnectionsByAddress.containsKey(address)) {
             return outboundConnectionsByAddress.get(address);
         } else if (inboundConnectionsByAddress.containsKey(address)) {
             return inboundConnectionsByAddress.get(address);
         } else {
             return createOutboundConnection(address);
+        }
+    }
+
+    public CompletableFuture<Connection> getOrCreateConnectionAsync(Address address) {
+        if (outboundConnectionsByAddress.containsKey(address)) {
+            return CompletableFuture.completedFuture(outboundConnectionsByAddress.get(address));
+        } else if (inboundConnectionsByAddress.containsKey(address)) {
+            return CompletableFuture.completedFuture(inboundConnectionsByAddress.get(address));
+        } else {
+            return createOutboundConnectionAsync(address);
         }
     }
 
@@ -384,15 +395,31 @@ public class Node implements Connection.Handler {
         }
     }
 
+    public Optional<Connection> findConnection(Address address) {
+        if (outboundConnectionsByAddress.containsKey(address)) {
+            return Optional.of(outboundConnectionsByAddress.get(address));
+        } else if (inboundConnectionsByAddress.containsKey(address)) {
+            return Optional.of(inboundConnectionsByAddress.get(address));
+        } else {
+            return Optional.empty();
+        }
+    }
+
 
     /* --------------------------------------------------------------------- */
     // OutboundConnection
     /* --------------------------------------------------------------------- */
 
     private Connection createOutboundConnection(Address address) {
+        return createOutboundConnectionAsync(address).join();
+    }
+
+    private CompletableFuture<Connection> createOutboundConnectionAsync(Address address) {
         log.debug("Create outbound connection to {}", address);
-        return myCapability.map(capability -> createOutboundConnection(address, capability))
-                .orElseGet(() -> {
+        // myCapability is set once we have start our sever which happens in initialize()
+        return myCapability.map(capability -> CompletableFuture.supplyAsync(() ->
+                        createOutboundConnection(address, capability), NetworkExecutors.getSendExecutor()))
+                .orElseGet(() -> CompletableFuture.supplyAsync(() -> {
                     int port = networkId.getAddressByTransportTypeMap().get(transportType).getPort();
                     log.warn("We create an outbound connection but we have not initialized our server. " +
                             "We create a server on port {} now but clients better control node " +
@@ -400,7 +427,7 @@ public class Node implements Connection.Handler {
                     initialize();
                     checkArgument(myCapability.isPresent(), "myCapability must be present after initializeServer got called");
                     return createOutboundConnection(address, myCapability.get());
-                });
+                }, NetworkExecutors.getNodeExecutor()));
     }
 
     private Connection createOutboundConnection(Address address, Capability myCapability) {
@@ -427,26 +454,89 @@ public class Node implements Connection.Handler {
         if (banList.isBanned(address)) {
             throw new ConnectionException(ADDRESS_BANNED, "PeerAddress is banned. address=" + address);
         }
-        Socket socket;
+
+        Socket socket = createSocket(address); // Blocking call
+
+        // As time passed we check again if connection is still not available
+        Optional<OutboundConnection> outboundConnection = findOutboundConnectionAndCloseSocketIfPresent(address, socket);
+        if (outboundConnection.isPresent()) {
+            return outboundConnection.get();
+        }
+
         try {
-            socket = transportService.getSocket(address); // Blocking call
+            ConnectionHandshake.Result result = startConnectionHandshake(address, socket, myCapability); // Blocking call
+            log.debug("Create new outbound connection to {}", address);
+
+            // As time passed we check again if connection is still not available
+            outboundConnection = findOutboundConnectionAndCloseSocketIfPresent(address, socket);
+            if (outboundConnection.isPresent()) {
+                return outboundConnection.get();
+            }
+
+            if (!isDefaultNode) {
+                log.info("We create an outbound connection to {} from a user node. node={}", address, getNodeInfo());
+            }
+
+            return createNewOutboundConnection(address, socket, result);
+        } catch (Throwable throwable) {
+            if (socket != null) {
+                try {
+                    socket.close();
+                } catch (IOException ignore) {
+                }
+            }
+            handleException(throwable);
+            throw new ConnectionException(throwable);
+        }
+    }
+
+    private Socket createSocket(Address address) {
+        try {
+            return transportService.getSocket(address); // Blocking call
         } catch (IOException e) {
             handleException(e);
             throw new ConnectionException(e);
         }
+    }
 
-        // As time passed we check again if connection is still not available
-        if (outboundConnectionsByAddress.containsKey(address)) {
-            log.warn("Has already an OutboundConnection to {}. This can happen while we " +
-                    "we waited for the socket creation at the createOutboundConnection method. " +
-                    "We will close the socket and use the existing connection instead.", address);
+    private OutboundConnection createNewOutboundConnection(Address address,
+                                                           Socket socket,
+                                                           ConnectionHandshake.Result result) {
+        OutboundConnection connection = null;
+        try {
+            NetworkLoadSnapshot peersNetworkLoadSnapshot = new NetworkLoadSnapshot(result.getPeersNetworkLoad());
+            ConnectionThrottle connectionThrottle = new ConnectionThrottle(peersNetworkLoadSnapshot, networkLoadSnapshot, config);
+            connection = new OutboundConnection(socket,
+                    address,
+                    result.getPeersCapability(),
+                    peersNetworkLoadSnapshot,
+                    result.getConnectionMetrics(),
+                    connectionThrottle,
+                    this,
+                    this::handleException);
+            outboundConnectionsByAddress.put(address, connection);
+
+            OutboundConnection finalConnection = connection;
+            listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnection(finalConnection)));
+            return connection;
+        } catch (Exception exception) {
+            log.error("Creating outbound connection failed", exception);
             try {
                 socket.close();
             } catch (IOException ignore) {
             }
-            return outboundConnectionsByAddress.get(address);
+            if (connection != null) {
+                connection.shutdown(CloseReason.EXCEPTION);
+                outboundConnectionsByAddress.remove(address);
+            }
+            handleException(exception);
+            throw new ConnectionException(exception);
         }
+    }
 
+    private ConnectionHandshake.Result startConnectionHandshake(Address address,
+                                                                Socket socket,
+                                                                Capability myCapability) {
         ConnectionHandshake connectionHandshake = null;
         try {
             connectionHandshake = new ConnectionHandshake(socket,
@@ -457,66 +547,45 @@ public class Node implements Connection.Handler {
 
             connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
             log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
-            ConnectionHandshake.Result result = connectionHandshake.start(networkLoadSnapshot.getCurrentNetworkLoad(), address); // Blocking call
+            ConnectionHandshake.Result result = connectionHandshake.start(networkLoadSnapshot.getCurrentNetworkLoad(), address);
             log.debug("Outbound handshake completed: Initiated by {} to {}", myCapability.getAddress(), address);
-            log.debug("Create new outbound connection to {}", address);
+
             if (!address.isClearNetAddress()) {
                 // For clearnet this check doesn't make sense because:
                 // - the peer binds to 127.0.0.1, therefore reports 127.0.0.1 in the handshake
                 // - we use the peer's public IP to connect to him
-                checkArgument(address.equals(result.getPeersCapability().getAddress()), "Peers reported address must match address we used to connect");
+                checkArgument(address.equals(result.getPeersCapability().getAddress()),
+                        "Peers reported address must match address we used to connect");
             }
-
-            // As time passed we check again if connection is still not available
-            if (outboundConnectionsByAddress.containsKey(address)) {
-                log.info("Has already an OutboundConnection to {}. This can happen when a " +
-                        "handshake was in progress while we started a new connection to that address and as the " +
-                        "handshake was not completed we did not consider that as an available connection. " +
-                        "We will close the socket of that new connection and use the existing instead.", address);
-                try {
-                    socket.close();
-                } catch (IOException ignore) {
-                }
-                return outboundConnectionsByAddress.get(address);
-            }
-
-            if (!isDefaultNode) {
-                log.info("We create an outbound connection to {} from a user node. node={}", address, getNodeInfo());
-            }
-
-            NetworkLoadSnapshot peersNetworkLoadSnapshot = new NetworkLoadSnapshot(result.getPeersNetworkLoad());
-            ConnectionThrottle connectionThrottle = new ConnectionThrottle(peersNetworkLoadSnapshot, networkLoadSnapshot, config);
-            OutboundConnection connection = new OutboundConnection(socket,
-                    address,
-                    result.getPeersCapability(),
-                    peersNetworkLoadSnapshot,
-                    result.getConnectionMetrics(),
-                    connectionThrottle,
-                    this,
-                    this::handleException);
-            outboundConnectionsByAddress.put(address, connection);
-            DISPATCHER.submit(() -> listeners.forEach(listener -> {
-                try {
-                    listener.onConnection(connection);
-                } catch (Exception e) {
-                    log.error("Calling onConnection at listener {} failed", listener, e);
-                }
-            }));
-            return connection;
-        } catch (Throwable throwable) {
+            return result;
+        } catch (Exception exception) {
+            log.error("Starting outbound handshake failed", exception);
             try {
                 socket.close();
             } catch (IOException ignore) {
             }
-
-            handleException(throwable);
-            throw new ConnectionException(ConnectionException.Reason.HANDSHAKE_FAILED, throwable);
+            handleException(exception);
+            throw new ConnectionException(ConnectionException.Reason.HANDSHAKE_FAILED, exception);
         } finally {
             if (connectionHandshake != null) {
                 connectionHandshake.shutdown();
                 connectionHandshakes.remove(connectionHandshake.getId());
             }
         }
+    }
+
+    private Optional<OutboundConnection> findOutboundConnectionAndCloseSocketIfPresent(Address address, Socket socket) {
+        if (outboundConnectionsByAddress.containsKey(address)) {
+            log.warn("Has already an OutboundConnection to {}. This can happen while we " +
+                    "we waited for the socket creation at the createOutboundConnection method. " +
+                    "We will close the socket and use the existing connection instead.", address);
+            try {
+                socket.close();
+            } catch (IOException ignore) {
+            }
+            return Optional.of(outboundConnectionsByAddress.get(address));
+        }
+        return Optional.empty();
     }
 
     public Stream<Connection> getAllConnections() {
@@ -539,8 +608,12 @@ public class Node implements Connection.Handler {
         return (int) getAllActiveConnections().count();
     }
 
+    CompletableFuture<Boolean> isPeerOnlineAsync(Address address) {
+        return CompletableFuture.supplyAsync(() -> isPeerOnline(address), NetworkExecutors.getSendExecutor());
+    }
+
     boolean isPeerOnline(Address address) {
-        return transportService.isPeerOnline(address);
+        return transportService.isPeerOnline(address); // Can be blocking
     }
 
 
@@ -643,21 +716,19 @@ public class Node implements Connection.Handler {
         connection.shutdown(closeReason);
     }
 
-    public CompletableFuture<Void> closeConnectionGracefullyAsync(Connection connection, CloseReason closeReason) {
-        return runAsync(() -> {
-            closeConnectionGracefully(connection, closeReason);
-        }, NETWORK_IO_POOL).orTimeout(4, SECONDS);
-    }
-
-    public void closeConnectionGracefully(Connection connection, CloseReason closeReason) {
+    public CompletableFuture<Connection> closeConnectionGracefullyAsync(Connection connection,
+                                                                        CloseReason closeReason) {
         connection.stopListening();
-        send(new CloseConnectionMessage(closeReason), connection);
-        try {
-            // Give a bit of delay before we close the connection.
-            Thread.sleep(100);
-        } catch (Throwable ignore) {
-        }
-        connection.shutdown(CloseReason.CLOSE_MSG_SENT.details(closeReason.name()));
+        return sendAsync(new CloseConnectionMessage(closeReason), connection)
+                .orTimeout(100, TimeUnit.MILLISECONDS)
+                .whenComplete((con, throwable) -> {
+                    if (throwable != null) {
+                        log.warn("Failed to send close message: {}", ExceptionUtil.getRootCauseMessage(throwable));
+                        connection.shutdown(closeReason);
+                    } else {
+                        connection.shutdown(CloseReason.CLOSE_MSG_SENT.details(closeReason.name()));
+                    }
+                });
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -669,7 +740,7 @@ public class Node implements Connection.Handler {
 
         server.ifPresent(Server::shutdown);
         connectionHandshakes.values().forEach(ConnectionHandshake::shutdown);
-        Stream<CompletableFuture<Void>> futures = getAllConnections()
+        Stream<CompletableFuture<Connection>> futures = getAllConnections()
                 .map(connection -> closeConnectionGracefullyAsync(connection, CloseReason.SHUTDOWN));
         return CompletableFutureUtils.allOf(futures)
                 .orTimeout(10, SECONDS)
@@ -819,7 +890,7 @@ public class Node implements Connection.Handler {
                             "We close that connection to avoid memory leaks.\n" +
                             "envelopePayloadMessage={} connection={}",
                     StringUtils.truncate(envelopePayloadMessage), connection);
-            NETWORK_IO_POOL.submit(() -> connection.shutdown(CloseReason.ORPHANED_CONNECTION));
+            connection.shutdown(CloseReason.ORPHANED_CONNECTION);
         }
     }
 
