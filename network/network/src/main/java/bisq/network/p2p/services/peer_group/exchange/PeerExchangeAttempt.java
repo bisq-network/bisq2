@@ -153,7 +153,7 @@ public class PeerExchangeAttempt {
 
     private CompletableFuture<Void> doPeerExchangeAsync(Address peerAddress) {
         return node.getOrCreateConnectionAsync(peerAddress)
-                .thenAccept(connection -> {
+                .thenCompose(connection -> {
                     String connectionId = connection.getId();
                     try {
                         checkArgument(!requestHandlerMap.containsKey(connectionId), "We have a pending request for that connection");
@@ -162,11 +162,19 @@ public class PeerExchangeAttempt {
                         requestHandlerMap.put(connectionId, handler);
                         Set<Peer> myPeers = peerExchangeStrategy.getPeersForReporting(peerAddress);
 
-                        // We request and wait blocking for response
-                        Set<Peer> reportedPeers = handler.request(myPeers).join();
-                        log.info("Completed peer exchange with {} and received {} reportedPeers. At instance: {}", peerAddress, reportedPeers.size(), this);
-                        peerExchangeStrategy.addReportedPeers(reportedPeers, peerAddress);
-                        requestHandlerMap.remove(connectionId);
+                        return handler.request(myPeers)
+                                .thenAccept(reportedPeers -> {
+                                    log.info("Completed peer exchange with {} and received {} reportedPeers. At instance: {}", peerAddress, reportedPeers.size(), this);
+                                    peerExchangeStrategy.addReportedPeers(reportedPeers, peerAddress);
+                                }).whenComplete((nil, throwable) -> {
+                                    if (throwable != null) {
+                                        if (!isShutdownInProgress.get()) {
+                                            log.warn("Peer exchange with {} failed. {}. At instance: {}", peerAddress, ExceptionUtil.getRootCauseMessage(throwable), this);
+                                        }
+                                        handler.dispose();
+                                    }
+                                    requestHandlerMap.remove(connectionId);
+                                });
                     } catch (Exception exception) {
                         if (!isShutdownInProgress.get()) {
                             log.warn("Peer exchange with {} failed. {}. At instance: {}", peerAddress, ExceptionUtil.getRootCauseMessage(exception), this);
