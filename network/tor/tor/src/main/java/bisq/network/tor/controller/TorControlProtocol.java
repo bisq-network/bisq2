@@ -313,6 +313,9 @@ public class TorControlProtocol implements AutoCloseable {
     }
 
     private void sendCommand(String command) {
+        if (closeInProgress) {
+            return;
+        }
         if (outputStream.isEmpty()) {
             throw new IllegalStateException("TorControlProtocol output stream not initialized. Cannot send command.");
         }
