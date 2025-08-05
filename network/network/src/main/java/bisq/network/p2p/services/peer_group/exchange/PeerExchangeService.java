@@ -238,7 +238,7 @@ public class PeerExchangeService implements Node.Listener {
     }
 
     private CompletableFuture<Boolean> retryPeerExchange() {
-        return delayRetryPeerExchangeAsync()
+        return nonBlockingDelay()
                 .thenCompose(nil -> {
                     try {
                         numRetryAttempts.incrementAndGet();
@@ -247,11 +247,12 @@ public class PeerExchangeService implements Node.Listener {
                         List<Address> candidates = peerExchangeStrategy.getAddressesForRetryPeerExchange();
                         return attempt.startAsync(candidates.size() / 2, candidates)
                                 .whenComplete((success, throwable) -> {
+                                    retryPeerExchangeAttempt.set(Optional.empty());
+
                                     if (throwable != null || success == null || !success) {
                                         log.warn("retryPeerExchangeAttempt completed unsuccessful.");
                                         maybeRetryPeerExchange();
                                     }
-                                    retryPeerExchangeAttempt.set(Optional.empty());
                                 });
                     } catch (Exception e) {
                         log.warn("retryPeerExchangeAttempt failed. {}", ExceptionUtil.getRootCauseMessage(e));
@@ -262,7 +263,7 @@ public class PeerExchangeService implements Node.Listener {
                 });
     }
 
-    private CompletableFuture<Void> delayRetryPeerExchangeAsync() {
+    private CompletableFuture<Void> nonBlockingDelay() {
         long delay = 1000L * numRetryAttempts.get() * numRetryAttempts.get();
         if (delay == 0) {
             return CompletableFuture.completedFuture(null);
