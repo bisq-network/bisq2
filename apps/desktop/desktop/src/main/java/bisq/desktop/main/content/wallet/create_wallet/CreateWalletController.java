@@ -13,7 +13,7 @@ import bisq.desktop.main.content.wallet.create_wallet.verify.CreateWalletVerifyC
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
-import bisq.wallets.core.WalletService;
+import bisq.wallet.WalletService;
 import javafx.event.EventHandler;
 import javafx.scene.Parent;
 import javafx.scene.input.KeyEvent;
@@ -184,7 +184,7 @@ public class CreateWalletController extends NavigationController {
     private void closeAndNavigateTo(NavigationTarget navigationTarget) {
         reset();
        // walletService.purgeSeedWords();
-        walletService.initializeWallet(null, Optional.empty());
+        walletService.initialize();
         OverlayController.hide(() -> Navigation.navigateTo(navigationTarget));
     }
 

@@ -21,8 +21,8 @@ import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
-import bisq.wallets.core.WalletService;
-import bisq.wallets.core.model.Transaction;
+import bisq.wallet.WalletService;
+import bisq.wallet.vo.Transaction;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

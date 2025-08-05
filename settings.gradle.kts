@@ -51,5 +51,3 @@ include("wallet")
 
 includeBuild("apps")
 includeBuild("network")
-includeBuild("wallets")
-includeBuild("wallets/bitcoind/build-logic")

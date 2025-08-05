@@ -45,8 +45,7 @@ import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
-import bisq.wallets.core.BitcoinWalletSelection;
-import bisq.wallets.core.WalletService;
+import bisq.wallet.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -93,21 +92,8 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
         super("node_monitor", args);
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
-        com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
-        BitcoinWalletSelection bitcoinWalletSelection = bitcoinWalletConfig.getEnum(BitcoinWalletSelection.class, "bitcoinWalletSelection");
-        //noinspection SwitchStatementWithTooFewBranches
-        switch (bitcoinWalletSelection) {
-           /* case BITCOIND:
-                walletService = Optional.of(new BitcoinWalletService(BitcoinWalletService.Config.from(bitcoinWalletConfig.getConfig("bitcoind")), getPersistenceService()));
-                break;
-            case ELECTRUM:
-                walletService = Optional.of(new ElectrumWalletService(ElectrumWalletService.Config.from(bitcoinWalletConfig.getConfig("electrum")), config.getBaseDir()));
-                break;*/
-            case NONE:
-            default:
-                walletService = Optional.empty();
-                break;
-        }
+
+        walletService = Optional.empty();
 
         networkService = new NetworkService(NetworkServiceConfig.from(config.getBaseDir(),
                 getConfig("network")),

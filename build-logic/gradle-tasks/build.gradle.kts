@@ -4,10 +4,9 @@ plugins {
 }
 
 repositories {
-    gradlePluginPortal()
     mavenCentral()
 }
 
 dependencies {
-    implementation(libs.protobuf.gradle.plugin)
+    implementation(libs.bouncycastle.pg)
 }

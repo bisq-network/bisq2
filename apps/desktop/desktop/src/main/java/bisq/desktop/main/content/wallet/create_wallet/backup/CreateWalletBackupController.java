@@ -6,7 +6,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.wallet.create_wallet.SeedState;
 import bisq.i18n.Res;
-import bisq.wallets.core.WalletService;
+import bisq.wallet.WalletService;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

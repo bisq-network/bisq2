@@ -12,7 +12,7 @@ fun readPropertiesFile(filePath: String): Properties {
 
 plugins {
     id("bisq.java-library")
-    id("bisq.gradle.desktop.regtest.BisqDesktopRegtestPlugin")
+   // id("bisq.gradle.desktop.regtest.BisqDesktopRegtestPlugin")
     application
     alias(libs.plugins.openjfx)
     alias(libs.plugins.shadow)
@@ -56,14 +56,11 @@ dependencies {
     implementation("bisq:evolution")
     implementation("bisq:os-specific")
     implementation("bisq:http-api")
+    implementation("bisq:wallet")
 
     implementation(project(":desktop"))
 
     implementation("network:network")
-    implementation("bitcoind:core")
-    implementation("wallets:wallet")
-    // implementation("wallets:electrum")
-    // implementation("wallets:bitcoind")
 
     implementation(libs.typesafe.config)
     implementation(libs.bundles.rest.api.libs)

@@ -33,7 +33,6 @@ public enum MaxBackupSize {
             case CACHE -> ZERO;
             case SETTINGS -> TEN_MB;
             case PRIVATE -> HUNDRED_MB;
-            case WALLETS -> HUNDRED_MB;
         };
     }
 

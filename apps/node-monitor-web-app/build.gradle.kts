@@ -35,10 +35,9 @@ dependencies {
     implementation("bisq:evolution")
     implementation("bisq:os-specific")
     implementation("bisq:http-api")
+    implementation("bisq:wallet")
 
     implementation("network:network")
-    implementation("bitcoind:core")
-    implementation("wallets:wallet")
 
     implementation(libs.typesafe.config)
     implementation(libs.bundles.rest.api.libs)

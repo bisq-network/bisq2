@@ -21,7 +21,7 @@ import bisq.common.monetary.Coin;
 import bisq.desktop.components.table.DateTableItem;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
-import bisq.wallets.core.model.Transaction;
+import bisq.wallet.vo.Transaction;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
