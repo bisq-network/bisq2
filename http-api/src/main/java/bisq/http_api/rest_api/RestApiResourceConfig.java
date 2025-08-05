@@ -9,6 +9,7 @@ import bisq.http_api.rest_api.domain.reputation.ReputationRestApi;
 import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
 import bisq.http_api.rest_api.domain.trades.TradeRestApi;
 import bisq.http_api.rest_api.domain.user_identity.UserIdentityRestApi;
+import bisq.http_api.rest_api.domain.user_profile.UserProfileRestApi;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
@@ -25,7 +26,8 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
                                  SettingsRestApi settingsRestApi,
                                  ExplorerRestApi explorerRestApi,
                                  PaymentAccountsRestApi paymentAccountsRestApi,
-                                 ReputationRestApi reputationRestApi) {
+                                 ReputationRestApi reputationRestApi,
+                                 UserProfileRestApi userProfileRestApi) {
         super(swaggerBaseUrl);
 
         //todo apply filtering with whiteListEndPoints/whiteListEndPoints
@@ -42,6 +44,7 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
         register(ExplorerRestApi.class);
         register(PaymentAccountsRestApi.class);
         register(ReputationRestApi.class);
+        register(UserProfileRestApi.class);
 
         register(new AbstractBinder() {
             @Override
@@ -55,6 +58,7 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
                 bind(explorerRestApi).to(ExplorerRestApi.class);
                 bind(paymentAccountsRestApi).to(PaymentAccountsRestApi.class);
                 bind(reputationRestApi).to(ReputationRestApi.class);
+                bind(userProfileRestApi).to(UserProfileRestApi.class);
             }
         });
     }
