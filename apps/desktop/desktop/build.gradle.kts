@@ -50,6 +50,7 @@ dependencies {
     implementation("network:network")
     implementation("network:network-identity")
 
+    implementation("net.java.dev.jna:jna:5.13.0")
     implementation(libs.google.gson)
     implementation(libs.bundles.fontawesomefx)
     implementation(libs.bundles.fxmisc.libs)

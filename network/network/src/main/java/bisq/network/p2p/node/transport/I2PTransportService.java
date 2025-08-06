@@ -24,6 +24,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.util.NetworkUtils;
 import bisq.network.NetworkExecutors;
+import bisq.network.NetworkService;
 import bisq.network.i2p.I2pClient;
 import bisq.network.i2p.I2pEmbeddedRouter;
 import bisq.network.identity.NetworkId;
@@ -63,10 +64,12 @@ public class I2PTransportService implements TransportService {
                     config.getBoolean("embeddedRouter"),
                     config.getBoolean("extendedI2pLogging"),
                     config.getInt("sendMessageThrottleTime"),
-                    config.getInt("receiveMessageThrottleTime"));
+                    config.getInt("receiveMessageThrottleTime"),
+                    config.getConfigList("proxyList").stream().map(c -> new ProxyEndpoint(c.getString("host"), c.getInt("port"))).collect(Collectors.toList()));
         }
 
         private final int defaultNodePort;
+        private final int socketTimeout;
         private final int inboundKBytesPerSecond;
         private final int outboundKBytesPerSecond;
         private final int bandwidthSharePercentage;
@@ -105,6 +108,16 @@ public class I2PTransportService implements TransportService {
             this.sendMessageThrottleTime = sendMessageThrottleTime;
             this.receiveMessageThrottleTime = receiveMessageThrottleTime;
             this.proxyList = proxyList;
+        }
+
+        @Override
+        public int getSocketTimeout() {
+            return 0;
+        }
+
+        @Override
+        public int getDevModeDelayInMs() {
+            return TransportConfig.super.getDevModeDelayInMs();
         }
     }
 
@@ -197,7 +210,7 @@ public class I2PTransportService implements TransportService {
 //        if (preventSleepService != null) {
 //            preventSleepService.shutdown();
 //        }
-        return CompletableFuture.runAsync(i2pClient::shutdown, NetworkService.NETWORK_IO_POOL).thenApply(nil -> true).whenComplete((result, throwable) -> setTransportState(TransportState.TERMINATED));
+        return CompletableFuture.runAsync(i2pClient::shutdown, NetworkExecutors.getSendExecutor()).thenApply(nil -> true).whenComplete((result, throwable) -> setTransportState(TransportState.TERMINATED));
     }
 
     private boolean isEmbeddedRouter() {
