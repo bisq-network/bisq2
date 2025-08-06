@@ -1,4 +1,4 @@
-import bisq.gradle.tasks.VersionUtil
+import bisq.gradle.common.VersionUtil
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {

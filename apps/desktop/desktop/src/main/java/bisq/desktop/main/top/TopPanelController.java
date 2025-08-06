@@ -22,7 +22,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.components.UserProfileSelection;
-import bisq.wallets.core.WalletService;
+import bisq.wallet.WalletService;
 import lombok.Getter;
 
 import javax.annotation.Nullable;

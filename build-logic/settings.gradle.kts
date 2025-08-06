@@ -6,13 +6,8 @@ dependencyResolutionManagement {
     }
 }
 
-includeBuild("../wallets/bitcoind/build-logic") {
-    name = "bitcoind-build-logic"
-}
-
 include("commons")
-include("desktop-regtest")
-include("electrum-binaries")
+include("gradle-tasks")
 include("packaging")
 include("maven-publisher")
 include("tor-binary")

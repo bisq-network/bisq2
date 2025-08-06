@@ -28,7 +28,7 @@ import bisq.desktop.main.content.wallet.send.WalletSendController;
 import bisq.desktop.main.content.wallet.settings.WalletSettingsController;
 import bisq.desktop.main.content.wallet.txs.WalletTxsController;
 import bisq.desktop.navigation.NavigationTarget;
-import bisq.wallets.core.WalletService;
+import bisq.wallet.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

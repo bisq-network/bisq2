@@ -1,6 +1,6 @@
 package bisq.gradle.webcam_app
 
-import bisq.gradle.tasks.VersionUtil
+import bisq.gradle.common.VersionUtil
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.Copy

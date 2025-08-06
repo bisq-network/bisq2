@@ -45,14 +45,10 @@ dependencies {
     implementation("bisq:mu-sig")
     implementation("bisq:application")
     implementation("bisq:evolution")
+    implementation("bisq:wallet")
 
     implementation("network:network")
     implementation("network:network-identity")
-
-    implementation("bitcoind:core")
-    implementation("wallets:wallet")
-    // implementation("wallets:electrum")
-    // implementation("wallets:bitcoind")
 
     implementation(libs.google.gson)
     implementation(libs.bundles.fontawesomefx)

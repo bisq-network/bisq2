@@ -25,7 +25,7 @@ class BisqTorBinaryPlugin : Plugin<Project> {
             pgpFingerprintToKeyUrlMap = mapOf(
                 Pair(
                     PgpFingerprint.normalize("EF6E 286D DA85 EA2A 4BA7  DE68 4E2C 6E87 9329 8290"),
-                    this::class.java.getResource("/Tor_Browser_Developers_(signing_key).asc")!!,
+                    this::class.java.getResource("/Tor_Browser_Developers_(signing_key).asc")!!.toString(),
                 )
             )
         )
