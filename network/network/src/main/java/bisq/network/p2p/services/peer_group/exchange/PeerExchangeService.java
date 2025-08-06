@@ -278,6 +278,8 @@ public class PeerExchangeService implements Node.Listener {
                     .host(this)
                     .runnableName("retryPeerExchange")
                     .after(delay);
+        } else {
+            future.completeExceptionally(new RuntimeException("retryPeerExchange has already been called"));
         }
         return future;
     }
