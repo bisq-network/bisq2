@@ -57,15 +57,3 @@ jobs:
       os: ${{ matrix.os }}
       name: tor module
       build-root-dir: network/tor
-
-  build_wallet_module:
-    name: Build wallet module on ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, macOS-latest, windows-latest ]
-
-    uses: ./.github/workflows/build_bisq_module.yml
-    with:
-      os: ${{ matrix.os }}
-      name: wallet module
-      build-root-dir: wallets
