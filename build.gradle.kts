@@ -9,6 +9,7 @@ tasks.register("buildAll") {
 
     doLast {
         listOf(
+            ":build-logic:build",
             "build",
             ":network:build",
             ":network:tor:build",
@@ -35,6 +36,7 @@ tasks.register("cleanAll") {
 
     doLast {
         listOf(
+            ":build-logic:clean",
             "clean",
             ":network:clean",
             ":network:tor:clean",
