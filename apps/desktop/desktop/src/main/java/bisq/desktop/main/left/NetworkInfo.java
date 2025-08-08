@@ -23,6 +23,7 @@ import bisq.common.network.TransportType;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.ManagedDuration;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
@@ -291,17 +292,17 @@ public class NetworkInfo {
             root.setMinHeight(VBox.USE_PREF_SIZE);
             root.setPadding(new Insets(26, 24, 0, 24));
 
-            Triple<HBox, BisqTooltip, Triple<Label, Label, ImageView>> clearNet = getNetworkBox("clearnet-white");
+            Triple<HBox, BisqTooltip, Triple<Label, Label, ImageView>> clearNet = getNetworkBox(Res.get("navigation.network.info.clearNet"), "clearnet-grey");
             clearNetHBox = clearNet.getFirst();
             clearNetTooltip = clearNet.getSecond();
             clearNetTriple = clearNet.getThird();
 
-            Triple<HBox, BisqTooltip, Triple<Label, Label, ImageView>> tor = getNetworkBox("tor-white");
+            Triple<HBox, BisqTooltip, Triple<Label, Label, ImageView>> tor = getNetworkBox(Res.get("navigation.network.info.tor"), "tor-grey");
             torHBox = tor.getFirst();
             torTooltip = tor.getSecond();
             torTriple = tor.getThird();
 
-            Triple<HBox, BisqTooltip, Triple<Label, Label, ImageView>> i2p = getNetworkBox("i2p-white");
+            Triple<HBox, BisqTooltip, Triple<Label, Label, ImageView>> i2p = getNetworkBox(Res.get("navigation.network.info.i2p"), "i2p-grey");
             i2pHBox = i2p.getFirst();
             i2pTooltip = i2p.getSecond();
             i2pTriple = i2p.getThird();
@@ -379,45 +380,25 @@ public class NetworkInfo {
                     ImageView inventoryRequestsIcon = inventoryRequestsPair.getSecond();
                     inventoryRequestsIcon.setId("check-green");
 
-                    // We use the parent hBox
-                    Parent node = inventoryRequestsIcon.getParent();
-                    node.setOpacity(1);
-                    Timeline fadeIn = new Timeline();
-                    ObservableList<KeyFrame> fadeInKeyFrames = fadeIn.getKeyFrames();
-                    fadeInKeyFrames.add(new KeyFrame(ManagedDuration.ZERO, new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR)));
-                    fadeInKeyFrames.add(new KeyFrame(ManagedDuration.millis(4000), new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR)));
-                    fadeInKeyFrames.add(new KeyFrame(ManagedDuration.millis(5000), new KeyValue(node.opacityProperty(), 0, Interpolator.EASE_OUT)));
-                    fadeIn.setOnFinished(e -> {
-                        inventoryRequestsLabel.getStyleClass().remove("bisq-text-green");
-                        inventoryRequestsLabel.getStyleClass().add("bisq-text-grey-9");
-                        inventoryRequestsIcon.setId("check-grey");
 
-                        Timeline fadeOut = new Timeline();
-                        ObservableList<KeyFrame> fadeOutKeyFrames = fadeOut.getKeyFrames();
-                        fadeOutKeyFrames.add(new KeyFrame(ManagedDuration.ZERO, new KeyValue(node.opacityProperty(), 0, Interpolator.LINEAR)));
-                        fadeOutKeyFrames.add(new KeyFrame(ManagedDuration.millis(1000), new KeyValue(node.opacityProperty(), 0, Interpolator.LINEAR)));
-                        fadeOutKeyFrames.add(new KeyFrame(ManagedDuration.millis(3000), new KeyValue(node.opacityProperty(), 1, Interpolator.EASE_OUT)));
-                        fadeOut.play();
-                    });
-                    fadeIn.play();
+                    animateRequestInfo(inventoryRequestsIcon, inventoryRequestsLabel);
                 } else {
+                    inventoryRequestsLabel.getStyleClass().remove("bisq-text-green");
                     inventoryRequestsLabel.getStyleClass().add("bisq-text-yellow-dim");
                 }
             });
             inventoryDataChangeFlagPin = EasyBind.subscribe(model.getInventoryDataChangeFlag(), inventoryDataChangeFlag -> {
-                if (inventoryDataChangeFlag != null) {
-                    inventoryRequestsLabel.setText(model.getInventoryRequestsInfo());
-                    boolean allInventoryDataReceived = model.getAllInventoryDataReceived().get();
-                    String allReceived = allInventoryDataReceived ? Res.get("confirmation.yes") : Res.get("confirmation.no");
-                    inventoryRequestsTooltip.setText(
-                            Res.get("navigation.network.info.inventoryRequests.tooltip",
-                                    model.getPendingInventoryRequests(),
-                                    model.getMaxInventoryRequests(),
-                                    allReceived));
-                    ImageView inventoryRequestsIcon = inventoryRequestsPair.getSecond();
-                    inventoryRequestsIcon.setVisible(allInventoryDataReceived);
-                    inventoryRequestsIcon.setManaged(allInventoryDataReceived);
-                }
+                inventoryRequestsLabel.setText(model.getInventoryRequestsInfo());
+                boolean allInventoryDataReceived = model.getAllInventoryDataReceived().get();
+                String allReceived = allInventoryDataReceived ? Res.get("confirmation.yes") : Res.get("confirmation.no");
+                inventoryRequestsTooltip.setText(
+                        Res.get("navigation.network.info.inventoryRequests.tooltip",
+                                model.getPendingInventoryRequests(),
+                                model.getMaxInventoryRequests(),
+                                allReceived));
+                ImageView inventoryRequestsIcon = inventoryRequestsPair.getSecond();
+                inventoryRequestsIcon.setVisible(allInventoryDataReceived);
+                inventoryRequestsIcon.setManaged(allInventoryDataReceived);
             });
 
             root.setOnMouseClicked(e -> controller.onNavigateToNetworkInfo());
@@ -435,7 +416,11 @@ public class NetworkInfo {
             root.setOnMouseClicked(null);
         }
 
-        private Triple<HBox, BisqTooltip, Triple<Label, Label, ImageView>> getNetworkBox(String imageId) {
+        private Triple<HBox, BisqTooltip, Triple<Label, Label, ImageView>> getNetworkBox(String title, String imageId) {
+            Label titleLabel = new Label(title);
+            titleLabel.getStyleClass().add("bisq-smaller-dimmed-label");
+            titleLabel.setMinWidth(Label.USE_PREF_SIZE);
+
             Label numConnectionsLabel = new Label();
             numConnectionsLabel.getStyleClass().add("bisq-smaller-dimmed-label");
             numConnectionsLabel.setMinWidth(Label.USE_PREF_SIZE);
@@ -449,7 +434,7 @@ public class NetworkInfo {
 
             ImageView icon = ImageUtil.getImageViewById(imageId);
 
-            HBox hBox = new HBox(5, icon, numConnectionsLabel, separator, numTargetConnectionsLabel);
+            HBox hBox = new HBox(5, icon, titleLabel, numConnectionsLabel, separator, numTargetConnectionsLabel);
             hBox.setAlignment(Pos.CENTER_LEFT);
 
             BisqTooltip tooltip = new BisqTooltip();
@@ -469,6 +454,38 @@ public class NetworkInfo {
             Tooltip.install(hBox, tooltip);
             Pair<Label, ImageView> pair = new Pair<>(info, icon);
             return new Triple<>(hBox, tooltip, pair);
+        }
+
+        private void animateRequestInfo(ImageView inventoryRequestsIcon, Label inventoryRequestsLabel) {
+            if (Transitions.useAnimations()) {
+                // We use the parent hBox
+                Parent node = inventoryRequestsIcon.getParent();
+                node.setOpacity(1);
+                Timeline fadeIn = new Timeline();
+                ObservableList<KeyFrame> fadeInKeyFrames = fadeIn.getKeyFrames();
+                fadeInKeyFrames.add(new KeyFrame(ManagedDuration.ZERO, new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR)));
+                fadeInKeyFrames.add(new KeyFrame(ManagedDuration.millis(4000), new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR)));
+                fadeInKeyFrames.add(new KeyFrame(ManagedDuration.millis(5000), new KeyValue(node.opacityProperty(), 0, Interpolator.EASE_OUT)));
+                fadeIn.setOnFinished(e -> {
+                    inventoryRequestsLabel.getStyleClass().remove("bisq-text-green");
+                    inventoryRequestsLabel.getStyleClass().add("bisq-text-grey-9");
+                    inventoryRequestsIcon.setId("check-grey");
+
+                    Timeline fadeOut = new Timeline();
+                    ObservableList<KeyFrame> fadeOutKeyFrames = fadeOut.getKeyFrames();
+                    fadeOutKeyFrames.add(new KeyFrame(ManagedDuration.ZERO, new KeyValue(node.opacityProperty(), 0, Interpolator.LINEAR)));
+                    fadeOutKeyFrames.add(new KeyFrame(ManagedDuration.millis(1000), new KeyValue(node.opacityProperty(), 0, Interpolator.LINEAR)));
+                    fadeOutKeyFrames.add(new KeyFrame(ManagedDuration.millis(3000), new KeyValue(node.opacityProperty(), 1, Interpolator.EASE_OUT)));
+                    fadeOut.play();
+                });
+                fadeIn.play();
+            } else {
+                UIScheduler.run(() -> {
+                    inventoryRequestsLabel.getStyleClass().remove("bisq-text-green");
+                    inventoryRequestsLabel.getStyleClass().add("bisq-text-grey-9");
+                    inventoryRequestsIcon.setId("check-grey");
+                }).after(8000);
+            }
         }
     }
 }
