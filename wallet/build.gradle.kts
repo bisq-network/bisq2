@@ -5,11 +5,13 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":common"))
     implementation(project(":persistence"))
     implementation(project(":i18n"))
     implementation(project(":security"))
 
     implementation(libs.typesafe.config)
+    implementation(libs.google.guava)
 }
 
 val grpcPluginId = "grpc"

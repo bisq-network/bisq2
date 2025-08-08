@@ -1,0 +1,124 @@
+syntax = "proto3";
+
+package bisq.wallets.grpc;
+
+option java_multiple_files = true;
+option java_package = "bisq.wallets.grpc.pb";
+option java_outer_classname = "WalletProto";
+
+// The WalletService definition.
+service WalletService {
+  rpc IsWalletReady(IsWalletReadyRequest) returns (IsWalletReadyResponse);
+  rpc GetUnusedAddress(GetUnusedAddressRequest) returns (GetUnusedAddressResponse);
+  rpc GetWalletAddresses(GetWalletAddressesRequest) returns (GetWalletAddressesResponse);
+  rpc ListTransactions(ListTransactionsRequest) returns (ListTransactionsResponse);
+  rpc ListUnspent(ListUnspentRequest) returns (ListUnspentResponse);
+  rpc SendToAddress(SendToAddressRequest) returns (SendToAddressResponse);
+  rpc IsWalletEncrypted(IsWalletEncryptedRequest) returns (IsWalletEncryptedResponse);
+  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
+  rpc GetSeedWords(GetSeedWordsRequest) returns (GetSeedWordsResponse);
+  rpc EncryptWallet(EncryptWalletRequest) returns (EncryptWalletResponse);
+}
+
+
+
+message IsWalletReadyRequest {}
+
+message IsWalletReadyResponse {
+  bool ready = 1;
+}
+
+message GetUnusedAddressRequest {}
+
+message GetUnusedAddressResponse {
+  string address = 1;
+}
+
+message GetWalletAddressesRequest {}
+
+message GetWalletAddressesResponse {
+  repeated string addresses = 1;
+}
+
+message ListTransactionsRequest {}
+
+message ListTransactionsResponse {
+  repeated Transaction transactions = 1;
+}
+
+message ListUnspentRequest {}
+
+message ListUnspentResponse {
+  repeated Utxo utxos = 1;
+}
+
+message SendToAddressRequest {
+  optional string passphrase = 1;
+  string address = 2;
+  double amount = 3;
+}
+
+message SendToAddressResponse {
+  string tx_id = 1;
+}
+
+message IsWalletEncryptedRequest {}
+
+message IsWalletEncryptedResponse {
+  bool encrypted = 1;
+}
+
+message GetBalanceRequest {}
+
+message GetBalanceResponse {
+  // Balance in satoshis
+  int64 balance = 1;
+}
+
+message GetSeedWordsRequest {}
+
+message GetSeedWordsResponse {
+  repeated string seed_words = 1;
+}
+
+message EncryptWalletRequest {
+  string password = 1;
+}
+
+message EncryptWalletResponse {
+  bool success = 1;
+}
+
+message TransactionInput {
+  string prev_out_tx_id = 1;
+  int32 prev_out_index = 2;
+  int64 sequence = 3;
+  string script_sig = 4;
+  string witness = 5;
+}
+
+message TransactionOutput {
+  int64 value = 1;
+  string address = 2;
+  string script_pub_key = 3;
+}
+
+message Transaction {
+  string tx_id = 1;
+  repeated TransactionInput inputs = 2;
+  repeated TransactionOutput outputs = 3;
+  int32 lock_time = 4;
+  int32 height = 5;
+  int64 date = 6; // Unix timestamp
+  int32 confirmations = 7;
+  int64 amount = 8;
+  bool incoming = 9;
+}
+
+message Utxo {
+  string tx_id = 1;
+  int32 vout = 2;
+  int64 amount = 3;
+  string address = 4;
+  int32 confirmations = 5;
+}
