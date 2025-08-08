@@ -15,6 +15,10 @@ package bisq.common.util;/*
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -109,7 +113,30 @@ public class CompletableFutureUtils {
 
         return future;
     }
-    /*public static <T> boolean isCompleted(CompletableFuture<T> future) {
-        return future.state() == Future.State.SUCCESS;
-    }*/
+
+    public static <T> CompletableFuture<T> toCompletableFuture(ListenableFuture<T> future) {
+        var completableFuture = new CompletableFuture<T>();
+        // Propagate cancellation from returned future to source future.
+        completableFuture.whenComplete((result, throwable) -> {
+            if (completableFuture.isCancelled()) {
+                future.cancel(true);
+            }
+        });
+        Futures.addCallback(future, new FutureCallback<>() {
+            @Override
+            public void onSuccess(T result) {
+                completableFuture.complete(result);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                if (t instanceof java.util.concurrent.CancellationException) {
+                    completableFuture.cancel(false);
+                } else {
+                    completableFuture.completeExceptionally(t);
+                }
+            }
+        }, MoreExecutors.directExecutor());
+        return completableFuture;
+    }
 }

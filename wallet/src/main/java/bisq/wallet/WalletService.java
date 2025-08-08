@@ -20,42 +20,166 @@ package bisq.wallet;
 import bisq.common.application.Service;
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Observable;
+import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.collection.ReadOnlyObservableSet;
+import bisq.wallet.protobuf.GetSeedWordsResponse;
+import bisq.wallet.protobuf.GetUnusedAddressResponse;
+import bisq.wallet.protobuf.IsWalletEncryptedResponse;
+import bisq.wallet.protobuf.IsWalletReadyResponse;
+import bisq.wallet.protobuf.SendToAddressRequest;
+import bisq.wallet.protobuf.SendToAddressResponse;
 import bisq.wallet.vo.Transaction;
-import bisq.wallet.vo.TransactionInfo;
 import bisq.wallet.vo.Utxo;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public interface WalletService extends Service {
+@Slf4j
+public class WalletService implements Service {
 
-    void encryptWallet(String password);
+    private final Observable<Coin> balance = new Observable<>();
+    private final ObservableSet<Transaction> transactions = new ObservableSet<>();
+    private final ObservableSet<String> walletAddresses = new ObservableSet<>();
+    private final Config config;
+    private WalletGrpcClient client;
 
-    CompletableFuture<List<String>> getSeedWords();
+    @Getter
+    public static class Config {
+        private final boolean enabled;
+        private final String host;
+        private final int port;
 
-    boolean isWalletReady();
+        public Config(boolean enabled, String host, int port) {
+            this.enabled = enabled;
+            this.host = host;
+            this.port = port;
+        }
 
-    CompletableFuture<String> getUnusedAddress();
+        public static Config from(com.typesafe.config.Config config) {
+            return new Config(
+                    config.getBoolean("enabled"),
+                    config.getString("host"),
+                    config.getInt("port")
+            );
+        }
+    }
 
-    ObservableSet<String> getWalletAddresses();
+    public WalletService(Config config) {
+        this.config = config;
+    }
 
-    CompletableFuture<ObservableSet<String>> requestWalletAddresses();
+    public void encryptWallet(String password) {
+        client.encryptWallet(password);
+    }
 
-    CompletableFuture<List<? extends TransactionInfo>> listTransactions();
+    public void decryptWallet(String password) {
+        client.decryptWallet(password);
+    }
 
-    CompletableFuture<List<? extends Utxo>> listUnspent();
+    public CompletableFuture<List<String>> getSeedWords() {
+        return client.getSeedWords()
+                .thenApply(GetSeedWordsResponse::getSeedWordsList);
+    }
 
-    CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, double amount);
+    public CompletableFuture<Boolean> isWalletReady() {
+        return client.isWalletReady().thenApply(IsWalletReadyResponse::getReady);
+    }
 
-    CompletableFuture<Boolean> isWalletEncrypted();
+    public CompletableFuture<String> getUnusedAddress() {
+        return client.getUnusedAddress()
+                .thenApply(GetUnusedAddressResponse::getAddress);
+    }
 
-    CompletableFuture<Coin> requestBalance();
+    public ReadOnlyObservableSet<String> getWalletAddresses() {
+        return walletAddresses;
+    }
 
-    Observable<Coin> getBalance();
+    public CompletableFuture<ReadOnlyObservableSet<String>> requestWalletAddresses() {
+        return client.requestWalletAddresses()
+                .thenApply(response -> {
+                    walletAddresses.setAll(response.getAddressesList());
+                    return walletAddresses;
+                });
+    }
 
-    ObservableSet<Transaction> getTransactions();
+    public CompletableFuture<List<Transaction>> listTransactions() {
+        return client.listTransactions()
+                .thenApply(response -> response.getTransactionsList().stream()
+                        .map(Transaction::fromProto)
+                        .toList());
+    }
 
-    CompletableFuture<ObservableSet<Transaction>> requestTransactions();
+    public CompletableFuture<List<Utxo>> listUtxos() {
+        return client.listUtxos()
+                .thenApply(response -> response.getUtxosList().stream()
+                        .map(Utxo::fromProto)
+                        .toList());
+    }
+
+    public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, long amount) {
+        var builder = SendToAddressRequest.newBuilder();
+        passphrase.ifPresent(builder::setPassphrase);
+        builder.setAddress(address);
+        builder.setAmount(amount);
+        var request = builder.build();
+
+        return client.sendToAddress(request)
+                .thenApply(SendToAddressResponse::getTxId);
+    }
+
+    public CompletableFuture<Boolean> isWalletEncrypted() {
+        return client.isWalletEncrypted()
+                .thenApply(IsWalletEncryptedResponse::getEncrypted);
+    }
+
+    public CompletableFuture<Coin> requestBalance() {
+        return client.requestBalance()
+                .thenApply(response -> {
+                    var newBalance = Coin.asBtcFromValue(response.getBalance());
+                    balance.set(newBalance);
+                    return newBalance;
+                });
+    }
+
+    public ReadOnlyObservable<Coin> getBalance() {
+        return balance;
+    }
+
+    public ReadOnlyObservableSet<Transaction> getTransactions() {
+        return transactions;
+    }
+
+    public CompletableFuture<ReadOnlyObservableSet<Transaction>> requestTransactions() {
+        return client.listTransactions()
+                .thenApply(response -> {
+                    transactions.setAll(response.getTransactionsList().stream()
+                            .map(Transaction::fromProto)
+                            .toList());
+                    return transactions;
+                });
+    }
+
+    @Override
+    public CompletableFuture<Boolean> initialize() {
+        if (!config.enabled) {
+            log.info("WalletService was disabled");
+            return CompletableFuture.completedFuture(false);
+        }
+        try {
+            client = new WalletGrpcClient(config.host, config.port);
+            return client.initialize();
+        } catch (Exception e) {
+            log.error("Failed to initialize WalletService", e);
+            return CompletableFuture.failedFuture(e);
+        }
+    }
+
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
+        return client.shutdown();
+    }
 }

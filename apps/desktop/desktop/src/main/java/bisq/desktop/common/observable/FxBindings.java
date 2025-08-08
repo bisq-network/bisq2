@@ -22,10 +22,16 @@ import bisq.common.observable.Pin;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.observable.map.HashMapObserver;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.desktop.common.threading.UIThread;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
@@ -127,6 +133,10 @@ public class FxBindings {
         }
 
         public Pin to(ObservableArray<S> observable) {
+            return observable.addCollectionChangeMapper(observableList, filterFunction, mapFunction, UIThread::run);
+        }
+
+        public Pin to(ReadOnlyObservableSet<S> observable) {
             return observable.addCollectionChangeMapper(observableList, filterFunction, mapFunction, UIThread::run);
         }
     }

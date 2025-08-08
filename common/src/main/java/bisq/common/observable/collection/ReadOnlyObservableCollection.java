@@ -19,10 +19,19 @@ package bisq.common.observable.collection;
 
 import bisq.common.observable.Pin;
 
+import java.util.Collection;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 public interface ReadOnlyObservableCollection<S> {
     Pin addObserver(CollectionObserver<S> observer);
 
     Pin addObserver(Runnable observer);
+
+    <T> Pin addCollectionChangeMapper(Collection<T> collection,
+                                      Function<S, Boolean> filterFunction,
+                                      Function<S, T> mapFunction,
+                                      Consumer<Runnable> executor);
 
     int size();
 

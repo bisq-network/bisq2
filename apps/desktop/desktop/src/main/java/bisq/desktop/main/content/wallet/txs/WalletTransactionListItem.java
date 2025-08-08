@@ -26,8 +26,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
-
 @Slf4j
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -46,7 +44,7 @@ public class WalletTransactionListItem implements DateTableItem {
     public WalletTransactionListItem(Transaction transaction) {
         this.transaction = transaction;
 
-        date = transaction.getDate().orElseGet(Date::new).getTime();
+        date = transaction.getDate().getTime();
         dateString = DateFormatter.formatDate(date);
         timeString = DateFormatter.formatTime(date);
         txId = transaction.getTxId();
