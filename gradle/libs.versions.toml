@@ -142,6 +142,7 @@ javacv = { module = "org.bytedeco:javacv-platform", version.ref = "javacv" }
 java-dev-jna = { module = 'net.java.dev.jna:jna', version.ref = 'java-dev-jna-lib' }
 jeromq = { module = 'org.zeromq:jeromq', version.ref = 'jeromq-lib' }
 junit-jupiter = { module = 'org.junit.jupiter:junit-jupiter', version.ref = 'junit-jupiter-lib' }
+junit-jupiter-engine = { module = 'org.junit.jupiter:junit-jupiter-engine', version.ref = 'junit-jupiter-lib' }
 
 logback-core = { module = 'ch.qos.logback:logback-core', version.ref = 'logback-lib' }
 logback-classic = { module = 'ch.qos.logback:logback-classic', version.ref = 'logback-lib' }

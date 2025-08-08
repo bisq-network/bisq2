@@ -5,7 +5,6 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":common"))
     implementation(project(":persistence"))
     implementation(project(":i18n"))
     implementation(project(":security"))
@@ -15,11 +14,8 @@ dependencies {
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.grpc.testing)
     testImplementation(libs.grpc.inprocess)
+    testImplementation(libs.mockito.junit.jupiter)
     testRuntimeOnly(libs.junit.jupiter.engine)
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
 }
 
 val grpcPluginId = "grpc"
