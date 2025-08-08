@@ -30,7 +30,6 @@ import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.PersistableStore;
@@ -80,10 +79,9 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
         networkService.getSupportedTransportTypes().forEach(type ->
                 networkService.getServiceNodesByTransport().findServiceNode(type)
-                        .flatMap(ServiceNode::getInventoryService).stream()
-                        .map(InventoryService::getInventoryRequestService)
-                        .forEach(inventoryRequestService -> {
-                            Pin pin = inventoryRequestService.getAllDataReceived().addObserver(allDataReceived -> {
+                        .flatMap(ServiceNode::getInventoryService)
+                        .ifPresent(inventoryService -> {
+                            Pin pin = inventoryService.getAllDataReceived().addObserver(allDataReceived -> {
                                 if (allDataReceived) {
                                     allInventoryDataReceived = true;
                                 }

@@ -37,7 +37,6 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.TorTransportService;
-import bisq.network.p2p.services.data.inventory.InventoryRequestService;
 import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peer_group.PeerGroupManager;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
@@ -154,17 +153,30 @@ public class NetworkInfo {
         }
 
         private void applyInventoryInfo(ServiceNode serviceNode, InventoryService inventoryService) {
-            InventoryRequestService inventoryRequestService = inventoryService.getInventoryRequestService();
-            numPendingRequestsPin = inventoryRequestService.getNumPendingRequests().addObserver(numPendingRequests -> {
+            inventoryRequestAnimation = UIScheduler.run(() -> {
+                                StringBuilder dots = new StringBuilder();
+                                long numDots = inventoryRequestAnimation.getCounter() % 6;
+                                for (long l = 0; l < numDots; l++) {
+                                    dots.append(".");
+                                }
+                                if (!inventoryService.getAllDataReceived().get()) {
+                                    model.setInventoryRequestsInfo(Res.get("navigation.network.info.inventoryRequest.requesting") + dots);
+                                    updateInventoryDataChangeFlag();
+                                }
+                            }
+                    )
+                    .periodically(250);
+
+            numPendingRequestsPin = inventoryService.getNumPendingRequests().addObserver(numPendingRequests -> {
                         if (numPendingRequests != null) {
                             UIThread.run(() -> {
                                 model.setPendingInventoryRequests(String.valueOf(numPendingRequests));
-                                model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
+                                updateInventoryDataChangeFlag();
                             });
                         }
                     }
             );
-            allDataReceivedPin = inventoryRequestService.getAllDataReceived().addObserver(allDataReceived -> {
+            allDataReceivedPin = inventoryService.getAllDataReceived().addObserver(allDataReceived -> {
                 if (allDataReceived != null) {
                     UIThread.run(() -> {
                         model.getAllInventoryDataReceived().set(allDataReceived);
@@ -176,26 +188,15 @@ public class NetworkInfo {
 
                             model.setInventoryRequestsInfo(Res.get("navigation.network.info.inventoryRequest.completed"));
                         }
-                        model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
+                        updateInventoryDataChangeFlag();
                     });
                 }
             });
-            inventoryRequestAnimation = UIScheduler.run(() -> {
-                                StringBuilder dots = new StringBuilder();
-                                long numDots = inventoryRequestAnimation.getCounter() % 6;
-                                for (long l = 0; l < numDots; l++) {
-                                    dots.append(".");
-                                }
-                                if (!inventoryRequestService.getAllDataReceived().get()) {
-                                    model.setInventoryRequestsInfo(Res.get("navigation.network.info.inventoryRequest.requesting") + dots);
-                                    model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
-                                }
-                            }
-                    )
-                    .periodically(250);
+
+
             model.setMaxInventoryRequests(String.valueOf(inventoryService.getConfig().getMaxPendingRequestsAtStartup()));
 
-            model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
+            updateInventoryDataChangeFlag();
         }
 
         private void applyNumConnections(TransportType type,
@@ -241,6 +242,10 @@ public class NetworkInfo {
                     model.getI2pNumConnections().set(value);
                     break;
             }
+        }
+
+        private void updateInventoryDataChangeFlag() {
+            model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
         }
     }
 
