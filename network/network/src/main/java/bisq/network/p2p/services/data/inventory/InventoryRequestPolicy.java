@@ -19,9 +19,7 @@ package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.util.CollectionUtil;
 import bisq.network.p2p.node.Connection;
-import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,6 +27,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static bisq.network.p2p.services.data.inventory.InventoryRequestPolicy.NextTaskAfterRequestCompleted.DO_NOTHING;
+import static bisq.network.p2p.services.data.inventory.InventoryRequestPolicy.NextTaskAfterRequestCompleted.RETRY_REQUEST_WITH_NEW_CONNECTION;
+import static bisq.network.p2p.services.data.inventory.InventoryRequestPolicy.NextTaskAfterRequestCompleted.RETRY_REQUEST_WITH_SAME_CONNECTION;
+import static bisq.network.p2p.services.data.inventory.InventoryRequestPolicy.NextTaskAfterRequestCompleted.START_PERIODIC_REQUESTS;
 
 /**
  * Encapsulates the policy logic for managing inventory requests in the InventoryService.
@@ -73,8 +76,8 @@ import java.util.stream.Stream;
  * </ul>
  */
 @Slf4j
-public class InventoryRequestPolicy {
-    enum NextTaskAfterRequestCompeted {
+class InventoryRequestPolicy {
+    enum NextTaskAfterRequestCompleted {
         START_PERIODIC_REQUESTS,
         RETRY_REQUEST_WITH_SAME_CONNECTION,
         RETRY_REQUEST_WITH_NEW_CONNECTION,
@@ -83,15 +86,18 @@ public class InventoryRequestPolicy {
 
     private final InventoryService.Config config;
     private final InventoryRequestModel inventoryRequestModel;
+    private final InventoryFilterFactory inventoryFilterFactory;
     private final Node node;
     private final PeerGroupService peerGroupService;
 
-    public InventoryRequestPolicy(InventoryService.Config config,
-                                  InventoryRequestModel inventoryRequestModel,
-                                  Node node,
-                                  PeerGroupService peerGroupService) {
+    InventoryRequestPolicy(InventoryService.Config config,
+                           InventoryRequestModel inventoryRequestModel,
+                           InventoryFilterFactory inventoryFilterFactory,
+                           Node node,
+                           PeerGroupService peerGroupService) {
         this.config = config;
         this.inventoryRequestModel = inventoryRequestModel;
+        this.inventoryFilterFactory = inventoryFilterFactory;
         this.node = node;
         this.peerGroupService = peerGroupService;
     }
@@ -121,34 +127,40 @@ public class InventoryRequestPolicy {
                 .findAny();
     }
 
-    NextTaskAfterRequestCompeted onRequestCompleted(Connection connection, Inventory inventory, Throwable throwable) {
+    NextTaskAfterRequestCompleted onRequestCompleted(Connection connection, Inventory inventory, Throwable throwable) {
         if (inventoryRequestModel.getAllDataReceived().get()) {
-            return NextTaskAfterRequestCompeted.DO_NOTHING;
+            return DO_NOTHING;
         }
 
-        if (throwable != null && isBelowMaxPendingRequests()) {
-            return NextTaskAfterRequestCompeted.RETRY_REQUEST_WITH_NEW_CONNECTION;
+        if (throwable != null) {
+            return isBelowMaxPendingRequests()
+                    ? RETRY_REQUEST_WITH_NEW_CONNECTION
+                    : DO_NOTHING;
         }
 
         if (inventory.allDataReceived()) {
             inventoryRequestModel.getAllDataReceived().set(true);
-            return NextTaskAfterRequestCompeted.START_PERIODIC_REQUESTS;
+            return START_PERIODIC_REQUESTS;
         }
 
         if (isBelowMaxPendingRequests()) {
             if (canUseCandidate(connection)) {
-                return NextTaskAfterRequestCompeted.RETRY_REQUEST_WITH_SAME_CONNECTION;
+                return RETRY_REQUEST_WITH_SAME_CONNECTION;
             } else {
-                return NextTaskAfterRequestCompeted.RETRY_REQUEST_WITH_NEW_CONNECTION;
+                return RETRY_REQUEST_WITH_NEW_CONNECTION;
             }
         } else {
-            return NextTaskAfterRequestCompeted.DO_NOTHING;
+            return DO_NOTHING;
         }
     }
 
     long getDelayForPeriodicRequests(List<Inventory> results,
                                      Throwable throwable,
                                      List<Connection> candidates) {
+        if (throwable != null || results == null) {
+            log.info("Periodic batch request failed – retrying in 1 second");
+            return 1000;
+        }
         boolean allDataReceived = results.stream().anyMatch(Inventory::allDataReceived);
         if (allDataReceived) {
             long delay = config.getRepeatRequestInterval();
@@ -165,25 +177,11 @@ public class InventoryRequestPolicy {
 
     private boolean canUseCandidate(Connection connection) {
         return !inventoryRequestModel.getRequestFuturesByConnectionId().containsKey(connection.getId()) &&
-                getPreferredFilterType(connection.getPeersCapability().getFeatures()).isPresent();
+                inventoryFilterFactory.getPreferredFilterType(connection.getPeersCapability().getFeatures()).isPresent();
     }
 
     private boolean isBelowMaxPendingRequests() {
         inventoryRequestModel.getNumPendingRequests().set(inventoryRequestModel.getRequestFuturesByConnectionId().size());
-        return inventoryRequestModel.getNumPendingRequests().get() < config.getMaxPendingRequestsAtStartup();
-    }
-
-    // Get first match with peers feature based on order of myPreferredFilterTypes
-    private Optional<InventoryFilterType> getPreferredFilterType(List<Feature> peersFeatures) {
-        List<InventoryFilterType> peersInventoryFilterTypes = toFilterTypes(peersFeatures);
-        return config.getMyPreferredFilterTypes().stream()
-                .filter(peersInventoryFilterTypes::contains)
-                .findFirst();
-    }
-
-    private List<InventoryFilterType> toFilterTypes(List<Feature> features) {
-        return features.stream()
-                .flatMap(feature -> InventoryFilterType.fromFeature(feature).stream())
-                .collect(Collectors.toList());
+        return inventoryRequestModel.getNumPendingRequests().get() < config.getMaxPendingRequests();
     }
 }

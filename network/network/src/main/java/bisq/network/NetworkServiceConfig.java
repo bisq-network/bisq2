@@ -57,15 +57,15 @@ public final class NetworkServiceConfig {
         Set<Feature> features = new HashSet<>(config.getEnumList(Feature.class, "features"));
 
         PeerGroupService.Config peerGroupConfig = PeerGroupService.Config.from(config.getConfig("peerGroup"));
-        PeerExchangeService.Config peerExchangeStrategyConfig = PeerExchangeService.Config.from(config.getConfig("peerExchangeStrategy"));
+        PeerExchangeService.Config peerExchangeServiceConfig = PeerExchangeService.Config.from(config.getConfig("peerExchange"));
         KeepAliveService.Config keepAliveServiceConfig = KeepAliveService.Config.from(config.getConfig("keepAlive"));
 
         PeerGroupManager.Config defaultConf = PeerGroupManager.Config.from(peerGroupConfig,
-                peerExchangeStrategyConfig,
+                peerExchangeServiceConfig,
                 keepAliveServiceConfig,
                 config.getConfig("defaultPeerGroup"));
         PeerGroupManager.Config clearNetConf = PeerGroupManager.Config.from(peerGroupConfig,
-                peerExchangeStrategyConfig,
+                peerExchangeServiceConfig,
                 keepAliveServiceConfig,
                 config.getConfig("clearNetPeerGroup"));
 

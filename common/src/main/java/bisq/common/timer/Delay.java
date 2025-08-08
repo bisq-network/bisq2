@@ -30,8 +30,8 @@ import java.util.function.Supplier;
  * task execution and future flattening, allowing for clean, readable scheduling code such as:
  * </p>
  * <pre>{@code
- * DelayedExecution.run(() -> someAsyncOperation())
- *                 .executeOn(myExecutor)
+ * Delay.run(() -> someAsyncOperation())
+ *                 .withExecutor(myExecutor)
  *                 .after(1500);
  * }</pre>
  *
@@ -58,7 +58,7 @@ public class Delay<T> {
     private Executor taskExecutor;
 
     /**
-     * Constructs a new {@code DelayedExecution} for a given asynchronous task supplier.
+     * Constructs a new {@code Delay} for a given asynchronous task supplier.
      *
      * @param taskSupplier a {@code Supplier} that returns a {@code CompletableFuture<T>} task
      */
@@ -71,7 +71,7 @@ public class Delay<T> {
      *
      * @param taskSupplier a {@code Supplier} that returns a {@code CompletableFuture<T>} task
      * @param <T>          the type of result produced by the task
-     * @return a new {@code DelayedExecution<T>} instance
+     * @return a new {@code Delay<T>} instance
      */
     public static <T> Delay<T> run(Supplier<CompletableFuture<T>> taskSupplier) {
         return new Delay<>(taskSupplier);
@@ -85,7 +85,7 @@ public class Delay<T> {
      * </p>
      *
      * @param taskExecutor the {@code Executor} to use for executing the task
-     * @return the same {@code DelayedExecution} instance for fluent chaining
+     * @return the same {@code Delay} instance for fluent chaining
      */
     public Delay<T> withExecutor(Executor taskExecutor) {
         this.taskExecutor = taskExecutor;
@@ -116,7 +116,7 @@ public class Delay<T> {
      */
     public CompletableFuture<T> after(long delay, TimeUnit timeUnit) {
         if (taskExecutor == null) {
-            throw new IllegalStateException("Task executor must be specified using executeOn(...) before calling after(...)");
+            throw new IllegalStateException("Task executor must be specified using withExecutor(...) before calling after(...)");
         }
         return CompletableFuture
                 .supplyAsync(taskSupplier, CompletableFuture.delayedExecutor(delay, timeUnit, taskExecutor))

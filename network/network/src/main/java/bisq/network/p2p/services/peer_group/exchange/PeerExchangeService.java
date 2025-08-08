@@ -73,12 +73,13 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
 
     public PeerExchangeService(Node node,
                                PeerGroupService peerGroupService,
-                               Config config) {
+                               Config config,
+                               PeerGroupService.Config peerGroupConfig) {
         super(node, TIMEOUT);
 
         this.peerGroupService = peerGroupService;
 
-        policy = new PeerExchangePolicy(peerGroupService, node, config);
+        policy = new PeerExchangePolicy(peerGroupService, node, config, peerGroupConfig);
     }
 
     public void initialize() {
@@ -160,8 +161,11 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
                             retryPeerExchangeWithDelay();
                         }
                     }
-                    // If min success was reached, we had already completed earlier with a success result.
-                    resultFuture.complete(false);
+                    if (throwable != null && !resultFuture.isDone()) {
+                        resultFuture.completeExceptionally(throwable);
+                    } else if (!resultFuture.isDone()) {
+                        resultFuture.complete(false);
+                    }
                 });
         return resultFuture;
     }

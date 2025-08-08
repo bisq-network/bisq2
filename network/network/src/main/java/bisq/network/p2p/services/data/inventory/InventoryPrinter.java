@@ -38,7 +38,12 @@ public class InventoryPrinter {
     static void print(InventoryResponse response,
                       Connection connection,
                       Map<String, Long> requestTimestampByConnectionId) {
-        long requestTs = requestTimestampByConnectionId.get(connection.getId());
+        Long requestTsValue = requestTimestampByConnectionId.get(connection.getId());
+        if (requestTsValue == null) {
+            log.warn("Map entry for {} not present in requestTimestampByConnectionId", connection.getId());
+            return;
+        }
+        long requestTs = requestTsValue;
         Map<String, Map<String, AtomicInteger>> dataRequestMap = new HashMap<>();
         Inventory inventory = response.getInventory();
         inventory.getEntries()

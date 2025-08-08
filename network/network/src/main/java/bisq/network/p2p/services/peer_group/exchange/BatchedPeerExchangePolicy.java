@@ -17,13 +17,11 @@
 
 package bisq.network.p2p.services.peer_group.exchange;
 
-import bisq.common.observable.Observable;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Manages the policy and tracking logic for a batched peer exchange based on the outcomes of individual peer exchanges.
@@ -51,8 +49,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * <ul>
  *   <li>{@code numSuccess} - Tracks the count of successful peer exchanges.</li>
  *   <li>{@code numFailures} - Tracks the count of failed peer exchanges.</li>
- *   <li>{@code minSuccessReached} - An observable boolean indicating if the minimum success threshold has been reached.</li>
- *   <li>{@code peerExchangeStrategy} - The strategy that defines thresholds and conditions for retry decisions.</li>
  *   <li>{@code numMinSuccess} - The minimum number of successes required to consider the exchange satisfactory.</li>
  *   <li>{@code candidatesSize} - The total number of peer candidates considered in the exchange.</li>
  * </ul>
@@ -68,7 +64,6 @@ import java.util.concurrent.atomic.AtomicReference;
 class BatchedPeerExchangePolicy {
     private final AtomicInteger numSuccess = new AtomicInteger();
     private final AtomicInteger numFailures = new AtomicInteger();
-    private final AtomicReference<Observable<Boolean>> minSuccessReached = new AtomicReference<>(new Observable<>(false));
     private final PeerGroupService peerGroupService;
     private final Node node;
     private final int numMinSuccess;
@@ -84,19 +79,18 @@ class BatchedPeerExchangePolicy {
     void trackSuccess(Throwable throwable) {
         if (throwable == null) {
             numSuccess.incrementAndGet();
+            boolean isMinSuccessReached = numSuccess.get() == numMinSuccess;
+            if (isMinSuccessReached) {
+                log.info("Min. success reached at initial peer exchange.\nnumSuccess={}; numFailures={}; numMinSuccess.get()={}; candidates.size()={}.",
+                        numSuccess.get(), numFailures.get(), numMinSuccess, candidatesSize);
+            }
         } else {
             numFailures.incrementAndGet();
         }
     }
 
     boolean wasMinSuccessReached() {
-        boolean isMinSuccessReached = numSuccess.get() >= numMinSuccess;
-        if (isMinSuccessReached && !minSuccessReached.get().get()) {
-            log.info("Min. success reached at initial peer exchange.\nnumSuccess={}; numFailures={}; numMinSuccess.get()={}; candidates.size()={}. At instance: {}",
-                    numSuccess.get(), numFailures.get(), numMinSuccess, candidatesSize, this);
-            minSuccessReached.get().set(true);
-        }
-        return isMinSuccessReached;
+        return numSuccess.get() >= numMinSuccess;
     }
 
     boolean requiresRetry(Throwable throwable) {
@@ -106,31 +100,37 @@ class BatchedPeerExchangePolicy {
             return true;
         }
 
-        log.info("Peer exchange completed. numSuccess={}; numFailures={}; numMinSuccess.get()={}; candidates.size()={}. At instance: {}",
-                numSuccess.get(), numFailures.get(), numMinSuccess, candidatesSize, this);
+        log.info("Peer exchange completed. numSuccess={}; numFailures={}; numMinSuccess.get()={}; candidates.size()={}.",
+                numSuccess.get(), numFailures.get(), numMinSuccess, candidatesSize);
 
-        boolean tooManyFailures =tooManyFailures(numSuccess.get(), numFailures.get());
-        boolean needsMoreConnections = needsMoreConnections();
-        boolean needsMoreReportedPeers = needsMoreReportedPeers();
-        boolean isMinSuccessReached = minSuccessReached.get().get();
-        boolean requireRetry = tooManyFailures || needsMoreConnections || needsMoreReportedPeers || !isMinSuccessReached;
-        if (requireRetry) {
-            if (tooManyFailures) {
-                log.info("Require retry of peer exchange because of: tooManyFailures. At instance: {}", this);
-            } else if (needsMoreConnections) {
-                log.info("Require retry of peer exchange because of: needsMoreConnections. At instance: {}", this);
-            } else {
-                log.info("Require retry of peer exchange because of: needsMoreReportedPeers. At instance: {}", this);
-            }
-            if (!isMinSuccessReached) {
-                log.info("All peer exchange completed but minSuccessReached not reached.\n" +
-                                "numSuccess={}; numFailures={}; numMinSuccess.get()={}; candidates.size()={}. At instance: {}",
-                        numSuccess.get(), numFailures.get(), numMinSuccess, candidatesSize, this);
-            }
-        } else {
-            log.info("We stop our peer exchange as we have sufficient connections established. At instance: {}", this);
+        boolean tooManyFailures = tooManyFailures(numSuccess.get(), numFailures.get());
+        if (tooManyFailures) {
+            log.info("Require retry of peer exchange because of: tooManyFailures.");
+            return true;
         }
-        return requireRetry;
+
+        boolean needsMoreConnections = needsMoreConnections();
+        if (needsMoreConnections) {
+            log.info("Require retry of peer exchange because of: needsMoreConnections.");
+            return true;
+        }
+
+        boolean needsMoreReportedPeers = needsMoreReportedPeers();
+        if (needsMoreReportedPeers) {
+            log.info("Require retry of peer exchange because of: needsMoreReportedPeers.");
+            return true;
+        }
+
+        boolean isMinSuccessReached = numSuccess.get() >= numMinSuccess;
+        if (!isMinSuccessReached) {
+            log.info("All peer exchange completed but minSuccessReached not reached.\n" +
+                            "numSuccess={}; numFailures={}; numMinSuccess.get()={}; candidates.size()={}.",
+                    numSuccess.get(), numFailures.get(), numMinSuccess, candidatesSize);
+            return true;
+        }
+
+        log.info("We stop our peer exchange as we have sufficient connections established.");
+        return false;
     }
 
     private boolean tooManyFailures(int numSuccess, int numFailures) {
@@ -138,6 +138,7 @@ class BatchedPeerExchangePolicy {
         int maxFailures = numRequests / 2;
         return numFailures > maxFailures;
     }
+
     private boolean needsMoreReportedPeers() {
         return peerGroupService.getReportedPeers().size() < peerGroupService.getMinNumReportedPeers();
     }

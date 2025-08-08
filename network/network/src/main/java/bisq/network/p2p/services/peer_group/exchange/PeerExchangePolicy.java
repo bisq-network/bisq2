@@ -83,7 +83,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * </ul>
  */
 @Slf4j
-public class PeerExchangePolicy {
+class PeerExchangePolicy {
     public static final long REPORTED_PEERS_LIMIT = 500;
     private static final long MAX_RETRY_DELAY = SECONDS.toMillis(60);
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(5);
@@ -91,12 +91,16 @@ public class PeerExchangePolicy {
     private final PeerGroupService peerGroupService;
     private final Node node;
     private final PeerExchangeService.Config config;
+    private final PeerGroupService.Config peerGroupConfig;
     private final Set<Address> usedAddresses = new CopyOnWriteArraySet<>();
 
-    public PeerExchangePolicy(PeerGroupService peerGroupService, Node node, PeerExchangeService.Config config) {
+    PeerExchangePolicy(PeerGroupService peerGroupService, Node node,
+                       PeerExchangeService.Config config,
+                       PeerGroupService.Config peerGroupConfig) {
         this.peerGroupService = peerGroupService;
         this.node = node;
         this.config = config;
+        this.peerGroupConfig = peerGroupConfig;
 
         PeerExchangeRequest.setMaxNumPeers(REPORTED_PEERS_LIMIT);
         PeerExchangeResponse.setMaxNumPeers(REPORTED_PEERS_LIMIT);
@@ -156,7 +160,8 @@ public class PeerExchangePolicy {
     boolean shouldExtendAfterInitialExchange(Boolean result,
                                              Throwable throwable,
                                              List<Address> candidates) {
-        return result != null && result && candidates.size() < 8;
+        // minNumConnectedPeers is 8 by default
+        return result != null && result && candidates.size() < peerGroupConfig.getMinNumConnectedPeers();
     }
 
     int getMinSuccessForExtendPeerGroup(List<Address> candidates) {

@@ -102,11 +102,11 @@ public class PeerGroupManager implements Node.Listener {
         }
 
         public static Config from(PeerGroupService.Config peerGroupConfig,
-                                  PeerExchangeService.Config peerExchangeStrategyConfig,
+                                  PeerExchangeService.Config peerExchangeServiceConfig,
                                   KeepAliveService.Config keepAliveServiceConfig,
                                   com.typesafe.config.Config typesafeConfig) {
             return new Config(peerGroupConfig,
-                    peerExchangeStrategyConfig,
+                    peerExchangeServiceConfig,
                     keepAliveServiceConfig,
                     SECONDS.toMillis(typesafeConfig.getLong("bootstrapTimeInSeconds")),
                     SECONDS.toMillis(typesafeConfig.getLong("houseKeepingIntervalInSeconds")),
@@ -147,7 +147,7 @@ public class PeerGroupManager implements Node.Listener {
         this.config = config;
         this.peerGroupService = peerGroupService;
 
-        peerExchangeService = new PeerExchangeService(node, peerGroupService, config.getPeerExchangeConfig());
+        peerExchangeService = new PeerExchangeService(node, peerGroupService, config.getPeerExchangeConfig(), config.getPeerGroupConfig());
         keepAliveService = new KeepAliveService(node, config.getKeepAliveServiceConfig());
         networkLoadExchangeService = new NetworkLoadExchangeService(node);
 
@@ -215,7 +215,13 @@ public class PeerGroupManager implements Node.Listener {
                 setState(PeerGroupManager.State.INITIALIZING);
                 // blocking
                 peerExchangeService.initialize();
-                Boolean result = peerExchangeService.startInitialPeerExchange().join();
+                Boolean result = peerExchangeService.startInitialPeerExchange()
+                        .orTimeout(180, SECONDS)
+                        .exceptionally(e -> {
+                            log.warn("Initial peer exchange timed out or failed: {}", e.toString());
+                            throw new IllegalStateException("Initial peer exchange failed", e);
+                        })
+                        .join();
                 log.info("Completed startInitialPeerExchange with result {}. Start periodic tasks with interval: {} sec",
                         result, config.getHouseKeepingInterval() / 1000);
                 scheduler = Optional.of(Scheduler.run(this::doHouseKeeping)

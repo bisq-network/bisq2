@@ -52,7 +52,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * by all transport specific services.
  * <p>
  * <p>
- * We request at startup from all new connections up to maxPendingRequestsAtStartup (5 by default).
+ * We request at startup from all new connections up to maxPendingRequests (5 by default).
  */
 @Slf4j
 public class InventoryService extends RequestResponseHandler<InventoryRequest, InventoryResponse> {
@@ -65,7 +65,7 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
         private final long repeatRequestInterval; // Default 10 min
         private final int maxSeedsForRequest;
         private final int maxPeersForRequest;
-        private final int maxPendingRequestsAtStartup; // Default 5
+        private final int maxPendingRequests; // Default 5
         private final int maxPendingRequestsAtPeriodicRequests; // Default 2
         private final List<InventoryFilterType> myPreferredFilterTypes; // Lower list index means higher preference
 
@@ -74,7 +74,7 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
                     SECONDS.toMillis(config.getLong("repeatRequestIntervalInSeconds")),
                     config.getInt("maxSeedsForRequest"),
                     config.getInt("maxPeersForRequest"),
-                    config.getInt("maxPendingRequestsAtStartup"),
+                    config.getInt("maxPendingRequests"),
                     config.getInt("maxPendingRequestsAtPeriodicRequests"),
                     new ArrayList<>(config.getEnumList(InventoryFilterType.class, "myPreferredFilterTypes")));
         }
@@ -83,14 +83,14 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
                       long repeatRequestInterval,
                       int maxSeedsForRequest,
                       int maxPeersForRequest,
-                      int maxPendingRequestsAtStartup,
+                      int maxPendingRequests,
                       int maxPendingRequestsAtPeriodicRequests,
                       List<InventoryFilterType> myPreferredFilterTypes) {
             this.maxSizeInKb = maxSizeInKb;
             this.repeatRequestInterval = repeatRequestInterval;
             this.maxSeedsForRequest = maxSeedsForRequest;
             this.maxPeersForRequest = maxPeersForRequest;
-            this.maxPendingRequestsAtStartup = maxPendingRequestsAtStartup;
+            this.maxPendingRequests = maxPendingRequests;
             this.maxPendingRequestsAtPeriodicRequests = maxPendingRequestsAtPeriodicRequests;
             this.myPreferredFilterTypes = myPreferredFilterTypes;
         }
@@ -110,24 +110,24 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
                             Node node,
                             PeerGroupManager peerGroupManager,
                             DataService dataService,
-                            Set<Feature> features) {
+                            Set<Feature> myFeatures) {
 
         super(node, TIMEOUT);
         this.dataService = dataService;
         this.config = config;
 
-        inventoryFilterFactory = new InventoryFilterFactory(features, dataService, config);
+        inventoryFilterFactory = new InventoryFilterFactory(myFeatures, dataService, config);
         model = new InventoryRequestModel(requestFuturesByConnectionId);
-        policy = new InventoryRequestPolicy(config, model, node, peerGroupManager.getPeerGroupService());
+        policy = new InventoryRequestPolicy(config, model, inventoryFilterFactory, node, peerGroupManager.getPeerGroupService());
         initialize();
     }
 
     public void shutdown() {
-        super.shutdown();
         if (shutdownInProgress) {
             return;
         }
         shutdownInProgress = true;
+        super.shutdown();
         periodicRequestScheduler.ifPresent(Scheduler::stop);
         periodicRequestScheduler = Optional.empty();
     }
@@ -203,10 +203,6 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
         model.getRequestTimestampByConnectionId().remove(connection.getId());
     }
 
-    @Override
-    protected void onRequest(Connection connection, InventoryRequest request) {
-    }
-
 
     /* --------------------------------------------------------------------- */
     // Delegate
@@ -228,12 +224,15 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
     private void requestWithRetry(Connection connection) {
         request(connection)
                 .whenComplete((inventory, throwable) -> {
-                    if (throwable != null && !shutdownInProgress) {
+                    if (shutdownInProgress) {
+                        return;
+                    }
+                    if (throwable != null) {
                         log.info("Exception at inventory request to peer {}: {}",
                                 connection.getPeerAddress().getFullAddress(), ExceptionUtil.getRootCauseMessage(throwable));
                     }
 
-                    InventoryRequestPolicy.NextTaskAfterRequestCompeted nextTask = policy.onRequestCompleted(connection, inventory, throwable);
+                    InventoryRequestPolicy.NextTaskAfterRequestCompleted nextTask = policy.onRequestCompleted(connection, inventory, throwable);
                     switch (nextTask) {
                         case START_PERIODIC_REQUESTS -> startPeriodicRequests(config.getRepeatRequestInterval());
                         case RETRY_REQUEST_WITH_SAME_CONNECTION -> requestWithRetry(connection);
@@ -248,11 +247,17 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
     private CompletableFuture<Inventory> request(Connection connection) {
         InventoryFilter inventoryFilter = inventoryFilterFactory.createInventoryFilterForRequest(connection);
         InventoryRequest request = new InventoryRequest(inventoryFilter, createNonce());
-        model.getRequestTimestampByConnectionId().computeIfAbsent(connection.getId(), k -> System.currentTimeMillis());
+        model.getRequestTimestampByConnectionId().put(connection.getId(), System.currentTimeMillis());
         CompletableFuture<InventoryResponse> requestFuture = request(connection, request);
         updateNumPendingRequests();
         return requestFuture
-                .whenComplete((r, t) -> updateNumPendingRequests())
+                .whenComplete((r, throwable) -> {
+                    updateNumPendingRequests();
+                    // On exceptional completion we won't reach processResponse; ensure cleanup
+                    if (throwable != null) {
+                        model.getRequestTimestampByConnectionId().remove(connection.getId());
+                    }
+                })
                 .thenApply(response -> {
                     Inventory inventory = response.getInventory();
                     inventory.getEntries().forEach(dataRequest -> {
@@ -267,6 +272,9 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
     }
 
     private void startPeriodicRequests(long interval) {
+        if (shutdownInProgress) {
+            return;
+        }
         periodicRequestScheduler.ifPresent(Scheduler::stop);
         periodicRequestScheduler = Optional.of(Scheduler.run(this::periodicRequest)
                 .host(this)
@@ -279,6 +287,9 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
         Stream<CompletableFuture<Inventory>> futures = candidates.stream().map(this::request);
         CompletableFutureUtils.allOf(futures)
                 .whenComplete((results, throwable) -> {
+                    if (shutdownInProgress) {
+                        return;
+                    }
                     long delay = policy.getDelayForPeriodicRequests(results, throwable, candidates);
                     startPeriodicRequests(delay);
                 });

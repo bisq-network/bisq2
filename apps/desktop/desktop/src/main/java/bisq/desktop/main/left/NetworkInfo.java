@@ -194,7 +194,7 @@ public class NetworkInfo {
             });
 
 
-            model.setMaxInventoryRequests(String.valueOf(inventoryService.getConfig().getMaxPendingRequestsAtStartup()));
+            model.setMaxInventoryRequests(String.valueOf(inventoryService.getConfig().getMaxPendingRequests()));
 
             updateInventoryDataChangeFlag();
         }

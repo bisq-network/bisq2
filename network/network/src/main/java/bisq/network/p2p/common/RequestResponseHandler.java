@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @Slf4j
-public abstract class RequestResponseHandler<T extends Request, R extends Response> extends CompletableFuture<R> implements Node.Listener {
+public abstract class RequestResponseHandler<T extends Request, R extends Response> implements Node.Listener {
     protected final Node node;
     protected final long timeout;
     protected final Map<String, RequestFuture<T, R>> requestFuturesByConnectionId = new ConcurrentHashMap<>();
@@ -80,13 +80,21 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
     // If we get called on a connection we have already assigned a request for, we ignore the new request and return
     // the future from the pending request.
     protected CompletableFuture<R> request(Connection connection, T request) {
-        return requestFuturesByConnectionId.computeIfAbsent(connection.getId(), key -> {
+        return requestFuturesByConnectionId.compute(connection.getId(), (k, existing) -> {
+            if (existing != null && !existing.isDone()) {
+                log.warn("Reusing pending request future for {}", connection.getPeerAddress());
+                return existing;
+            }
             RequestFuture<T, R> requestFuture = new RequestFuture<>(node, connection, request);
             requestFuture.orTimeout(timeout, TimeUnit.MILLISECONDS)
                     .whenComplete((response, throwable) -> {
-                        requestFuturesByConnectionId.remove(key);
+                        requestFuturesByConnectionId.remove(k);
                         if (throwable instanceof TimeoutException) {
                             log.warn("Request to {} timed out after {} ms", connection.getPeerAddress(), timeout);
+                        } else if (throwable != null) {
+                            log.warn("Request to {} failed: {}", connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
+                        } else {
+                            log.debug("Request to {} completed", connection.getPeerAddress());
                         }
                     });
             return requestFuture;
@@ -121,7 +129,8 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
                 });
     }
 
-    protected abstract void onRequest(Connection connection, T request);
+    protected void onRequest(Connection connection, T request) {
+    }
 
     @Override
     public void onConnection(Connection connection) {
@@ -141,9 +150,5 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
 
     protected int createNonce() {
         return new Random().nextInt();
-    }
-
-    protected int otNonce(String requestId) {
-        return Integer.parseInt(requestId);
     }
 }
