@@ -18,18 +18,13 @@
 package bisq.network.p2p.services.peer_group.network_load;
 
 import bisq.common.timer.Scheduler;
-import bisq.common.util.ExceptionUtil;
-import bisq.network.identity.NetworkId;
-import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.node.CloseReason;
+import bisq.network.p2p.common.RequestResponseHandler;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.node.network_load.NetworkLoad;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -37,22 +32,20 @@ import java.util.concurrent.TimeUnit;
  * We do not user a config here as we want to have the same behaviour in the network to avoid stale networkLoad states.
  */
 @Slf4j
-public class NetworkLoadExchangeService implements Node.Listener {
-    private static final long TIMEOUT_SEC = 120;
+public class NetworkLoadExchangeService extends RequestResponseHandler<NetworkLoadExchangeRequest, NetworkLoadExchangeResponse> {
+    private static final long TIMEOUT = TimeUnit.SECONDS.toMillis(120);
     private static final long INITIAL_DELAY = TimeUnit.SECONDS.toMillis(10);
     private static final long INTERVAL = TimeUnit.MINUTES.toMillis(3);
     private static final long MAX_IDLE = TimeUnit.MINUTES.toMillis(5);
 
-    private final Node node;
-    private final Map<String, NetworkLoadExchangeHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private Optional<Scheduler> scheduler = Optional.empty();
 
     public NetworkLoadExchangeService(Node node) {
-        this.node = node;
+        super(node, TIMEOUT);
     }
 
     public void initialize() {
-        node.addListener(this);
+        super.initialize();
         scheduler = Optional.of(Scheduler.run(this::requestFromAll)
                 .host(this)
                 .runnableName("requestFromAll")
@@ -60,11 +53,29 @@ public class NetworkLoadExchangeService implements Node.Listener {
     }
 
     public void shutdown() {
-        node.removeListener(this);
+        super.shutdown();
         scheduler.ifPresent(Scheduler::stop);
         scheduler = Optional.empty();
-        requestHandlerMap.values().forEach(NetworkLoadExchangeHandler::dispose);
-        requestHandlerMap.clear();
+    }
+
+    @Override
+    protected NetworkLoadExchangeResponse createResponse(Connection connection, NetworkLoadExchangeRequest request) {
+        return new NetworkLoadExchangeResponse(request.getNonce(), node.getNetworkLoadSnapshot().getCurrentNetworkLoad());
+    }
+
+    @Override
+    protected Class<NetworkLoadExchangeRequest> getRequestClass() {
+        return NetworkLoadExchangeRequest.class;
+    }
+
+    @Override
+    protected Class<NetworkLoadExchangeResponse> getResponseClass() {
+        return NetworkLoadExchangeResponse.class;
+    }
+
+    @Override
+    protected void onRequest(Connection connection, NetworkLoadExchangeRequest request) {
+        connection.getPeersNetworkLoadSnapshot().updateNetworkLoad(request.getNetworkLoad());
     }
 
     private void requestFromAll() {
@@ -73,55 +84,14 @@ public class NetworkLoadExchangeService implements Node.Listener {
                 .forEach(this::request);
     }
 
-    public void request(Connection connection) {
-        String key = connection.getId();
-        if (requestHandlerMap.containsKey(key)) {
-            log.info("requestHandlerMap contains {}. " +
-                            "This is expected if the connection is still pending the response or the peer is not available " +
-                            "but the timeout has not triggered an exception yet. We skip that request. Connection={}",
-                    key, connection);
-            return;
-        }
-        NetworkLoadExchangeHandler handler = new NetworkLoadExchangeHandler(node, connection);
-        requestHandlerMap.put(key, handler);
-        handler.request()
-                .orTimeout(TIMEOUT_SEC, TimeUnit.SECONDS)
-                .whenComplete((nil, throwable) -> requestHandlerMap.remove(key));
-    }
-
-    @Override
-    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-        if (envelopePayloadMessage instanceof NetworkLoadExchangeRequest request) {
-            NetworkLoad peersNetworkLoad = request.getNetworkLoad();
-            log.debug("Received NetworkLoadRequest with nonce {} and peers networkLoad {} from {}",
-                    request.getNonce(), peersNetworkLoad, connection.getPeerAddress());
-            connection.getPeersNetworkLoadSnapshot().updateNetworkLoad(peersNetworkLoad);
-            NetworkLoad myNetworkLoad = node.getNetworkLoadSnapshot().getCurrentNetworkLoad();
-            NetworkLoadExchangeResponse response = new NetworkLoadExchangeResponse(request.getNonce(),
-                    myNetworkLoad);
-            node.sendAsync(response, connection)
-                    .whenComplete((result, throwable) -> {
-                        if (throwable != null) {
-                            log.warn("Sending {} to {} failed. {}", response.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
-                        } else {
-                            log.debug("Sent NetworkLoadResponse with nonce {} and my networkLoad {} to {}. Connection={}",
-                                    request.getNonce(), myNetworkLoad, connection.getPeerAddress(), connection.getId());
-                        }
-                    });
-        }
-    }
-
-    @Override
-    public void onConnection(Connection connection) {
-    }
-
-    @Override
-    public void onDisconnect(Connection connection, CloseReason closeReason) {
-        String key = connection.getId();
-        if (requestHandlerMap.containsKey(key)) {
-            requestHandlerMap.get(key).dispose();
-            requestHandlerMap.remove(key);
-        }
+    private CompletableFuture<NetworkLoadExchangeResponse> request(Connection connection) {
+        NetworkLoadExchangeRequest request = new NetworkLoadExchangeRequest(createNonce(), node.getNetworkLoadSnapshot().getCurrentNetworkLoad());
+        return super.request(connection, request)
+                .whenComplete((response, throwable) -> {
+                    if (throwable == null) {
+                        connection.getPeersNetworkLoadSnapshot().updateNetworkLoad(response.getNetworkLoad());
+                    }
+                });
     }
 
     private boolean needsUpdate(Connection connection) {
