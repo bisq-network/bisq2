@@ -18,91 +18,32 @@
 package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.data.ByteUnit;
-import bisq.common.util.ExceptionUtil;
 import bisq.common.util.MathUtils;
-import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
-import bisq.network.p2p.node.Node;
-import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.RefreshAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-@Getter
 @Slf4j
-class InventoryHandler implements Connection.Listener {
-    private final Node node;
-    private final Connection connection;
-    private final CompletableFuture<Inventory> future = new CompletableFuture<>();
-    private final int nonce;
-    private long requestTs;
-
-    InventoryHandler(Node node, Connection connection) {
-        this.node = node;
-        this.connection = connection;
-
-        nonce = new Random().nextInt();
-        connection.addListener(this);
-    }
-
-    CompletableFuture<Inventory> request(InventoryFilter inventoryFilter) {
-        requestTs = System.currentTimeMillis();
-        log.info("Send InventoryRequest to {} with {}", connection.getPeerAddress(), inventoryFilter.getDetails());
-        InventoryRequest request = new InventoryRequest(inventoryFilter, nonce);
-        node.sendAsync(request, connection)
-                .whenComplete((result, throwable) -> {
-                    if (throwable != null) {
-                        log.warn("Sending {} to {} failed. {}", request.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
-                        future.completeExceptionally(throwable);
-                        removeListeners();
-                    }
-                });
-        return future;
-    }
-
-    /* --------------------------------------------------------------------- */
-    // Connection.Listener implementation
-    /* --------------------------------------------------------------------- */
-
-    @Override
-    public void onNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof InventoryResponse response) {
-            if (response.getRequestNonce() == nonce) {
-                printReceivedInventory(response);
-                removeListeners();
-                future.complete(response.getInventory());
-            } else {
-                log.warn("Received InventoryResponse from {} with invalid nonce {}. Request nonce was {}. Peer address={}",
-                        connection.getPeerAddress(), response.getRequestNonce(), nonce,
-                        connection.getPeerAddress().getFullAddress());
-            }
+public class InventoryPrinter {
+    static void print(InventoryResponse response,
+                      Connection connection,
+                      Map<String, Long> requestTimestampByConnectionId) {
+        Long requestTsValue = requestTimestampByConnectionId.get(connection.getId());
+        if (requestTsValue == null) {
+            log.warn("Map entry for {} not present in requestTimestampByConnectionId", connection.getId());
+            return;
         }
-    }
-
-    @Override
-    public void onConnectionClosed(CloseReason closeReason) {
-        dispose();
-    }
-
-    void dispose() {
-        removeListeners();
-        future.cancel(true);
-    }
-
-    private void printReceivedInventory(InventoryResponse response) {
+        long requestTs = requestTsValue;
         Map<String, Map<String, AtomicInteger>> dataRequestMap = new HashMap<>();
         Inventory inventory = response.getInventory();
         inventory.getEntries()
@@ -152,9 +93,5 @@ class InventoryHandler implements Connection.Listener {
                         "\n##########################################################################################\n{}" +
                         "\n##########################################################################################",
                 size, connection.getPeerAddress().getFullAddress(), passed, maxSizeReached, report);
-    }
-
-    private void removeListeners() {
-        connection.removeListener(this);
     }
 }

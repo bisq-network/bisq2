@@ -17,12 +17,11 @@
 
 package bisq.network.p2p.services.peer_group.exchange;
 
-import bisq.common.util.CollectionUtil;
 import bisq.common.network.Address;
+import bisq.common.util.CollectionUtil;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peer_group.Peer;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -34,46 +33,74 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+/**
+ * Defines the policy and logic for selecting, managing, and retrying peer exchanges within the peer-to-peer network.
+ * <p>
+ * This class encapsulates the decision-making criteria for which peer addresses to use during initial exchanges,
+ * retries, and peer group extension phases. It also manages address usage tracking to avoid repeated attempts,
+ * and applies limits and thresholds for retry delays and peer reporting.
+ * </p>
+ *
+ * <h2>Policy Overview:</h2>
+ * <ul>
+ *   <li><b>Address Selection:</b> Provides prioritized lists of peer addresses for initial peer exchange, retry attempts,
+ *       and extending the peer group. These lists combine seed nodes, reported peers, persisted peers, and currently connected peers,
+ *       filtered and shuffled to maximize connection diversity and efficiency.</li>
+ *   <li><b>Address Usage Tracking:</b> Maintains a set of addresses already used in peer exchange attempts to avoid redundant retries.
+ *       If no new candidates are available, the set is cleared to allow retrying previously used peers, assuming network state changes.</li>
+ *   <li><b>Retry and Extension Conditions:</b> Determines whether to extend the peer group after initial exchange based on
+ *       success results and candidate counts, and computes minimum success thresholds for retries and group extensions.</li>
+ *   <li><b>Retry Delay Strategy:</b> Uses a capped quadratic backoff delay for retry attempts to avoid excessive network load.</li>
+ *   <li><b>Peer Reporting:</b> Manages which peers are shared with requesters during peer reporting, excluding oracle nodes and respecting configured limits.</li>
+ *   <li><b>Filtering Criteria:</b> Validates peers to exclude seeds, banned nodes, outdated peers, or self-addresses to ensure healthy peer sets.</li>
+ * </ul>
+ *
+ * <h2>Configuration and Limits:</h2>
+ * <ul>
+ *   <li>Uses configurable parameters for numbers of seed nodes, reported peers, and persisted peers to include during bootstrap.</li>
+ *   <li>Limits the number of reported peers shared during peer reporting to a maximum of 500.</li>
+ *   <li>Restricts retry delays to a maximum of 60 seconds.</li>
+ *   <li>Considers peers outdated if their age exceeds 5 days.</li>
+ * </ul>
+ *
+ * <h2>Usage:</h2>
+ * <ol>
+ *   <li>Obtain prioritized peer address lists via {@link #getAddressesForInitialPeerExchange()},
+ *       {@link #getAddressesForRetryPeerExchange()}, and {@link #getAddressesForExtendingPeerGroup()}.</li>
+ *   <li>Check whether to extend the peer group after exchanges using {@link #shouldExtendAfterInitialExchange(Boolean, Throwable, List)}.</li>
+ *   <li>Determine minimum success counts for retries or extensions with {@link #getMinSuccessForRetry(List)} and {@link #getMinSuccessForExtendPeerGroup(List)}.</li>
+ *   <li>Use {@link #getRetryDelay(int)} to compute delays between retries based on retry counts.</li>
+ *   <li>Retrieve and add peers for reporting using {@link #getPeersForReporting(Address)} and {@link #addReportedPeers(List, Address)}.</li>
+ * </ol>
+ *
+ * <h2>Dependencies:</h2>
+ * <ul>
+ *   <li>{@link PeerGroupService} provides peer-related operations, such as retrieving seed nodes, reported peers, and banning checks.</li>
+ *   <li>{@link Node} offers context about the current node, its connections, and identity.</li>
+ *   <li>{@link PeerExchangeService.Config} contains configuration settings relevant to peer exchange behavior.</li>
+ * </ul>
+ */
 @Slf4j
-public class PeerExchangeStrategy {
+class PeerExchangePolicy {
     public static final long REPORTED_PEERS_LIMIT = 500;
+    private static final long MAX_RETRY_DELAY = SECONDS.toMillis(60);
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(5);
-
-    @Getter
-    public static class Config {
-        private final int numSeedNodesAtBoostrap;
-        private final int numPersistedPeersAtBoostrap;
-        private final int numReportedPeersAtBoostrap;
-        private final boolean supportPeerReporting;
-
-        public Config(int numSeedNodesAtBoostrap,
-                      int numPersistedPeersAtBoostrap,
-                      int numReportedPeersAtBoostrap,
-                      boolean supportPeerReporting) {
-            this.numSeedNodesAtBoostrap = numSeedNodesAtBoostrap;
-            this.numPersistedPeersAtBoostrap = numPersistedPeersAtBoostrap;
-            this.numReportedPeersAtBoostrap = numReportedPeersAtBoostrap;
-            this.supportPeerReporting = supportPeerReporting;
-        }
-
-        public static Config from(com.typesafe.config.Config typesafeConfig) {
-            return new PeerExchangeStrategy.Config(
-                    typesafeConfig.getInt("numSeedNodesAtBoostrap"),
-                    typesafeConfig.getInt("numPersistedPeersAtBoostrap"),
-                    typesafeConfig.getInt("numReportedPeersAtBoostrap"),
-                    typesafeConfig.getBoolean("supportPeerReporting"));
-        }
-    }
 
     private final PeerGroupService peerGroupService;
     private final Node node;
-    private final Config config;
+    private final PeerExchangeService.Config config;
+    private final PeerGroupService.Config peerGroupConfig;
     private final Set<Address> usedAddresses = new CopyOnWriteArraySet<>();
 
-    public PeerExchangeStrategy(PeerGroupService peerGroupService, Node node, Config config) {
+    PeerExchangePolicy(PeerGroupService peerGroupService, Node node,
+                       PeerExchangeService.Config config,
+                       PeerGroupService.Config peerGroupConfig) {
         this.peerGroupService = peerGroupService;
         this.node = node;
         this.config = config;
+        this.peerGroupConfig = peerGroupConfig;
 
         PeerExchangeRequest.setMaxNumPeers(REPORTED_PEERS_LIMIT);
         PeerExchangeResponse.setMaxNumPeers(REPORTED_PEERS_LIMIT);
@@ -130,26 +157,23 @@ public class PeerExchangeStrategy {
         return candidates;
     }
 
-    boolean tooManyFailures(int numSuccess, int numFailures) {
-        int numRequests = numSuccess + numFailures;
-        int maxFailures = numRequests / 2;
-        return numFailures > maxFailures;
+    boolean shouldExtendAfterInitialExchange(Boolean result,
+                                             Throwable throwable,
+                                             List<Address> candidates) {
+        // minNumConnectedPeers is 8 by default
+        return result != null && result && candidates.size() < peerGroupConfig.getMinNumConnectedPeers();
     }
 
-    boolean needsMoreReportedPeers() {
-        return peerGroupService.getReportedPeers().size() < peerGroupService.getMinNumReportedPeers();
+    int getMinSuccessForExtendPeerGroup(List<Address> candidates) {
+        return Math.max(1, candidates.size() / 2);
     }
 
-    boolean needsMoreConnections() {
-        return peerGroupService.getAllConnectedPeers(node).count() < peerGroupService.getTargetNumConnectedPeers();
+    int getMinSuccessForRetry(List<Address> candidates) {
+        return Math.max(1, candidates.size() / 2);
     }
 
-    public void clearPersistedPeers() {
-        peerGroupService.clearPersistedPeers();
-    }
-
-    public void clearReportedPeers() {
-        peerGroupService.clearReportedPeers();
+    long getRetryDelay(int numRetries) {
+        return Math.min(MAX_RETRY_DELAY, 1000L * numRetries * numRetries);
     }
 
 
@@ -157,12 +181,12 @@ public class PeerExchangeStrategy {
     // Reporting
     /* --------------------------------------------------------------------- */
 
-    Set<Peer> getPeersForReporting(Address requesterAddress) {
-        // Oracel nodes run only a default node but receive requests from user-level nodes. If we include the connected
+    List<Peer> getPeersForReporting(Address requesterAddress) {
+        // Oracle nodes run only a default node but receive requests from user-level nodes. If we include the connected
         // peers of oracle nodes we would mix up the gossip network with those user-level nodes. Therefor we set the
         // flag to supportPeerReporting false for oracle nodes and do not share our peers in peer reporting.
         if (!config.isSupportPeerReporting()) {
-            return new HashSet<>();
+            return new ArrayList<>();
         }
 
         Set<Peer> connectedPeers = getSortedAllConnectedPeers()
@@ -175,11 +199,11 @@ public class PeerExchangeStrategy {
 
         Set<Peer> peers = new HashSet<>(connectedPeers);
         peers.addAll(reportedPeers);
-        return peers;
+        return new ArrayList<>(peers);
     }
 
-    void addReportedPeers(Set<Peer> reportedPeers, Address reporterAddress) {
-        Set<Peer> peers = reportedPeers.stream()
+    void addReportedPeers(List<Peer> reportedPeers, Address reporterAddress) {
+        Set<Peer> peers = new HashSet<>(reportedPeers).stream()
                 .filter(peer -> notSameAddress(reporterAddress, peer))
                 .filter(this::isValidNonSeedPeer)
                 .filter(this::isNotOutDated)

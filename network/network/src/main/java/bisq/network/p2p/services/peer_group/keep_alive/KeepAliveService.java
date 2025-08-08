@@ -90,10 +90,6 @@ public class KeepAliveService extends RequestResponseHandler<Ping, Pong> {
         return Pong.class;
     }
 
-    @Override
-    protected void onRequest(Connection connection, Ping request) {
-    }
-
     private void sendPingIfRequired() {
         node.getAllActiveConnections()
                 .filter(this::isRequired)
