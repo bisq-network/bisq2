@@ -29,7 +29,7 @@ import bisq.network.p2p.node.transport.I2PTransportService;
 import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peer_group.PeerGroupManager;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
-import bisq.network.p2p.services.peer_group.exchange.PeerExchangeStrategy;
+import bisq.network.p2p.services.peer_group.exchange.PeerExchangeService;
 import bisq.network.p2p.services.peer_group.keep_alive.KeepAliveService;
 import bisq.network.tor.TorTransportConfig;
 import com.typesafe.config.Config;
@@ -57,7 +57,7 @@ public final class NetworkServiceConfig {
         Set<Feature> features = new HashSet<>(config.getEnumList(Feature.class, "features"));
 
         PeerGroupService.Config peerGroupConfig = PeerGroupService.Config.from(config.getConfig("peerGroup"));
-        PeerExchangeStrategy.Config peerExchangeStrategyConfig = PeerExchangeStrategy.Config.from(config.getConfig("peerExchangeStrategy"));
+        PeerExchangeService.Config peerExchangeStrategyConfig = PeerExchangeService.Config.from(config.getConfig("peerExchangeStrategy"));
         KeepAliveService.Config keepAliveServiceConfig = KeepAliveService.Config.from(config.getConfig("keepAlive"));
 
         PeerGroupManager.Config defaultConf = PeerGroupManager.Config.from(peerGroupConfig,

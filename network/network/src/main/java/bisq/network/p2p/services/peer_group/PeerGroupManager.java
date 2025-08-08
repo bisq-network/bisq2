@@ -28,7 +28,6 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peer_group.exchange.PeerExchangeService;
-import bisq.network.p2p.services.peer_group.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peer_group.keep_alive.KeepAliveService;
 import bisq.network.p2p.services.peer_group.network_load.NetworkLoadExchangeService;
 import dev.failsafe.Failsafe;
@@ -70,7 +69,7 @@ public class PeerGroupManager implements Node.Listener {
     @ToString
     public static final class Config {
         private final PeerGroupService.Config peerGroupConfig;
-        private final PeerExchangeStrategy.Config peerExchangeConfig;
+        private final PeerExchangeService.Config peerExchangeConfig;
         private final KeepAliveService.Config keepAliveServiceConfig;
         private final long bootstrapTime;
         private final long houseKeepingInterval;
@@ -81,7 +80,7 @@ public class PeerGroupManager implements Node.Listener {
         private final int maxSeeds;
 
         public Config(PeerGroupService.Config peerGroupConfig,
-                      PeerExchangeStrategy.Config peerExchangeConfig,
+                      PeerExchangeService.Config peerExchangeConfig,
                       KeepAliveService.Config keepAliveServiceConfig,
                       long bootstrapTime,
                       long houseKeepingInterval,
@@ -103,7 +102,7 @@ public class PeerGroupManager implements Node.Listener {
         }
 
         public static Config from(PeerGroupService.Config peerGroupConfig,
-                                  PeerExchangeStrategy.Config peerExchangeStrategyConfig,
+                                  PeerExchangeService.Config peerExchangeStrategyConfig,
                                   KeepAliveService.Config keepAliveServiceConfig,
                                   com.typesafe.config.Config typesafeConfig) {
             return new Config(peerGroupConfig,
@@ -147,10 +146,8 @@ public class PeerGroupManager implements Node.Listener {
         this.banList = banList;
         this.config = config;
         this.peerGroupService = peerGroupService;
-        PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroupService,
-                node,
-                config.getPeerExchangeConfig());
-        peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy);
+
+        peerExchangeService = new PeerExchangeService(node, peerGroupService, config.getPeerExchangeConfig());
         keepAliveService = new KeepAliveService(node, config.getKeepAliveServiceConfig());
         networkLoadExchangeService = new NetworkLoadExchangeService(node);
 
@@ -217,9 +214,10 @@ public class PeerGroupManager implements Node.Listener {
             case NEW:
                 setState(PeerGroupManager.State.INITIALIZING);
                 // blocking
-                peerExchangeService.startInitialPeerExchange();
-                log.info("Completed startInitialPeerExchange. Start periodic tasks with interval: {} sec",
-                        config.getHouseKeepingInterval() / 1000);
+                peerExchangeService.initialize();
+                Boolean result = peerExchangeService.startInitialPeerExchange().join();
+                log.info("Completed startInitialPeerExchange with result {}. Start periodic tasks with interval: {} sec",
+                        result, config.getHouseKeepingInterval() / 1000);
                 scheduler = Optional.of(Scheduler.run(this::doHouseKeeping)
                         .host(this)
                         .runnableName("doHouseKeeping")
@@ -379,7 +377,7 @@ public class PeerGroupManager implements Node.Listener {
         // The calculation how many connections we need is done inside PeerExchangeService/PeerExchangeStrategy
         log.info("We have not sufficient connections and call peerExchangeService.extendPeerGroup");
         // It is an async call. We do not wait for the result.
-        peerExchangeService.extendPeerGroupAsync();
+        peerExchangeService.extendPeerGroup();
     }
 
     private void maybeRemoveReportedPeers() {
