@@ -49,11 +49,15 @@ public class GrpcWalletService implements WalletService {
     private final ObservableSet<String> walletAddresses = new ObservableSet<>();
 
     public GrpcWalletService(ServerConfig config) {
-        this.channel = ManagedChannelBuilder.forAddress(config.host(), config.port())
-                .usePlaintext()
-                .build();
+        this.channel = createChannel(config);
         this.blockingStub = WalletServiceGrpc.newBlockingStub(channel);
         this.futureStub = WalletServiceGrpc.newFutureStub(channel);
+    }
+
+    protected ManagedChannel createChannel(ServerConfig config) {
+        return ManagedChannelBuilder.forAddress(config.host(), config.port())
+                .usePlaintext()
+                .build();
     }
 
     @Override

@@ -11,7 +11,15 @@ dependencies {
     implementation(project(":security"))
 
     implementation(libs.typesafe.config)
-    implementation(libs.google.guava)
+
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.grpc.testing)
+    testImplementation(libs.grpc.inprocess)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
 
 val grpcPluginId = "grpc"

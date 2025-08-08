@@ -40,6 +40,7 @@ google-guava-lib = { strictly = '33.2.1-jre' }
 google-libphonenumber-lib = { strictly = '9.0.8' }
 
 grpc = { strictly = '1.61.0' }
+grpc-testing = { strictly = '1.63.0' }
 
 i2p-lib = { strictly = '1.8.0' }
 i2p-v2 = { strictly = '2.4.0' }
@@ -121,6 +122,8 @@ grpc-netty-shaded = { module = 'io.grpc:grpc-netty-shaded', version.ref = 'grpc'
 grpc-protobuf = { module = 'io.grpc:grpc-protobuf', version.ref = 'grpc' }
 grpc-services = { module = 'io.grpc:grpc-services', version.ref = 'grpc' }
 grpc-stub = { module = 'io.grpc:grpc-stub', version.ref = 'grpc' }
+grpc-testing = { module = 'io.grpc:grpc-testing', version.ref = 'grpc-testing' }
+grpc-inprocess = { module = 'io.grpc:grpc-inprocess', version.ref = 'grpc' }
 
 i2p-core = { module = 'net.i2p:i2p', version.ref = 'i2p-lib' }
 i2p-core-v2 = { module = 'net.i2p:i2p', version.ref = 'i2p-v2' }
@@ -145,6 +148,7 @@ logback-classic = { module = 'ch.qos.logback:logback-classic', version.ref = 'lo
 lombok = { module = 'org.projectlombok:lombok', version.ref = 'lombok-lib' }
 
 mockito = { module = 'org.mockito:mockito-core', version.ref = 'mockito-lib' }
+mockito-junit-jupiter = { module = 'org.mockito:mockito-junit-jupiter', version.ref = 'mockito-lib' }
 openjfx-monocle = { module = 'org.testfx:openjfx-monocle', version.ref = 'openjfx-monocle-lib' }
 
 protobuf-java = { module = 'com.google.protobuf:protobuf-java', version.ref = 'protobuf-java-lib' }
