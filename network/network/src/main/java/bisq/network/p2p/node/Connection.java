@@ -293,7 +293,9 @@ public abstract class Connection {
             log.debug("Shut down already in progress {}", this);
             return;
         }
-        log.info("Close {}; \ncloseReason: {}", this, closeReason);
+        if (closeReason != CloseReason.SHUTDOWN) {
+            log.info("Close {}; \ncloseReason: {}", this, closeReason);
+        }
         shutdownStarted = true;
         requestResponseManager.dispose();
         connectionMetrics.clear();

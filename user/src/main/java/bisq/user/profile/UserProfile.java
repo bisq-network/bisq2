@@ -289,9 +289,9 @@ public final class UserProfile implements DistributedData, PublishDateAware {
                 ",\r\n                    networkId=" + networkId +
                 ",\r\n                    terms='" + terms + '\'' +
                 ",\r\n                    statement='" + statement + '\'' +
-                ",\r\n                    nym='" + nym + '\'' +
-                ",\r\n                    proofOfBurnHash=" + proofOfBurnHash +
-                ",\r\n                    bondedReputationHash=" + bondedReputationHash +
+                ",\r\n                    nym='" + getNym() + '\'' +
+                ",\r\n                    proofOfBurnHash=" + getProofOfBurnKey() +
+                ",\r\n                    bondedReputationHash=" + getBondedReputationKey() +
                 ",\r\n                    applicationVersion=" + applicationVersion +
                 "\r\n}";
     }
