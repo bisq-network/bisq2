@@ -7,6 +7,6 @@ package bisq.network.p2p.message;
  * Not to be used for higher level Request/Response pattern as that would conflict with lower level
  * usage (e.g. AckRequestingMessage/AckMessage).
  */
-public interface Response {
+public interface Response extends EnvelopePayloadMessage {
     String getRequestId();
 }
