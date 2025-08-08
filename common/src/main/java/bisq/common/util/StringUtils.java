@@ -39,7 +39,7 @@ public class StringUtils {
     }
 
     public static String truncate(String value) {
-        return truncate(value, 32);
+        return truncate(value, 50);
     }
 
     public static String truncate(Object value, int maxLength) {
