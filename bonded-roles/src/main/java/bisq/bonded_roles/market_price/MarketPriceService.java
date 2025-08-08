@@ -38,6 +38,7 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -54,28 +55,26 @@ import java.util.stream.Collectors;
 public class MarketPriceService implements Service, PersistenceClient<MarketPriceStore>, AuthorizedBondedRolesService.Listener {
     @Getter
     private final MarketPriceStore persistableStore = new MarketPriceStore();
-    @Getter
-    private final Persistence<MarketPriceStore> persistence;
+    private final Optional<Persistence<MarketPriceStore>> persistence;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     @Getter
-    private final MarketPriceRequestService marketPriceRequestService;
+    private final Optional<MarketPriceRequestService> marketPriceRequestService;
     private Pin marketPriceByCurrencyMapPin;
     @Getter
     private Optional<AuthorizedBondedRole> marketPriceProvidingOracle = Optional.empty();
-    private final boolean enabled;
 
     public MarketPriceService(com.typesafe.config.Config marketPrice,
                               PersistenceService persistenceService,
                               NetworkService networkService,
                               AuthorizedBondedRolesService authorizedBondedRolesService) {
-        this.enabled = marketPrice.getBoolean("enabled");
+        boolean enabled = marketPrice.getBoolean("enabled");
         this.authorizedBondedRolesService = authorizedBondedRolesService;
-        marketPriceRequestService = this.enabled
-                ? new MarketPriceRequestService(MarketPriceRequestService.Config.from(marketPrice), networkService)
-                : null;
-        persistence = this.enabled
-                ? persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore)
-                : null;
+        marketPriceRequestService = enabled
+                ? Optional.of(new MarketPriceRequestService(MarketPriceRequestService.Config.from(marketPrice), networkService))
+                : Optional.empty();
+        persistence = enabled
+                ? Optional.of(persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore))
+                : Optional.empty();
     }
 
 
@@ -86,31 +85,31 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        if (!this.enabled) {
-            return CompletableFuture.completedFuture(true);
-        }
-
         authorizedBondedRolesService.addListener(this);
-
         setSelectedMarket(MarketRepository.getDefaultBtcFiatMarket());
 
-        marketPriceByCurrencyMapPin = marketPriceRequestService.getMarketPriceByCurrencyMap().addObserver(() ->
-                applyNewMap(marketPriceRequestService.getMarketPriceByCurrencyMap()));
+        return marketPriceRequestService
+                .map(service -> {
+                    marketPriceByCurrencyMapPin = service.getMarketPriceByCurrencyMap()
+                            .addObserver(() -> applyNewMap(service.getMarketPriceByCurrencyMap()));
 
-        return marketPriceRequestService.initialize();
+                    return service.initialize();
+                })
+                .orElseGet(() -> CompletableFuture.completedFuture(true));
     }
 
-    public CompletableFuture<Boolean> shutdown() {
-        if (!this.enabled) {
-            return CompletableFuture.completedFuture(true);
-        }
 
+    public CompletableFuture<Boolean> shutdown() {
         if (marketPriceByCurrencyMapPin != null) {
             marketPriceByCurrencyMapPin.unbind();
         }
         authorizedBondedRolesService.removeListener(this);
-        return marketPriceRequestService.shutdown();
+
+        return marketPriceRequestService
+                .map(MarketPriceRequestService::shutdown)
+                .orElseGet(() -> CompletableFuture.completedFuture(true));
     }
+
 
 
     /* --------------------------------------------------------------------- */
@@ -201,4 +200,9 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
+    @Override
+    @Nullable
+    public Persistence<MarketPriceStore> getPersistence() {
+        return this.persistence.orElse(null);
+    }
 }
