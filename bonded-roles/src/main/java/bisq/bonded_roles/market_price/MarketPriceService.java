@@ -68,7 +68,7 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
                               PersistenceService persistenceService,
                               NetworkService networkService,
                               AuthorizedBondedRolesService authorizedBondedRolesService) {
-        this.enabled = !marketPrice.hasPath("enabled") || marketPrice.getBoolean("enabled");
+        this.enabled = marketPrice.getBoolean("enabled");
         this.authorizedBondedRolesService = authorizedBondedRolesService;
         marketPriceRequestService = this.enabled
                 ? new MarketPriceRequestService(MarketPriceRequestService.Config.from(marketPrice), networkService)
