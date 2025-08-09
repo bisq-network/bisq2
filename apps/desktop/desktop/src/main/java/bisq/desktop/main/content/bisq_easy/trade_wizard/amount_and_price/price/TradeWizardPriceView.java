@@ -167,7 +167,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     protected void onViewAttached() {
         minSliderValue.setText(DECIMAL_FORMAT.format(model.getMinPercentage() * 100) + "%");
         maxSliderValue.setText(DECIMAL_FORMAT.format(model.getMaxPercentage() * 100) + "%");
-        marketPriceMarker.setLayoutX(model.getMarketPriceMarketLayoutX());
+        marketPriceMarker.setLayoutX(model.getMarketPriceMarkerLayoutX());
         marketPriceMarkerTooltip.setText(Res.get("bisqEasy.price.slider.marketPriceMarker"));
         Tooltip.install(marketPriceMarker, marketPriceMarkerTooltip);
 

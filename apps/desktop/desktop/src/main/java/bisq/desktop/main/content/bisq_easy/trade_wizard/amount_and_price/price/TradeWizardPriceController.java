@@ -125,7 +125,7 @@ public class TradeWizardPriceController implements Controller {
 
     @Override
     public void onActivate() {
-        model.setMarketPriceMarketLayoutX(calculateMarketPriceLayoutX());
+        model.setMarketPriceMarkerLayoutX(calculateMarketPriceLayoutX());
         settingsService.getCookie().asBoolean(CookieKey.CREATE_OFFER_USE_FIX_PRICE, getCookieSubKey())
                 .ifPresent(useFixPrice -> model.getUseFixPrice().set(useFixPrice));
         settingsService.getCookie().asString(CookieKey.CREATE_OFFER_PRICE)
