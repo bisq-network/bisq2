@@ -1303,6 +1303,12 @@
     -fx-padding: 0 0 15 0;
 }
 
+.bisq-easy-trade-wizard-price-step .market-price-marker {
+    -fx-fill: -bisq-white;
+    -fx-stroke: -bisq-black;
+    -fx-stroke-width: 1.5;
+}
+
 .bisq-easy-trade-wizard-payment-methods-step .ln-checkbox .check-box {
     -fx-scale-x: 0.6;
     -fx-scale-y: 0.6;
