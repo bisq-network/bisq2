@@ -125,6 +125,7 @@ public class TradeWizardPriceController implements Controller {
 
     @Override
     public void onActivate() {
+        model.setMarketPriceMarkerLayoutX(calculateMarketPriceMarkerLayoutX());
         settingsService.getCookie().asBoolean(CookieKey.CREATE_OFFER_USE_FIX_PRICE, getCookieSubKey())
                 .ifPresent(useFixPrice -> model.getUseFixPrice().set(useFixPrice));
         settingsService.getCookie().asString(CookieKey.CREATE_OFFER_PRICE)
@@ -220,6 +221,12 @@ public class TradeWizardPriceController implements Controller {
         } else {
             priceInput.deactivate();
         }
+    }
+
+    private double calculateMarketPriceMarkerLayoutX() {
+        double marketPricePercentage = 0;
+        double normalizedValue = (marketPricePercentage - model.getMinPercentage()) / (model.getMaxPercentage() - model.getMinPercentage());
+        return normalizedValue * model.getPriceComponentWidth() + 5; // 5 for the padding
     }
 
     private void onPercentageInput(String percentageAsString) {
