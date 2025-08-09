@@ -10,6 +10,12 @@ dependencies {
     implementation(project(":security"))
 
     implementation(libs.typesafe.config)
+
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.grpc.testing)
+    testImplementation(libs.grpc.inprocess)
+    testImplementation(libs.mockito.junit.jupiter)
+    testRuntimeOnly(libs.junit.jupiter.engine)
 }
 
 val grpcPluginId = "grpc"
