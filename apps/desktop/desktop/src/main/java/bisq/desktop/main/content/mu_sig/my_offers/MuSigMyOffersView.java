@@ -80,10 +80,9 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 .title(Res.get("muSig.myOffers.table.header.myProfile"))
                 .left()
                 .minWidth(140)
-                .comparator(Comparator.comparingLong(MuSigOfferListItem::getTotalScore))
+                .comparator(Comparator.comparing(item -> item.getMakerUserProfile().getNickName()))
                 .setCellFactory(MuSigOfferUtil.getUserProfileCellFactory())
                 .includeForCsv(false)
-                .sortType(TableColumn.SortType.DESCENDING)
                 .build();
         muSigMyOffersListView.getColumns().add(myProfileColumn);
 
