@@ -36,6 +36,7 @@ import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.List;
 import java.util.Map;
@@ -130,7 +131,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     /**
      * Creates new identity based on given parameters.
      */
-    public CompletableFuture<Identity> createNewActiveIdentity(String identityTag, KeyPair keyPair) {
+    public CompletableFuture<Identity> createNewActiveIdentity(String identityTag, KeyPair keyPair) throws GeneralSecurityException {
         KeyBundle keyBundle = keyBundleService.createAndPersistKeyBundle(identityTag, keyPair);
         NetworkId networkId = networkIdService.getOrCreateNetworkId(keyBundle, identityTag);
         Identity identity = new Identity(identityTag, networkId, keyBundle);
