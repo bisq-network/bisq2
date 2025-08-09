@@ -98,7 +98,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 .title(Res.get("muSig.myOffers.table.header.date"))
                 .left()
                 .minWidth(160)
-                .comparator(Comparator.comparing(MuSigOfferListItem::getOfferDate))
+                .comparator(Comparator.comparing(MuSigOfferListItem::getOfferDate).reversed())
                 .valueSupplier(MuSigOfferListItem::getOfferDate)
                 .build();
         muSigMyOffersListView.getColumns().add(dateColumn);
