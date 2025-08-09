@@ -80,7 +80,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 .title(Res.get("muSig.myOffers.table.header.myProfile"))
                 .left()
                 .minWidth(140)
-                .comparator(Comparator.comparingLong(MuSigOfferListItem::getTotalScore).reversed())
+                .comparator(Comparator.comparing(item -> item.getMakerUserProfile().getNickName()))
                 .setCellFactory(MuSigOfferUtil.getUserProfileCellFactory())
                 .includeForCsv(false)
                 .build();
@@ -100,6 +100,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 .minWidth(160)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getOfferDate))
                 .valueSupplier(MuSigOfferListItem::getOfferDate)
+                .sortType(TableColumn.SortType.DESCENDING)
                 .build();
         muSigMyOffersListView.getColumns().add(dateColumn);
         muSigMyOffersListView.getSortOrder().add(dateColumn);

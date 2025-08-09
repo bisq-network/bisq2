@@ -30,7 +30,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.Tooltip;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
@@ -107,6 +106,7 @@ public class MuSigOfferUtil {
         return column -> new TableCell<>() {
             private final HBox hbox = new HBox(7);
             private final BisqTooltip tooltip = new BisqTooltip();
+            private final Label priceIconLabel = new Label();
 
             {
                 hbox.setAlignment(Pos.CENTER_LEFT);
@@ -121,11 +121,9 @@ public class MuSigOfferUtil {
 
                     Pair<String, String> pricePair = item.getPricePair();
                     Label price = new Label(pricePair.getFirst());
-                    Label iconLabel = new Label();
-                    iconLabel.setGraphic(ImageUtil.getImageViewById(getPriceIconId(item.isHasFixPrice())));
-                    HBox.setMargin(iconLabel, new Insets(-2, 0, 2, 0));
+                    setupPriceIconLabel(item.isHasFixPrice());
                     Label pricePercentage = new Label(pricePair.getSecond());
-                    hbox.getChildren().addAll(price, iconLabel, pricePercentage);
+                    hbox.getChildren().addAll(price, priceIconLabel, pricePercentage);
 
                     tooltip.setText(item.getPriceTooltip());
                     Tooltip.install(hbox, tooltip);
@@ -137,8 +135,14 @@ public class MuSigOfferUtil {
                 }
             }
 
-            private String getPriceIconId(boolean hasFixPrice) {
-                return hasFixPrice ? "lock-icon-grey" : "chart-icon-grey";
+            private void setupPriceIconLabel(boolean hasFixPrice) {
+                String priceIconId = hasFixPrice ? "lock-icon-grey" : "chart-icon-grey";
+                priceIconLabel.setGraphic(ImageUtil.getImageViewById(priceIconId));
+                if (hasFixPrice) {
+                    HBox.setMargin(priceIconLabel, new Insets(0));
+                } else {
+                    HBox.setMargin(priceIconLabel, new Insets(-2, 0, 2, 0));
+                }
             }
         };
     }
