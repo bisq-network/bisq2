@@ -152,6 +152,7 @@ Overriding the marketPrice provider with a self-hosted one would be done as foll
 application {
     bondedRoles = {
         marketPrice = {
+            enabled = true
             providers = [
                         {
                             url = "http://[MY_ONION_ADDRESS].onion"

@@ -336,7 +336,8 @@ public class MarketPriceComponent {
         }
 
         public String getProviderUrl() {
-            return marketPriceService.getMarketPriceRequestService().getMostRecentProvider()
+            return marketPriceService.getMarketPriceRequestService()
+                    .flatMap(MarketPriceRequestService::getMostRecentProvider)
                     .map(MarketPriceRequestService.Provider::getBaseUrl)
                     .orElse(Res.get("data.na"));
         }
