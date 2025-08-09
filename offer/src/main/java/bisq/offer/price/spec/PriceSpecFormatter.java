@@ -123,7 +123,7 @@ public class PriceSpecFormatter {
                     .map(priceQuote -> PriceUtil.fromMarketPriceMarkup(priceQuote, percentage))
                     .map(priceQuote -> PriceFormatter.format(priceQuote, true))
                     .orElse(missingPriceInfo);
-            String percentageAsString = PercentageFormatter.formatToPercentWithSignAndSymbol(Math.abs(percentage));
+            String percentageAsString = PercentageFormatter.formatToPercentWithSignAndSymbol(percentage);
             return new Pair<>(currentPrice, percentageAsString);
         }
 

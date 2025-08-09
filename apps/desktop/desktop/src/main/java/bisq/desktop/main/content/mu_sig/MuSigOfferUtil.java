@@ -106,6 +106,7 @@ public class MuSigOfferUtil {
         return column -> new TableCell<>() {
             private final HBox hbox = new HBox(7);
             private final BisqTooltip tooltip = new BisqTooltip();
+            private final Label priceIconLabel = new Label();
 
             {
                 hbox.setAlignment(Pos.CENTER_LEFT);
@@ -120,9 +121,9 @@ public class MuSigOfferUtil {
 
                     Pair<String, String> pricePair = item.getPricePair();
                     Label price = new Label(pricePair.getFirst());
-                    Label iconLabel = createAndGetPriceIconLabel(item.isHasFixPrice());
+                    setupPriceIconLabel(item.isHasFixPrice());
                     Label pricePercentage = new Label(pricePair.getSecond());
-                    hbox.getChildren().addAll(price, iconLabel, pricePercentage);
+                    hbox.getChildren().addAll(price, priceIconLabel, pricePercentage);
 
                     tooltip.setText(item.getPriceTooltip());
                     Tooltip.install(hbox, tooltip);
@@ -134,16 +135,14 @@ public class MuSigOfferUtil {
                 }
             }
 
-            private Label createAndGetPriceIconLabel(boolean hasFixPrice) {
-                Label label = new Label();
+            private void setupPriceIconLabel(boolean hasFixPrice) {
                 String priceIconId = hasFixPrice ? "lock-icon-grey" : "chart-icon-grey";
-                label.setGraphic(ImageUtil.getImageViewById(priceIconId));
+                priceIconLabel.setGraphic(ImageUtil.getImageViewById(priceIconId));
                 if (hasFixPrice) {
-                    HBox.setMargin(label, new Insets(0));
+                    HBox.setMargin(priceIconLabel, new Insets(0));
                 } else {
-                    HBox.setMargin(label, new Insets(-2, 0, 2, 0));
+                    HBox.setMargin(priceIconLabel, new Insets(-2, 0, 2, 0));
                 }
-                return label;
             }
         };
     }
