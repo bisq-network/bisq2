@@ -22,6 +22,7 @@ import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.UnorderedList;
 import bisq.desktop.components.controls.validator.PercentageValidator;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
@@ -35,6 +36,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -64,6 +66,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     private final Hyperlink showLearnWhyButton;
     private final ImageView percentagePriceIconGreen, percentagePriceIconGrey, fixedPriceIconGreen, fixedPriceIconGrey;
     private final Circle marketPriceMarker;
+    private final BisqTooltip marketPriceMarkerTooltip = new BisqTooltip();
     private Subscription percentageFocusedPin, useFixPricePin, isOverlayVisible;
 
     public TradeWizardPriceView(TradeWizardPriceModel model,
@@ -165,6 +168,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         minSliderValue.setText(DECIMAL_FORMAT.format(model.getMinPercentage() * 100) + "%");
         maxSliderValue.setText(DECIMAL_FORMAT.format(model.getMaxPercentage() * 100) + "%");
         marketPriceMarker.setLayoutX(model.getMarketPriceMarketLayoutX());
+        marketPriceMarkerTooltip.setText(Res.get("bisqEasy.price.slider.marketPriceMarker"));
+        Tooltip.install(marketPriceMarker, marketPriceMarkerTooltip);
 
         priceInputBox.visibleProperty().bind(model.getUseFixPrice());
         priceInputBox.managedProperty().bind(model.getUseFixPrice());
@@ -212,6 +217,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
     @Override
     protected void onViewDetached() {
+        Tooltip.uninstall(marketPriceMarker, marketPriceMarkerTooltip);
+
         percentageInputBox.textProperty().unbindBidirectional(model.getPercentageInput());
         percentageInputBox.conversionPriceTextProperty().unbind();
         percentageInputBox.dispose();
