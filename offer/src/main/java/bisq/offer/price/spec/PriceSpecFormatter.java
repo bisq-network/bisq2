@@ -96,11 +96,6 @@ public class PriceSpecFormatter {
     public static Pair<String, String> getFormattedPricePair(PriceSpec priceSpec,
                                                              MarketPriceService marketPriceService,
                                                              Market market) {
-        if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
-            String price = PriceFormatter.format(fixPriceSpec.getPriceQuote());
-            return new Pair<>(price, "");
-        }
-
         String missingPriceInfo = Res.get("data.na");
         if (market == null) {
             log.warn("No market price selected");
@@ -113,19 +108,23 @@ public class PriceSpecFormatter {
             return new Pair<>(missingPriceInfo, "");
         }
 
+        if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
+            String price = PriceFormatter.format(fixPriceSpec.getPriceQuote());
+            String percentage = marketPrice.map(MarketPrice::getPriceQuote)
+                    .map(priceQuote -> PriceUtil.getPercentageToMarketPrice(priceQuote, fixPriceSpec.getPriceQuote()))
+                    .map(PercentageFormatter::formatToPercentWithSignAndSymbol)
+                    .orElse(missingPriceInfo);
+            return new Pair<>(price, percentage);
+        }
+
         if (priceSpec instanceof FloatPriceSpec floatPriceSpec) {
             double percentage = floatPriceSpec.getPercentage();
             String currentPrice = marketPrice.map(MarketPrice::getPriceQuote)
                     .map(priceQuote -> PriceUtil.fromMarketPriceMarkup(priceQuote, percentage))
                     .map(priceQuote -> PriceFormatter.format(priceQuote, true))
                     .orElse(missingPriceInfo);
-
-            String percentageAsString = PercentageFormatter.formatToPercentWithSymbol(Math.abs(percentage));
-            String percentageInfo = Res.get(percentage >= 0
-                    ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.plus"
-                    : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.minus", percentageAsString);
-
-            return new Pair<>(currentPrice, percentageInfo);
+            String percentageAsString = PercentageFormatter.formatToPercentWithSignAndSymbol(Math.abs(percentage));
+            return new Pair<>(currentPrice, percentageAsString);
         }
 
         // Market price

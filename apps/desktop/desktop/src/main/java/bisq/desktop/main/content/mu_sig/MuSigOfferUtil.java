@@ -30,7 +30,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.Tooltip;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
@@ -121,9 +120,7 @@ public class MuSigOfferUtil {
 
                     Pair<String, String> pricePair = item.getPricePair();
                     Label price = new Label(pricePair.getFirst());
-                    Label iconLabel = new Label();
-                    iconLabel.setGraphic(ImageUtil.getImageViewById(getPriceIconId(item.isHasFixPrice())));
-                    HBox.setMargin(iconLabel, new Insets(-2, 0, 2, 0));
+                    Label iconLabel = createAndGetPriceIconLabel(item.isHasFixPrice());
                     Label pricePercentage = new Label(pricePair.getSecond());
                     hbox.getChildren().addAll(price, iconLabel, pricePercentage);
 
@@ -137,8 +134,16 @@ public class MuSigOfferUtil {
                 }
             }
 
-            private String getPriceIconId(boolean hasFixPrice) {
-                return hasFixPrice ? "lock-icon-grey" : "chart-icon-grey";
+            private Label createAndGetPriceIconLabel(boolean hasFixPrice) {
+                Label label = new Label();
+                String priceIconId = hasFixPrice ? "lock-icon-grey" : "chart-icon-grey";
+                label.setGraphic(ImageUtil.getImageViewById(priceIconId));
+                if (hasFixPrice) {
+                    HBox.setMargin(label, new Insets(0));
+                } else {
+                    HBox.setMargin(label, new Insets(-2, 0, 2, 0));
+                }
+                return label;
             }
         };
     }
