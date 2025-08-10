@@ -205,6 +205,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         fixedPriceButton.setOnAction(e -> controller.useFixedPrice());
         showLearnWhyButton.setOnAction(e -> controller.onShowOverlay());
         closeOverlayButton.setOnAction(e -> controller.onCloseOverlay());
+        marketPriceMarker.setOnMouseClicked(e -> controller.onMarketPriceMarkerClicked());
 
         // Needed to trigger focusOut event on amount components
         // We handle all parents mouse events.
@@ -239,6 +240,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         fixedPriceButton.setOnAction(null);
         showLearnWhyButton.setOnAction(null);
         closeOverlayButton.setOnAction(null);
+        marketPriceMarker.setOnMouseClicked(null);
 
         root.setOnKeyPressed(null);
 

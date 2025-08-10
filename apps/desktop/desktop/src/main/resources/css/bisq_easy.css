@@ -328,8 +328,14 @@
     -fx-max-height: 20;
 }
 
+.split-button.dropdown-menu.dropdown-offer-list-direction-filter-menu .split-button-dropdown-label-box {
+    -fx-min-width: 70;
+    -fx-alignment: center;
+}
+
 .split-button.dropdown-menu.dropdown-offer-list-direction-filter-menu .split-button-dropdown-label {
     -fx-text-fill: -fx-light-text-color;
+    -fx-padding: 1.5 0 -1.5 0;
 }
 
 /* BUY FROM */
@@ -1307,6 +1313,7 @@
     -fx-fill: -bisq-white;
     -fx-stroke: -bisq-black;
     -fx-stroke-width: 1.5;
+    -fx-cursor: hand;
 }
 
 .bisq-easy-trade-wizard-payment-methods-step .ln-checkbox .check-box {
