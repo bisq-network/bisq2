@@ -22,6 +22,7 @@ import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.UnorderedList;
 import bisq.desktop.components.controls.validator.PercentageValidator;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
@@ -35,10 +36,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Circle;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -62,6 +65,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     private final Slider slider;
     private final Hyperlink showLearnWhyButton;
     private final ImageView percentagePriceIconGreen, percentagePriceIconGrey, fixedPriceIconGreen, fixedPriceIconGrey;
+    private final Circle marketPriceMarker;
+    private final BisqTooltip marketPriceMarkerTooltip = new BisqTooltip();
     private Subscription percentageFocusedPin, useFixPricePin, isOverlayVisible;
 
     public TradeWizardPriceView(TradeWizardPriceModel model,
@@ -101,9 +106,9 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         percentageInputBox.textInputSymbolTextProperty().set("%");
         VBox fieldsBox = new VBox(20, priceInput, percentageInputBox);
         fieldsBox.setAlignment(Pos.TOP_CENTER);
-        fieldsBox.setMinWidth(340);
-        fieldsBox.setPrefWidth(340);
-        fieldsBox.setMaxWidth(340);
+        fieldsBox.setMinWidth(model.getPriceComponentWidth());
+        fieldsBox.setPrefWidth(model.getPriceComponentWidth());
+        fieldsBox.setMaxWidth(model.getPriceComponentWidth());
 
         // Slider
         slider = new Slider();
@@ -117,9 +122,19 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         maxSliderValue = new Label();
         maxSliderValue.getStyleClass().add("range-value");
         maxSliderValue.setAlignment(Pos.BASELINE_RIGHT);
+
+        marketPriceMarker = new Circle(2.5);
+        marketPriceMarker.getStyleClass().add("market-price-marker");
+        marketPriceMarker.setLayoutY(8);
+
         HBox sliderIndicators = new HBox(minSliderValue, Spacer.fillHBox(), maxSliderValue);
         VBox.setMargin(sliderIndicators, new Insets(2.5, 0, 0, 0));
         VBox sliderBox = new VBox(2, slider, sliderIndicators);
+        sliderBox.setMinWidth(model.getPriceComponentWidth());
+        sliderBox.setPrefWidth(model.getPriceComponentWidth());
+        sliderBox.setMaxWidth(model.getPriceComponentWidth());
+
+        Pane sliderBoxAndMarketPriceMarker = new Pane(sliderBox, marketPriceMarker);
 
         // Feedback sentence
         warningIcon = new Label();
@@ -142,9 +157,9 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         closeOverlayButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.closeButton"));
         overlay = createOverlay();
 
-        VBox.setMargin(sliderBox, new Insets(22.5, 0, 0, 0));
+        VBox.setMargin(sliderBoxAndMarketPriceMarker, new Insets(22.5, 0, 0, 0));
         root.setAlignment(Pos.TOP_CENTER);
-        root.getChildren().addAll(pricingModels, fieldsBox, sliderBox, feedbackBox);
+        root.getChildren().addAll(pricingModels, fieldsBox, sliderBoxAndMarketPriceMarker, feedbackBox);
         root.getStyleClass().add("bisq-easy-trade-wizard-price-step");
     }
 
@@ -152,6 +167,10 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     protected void onViewAttached() {
         minSliderValue.setText(DECIMAL_FORMAT.format(model.getMinPercentage() * 100) + "%");
         maxSliderValue.setText(DECIMAL_FORMAT.format(model.getMaxPercentage() * 100) + "%");
+        marketPriceMarker.setLayoutX(model.getMarketPriceMarkerLayoutX());
+        marketPriceMarkerTooltip.setText(Res.get("bisqEasy.price.slider.marketPriceMarker"));
+        Tooltip.install(marketPriceMarker, marketPriceMarkerTooltip);
+
         priceInputBox.visibleProperty().bind(model.getUseFixPrice());
         priceInputBox.managedProperty().bind(model.getUseFixPrice());
         percentageInputBox.visibleProperty().bind(model.getUseFixPrice().not());
@@ -198,6 +217,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
     @Override
     protected void onViewDetached() {
+        Tooltip.uninstall(marketPriceMarker, marketPriceMarkerTooltip);
+
         percentageInputBox.textProperty().unbindBidirectional(model.getPercentageInput());
         percentageInputBox.conversionPriceTextProperty().unbind();
         percentageInputBox.dispose();
