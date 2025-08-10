@@ -89,7 +89,7 @@ public class NetworkExecutors {
 
 
     private static ThreadPoolExecutor createNotifyExecutor(int maxPoolSize) {
-        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(1000);
+        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(100000);
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 1,
                 maxPoolSize,
