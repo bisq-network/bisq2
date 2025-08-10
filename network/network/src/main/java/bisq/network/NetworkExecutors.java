@@ -17,9 +17,7 @@
 
 package bisq.network;
 
-import bisq.common.threading.CallerRunsPolicyWithLogging;
-import bisq.common.threading.DiscardNewestPolicy;
-import bisq.common.threading.DiscardOldestPolicy;
+import bisq.common.threading.AbortPolicyWithLogging;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.threading.MaxSizeAwareDeque;
 import bisq.common.threading.MaxSizeAwareQueue;
@@ -84,7 +82,7 @@ public class NetworkExecutors {
                 TimeUnit.SECONDS,
                 queue,
                 ExecutorFactory.getThreadFactoryWithCounter("Network.node"),
-                new DiscardOldestPolicy());
+                new AbortPolicyWithLogging());
         queue.setExecutor(executor);
         return executor;
     }
@@ -99,7 +97,7 @@ public class NetworkExecutors {
                 TimeUnit.SECONDS,
                 queue,
                 ExecutorFactory.getThreadFactoryWithCounter("Network.notify"),
-                new CallerRunsPolicyWithLogging());
+                new AbortPolicyWithLogging());
         queue.setExecutor(executor);
         return executor;
     }
@@ -121,7 +119,7 @@ public class NetworkExecutors {
                 TimeUnit.SECONDS,
                 deque,
                 ExecutorFactory.getThreadFactoryWithCounter("Network.read"),
-                new DiscardNewestPolicy());
+                new AbortPolicyWithLogging());
         deque.setExecutor(executor);
         return executor;
     }
@@ -149,7 +147,7 @@ public class NetworkExecutors {
                 TimeUnit.SECONDS,
                 queue,
                 ExecutorFactory.getThreadFactoryWithCounter("Network.send"),
-                new CallerRunsPolicyWithLogging());
+                new AbortPolicyWithLogging());
         queue.setExecutor(executor);
         return executor;
     }
