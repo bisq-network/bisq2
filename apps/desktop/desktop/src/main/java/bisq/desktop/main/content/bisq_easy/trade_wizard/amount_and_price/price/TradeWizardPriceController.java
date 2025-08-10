@@ -313,6 +313,10 @@ public class TradeWizardPriceController implements Controller {
         }
     }
 
+    void onMarketPriceMarkerClicked() {
+        model.getPercentage().set(0);
+    }
+
     private void applyPriceSpec() {
         if (model.getUseFixPrice().get()) {
             model.getPriceSpec().set(new FixPriceSpec(priceInput.getQuote().get()));
