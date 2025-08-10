@@ -2,7 +2,7 @@
 
 1. **Clone Bisq 2**
    ```bash
-   git clone --recurse-submodules https://github.com/bisq-network/bisq2.git
+   git clone https://github.com/bisq-network/bisq2.git
    ```
    ```bash
    cd bisq2
@@ -13,7 +13,7 @@
 
 3. **Update to latest GitHub version:**
    ```bash
-   git pull --recurse-submodules
+   git pull
    ```
 
 4. **Build Bisq**
