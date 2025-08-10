@@ -55,7 +55,9 @@ import java.util.stream.Collectors;
 public class MarketPriceService implements Service, PersistenceClient<MarketPriceStore>, AuthorizedBondedRolesService.Listener {
     @Getter
     private final MarketPriceStore persistableStore = new MarketPriceStore();
-    private final Optional<Persistence<MarketPriceStore>> persistence;
+    @Getter
+    @Nullable
+    private final Persistence<MarketPriceStore> persistence;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     @Getter
     private final Optional<MarketPriceRequestService> marketPriceRequestService;
@@ -73,8 +75,8 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
                 ? Optional.of(new MarketPriceRequestService(MarketPriceRequestService.Config.from(marketPrice), networkService))
                 : Optional.empty();
         persistence = enabled
-                ? Optional.of(persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore))
-                : Optional.empty();
+                ? persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore)
+                : null;
     }
 
 
@@ -198,11 +200,5 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
                     return e.getValue().getTimestamp() > marketPrice.getTimestamp();
                 })
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
-
-    @Override
-    @Nullable
-    public Persistence<MarketPriceStore> getPersistence() {
-        return this.persistence.orElse(null);
     }
 }
