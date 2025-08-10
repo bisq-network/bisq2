@@ -100,6 +100,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     private final Set<TransportType> supportedTransportTypes;
     @Getter
     private final Map<TransportType, Integer> defaultPortByTransportType;
+    private final NetworkServiceConfig config;
     @Getter
     private final NetworkIdService networkIdService;
     private final HttpClientsByTransport httpClientsByTransport;
@@ -127,6 +128,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         socks5ProxyAddress = config.getSocks5ProxyAddress();
         supportedTransportTypes = config.getSupportedTransportTypes();
         defaultPortByTransportType = config.getDefaultPortByTransportType();
+        this.config = config;
         NetworkEnvelope.setNetworkVersion(config.getVersion());
 
         networkIdService = new NetworkIdService(persistenceService, keyBundleService, supportedTransportTypes, defaultPortByTransportType);
@@ -185,7 +187,10 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        NetworkExecutors.initialize();
+        NetworkExecutors.initialize(config.getReadExecutorMaxPoolSize(),
+                config.getSendExecutorMaxPoolSize(),
+                config.getNodeExecutorMaxPoolSize(),
+                config.getNotifyExecutorMaxPoolSize());
 
         NetworkId defaultNetworkId = networkIdService.getOrCreateDefaultNetworkId();
         Map<TransportType, CompletableFuture<Node>> map = serviceNodesByTransport.getInitializedDefaultNodeByTransport(defaultNetworkId);

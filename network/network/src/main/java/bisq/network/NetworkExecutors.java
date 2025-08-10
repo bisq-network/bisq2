@@ -42,12 +42,15 @@ public class NetworkExecutors {
     private static ThreadPoolExecutor notifyExecutor;
     private static volatile boolean isInitialized;
 
-    public static void initialize() {
+    public static void initialize(int readExecutorMaxPoolSize,
+                                  int sendExecutorMaxPoolSize,
+                                  int nodeExecutorMaxPoolSize,
+                                  int notifyExecutorMaxPoolSize) {
         checkArgument(!isInitialized, "initialize must not be called twice");
-        readExecutor = createReadExecutor();
-        sendExecutor = createSendExecutor();
-        nodeExecutor = createNodeExecutor();
-        notifyExecutor = createNotifyExecutor();
+        readExecutor = createReadExecutor(readExecutorMaxPoolSize);
+        sendExecutor = createSendExecutor(sendExecutorMaxPoolSize);
+        nodeExecutor = createNodeExecutor(nodeExecutorMaxPoolSize);
+        notifyExecutor = createNotifyExecutor(notifyExecutorMaxPoolSize);
 
         isInitialized = true;
     }
@@ -72,11 +75,11 @@ public class NetworkExecutors {
      * Used for initializing the transportService, initializing the node and used as the blocking server thread.
      * @return
      */
-    private static ThreadPoolExecutor createNodeExecutor() {
+    private static ThreadPoolExecutor createNodeExecutor(int maxPoolSize) {
         MaxSizeAwareQueue queue = new MaxSizeAwareQueue(100);
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 1,
-                20,
+                maxPoolSize,
                 10,
                 TimeUnit.SECONDS,
                 queue,
@@ -87,11 +90,11 @@ public class NetworkExecutors {
     }
 
 
-    private static ThreadPoolExecutor createNotifyExecutor() {
+    private static ThreadPoolExecutor createNotifyExecutor(int maxPoolSize) {
         MaxSizeAwareQueue queue = new MaxSizeAwareQueue(1000);
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 1,
-                4,
+                maxPoolSize,
                 30,
                 TimeUnit.SECONDS,
                 queue,
@@ -109,11 +112,11 @@ public class NetworkExecutors {
      * We choose the newest instead of dropping the oldest as it might serve better for protecting against attacks.
      * This executor must only be used for direct network read operations, which happen in Connection and ConnectionHandshake.
      */
-    private static ThreadPoolExecutor createReadExecutor() {
+    private static ThreadPoolExecutor createReadExecutor(int maxPoolSize) {
         MaxSizeAwareDeque deque = new MaxSizeAwareDeque(100);
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 12,
-                30,
+                maxPoolSize,
                 30,
                 TimeUnit.SECONDS,
                 deque,
@@ -137,11 +140,11 @@ public class NetworkExecutors {
      * Thus, the send operation can take  longer as the actual network IO operation.
      * This whole process is all covered by that executor.
      */
-    private static ThreadPoolExecutor createSendExecutor() {
+    private static ThreadPoolExecutor createSendExecutor(int maxPoolSize) {
         MaxSizeAwareQueue queue = new MaxSizeAwareQueue(1000);
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 9,
-                20,
+                maxPoolSize,
                 30,
                 TimeUnit.SECONDS,
                 queue,

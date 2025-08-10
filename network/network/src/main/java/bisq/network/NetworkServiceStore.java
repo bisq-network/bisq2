@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-final class NetworkServiceStore implements PersistableStore<NetworkServiceStore> {
+public final class NetworkServiceStore implements PersistableStore<NetworkServiceStore> {
     @Getter(AccessLevel.PACKAGE)
     private final Set<AddressByTransportTypeMap> seedNodes = new CopyOnWriteArraySet<>();
     @Deprecated(since = "2.1.0") // Moved to NetworkIdStore
