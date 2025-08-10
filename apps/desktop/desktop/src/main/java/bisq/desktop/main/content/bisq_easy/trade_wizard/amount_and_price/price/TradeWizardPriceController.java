@@ -223,49 +223,6 @@ public class TradeWizardPriceController implements Controller {
         }
     }
 
-    private double calculateMarketPriceMarkerLayoutX() {
-        double marketPricePercentage = 0;
-        double normalizedValue = (marketPricePercentage - model.getMinPercentage()) / (model.getMaxPercentage() - model.getMinPercentage());
-        return normalizedValue * model.getPriceComponentWidth() + 5; // 5 for the padding
-    }
-
-    private void onPercentageInput(String percentageAsString) {
-        if (model.isFocused() || model.getMarket() == null) {
-            return;
-        }
-        applyPercentageString(percentageAsString);
-    }
-
-    private void applyPercentageString(String percentageAsString) {
-        if (percentageAsString == null || percentageAsString.trim().isEmpty()) {
-            return;
-        }
-
-        model.getErrorMessage().set(null);
-        try {
-            double percentage = parse(percentageAsString);
-            if (!validatePercentage(percentage)) {
-                return;
-            }
-            Optional<PriceQuote> marketPriceQuote = findMarketPriceQuote();
-            if (marketPriceQuote.isPresent()) {
-                PriceQuote priceQuote = PriceUtil.fromMarketPriceMarkup(marketPriceQuote.get(), percentage);
-                if (validateQuote(priceQuote)) {
-                    priceInput.setQuote(priceQuote);
-                } else {
-                    return;
-                }
-            } else {
-                log.error("marketPriceQuote is not present");
-            }
-            applyPriceSpec();
-        } catch (NumberFormatException e) {
-            model.getErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.numberFormatException"));
-        } catch (Exception e) {
-            model.getErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.exception", e.getMessage()));
-        }
-    }
-
     void onToggleUseFixPrice() {
         boolean useFixPrice = !model.getUseFixPrice().get();
 
@@ -314,7 +271,50 @@ public class TradeWizardPriceController implements Controller {
     }
 
     void onMarketPriceMarkerClicked() {
-        model.getPercentage().set(0);
+        applyPercentageString(PercentageFormatter.formatToPercent(0));
+    }
+
+    private double calculateMarketPriceMarkerLayoutX() {
+        double marketPricePercentage = 0;
+        double normalizedValue = (marketPricePercentage - model.getMinPercentage()) / (model.getMaxPercentage() - model.getMinPercentage());
+        return normalizedValue * model.getPriceComponentWidth() + 5; // 5 for the padding
+    }
+
+    private void onPercentageInput(String percentageAsString) {
+        if (model.isFocused() || model.getMarket() == null) {
+            return;
+        }
+        applyPercentageString(percentageAsString);
+    }
+
+    private void applyPercentageString(String percentageAsString) {
+        if (percentageAsString == null || percentageAsString.trim().isEmpty()) {
+            return;
+        }
+
+        model.getErrorMessage().set(null);
+        try {
+            double percentage = parse(percentageAsString);
+            if (!validatePercentage(percentage)) {
+                return;
+            }
+            Optional<PriceQuote> marketPriceQuote = findMarketPriceQuote();
+            if (marketPriceQuote.isPresent()) {
+                PriceQuote priceQuote = PriceUtil.fromMarketPriceMarkup(marketPriceQuote.get(), percentage);
+                if (validateQuote(priceQuote)) {
+                    priceInput.setQuote(priceQuote);
+                } else {
+                    return;
+                }
+            } else {
+                log.error("marketPriceQuote is not present");
+            }
+            applyPriceSpec();
+        } catch (NumberFormatException e) {
+            model.getErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.numberFormatException"));
+        } catch (Exception e) {
+            model.getErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.exception", e.getMessage()));
+        }
     }
 
     private void applyPriceSpec() {

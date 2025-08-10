@@ -1313,7 +1313,7 @@
     -fx-fill: -bisq-white;
     -fx-stroke: -bisq-black;
     -fx-stroke-width: 1.5;
-    -fx-cursor: "hand";
+    -fx-cursor: hand;
 }
 
 .bisq-easy-trade-wizard-payment-methods-step .ln-checkbox .check-box {
