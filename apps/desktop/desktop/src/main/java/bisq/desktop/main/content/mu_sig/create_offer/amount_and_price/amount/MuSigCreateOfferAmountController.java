@@ -482,16 +482,22 @@ public class MuSigCreateOfferAmountController implements Controller {
 
     private void applyQuoteSideMinMaxRange() {
         Market market = model.getMarket();
-        Monetary maxRangeValue = MuSigTradeAmountLimits.usdToFiat(marketPriceService, market, MAX_USD_TRADE_AMOUNT)
-                .orElseThrow().round(0);
-        Monetary minRangeValue = MuSigTradeAmountLimits.usdToFiat(marketPriceService, market, DEFAULT_MIN_USD_TRADE_AMOUNT)
-                .orElseThrow().round(0);
 
+        Monetary maxRangeValue = market.isCrypto()
+                ? MuSigTradeAmountLimits.usdToBtc(marketPriceService, MAX_USD_TRADE_AMOUNT).orElseThrow()
+                : MuSigTradeAmountLimits.usdToFiat(marketPriceService, market, MAX_USD_TRADE_AMOUNT)
+                    .orElseThrow().round(0);
+        Monetary minRangeValue = market.isCrypto()
+                ? MuSigTradeAmountLimits.usdToBtc(marketPriceService, DEFAULT_MIN_USD_TRADE_AMOUNT).orElseThrow()
+                : MuSigTradeAmountLimits.usdToFiat(marketPriceService, market, DEFAULT_MIN_USD_TRADE_AMOUNT)
+                    .orElseThrow().round(0);
         applyMaxAmountBasedOnReputation();
 
         Fiat defaultUsdAmount = MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION.multiply(2);
-        Monetary defaultFiatAmount = MuSigTradeAmountLimits.usdToFiat(marketPriceService, market, defaultUsdAmount)
-                .orElseThrow().round(0);
+        Monetary defaultAmount = market.isCrypto()
+                ? MuSigTradeAmountLimits.usdToBtc(marketPriceService, defaultUsdAmount).orElseThrow()
+                : MuSigTradeAmountLimits.usdToFiat(marketPriceService, market, defaultUsdAmount)
+                    .orElseThrow().round(0);
         boolean isBuyer = model.getDirection().isBuy();
         Monetary reputationBasedMaxAmount = model.getReputationBasedMaxAmount().round(0);
         amountSelectionController.setMaxAllowedLimitation(maxRangeValue);
@@ -522,10 +528,10 @@ public class MuSigCreateOfferAmountController implements Controller {
                     .max()
                     .orElse(0L);
             Monetary highestPossibleAmountFromSellers = MuSigTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, market, highestScore)
-                    .orElse(Fiat.from(0, market.getQuoteCurrencyCode()));
+                    .orElse(Monetary.from(0, market.getQuoteCurrencyCode()));
             amountSelectionController.setRightMarkerQuoteSideValue(highestPossibleAmountFromSellers);
             if (amountSelectionController.getMaxOrFixedQuoteSideAmount().get() == null) {
-                amountSelectionController.setMaxOrFixedQuoteSideAmount(defaultFiatAmount);
+                amountSelectionController.setMaxOrFixedQuoteSideAmount(defaultAmount);
             }
         } else {
             // Seller case

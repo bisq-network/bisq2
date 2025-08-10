@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.components.amount_selection;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
 import bisq.common.asset.Asset;
+import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
@@ -42,8 +43,6 @@ import org.fxmisc.easybind.Subscription;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class AmountSelectionController implements Controller {
@@ -226,10 +225,10 @@ public class AmountSelectionController implements Controller {
     }
 
     public void setMinMaxRange(Monetary minRangeValue, Monetary maxRangeValue) {
-        boolean minRangeValueIsFiat = Asset.isFiat(minRangeValue.getCode());
-        boolean maxRangeValueIsFiat = Asset.isFiat(maxRangeValue.getCode());
-        checkArgument(minRangeValueIsFiat && maxRangeValueIsFiat,
-                "The provided minRangeValue and maxRangeValue must be fiat currencies as useQuoteCurrencyForMinMaxRange is set to true.");
+//        boolean minRangeValueIsFiat = Asset.isFiat(minRangeValue.getCode());
+//        boolean maxRangeValueIsFiat = Asset.isFiat(maxRangeValue.getCode());
+//        checkArgument(minRangeValueIsFiat && maxRangeValueIsFiat,
+//                "The provided minRangeValue and maxRangeValue must be fiat currencies as useQuoteCurrencyForMinMaxRange is set to true.");
 
         model.getMinRangeMonetary().set(minRangeValue);
         model.getMaxRangeMonetary().set(maxRangeValue);
@@ -535,12 +534,16 @@ public class AmountSelectionController implements Controller {
             Monetary minRangeQuoteSideValue = model.getMinRangeQuoteSideValue().get();
             Monetary maxRangeQuoteSideValue = model.getMaxRangeQuoteSideValue().get();
             long midValue = minRangeQuoteSideValue.getValue() + (maxRangeQuoteSideValue.getValue() - minRangeQuoteSideValue.getValue()) / 2;
-            Monetary exactAmount = Fiat.fromValue(midValue, priceQuote.getQuoteSideMonetary().getCode());
-            quoteSideAmountInput.setAmount(exactAmount.round(0));
-            smallNumberDisplayBox.setAmount(exactAmount.round(0));
+            Monetary exactAmount = model.getMarket().isCrypto()
+                    ? Coin.asBtcFromValue(midValue)
+                    : Fiat.fromValue(midValue, priceQuote.getQuoteSideMonetary().getCode()).round(0);
+            quoteSideAmountInput.setAmount(exactAmount);
+            smallNumberDisplayBox.setAmount(exactAmount);
         } else {
             log.warn("price.quoteProperty().get() is null. We use a fiat value of 100 as default value.");
-            Fiat defaultQuoteSideAmount = Fiat.fromFaceValue(100, model.getMarket().getQuoteCurrencyCode());
+            Monetary defaultQuoteSideAmount = model.getMarket().isCrypto()
+                    ? Coin.asBtcFromFaceValue(100)
+                    : Fiat.fromFaceValue(100, model.getMarket().getQuoteCurrencyCode());
             quoteSideAmountInput.setAmount(defaultQuoteSideAmount);
             smallNumberDisplayBox.setAmount(defaultQuoteSideAmount);
         }
