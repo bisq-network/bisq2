@@ -28,10 +28,11 @@ public class AbortPolicyWithLogging implements RejectedExecutionHandler {
     public AbortPolicyWithLogging() {
     }
 
+    @Override
     public void rejectedExecution(Runnable runnable, ThreadPoolExecutor executor) {
         log.warn("Task rejected. We throw a RejectedExecutionException");
-        throw new RejectedExecutionException("Task " + runnable.toString() +
+        throw new RejectedExecutionException("Task " + runnable.getClass().getSimpleName() +
                 " rejected from " +
-                executor.getRejectedExecutionHandler().toString());
+                executor.toString());
     }
 }
