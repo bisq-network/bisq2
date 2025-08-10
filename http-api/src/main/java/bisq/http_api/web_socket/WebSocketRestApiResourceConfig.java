@@ -10,6 +10,7 @@ import bisq.http_api.rest_api.domain.reputation.ReputationRestApi;
 import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
 import bisq.http_api.rest_api.domain.trades.TradeRestApi;
 import bisq.http_api.rest_api.domain.user_identity.UserIdentityRestApi;
+import bisq.http_api.rest_api.domain.user_profile.UserProfileRestApi;
 import jakarta.ws.rs.ApplicationPath;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,7 +26,8 @@ public class WebSocketRestApiResourceConfig extends RestApiResourceConfig {
                                           SettingsRestApi settingsRestApi,
                                           ExplorerRestApi explorerRestApi,
                                           PaymentAccountsRestApi paymentAccountsRestApi,
-                                          ReputationRestApi reputationRestApi) {
-        super(swaggerBaseUrl, offerbookRestApi, tradeRestApi, tradeChatRestApi, userIdentityRestApi, marketPriceRestApi, settingsRestApi, explorerRestApi, paymentAccountsRestApi, reputationRestApi);
+                                          ReputationRestApi reputationRestApi,
+                                          UserProfileRestApi userProfileRestApi) {
+        super(swaggerBaseUrl, offerbookRestApi, tradeRestApi, tradeChatRestApi, userIdentityRestApi, marketPriceRestApi, settingsRestApi, explorerRestApi, paymentAccountsRestApi, reputationRestApi, userProfileRestApi);
     }
 }
