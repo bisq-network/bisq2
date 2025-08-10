@@ -38,7 +38,6 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -56,7 +55,6 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
     @Getter
     private final MarketPriceStore persistableStore = new MarketPriceStore();
     @Getter
-    @Nullable
     private final Persistence<MarketPriceStore> persistence;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     @Getter
@@ -74,9 +72,7 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
         marketPriceRequestService = enabled
                 ? Optional.of(new MarketPriceRequestService(MarketPriceRequestService.Config.from(marketPrice), networkService))
                 : Optional.empty();
-        persistence = enabled
-                ? persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore)
-                : null;
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
     }
 
 
