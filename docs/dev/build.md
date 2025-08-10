@@ -2,7 +2,7 @@
 
 1. **Clone Bisq 2**
    ```bash
-   git clone
+   git clone https://github.com/bisq-network/bisq2.git
    ```
    ```bash
    cd bisq2

@@ -21,7 +21,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.2.0
         with:
-          submodules: 'true'
+          fetch-depth: 1
 
       - name: Setup Java JDK
         uses: actions/setup-java@v4.7.1
