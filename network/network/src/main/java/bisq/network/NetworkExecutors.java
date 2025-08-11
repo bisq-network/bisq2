@@ -129,7 +129,6 @@ public class NetworkExecutors {
      * The core pool size is aligned to the broadcasters peer group size of 75% of the peer group (target 12),
      * thus resulting in 9 in case we broadcast our own message.
      * We use a higher queue capacity to allow network bursts to some extent.
-     * We use the CallerRunsPolicy thus putting backpressure on the caller in case we exceed the queue capacity.
      * This pool must be used only for sending messages to the network, either in Connection or in ConnectionHandshake.
      * <p>
      * Sending a message start with creating the handshake which starts with creating the socket which is a blocking operation.

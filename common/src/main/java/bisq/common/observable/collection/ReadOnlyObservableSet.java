@@ -19,6 +19,6 @@ package bisq.common.observable.collection;
 
 import java.util.Set;
 
-public interface ReadOnlyObservableSet<S> extends ReadOnlyObservableCollection<S> {
+public interface ReadOnlyObservableSet<S> extends ReadOnlyObservableCollection<S>, Set<S> {
     Set<S> getUnmodifiableSet() ;
 }
