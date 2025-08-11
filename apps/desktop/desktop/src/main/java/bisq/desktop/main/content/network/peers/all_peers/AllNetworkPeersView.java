@@ -404,7 +404,7 @@ public class AllNetworkPeersView extends View<VBox, AllNetworkPeersModel, AllNet
         }
 
         private void applyReputationSourceValue(ReputationSource reputationSource, long value) {
-            valuePairBySource.putIfAbsent(reputationSource, new Pair<>(value, formatReputationSourceValue(reputationSource, value)));
+            valuePairBySource.put(reputationSource, new Pair<>(value, formatReputationSourceValue(reputationSource, value)));
         }
 
         private String formatReputationSourceValue(ReputationSource reputationSource, long value) {

@@ -74,8 +74,17 @@ public class ContactListService implements PersistenceClient<ContactListStore>, 
         return wasAdded;
     }
 
+    // Use object identity for remove
     public boolean removeContactListEntry(ContactListEntry contactListEntry) {
         boolean wasRemoved = persistableStore.removeContactListEntry(contactListEntry);
+        if (wasRemoved) {
+            persist();
+        }
+        return wasRemoved;
+    }
+
+    public boolean removeContactListEntry(String userProfileId) {
+        boolean wasRemoved = persistableStore.removeContactListEntry(userProfileId);
         if (wasRemoved) {
             persist();
         }

@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.network.p2p_network;
 
-import bisq.desktop.common.view.Model;
 import bisq.common.network.TransportType;
+import bisq.desktop.common.view.Model;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,10 +29,7 @@ import java.util.Set;
 public class P2PNetworkModel implements Model {
     private final Set<TransportType> supportedTransportTypes;
 
-    public P2PNetworkModel(Set<TransportType> supportedTransportTypes,
-                           boolean clearNetDisabled,
-                           boolean torDisabled,
-                           boolean i2pDisabled) {
+    public P2PNetworkModel(Set<TransportType> supportedTransportTypes) {
         this.supportedTransportTypes = supportedTransportTypes;
     }
 }

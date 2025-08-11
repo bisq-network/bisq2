@@ -394,7 +394,7 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
         }
 
         private void applyReputationSourceValue(ReputationSource reputationSource, long value) {
-            valuePairBySource.putIfAbsent(reputationSource, new Pair<>(value, formatReputationSourceValue(reputationSource, value)));
+            valuePairBySource.put(reputationSource, new Pair<>(value, formatReputationSourceValue(reputationSource, value)));
         }
 
         private String formatReputationSourceValue(ReputationSource reputationSource, long value) {
