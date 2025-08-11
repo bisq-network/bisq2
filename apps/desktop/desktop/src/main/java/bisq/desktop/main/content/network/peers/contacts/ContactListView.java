@@ -142,6 +142,11 @@ public class ContactListView extends View<VBox, ContactListModel, ContactListCon
                 .valueSupplier(ListItem::getUserName)
                 .build());
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+                .title(Res.get("network.contactList.table.columns.contactReason"))
+                .comparator(Comparator.comparing(ListItem::getContactReasonString))
+                .valueSupplier(ListItem::getContactReasonString)
+                .build());
+        richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("network.contactList.table.columns.tag"))
                 .comparator(Comparator.comparing(ListItem::getTag))
                 .valueSupplier(ListItem::getTag)
@@ -287,7 +292,7 @@ public class ContactListView extends View<VBox, ContactListModel, ContactListCon
         private final UserProfileService userProfileService;
         private final ContactListController controller;
 
-        private final String userName, profileAgeString, trustScore, tag, notes;
+        private final String userName, profileAgeString, trustScore, tag, notes, contactReasonString;
         private ReputationScore reputationScore;
         private final long profileAge;
         private long totalScore;
@@ -308,9 +313,10 @@ public class ContactListView extends View<VBox, ContactListModel, ContactListCon
             this.controller = controller;
 
             userName = userProfile.getUserName();
+            contactReasonString = contactListEntry.getContactReason().getDisplayString();
+            tag = contactListEntry.getTag().orElse(Res.get("data.na"));
             //todo use custom trust display
             trustScore = contactListEntry.getTrustScore().map(String::valueOf).orElse(Res.get("data.na"));
-            tag = contactListEntry.getTag().orElse(Res.get("data.na"));
             notes = contactListEntry.getNotes().orElse(Res.get("data.na"));
             Optional<Long> optionalProfileAge = reputationService.getProfileAgeService().getProfileAge(userProfile);
             profileAge = optionalProfileAge.orElse(0L);
