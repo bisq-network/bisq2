@@ -19,6 +19,6 @@ package bisq.common.observable.collection;
 
 import java.util.List;
 
-public interface ReadOnlyObservableArray<S> extends ReadOnlyObservableCollection<S> {
+public interface ReadOnlyObservableArray<S> extends ReadOnlyObservableCollection<S>, List<S> {
     List<S> getUnmodifiableList() ;
 }

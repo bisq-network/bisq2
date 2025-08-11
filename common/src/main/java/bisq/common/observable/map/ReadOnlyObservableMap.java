@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-public interface ReadOnlyObservableMap<K, V> {
+public interface ReadOnlyObservableMap<K, V> extends Map<K, V> {
     Map<K, V> getUnmodifiableMap();
 
     Pin addObserver(HashMapObserver<K, V> observer);
