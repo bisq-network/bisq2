@@ -131,6 +131,7 @@ public class ChatService implements Service {
                 new TwoPartyPrivateChatChannelService(persistenceService,
                         networkService,
                         userService,
+                        settingsService,
                         ChatChannelDomain.DISCUSSION));
         addToChatChannelSelectionServices(ChatChannelDomain.DISCUSSION);
 

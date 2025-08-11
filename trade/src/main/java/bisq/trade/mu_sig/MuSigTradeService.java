@@ -612,7 +612,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
 
     private void maybeAddPeerToContactList(String peersProfileId) {
         if (settingsService.getDoAutoAddToContactList()) {
-            contactListService.addContactListEntry(peersProfileId, ContactReason.BISQ_EASY_TRADE);
+            contactListService.addContactListEntry(peersProfileId, ContactReason.MUSIG_TRADE);
         }
     }
 }
