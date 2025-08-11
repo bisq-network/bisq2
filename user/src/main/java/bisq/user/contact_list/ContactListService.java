@@ -46,25 +46,39 @@ public class ContactListService implements PersistenceClient<ContactListStore>, 
         return persistableStore.getContactListEntries();
     }
 
-    public void addContactListEntry(String profileId, ContactReason contactReason) {
-        userProfileService.findUserProfile(profileId).ifPresent(userProfile -> {
-            persistableStore.addContactListEntry(new ContactListEntry(userProfile, contactReason));
+    public boolean addContactListEntry(String profileId, ContactReason contactReason) {
+        return userProfileService.findUserProfile(profileId)
+                .map(userProfile -> {
+                    boolean wasAdded = persistableStore.addContactListEntry(new ContactListEntry(userProfile, contactReason));
+                    if (wasAdded) {
+                        persist();
+                    }
+                    return wasAdded;
+                })
+                .orElse(false);
+    }
+
+    public boolean addContactListEntry(UserProfile userProfile, ContactReason contactReason) {
+        boolean wasAdded = persistableStore.addContactListEntry(new ContactListEntry(userProfile, contactReason));
+        if (wasAdded) {
             persist();
-        });
+        }
+        return wasAdded;
     }
 
-    public void addContactListEntry(UserProfile userProfile, ContactReason contactReason) {
-        persistableStore.addContactListEntry(new ContactListEntry(userProfile, contactReason));
-        persist();
+    public boolean addContactListEntry(ContactListEntry contactListEntry) {
+        boolean wasAdded = persistableStore.addContactListEntry(contactListEntry);
+        if (wasAdded) {
+            persist();
+        }
+        return wasAdded;
     }
 
-    public void addContactListEntry(ContactListEntry contactListEntry) {
-        persistableStore.addContactListEntry(contactListEntry);
-        persist();
-    }
-
-    public void removeContactListEntry(ContactListEntry contactListEntry) {
-        persistableStore.removeContactListEntry(contactListEntry);
-        persist();
+    public boolean removeContactListEntry(ContactListEntry contactListEntry) {
+        boolean wasRemoved = persistableStore.removeContactListEntry(contactListEntry);
+        if (wasRemoved) {
+            persist();
+        }
+        return wasRemoved;
     }
 }
