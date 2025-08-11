@@ -22,7 +22,6 @@ import bisq.network.i2p.util.I2PLogManager;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.client.I2PClient;
-import net.i2p.client.streaming.I2PSocketManager;
 import net.i2p.data.DataHelper;
 import net.i2p.data.Destination;
 import net.i2p.router.CommSystemFacade;
@@ -248,7 +247,9 @@ public class I2pEmbeddedRouter {
             throw new IOException("Unable to create SSL certificates directory: " + sslDir.getAbsolutePath());
         }
 
-        copyCertificatesToBaseDir(seedDir, sslDir);
+        if (!copyCertificatesToBaseDir(seedDir, sslDir)) {
+            throw new IOException("Unable to copy certificates from resources");
+        }
     }
 
     private CommSystemFacade.Status getRouterStatus() {
@@ -309,11 +310,11 @@ public class I2pEmbeddedRouter {
     }
 
     /**
-     *  Copy all certificates found in certificates on classpath
-     *  into i2pDir/certificates
+     * Copy all certificates found in certificates on classpath
+     * into i2pDir/certificates
      *
-     *  @param reseedCertificates destination directory for reseed certificates
-     *  @param sslCertificates destination directory for ssl certificates
+     * @param reseedCertificates destination directory for reseed certificates
+     * @param sslCertificates    destination directory for ssl certificates
      */
     private boolean copyCertificatesToBaseDir(File reseedCertificates, File sslCertificates) {
         String jarPath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
@@ -371,40 +372,34 @@ public class I2pEmbeddedRouter {
             }
         } else {
             // called while testing in an IDE
-            URL resource = I2pEmbeddedRouter.class.getClassLoader().getResource(".");
-            File file = null;
+            URL resource = I2pEmbeddedRouter.class.getClassLoader().getResource("certificates");
+            if (resource == null) return false;
+            File certResFolder;
             try {
-                file = new File(resource.toURI());
+                certResFolder = new File(resource.toURI());
             } catch (URISyntaxException e) {
                 log.warn("Unable to access I2P resource directory.");
                 return false;
             }
-            File[] resFolderFiles = file.listFiles();
-            File certResFolder = null;
-            for (File f : resFolderFiles) {
-                if ("certificates".equals(f.getName())) {
-                    certResFolder = f;
-                    break;
-                }
-            }
-            if (certResFolder != null) {
-                File[] folders = certResFolder.listFiles();
-                for (File folder : folders) {
-                    if ("reseed".equals(folder.getName())) {
-                        File[] reseedCerts = folder.listFiles();
-                        for (File reseedCert : reseedCerts) {
-                            FileUtil.copy(reseedCert, reseedCertificates, true, false);
-                        }
-                    } else if ("ssl".equals(folder.getName())) {
-                        File[] sslCerts = folder.listFiles();
-                        for (File sslCert : sslCerts) {
-                            FileUtil.copy(sslCert, sslCertificates, true, false);
-                        }
+
+            File[] folders = certResFolder.listFiles();
+            if (folders == null) return false;
+            for (File folder : folders) {
+                if ("reseed".equals(folder.getName())) {
+                    File[] reseedCerts = folder.listFiles();
+                    if (reseedCerts == null) return false;
+                    for (File reseedCert : reseedCerts) {
+                        FileUtil.copy(reseedCert, reseedCertificates, true, false);
+                    }
+                } else if ("ssl".equals(folder.getName())) {
+                    File[] sslCerts = folder.listFiles();
+                    if (sslCerts == null) return false;
+                    for (File sslCert : sslCerts) {
+                        FileUtil.copy(sslCert, sslCertificates, true, false);
                     }
                 }
-                return true;
             }
-            return false;
+            return true;
         }
 
         return true;
@@ -441,7 +436,7 @@ public class I2pEmbeddedRouter {
     }
 
     private void reportRouterStatus() {
-        if(i2pRouterStatus == CommSystemFacade.Status.OK ||
+        if (i2pRouterStatus == CommSystemFacade.Status.OK ||
                 i2pRouterStatus == CommSystemFacade.Status.IPV4_DISABLED_IPV6_OK ||
                 i2pRouterStatus == CommSystemFacade.Status.IPV4_FIREWALLED_IPV6_OK ||
                 i2pRouterStatus == CommSystemFacade.Status.IPV4_SNAT_IPV6_OK ||
