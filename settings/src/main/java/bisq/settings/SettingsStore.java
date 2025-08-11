@@ -18,9 +18,9 @@
 package bisq.settings;
 
 import bisq.common.application.DevMode;
+import bisq.common.locale.LanguageRepository;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
-import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.platform.PlatformUtils;
@@ -81,6 +81,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<ChatMessageType> bisqEasyOfferbookMessageTypeFilter = new Observable<>();
     final Observable<Integer> numDaysAfterRedactingTradeData = new Observable<>();
     final Observable<Boolean> muSigActivated = new Observable<>();
+    final Observable<Boolean> doNotAutoAddToContactList = new Observable<>();
 
     SettingsStore() {
         this(new Cookie(),
@@ -110,7 +111,8 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 DEFAULT_TOTAL_MAX_BACKUP_SIZE_IN_MB,
                 ChatMessageType.ALL,
                 DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA,
-                DevMode.isDevMode());
+                DevMode.isDevMode(),
+                false);
     }
 
     SettingsStore(Cookie cookie,
@@ -140,7 +142,8 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                   double totalMaxBackupSizeInMB,
                   ChatMessageType bisqEasyOfferbookMessageTypeFilter,
                   int numDaysAfterRedactingTradeData,
-                  boolean muSigActivated) {
+                  boolean muSigActivated,
+                  boolean doNotAutoAddToContactList) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -169,6 +172,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
         this.bisqEasyOfferbookMessageTypeFilter.set(bisqEasyOfferbookMessageTypeFilter);
         this.numDaysAfterRedactingTradeData.set(numDaysAfterRedactingTradeData);
         this.muSigActivated.set(muSigActivated);
+        this.doNotAutoAddToContactList.set(doNotAutoAddToContactList);
     }
 
     @Override
@@ -201,7 +205,8 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setTotalMaxBackupSizeInMB(totalMaxBackupSizeInMB.get())
                 .setBisqEasyOfferbookMessageTypeFilter(bisqEasyOfferbookMessageTypeFilter.get().toProtoEnum())
                 .setNumDaysAfterRedactingTradeData(numDaysAfterRedactingTradeData.get())
-                .setMuSigActivated(muSigActivated.get());
+                .setMuSigActivated(muSigActivated.get())
+                .setDoNotAutoAddToContactList(doNotAutoAddToContactList.get());
     }
 
     @Override
@@ -256,7 +261,8 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 totalMaxBackupSizeInMB,
                 ChatMessageType.fromProto(proto.getBisqEasyOfferbookMessageTypeFilter()),
                 numDaysAfterRedactingTradeData,
-                proto.getMuSigActivated());
+                proto.getMuSigActivated(),
+                proto.getDoNotAutoAddToContactList());
     }
 
     @Override
@@ -299,7 +305,8 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 totalMaxBackupSizeInMB.get(),
                 bisqEasyOfferbookMessageTypeFilter.get(),
                 numDaysAfterRedactingTradeData.get(),
-                muSigActivated.get());
+                muSigActivated.get(),
+                doNotAutoAddToContactList.get());
     }
 
     @Override
@@ -333,6 +340,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
             bisqEasyOfferbookMessageTypeFilter.set(persisted.bisqEasyOfferbookMessageTypeFilter.get());
             numDaysAfterRedactingTradeData.set(persisted.numDaysAfterRedactingTradeData.get());
             muSigActivated.set(persisted.muSigActivated.get());
+            doNotAutoAddToContactList.set(persisted.doNotAutoAddToContactList.get());
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }

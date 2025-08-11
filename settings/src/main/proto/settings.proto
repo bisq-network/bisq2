@@ -74,4 +74,5 @@ message SettingsStore {
   ChatMessageType bisqEasyOfferbookMessageTypeFilter = 26;
   sint32 numDaysAfterRedactingTradeData = 27;
   bool muSigActivated = 28;
+  bool doNotAutoAddToContactList = 29;
 }
