@@ -154,7 +154,7 @@ public class TradeRestApi extends RestApiBase {
             long marketPrice = marketPriceService.findMarketPrice(bisqEasyOffer.getMarket())
                     .map(e -> e.getPriceQuote().getValue())
                     .orElseThrow();
-            BisqEasyProtocol bisqEasyProtocol = bisqEasyTradeService.createBisqEasyProtocol(takerIdentity.getIdentity(),
+            BisqEasyProtocol bisqEasyProtocol = bisqEasyTradeService.takerCreatesProtocol(takerIdentity.getIdentity(),
                     bisqEasyOffer,
                     baseSideAmount,
                     quoteSideAmount,

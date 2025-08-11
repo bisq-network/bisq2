@@ -230,7 +230,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     private void handleBisqEasyTakeOfferMessage(BisqEasyTakeOfferRequest message) {
         BisqEasyContract bisqEasyContract = message.getBisqEasyContract();
-        BisqEasyProtocol protocol = createProtocol(bisqEasyContract, message.getSender(), message.getReceiver());
+        BisqEasyProtocol protocol = makerCreatesProtocol(bisqEasyContract, message.getSender(), message.getReceiver());
         handleBisqEasyTradeMessage(message, protocol);
     }
 
@@ -263,15 +263,15 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     // Events
     /* --------------------------------------------------------------------- */
 
-    public BisqEasyProtocol createBisqEasyProtocol(Identity takerIdentity,
-                                                   BisqEasyOffer bisqEasyOffer,
-                                                   Monetary baseSideAmount,
-                                                   Monetary quoteSideAmount,
-                                                   BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
-                                                   FiatPaymentMethodSpec fiatPaymentMethodSpec,
-                                                   Optional<UserProfile> mediator,
-                                                   PriceSpec priceSpec,
-                                                   long marketPrice) {
+    public BisqEasyProtocol takerCreatesProtocol(Identity takerIdentity,
+                                                 BisqEasyOffer bisqEasyOffer,
+                                                 Monetary baseSideAmount,
+                                                 Monetary quoteSideAmount,
+                                                 BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
+                                                 FiatPaymentMethodSpec fiatPaymentMethodSpec,
+                                                 Optional<UserProfile> mediator,
+                                                 PriceSpec priceSpec,
+                                                 long marketPrice) {
         verifyTradingNotOnHalt();
         verifyMinVersionForTrading();
 
@@ -395,7 +395,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     // TradeProtocol factory
     /* --------------------------------------------------------------------- */
 
-    private BisqEasyProtocol createProtocol(BisqEasyContract contract, NetworkId sender, NetworkId receiver) {
+    private BisqEasyProtocol makerCreatesProtocol(BisqEasyContract contract, NetworkId sender, NetworkId receiver) {
         // We only create the data required for the protocol creation.
         // Verification will happen in the BisqEasyTakeOfferRequestHandler
         BisqEasyOffer offer = contract.getOffer();
