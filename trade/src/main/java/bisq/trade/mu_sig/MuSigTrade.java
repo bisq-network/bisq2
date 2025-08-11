@@ -75,7 +75,7 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
         stateObservable().addObserver(state -> tradeState.set((MuSigTradeState) state));
     }
 
-    public MuSigTrade(MuSigContract contract,
+    private MuSigTrade(MuSigContract contract,
                       MuSigTradeState state,
                       String id,
                       TradeRole tradeRole,

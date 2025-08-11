@@ -31,7 +31,10 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
+import bisq.settings.SettingsService;
 import bisq.user.UserService;
+import bisq.user.contact_list.ContactListService;
+import bisq.user.contact_list.ContactReason;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
@@ -49,12 +52,18 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     private final TwoPartyPrivateChatChannelStore persistableStore = new TwoPartyPrivateChatChannelStore();
     @Getter
     private final Persistence<TwoPartyPrivateChatChannelStore> persistence;
+    private final ContactListService contactListService;
+    private final SettingsService settingsService;
 
     public TwoPartyPrivateChatChannelService(PersistenceService persistenceService,
                                              NetworkService networkService,
                                              UserService userService,
+                                             SettingsService settingsService,
                                              ChatChannelDomain chatChannelDomain) {
         super(networkService, userService, chatChannelDomain);
+        contactListService = userService.getContactListService();
+        this.settingsService = settingsService;
+
         String name = StringUtils.capitalize(StringUtils.snakeCaseToCamelCase(chatChannelDomain.name().toLowerCase()));
         persistence = persistenceService.getOrCreatePersistence(this,
                 DbSubDirectory.PRIVATE,
@@ -155,6 +164,9 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     @Override
     protected TwoPartyPrivateChatChannel createAndGetNewPrivateChatChannel(UserProfile peer,
                                                                            UserIdentity myUserIdentity) {
+        if (settingsService.getDoAutoAddToContactList()) {
+            contactListService.addContactListEntry(peer, ContactReason.PRIVATE_CHAT);
+        }
         return new TwoPartyPrivateChatChannel(peer, myUserIdentity, chatChannelDomain);
     }
 

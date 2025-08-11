@@ -17,6 +17,8 @@
 
 package bisq.trade.bisq_easy;
 
+import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
@@ -38,8 +40,6 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -65,6 +65,8 @@ import bisq.trade.bisq_easy.protocol.events.BisqEasyTradeEvent;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
 import bisq.user.banned.BannedUserService;
+import bisq.user.contact_list.ContactListService;
+import bisq.user.contact_list.ContactReason;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -98,6 +100,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     // We don't persist the protocol, only the model.
     private final Map<String, BisqEasyProtocol> tradeProtocolById = new ConcurrentHashMap<>();
+    private final ContactListService contactListService;
     private boolean haltTrading;
     private boolean requireVersionForTrading;
     private Optional<String> minRequiredVersionForTrading = Optional.empty();
@@ -114,6 +117,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         settingsService = serviceProvider.getSettingsService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         alertService = serviceProvider.getBondedRolesService().getAlertService();
+        contactListService = serviceProvider.getUserService().getContactListService();
 
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
@@ -226,7 +230,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     private void handleBisqEasyTakeOfferMessage(BisqEasyTakeOfferRequest message) {
         BisqEasyContract bisqEasyContract = message.getBisqEasyContract();
-        BisqEasyProtocol protocol = createProtocol(bisqEasyContract, message.getSender(), message.getReceiver());
+        BisqEasyProtocol protocol = makerCreatesProtocol(bisqEasyContract, message.getSender(), message.getReceiver());
         handleBisqEasyTradeMessage(message, protocol);
     }
 
@@ -259,15 +263,15 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     // Events
     /* --------------------------------------------------------------------- */
 
-    public BisqEasyProtocol createBisqEasyProtocol(Identity takerIdentity,
-                                                   BisqEasyOffer bisqEasyOffer,
-                                                   Monetary baseSideAmount,
-                                                   Monetary quoteSideAmount,
-                                                   BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
-                                                   FiatPaymentMethodSpec fiatPaymentMethodSpec,
-                                                   Optional<UserProfile> mediator,
-                                                   PriceSpec priceSpec,
-                                                   long marketPrice) {
+    public BisqEasyProtocol takerCreatesProtocol(Identity takerIdentity,
+                                                 BisqEasyOffer bisqEasyOffer,
+                                                 Monetary baseSideAmount,
+                                                 Monetary quoteSideAmount,
+                                                 BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
+                                                 FiatPaymentMethodSpec fiatPaymentMethodSpec,
+                                                 Optional<UserProfile> mediator,
+                                                 PriceSpec priceSpec,
+                                                 long marketPrice) {
         verifyTradingNotOnHalt();
         verifyMinVersionForTrading();
 
@@ -293,6 +297,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         checkArgument(!tradeExists(bisqEasyTrade.getId()), "A trade with that ID exists already");
         persistableStore.addTrade(bisqEasyTrade);
         persist();
+
+        maybeAddPeerToContactList(makerNetworkId.getId());
+
         return createAndAddTradeProtocol(bisqEasyTrade);
     }
 
@@ -388,7 +395,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     // TradeProtocol factory
     /* --------------------------------------------------------------------- */
 
-    private BisqEasyProtocol createProtocol(BisqEasyContract contract, NetworkId sender, NetworkId receiver) {
+    private BisqEasyProtocol makerCreatesProtocol(BisqEasyContract contract, NetworkId sender, NetworkId receiver) {
         // We only create the data required for the protocol creation.
         // Verification will happen in the BisqEasyTakeOfferRequestHandler
         BisqEasyOffer offer = contract.getOffer();
@@ -398,8 +405,12 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         String tradeId = bisqEasyTrade.getId();
         checkArgument(findProtocol(tradeId).isEmpty(), "We received the BisqEasyTakeOfferRequest for an already existing protocol");
         checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
+
         persistableStore.addTrade(bisqEasyTrade);
         persist();
+
+        maybeAddPeerToContactList(sender.getId());
+
         return createAndAddTradeProtocol(bisqEasyTrade);
     }
 
@@ -465,6 +476,17 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                 .count();
         if (numChanges > 0) {
             persist();
+        }
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Misc
+    /* --------------------------------------------------------------------- */
+
+    private void maybeAddPeerToContactList(String peersProfileId) {
+        if (settingsService.getDoAutoAddToContactList()) {
+            contactListService.addContactListEntry(peersProfileId, ContactReason.BISQ_EASY_TRADE);
         }
     }
 }

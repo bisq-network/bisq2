@@ -227,7 +227,7 @@ public class NetworkInfo {
         }
 
         private void onNavigateToNetworkInfo() {
-            onNavigationTargetSelectedHandler.accept(NavigationTarget.NETWORK_NODES);
+            onNavigationTargetSelectedHandler.accept(NavigationTarget.NETWORK_P2P);
         }
 
         private void onNumConnectionsChanged(TransportType transportType, Node node) {

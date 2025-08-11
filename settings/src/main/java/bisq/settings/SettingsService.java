@@ -121,6 +121,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         pins.add(getBisqEasyOfferbookMessageTypeFilter().addObserver(value -> persist()));
         pins.add(getNumDaysAfterRedactingTradeData().addObserver(value -> persist()));
         pins.add(getMuSigActivated().addObserver(value -> persist()));
+        pins.add(getDoNotAutoAddToContactList().addObserver(value -> persist()));
 
         isInitialized = true;
 
@@ -265,6 +266,14 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.muSigActivated;
     }
 
+    public ReadOnlyObservable<Boolean> getDoNotAutoAddToContactList() {
+        return persistableStore.doNotAutoAddToContactList;
+    }
+
+    public boolean getDoAutoAddToContactList() {
+        return !getDoNotAutoAddToContactList().get();
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Setters
@@ -362,6 +371,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public void setMuSigActivated(boolean muSigActivated) {
         persistableStore.muSigActivated.set(DevMode.isDevMode() && muSigActivated);
+    }
+
+    public void setDoNotAutoAddToContactList(boolean value) {
+        persistableStore.doNotAutoAddToContactList.set(value);
     }
 
 

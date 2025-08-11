@@ -24,6 +24,8 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,22 +35,50 @@ public class ContactListService implements PersistenceClient<ContactListStore>, 
     private final ContactListStore persistableStore = new ContactListStore();
     @Getter
     private final Persistence<ContactListStore> persistence;
+    private final UserProfileService userProfileService;
 
-    public ContactListService(PersistenceService persistenceService) {
+    public ContactListService(PersistenceService persistenceService, UserProfileService userProfileService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
+        this.userProfileService = userProfileService;
     }
 
     public ReadOnlyObservableSet<ContactListEntry> getContactListEntries() {
         return persistableStore.getContactListEntries();
     }
 
-    public void addContactListEntry(ContactListEntry contactListEntry) {
-        persistableStore.addContactListEntry(contactListEntry);
-        persist();
+    public boolean addContactListEntry(String profileId, ContactReason contactReason) {
+        return userProfileService.findUserProfile(profileId)
+                .map(userProfile -> {
+                    boolean wasAdded = persistableStore.addContactListEntry(new ContactListEntry(userProfile, contactReason));
+                    if (wasAdded) {
+                        persist();
+                    }
+                    return wasAdded;
+                })
+                .orElse(false);
     }
 
-    public void removeContactListEntry(ContactListEntry contactListEntry) {
-        persistableStore.removeContactListEntry(contactListEntry);
-        persist();
+    public boolean addContactListEntry(UserProfile userProfile, ContactReason contactReason) {
+        boolean wasAdded = persistableStore.addContactListEntry(new ContactListEntry(userProfile, contactReason));
+        if (wasAdded) {
+            persist();
+        }
+        return wasAdded;
+    }
+
+    public boolean addContactListEntry(ContactListEntry contactListEntry) {
+        boolean wasAdded = persistableStore.addContactListEntry(contactListEntry);
+        if (wasAdded) {
+            persist();
+        }
+        return wasAdded;
+    }
+
+    public boolean removeContactListEntry(ContactListEntry contactListEntry) {
+        boolean wasRemoved = persistableStore.removeContactListEntry(contactListEntry);
+        if (wasRemoved) {
+            persist();
+        }
+        return wasRemoved;
     }
 }

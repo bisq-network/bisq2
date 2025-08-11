@@ -82,12 +82,17 @@ public final class ContactListStore implements PersistableStore<ContactListStore
         contactListEntries.setAll(persisted.getContactListEntries());
     }
 
-    synchronized void addContactListEntry(ContactListEntry contactListEntry) {
-        contactListEntries.add(contactListEntry);
+    synchronized boolean addContactListEntry(ContactListEntry contactListEntry) {
+        boolean didNotExist = contactListEntries.stream()
+                .noneMatch(e -> e.getUserProfile().getId().equals(contactListEntry.getUserProfile().getId()));
+        if (didNotExist) {
+            contactListEntries.add(contactListEntry);
+        }
+        return didNotExist;
     }
 
-    synchronized void removeContactListEntry(ContactListEntry contactListEntry) {
-        contactListEntries.remove(contactListEntry);
+    synchronized boolean removeContactListEntry(ContactListEntry contactListEntry) {
+        return contactListEntries.remove(contactListEntry);
     }
 
     ReadOnlyObservableSet<ContactListEntry> getContactListEntries() {
