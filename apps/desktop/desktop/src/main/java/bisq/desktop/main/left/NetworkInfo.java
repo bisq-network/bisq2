@@ -227,7 +227,7 @@ public class NetworkInfo {
         }
 
         private void onNavigateToNetworkInfo() {
-            onNavigationTargetSelectedHandler.accept(NavigationTarget.MY_NETWORK_NODE);
+            onNavigationTargetSelectedHandler.accept(NavigationTarget.NETWORK_NODES);
         }
 
         private void onNumConnectionsChanged(TransportType transportType, Node node) {

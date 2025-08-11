@@ -23,6 +23,6 @@ import bisq.desktop.main.content.ContentTabModel;
 public class NetworkModel extends ContentTabModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.MY_NETWORK_NODE;
+        return NavigationTarget.NETWORK_NODES;
     }
 }

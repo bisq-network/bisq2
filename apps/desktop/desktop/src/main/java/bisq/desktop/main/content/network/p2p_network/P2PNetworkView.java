@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.network.my_node;
+package bisq.desktop.main.content.network.p2p_network;
 
 import bisq.desktop.common.view.View;
 import javafx.geometry.Insets;
@@ -28,13 +28,14 @@ import java.util.Optional;
 
 
 @Slf4j
-public class MyNetworkNodeView extends View<VBox, MyNetworkNodeModel, MyNetworkNodeController> {
+public class P2PNetworkView extends View<VBox, P2PNetworkModel, P2PNetworkController> {
 
-    public MyNetworkNodeView(MyNetworkNodeModel model,
-                             MyNetworkNodeController controller,
-                             Optional<Node> clear,
-                             Optional<Node> tor,
-                             Optional<Node> i2p) {
+    public P2PNetworkView(P2PNetworkModel model,
+                          P2PNetworkController controller,
+                          Optional<Node> clear,
+                          Optional<Node> tor,
+                          Optional<Node> i2p,
+                          VBox versionDistribution) {
         super(new VBox(50), model, controller);
 
         root.setPadding(new Insets(0, 40, 40, 40));
@@ -43,6 +44,8 @@ public class MyNetworkNodeView extends View<VBox, MyNetworkNodeModel, MyNetworkN
         clear.ifPresent(childRoot -> root.getChildren().add(childRoot));
         tor.ifPresent(childRoot -> root.getChildren().add(childRoot));
         i2p.ifPresent(childRoot -> root.getChildren().add(childRoot));
+
+        root.getChildren().add(versionDistribution);
     }
 
     @Override

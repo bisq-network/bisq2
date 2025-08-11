@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.network.my_node;
+package bisq.desktop.main.content.network.p2p_network;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.network.my_node.transport.TransportController;
+import bisq.desktop.main.content.network.p2p_network.transport.TransportController;
+import bisq.desktop.main.content.network.p2p_network.version.VersionDistributionController;
 import bisq.network.NetworkService;
 import bisq.common.network.TransportType;
 import javafx.scene.Node;
@@ -30,11 +31,11 @@ import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
-public class MyNetworkNodeController implements Controller {
+public class P2PNetworkController implements Controller {
     @Getter
-    private final MyNetworkNodeModel model;
+    private final P2PNetworkModel model;
     @Getter
-    private final MyNetworkNodeView view;
+    private final P2PNetworkView view;
     private final ServiceProvider serviceProvider;
     @Getter
     private final Optional<TransportController> clearNetController = Optional.empty();
@@ -43,20 +44,23 @@ public class MyNetworkNodeController implements Controller {
     @Getter
     private final Optional<TransportController> i2pController = Optional.empty();
 
-    public MyNetworkNodeController(ServiceProvider serviceProvider) {
+    public P2PNetworkController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
         NetworkService networkService = serviceProvider.getNetworkService();
 
-        model = new MyNetworkNodeModel(networkService.getSupportedTransportTypes(),
+        VersionDistributionController versionDistributionController = new VersionDistributionController(serviceProvider);
+
+        model = new P2PNetworkModel(networkService.getSupportedTransportTypes(),
                 !networkService.isTransportTypeSupported(TransportType.CLEAR),
                 !networkService.isTransportTypeSupported(TransportType.TOR),
                 !networkService.isTransportTypeSupported(TransportType.I2P));
 
         Set<TransportType> supportedTransportTypes = serviceProvider.getNetworkService().getSupportedTransportTypes();
-        view = new MyNetworkNodeView(model, this,
+        view = new P2PNetworkView(model, this,
                 getTransportTypeViewRoot(supportedTransportTypes, TransportType.CLEAR),
                 getTransportTypeViewRoot(supportedTransportTypes, TransportType.TOR),
-                getTransportTypeViewRoot(supportedTransportTypes, TransportType.I2P));
+                getTransportTypeViewRoot(supportedTransportTypes, TransportType.I2P),
+                versionDistributionController.getView().getRoot());
     }
 
     @Override

@@ -15,15 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.network.p2p;
+package bisq.desktop.main.content.network.p2p_network.transport;
 
 import bisq.desktop.common.view.Model;
+import bisq.common.network.TransportType;
+import bisq.network.p2p.node.Node;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class P2PNetworkModel implements Model {
-    public P2PNetworkModel() {
+public class TransportModel implements Model {
+    private final TransportType transportType;
+    private final Node defaultNode;
+    @Setter
+    private String myDefaultNodeAddress;
+
+    public TransportModel(TransportType transportType, Node defaultNode) {
+        this.transportType = transportType;
+        this.defaultNode = defaultNode;
     }
 }

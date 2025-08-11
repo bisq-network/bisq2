@@ -15,23 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.network.p2p;
+package bisq.desktop.main.content.network.peers;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.network.p2p.version.VersionDistributionController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class P2PNetworkController implements Controller {
+public class NetworkPeersController implements Controller {
     @Getter
-    private final P2PNetworkView view;
+    private final NetworkPeersView view;
 
-    public P2PNetworkController(ServiceProvider serviceProvider) {
-        VersionDistributionController versionDistributionController = new VersionDistributionController(serviceProvider);
-        P2PNetworkModel model = new P2PNetworkModel();
-        view = new P2PNetworkView(model, this, versionDistributionController.getView().getRoot());
+    public NetworkPeersController(ServiceProvider serviceProvider) {
+        NetworkPeersModel model = new NetworkPeersModel();
+        view = new NetworkPeersView(model, this);
     }
 
     @Override

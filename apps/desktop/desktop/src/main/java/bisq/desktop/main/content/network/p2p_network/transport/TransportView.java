@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.network.my_node.transport;
+package bisq.desktop.main.content.network.p2p_network.transport;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextField;
