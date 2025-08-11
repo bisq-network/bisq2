@@ -70,7 +70,7 @@ public class UserService implements Service {
                 bannedUserService,
                 bondedRolesService.getAuthorizedBondedRolesService());
 
-        contactListService = new ContactListService(persistenceService);
+        contactListService = new ContactListService(persistenceService, userProfileService);
     }
 
     /* --------------------------------------------------------------------- */

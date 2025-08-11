@@ -24,6 +24,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,13 +34,22 @@ public class ContactListService implements PersistenceClient<ContactListStore>, 
     private final ContactListStore persistableStore = new ContactListStore();
     @Getter
     private final Persistence<ContactListStore> persistence;
+    private final UserProfileService userProfileService;
 
-    public ContactListService(PersistenceService persistenceService) {
+    public ContactListService(PersistenceService persistenceService, UserProfileService userProfileService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
+        this.userProfileService = userProfileService;
     }
 
     public ReadOnlyObservableSet<ContactListEntry> getContactListEntries() {
         return persistableStore.getContactListEntries();
+    }
+
+    public void addContactListEntry(String profileId, ContactReason contactReason) {
+        userProfileService.findUserProfile(profileId).ifPresent(userProfile -> {
+            persistableStore.addContactListEntry(new ContactListEntry(userProfile, contactReason));
+            persist();
+        });
     }
 
     public void addContactListEntry(ContactListEntry contactListEntry) {

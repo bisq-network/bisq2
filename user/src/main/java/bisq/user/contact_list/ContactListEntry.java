@@ -37,6 +37,14 @@ public final class ContactListEntry implements PersistableProto {
     private final Optional<String> tag; // Short tag for quick identification
     private final Optional<String> notes;
 
+    public ContactListEntry(UserProfile userProfile, ContactReason contactReason) {
+        this(userProfile, System.currentTimeMillis(),
+                contactReason,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty());
+    }
+
     public ContactListEntry(UserProfile userProfile,
                             long date,
                             ContactReason contactReason,
