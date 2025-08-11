@@ -69,6 +69,8 @@ import bisq.trade.mu_sig.protocol.MuSigSellerAsTakerProtocol;
 import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protobuf.SubscribeTxConfirmationStatusRequest;
 import bisq.user.banned.BannedUserService;
+import bisq.user.contact_list.ContactListService;
+import bisq.user.contact_list.ContactReason;
 import bisq.user.profile.UserProfile;
 import io.grpc.stub.StreamObserver;
 import lombok.Getter;
@@ -113,6 +115,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
     private final BannedUserService bannedUserService;
     private final AlertService alertService;
     private final MuSigOpenTradeChannelService muSigOpenTradeChannelService;
+    private final ContactListService contactListService;
 
     @Getter
     private final MuSigTradeStore persistableStore = new MuSigTradeStore();
@@ -142,6 +145,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         alertService = serviceProvider.getBondedRolesService().getAlertService();
         muSigOpenTradeChannelService = serviceProvider.getChatService().getMuSigOpenTradeChannelService();
+        contactListService = serviceProvider.getUserService().getContactListService();
 
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
 
@@ -386,6 +390,8 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         persistableStore.addTrade(muSigTrade);
         persist();
 
+        maybeAddPeerToContactList(makerNetworkId.getId());
+
         return createAndAddTradeProtocol(muSigTrade);
     }
 
@@ -534,6 +540,8 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         persistableStore.addTrade(trade);
         persist();
 
+        maybeAddPeerToContactList(sender.getId());
+
         return createAndAddTradeProtocol(trade);
     }
 
@@ -594,6 +602,17 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
                 .count();
         if (numChanges > 0) {
             persist();
+        }
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Misc
+    /* --------------------------------------------------------------------- */
+
+    private void maybeAddPeerToContactList(String peersProfileId) {
+        if (settingsService.getDoAutoAddToContactList()) {
+            contactListService.addContactListEntry(peersProfileId, ContactReason.BISQ_EASY_TRADE);
         }
     }
 }
