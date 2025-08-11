@@ -15,12 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.network.nodes;
+package bisq.desktop.main.content.network.p2p_network;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.network.nodes.transport.TransportController;
-import bisq.desktop.main.content.network.nodes.version.VersionDistributionController;
+import bisq.desktop.main.content.network.p2p_network.transport.TransportController;
+import bisq.desktop.main.content.network.p2p_network.version.VersionDistributionController;
 import bisq.network.NetworkService;
 import bisq.common.network.TransportType;
 import javafx.scene.Node;

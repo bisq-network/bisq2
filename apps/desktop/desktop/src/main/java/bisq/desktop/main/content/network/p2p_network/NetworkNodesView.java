@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.network.nodes;
+package bisq.desktop.main.content.network.p2p_network;
 
 import bisq.desktop.common.view.View;
 import javafx.geometry.Insets;

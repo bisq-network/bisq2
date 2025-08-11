@@ -21,7 +21,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.network.bonded_roles.roles.RolesController;
-import bisq.desktop.main.content.network.nodes.NetworkNodesController;
+import bisq.desktop.main.content.network.p2p_network.NetworkNodesController;
 import bisq.desktop.main.content.network.peers.NetworkPeersController;
 import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
