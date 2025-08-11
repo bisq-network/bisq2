@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.user.profile_card;
 
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.view.TabButton;
 import bisq.desktop.common.view.TabView;
 import bisq.desktop.components.containers.Spacer;
@@ -26,6 +25,7 @@ import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.components.BondedRoleBadge;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
@@ -45,7 +45,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
     private UserProfileIcon userProfileIcon;
     private ReputationScoreDisplay reputationScoreDisplay;
     private Label userNickNameLabel, userNymLabel, totalRepScoreLabel, rankingLabel;
-    private BisqMenuItem sendPrivateMsg, ignore, undoIgnore, report;
+    private BisqMenuItem sendPrivateMsg, ignore, undoIgnore, report, addToContracts;
     private Button closeButton;
     private HBox userActionsBox;
     private BondedRoleBadge bondedRoleBadge;
@@ -108,6 +108,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         ignore.setOnAction(e -> controller.onToggleIgnoreUser());
         undoIgnore.setOnAction(e -> controller.onToggleIgnoreUser());
         report.setOnAction(e -> controller.onReportUser());
+        addToContracts.setOnAction(e -> controller.onAddToContacts());
         closeButton.setOnAction(e -> controller.onClose());
     }
 
@@ -122,6 +123,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         ignore.setOnAction(null);
         undoIgnore.setOnAction(null);
         report.setOnAction(null);
+        addToContracts.setOnAction(null);
         closeButton.setOnAction(null);
 
         bondedRoleBadge.dispose();
@@ -170,11 +172,13 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
                 Res.get("user.profileCard.userActions.undoIgnore"));
         report = new BisqMenuItem("report-grey", "report-white",
                 Res.get("user.profileCard.userActions.report"));
+        addToContracts = new BisqMenuItem("report-grey", "report-white",
+                Res.get("user.profileCard.userActions.addToContacts"));
 
         HBox userNameBox = new HBox(10, bondedRoleBadge, userNickNameLabel, userNymLabel);
         HBox reputationBox = new HBox(30, reputationScoreDisplay, totalRepScoreBox, rankingBox);
         reputationBox.setAlignment(Pos.BOTTOM_LEFT);
-        userActionsBox = new HBox(30, sendPrivateMsg, ignore, undoIgnore, report);
+        userActionsBox = new HBox(30, sendPrivateMsg, ignore, undoIgnore, report, addToContracts);
         VBox userNameReputationAndActionsBox = new VBox(5, userNameBox, reputationBox, Spacer.fillVBox(), userActionsBox);
         userNameReputationAndActionsBox.getStyleClass().add("header-content");
         HBox header = new HBox(40, userProfileIcon, userNameReputationAndActionsBox);

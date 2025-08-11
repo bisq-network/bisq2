@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.user.profile_card;
 
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
@@ -34,10 +33,14 @@ import bisq.desktop.main.content.user.profile_card.messages.ProfileCardMessagesC
 import bisq.desktop.main.content.user.profile_card.offers.ProfileCardOffersController;
 import bisq.desktop.main.content.user.profile_card.overview.ProfileCardOverviewController;
 import bisq.desktop.main.content.user.profile_card.reputation.ProfileCardReputationController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
+import bisq.user.contact_list.ContactListEntry;
+import bisq.user.contact_list.ContactListService;
+import bisq.user.contact_list.ContactReason;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -78,6 +81,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     private final UserProfileService userProfileService;
     protected final UserIdentityService userIdentityService;
     private final ChatService chatService;
+    private final ContactListService contactListService;
     private final ProfileCardDetailsController profileCardDetailsController;
     private final ProfileCardOverviewController profileCardOverviewController;
     private final ProfileCardReputationController profileCardReputationController;
@@ -95,6 +99,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
         userProfileService = userService.getUserProfileService();
         userIdentityService = userService.getUserIdentityService();
         chatService = serviceProvider.getChatService();
+        contactListService = serviceProvider.getUserService().getContactListService();
 
         profileCardOverviewController = new ProfileCardOverviewController(serviceProvider);
         profileCardDetailsController = new ProfileCardDetailsController(serviceProvider);
@@ -182,6 +187,16 @@ public class ProfileCardController extends TabController<ProfileCardModel>
         OverlayController.hide(() ->
                 Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
                         new ReportToModeratorWindow.InitData(model.getUserProfile())));
+    }
+
+    void onAddToContacts() {
+        // todo add overlay for entering tag, notes, trust score
+        contactListService.addContactListEntry(new ContactListEntry(model.getUserProfile(),
+                System.currentTimeMillis(),
+                ContactReason.MANUALLY_ADDED,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     }
 
     void onClose() {
