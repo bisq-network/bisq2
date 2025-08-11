@@ -19,18 +19,21 @@ package bisq.desktop.main.content.network.peers;
 
 import bisq.desktop.common.view.View;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class NetworkPeersView extends View<VBox, NetworkPeersModel, NetworkPeersController> {
-    public NetworkPeersView(NetworkPeersModel model, NetworkPeersController controller) {
-        super(new VBox(50), model, controller);
+    private static final double SIDE_PADDING = 40;
 
-        root.setPadding(new Insets(0, 40, 40, 40));
-        root.setAlignment(Pos.TOP_LEFT);
+    public NetworkPeersView(NetworkPeersModel model,
+                            NetworkPeersController controller,
+                            VBox contactList,
+                            VBox allPeers) {
+        super(new VBox(40), model, controller);
 
+        this.root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
+        this.root.getChildren().addAll(contactList, allPeers);
     }
 
     @Override

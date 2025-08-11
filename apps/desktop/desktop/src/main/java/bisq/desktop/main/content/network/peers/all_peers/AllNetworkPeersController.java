@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.reputation.ranking;
+package bisq.desktop.main.content.network.peers.all_peers;
 
 import bisq.common.data.Pair;
 import bisq.common.observable.Pin;
@@ -46,10 +46,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class ReputationRankingController implements Controller {
+public class AllNetworkPeersController implements Controller {
     @Getter
-    private final ReputationRankingView view;
-    private final ReputationRankingModel model;
+    private final AllNetworkPeersView view;
+    private final AllNetworkPeersModel model;
     private final ReputationService reputationService;
     private final UserProfileService userProfileService;
     private Pin userProfileByIdPin, proofOfBurnScoreChangedFlagPin,
@@ -57,11 +57,11 @@ public class ReputationRankingController implements Controller {
             accountAgeScoreChangedFlagPin;
     private Subscription filterMenuItemTogglePin;
 
-    public ReputationRankingController(ServiceProvider serviceProvider) {
+    public AllNetworkPeersController(ServiceProvider serviceProvider) {
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         reputationService = serviceProvider.getUserService().getReputationService();
 
-        model = new ReputationRankingModel();
+        model = new AllNetworkPeersModel();
 
         model.getFilterItems().add(getShowAllFilterMenuItem());
         addFilterMenuItem(ReputationSource.BURNED_BSQ);
@@ -70,7 +70,7 @@ public class ReputationRankingController implements Controller {
         addFilterMenuItem(ReputationSource.BISQ1_SIGNED_ACCOUNT_AGE_WITNESS);
         addFilterMenuItem(ReputationSource.PROFILE_AGE);
 
-        view = new ReputationRankingView(model, this);
+        view = new AllNetworkPeersView(model, this);
     }
 
     @Override
@@ -83,9 +83,9 @@ public class ReputationRankingController implements Controller {
             @Override
             public void put(String key, UserProfile userProfile) {
                 UIThread.run(() -> {
-                    ReputationRankingView.ListItem listItem = new ReputationRankingView.ListItem(userProfile,
+                    AllNetworkPeersView.ListItem listItem = new AllNetworkPeersView.ListItem(userProfile,
                             reputationService,
-                            ReputationRankingController.this,
+                            AllNetworkPeersController.this,
                             model.getFilterMenuItemToggleGroup(),
                             userProfileService);
                     model.getListItems().add(listItem);
@@ -96,10 +96,10 @@ public class ReputationRankingController implements Controller {
             public void putAll(Map<? extends String, ? extends UserProfile> map) {
                 UIThread.run(() -> {
                     Set<? extends UserProfile> clone = new HashSet<>(map.values());
-                    List<ReputationRankingView.ListItem> listItems = clone.stream()
-                            .map(userProfile -> new ReputationRankingView.ListItem(userProfile,
+                    List<AllNetworkPeersView.ListItem> listItems = clone.stream()
+                            .map(userProfile -> new AllNetworkPeersView.ListItem(userProfile,
                                     reputationService,
-                                    ReputationRankingController.this,
+                                    AllNetworkPeersController.this,
                                     model.getFilterMenuItemToggleGroup(),
                                     userProfileService))
                             .collect(Collectors.toList());
@@ -111,7 +111,7 @@ public class ReputationRankingController implements Controller {
             public void remove(Object key) {
                 if (key instanceof String) {
                     UIThread.run(() -> {
-                        Optional<ReputationRankingView.ListItem> toRemove = model.getListItems().stream()
+                        Optional<AllNetworkPeersView.ListItem> toRemove = model.getListItems().stream()
                                 .filter(e -> e.getUserProfile().getId().equals(key))
                                 .findAny();
                         toRemove.ifPresent(listItem -> model.getListItems().remove(listItem));
@@ -144,7 +144,7 @@ public class ReputationRankingController implements Controller {
         signedWitnessScoreChangedFlagPin.unbind();
 
         filterMenuItemTogglePin.unsubscribe();
-        model.getListItems().forEach(ReputationRankingView.ListItem::dispose);
+        model.getListItems().forEach(AllNetworkPeersView.ListItem::dispose);
         model.getListItems().clear();
     }
 
@@ -190,7 +190,7 @@ public class ReputationRankingController implements Controller {
     }
 
     private void addFilterMenuItem(ReputationSource reputationSource) {
-        RichTableView.FilterMenuItem<ReputationRankingView.ListItem> filterMenuItem = new RichTableView.FilterMenuItem<>(
+        RichTableView.FilterMenuItem<AllNetworkPeersView.ListItem> filterMenuItem = new RichTableView.FilterMenuItem<>(
                 model.getFilterMenuItemToggleGroup(),
                 reputationSource.getDisplayString(),
                 Optional.of(reputationSource),
@@ -223,7 +223,7 @@ public class ReputationRankingController implements Controller {
         );
     }
 
-    private RichTableView.FilterMenuItem<ReputationRankingView.ListItem> getShowAllFilterMenuItem() {
+    private RichTableView.FilterMenuItem<AllNetworkPeersView.ListItem> getShowAllFilterMenuItem() {
         return RichTableView.FilterMenuItem.getShowAllFilterMenuItem(model.getFilterMenuItemToggleGroup());
     }
 }

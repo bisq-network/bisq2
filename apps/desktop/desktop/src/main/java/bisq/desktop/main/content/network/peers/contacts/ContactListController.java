@@ -1,0 +1,158 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.desktop.main.content.network.peers.contacts;
+
+import bisq.common.data.Pair;
+import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
+import bisq.common.util.StringUtils;
+import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.main.content.user.profile_card.ProfileCardController;
+import bisq.desktop.navigation.NavigationTarget;
+import bisq.user.contact_list.ContactListEntry;
+import bisq.user.contact_list.ContactListService;
+import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.ReputationService;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
+
+@Slf4j
+public class ContactListController implements Controller {
+    @Getter
+    private final ContactListView view;
+    private final ContactListModel model;
+    private final ReputationService reputationService;
+    private final UserProfileService userProfileService;
+    private final ContactListService contactListService;
+    private Pin  proofOfBurnScoreChangedFlagPin,
+            bondedReputationScoreChangedFlagPin, signedWitnessScoreChangedFlagPin,
+            accountAgeScoreChangedFlagPin, contactListEntriesPin;
+
+    public ContactListController(ServiceProvider serviceProvider) {
+        userProfileService = serviceProvider.getUserService().getUserProfileService();
+        reputationService = serviceProvider.getUserService().getReputationService();
+        contactListService = serviceProvider.getUserService().getContactListService();
+
+        model = new ContactListModel();
+
+        view = new ContactListView(model, this);
+    }
+
+    @Override
+    public void onActivate() {
+        contactListEntriesPin = contactListService.getContactListEntries().addObserver(new CollectionObserver<>() {
+            @Override
+            public void add(ContactListEntry contactListEntry) {
+                UIThread.run(() -> {
+                    ContactListView.ListItem listItem = new ContactListView.ListItem(contactListEntry,
+                            reputationService,
+                            ContactListController.this,
+                            userProfileService);
+                    if (!model.getListItems().contains(listItem)) {
+                        model.getListItems().add(listItem);
+                    }
+                });
+            }
+
+            @Override
+            public void remove(Object element) {
+                if (element instanceof ContactListEntry contactListEntry) {
+                    UIThread.run(() -> {
+                        Optional<ContactListView.ListItem> toRemove = model.getListItems().stream()
+                                .filter(e -> e.getUserProfile().getId().equals(contactListEntry.getUserProfile().getId()))
+                                .findAny();
+                        toRemove.ifPresent(item -> model.getListItems().remove(item));
+                    });
+                }
+            }
+
+            @Override
+            public void clear() {
+                UIThread.run(() -> model.getListItems().clear());
+            }
+        });
+
+        proofOfBurnScoreChangedFlagPin = reputationService.getProofOfBurnService().getUserProfileIdScorePair()
+                .addObserver(this::updateScore);
+        bondedReputationScoreChangedFlagPin = reputationService.getBondedReputationService().getUserProfileIdScorePair()
+                .addObserver(this::updateScore);
+        accountAgeScoreChangedFlagPin = reputationService.getAccountAgeService().getUserProfileIdScorePair()
+                .addObserver(this::updateScore);
+        signedWitnessScoreChangedFlagPin = reputationService.getSignedWitnessService().getUserProfileIdScorePair()
+                .addObserver(this::updateScore);
+    }
+
+    @Override
+    public void onDeactivate() {
+        contactListEntriesPin.unbind();
+        proofOfBurnScoreChangedFlagPin.unbind();
+        bondedReputationScoreChangedFlagPin.unbind();
+        accountAgeScoreChangedFlagPin.unbind();
+        signedWitnessScoreChangedFlagPin.unbind();
+
+        model.getListItems().forEach(ContactListView.ListItem::dispose);
+        model.getListItems().clear();
+    }
+
+    void onOpenProfileCard(UserProfile userProfile) {
+        Navigation.navigateTo(NavigationTarget.PROFILE_CARD_REPUTATION,
+                new ProfileCardController.InitData(userProfile));
+    }
+
+    void applySearchPredicate(String searchText) {
+        String string = searchText == null ? "" : searchText.toLowerCase();
+        model.setSearchStringPredicate(item ->
+                StringUtils.isEmpty(string) ||
+                        item.getUserName().toLowerCase().contains(string) ||
+                        item.getUserProfile().getNym().toLowerCase().contains(string) ||
+                        item.getTotalScoreString().contains(string) ||
+                        item.getProfileAgeString().contains(string) ||
+                        item.getValueAsStringProperty().get().toLowerCase().contains(string));
+        applyPredicates();
+    }
+
+    void openProfileCard(UserProfile userProfile) {
+        Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
+                new ProfileCardController.InitData(userProfile));
+    }
+
+    private void updateScore(Pair<String, Long> userProfileIdScorePair) {
+        if (userProfileIdScorePair == null) {
+            return;
+        }
+        String userProfileId = userProfileIdScorePair.getFirst();
+        UIThread.run(() -> {
+            model.getListItems().stream().filter(e -> e.getUserProfile().getId().equals(userProfileId))
+                    .forEach(item -> item.applyReputationScore(userProfileId));
+            model.getScoreChangeTrigger().set(!model.getScoreChangeTrigger().get());
+        });
+    }
+
+    private void applyPredicates() {
+        model.getFilteredList().setPredicate(item ->
+                model.getFilterItemPredicate().test(item) &&
+                        model.getSearchStringPredicate().test(item)
+        );
+    }
+}
