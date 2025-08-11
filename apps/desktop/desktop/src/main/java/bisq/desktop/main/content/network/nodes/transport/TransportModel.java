@@ -15,24 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.network.p2p.version;
+package bisq.desktop.main.content.network.nodes.transport;
 
-import bisq.common.data.Pair;
 import bisq.desktop.common.view.Model;
+import bisq.common.network.TransportType;
+import bisq.network.p2p.node.Node;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Slf4j
 @Getter
-public class VersionDistributionModel implements Model {
-    private final List<Pair<String, Double>> versionDistribution = new ArrayList<>();
+public class TransportModel implements Model {
+    private final TransportType transportType;
+    private final Node defaultNode;
     @Setter
-    private String versionDistributionTooltip;
+    private String myDefaultNodeAddress;
 
-    public VersionDistributionModel() {
+    public TransportModel(TransportType transportType, Node defaultNode) {
+        this.transportType = transportType;
+        this.defaultNode = defaultNode;
     }
 }

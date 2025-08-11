@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.network.my_node.transport;
+package bisq.desktop.main.content.network.nodes.transport;
 
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.table.ActivatableTableItem;

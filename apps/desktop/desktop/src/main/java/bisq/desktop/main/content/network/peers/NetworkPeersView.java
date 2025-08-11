@@ -15,24 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.network.my_node;
+package bisq.desktop.main.content.network.peers;
 
-import bisq.desktop.common.view.Model;
-import bisq.common.network.TransportType;
-import lombok.Getter;
+import bisq.desktop.common.view.View;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Set;
-
 @Slf4j
-@Getter
-public class MyNetworkNodeModel implements Model {
-    private final Set<TransportType> supportedTransportTypes;
+public class NetworkPeersView extends View<VBox, NetworkPeersModel, NetworkPeersController> {
+    public NetworkPeersView(NetworkPeersModel model, NetworkPeersController controller) {
+        super(new VBox(50), model, controller);
 
-    public MyNetworkNodeModel(Set<TransportType> supportedTransportTypes,
-                              boolean clearNetDisabled,
-                              boolean torDisabled,
-                              boolean i2pDisabled) {
-        this.supportedTransportTypes = supportedTransportTypes;
+        root.setPadding(new Insets(0, 40, 40, 40));
+        root.setAlignment(Pos.TOP_LEFT);
+
+    }
+
+    @Override
+    protected void onViewAttached() {
+    }
+
+    @Override
+    protected void onViewDetached() {
     }
 }

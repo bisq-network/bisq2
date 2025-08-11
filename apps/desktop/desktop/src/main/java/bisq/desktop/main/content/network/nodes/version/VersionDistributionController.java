@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.network.p2p.version;
+package bisq.desktop.main.content.network.nodes.version;
 
 import bisq.common.data.Pair;
 import bisq.common.platform.Version;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.network.my_node.transport.TransportController;
+import bisq.desktop.main.content.network.nodes.transport.TransportController;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;

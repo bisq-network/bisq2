@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.network.p2p.version;
+package bisq.desktop.main.content.network.nodes.version;
 
 import bisq.common.application.ApplicationVersion;
 import bisq.desktop.common.view.View;

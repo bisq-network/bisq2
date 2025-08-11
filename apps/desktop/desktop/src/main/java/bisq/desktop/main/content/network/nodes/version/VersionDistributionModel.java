@@ -15,14 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.network;
+package bisq.desktop.main.content.network.nodes.version;
 
-import bisq.desktop.navigation.NavigationTarget;
-import bisq.desktop.main.content.ContentTabModel;
+import bisq.common.data.Pair;
+import bisq.desktop.common.view.Model;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
-public class NetworkModel extends ContentTabModel {
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.NETWORK_NODES;
+import java.util.ArrayList;
+import java.util.List;
+
+@Slf4j
+@Getter
+public class VersionDistributionModel implements Model {
+    private final List<Pair<String, Double>> versionDistribution = new ArrayList<>();
+    @Setter
+    private String versionDistributionTooltip;
+
+    public VersionDistributionModel() {
     }
 }
