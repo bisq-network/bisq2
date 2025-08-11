@@ -26,13 +26,13 @@ import java.util.Set;
 
 @Slf4j
 @Getter
-public class NetworkNodesModel implements Model {
+public class P2PNetworkModel implements Model {
     private final Set<TransportType> supportedTransportTypes;
 
-    public NetworkNodesModel(Set<TransportType> supportedTransportTypes,
-                             boolean clearNetDisabled,
-                             boolean torDisabled,
-                             boolean i2pDisabled) {
+    public P2PNetworkModel(Set<TransportType> supportedTransportTypes,
+                           boolean clearNetDisabled,
+                           boolean torDisabled,
+                           boolean i2pDisabled) {
         this.supportedTransportTypes = supportedTransportTypes;
     }
 }

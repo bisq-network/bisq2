@@ -28,14 +28,14 @@ import java.util.Optional;
 
 
 @Slf4j
-public class NetworkNodesView extends View<VBox, NetworkNodesModel, NetworkNodesController> {
+public class P2PNetworkView extends View<VBox, P2PNetworkModel, P2PNetworkController> {
 
-    public NetworkNodesView(NetworkNodesModel model,
-                            NetworkNodesController controller,
-                            Optional<Node> clear,
-                            Optional<Node> tor,
-                            Optional<Node> i2p,
-                            VBox versionDistribution) {
+    public P2PNetworkView(P2PNetworkModel model,
+                          P2PNetworkController controller,
+                          Optional<Node> clear,
+                          Optional<Node> tor,
+                          Optional<Node> i2p,
+                          VBox versionDistribution) {
         super(new VBox(50), model, controller);
 
         root.setPadding(new Insets(0, 40, 40, 40));

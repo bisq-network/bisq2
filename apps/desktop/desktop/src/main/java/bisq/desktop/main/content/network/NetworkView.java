@@ -25,8 +25,8 @@ public class NetworkView extends ContentTabView<NetworkModel, NetworkController>
     public NetworkView(NetworkModel model, NetworkController controller) {
         super(model, controller);
 
-        addTab(Res.get("network.networkPeers"), NavigationTarget.NETWORK_PEERS);
-        addTab(Res.get("network.networkNodes"), NavigationTarget.NETWORK_NODES);
+        addTab(Res.get("network.peers"), NavigationTarget.NETWORK_PEERS);
+        addTab(Res.get("network.p2pNetwork"), NavigationTarget.NETWORK_NODES);
         addTab(Res.get("network.roles"), NavigationTarget.ROLES);
         addTab(Res.get("network.nodes"), NavigationTarget.NODES);
     }

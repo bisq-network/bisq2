@@ -21,7 +21,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.network.bonded_roles.roles.RolesController;
-import bisq.desktop.main.content.network.p2p_network.NetworkNodesController;
+import bisq.desktop.main.content.network.p2p_network.P2PNetworkController;
 import bisq.desktop.main.content.network.peers.NetworkPeersController;
 import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
@@ -42,8 +42,8 @@ public class NetworkController extends ContentTabController<NetworkModel> {
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case NETWORK_NODES -> Optional.of(new NetworkNodesController(serviceProvider));
             case NETWORK_PEERS -> Optional.of(new NetworkPeersController(serviceProvider));
+            case NETWORK_NODES -> Optional.of(new P2PNetworkController(serviceProvider));
             case ROLES -> Optional.of(new RolesController(serviceProvider));
             case NODES -> Optional.of(new bisq.desktop.main.content.network.bonded_roles.nodes.NodesController(serviceProvider));
             default -> Optional.empty();

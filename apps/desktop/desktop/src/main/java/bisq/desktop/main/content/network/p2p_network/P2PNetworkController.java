@@ -31,11 +31,11 @@ import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
-public class NetworkNodesController implements Controller {
+public class P2PNetworkController implements Controller {
     @Getter
-    private final NetworkNodesModel model;
+    private final P2PNetworkModel model;
     @Getter
-    private final NetworkNodesView view;
+    private final P2PNetworkView view;
     private final ServiceProvider serviceProvider;
     @Getter
     private final Optional<TransportController> clearNetController = Optional.empty();
@@ -44,19 +44,19 @@ public class NetworkNodesController implements Controller {
     @Getter
     private final Optional<TransportController> i2pController = Optional.empty();
 
-    public NetworkNodesController(ServiceProvider serviceProvider) {
+    public P2PNetworkController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
         NetworkService networkService = serviceProvider.getNetworkService();
 
         VersionDistributionController versionDistributionController = new VersionDistributionController(serviceProvider);
 
-        model = new NetworkNodesModel(networkService.getSupportedTransportTypes(),
+        model = new P2PNetworkModel(networkService.getSupportedTransportTypes(),
                 !networkService.isTransportTypeSupported(TransportType.CLEAR),
                 !networkService.isTransportTypeSupported(TransportType.TOR),
                 !networkService.isTransportTypeSupported(TransportType.I2P));
 
         Set<TransportType> supportedTransportTypes = serviceProvider.getNetworkService().getSupportedTransportTypes();
-        view = new NetworkNodesView(model, this,
+        view = new P2PNetworkView(model, this,
                 getTransportTypeViewRoot(supportedTransportTypes, TransportType.CLEAR),
                 getTransportTypeViewRoot(supportedTransportTypes, TransportType.TOR),
                 getTransportTypeViewRoot(supportedTransportTypes, TransportType.I2P),
