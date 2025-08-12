@@ -323,6 +323,8 @@ public class ContactListView extends View<VBox, ContactListModel, ContactListCon
             profileAgeString = optionalProfileAge
                     .map(TimeFormatter::formatAgeInDaysAndYears)
                     .orElse(Res.get("data.na"));
+
+            applyReputationScore(userProfile.getId());
         }
 
         long getPublishDate() {

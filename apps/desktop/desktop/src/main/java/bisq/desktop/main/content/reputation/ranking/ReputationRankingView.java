@@ -352,6 +352,9 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
         void applyReputationScore(String userProfileId) {
             Optional<ReputationSource> selectedReputationSource = controller.resolveReputationSource(toggleGroup.getSelectedToggle());
             reputationScore = reputationService.getReputationScore(userProfileId);
+
+            updateAmountBySource();
+
             if (selectedReputationSource.isEmpty() || !valuePairBySource.containsKey(selectedReputationSource.get())) {
                 totalScore = reputationScore.getTotalScore();
                 totalScoreString = String.valueOf(totalScore);
@@ -361,8 +364,6 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
                 value = pair.getFirst();
                 valueAsStringProperty.set(pair.getSecond());
             }
-
-            updateAmountBySource();
         }
 
         private void updateAmountBySource() {
