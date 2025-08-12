@@ -338,6 +338,7 @@ public class ContactListView extends View<VBox, ContactListModel, ContactListCon
             reputationScore = reputationService.getReputationScore(userProfileId);
             totalScore = reputationScore.getTotalScore();
             totalScoreString = String.valueOf(totalScore);
+            value = totalScore;
             valueAsStringProperty.set(String.valueOf(totalScore));
 
             updateAmountBySource();

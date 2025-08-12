@@ -362,12 +362,13 @@ public class AllNetworkPeersView extends View<VBox, AllNetworkPeersModel, AllNet
         void applyReputationScore(String userProfileId) {
             Optional<ReputationSource> selectedReputationSource = controller.resolveReputationSource(toggleGroup.getSelectedToggle());
             reputationScore = reputationService.getReputationScore(userProfileId);
+            totalScore = reputationScore.getTotalScore();
+            totalScoreString = String.valueOf(totalScore);
 
             updateAmountBySource();
 
             if (selectedReputationSource.isEmpty() || !valuePairBySource.containsKey(selectedReputationSource.get())) {
-                totalScore = reputationScore.getTotalScore();
-                totalScoreString = String.valueOf(totalScore);
+                value = totalScore;
                 valueAsStringProperty.set(String.valueOf(totalScore));
             } else {
                 Pair<Long, String> pair = valuePairBySource.get(selectedReputationSource.get());
