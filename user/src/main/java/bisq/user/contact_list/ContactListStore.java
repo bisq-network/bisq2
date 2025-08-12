@@ -95,14 +95,6 @@ public final class ContactListStore implements PersistableStore<ContactListStore
         return contactListEntries.remove(contactListEntry);
     }
 
-    synchronized boolean removeContactListEntry(String userProfileId) {
-        return contactListEntries.stream()
-                .filter(e -> e.getUserProfile().getId().equals(userProfileId))
-                .findFirst()
-                .map(contactListEntries::remove)
-                .orElse(false);
-    }
-
     ReadOnlyObservableSet<ContactListEntry> getContactListEntries() {
         return contactListEntries;
     }

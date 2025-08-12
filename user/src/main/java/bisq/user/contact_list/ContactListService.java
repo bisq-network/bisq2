@@ -25,9 +25,14 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class ContactListService implements PersistenceClient<ContactListStore>, DataService.Listener, Service {
@@ -35,57 +40,44 @@ public class ContactListService implements PersistenceClient<ContactListStore>, 
     private final ContactListStore persistableStore = new ContactListStore();
     @Getter
     private final Persistence<ContactListStore> persistence;
-    private final UserProfileService userProfileService;
+    @Getter
+    private final Map<String, Set<String>> nymsByNickName = new ConcurrentHashMap<>();
 
-    public ContactListService(PersistenceService persistenceService, UserProfileService userProfileService) {
+    public ContactListService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
-        this.userProfileService = userProfileService;
+    }
+
+    @Override
+    public void onPersistedApplied(ContactListStore persisted) {
+        persisted.getContactListEntries().forEach(contactListEntry -> {
+            nymsByNickName.computeIfAbsent(contactListEntry.getUserProfile().getNickName(), k -> new HashSet<>())
+                    .add(contactListEntry.getUserProfile().getNym());
+        });
     }
 
     public ReadOnlyObservableSet<ContactListEntry> getContactListEntries() {
         return persistableStore.getContactListEntries();
     }
 
-    public boolean addContactListEntry(String profileId, ContactReason contactReason) {
-        return userProfileService.findUserProfile(profileId)
-                .map(userProfile -> {
-                    boolean wasAdded = persistableStore.addContactListEntry(new ContactListEntry(userProfile, contactReason));
-                    if (wasAdded) {
-                        persist();
-                    }
-                    return wasAdded;
-                })
-                .orElse(false);
-    }
-
     public boolean addContactListEntry(UserProfile userProfile, ContactReason contactReason) {
-        boolean wasAdded = persistableStore.addContactListEntry(new ContactListEntry(userProfile, contactReason));
-        if (wasAdded) {
-            persist();
-        }
-        return wasAdded;
+        return addContactListEntry(new ContactListEntry(userProfile, contactReason));
     }
 
     public boolean addContactListEntry(ContactListEntry contactListEntry) {
         boolean wasAdded = persistableStore.addContactListEntry(contactListEntry);
         if (wasAdded) {
+            nymsByNickName.computeIfAbsent(contactListEntry.getUserProfile().getNickName(), k -> new HashSet<>())
+                    .add(contactListEntry.getUserProfile().getNym());
             persist();
         }
         return wasAdded;
     }
 
-    // Use object identity for remove
     public boolean removeContactListEntry(ContactListEntry contactListEntry) {
         boolean wasRemoved = persistableStore.removeContactListEntry(contactListEntry);
         if (wasRemoved) {
-            persist();
-        }
-        return wasRemoved;
-    }
-
-    public boolean removeContactListEntry(String userProfileId) {
-        boolean wasRemoved = persistableStore.removeContactListEntry(userProfileId);
-        if (wasRemoved) {
+            Optional.ofNullable(nymsByNickName.get(contactListEntry.getUserProfile().getNickName()))
+                    .ifPresent(set -> set.remove(contactListEntry.getUserProfile().getNym()));
             persist();
         }
         return wasRemoved;

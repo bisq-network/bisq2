@@ -68,6 +68,7 @@ import bisq.user.banned.BannedUserService;
 import bisq.user.contact_list.ContactListService;
 import bisq.user.contact_list.ContactReason;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -101,6 +102,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     // We don't persist the protocol, only the model.
     private final Map<String, BisqEasyProtocol> tradeProtocolById = new ConcurrentHashMap<>();
     private final ContactListService contactListService;
+    private final UserProfileService userProfileService;
     private boolean haltTrading;
     private boolean requireVersionForTrading;
     private Optional<String> minRequiredVersionForTrading = Optional.empty();
@@ -118,6 +120,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         alertService = serviceProvider.getBondedRolesService().getAlertService();
         contactListService = serviceProvider.getUserService().getContactListService();
+        userProfileService = serviceProvider.getUserService().getUserProfileService();
 
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
@@ -486,7 +489,8 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     private void maybeAddPeerToContactList(String peersProfileId) {
         if (settingsService.getDoAutoAddToContactList()) {
-            contactListService.addContactListEntry(peersProfileId, ContactReason.BISQ_EASY_TRADE);
+            userProfileService.findUserProfile(peersProfileId)
+                    .ifPresent(userProfile -> contactListService.addContactListEntry(userProfile, ContactReason.BISQ_EASY_TRADE));
         }
     }
 }

@@ -265,7 +265,7 @@ public final class UserProfile implements DistributedData, PublishDateAware {
     }
 
     public String getUserName() {
-        return UserNameLookup.getUserName(getNym(), nickName);
+        return UserProfileService.getInstance().evaluateUserName(nickName, getNym());
     }
 
     public String getAddressByTransportDisplayString() {
