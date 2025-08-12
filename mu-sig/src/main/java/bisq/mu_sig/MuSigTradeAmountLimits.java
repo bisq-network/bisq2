@@ -177,7 +177,7 @@ public class MuSigTradeAmountLimits {
                 .map(btcFiatPriceQuote -> btcFiatPriceQuote.toBaseSideMonetary(fiatAmount));
     }
 
-    private static Optional<Monetary> usdToBtc(MarketPriceService marketPriceService, Monetary usdAmount) {
+    public static Optional<Monetary> usdToBtc(MarketPriceService marketPriceService, Monetary usdAmount) {
         Market usdBitcoinMarket = MarketRepository.getUSDBitcoinMarket();
         return fiatToBtc(marketPriceService, usdBitcoinMarket, usdAmount);
     }
