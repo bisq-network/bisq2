@@ -1778,7 +1778,7 @@
 /* ------------------------------------------------------------------------------------ */
 
 #wallet-protect {
-    -fx-image: url("/images/learn/old/security.png");
+    -fx-image: url("/images/learn/old/security@2x.png");
 }
 
 #wallet-seed-backup {
