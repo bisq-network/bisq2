@@ -206,7 +206,6 @@ public class OfferAmountUtil {
                                                                                        QuoteSideAmountSpec amountSpec,
                                                                                        PriceSpec priceSpec,
                                                                                        Market market) {
-
         if (amountSpec instanceof FixedAmountSpec) {
             return OfferAmountUtil.findBaseSideFixedAmount(marketPriceService, amountSpec, priceSpec, market)
                     .flatMap(amount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
@@ -236,7 +235,6 @@ public class OfferAmountUtil {
                                                                                      BaseSideAmountSpec amountSpec,
                                                                                      PriceSpec priceSpec,
                                                                                      Market market) {
-
         if (amountSpec instanceof FixedAmountSpec) {
             return OfferAmountUtil.findQuoteSideFixedAmount(marketPriceService, amountSpec, priceSpec, market)
                     .flatMap(quoteAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)

@@ -162,8 +162,8 @@ public class MuSigTakeOfferAmountController implements Controller {
         if (muSigOffer == null) {
             return;
         }
-        Optional<Monetary> OptionalQuoteSideMinAmount = OfferAmountUtil.findQuoteSideMinAmount(marketPriceService, muSigOffer);
-        if (OptionalQuoteSideMinAmount.isEmpty()) {
+        Optional<Monetary> optionalQuoteSideMinAmount = OfferAmountUtil.findQuoteSideMinAmount(marketPriceService, muSigOffer);
+        if (optionalQuoteSideMinAmount.isEmpty()) {
             return;
         }
 
@@ -182,7 +182,7 @@ public class MuSigTakeOfferAmountController implements Controller {
         long sellersReputationScore = model.getSellersReputationScore();
         Monetary reputationBasedQuoteSideAmount = model.getSellersReputationBasedQuoteSideAmount().round(0);
         Monetary offersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, muSigOffer).orElseThrow().round(0);
-        Monetary minRangeValue = OptionalQuoteSideMinAmount.get().round(0);
+        Monetary minRangeValue = optionalQuoteSideMinAmount.get().round(0);
         Monetary maxAmount = reputationBasedQuoteSideAmount.isLessThan(offersQuoteSideMaxOrFixedAmount)
                 ? reputationBasedQuoteSideAmount
                 : offersQuoteSideMaxOrFixedAmount;

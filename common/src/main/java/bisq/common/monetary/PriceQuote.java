@@ -134,7 +134,7 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
      * Calculates the quote from the given monetary objects
      *
      * @param baseSideMonetary  The base side monetary
-     * @param quoteSideMonetary The quoteside  monetary
+     * @param quoteSideMonetary The quote side monetary
      * @return The PriceQuote
      */
     public static PriceQuote from(Monetary baseSideMonetary, Monetary quoteSideMonetary) {
