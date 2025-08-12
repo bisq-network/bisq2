@@ -323,6 +323,8 @@ public class ContactListView extends View<VBox, ContactListModel, ContactListCon
             profileAgeString = optionalProfileAge
                     .map(TimeFormatter::formatAgeInDaysAndYears)
                     .orElse(Res.get("data.na"));
+
+            applyReputationScore(userProfile.getId());
         }
 
         long getPublishDate() {
@@ -336,6 +338,7 @@ public class ContactListView extends View<VBox, ContactListModel, ContactListCon
             reputationScore = reputationService.getReputationScore(userProfileId);
             totalScore = reputationScore.getTotalScore();
             totalScoreString = String.valueOf(totalScore);
+            value = totalScore;
             valueAsStringProperty.set(String.valueOf(totalScore));
 
             updateAmountBySource();
@@ -369,7 +372,7 @@ public class ContactListView extends View<VBox, ContactListModel, ContactListCon
         }
 
         private void applyReputationSourceValue(ReputationSource reputationSource, long value) {
-            valuePairBySource.putIfAbsent(reputationSource, new Pair<>(value, formatReputationSourceValue(reputationSource, value)));
+            valuePairBySource.put(reputationSource, new Pair<>(value, formatReputationSourceValue(reputationSource, value)));
         }
 
         private String formatReputationSourceValue(ReputationSource reputationSource, long value) {

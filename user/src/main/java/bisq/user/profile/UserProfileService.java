@@ -31,6 +31,8 @@ import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
+import bisq.user.contact_list.ContactListService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,31 +44,41 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class UserProfileService implements PersistenceClient<UserProfileStore>, DataService.Listener, Service {
     private static final String SEPARATOR_START = " [";
     private static final String SEPARATOR_END = "]";
+    @Getter
+    private static UserProfileService instance;
 
     @Getter
     private final UserProfileStore persistableStore = new UserProfileStore();
     @Getter
     private final Persistence<UserProfileStore> persistence;
     private final NetworkService networkService;
+    private final ContactListService contactListService;
     @Getter
     private final Observable<Integer> numUserProfiles = new Observable<>();
     private final HashCashProofOfWorkService hashCashProofOfWorkService;
     private final ObservableHashMap<String, UserProfile> userProfileById = new ObservableHashMap<>();
+    @Getter
+    private final Map<String, Set<String>> nymsByNickName = new ConcurrentHashMap<>();
 
     public UserProfileService(PersistenceService persistenceService,
                               SecurityService securityService,
-                              NetworkService networkService) {
+                              NetworkService networkService,
+                              ContactListService contactListService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
         hashCashProofOfWorkService = securityService.getHashCashProofOfWorkService();
         this.networkService = networkService;
-        UserNameLookup.setUserProfileService(this);
+        this.contactListService = contactListService;
+
+        instance = this;
     }
 
+    @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         networkService.addDataServiceListener(this);
@@ -79,6 +91,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         return CompletableFuture.completedFuture(true);
     }
 
+    @Override
     public CompletableFuture<Boolean> shutdown() {
         networkService.removeDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
@@ -153,15 +166,32 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         return persistableStore.getIgnoredUserProfileIds();
     }
 
-    public String getUserName(String nym, String nickName) {
-        int numNymsForNickName = Optional.ofNullable(getNymsByNickName().get(nickName))
+    public String evaluateUserName(String nickName, String nym) {
+        if (shouldAddNymToNickName(nickName, nym, getNymsByNickName(), contactListService.getNymsByNickName())) {
+            return nickName + SEPARATOR_START + nym + SEPARATOR_END;
+        } else {
+            return nickName;
+        }
+    }
+
+    @VisibleForTesting
+    static boolean shouldAddNymToNickName(String nickName,
+                                          String nym,
+                                          Map<String, Set<String>> nymsByNickNameFromNetwork,
+                                          Map<String, Set<String>> nymsByNickNameFromContactList) {
+        Optional<Set<String>> nymsForNickNameFromNetwork = Optional.ofNullable(nymsByNickNameFromNetwork.get(nickName));
+        long numNymsWithSameNicknameInNetwork = nymsForNickNameFromNetwork.map(Set::size).orElse(0);
+        int numNickNamesWithDifferentNymInContactList = Optional.ofNullable(nymsByNickNameFromContactList.get(nickName))
+                .filter(set -> !set.contains(nym))
                 .map(Set::size)
                 .orElse(0);
-        if (numNymsForNickName <= 1) {
-            return nickName;
-        } else {
-            return nickName + SEPARATOR_START + nym + SEPARATOR_END;
-        }
+        Optional<String> singleDifferentNymFromNetwork = nymsForNickNameFromNetwork
+                .filter(set -> set.size() == 1)
+                .map(set -> set.iterator().next())
+                .filter(e -> !e.equals(nym));
+        return numNymsWithSameNicknameInNetwork > 1 ||
+                numNickNamesWithDifferentNymInContactList > 0 ||
+                singleDifferentNymFromNetwork.isPresent();
     }
 
     private void processUserProfileAddedOrRefreshed(UserProfile userProfile) {
@@ -222,10 +252,6 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         }
 
         return true;
-    }
-
-    private Map<String, Set<String>> getNymsByNickName() {
-        return persistableStore.getNymsByNickName();
     }
 
     public ReadOnlyObservableMap<String, UserProfile> getUserProfileById() {

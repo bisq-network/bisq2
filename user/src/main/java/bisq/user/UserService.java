@@ -49,9 +49,9 @@ public class UserService implements Service {
                        IdentityService identityService,
                        NetworkService networkService,
                        BondedRolesService bondedRolesService) {
+        contactListService = new ContactListService(persistenceService);
 
-
-        userProfileService = new UserProfileService(persistenceService, securityService, networkService);
+        userProfileService = new UserProfileService(persistenceService, securityService, networkService, contactListService);
 
         userIdentityService = new UserIdentityService(persistenceService,
                 securityService,
@@ -69,8 +69,6 @@ public class UserService implements Service {
                 userProfileService,
                 bannedUserService,
                 bondedRolesService.getAuthorizedBondedRolesService());
-
-        contactListService = new ContactListService(persistenceService, userProfileService);
     }
 
     /* --------------------------------------------------------------------- */
@@ -79,21 +77,21 @@ public class UserService implements Service {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return userProfileService.initialize()
+        return contactListService.initialize()
+                .thenCompose(result -> userProfileService.initialize())
                 .thenCompose(result -> userIdentityService.initialize())
                 .thenCompose(result -> republishUserProfileService.initialize())
                 .thenCompose(result -> bannedUserService.initialize())
-                .thenCompose(result -> reputationService.initialize())
-                .thenCompose(result -> contactListService.initialize());
+                .thenCompose(result -> reputationService.initialize());
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        return contactListService.shutdown()
-                .thenCompose(result -> reputationService.shutdown())
+        return reputationService.shutdown()
                 .thenCompose(result -> bannedUserService.shutdown())
                 .thenCompose(result -> republishUserProfileService.shutdown())
                 .thenCompose(result -> userIdentityService.shutdown())
-                .thenCompose(result -> userProfileService.shutdown());
+                .thenCompose(result -> userProfileService.shutdown())
+                .thenCompose(result -> contactListService.shutdown());
     }
 }

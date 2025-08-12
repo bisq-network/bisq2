@@ -6,6 +6,7 @@
       <option name="HTML_ALIGN_ATTRIBUTES" value="false" />
     </HTMLCodeStyleSettings>
     <JavaCodeStyleSettings>
+      <option name="REPLACE_INSTANCEOF_AND_CAST" value="true" />
       <option name="CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND" value="9999" />
       <option name="NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND" value="9999" />
     </JavaCodeStyleSettings>

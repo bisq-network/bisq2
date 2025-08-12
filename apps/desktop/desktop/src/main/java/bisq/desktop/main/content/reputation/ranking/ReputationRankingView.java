@@ -34,12 +34,21 @@ import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import bisq.user.reputation.ReputationSource;
-import bisq.user.reputation.data.*;
+import bisq.user.reputation.data.AuthorizedAccountAgeData;
+import bisq.user.reputation.data.AuthorizedBondedReputationData;
+import bisq.user.reputation.data.AuthorizedProofOfBurnData;
+import bisq.user.reputation.data.AuthorizedSignedWitnessData;
+import bisq.user.reputation.data.AuthorizedTimestampData;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
@@ -50,7 +59,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -352,17 +367,19 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
         void applyReputationScore(String userProfileId) {
             Optional<ReputationSource> selectedReputationSource = controller.resolveReputationSource(toggleGroup.getSelectedToggle());
             reputationScore = reputationService.getReputationScore(userProfileId);
+            totalScore = reputationScore.getTotalScore();
+            totalScoreString = String.valueOf(totalScore);
+
+            updateAmountBySource();
+
             if (selectedReputationSource.isEmpty() || !valuePairBySource.containsKey(selectedReputationSource.get())) {
-                totalScore = reputationScore.getTotalScore();
-                totalScoreString = String.valueOf(totalScore);
+                value = totalScore;
                 valueAsStringProperty.set(String.valueOf(totalScore));
             } else {
                 Pair<Long, String> pair = valuePairBySource.get(selectedReputationSource.get());
                 value = pair.getFirst();
                 valueAsStringProperty.set(pair.getSecond());
             }
-
-            updateAmountBySource();
         }
 
         private void updateAmountBySource() {
@@ -394,7 +411,7 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
         }
 
         private void applyReputationSourceValue(ReputationSource reputationSource, long value) {
-            valuePairBySource.putIfAbsent(reputationSource, new Pair<>(value, formatReputationSourceValue(reputationSource, value)));
+            valuePairBySource.put(reputationSource, new Pair<>(value, formatReputationSourceValue(reputationSource, value)));
         }
 
         private String formatReputationSourceValue(ReputationSource reputationSource, long value) {

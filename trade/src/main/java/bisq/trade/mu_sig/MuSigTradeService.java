@@ -20,6 +20,7 @@ package bisq.trade.mu_sig;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
@@ -43,7 +44,6 @@ import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.options.AccountOption;
 import bisq.offer.options.OfferOptionUtil;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -72,6 +72,7 @@ import bisq.user.banned.BannedUserService;
 import bisq.user.contact_list.ContactListService;
 import bisq.user.contact_list.ContactReason;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import io.grpc.stub.StreamObserver;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -116,6 +117,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
     private final AlertService alertService;
     private final MuSigOpenTradeChannelService muSigOpenTradeChannelService;
     private final ContactListService contactListService;
+    private final UserProfileService userProfileService;
 
     @Getter
     private final MuSigTradeStore persistableStore = new MuSigTradeStore();
@@ -146,6 +148,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         alertService = serviceProvider.getBondedRolesService().getAlertService();
         muSigOpenTradeChannelService = serviceProvider.getChatService().getMuSigOpenTradeChannelService();
         contactListService = serviceProvider.getUserService().getContactListService();
+        userProfileService = serviceProvider.getUserService().getUserProfileService();
 
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
 
@@ -612,7 +615,8 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
 
     private void maybeAddPeerToContactList(String peersProfileId) {
         if (settingsService.getDoAutoAddToContactList()) {
-            contactListService.addContactListEntry(peersProfileId, ContactReason.MUSIG_TRADE);
+            userProfileService.findUserProfile(peersProfileId)
+                    .ifPresent(userProfile -> contactListService.addContactListEntry(userProfile, ContactReason.MUSIG_TRADE));
         }
     }
 }

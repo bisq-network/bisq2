@@ -54,7 +54,7 @@ message NymList {
 }
 
 message UserProfileStore {
-  map<string, NymList> nymListByNickName = 1;
+  map<string, NymList> nymListByNickName = 1 [deprecated = true]; // Not used anymore in v2.1.8
   repeated string ignoredUserProfileIds = 2;
   map<string, UserProfile> userProfileById = 3 [deprecated = true]; // Not used anymore in v2.1.8
 }

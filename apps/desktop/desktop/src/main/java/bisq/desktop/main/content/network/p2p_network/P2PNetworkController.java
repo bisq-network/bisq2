@@ -50,10 +50,7 @@ public class P2PNetworkController implements Controller {
 
         VersionDistributionController versionDistributionController = new VersionDistributionController(serviceProvider);
 
-        model = new P2PNetworkModel(networkService.getSupportedTransportTypes(),
-                !networkService.isTransportTypeSupported(TransportType.CLEAR),
-                !networkService.isTransportTypeSupported(TransportType.TOR),
-                !networkService.isTransportTypeSupported(TransportType.I2P));
+        model = new P2PNetworkModel(networkService.getSupportedTransportTypes());
 
         Set<TransportType> supportedTransportTypes = serviceProvider.getNetworkService().getSupportedTransportTypes();
         view = new P2PNetworkView(model, this,

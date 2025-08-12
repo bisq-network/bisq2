@@ -95,6 +95,7 @@ public class ReputationRankingController implements Controller {
             @Override
             public void putAll(Map<? extends String, ? extends UserProfile> map) {
                 UIThread.run(() -> {
+                    model.getListItems().forEach(ReputationRankingView.ListItem::dispose);
                     Set<? extends UserProfile> clone = new HashSet<>(map.values());
                     List<ReputationRankingView.ListItem> listItems = clone.stream()
                             .map(userProfile -> new ReputationRankingView.ListItem(userProfile,
@@ -114,14 +115,20 @@ public class ReputationRankingController implements Controller {
                         Optional<ReputationRankingView.ListItem> toRemove = model.getListItems().stream()
                                 .filter(e -> e.getUserProfile().getId().equals(key))
                                 .findAny();
-                        toRemove.ifPresent(listItem -> model.getListItems().remove(listItem));
+                        toRemove.ifPresent(listItem -> {
+                            listItem.dispose();
+                            model.getListItems().remove(listItem);
+                        });
                     });
                 }
             }
 
             @Override
             public void clear() {
-                UIThread.run(() -> model.getListItems().clear());
+                UIThread.run(() -> {
+                    model.getListItems().forEach(ReputationRankingView.ListItem::dispose);
+                    model.getListItems().clear();
+                });
             }
         });
 

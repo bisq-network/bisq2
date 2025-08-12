@@ -95,6 +95,7 @@ public class AllNetworkPeersController implements Controller {
             @Override
             public void putAll(Map<? extends String, ? extends UserProfile> map) {
                 UIThread.run(() -> {
+                    model.getListItems().forEach(AllNetworkPeersView.ListItem::dispose);
                     Set<? extends UserProfile> clone = new HashSet<>(map.values());
                     List<AllNetworkPeersView.ListItem> listItems = clone.stream()
                             .map(userProfile -> new AllNetworkPeersView.ListItem(userProfile,
@@ -114,14 +115,20 @@ public class AllNetworkPeersController implements Controller {
                         Optional<AllNetworkPeersView.ListItem> toRemove = model.getListItems().stream()
                                 .filter(e -> e.getUserProfile().getId().equals(key))
                                 .findAny();
-                        toRemove.ifPresent(listItem -> model.getListItems().remove(listItem));
+                        toRemove.ifPresent(listItem -> {
+                            listItem.dispose();
+                            model.getListItems().remove(listItem);
+                        });
                     });
                 }
             }
 
             @Override
             public void clear() {
-                UIThread.run(() -> model.getListItems().clear());
+                UIThread.run(() -> {
+                    model.getListItems().forEach(AllNetworkPeersView.ListItem::dispose);
+                    model.getListItems().clear();
+                });
             }
         });
 

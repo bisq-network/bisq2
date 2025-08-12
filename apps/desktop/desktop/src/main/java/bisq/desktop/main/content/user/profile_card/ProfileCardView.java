@@ -45,7 +45,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
     private UserProfileIcon userProfileIcon;
     private ReputationScoreDisplay reputationScoreDisplay;
     private Label userNickNameLabel, userNymLabel, totalRepScoreLabel, rankingLabel;
-    private BisqMenuItem sendPrivateMsg, ignore, undoIgnore, report, addToContracts;
+    private BisqMenuItem sendPrivateMsg, ignore, undoIgnore, report, addToContacts;
     private Button closeButton;
     private HBox userActionsBox;
     private BondedRoleBadge bondedRoleBadge;
@@ -108,7 +108,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         ignore.setOnAction(e -> controller.onToggleIgnoreUser());
         undoIgnore.setOnAction(e -> controller.onToggleIgnoreUser());
         report.setOnAction(e -> controller.onReportUser());
-        addToContracts.setOnAction(e -> controller.onAddToContacts());
+        addToContacts.setOnAction(e -> controller.onAddToContacts());
         closeButton.setOnAction(e -> controller.onClose());
     }
 
@@ -123,7 +123,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         ignore.setOnAction(null);
         undoIgnore.setOnAction(null);
         report.setOnAction(null);
-        addToContracts.setOnAction(null);
+        addToContacts.setOnAction(null);
         closeButton.setOnAction(null);
 
         bondedRoleBadge.dispose();
@@ -172,13 +172,13 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
                 Res.get("user.profileCard.userActions.undoIgnore"));
         report = new BisqMenuItem("report-grey", "report-white",
                 Res.get("user.profileCard.userActions.report"));
-        addToContracts = new BisqMenuItem("report-grey", "report-white",
+        addToContacts = new BisqMenuItem("report-grey", "report-white",
                 Res.get("user.profileCard.userActions.addToContacts"));
 
         HBox userNameBox = new HBox(10, bondedRoleBadge, userNickNameLabel, userNymLabel);
         HBox reputationBox = new HBox(30, reputationScoreDisplay, totalRepScoreBox, rankingBox);
         reputationBox.setAlignment(Pos.BOTTOM_LEFT);
-        userActionsBox = new HBox(30, sendPrivateMsg, ignore, undoIgnore, report, addToContracts);
+        userActionsBox = new HBox(30, sendPrivateMsg, ignore, undoIgnore, report, addToContacts);
         VBox userNameReputationAndActionsBox = new VBox(5, userNameBox, reputationBox, Spacer.fillVBox(), userActionsBox);
         userNameReputationAndActionsBox.getStyleClass().add("header-content");
         HBox header = new HBox(40, userProfileIcon, userNameReputationAndActionsBox);
