@@ -223,7 +223,7 @@ public class MuSigOfferbookController implements Controller {
         selectedBaseCryptoAssetPin = EasyBind.subscribe(model.getSelectedBaseCryptoAsset(), selectedCrypto -> {
             if (selectedCrypto != null) {
                 if (selectedCrypto.equals(CryptoAssetRepository.XMR)) {
-                    updateQuoteMarketItems(MarketRepository.getAllXmrMarkets());
+                    updateQuoteMarketItems(MarketRepository.getXmrCryptoMarkets());
                     // TODO: update with saved user preference
                     updateSelectedMuSigMarket(MarketRepository.getXmrCryptoMarkets().get(0));
                 } else if (selectedCrypto.equals(CryptoAssetRepository.BITCOIN)) {
