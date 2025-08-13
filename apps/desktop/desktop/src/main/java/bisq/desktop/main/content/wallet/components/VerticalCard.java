@@ -1,6 +1,5 @@
 package bisq.desktop.main.content.wallet.components;
 
-import bisq.common.util.StringUtils;
 import bisq.desktop.common.utils.ImageUtil;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -12,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class VerticalCard extends VBox {
-
     private static final int DEFAULT_IMAGE_WIDTH = 80;
     private static final int DEFAULT_IMAGE_HEIGHT = 80;
     private static final int DEFAULT_WIDTH = 200;
