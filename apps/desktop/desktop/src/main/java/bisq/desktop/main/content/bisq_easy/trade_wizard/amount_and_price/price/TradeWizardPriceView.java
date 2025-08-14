@@ -125,7 +125,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
         marketPriceMarker = new Circle(2.5);
         marketPriceMarker.getStyleClass().add("market-price-marker");
-        marketPriceMarker.setLayoutY(8);
+        marketPriceMarker.setLayoutY(7.5);
 
         HBox sliderIndicators = new HBox(minSliderValue, Spacer.fillHBox(), maxSliderValue);
         VBox.setMargin(sliderIndicators, new Insets(2.5, 0, 0, 0));

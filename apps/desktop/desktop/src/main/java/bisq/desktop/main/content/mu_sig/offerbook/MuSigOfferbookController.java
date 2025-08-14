@@ -189,10 +189,8 @@ public class MuSigOfferbookController implements Controller {
 
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
                 UIThread.run(() -> {
-                    // TODO: Calculate prices for xmr
-                    model.setMarketPricePredicate(item -> true);
-//                    model.setMarketPricePredicate(item -> marketPriceService.getMarketPriceByCurrencyMap().isEmpty() ||
-//                            marketPriceService.getMarketPriceByCurrencyMap().containsKey(item.getMarket()));
+                    model.setMarketPricePredicate(item -> marketPriceService.getMarketPriceByCurrencyMap().isEmpty() ||
+                            marketPriceService.getMarketPriceByCurrencyMap().containsKey(item.getMarket()));
                     updateFilteredMarketItems();
 
                     if (selectedMarketPricePin != null) {
@@ -223,7 +221,7 @@ public class MuSigOfferbookController implements Controller {
         selectedBaseCryptoAssetPin = EasyBind.subscribe(model.getSelectedBaseCryptoAsset(), selectedCrypto -> {
             if (selectedCrypto != null) {
                 if (selectedCrypto.equals(CryptoAssetRepository.XMR)) {
-                    updateQuoteMarketItems(MarketRepository.getAllXmrMarkets());
+                    updateQuoteMarketItems(MarketRepository.getXmrCryptoMarkets());
                     // TODO: update with saved user preference
                     updateSelectedMuSigMarket(MarketRepository.getXmrCryptoMarkets().get(0));
                 } else if (selectedCrypto.equals(CryptoAssetRepository.BITCOIN)) {
