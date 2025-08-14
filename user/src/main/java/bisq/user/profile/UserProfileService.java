@@ -60,7 +60,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     private final NetworkService networkService;
     private final ContactListService contactListService;
     @Getter
-    private final Observable<Integer> numUserProfiles = new Observable<>();
+    private final Observable<Integer> numUserProfiles = new Observable<>(0);
     private final HashCashProofOfWorkService hashCashProofOfWorkService;
     private final ObservableHashMap<String, UserProfile> userProfileById = new ObservableHashMap<>();
     @Getter
