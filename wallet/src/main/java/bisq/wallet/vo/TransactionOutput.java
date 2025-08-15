@@ -17,19 +17,25 @@
 
 package bisq.wallet.vo;
 
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 @Getter
 @EqualsAndHashCode
-public class TransactionOutput {
+@ToString
+@AllArgsConstructor
+public final class TransactionOutput {
     private final long value;
     private final String address;
     private final String scriptPubKey;
 
-    public TransactionOutput(long value, String address, String scriptPubKey) {
-        this.value = value;
-        this.address = address;
-        this.scriptPubKey = scriptPubKey;
+    public static TransactionOutput fromProto(bisq.wallet.protobuf.TransactionOutput output) {
+        return new TransactionOutput(
+                output.getValue(),
+                output.getAddress(),
+                output.getScriptPubKey()
+        );
     }
 }

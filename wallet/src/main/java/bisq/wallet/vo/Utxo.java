@@ -17,10 +17,29 @@
 
 package bisq.wallet.vo;
 
-public interface Utxo {
-    String getTxId();
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-    String getAddress();
+@Getter
+@EqualsAndHashCode
+@ToString
+@AllArgsConstructor
+public final class Utxo {
+    private final String txId;
+    private final int vout;
+    private final long amount;
+    private final String address;
+    private final int confirmations;
 
-    double getAmount();
+    public static Utxo fromProto(bisq.wallet.protobuf.Utxo utxo) {
+        return new Utxo(
+                utxo.getTxId(),
+                utxo.getVout(),
+                utxo.getAmount(),
+                utxo.getAddress(),
+                utxo.getConfirmations()
+        );
+    }
 }

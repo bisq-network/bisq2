@@ -17,44 +17,41 @@
 
 package bisq.wallet.vo;
 
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 @Getter
 @EqualsAndHashCode
-public class Transaction {
+@ToString
+@AllArgsConstructor
+public final class Transaction {
     private final String txId;
     private final List<TransactionInput> inputs;
     private final List<TransactionOutput> outputs;
-    private final int lockTime;
-    private final int height;
-    private final Optional<Date> date;
+    private final long lockTime;
+    private final long height;
+    private final Date date;
     private final int confirmations;
     private final long amount;
     private final boolean incoming;
 
-    public Transaction(String txId,
-                       List<TransactionInput> inputs,
-                       List<TransactionOutput> outputs,
-                       int lockTime,
-                       int height,
-                       Optional<Date> date,
-                       int confirmations,
-                       long amount,
-                       boolean incoming) {
-
-        this.txId = txId;
-        this.inputs = inputs;
-        this.outputs = outputs;
-        this.lockTime = lockTime;
-        this.height = height;
-        this.date = date;
-        this.confirmations = confirmations;
-        this.amount = amount;
-        this.incoming = incoming;
+    public static Transaction fromProto(bisq.wallet.protobuf.Transaction tx) {
+        return new Transaction(
+                tx.getTxId(),
+                tx.getInputsList().stream().map(TransactionInput::fromProto).toList(),
+                tx.getOutputsList().stream().map(TransactionOutput::fromProto).toList(),
+                tx.getLockTime(),
+                tx.getHeight(),
+                Date.from(Instant.ofEpochSecond(tx.getDate())),
+                tx.getConfirmations(),
+                tx.getAmount(),
+                tx.getIncoming()
+        );
     }
 }

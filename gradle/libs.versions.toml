@@ -121,6 +121,8 @@ grpc-netty-shaded = { module = 'io.grpc:grpc-netty-shaded', version.ref = 'grpc'
 grpc-protobuf = { module = 'io.grpc:grpc-protobuf', version.ref = 'grpc' }
 grpc-services = { module = 'io.grpc:grpc-services', version.ref = 'grpc' }
 grpc-stub = { module = 'io.grpc:grpc-stub', version.ref = 'grpc' }
+grpc-testing = { module = 'io.grpc:grpc-testing', version.ref = 'grpc' }
+grpc-inprocess = { module = 'io.grpc:grpc-inprocess', version.ref = 'grpc' }
 
 i2p-core = { module = 'net.i2p:i2p', version.ref = 'i2p-lib' }
 i2p-core-v2 = { module = 'net.i2p:i2p', version.ref = 'i2p-v2' }
@@ -139,12 +141,14 @@ javacv = { module = "org.bytedeco:javacv-platform", version.ref = "javacv" }
 java-dev-jna = { module = 'net.java.dev.jna:jna', version.ref = 'java-dev-jna-lib' }
 jeromq = { module = 'org.zeromq:jeromq', version.ref = 'jeromq-lib' }
 junit-jupiter = { module = 'org.junit.jupiter:junit-jupiter', version.ref = 'junit-jupiter-lib' }
+junit-jupiter-engine = { module = 'org.junit.jupiter:junit-jupiter-engine', version.ref = 'junit-jupiter-lib' }
 
 logback-core = { module = 'ch.qos.logback:logback-core', version.ref = 'logback-lib' }
 logback-classic = { module = 'ch.qos.logback:logback-classic', version.ref = 'logback-lib' }
 lombok = { module = 'org.projectlombok:lombok', version.ref = 'lombok-lib' }
 
 mockito = { module = 'org.mockito:mockito-core', version.ref = 'mockito-lib' }
+mockito-junit-jupiter = { module = 'org.mockito:mockito-junit-jupiter', version.ref = 'mockito-lib' }
 openjfx-monocle = { module = 'org.testfx:openjfx-monocle', version.ref = 'openjfx-monocle-lib' }
 
 protobuf-java = { module = 'com.google.protobuf:protobuf-java', version.ref = 'protobuf-java-lib' }

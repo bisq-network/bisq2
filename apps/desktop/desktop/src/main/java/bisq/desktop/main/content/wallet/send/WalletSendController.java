@@ -17,11 +17,11 @@
 
 package bisq.desktop.main.content.wallet.send;
 
+import bisq.common.monetary.Coin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
-import bisq.presentation.parser.DoubleParser;
 import bisq.wallet.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -66,9 +66,9 @@ public class WalletSendController implements Controller {
 
     void onSend() {
         String value = model.getAmount().get();
-        double amount = DoubleParser.parse(value);
         String address = model.getAddress().get();
-        walletService.sendToAddress(Optional.ofNullable(model.getPassword().get()), address, amount)
+        var amount = Coin.parseBtc(value);
+        walletService.sendToAddress(Optional.ofNullable(model.getPassword().get()), address, amount.getValue())
                 .whenComplete((response, throwable) -> {
                     if (throwable != null) {
                         UIThread.run(() -> new Popup().error(throwable).show());

@@ -17,23 +17,29 @@
 
 package bisq.wallet.vo;
 
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 @Getter
 @EqualsAndHashCode
-public class TransactionInput {
+@ToString
+@AllArgsConstructor
+public final class TransactionInput {
     private final String prevOutTxId;
-    private final int prevOutIndex;
-    private final long sequence;
+    private final long prevOutIndex;
+    private final long sequenceNumber;
     private final String scriptSig;
     private final String witness;
 
-    public TransactionInput(String prevOutTxId, int prevOutIndex, long sequence, String scriptSig, String witness) {
-        this.prevOutTxId = prevOutTxId;
-        this.prevOutIndex = prevOutIndex;
-        this.sequence = sequence;
-        this.scriptSig = scriptSig;
-        this.witness = witness;
+    public static TransactionInput fromProto(bisq.wallet.protobuf.TransactionInput input) {
+        return new TransactionInput(
+                input.getPrevOutTxId(),
+                input.getPrevOutIndex(),
+                input.getSequenceNumber(),
+                input.getScriptSig(),
+                input.getWitness()
+        );
     }
 }
