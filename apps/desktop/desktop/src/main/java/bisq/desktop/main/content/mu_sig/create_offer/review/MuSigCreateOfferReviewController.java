@@ -388,9 +388,10 @@ public class MuSigCreateOfferReviewController implements Controller {
         if (paymentMethods == null || paymentMethods.isEmpty()) {
             throw new IllegalArgumentException("No payment methods provided");
         }
-        PaymentMethod<?> first = paymentMethods.get(0);
-        if (!(first instanceof FiatPaymentMethod) && !(first instanceof CryptoPaymentMethod)) {
-            throw new IllegalArgumentException("Payment method must be either fiat or crypto");
+        boolean allFiat = paymentMethods.stream().allMatch(pm -> pm instanceof FiatPaymentMethod);
+        boolean allCrypto = paymentMethods.stream().allMatch(pm -> pm instanceof CryptoPaymentMethod);
+        if (!(allFiat || allCrypto)) {
+            throw new IllegalArgumentException("All payment methods must be either fiat or crypto (no mixing).");
         }
     }
 }
