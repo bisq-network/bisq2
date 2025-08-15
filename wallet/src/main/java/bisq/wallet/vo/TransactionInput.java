@@ -28,8 +28,8 @@ import lombok.ToString;
 @AllArgsConstructor
 public final class TransactionInput {
     private final String prevOutTxId;
-    private final long prevOutIndex;
-    private final long sequenceNumber;
+    private final int prevOutIndex;
+    private final long sequenceNumber; // Is unsigned int in Bitcoin, thus not fits into signed Integer in Java
     private final String scriptSig;
     private final String witness;
 

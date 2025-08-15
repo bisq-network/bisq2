@@ -34,10 +34,10 @@ public final class Transaction {
     private final String txId;
     private final List<TransactionInput> inputs;
     private final List<TransactionOutput> outputs;
-    private final long lockTime;
-    private final long height;
+    private final long lockTime; // Is unsigned int in Bitcoin, thus not fits into signed Integer in Java
+    private final int blockHeight;
     private final Date date;
-    private final int confirmations;
+    private final int numConfirmations;
     private final long amount;
     private final boolean incoming;
 
@@ -47,9 +47,9 @@ public final class Transaction {
                 tx.getInputsList().stream().map(TransactionInput::fromProto).toList(),
                 tx.getOutputsList().stream().map(TransactionOutput::fromProto).toList(),
                 tx.getLockTime(),
-                tx.getHeight(),
+                tx.getBlockHeight(),
                 Date.from(Instant.ofEpochSecond(tx.getDate())),
-                tx.getConfirmations(),
+                tx.getNumConfirmations(),
                 tx.getAmount(),
                 tx.getIncoming()
         );

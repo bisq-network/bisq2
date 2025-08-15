@@ -79,8 +79,8 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
         richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
                 .title(Res.get("wallet.txs.confirmations"))
                 .minWidth(120)
-                .valueSupplier(WalletTransactionListItem::getConfirmationsAsString)
-                .comparator(Comparator.comparing(WalletTransactionListItem::getConfirmations))
+                .valueSupplier(WalletTransactionListItem::getNumConfirmationsAsString)
+                .comparator(Comparator.comparing(WalletTransactionListItem::getNumConfirmations))
                 .sortType(TableColumn.SortType.DESCENDING)
                 .right()
                 .build());

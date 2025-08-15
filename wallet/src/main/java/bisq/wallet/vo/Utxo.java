@@ -31,7 +31,7 @@ public final class Utxo {
     private final int vout;
     private final long amount;
     private final String address;
-    private final int confirmations;
+    private final int numConfirmations;
 
     public static Utxo fromProto(bisq.wallet.protobuf.Utxo utxo) {
         return new Utxo(
@@ -39,7 +39,7 @@ public final class Utxo {
                 utxo.getVout(),
                 utxo.getAmount(),
                 utxo.getAddress(),
-                utxo.getConfirmations()
+                utxo.getNumConfirmations()
         );
     }
 }
