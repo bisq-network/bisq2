@@ -54,6 +54,7 @@ import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
+import bisq.wallet.MockWalletService;
 import bisq.wallet.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -115,9 +116,13 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
 
         var walletCfg = WalletService.Config.from(getConfig("wallet"));
-        walletService = walletCfg.isEnabled()
+      /*  walletService = walletCfg.isEnabled()
                 ? Optional.of(new WalletService(walletCfg))
+                : Optional.empty();*/
+        walletService = walletCfg.isEnabled()
+                ? Optional.of(new MockWalletService(walletCfg))
                 : Optional.empty();
+
 
         networkService = new NetworkService(NetworkServiceConfig.from(config.getBaseDir(),
                 getConfig("network")),

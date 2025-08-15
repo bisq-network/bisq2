@@ -40,10 +40,10 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class WalletService implements Service {
-    private final Observable<Coin> balance = new Observable<>();
-    private final ObservableSet<Transaction> transactions = new ObservableSet<>();
-    private final ObservableSet<String> walletAddresses = new ObservableSet<>();
-    private final Config config;
+    protected final Observable<Coin> balance = new Observable<>();
+    protected final ObservableSet<Transaction> transactions = new ObservableSet<>();
+    protected final ObservableSet<String> walletAddresses = new ObservableSet<>();
+    protected final Config config;
     private final WalletGrpcClient client;
 
     @Getter
@@ -108,10 +108,6 @@ public class WalletService implements Service {
                 .thenApply(GetUnusedAddressResponse::getAddress);
     }
 
-    public ReadOnlyObservableSet<String> getWalletAddresses() {
-        return walletAddresses;
-    }
-
     public CompletableFuture<ReadOnlyObservableSet<String>> requestWalletAddresses() {
         return client.requestWalletAddresses()
                 .thenApply(response -> {
@@ -169,6 +165,10 @@ public class WalletService implements Service {
                 });
     }
 
+
+    public ReadOnlyObservableSet<String> getWalletAddresses() {
+        return walletAddresses;
+    }
 
     public ReadOnlyObservable<Coin> getBalance() {
         return balance;
