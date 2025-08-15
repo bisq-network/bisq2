@@ -47,7 +47,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     private final Persistence<UserProfileStore> persistence;
     private final NetworkService networkService;
     @Getter
-    private final Observable<Integer> numUserProfiles = new Observable<>();
+    private final Observable<Integer> numUserProfiles = new Observable<>(0);
     private final HashCashProofOfWorkService hashCashProofOfWorkService;
 
     public UserProfileService(PersistenceService persistenceService,
