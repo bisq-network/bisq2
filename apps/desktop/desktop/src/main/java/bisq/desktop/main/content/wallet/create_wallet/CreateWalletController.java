@@ -90,7 +90,7 @@ public class CreateWalletController extends NavigationController {
         String nextString = "", backString = "";
         if (navigationTarget == NavigationTarget.CREATE_WALLET_PROTECT) {
             backString = Res.get("wallet.protectWallet.button.skipStep");
-            nextString = Res.get("wallet.protectWallet.button.nextStep");
+            nextString = Res.get("action.next");
         } else if (navigationTarget == NavigationTarget.CREATE_WALLET_BACKUP) {
             backString = Res.get("action.back");
             nextString = Res.get("wallet.backupSeeds.button.verify");

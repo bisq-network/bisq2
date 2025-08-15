@@ -451,3 +451,14 @@
     -fx-background-color: -bisq-dark-grey-20;
     -fx-border-color: transparent;
 }
+
+
+/*******************************************************************************
+ * Wallet                                                                  *
+ ******************************************************************************/
+
+.vertical-card-step {
+    -fx-font-size: 2.7em;
+    -fx-font-family: "IBM Plex Sans Thin";
+    -fx-text-fill: -fx-light-text-color;
+}
