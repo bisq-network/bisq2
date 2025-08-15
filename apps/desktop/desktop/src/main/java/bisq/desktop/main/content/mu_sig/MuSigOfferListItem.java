@@ -19,8 +19,8 @@ package bisq.desktop.main.content.mu_sig;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.data.Pair;
 import bisq.common.market.Market;
@@ -74,12 +74,12 @@ public class MuSigOfferListItem {
     private final boolean isMyOffer, hasAnyMatchingAccount, canTakeOffer;
     private final Market market;
     private final Direction direction;
-    private final List<FiatPaymentMethod> paymentMethods;
+    private final List<PaymentMethod<?>> paymentMethods;
     private final UserProfile makerUserProfile;
     private final ReputationScore reputationScore;
     private final long totalScore;
     private final boolean hasFixPrice;
-    private final Map<FiatPaymentMethod, Boolean> accountAvailableByPaymentMethod;
+    private final Map<PaymentMethod<?>, Boolean> accountAvailableByPaymentMethod;
     private final Pin marketPriceByCurrencyMapPin;
     private final boolean isBaseAmountBtc;
     private final boolean hasAmountRange;
@@ -129,9 +129,13 @@ public class MuSigOfferListItem {
         offerDate = DateFormatter.formatDateTime(offer.getDate());
         deposit = "15%";
 
-        // ImageUtil.getImageViewById(fiatPaymentMethod.getName());
+        List<PaymentMethodSpec<PaymentMethod<?>>> specsForString = new java.util.ArrayList<>();
+        for (PaymentMethodSpec<?> spec : offer.getQuoteSidePaymentMethodSpecs()) {
+            //noinspection unchecked
+            specsForString.add((PaymentMethodSpec<PaymentMethod<?>>) spec);
+        }
         paymentMethodsAsString = Joiner.on("\n")
-                .join(PaymentMethodSpecUtil.getPaymentMethods(offer.getQuoteSidePaymentMethodSpecs()).stream()
+                .join(PaymentMethodSpecUtil.getPaymentMethods(specsForString).stream()
                         .map(PaymentMethod::getDisplayString)
                         .collect(Collectors.toList()));
         paymentMethods = retrieveAndSortFiatPaymentMethods();
@@ -203,11 +207,17 @@ public class MuSigOfferListItem {
                 });
     }
 
-    private List<FiatPaymentMethod> retrieveAndSortFiatPaymentMethods() {
-        List<FiatPaymentMethod> paymentMethods =
-                PaymentMethodSpecUtil.getPaymentMethods(offer.getQuoteSidePaymentMethodSpecs());
-        paymentMethods.sort(Comparator.comparing(FiatPaymentMethod::isCustomPaymentMethod)
-                .thenComparing(FiatPaymentMethod::getDisplayString));
+    @SuppressWarnings("unchecked")
+    private List<PaymentMethod<?>> retrieveAndSortFiatPaymentMethods() {
+        List<PaymentMethodSpec<PaymentMethod<?>>> specs = new java.util.ArrayList<>();
+        for (PaymentMethodSpec<?> spec : offer.getQuoteSidePaymentMethodSpecs()) {
+            specs.add((PaymentMethodSpec<PaymentMethod<?>>) spec);
+        }
+        List<PaymentMethod<?>> paymentMethods = PaymentMethodSpecUtil.getPaymentMethods(specs);
+        paymentMethods.sort(
+            Comparator.comparing((PaymentMethod<?> pm) -> pm.isCustomPaymentMethod())
+                .thenComparing(PaymentMethod::getDisplayString)
+        );
         return paymentMethods;
     }
 }

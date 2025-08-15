@@ -63,4 +63,10 @@ public class CryptoPaymentMethodUtil {
         return CRYPTO_PAYMENT_RAIL_BY_CODE.getOrDefault(code, CryptoPaymentRail.UNDEFINED);
     }
 
+    public static List<CryptoPaymentMethod> getPaymentMethods(String code) {
+        return CryptoAssetRepository.getCryptoAssets().stream()
+                .filter(asset -> asset.getCode().equals(code) || asset.getCode().endsWith(code))
+                .map(asset -> new CryptoPaymentMethod(asset.getCode()))
+                .collect(Collectors.toList());
+    }
 }

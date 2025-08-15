@@ -22,7 +22,6 @@ import bisq.account.accounts.Account;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.market.Market;
 import bisq.desktop.ServiceProvider;
@@ -34,7 +33,6 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -91,11 +89,11 @@ public class MuSigTakeOfferPaymentController implements Controller {
                 ));
         model.getAccountsByPaymentMethod().putAll(accountsByPaymentMethod);
 
-        List<FiatPaymentMethodSpec> offeredPaymentMethodSpecs = muSigOffer.getQuoteSidePaymentMethodSpecs();
+        List<PaymentMethodSpec<?>> offeredPaymentMethodSpecs = muSigOffer.getQuoteSidePaymentMethodSpecs();
         boolean isSinglePaymentMethod = offeredPaymentMethodSpecs.size() == 1;
         model.setSinglePaymentMethod(isSinglePaymentMethod);
         if (isSinglePaymentMethod) {
-            FiatPaymentMethod paymentMethod = offeredPaymentMethodSpecs.get(0).getPaymentMethod();
+            PaymentMethod paymentMethod = offeredPaymentMethodSpecs.get(0).getPaymentMethod();
             model.getSelectedPaymentMethodSpec().set(PaymentMethodSpecUtil.createPaymentMethodSpec(paymentMethod, model.getMarket().getQuoteCurrencyCode()));
 
             List<Account<?, ?>> accountsForPaymentMethod = accountsByPaymentMethod.get(paymentMethod);

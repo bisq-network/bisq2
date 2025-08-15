@@ -98,7 +98,7 @@ public class PaymentMethodSpecUtil {
     }
 
     public static PaymentMethodSpec<?> createPaymentMethodSpec(PaymentMethod<?> paymentMethod,
-                                                                String currencyCode) {
+                                                               String currencyCode) {
         if (Asset.isFiat(currencyCode) && paymentMethod instanceof FiatPaymentMethod fiatPaymentMethod) {
             return new FiatPaymentMethodSpec(fiatPaymentMethod);
         } else if (Asset.isAltcoin(currencyCode) && paymentMethod instanceof CryptoPaymentMethod cryptoPaymentMethod) {

@@ -24,8 +24,7 @@ import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
-import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.BitcoinPaymentRail;
+import bisq.account.payment_method.crypto.CryptoPaymentMethodUtil;
 import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.market.Market;
@@ -54,7 +53,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class MuSigCreateOfferPaymentController implements Controller {
-    private static final BitcoinPaymentMethod MAIN_CHAIN_PAYMENT_METHOD = BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN);
     private static final int MAX_NUM_PAYMENT_METHODS = 4;
 
     private final MuSigCreateOfferPaymentModel model;
@@ -100,14 +98,18 @@ public class MuSigCreateOfferPaymentController implements Controller {
         }
 
         model.getMarket().set(market);
+        model.setCryptoMarket(market.isCrypto());
         model.getSelectedPaymentMethods().clear();
         String quoteCurrencyCode = market.getQuoteCurrencyCode();
-        model.getPaymentMethods().setAll(FiatPaymentMethodUtil.getPaymentMethods(quoteCurrencyCode));
+        model.getPaymentMethods().setAll(model.isCryptoMarket()
+                ? CryptoPaymentMethodUtil.getPaymentMethods(quoteCurrencyCode) // Do we want to support altcoin/altcoin markets?
+                : FiatPaymentMethodUtil.getPaymentMethods(quoteCurrencyCode));
 
         model.getAccountsByPaymentMethod().putAll(accountService.getAccounts().stream()
                 .filter(account -> !(account instanceof UserDefinedFiatAccount))
                 .filter(account ->
-                        account.getAccountPayload().getSelectedCurrencyCodes().contains(quoteCurrencyCode))
+                        account.getAccountPayload().getSelectedCurrencyCodes().stream()
+                                .anyMatch(code -> code.endsWith(quoteCurrencyCode)))
                 .collect(Collectors.groupingBy(
                         Account::getPaymentMethod,
                         Collectors.toList()
