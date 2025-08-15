@@ -37,9 +37,9 @@ public class WalletTransactionListItem implements DateTableItem {
     private final String dateString, timeString;
     private final String txId;
     private final String amountAsString;
-    private final String confirmationsAsString;
+    private final String numConfirmationsAsString;
     private final Coin amount;
-    private final int confirmations;
+    private final int numConfirmations;
 
     public WalletTransactionListItem(Transaction transaction) {
         this.transaction = transaction;
@@ -50,7 +50,7 @@ public class WalletTransactionListItem implements DateTableItem {
         txId = transaction.getTxId();
         amount = Coin.asBtcFromValue(transaction.getAmount());
         amountAsString = AmountFormatter.formatBaseAmount(amount);
-        confirmations = transaction.getConfirmations();
-        confirmationsAsString = String.valueOf(confirmations);
+        numConfirmations = transaction.getNumConfirmations();
+        numConfirmationsAsString = String.valueOf(numConfirmations);
     }
 }

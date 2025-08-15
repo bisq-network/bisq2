@@ -39,6 +39,7 @@ import bisq.wallet.protobuf.ListUtxosResponse;
 import bisq.wallet.protobuf.SendToAddressRequest;
 import bisq.wallet.protobuf.SendToAddressResponse;
 import bisq.wallet.protobuf.WalletGrpc;
+import com.google.common.annotations.VisibleForTesting;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -61,10 +62,47 @@ public class WalletGrpcClient implements Service {
         this.port = port;
     }
 
-    public WalletGrpcClient(ManagedChannel managedChannel) {
+    @VisibleForTesting
+    WalletGrpcClient(ManagedChannel managedChannel) {
         this.managedChannel = managedChannel;
         this.host = null;
         this.port = 0;
+    }
+
+
+    @Override
+    public CompletableFuture<Boolean> initialize() {
+        if (managedChannel == null) {
+            this.managedChannel = ManagedChannelBuilder.forAddress(host, port)
+                    .usePlaintext()
+                    // .useTransportSecurity() //Todo turn this on in prod env
+                    .build();
+        }
+        this.blockingStub = WalletGrpc.newBlockingStub(managedChannel);
+        this.futureStub = WalletGrpc.newFutureStub(managedChannel);
+
+        return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
+        if (managedChannel != null) {
+            managedChannel.shutdown();
+            try {
+                if (!managedChannel.awaitTermination(1000, TimeUnit.MILLISECONDS)) {
+                    managedChannel.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                log.warn("Thread got interrupted at while shutting down WalletGrpcClient", e);
+                Thread.currentThread().interrupt(); // Restore interrupted state
+
+                managedChannel.shutdownNow();
+            }
+            managedChannel = null;
+            futureStub = null;
+            blockingStub = null;
+        }
+        return CompletableFuture.completedFuture(true);
     }
 
     public void encryptWallet(String password) {
@@ -119,40 +157,5 @@ public class WalletGrpcClient implements Service {
     public CompletableFuture<GetBalanceResponse> requestBalance() {
         var request = GetBalanceRequest.newBuilder().build();
         return toCompletableFuture(futureStub.getBalance(request));
-    }
-
-    @Override
-    public CompletableFuture<Boolean> initialize() {
-        if (managedChannel == null) {
-            this.managedChannel = ManagedChannelBuilder.forAddress(this.host, this.port)
-                    .usePlaintext()
-//                .useTransportSecurity() //Todo turn this on in prod env
-                    .build();
-        }
-        this.blockingStub = WalletGrpc.newBlockingStub(managedChannel);
-        this.futureStub = WalletGrpc.newFutureStub(managedChannel);
-
-        return CompletableFuture.completedFuture(true);
-    }
-
-    @Override
-    public CompletableFuture<Boolean> shutdown() {
-        if (managedChannel != null) {
-            managedChannel.shutdown();
-            try {
-                if (!managedChannel.awaitTermination(1000, TimeUnit.MILLISECONDS)) {
-                    managedChannel.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                log.warn("Thread got interrupted at while shutting down WalletGrpcClient", e);
-                Thread.currentThread().interrupt(); // Restore interrupted state
-
-                managedChannel.shutdownNow();
-            }
-            managedChannel = null;
-            futureStub = null;
-            blockingStub = null;
-        }
-        return CompletableFuture.completedFuture(true);
     }
 }

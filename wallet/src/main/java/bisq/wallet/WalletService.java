@@ -40,12 +40,11 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class WalletService implements Service {
-
     private final Observable<Coin> balance = new Observable<>();
     private final ObservableSet<Transaction> transactions = new ObservableSet<>();
     private final ObservableSet<String> walletAddresses = new ObservableSet<>();
     private final Config config;
-    private WalletGrpcClient client;
+    private final WalletGrpcClient client;
 
     @Getter
     public static class Config {
@@ -70,6 +69,21 @@ public class WalletService implements Service {
 
     public WalletService(Config config) {
         this.config = config;
+        client = new WalletGrpcClient(config.host, config.port);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> initialize() {
+        if (!config.enabled) {
+            log.info("WalletService was disabled");
+            return CompletableFuture.completedFuture(false);
+        }
+        return client.initialize();
+    }
+
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
+        return client.shutdown();
     }
 
     public void encryptWallet(String password) {
@@ -145,14 +159,6 @@ public class WalletService implements Service {
                 });
     }
 
-    public ReadOnlyObservable<Coin> getBalance() {
-        return balance;
-    }
-
-    public ReadOnlyObservableSet<Transaction> getTransactions() {
-        return transactions;
-    }
-
     public CompletableFuture<ReadOnlyObservableSet<Transaction>> requestTransactions() {
         return client.listTransactions()
                 .thenApply(response -> {
@@ -163,23 +169,12 @@ public class WalletService implements Service {
                 });
     }
 
-    @Override
-    public CompletableFuture<Boolean> initialize() {
-        if (!config.enabled) {
-            log.info("WalletService was disabled");
-            return CompletableFuture.completedFuture(false);
-        }
-        try {
-            client = new WalletGrpcClient(config.host, config.port);
-            return client.initialize();
-        } catch (Exception e) {
-            log.error("Failed to initialize WalletService", e);
-            return CompletableFuture.failedFuture(e);
-        }
+
+    public ReadOnlyObservable<Coin> getBalance() {
+        return balance;
     }
 
-    @Override
-    public CompletableFuture<Boolean> shutdown() {
-        return client.shutdown();
+    public ReadOnlyObservableSet<Transaction> getTransactions() {
+        return transactions;
     }
 }
