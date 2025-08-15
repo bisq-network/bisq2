@@ -43,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Slf4j
 public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, CreateWalletController> {
@@ -203,19 +204,19 @@ public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, Cr
         progressBox.setPadding(new Insets(0, 20, 0, 5));
         progressLabelList.clear();
 
-        Label paymentMethod = createAndGetProgressLabel(Res.get("wallet.protectWallet"));
+        Label paymentMethod = createAndGetProgressLabel(Res.get("wallet.protectWallet").toUpperCase(Locale.ROOT));
         progressLabelList.add(paymentMethod);
         progressBox.getChildren().add(paymentMethod);
 
         progressBox.getChildren().add(getHLine());
 
-        Label amount = createAndGetProgressLabel(Res.get("wallet.backupSeeds"));
+        Label amount = createAndGetProgressLabel(Res.get("wallet.backupSeeds").toUpperCase(Locale.ROOT));
         progressLabelList.add(amount);
         progressBox.getChildren().add(amount);
 
         progressBox.getChildren().add(getHLine());
 
-        Label review = createAndGetProgressLabel(Res.get("wallet.verifySeeds"));
+        Label review = createAndGetProgressLabel(Res.get("wallet.verifySeeds").toUpperCase(Locale.ROOT));
         progressLabelList.add(review);
         progressBox.getChildren().add(review);
 

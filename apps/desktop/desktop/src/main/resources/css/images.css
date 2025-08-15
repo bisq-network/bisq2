@@ -1777,14 +1777,14 @@
 /* Wallet */
 /* ------------------------------------------------------------------------------------ */
 
-#wallet-protect {
-    -fx-image: url("/images/learn/old/security@2x.png");
+#wallet-password {
+    -fx-image: url("/images/wallet/password.png");
 }
 
-#wallet-seed-backup {
-    -fx-image: url("/images/learn/old/wallets@2x.png");
+#wallet-seeds {
+    -fx-image: url("/images/wallet/seeds.png");
 }
 
-#wallet-seed-verify {
-    -fx-image: url("/images/learn/old/privacy@2x.png");
+#wallet-verify {
+    -fx-image: url("/images/wallet/verify.png");
 }
