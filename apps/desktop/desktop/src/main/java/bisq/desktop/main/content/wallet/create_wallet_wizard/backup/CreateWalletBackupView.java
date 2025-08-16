@@ -1,8 +1,8 @@
-package bisq.desktop.main.content.wallet.create_wallet.backup;
+package bisq.desktop.main.content.wallet.create_wallet_wizard.backup;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.main.content.wallet.create_wallet.SeedState;
+import bisq.desktop.main.content.wallet.create_wallet_wizard.SeedState;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;

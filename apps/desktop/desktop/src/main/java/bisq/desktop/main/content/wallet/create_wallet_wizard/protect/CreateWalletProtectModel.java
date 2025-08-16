@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.wallet.create_wallet.protect;
+package bisq.desktop.main.content.wallet.create_wallet_wizard.protect;
 
 import bisq.desktop.common.view.Model;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;

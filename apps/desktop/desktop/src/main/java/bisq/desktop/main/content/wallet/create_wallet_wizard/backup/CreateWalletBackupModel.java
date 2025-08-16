@@ -1,13 +1,12 @@
-package bisq.desktop.main.content.wallet.create_wallet.backup;
+package bisq.desktop.main.content.wallet.create_wallet_wizard.backup;
 
 import bisq.desktop.common.view.Model;
-import bisq.desktop.main.content.wallet.create_wallet.SeedState;
+import bisq.desktop.main.content.wallet.create_wallet_wizard.SeedState;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 public class CreateWalletBackupModel implements Model {

@@ -1,10 +1,10 @@
-package bisq.desktop.main.content.wallet.create_wallet.backup;
+package bisq.desktop.main.content.wallet.create_wallet_wizard.backup;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.wallet.create_wallet.SeedState;
+import bisq.desktop.main.content.wallet.create_wallet_wizard.SeedState;
 import bisq.i18n.Res;
 import bisq.wallet.WalletService;
 import javafx.scene.layout.Region;

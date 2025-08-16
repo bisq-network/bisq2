@@ -1,4 +1,4 @@
-package bisq.desktop.main.content.wallet.create_wallet;
+package bisq.desktop.main.content.wallet.create_wallet_wizard;
 
 // TODO: Refactor to a general load state
 public enum SeedState {

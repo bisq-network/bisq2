@@ -1,4 +1,4 @@
-package bisq.desktop.main.content.wallet.create_wallet.verify;
+package bisq.desktop.main.content.wallet.create_wallet_wizard.verify;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;

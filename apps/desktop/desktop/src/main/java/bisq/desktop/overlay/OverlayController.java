@@ -43,7 +43,7 @@ import bisq.desktop.main.content.user.fiat_accounts.create.CreatePaymentAccountC
 import bisq.desktop.main.content.user.fiat_accounts.create.legacy.LegacyCreatePaymentAccountController;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.desktop.main.content.user.user_profile.create.CreateUserProfileController;
-import bisq.desktop.main.content.wallet.create_wallet.CreateWalletController;
+import bisq.desktop.main.content.wallet.create_wallet_wizard.CreateWalletController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.chat_rules.ChatRulesController;
 import bisq.desktop.overlay.onboarding.OnboardingController;

@@ -1,4 +1,4 @@
-package bisq.desktop.main.content.wallet.create_wallet;
+package bisq.desktop.main.content.wallet.create_wallet_wizard;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
@@ -7,9 +7,9 @@ import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.View;
-import bisq.desktop.main.content.wallet.create_wallet.protect.CreateWalletProtectController;
-import bisq.desktop.main.content.wallet.create_wallet.backup.CreateWalletBackupController;
-import bisq.desktop.main.content.wallet.create_wallet.verify.CreateWalletVerifyController;
+import bisq.desktop.main.content.wallet.create_wallet_wizard.protect.CreateWalletProtectController;
+import bisq.desktop.main.content.wallet.create_wallet_wizard.backup.CreateWalletBackupController;
+import bisq.desktop.main.content.wallet.create_wallet_wizard.verify.CreateWalletVerifyController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;

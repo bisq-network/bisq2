@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.wallet.create_wallet;
+package bisq.desktop.main.content.wallet.create_wallet_wizard;
 
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.ManagedDuration;

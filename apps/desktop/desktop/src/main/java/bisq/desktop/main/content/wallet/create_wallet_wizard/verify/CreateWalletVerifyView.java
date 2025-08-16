@@ -1,4 +1,4 @@
-package bisq.desktop.main.content.wallet.create_wallet.verify;
+package bisq.desktop.main.content.wallet.create_wallet_wizard.verify;
 
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
