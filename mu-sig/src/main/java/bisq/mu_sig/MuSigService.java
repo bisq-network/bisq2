@@ -20,7 +20,7 @@ package bisq.mu_sig;
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.bonded_roles.market_price.NoMarketPriceAvailableException;
@@ -213,7 +213,7 @@ public class MuSigService extends LifecycleService {
                                              Market market,
                                              AmountSpec amountSpec,
                                              PriceSpec priceSpec,
-                                             List<FiatPaymentMethod> fiatPaymentMethods,
+                                             List<PaymentMethod<?>> fiatPaymentMethods,
                                              List<? extends OfferOption> offerOptions) {
         checkArgument(isActivated());
         NetworkId makerNetworkId = userIdentityService.getSelectedUserIdentity().getUserProfile().getNetworkId();

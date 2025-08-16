@@ -40,7 +40,7 @@ public class MuSigCreateOfferPaymentModel implements Model {
     @Setter
     private Direction direction;
     @Setter
-    private String subtitleLabel;
+    private String paymentMethodCurrencyCode;
 
     private final Map<PaymentMethod<?>, List<Account<?, ?>>> accountsByPaymentMethod = new HashMap<>();
     private final ObservableList<PaymentMethod<?>> paymentMethods = FXCollections.observableArrayList();
@@ -60,7 +60,7 @@ public class MuSigCreateOfferPaymentModel implements Model {
 
     void reset() {
         direction = null;
-        subtitleLabel = null;
+        paymentMethodCurrencyCode = null;
         accountsByPaymentMethod.clear();
         paymentMethods.clear();
         selectedPaymentMethods.clear();

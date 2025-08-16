@@ -19,8 +19,8 @@ package bisq.desktop.main.content.mu_sig;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.data.Pair;
 import bisq.common.market.Market;
@@ -34,7 +34,6 @@ import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.OfferPriceFormatter;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FixPriceSpec;
@@ -58,6 +57,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Getter
@@ -74,16 +74,17 @@ public class MuSigOfferListItem {
     private final boolean isMyOffer, hasAnyMatchingAccount, canTakeOffer;
     private final Market market;
     private final Direction direction;
-    private final List<FiatPaymentMethod> paymentMethods;
+    private final List<PaymentMethod<?>> paymentMethods;
     private final UserProfile makerUserProfile;
     private final ReputationScore reputationScore;
     private final long totalScore;
     private final boolean hasFixPrice;
-    private final Map<FiatPaymentMethod, Boolean> accountAvailableByPaymentMethod;
+    private final Map<PaymentMethod<?>, Boolean> accountAvailableByPaymentMethod;
     private final Pin marketPriceByCurrencyMapPin;
     private final boolean isBaseAmountBtc;
     private final boolean hasAmountRange;
     private final Pair<String, String> minAndMaxBaseAmountPair;
+    private final String paymentMethodCurrencyCode;
 
     private Optional<String> cannotTakeOfferReason = Optional.empty();
     private double priceSpecAsPercent = 0;
@@ -129,12 +130,14 @@ public class MuSigOfferListItem {
         offerDate = DateFormatter.formatDateTime(offer.getDate());
         deposit = "15%";
 
-        // ImageUtil.getImageViewById(fiatPaymentMethod.getName());
         paymentMethodsAsString = Joiner.on("\n")
-                .join(PaymentMethodSpecUtil.getPaymentMethods(offer.getQuoteSidePaymentMethodSpecs()).stream()
+                .join(offer.getQuoteSidePaymentMethodSpecs()
+                        .stream()
+                        .map(PaymentMethodSpec::getPaymentMethod)
                         .map(PaymentMethod::getDisplayString)
                         .collect(Collectors.toList()));
-        paymentMethods = retrieveAndSortFiatPaymentMethods();
+        paymentMethods = retrieveAndSortQuoteSidePaymentMethods();
+        paymentMethodCurrencyCode = market.isCrypto() ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode();
 
         accountAvailableByPaymentMethod = paymentMethods.stream().collect(Collectors.toMap(paymentMethod -> paymentMethod,
                 paymentMethod -> !accountService.getAccounts(paymentMethod).isEmpty()));
@@ -143,12 +146,12 @@ public class MuSigOfferListItem {
                 .anyMatch(paymentMethod -> accountService.getAccounts(paymentMethod).stream()
                         .filter(account -> !(account instanceof UserDefinedFiatAccount))
                         .anyMatch(account ->
-                                account.getAccountPayload().getSelectedCurrencyCodes().contains(quoteCurrencyCode))
+                                account.getAccountPayload().getSelectedCurrencyCodes().contains(paymentMethodCurrencyCode))
                 );
 
         if (!hasAnyMatchingAccount) {
             cannotTakeOfferReason = Optional.of(Res.get("muSig.offerbook.table.cell.takeOffer.cannotTakeOfferReason.noAccountForOfferPaymentMethods",
-                    quoteCurrencyCode));
+                    paymentMethodCurrencyCode));
         }
         canTakeOffer = hasAnyMatchingAccount;
 
@@ -203,11 +206,12 @@ public class MuSigOfferListItem {
                 });
     }
 
-    private List<FiatPaymentMethod> retrieveAndSortFiatPaymentMethods() {
-        List<FiatPaymentMethod> paymentMethods =
-                PaymentMethodSpecUtil.getPaymentMethods(offer.getQuoteSidePaymentMethodSpecs());
-        paymentMethods.sort(Comparator.comparing(FiatPaymentMethod::isCustomPaymentMethod)
-                .thenComparing(FiatPaymentMethod::getDisplayString));
-        return paymentMethods;
+    private List<PaymentMethod<?>> retrieveAndSortQuoteSidePaymentMethods() {
+        Stream<PaymentMethod<?>> stream = offer.getQuoteSidePaymentMethodSpecs().stream()
+                .map(PaymentMethodSpec::getPaymentMethod);
+        return stream
+                .sorted(Comparator.comparing((PaymentMethod<?> method) -> method.isCustomPaymentMethod())
+                        .thenComparing(PaymentMethod::getDisplayString))
+                .toList();
     }
 }
