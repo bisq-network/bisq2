@@ -109,7 +109,7 @@ public class SetupWalletWizardController extends NavigationController {
     protected void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
         String nextString = "", backString = "";
         if (navigationTarget == NavigationTarget.SETUP_OR_RESTORE_WALLET) {
-            backString = Res.get("wallet.setupWallet.backButon");
+            backString = Res.get("wallet.setupWallet.backButton");
             nextString = Res.get("wallet.setupWallet.nextButton");
         } else if (navigationTarget == NavigationTarget.SETUP_WALLET_PROTECT) {
             backString = Res.get("wallet.protectWallet.button.skipStep");
