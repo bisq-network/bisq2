@@ -85,6 +85,7 @@ public class MuSigOfferListItem {
     private final boolean isBaseAmountBtc;
     private final boolean hasAmountRange;
     private final Pair<String, String> minAndMaxBaseAmountPair;
+    private final String paymentMethodCurrencyCode;
 
     private Optional<String> cannotTakeOfferReason = Optional.empty();
     private double priceSpecAsPercent = 0;
@@ -142,6 +143,7 @@ public class MuSigOfferListItem {
                         .map(PaymentMethod::getDisplayString)
                         .collect(Collectors.toList()));
         paymentMethods = retrieveAndSortQuoteSidePaymentMethods();
+        paymentMethodCurrencyCode = market.isCrypto() ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode();
 
         accountAvailableByPaymentMethod = paymentMethods.stream().collect(Collectors.toMap(paymentMethod -> paymentMethod,
                 paymentMethod -> !accountService.getAccounts(paymentMethod).isEmpty()));
@@ -150,12 +152,12 @@ public class MuSigOfferListItem {
                 .anyMatch(paymentMethod -> accountService.getAccounts(paymentMethod).stream()
                         .filter(account -> !(account instanceof UserDefinedFiatAccount))
                         .anyMatch(account ->
-                                account.getAccountPayload().getSelectedCurrencyCodes().contains(quoteCurrencyCode))
+                                account.getAccountPayload().getSelectedCurrencyCodes().contains(paymentMethodCurrencyCode))
                 );
 
         if (!hasAnyMatchingAccount) {
             cannotTakeOfferReason = Optional.of(Res.get("muSig.offerbook.table.cell.takeOffer.cannotTakeOfferReason.noAccountForOfferPaymentMethods",
-                    quoteCurrencyCode));
+                    paymentMethodCurrencyCode));
         }
         canTakeOffer = hasAnyMatchingAccount;
 
