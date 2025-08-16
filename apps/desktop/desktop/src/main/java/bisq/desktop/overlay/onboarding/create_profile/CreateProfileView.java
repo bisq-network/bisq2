@@ -29,6 +29,7 @@ import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
@@ -60,7 +61,8 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         Label subtitleLabel = new Label(Res.get("onboarding.createProfile.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setMaxWidth(400);
-        subtitleLabel.setMinHeight(40); // does not wrap without that...
+        subtitleLabel.setMinHeight(Region.USE_PREF_SIZE); // does not wrap without that...
+        subtitleLabel.setWrapText(true);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
         nickname = new MaterialTextField(Res.get("onboarding.createProfile.nickName"), Res.get("onboarding.createProfile.nickName.prompt"));
