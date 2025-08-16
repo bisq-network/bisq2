@@ -26,6 +26,7 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.View;
 import bisq.desktop.main.content.wallet.setup_wallet_wizard.protect.SetupWalletWizardProtectController;
 import bisq.desktop.main.content.wallet.setup_wallet_wizard.backup.SetupWalletWizardBackupController;
+import bisq.desktop.main.content.wallet.setup_wallet_wizard.setup_or_restore.SetupWalletWizardSetupOrRestoreController;
 import bisq.desktop.main.content.wallet.setup_wallet_wizard.verify.SetupWalletWizardVerifyController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
@@ -46,6 +47,7 @@ public class SetupWalletWizardController extends NavigationController {
     private final SetupWalletWizardModel model;
     private final SetupWalletWizardView view;
 
+    private final SetupWalletWizardSetupOrRestoreController setupOrRestoreWalletWizardController;
     private final SetupWalletWizardProtectController createWalletProtectController;
     private final SetupWalletWizardBackupController createWalletBackupController;
     private final SetupWalletWizardVerifyController createWalletVerifyController;
@@ -53,13 +55,14 @@ public class SetupWalletWizardController extends NavigationController {
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
 
     public SetupWalletWizardController(ServiceProvider serviceProvider) {
-        super(NavigationTarget.CREATE_WALLET);
+        super(NavigationTarget.SETUP_WALLET);
 
         overlayController = OverlayController.getInstance();
 
         model = new SetupWalletWizardModel();
         view = new SetupWalletWizardView(model, this);
 
+        setupOrRestoreWalletWizardController = new SetupWalletWizardSetupOrRestoreController(serviceProvider);
         createWalletProtectController = new SetupWalletWizardProtectController(serviceProvider);
         createWalletBackupController = new SetupWalletWizardBackupController(serviceProvider,
                 this::setMainButtonsVisibleState,
@@ -105,13 +108,16 @@ public class SetupWalletWizardController extends NavigationController {
     @Override
     protected void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
         String nextString = "", backString = "";
-        if (navigationTarget == NavigationTarget.CREATE_WALLET_PROTECT) {
+        if (navigationTarget == NavigationTarget.SETUP_OR_RESTORE_WALLET) {
+            backString = Res.get("wallet.setupWallet.backButon");
+            nextString = Res.get("wallet.setupWallet.nextButton");
+        } else if (navigationTarget == NavigationTarget.SETUP_WALLET_PROTECT) {
             backString = Res.get("wallet.protectWallet.button.skipStep");
             nextString = Res.get("action.next");
-        } else if (navigationTarget == NavigationTarget.CREATE_WALLET_BACKUP) {
+        } else if (navigationTarget == NavigationTarget.SETUP_WALLET_BACKUP) {
             backString = Res.get("action.back");
             nextString = Res.get("wallet.backupSeeds.button.verify");
-        } else if (navigationTarget == NavigationTarget.CREATE_WALLET_VERIFY) {
+        } else if (navigationTarget == NavigationTarget.SETUP_WALLET_VERIFY) {
             backString = Res.get("action.back");
             nextString = Res.get("wallet.verifySeeds.button.question.nextWord");
         }
@@ -123,9 +129,10 @@ public class SetupWalletWizardController extends NavigationController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case CREATE_WALLET_PROTECT -> Optional.of(createWalletProtectController);
-            case CREATE_WALLET_BACKUP -> Optional.of(createWalletBackupController);
-            case CREATE_WALLET_VERIFY -> Optional.of(createWalletVerifyController);
+            case SETUP_OR_RESTORE_WALLET -> Optional.of(setupOrRestoreWalletWizardController);
+            case SETUP_WALLET_PROTECT -> Optional.of(createWalletProtectController);
+            case SETUP_WALLET_BACKUP -> Optional.of(createWalletBackupController);
+            case SETUP_WALLET_VERIFY -> Optional.of(createWalletVerifyController);
             default -> Optional.empty();
         };
     }
@@ -136,7 +143,7 @@ public class SetupWalletWizardController extends NavigationController {
         if (nextIndex < model.getChildTargets().size()) {
             NavigationTarget currentTarget = model.getNavigationTarget();
             log.info("Navigating from {} to index {}", currentTarget, nextIndex);
-            if (currentTarget == NavigationTarget.CREATE_WALLET_PROTECT) {
+            if (currentTarget == NavigationTarget.SETUP_WALLET_PROTECT) {
                 if (!createWalletProtectController.isValid()) {
                     log.warn("Protect step invalid input");
                     createWalletProtectController.handleInvalidInput();
@@ -164,7 +171,7 @@ public class SetupWalletWizardController extends NavigationController {
 
     private void handleSkipProtectStep() {
         // Validate we're actually on the protection step
-        if (model.getNavigationTarget() != NavigationTarget.CREATE_WALLET_PROTECT) {
+        if (model.getNavigationTarget() != NavigationTarget.SETUP_WALLET_PROTECT) {
             log.warn("Skip protection step called from invalid state: {}", model.getNavigationTarget());
             return;
         }

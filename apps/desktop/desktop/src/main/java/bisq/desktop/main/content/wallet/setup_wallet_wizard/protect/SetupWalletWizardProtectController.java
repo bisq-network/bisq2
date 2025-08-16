@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SetupWalletWizardProtectController implements Controller {
-
     private final SetupWalletWizardProtectModel model;
     @Getter
     private final SetupWalletWizardProtectView view;
@@ -67,7 +66,6 @@ public class SetupWalletWizardProtectController implements Controller {
                         .show();
             }
         }
-
     }
 
     public String getPassword() {
@@ -81,5 +79,4 @@ public class SetupWalletWizardProtectController implements Controller {
     private Region getPopupOwner() {
         return (Region) view.getRoot().getParent().getParent();
     }
-
 }

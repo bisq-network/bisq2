@@ -44,9 +44,10 @@ public class SetupWalletWizardModel extends NavigationModel {
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty(true);
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     private final List<NavigationTarget> childTargets = List.of(
-        NavigationTarget.CREATE_WALLET_PROTECT,
-        NavigationTarget.CREATE_WALLET_BACKUP,
-        NavigationTarget.CREATE_WALLET_VERIFY
+        NavigationTarget.SETUP_OR_RESTORE_WALLET,
+        NavigationTarget.SETUP_WALLET_PROTECT,
+        NavigationTarget.SETUP_WALLET_BACKUP,
+        NavigationTarget.SETUP_WALLET_VERIFY
     );
     @Setter
     private boolean animateRightOut = true;
@@ -56,6 +57,6 @@ public class SetupWalletWizardModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.CREATE_WALLET_PROTECT;
+        return NavigationTarget.SETUP_OR_RESTORE_WALLET;
     }
 }

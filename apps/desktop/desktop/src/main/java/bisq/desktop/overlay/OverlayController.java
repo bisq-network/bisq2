@@ -147,7 +147,7 @@ public class OverlayController extends NavigationController {
             case BISQ_EASY_TRADE_DETAILS -> Optional.of(new TradeDetailsController(serviceProvider));
             case BISQ_EASY_OFFER_DETAILS -> Optional.of(new BisqEasyOfferDetailsController(serviceProvider));
 
-            case CREATE_WALLET -> Optional.of(new SetupWalletWizardController(serviceProvider));
+            case SETUP_WALLET -> Optional.of(new SetupWalletWizardController(serviceProvider));
 
             case MU_SIG_CREATE_OFFER -> Optional.of(new MuSigCreateOfferController(serviceProvider));
             case MU_SIG_TAKE_OFFER -> Optional.of(new MuSigTakeOfferController(serviceProvider));

@@ -31,7 +31,7 @@ public class VerticalCard extends VBox {
         setMinHeight(DEFAULT_HEIGHT);
         setMaxHeight(DEFAULT_HEIGHT);
 
-       setAlignment(Pos.TOP_CENTER);
+        setAlignment(Pos.TOP_CENTER);
         //setPadding(CARD_PADDING);
         getStyleClass().add("bisq-card-bg");
 

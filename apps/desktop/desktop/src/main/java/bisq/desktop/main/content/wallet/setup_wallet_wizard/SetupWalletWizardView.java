@@ -204,21 +204,27 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
         progressBox.setPadding(new Insets(0, 20, 0, 5));
         progressLabelList.clear();
 
-        Label paymentMethod = createAndGetProgressLabel(Res.get("wallet.protectWallet").toUpperCase(Locale.ROOT));
-        progressLabelList.add(paymentMethod);
-        progressBox.getChildren().add(paymentMethod);
+        Label setupOrRestoreWallet = createAndGetProgressLabel(Res.get("wallet.setupOrRestore").toUpperCase(Locale.ROOT));
+        progressLabelList.add(setupOrRestoreWallet);
+        progressBox.getChildren().add(setupOrRestoreWallet);
 
         progressBox.getChildren().add(getHLine());
 
-        Label amount = createAndGetProgressLabel(Res.get("wallet.backupSeeds").toUpperCase(Locale.ROOT));
-        progressLabelList.add(amount);
-        progressBox.getChildren().add(amount);
+        Label protectWallet = createAndGetProgressLabel(Res.get("wallet.protectWallet").toUpperCase(Locale.ROOT));
+        progressLabelList.add(protectWallet);
+        progressBox.getChildren().add(protectWallet);
 
         progressBox.getChildren().add(getHLine());
 
-        Label review = createAndGetProgressLabel(Res.get("wallet.verifySeeds").toUpperCase(Locale.ROOT));
-        progressLabelList.add(review);
-        progressBox.getChildren().add(review);
+        Label backupSeeds = createAndGetProgressLabel(Res.get("wallet.backupSeeds").toUpperCase(Locale.ROOT));
+        progressLabelList.add(backupSeeds);
+        progressBox.getChildren().add(backupSeeds);
+
+        progressBox.getChildren().add(getHLine());
+
+        Label verifySeeds = createAndGetProgressLabel(Res.get("wallet.verifySeeds").toUpperCase(Locale.ROOT));
+        progressLabelList.add(verifySeeds);
+        progressBox.getChildren().add(verifySeeds);
 
         return progressBox;
     }
