@@ -47,10 +47,10 @@ public class SetupWalletWizardController extends NavigationController {
     private final SetupWalletWizardModel model;
     private final SetupWalletWizardView view;
 
-    private final SetupWalletWizardSetupOrRestoreController setupOrRestoreWalletWizardController;
-    private final SetupWalletWizardProtectController createWalletProtectController;
-    private final SetupWalletWizardBackupController createWalletBackupController;
-    private final SetupWalletWizardVerifyController createWalletVerifyController;
+    private final SetupWalletWizardSetupOrRestoreController setupWalletWizardSetupOrRestoreController;
+    private final SetupWalletWizardProtectController setupWalletWizardProtectController;
+    private final SetupWalletWizardBackupController setupWalletWizardBackupController;
+    private final SetupWalletWizardVerifyController setupWalletWizardVerifyController;
     private final WalletService walletService;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
 
@@ -62,13 +62,13 @@ public class SetupWalletWizardController extends NavigationController {
         model = new SetupWalletWizardModel();
         view = new SetupWalletWizardView(model, this);
 
-        setupOrRestoreWalletWizardController = new SetupWalletWizardSetupOrRestoreController(serviceProvider);
-        createWalletProtectController = new SetupWalletWizardProtectController(serviceProvider);
-        createWalletBackupController = new SetupWalletWizardBackupController(serviceProvider,
+        setupWalletWizardSetupOrRestoreController = new SetupWalletWizardSetupOrRestoreController(serviceProvider);
+        setupWalletWizardProtectController = new SetupWalletWizardProtectController(serviceProvider);
+        setupWalletWizardBackupController = new SetupWalletWizardBackupController(serviceProvider,
                 this::setMainButtonsVisibleState,
                 this::onBack
         );
-        createWalletVerifyController = new SetupWalletWizardVerifyController(
+        setupWalletWizardVerifyController = new SetupWalletWizardVerifyController(
                 serviceProvider,
                 this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo,
@@ -129,10 +129,10 @@ public class SetupWalletWizardController extends NavigationController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case SETUP_OR_RESTORE_WALLET -> Optional.of(setupOrRestoreWalletWizardController);
-            case SETUP_WALLET_PROTECT -> Optional.of(createWalletProtectController);
-            case SETUP_WALLET_BACKUP -> Optional.of(createWalletBackupController);
-            case SETUP_WALLET_VERIFY -> Optional.of(createWalletVerifyController);
+            case SETUP_OR_RESTORE_WALLET -> Optional.of(setupWalletWizardSetupOrRestoreController);
+            case SETUP_WALLET_PROTECT -> Optional.of(setupWalletWizardProtectController);
+            case SETUP_WALLET_BACKUP -> Optional.of(setupWalletWizardBackupController);
+            case SETUP_WALLET_VERIFY -> Optional.of(setupWalletWizardVerifyController);
             default -> Optional.empty();
         };
     }
@@ -144,12 +144,12 @@ public class SetupWalletWizardController extends NavigationController {
             NavigationTarget currentTarget = model.getNavigationTarget();
             log.info("Navigating from {} to index {}", currentTarget, nextIndex);
             if (currentTarget == NavigationTarget.SETUP_WALLET_PROTECT) {
-                if (!createWalletProtectController.isValid()) {
+                if (!setupWalletWizardProtectController.isValid()) {
                     log.warn("Protect step invalid input");
-                    createWalletProtectController.handleInvalidInput();
+                    setupWalletWizardProtectController.handleInvalidInput();
                     return;
                 }
-                String password = createWalletProtectController.getPassword();
+                String password = setupWalletWizardProtectController.getPassword();
                 walletService.encryptWallet(password);
             }
             model.setAnimateRightOut(false);
