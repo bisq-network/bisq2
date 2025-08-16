@@ -88,6 +88,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
                 persist();
             }
         }));
+        numUserProfiles.set(userProfileById.size());
         return CompletableFuture.completedFuture(true);
     }
 
