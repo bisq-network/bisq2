@@ -1,10 +1,27 @@
-package bisq.desktop.main.content.wallet.create_wallet_wizard.backup;
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.desktop.main.content.wallet.setup_wallet_wizard.backup;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.wallet.create_wallet_wizard.SeedState;
+import bisq.desktop.main.content.wallet.setup_wallet_wizard.SeedState;
 import bisq.i18n.Res;
 import bisq.wallet.WalletService;
 import javafx.scene.layout.Region;
@@ -16,19 +33,19 @@ import java.util.function.Consumer;
 import java.util.List;
 
 @Slf4j
-public class CreateWalletBackupController implements Controller {
-    private final CreateWalletBackupModel model;
+public class SetupWalletWizardBackupController implements Controller {
+    private final SetupWalletWizardBackupModel model;
     @Getter
-    private final CreateWalletBackupView view;
+    private final SetupWalletWizardBackupView view;
     private final Runnable onBackHandler;
     private final WalletService walletService;
 
-    public CreateWalletBackupController(ServiceProvider serviceProvider,
-                                        Consumer<Boolean> navigationButtonsVisibleHandler,
-                                        Runnable onBackHandler) {
+    public SetupWalletWizardBackupController(ServiceProvider serviceProvider,
+                                             Consumer<Boolean> navigationButtonsVisibleHandler,
+                                             Runnable onBackHandler) {
         this.onBackHandler = onBackHandler;
-        model = new CreateWalletBackupModel();
-        view = new CreateWalletBackupView(model, this, navigationButtonsVisibleHandler);
+        model = new SetupWalletWizardBackupModel();
+        view = new SetupWalletWizardBackupView(model, this, navigationButtonsVisibleHandler);
 
         walletService = serviceProvider.getWalletService().orElseThrow();
     }

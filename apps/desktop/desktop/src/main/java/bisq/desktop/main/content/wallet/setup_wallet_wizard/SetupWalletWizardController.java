@@ -1,4 +1,21 @@
-package bisq.desktop.main.content.wallet.create_wallet_wizard;
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.desktop.main.content.wallet.setup_wallet_wizard;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
@@ -7,9 +24,9 @@ import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.View;
-import bisq.desktop.main.content.wallet.create_wallet_wizard.protect.CreateWalletProtectController;
-import bisq.desktop.main.content.wallet.create_wallet_wizard.backup.CreateWalletBackupController;
-import bisq.desktop.main.content.wallet.create_wallet_wizard.verify.CreateWalletVerifyController;
+import bisq.desktop.main.content.wallet.setup_wallet_wizard.protect.SetupWalletWizardProtectController;
+import bisq.desktop.main.content.wallet.setup_wallet_wizard.backup.SetupWalletWizardBackupController;
+import bisq.desktop.main.content.wallet.setup_wallet_wizard.verify.SetupWalletWizardVerifyController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
@@ -23,32 +40,32 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class CreateWalletController extends NavigationController {
+public class SetupWalletWizardController extends NavigationController {
     private final OverlayController overlayController;
     @Getter
-    private final CreateWalletModel model;
-    private final CreateWalletView view;
+    private final SetupWalletWizardModel model;
+    private final SetupWalletWizardView view;
 
-    private final CreateWalletProtectController createWalletProtectController;
-    private final CreateWalletBackupController createWalletBackupController;
-    private final CreateWalletVerifyController createWalletVerifyController;
+    private final SetupWalletWizardProtectController createWalletProtectController;
+    private final SetupWalletWizardBackupController createWalletBackupController;
+    private final SetupWalletWizardVerifyController createWalletVerifyController;
     private final WalletService walletService;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
 
-    public CreateWalletController(ServiceProvider serviceProvider) {
+    public SetupWalletWizardController(ServiceProvider serviceProvider) {
         super(NavigationTarget.CREATE_WALLET);
 
         overlayController = OverlayController.getInstance();
 
-        model = new CreateWalletModel();
-        view = new CreateWalletView(model, this);
+        model = new SetupWalletWizardModel();
+        view = new SetupWalletWizardView(model, this);
 
-        createWalletProtectController = new CreateWalletProtectController(serviceProvider);
-        createWalletBackupController = new CreateWalletBackupController(serviceProvider,
+        createWalletProtectController = new SetupWalletWizardProtectController(serviceProvider);
+        createWalletBackupController = new SetupWalletWizardBackupController(serviceProvider,
                 this::setMainButtonsVisibleState,
                 this::onBack
         );
-        createWalletVerifyController = new CreateWalletVerifyController(
+        createWalletVerifyController = new SetupWalletWizardVerifyController(
                 serviceProvider,
                 this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo,

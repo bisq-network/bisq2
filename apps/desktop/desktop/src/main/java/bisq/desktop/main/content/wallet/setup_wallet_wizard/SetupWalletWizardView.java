@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.wallet.create_wallet_wizard;
+package bisq.desktop.main.content.wallet.setup_wallet_wizard;
 
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.ManagedDuration;
@@ -46,7 +46,7 @@ import java.util.List;
 import java.util.Locale;
 
 @Slf4j
-public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, CreateWalletController> {
+public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizardModel, SetupWalletWizardController> {
     public static final double POPUP_HEIGHT = OverlayModel.HEIGHT;
     public static final double TOP_PANE_HEIGHT = 55;
     public static final double BUTTON_HEIGHT = 32;
@@ -61,7 +61,7 @@ public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, Cr
     private final ChangeListener<Number> currentIndexListener;
     private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
 
-    public CreateWalletView(CreateWalletModel model, CreateWalletController controller) {
+    public SetupWalletWizardView(SetupWalletWizardModel model, SetupWalletWizardController controller) {
         super(new VBox(), model, controller);
 
         root.setPrefWidth(OverlayModel.WIDTH);

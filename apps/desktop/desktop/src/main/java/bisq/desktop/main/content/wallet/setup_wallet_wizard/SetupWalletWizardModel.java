@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.wallet.create_wallet_wizard;
+package bisq.desktop.main.content.wallet.setup_wallet_wizard;
 
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.navigation.NavigationTarget;
@@ -35,7 +35,7 @@ import java.util.List;
 
 @Slf4j
 @Getter
-public class CreateWalletModel extends NavigationModel {
+public class SetupWalletWizardModel extends NavigationModel {
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
     private final StringProperty nextButtonText = new SimpleStringProperty();
     private final StringProperty backButtonText = new SimpleStringProperty();
@@ -51,7 +51,7 @@ public class CreateWalletModel extends NavigationModel {
     @Setter
     private boolean animateRightOut = true;
 
-    public CreateWalletModel() {
+    public SetupWalletWizardModel() {
     }
 
     @Override
