@@ -40,7 +40,7 @@ public class MuSigCreateOfferPaymentModel implements Model {
     @Setter
     private Direction direction;
     @Setter
-    private boolean isCryptoMarket;
+    private String paymentMethodCurrencyCode;
 
     private final Map<PaymentMethod<?>, List<Account<?, ?>>> accountsByPaymentMethod = new HashMap<>();
     private final ObservableList<PaymentMethod<?>> paymentMethods = FXCollections.observableArrayList();
@@ -60,7 +60,7 @@ public class MuSigCreateOfferPaymentModel implements Model {
 
     void reset() {
         direction = null;
-        isCryptoMarket = false;
+        paymentMethodCurrencyCode = null;
         accountsByPaymentMethod.clear();
         paymentMethods.clear();
         selectedPaymentMethods.clear();

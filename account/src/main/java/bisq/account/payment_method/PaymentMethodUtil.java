@@ -38,6 +38,20 @@ public class PaymentMethodUtil {
         }
     }
 
+    public static List<PaymentMethod<?>> getPaymentMethods(String code) {
+        if (Asset.isFiat(code)) {
+            return FiatPaymentMethodUtil.getPaymentMethods(code).stream()
+                    .map(pm -> (PaymentMethod<?>) pm)
+                    .collect(Collectors.toList());
+        } else if (Asset.isAltcoin(code)) {
+            return CryptoPaymentMethodUtil.getPaymentMethods(code).stream()
+                    .map(pm -> (PaymentMethod<?>) pm)
+                    .collect(Collectors.toList());
+        } else {
+            throw new UnsupportedOperationException("getPaymentMethods only supports fiat and altcoins. CurrencyCode: " + code);
+        }
+    }
+
     public static PaymentRail getPaymentRail(String name, String code) {
         return getPaymentMethod(name, code).getPaymentRail();
     }

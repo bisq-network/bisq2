@@ -24,8 +24,7 @@ import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
-import bisq.account.payment_method.crypto.CryptoPaymentMethodUtil;
-import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
+import bisq.account.payment_method.PaymentMethodUtil;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.market.Market;
 import bisq.common.observable.map.ReadOnlyObservableMap;
@@ -98,22 +97,7 @@ public class MuSigCreateOfferPaymentController implements Controller {
         }
 
         model.getMarket().set(market);
-        model.setCryptoMarket(market.isCrypto());
-        model.getSelectedPaymentMethods().clear();
-        String currencyCode = model.isCryptoMarket() ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode();
-        model.getPaymentMethods().setAll(model.isCryptoMarket()
-                ? CryptoPaymentMethodUtil.getPaymentMethods(currencyCode)
-                : FiatPaymentMethodUtil.getPaymentMethods(currencyCode));
-
-        model.getAccountsByPaymentMethod().putAll(accountService.getAccounts().stream()
-                .filter(account -> !(account instanceof UserDefinedFiatAccount))
-                .filter(account ->
-                        account.getAccountPayload().getSelectedCurrencyCodes().stream()
-                                .anyMatch(code -> code.equals(currencyCode)))
-                .collect(Collectors.groupingBy(
-                        Account::getPaymentMethod,
-                        Collectors.toList()
-                )));
+        model.setPaymentMethodCurrencyCode(market.isCrypto() ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode());
     }
 
     public void reset() {
@@ -123,6 +107,17 @@ public class MuSigCreateOfferPaymentController implements Controller {
     @Override
     public void onActivate() {
         model.getSortedPaymentMethods().setComparator(Comparator.comparing(PaymentMethod::getShortDisplayString));
+        model.getSelectedPaymentMethods().clear();
+        model.getPaymentMethods().setAll(PaymentMethodUtil.getPaymentMethods(model.getPaymentMethodCurrencyCode()));
+        model.getAccountsByPaymentMethod().putAll(accountService.getAccounts().stream()
+                .filter(account -> !(account instanceof UserDefinedFiatAccount))
+                .filter(account ->
+                        account.getAccountPayload().getSelectedCurrencyCodes().stream()
+                                .anyMatch(code -> code.equals(model.getPaymentMethodCurrencyCode())))
+                .collect(Collectors.groupingBy(
+                        Account::getPaymentMethod,
+                        Collectors.toList()
+                )));
     }
 
     @Override
