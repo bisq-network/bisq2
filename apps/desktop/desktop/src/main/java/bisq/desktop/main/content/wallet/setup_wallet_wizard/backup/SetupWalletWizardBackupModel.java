@@ -15,24 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.wallet.create_wallet.protect;
+package bisq.desktop.main.content.wallet.setup_wallet_wizard.backup;
 
 import bisq.desktop.common.view.Model;
-import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
+import bisq.desktop.main.content.wallet.setup_wallet_wizard.SeedState;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Getter
-public class CreateWalletProtectModel implements Model {
-    private static final int PASSWORD_MIN_LENGTH = 8;
-    private static final int PASSWORD_MAX_LENGTH = 100;
+public class SetupWalletWizardBackupModel implements Model {
+    private final int SEED_WORD_COUNT = 12;
+    private final StringProperty[] seedWords = new StringProperty[SEED_WORD_COUNT];
+    private final ObjectProperty<SeedState> seedState = new SimpleObjectProperty<>(SeedState.LOADING);
 
-    private final StringProperty password = new SimpleStringProperty("");
-    private final TextMinMaxLengthValidator passwordValidator = new TextMinMaxLengthValidator(PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH);
+    public SetupWalletWizardBackupModel() {
+        for (int i = 0; i < SEED_WORD_COUNT; i++) {
+            seedWords[i] = new SimpleStringProperty("");
+        }
+    }
 
-    private final StringProperty confirmPassword = new SimpleStringProperty("");
-    private final TextMinMaxLengthValidator confirmPasswordValidator = new TextMinMaxLengthValidator(PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH);
 }
+

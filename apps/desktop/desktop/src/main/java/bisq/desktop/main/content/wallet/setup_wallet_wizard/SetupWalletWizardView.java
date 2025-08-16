@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.wallet.create_wallet;
+package bisq.desktop.main.content.wallet.setup_wallet_wizard;
 
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.ManagedDuration;
@@ -46,7 +46,7 @@ import java.util.List;
 import java.util.Locale;
 
 @Slf4j
-public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, CreateWalletController> {
+public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizardModel, SetupWalletWizardController> {
     public static final double POPUP_HEIGHT = OverlayModel.HEIGHT;
     public static final double TOP_PANE_HEIGHT = 55;
     public static final double BUTTON_HEIGHT = 32;
@@ -61,7 +61,7 @@ public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, Cr
     private final ChangeListener<Number> currentIndexListener;
     private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
 
-    public CreateWalletView(CreateWalletModel model, CreateWalletController controller) {
+    public SetupWalletWizardView(SetupWalletWizardModel model, SetupWalletWizardController controller) {
         super(new VBox(), model, controller);
 
         root.setPrefWidth(OverlayModel.WIDTH);
@@ -204,21 +204,27 @@ public class CreateWalletView extends NavigationView<VBox, CreateWalletModel, Cr
         progressBox.setPadding(new Insets(0, 20, 0, 5));
         progressLabelList.clear();
 
-        Label paymentMethod = createAndGetProgressLabel(Res.get("wallet.protectWallet").toUpperCase(Locale.ROOT));
-        progressLabelList.add(paymentMethod);
-        progressBox.getChildren().add(paymentMethod);
+        Label setupOrRestoreWallet = createAndGetProgressLabel(Res.get("wallet.setupOrRestore").toUpperCase(Locale.ROOT));
+        progressLabelList.add(setupOrRestoreWallet);
+        progressBox.getChildren().add(setupOrRestoreWallet);
 
         progressBox.getChildren().add(getHLine());
 
-        Label amount = createAndGetProgressLabel(Res.get("wallet.backupSeeds").toUpperCase(Locale.ROOT));
-        progressLabelList.add(amount);
-        progressBox.getChildren().add(amount);
+        Label protectWallet = createAndGetProgressLabel(Res.get("wallet.protectWallet").toUpperCase(Locale.ROOT));
+        progressLabelList.add(protectWallet);
+        progressBox.getChildren().add(protectWallet);
 
         progressBox.getChildren().add(getHLine());
 
-        Label review = createAndGetProgressLabel(Res.get("wallet.verifySeeds").toUpperCase(Locale.ROOT));
-        progressLabelList.add(review);
-        progressBox.getChildren().add(review);
+        Label backupSeeds = createAndGetProgressLabel(Res.get("wallet.backupSeeds").toUpperCase(Locale.ROOT));
+        progressLabelList.add(backupSeeds);
+        progressBox.getChildren().add(backupSeeds);
+
+        progressBox.getChildren().add(getHLine());
+
+        Label verifySeeds = createAndGetProgressLabel(Res.get("wallet.verifySeeds").toUpperCase(Locale.ROOT));
+        progressLabelList.add(verifySeeds);
+        progressBox.getChildren().add(verifySeeds);
 
         return progressBox;
     }

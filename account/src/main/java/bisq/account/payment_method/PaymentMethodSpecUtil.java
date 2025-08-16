@@ -23,6 +23,7 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
 import bisq.common.asset.Asset;
+import bisq.common.market.Market;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -79,6 +80,12 @@ public class PaymentMethodSpecUtil {
     }
 
     public static List<PaymentMethodSpec<?>> createPaymentMethodSpecs(List<PaymentMethod<?>> paymentMethods,
+                                                                      Market market) {
+        String currencyCode = market.isCrypto() ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode();
+        return createPaymentMethodSpecs(paymentMethods, currencyCode);
+    }
+
+    public static List<PaymentMethodSpec<?>> createPaymentMethodSpecs(List<PaymentMethod<?>> paymentMethods,
                                                                       String currencyCode) {
         if (Asset.isFiat(currencyCode)) {
             return paymentMethods.stream()
@@ -98,7 +105,7 @@ public class PaymentMethodSpecUtil {
     }
 
     public static PaymentMethodSpec<?> createPaymentMethodSpec(PaymentMethod<?> paymentMethod,
-                                                                String currencyCode) {
+                                                               String currencyCode) {
         if (Asset.isFiat(currencyCode) && paymentMethod instanceof FiatPaymentMethod fiatPaymentMethod) {
             return new FiatPaymentMethodSpec(fiatPaymentMethod);
         } else if (Asset.isAltcoin(currencyCode) && paymentMethod instanceof CryptoPaymentMethod cryptoPaymentMethod) {

@@ -43,7 +43,7 @@ import bisq.desktop.main.content.user.fiat_accounts.create.CreatePaymentAccountC
 import bisq.desktop.main.content.user.fiat_accounts.create.legacy.LegacyCreatePaymentAccountController;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.desktop.main.content.user.user_profile.create.CreateUserProfileController;
-import bisq.desktop.main.content.wallet.create_wallet.CreateWalletController;
+import bisq.desktop.main.content.wallet.setup_wallet_wizard.SetupWalletWizardController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.chat_rules.ChatRulesController;
 import bisq.desktop.overlay.onboarding.OnboardingController;
@@ -147,7 +147,7 @@ public class OverlayController extends NavigationController {
             case BISQ_EASY_TRADE_DETAILS -> Optional.of(new TradeDetailsController(serviceProvider));
             case BISQ_EASY_OFFER_DETAILS -> Optional.of(new BisqEasyOfferDetailsController(serviceProvider));
 
-            case CREATE_WALLET -> Optional.of(new CreateWalletController(serviceProvider));
+            case SETUP_WALLET -> Optional.of(new SetupWalletWizardController(serviceProvider));
 
             case MU_SIG_CREATE_OFFER -> Optional.of(new MuSigCreateOfferController(serviceProvider));
             case MU_SIG_TAKE_OFFER -> Optional.of(new MuSigTakeOfferController(serviceProvider));

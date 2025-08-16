@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.wallet.create_wallet;
+package bisq.desktop.main.content.wallet.setup_wallet_wizard;
 
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.navigation.NavigationTarget;
@@ -31,12 +31,11 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
 @Getter
-public class CreateWalletModel extends NavigationModel {
+public class SetupWalletWizardModel extends NavigationModel {
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
     private final StringProperty nextButtonText = new SimpleStringProperty();
     private final StringProperty backButtonText = new SimpleStringProperty();
@@ -45,18 +44,19 @@ public class CreateWalletModel extends NavigationModel {
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty(true);
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     private final List<NavigationTarget> childTargets = List.of(
-        NavigationTarget.CREATE_WALLET_PROTECT,
-        NavigationTarget.CREATE_WALLET_BACKUP,
-        NavigationTarget.CREATE_WALLET_VERIFY
+        NavigationTarget.SETUP_OR_RESTORE_WALLET,
+        NavigationTarget.SETUP_WALLET_PROTECT,
+        NavigationTarget.SETUP_WALLET_BACKUP,
+        NavigationTarget.SETUP_WALLET_VERIFY
     );
     @Setter
     private boolean animateRightOut = true;
 
-    public CreateWalletModel() {
+    public SetupWalletWizardModel() {
     }
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.CREATE_WALLET_PROTECT;
+        return NavigationTarget.SETUP_OR_RESTORE_WALLET;
     }
 }

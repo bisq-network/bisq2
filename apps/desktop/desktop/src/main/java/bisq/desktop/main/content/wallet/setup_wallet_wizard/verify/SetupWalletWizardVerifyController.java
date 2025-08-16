@@ -1,4 +1,21 @@
-package bisq.desktop.main.content.wallet.create_wallet.verify;
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.desktop.main.content.wallet.setup_wallet_wizard.verify;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
@@ -15,25 +32,25 @@ import java.util.List;
 import java.util.function.Consumer;
 
 @Slf4j
-public class CreateWalletVerifyController implements Controller {
-    private final CreateWalletVerifyModel model;
+public class SetupWalletWizardVerifyController implements Controller {
+    private final SetupWalletWizardVerifyModel model;
     @Getter
-    private final CreateWalletVerifyView view;
+    private final SetupWalletWizardVerifyView view;
     private final Consumer<Boolean> navigationButtonsVisibleHandler;
     private final Consumer<NavigationTarget> closeAndNavigateToHandler;
     private final Runnable onBackHandler;
     private final WalletService walletService;
 
-    public CreateWalletVerifyController(ServiceProvider serviceProvider,
-                                        Consumer<Boolean> navigationButtonsVisibleHandler,
-                                        Consumer<NavigationTarget> closeAndNavigateToHandler,
-                                        Runnable onBackHandler) {
+    public SetupWalletWizardVerifyController(ServiceProvider serviceProvider,
+                                             Consumer<Boolean> navigationButtonsVisibleHandler,
+                                             Consumer<NavigationTarget> closeAndNavigateToHandler,
+                                             Runnable onBackHandler) {
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         this.closeAndNavigateToHandler = closeAndNavigateToHandler;
         this.onBackHandler = onBackHandler;
 
-        model = new CreateWalletVerifyModel();
-        view = new CreateWalletVerifyView(model, this);
+        model = new SetupWalletWizardVerifyModel();
+        view = new SetupWalletWizardVerifyView(model, this);
 
         walletService = serviceProvider.getWalletService().orElseThrow();
     }
@@ -62,10 +79,10 @@ public class CreateWalletVerifyController implements Controller {
         }
         int correctIdx = model.getCorrectAnswerIndices().get(qIdx);
         if (selectedIdx == correctIdx) {
-            if (qIdx == CreateWalletVerifyModel.QUESTIONS_COUNT - 1) { // Last Q
+            if (qIdx == SetupWalletWizardVerifyModel.QUESTIONS_COUNT - 1) { // Last Q
                 // Use settings if needed
                 //walletService.setIsWalletBackedup(true);
-                model.getCurrentScreenState().set(CreateWalletVerifyModel.ScreenState.SUCCESS);
+                model.getCurrentScreenState().set(SetupWalletWizardVerifyModel.ScreenState.SUCCESS);
                 navigationButtonsVisibleHandler.accept(false);
             } else {
                 model.getCurrentQuestionIndex().set(qIdx + 1);
@@ -80,7 +97,7 @@ public class CreateWalletVerifyController implements Controller {
         }
     }
 
-    public CreateWalletVerifyModel getModel() {
+    public SetupWalletWizardVerifyModel getModel() {
         return model;
     }
 

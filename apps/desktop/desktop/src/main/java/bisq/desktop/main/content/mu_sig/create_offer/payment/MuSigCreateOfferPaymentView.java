@@ -59,7 +59,7 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
     private static final double TWO_COLUMN_WIDTH = 20.75;
 
     private final GridPane gridPane;
-    private final Label subtitleLabel, noAccountOverlayHeadline, multipleAccountOverlayHeadline;
+    private final Label noAccountOverlayHeadline, multipleAccountOverlayHeadline;
     private final VBox noAccountOverlay, multipleAccountOverlay, content;
     private final Button noAccountOverlayCloseButton, createAccountButton, multipleAccountOverlayCloseButton;
     private final AutoCompleteComboBox<Account<?, ?>> accountSelection;
@@ -80,17 +80,10 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
         Label headlineLabel = new Label(Res.get("muSig.createOffer.paymentMethods.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        subtitleLabel = new Label();
-        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.getStyleClass().add("bisq-text-3");
-        subtitleLabel.setWrapText(true);
-        subtitleLabel.setMaxWidth(600);
-
         gridPane = GridPaneUtil.getGridPane(10, 10, new Insets(0));
         gridPane.getStyleClass().add("fiat-methods-grid-pane");
 
-        VBox vBox = new VBox(20, subtitleLabel, gridPane);
+        VBox vBox = new VBox(20, gridPane);
         vBox.setAlignment(Pos.CENTER);
 
         content = new VBox(20);
@@ -124,8 +117,6 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
 
     @Override
     protected void onViewAttached() {
-        subtitleLabel.setText(model.getSubtitleLabel());
-
         paymentMethodWithoutAccountPin = EasyBind.subscribe(model.getPaymentMethodWithoutAccount(),
                 paymentMethod -> {
                     noAccountOverlayCloseButton.setOnAction(null);

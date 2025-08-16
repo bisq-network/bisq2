@@ -684,7 +684,7 @@
 }
 
 .bisq-card-bg {
-    -fx-background-color: -bisq-dark-grey-40;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 8 8 8 8;
     -fx-padding: 40;
 }

@@ -73,8 +73,4 @@ public class WalletController extends ContentTabController<WalletModel> {
             default -> Optional.empty();
         };
     }
-
-    void onCreateWallet() {
-        Navigation.navigateTo(NavigationTarget.CREATE_WALLET);
-    }
 }

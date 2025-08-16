@@ -1,4 +1,21 @@
-package bisq.desktop.main.content.wallet.create_wallet.verify;
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.desktop.main.content.wallet.setup_wallet_wizard.verify;
 
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
@@ -19,7 +36,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class CreateWalletVerifyView extends View<StackPane, CreateWalletVerifyModel, CreateWalletVerifyController> {
+public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWizardVerifyModel, SetupWalletWizardVerifyController> {
     private final static int FEEDBACK_WIDTH = 700;
     private static final int ANSWER_BUTTONS_COUNT = 3;
     private static final int BUTTON_MIN_WIDTH = 160;
@@ -37,8 +54,8 @@ public class CreateWalletVerifyView extends View<StackPane, CreateWalletVerifyMo
     private final Button createWalletSuccessButton;
     private Subscription showCreateWalletSuccessPin;
 
-    public CreateWalletVerifyView(CreateWalletVerifyModel model,
-                                  CreateWalletVerifyController controller) {
+    public SetupWalletWizardVerifyView(SetupWalletWizardVerifyModel model,
+                                       SetupWalletWizardVerifyController controller) {
         super(new StackPane(), model, controller);
 
         root.setAlignment(Pos.CENTER);
@@ -93,7 +110,7 @@ public class CreateWalletVerifyView extends View<StackPane, CreateWalletVerifyMo
 
         showCreateWalletSuccessPin = EasyBind.subscribe(model.getCurrentScreenState(),
                 state -> {
-                    boolean show = state == CreateWalletVerifyModel.ScreenState.SUCCESS;
+                    boolean show = state == SetupWalletWizardVerifyModel.ScreenState.SUCCESS;
                     createWalletSuccess.setVisible(show);
                     if (show) {
                         Transitions.blurStrong(content, 0);
@@ -120,7 +137,7 @@ public class CreateWalletVerifyView extends View<StackPane, CreateWalletVerifyMo
             for (Button btn : answerButtons) btn.setVisible(false);
             return;
         }
-        if (qIdx == CreateWalletVerifyModel.QUESTIONS_COUNT - 1) { // 'Finish' for last button
+        if (qIdx == SetupWalletWizardVerifyModel.QUESTIONS_COUNT - 1) { // 'Finish' for last button
             nextWordButton.setText(Res.get("wallet.verifySeeds.button.question.nextWord.last"));
         }
         int pos = model.getQuestionPositions().get(qIdx);

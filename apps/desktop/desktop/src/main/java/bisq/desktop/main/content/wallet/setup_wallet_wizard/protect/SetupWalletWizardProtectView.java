@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.wallet.create_wallet.protect;
+package bisq.desktop.main.content.wallet.setup_wallet_wizard.protect;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -33,11 +33,11 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-public class CreateWalletProtectView extends View<StackPane, CreateWalletProtectModel, CreateWalletProtectController> {
+public class SetupWalletWizardProtectView extends View<StackPane, SetupWalletWizardProtectModel, SetupWalletWizardProtectController> {
     private final MaterialTextField passwordField, confirmPasswordField;
 
-    public CreateWalletProtectView(CreateWalletProtectModel model,
-                               CreateWalletProtectController controller) {
+    public SetupWalletWizardProtectView(SetupWalletWizardProtectModel model,
+                                        SetupWalletWizardProtectController controller) {
         super(new StackPane(), model, controller);
 
         root.setAlignment(Pos.CENTER);
