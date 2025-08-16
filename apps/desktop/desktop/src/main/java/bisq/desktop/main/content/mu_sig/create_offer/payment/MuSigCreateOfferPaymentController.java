@@ -100,16 +100,16 @@ public class MuSigCreateOfferPaymentController implements Controller {
         model.getMarket().set(market);
         model.setCryptoMarket(market.isCrypto());
         model.getSelectedPaymentMethods().clear();
-        String quoteCurrencyCode = market.getQuoteCurrencyCode();
+        String currencyCode = model.isCryptoMarket() ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode();
         model.getPaymentMethods().setAll(model.isCryptoMarket()
-                ? CryptoPaymentMethodUtil.getPaymentMethods(quoteCurrencyCode) // Do we want to support altcoin/altcoin markets?
-                : FiatPaymentMethodUtil.getPaymentMethods(quoteCurrencyCode));
+                ? CryptoPaymentMethodUtil.getPaymentMethods(currencyCode)
+                : FiatPaymentMethodUtil.getPaymentMethods(currencyCode));
 
         model.getAccountsByPaymentMethod().putAll(accountService.getAccounts().stream()
                 .filter(account -> !(account instanceof UserDefinedFiatAccount))
                 .filter(account ->
                         account.getAccountPayload().getSelectedCurrencyCodes().stream()
-                                .anyMatch(code -> code.endsWith(quoteCurrencyCode)))
+                                .anyMatch(code -> code.equals(currencyCode)))
                 .collect(Collectors.groupingBy(
                         Account::getPaymentMethod,
                         Collectors.toList()

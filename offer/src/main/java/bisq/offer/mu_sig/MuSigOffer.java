@@ -64,7 +64,7 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, PaymentMet
                 priceSpec,
                 List.of(TradeProtocolType.MU_SIG),
                 PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec(),
-                PaymentMethodSpecUtil.createPaymentMethodSpecs(paymentMethods, market.isCrypto() ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode()),
+                PaymentMethodSpecUtil.createPaymentMethodSpecs(paymentMethods, market),
                 offerOptions,
                 VERSION,
                 tradeProtocolVersion,

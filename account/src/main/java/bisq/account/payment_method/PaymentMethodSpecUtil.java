@@ -23,6 +23,7 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
 import bisq.common.asset.Asset;
+import bisq.common.market.Market;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -76,6 +77,12 @@ public class PaymentMethodSpecUtil {
 
     public static List<String> getPaymentMethodNames(Collection<? extends PaymentMethodSpec<?>> paymentMethodSpecs) {
         return paymentMethodSpecs.stream().map(PaymentMethodSpec::getPaymentMethodName).collect(Collectors.toList());
+    }
+
+    public static List<PaymentMethodSpec<?>> createPaymentMethodSpecs(List<PaymentMethod<?>> paymentMethods,
+                                                                      Market market) {
+        String currencyCode = market.isCrypto() ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode();
+        return createPaymentMethodSpecs(paymentMethods, currencyCode);
     }
 
     public static List<PaymentMethodSpec<?>> createPaymentMethodSpecs(List<PaymentMethod<?>> paymentMethods,

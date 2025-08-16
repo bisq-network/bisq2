@@ -65,7 +65,7 @@ public class CryptoPaymentMethodUtil {
 
     public static List<CryptoPaymentMethod> getPaymentMethods(String code) {
         return CryptoAssetRepository.getCryptoAssets().stream()
-                .filter(asset -> asset.getCode().equals(code) || asset.getCode().endsWith(code))
+                .filter(asset -> asset.getCode().equals(code))
                 .map(asset -> new CryptoPaymentMethod(asset.getCode()))
                 .collect(Collectors.toList());
     }
