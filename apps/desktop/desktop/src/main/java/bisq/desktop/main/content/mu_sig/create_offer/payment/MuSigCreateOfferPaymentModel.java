@@ -40,8 +40,6 @@ public class MuSigCreateOfferPaymentModel implements Model {
     @Setter
     private Direction direction;
     @Setter
-    private String subtitleLabel;
-    @Setter
     private boolean isCryptoMarket;
 
     private final Map<PaymentMethod<?>, List<Account<?, ?>>> accountsByPaymentMethod = new HashMap<>();
@@ -62,7 +60,6 @@ public class MuSigCreateOfferPaymentModel implements Model {
 
     void reset() {
         direction = null;
-        subtitleLabel = null;
         isCryptoMarket = false;
         accountsByPaymentMethod.clear();
         paymentMethods.clear();

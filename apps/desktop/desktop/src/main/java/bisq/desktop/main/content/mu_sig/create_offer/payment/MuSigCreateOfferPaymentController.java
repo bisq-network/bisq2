@@ -122,9 +122,6 @@ public class MuSigCreateOfferPaymentController implements Controller {
 
     @Override
     public void onActivate() {
-        model.setSubtitleLabel(model.getDirection().isBuy()
-                ? Res.get("bisqEasy.tradeWizard.paymentMethods.fiat.subTitle.buyer", model.getMarket().get().getQuoteCurrencyCode())
-                : Res.get("bisqEasy.tradeWizard.paymentMethods.fiat.subTitle.seller", model.getMarket().get().getQuoteCurrencyCode()));
         model.getSortedPaymentMethods().setComparator(Comparator.comparing(PaymentMethod::getShortDisplayString));
     }
 
