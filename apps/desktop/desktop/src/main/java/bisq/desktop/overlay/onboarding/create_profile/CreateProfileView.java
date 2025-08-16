@@ -62,7 +62,6 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setMaxWidth(400);
         subtitleLabel.setMinHeight(Region.USE_PREF_SIZE); // does not wrap without that...
-        subtitleLabel.setWrapText(true);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
         nickname = new MaterialTextField(Res.get("onboarding.createProfile.nickName"), Res.get("onboarding.createProfile.nickName.prompt"));
