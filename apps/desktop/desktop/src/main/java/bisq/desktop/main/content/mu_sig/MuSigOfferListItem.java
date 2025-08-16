@@ -52,7 +52,6 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -131,11 +130,6 @@ public class MuSigOfferListItem {
         offerDate = DateFormatter.formatDateTime(offer.getDate());
         deposit = "15%";
 
-        List<PaymentMethodSpec<PaymentMethod<?>>> specsForString = new ArrayList<>();
-        for (PaymentMethodSpec<?> spec : offer.getQuoteSidePaymentMethodSpecs()) {
-            //noinspection unchecked
-            specsForString.add((PaymentMethodSpec<PaymentMethod<?>>) spec);
-        }
         paymentMethodsAsString = Joiner.on("\n")
                 .join(offer.getQuoteSidePaymentMethodSpecs()
                         .stream()
@@ -214,8 +208,7 @@ public class MuSigOfferListItem {
 
     private List<PaymentMethod<?>> retrieveAndSortQuoteSidePaymentMethods() {
         Stream<PaymentMethod<?>> stream = offer.getQuoteSidePaymentMethodSpecs().stream()
-                .map(PaymentMethodSpec::getPaymentMethod)
-                .map(e -> (PaymentMethod<?>) e);
+                .map(PaymentMethodSpec::getPaymentMethod);
         return stream
                 .sorted(Comparator.comparing((PaymentMethod<?> method) -> method.isCustomPaymentMethod())
                         .thenComparing(PaymentMethod::getDisplayString))
