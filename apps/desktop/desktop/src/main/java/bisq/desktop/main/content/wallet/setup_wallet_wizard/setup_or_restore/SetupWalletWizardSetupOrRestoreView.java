@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.wallet.setup_wallet_wizard.setup_or_restore;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.wallet.components.VerticalCard;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -33,12 +32,12 @@ public class SetupWalletWizardSetupOrRestoreView extends View<VBox, SetupWalletW
     private static final Insets CARD_CONTAINER_INSETS = new Insets(10, 0, 10, 0);
 
     public SetupWalletWizardSetupOrRestoreView(SetupWalletWizardSetupOrRestoreModel model, SetupWalletWizardSetupOrRestoreController controller) {
-        super(new VBox(10), model, controller);
+        super(new VBox(25), model, controller);
 
         Label headlineLabel = new Label(Res.get("wallet.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        WrappingText descriptionLabel = new WrappingText(Res.get("wallet.description"),"bisq-text-3");
+//        WrappingText descriptionLabel = new WrappingText(Res.get("wallet.description"),"bisq-text-3");
 
         VBox card1 = new VerticalCard("1", "wallet-password", Res.get("wallet.instruction.caption1"));
         VBox card2 = new VerticalCard("2", "wallet-seeds", Res.get("wallet.instruction.caption2"));
@@ -49,9 +48,8 @@ public class SetupWalletWizardSetupOrRestoreView extends View<VBox, SetupWalletW
         cardContainer.setPadding(CARD_CONTAINER_INSETS);
         cardContainer.getChildren().addAll(card1, card2, card3);
 
-        VBox.setMargin(headlineLabel, new Insets(50, 0, 0, 0));
         root.setAlignment(Pos.CENTER);
-        root.getChildren().addAll(headlineLabel, descriptionLabel, cardContainer);
+        root.getChildren().addAll(headlineLabel, /*descriptionLabel, */cardContainer);
     }
 
     @Override

@@ -73,7 +73,7 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
 
     private void setContentToNotInitialized() {
         root.setPadding(new Insets(40));
-        root.getChildren().setAll(new Label("TEST"));
+        root.getChildren().setAll(new Label("TODO"));
     }
 
     private WalletModel getModel() {
