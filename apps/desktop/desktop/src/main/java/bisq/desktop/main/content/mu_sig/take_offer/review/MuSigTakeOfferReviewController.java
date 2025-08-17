@@ -136,7 +136,7 @@ public class MuSigTakeOfferReviewController implements Controller {
         if (paymentMethodSpec != null) {
             model.setTakersPaymentMethodSpec(paymentMethodSpec);
             model.setPaymentMethodDisplayString(paymentMethodSpec.getShortDisplayString());
-            muSigReviewDataDisplay.setFiatPaymentMethodDescription(Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription.fiat").toUpperCase());
+            muSigReviewDataDisplay.setFiatPaymentMethodDescription(Res.get("muSig.takeOffer.review.paymentMethod.description").toUpperCase());
             muSigReviewDataDisplay.setFiatPaymentMethod(model.getPaymentMethodDisplayString());
         }
     }
@@ -156,16 +156,13 @@ public class MuSigTakeOfferReviewController implements Controller {
         checkArgument(muSigOffer.getBaseSidePaymentMethodSpecs().size() == 1);
         mainButtonsVisibleHandler.accept(false);
 
-        //todo
-        FiatPaymentMethodSpec fiatPaymentMethodSpec = (FiatPaymentMethodSpec) paymentMethodSpec;
-
         try {
             UserIdentity takerIdentity = userIdentityService.getSelectedUserIdentity();
             MuSigProtocol muSigProtocol = muSigService.takerCreatesProtocol(takerIdentity,
                     muSigOffer,
                     takersBaseSideAmount,
                     takersQuoteSideAmount,
-                    fiatPaymentMethodSpec,
+                    paymentMethodSpec,
                     model.getTakersAccount());
             MuSigTrade muSigTrade = muSigProtocol.getTrade();
             model.setMuSigTrade(muSigTrade);

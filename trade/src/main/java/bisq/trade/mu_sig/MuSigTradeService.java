@@ -20,7 +20,7 @@ package bisq.trade.mu_sig;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
@@ -362,7 +362,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
                                               MuSigOffer muSigOffer,
                                               Monetary baseSideAmount,
                                               Monetary quoteSideAmount,
-                                              FiatPaymentMethodSpec fiatPaymentMethodSpec,
+                                              PaymentMethodSpec<?> paymentMethodSpec,
                                               AccountPayload<?> takersAccountPayload,
                                               Optional<UserProfile> mediator,
                                               PriceSpec priceSpec,
@@ -377,7 +377,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
                 takerNetworkId,
                 baseSideAmount.getValue(),
                 quoteSideAmount.getValue(),
-                fiatPaymentMethodSpec,
+                paymentMethodSpec,
                 mediator,
                 priceSpec,
                 marketPrice);

@@ -21,6 +21,7 @@ import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.bonded_roles.market_price.NoMarketPriceAvailableException;
@@ -254,7 +255,7 @@ public class MuSigService extends LifecycleService {
                                               MuSigOffer muSigOffer,
                                               Monetary takersBaseSideAmount,
                                               Monetary takersQuoteSideAmount,
-                                              FiatPaymentMethodSpec fiatPaymentMethodSpec,
+                                              PaymentMethodSpec<?> fiatPaymentMethodSpec,
                                               Account<?, ?> takersAccount)
             throws UserProfileBannedException, NoMediatorAvailableException,
             NoMarketPriceAvailableException, RateLimitExceededException {
@@ -284,7 +285,7 @@ public class MuSigService extends LifecycleService {
                                                MuSigOffer muSigOffer,
                                                Monetary takersBaseSideAmount,
                                                Monetary takersQuoteSideAmount,
-                                               FiatPaymentMethodSpec fiatPaymentMethodSpec,
+                                               PaymentMethodSpec<?> paymentMethodSpec,
                                                AccountPayload<?> takersAccountPayload,
                                                Optional<UserProfile> mediator
                                          ) throws NoMarketPriceAvailableException {
@@ -301,7 +302,7 @@ public class MuSigService extends LifecycleService {
                 muSigOffer,
                 takersBaseSideAmount,
                 takersQuoteSideAmount,
-                fiatPaymentMethodSpec,
+                paymentMethodSpec,
                 takersAccountPayload,
                 mediator,
                 marketPrice.get());
@@ -311,7 +312,7 @@ public class MuSigService extends LifecycleService {
                                                MuSigOffer muSigOffer,
                                                Monetary takersBaseSideAmount,
                                                Monetary takersQuoteSideAmount,
-                                               FiatPaymentMethodSpec fiatPaymentMethodSpec,
+                                               PaymentMethodSpec<?> paymentMethodSpec,
                                                AccountPayload<?> takersAccountPayload,
                                                Optional<UserProfile> mediator,
                                                long marketPrice) {
@@ -319,7 +320,7 @@ public class MuSigService extends LifecycleService {
                 muSigOffer,
                 takersBaseSideAmount,
                 takersQuoteSideAmount,
-                fiatPaymentMethodSpec,
+                paymentMethodSpec,
                 takersAccountPayload,
                 mediator,
                 muSigOffer.getPriceSpec(),

@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.mu_sig.open_trades;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.account.payment_method.PaymentRail;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
@@ -60,7 +60,7 @@ class MuSigOpenTradeListItem implements DateTableItem {
     private final StringProperty mediatorNumNotificationsProperty = new SimpleStringProperty();
     private final Pin changedChatNotificationPin, isInMediationPin;
     private final BitcoinPaymentRail bitcoinPaymentRail;
-    private final FiatPaymentRail fiatPaymentRail;
+    private final PaymentRail paymentRail;
     private final boolean isFiatPaymentMethodCustom;
 
     private long peerNumNotifications, mediatorNumNotifications;
@@ -97,7 +97,7 @@ class MuSigOpenTradeListItem implements DateTableItem {
         quoteAmount = contract.getQuoteSideAmount();
         quoteAmountString = MuSigTradeFormatter.formatQuoteSideAmountWithCode(trade);
         bitcoinPaymentRail = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
-        fiatPaymentRail = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
+        paymentRail = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
         fiatPaymentMethod = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
         isFiatPaymentMethodCustom = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().isCustomPaymentMethod();
 
@@ -127,6 +127,7 @@ class MuSigOpenTradeListItem implements DateTableItem {
         if (notification == null || !notification.getChatChannelId().equals(channel.getId())) {
             return;
         }
+
         UIThread.run(() -> {
             boolean isSenderMediator = notification.getSenderUserProfile().equals(channel.getMediator());
             boolean isNotificationFromMediator = notification.getMediator().equals(notification.getSenderUserProfile());
