@@ -120,8 +120,8 @@ public class MuSigOfferListItem {
                 OfferAmountFormatter.formatBaseSideMaxAmount(marketPriceService, offer, false));
 
         takeOfferButtonText = offer.getDirection().isBuy()
-                ? Res.get("muSig.offerbook.table.cell.offer.intent.sell")
-                : Res.get("muSig.offerbook.table.cell.offer.intent.buy");
+                ? Res.get("muSig.offerbook.table.cell.offer.intent.sell", market.getBaseCurrencyName())
+                : Res.get("muSig.offerbook.table.cell.offer.intent.buy", market.getBaseCurrencyName());
         direction = offer.getDirection();
         offerIntentText = offer.getDirection().isBuy()
                 ? Res.get("muSig.myOffers.table.cell.offerType.buying")
