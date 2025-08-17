@@ -296,12 +296,16 @@ public class MuSigCreateOfferReviewController implements Controller {
         }
         toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
 
+        String directionString = String.format("%s %s",
+                Res.get(direction.isSell() ? "offer.sell" : "offer.buy").toUpperCase(),
+                model.getMarket().getBaseCurrencyDisplayName());
+
         applyHeaderFiatPaymentMethod();
 
         muSigReviewDataDisplay.setToSendMinAmount(currentToSendMinAmount);
         muSigReviewDataDisplay.setToReceiveMinAmount(currentToReceiveMinAmount);
         muSigReviewDataDisplay.setRangeAmount(model.isRangeAmount());
-        muSigReviewDataDisplay.setDirection(Res.get("bisqEasy.tradeWizard.review.direction", Res.get(direction.isSell() ? "offer.sell" : "offer.buy").toUpperCase()));
+        muSigReviewDataDisplay.setDirection(directionString);
         muSigReviewDataDisplay.setToSendAmountDescription(toSendAmountDescription.toUpperCase());
         muSigReviewDataDisplay.setToSendMaxOrFixedAmount(currentToSendMaxOrFixedAmount);
         muSigReviewDataDisplay.setToSendCode(toSendCode);

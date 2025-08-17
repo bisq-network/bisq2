@@ -20,8 +20,6 @@ package bisq.desktop.main.content.mu_sig.take_offer.payment;
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
-import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.market.Market;
 import bisq.desktop.ServiceProvider;
@@ -51,8 +49,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class MuSigTakeOfferPaymentController implements Controller {
-    private static final BitcoinPaymentMethod MAIN_CHAIN_PAYMENT_METHOD = BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN);
-
     private final MuSigTakeOfferPaymentModel model;
     @Getter
     private final MuSigTakeOfferPaymentView view;
@@ -73,16 +69,14 @@ public class MuSigTakeOfferPaymentController implements Controller {
     public void init(MuSigOffer muSigOffer) {
         Market market = muSigOffer.getMarket();
         model.setMarket(market);
+        model.setPaymentMethodCurrencyCode(market.isCrypto() ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode());
         model.setDirection(muSigOffer.getDirection());
-        String quoteCurrencyCode = market.getQuoteCurrencyCode();
-        model.setHeadline(muSigOffer.getTakersDirection().isBuy()
-                ? Res.get("muSig.takeOffer.paymentMethods.headline.buyer", quoteCurrencyCode)
-                : Res.get("muSig.takeOffer.paymentMethods.headline.seller", quoteCurrencyCode));
+        model.setHeadline(getPaymentMethodsHeadline(muSigOffer.getTakersDirection().isBuy()));
 
         Map<? extends PaymentMethod<?>, List<Account<?, ?>>> accountsByPaymentMethod = accountService.getAccounts().stream()
                 .filter(account -> !(account instanceof UserDefinedFiatAccount))
                 .filter(account ->
-                        account.getAccountPayload().getSelectedCurrencyCodes().contains(quoteCurrencyCode))
+                        account.getAccountPayload().getSelectedCurrencyCodes().contains(model.getPaymentMethodCurrencyCode()))
                 .collect(Collectors.groupingBy(
                         Account::getPaymentMethod,
                         Collectors.toList()
@@ -93,8 +87,8 @@ public class MuSigTakeOfferPaymentController implements Controller {
         boolean isSinglePaymentMethod = offeredPaymentMethodSpecs.size() == 1;
         model.setSinglePaymentMethod(isSinglePaymentMethod);
         if (isSinglePaymentMethod) {
-            PaymentMethod paymentMethod = offeredPaymentMethodSpecs.get(0).getPaymentMethod();
-            model.getSelectedPaymentMethodSpec().set(PaymentMethodSpecUtil.createPaymentMethodSpec(paymentMethod, model.getMarket().getQuoteCurrencyCode()));
+            PaymentMethod<?> paymentMethod = offeredPaymentMethodSpecs.get(0).getPaymentMethod();
+            model.getSelectedPaymentMethodSpec().set(PaymentMethodSpecUtil.createPaymentMethodSpec(paymentMethod, model.getPaymentMethodCurrencyCode()));
 
             List<Account<?, ?>> accountsForPaymentMethod = accountsByPaymentMethod.get(paymentMethod);
             checkNotNull(accountsForPaymentMethod, "There must be a account list for paymentMethod " + paymentMethod);
@@ -150,7 +144,7 @@ public class MuSigTakeOfferPaymentController implements Controller {
         }
         if (isSelected) {
             if (model.getAccountsByPaymentMethod().containsKey(paymentMethod)) {
-                model.getSelectedPaymentMethodSpec().set(PaymentMethodSpecUtil.createPaymentMethodSpec(paymentMethod, model.getMarket().getQuoteCurrencyCode()));
+                model.getSelectedPaymentMethodSpec().set(PaymentMethodSpecUtil.createPaymentMethodSpec(paymentMethod, model.getPaymentMethodCurrencyCode()));
                 List<Account<?, ?>> accountsForPaymentMethod = model.getAccountsByPaymentMethod().get(paymentMethod);
                 checkArgument(!accountsForPaymentMethod.isEmpty());
 
@@ -206,5 +200,18 @@ public class MuSigTakeOfferPaymentController implements Controller {
             model.getPaymentMethodWithoutAccount().set(null);
             model.getPaymentMethodWithMultipleAccounts().set(null);
         });
+    }
+
+    private String getPaymentMethodsHeadline(boolean isBuyer) {
+        String currencyCode = model.getPaymentMethodCurrencyCode();
+        if (model.getMarket().isCrypto()) {
+            return isBuyer
+                    ? Res.get("muSig.takeOffer.cryptoMarket.paymentMethods.headline.buyer", currencyCode)
+                    : Res.get("muSig.takeOffer.cryptoMarket.paymentMethods.headline.seller", currencyCode);
+        } else {
+            return isBuyer
+                    ? Res.get("muSig.takeOffer.fiatMarket.paymentMethods.headline.buyer", currencyCode)
+                    : Res.get("muSig.takeOffer.fiatMarket.paymentMethods.headline.seller", currencyCode);
+        }
     }
 }

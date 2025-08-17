@@ -287,8 +287,11 @@ public class MuSigTakeOfferReviewController implements Controller {
             model.setFeeDetails(Res.get("bisqEasy.takeOffer.review.sellerPaysMinerFeeLong"));
         }
 
-        muSigReviewDataDisplay.setDirection(Res.get("bisqEasy.tradeWizard.review.direction",
-                Res.get(takersDirection.isSell() ? "offer.sell" : "offer.buy").toUpperCase()));
+        String directionString = String.format("%s %s",
+                Res.get(takersDirection.isSell() ? "offer.sell" : "offer.buy").toUpperCase(),
+                model.getMuSigOffer().getMarket().getBaseCurrencyDisplayName());
+
+        muSigReviewDataDisplay.setDirection(directionString);
         muSigReviewDataDisplay.setToSendAmountDescription(toSendAmountDescription.toUpperCase());
         muSigReviewDataDisplay.setToSendMaxOrFixedAmount(toSendAmount);
         muSigReviewDataDisplay.setToSendCode(toSendCode);
