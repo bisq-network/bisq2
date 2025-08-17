@@ -300,7 +300,7 @@ public class MuSigCreateOfferReviewController implements Controller {
                 Res.get(direction.isSell() ? "offer.sell" : "offer.buy").toUpperCase(),
                 model.getMarket().getBaseCurrencyDisplayName());
 
-        applyHeaderFiatPaymentMethod();
+        applyHeaderPaymentMethod();
 
         muSigReviewDataDisplay.setToSendMinAmount(currentToSendMinAmount);
         muSigReviewDataDisplay.setToReceiveMinAmount(currentToReceiveMinAmount);
@@ -312,7 +312,7 @@ public class MuSigCreateOfferReviewController implements Controller {
         muSigReviewDataDisplay.setToReceiveAmountDescription(toReceiveAmountDescription.toUpperCase());
         muSigReviewDataDisplay.setToReceiveMaxOrFixedAmount(currentToReceiveMaxOrFixedAmount);
         muSigReviewDataDisplay.setToReceiveCode(toReceiveCode);
-        muSigReviewDataDisplay.setFiatPaymentMethodDescription(model.getPaymentMethodDescription().toUpperCase());
+        muSigReviewDataDisplay.setPaymentMethodDescription(model.getPaymentMethodDescription().toUpperCase());
     }
 
     public void reset() {
@@ -350,14 +350,14 @@ public class MuSigCreateOfferReviewController implements Controller {
     }
 
     private void resetSelectedPaymentMethod() {
-        model.setTakersSelectedFiatPaymentMethod(null);
+        model.setTakersSelectedPaymentMethod(null);
     }
 
-    private void applyHeaderFiatPaymentMethod() {
+    private void applyHeaderPaymentMethod() {
         List<PaymentMethod<?>> paymentMethods = model.getPaymentMethods();
         String bitcoinPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(paymentMethods);
-        model.setHeaderFiatPaymentMethod(bitcoinPaymentMethodsString);
-        muSigReviewDataDisplay.setFiatPaymentMethod(bitcoinPaymentMethodsString);
+        model.setHeaderPaymentMethod(bitcoinPaymentMethodsString);
+        muSigReviewDataDisplay.setPaymentMethod(bitcoinPaymentMethodsString);
     }
 
     private void applyPriceDetails(PriceSpec priceSpec, Market market) {
