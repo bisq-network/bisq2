@@ -669,13 +669,7 @@ public class Node implements Connection.Handler {
         }
 
         // Even we get a CloseConnectionMessage we notify listeners as we want to track it for instance for metrics
-        listeners.forEach(listener -> {
-            try {
-                listener.onMessage(envelopePayloadMessage, connection, networkId);
-            } catch (Exception e) {
-                log.error("Calling onMessage at listener {} failed", listener, e);
-            }
-        });
+        listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onMessage(envelopePayloadMessage, connection, networkId)));
     }
 
     @Override
@@ -699,13 +693,7 @@ public class Node implements Connection.Handler {
             }
         }
         if (wasRemoved) {
-            listeners.forEach(listener -> {
-                try {
-                    listener.onDisconnect(connection, closeReason);
-                } catch (Exception e) {
-                    log.error("Calling onDisconnect at listener {} failed", listener, e);
-                }
-            });
+            listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onDisconnect(connection, closeReason)));
         }
     }
 
@@ -752,13 +740,7 @@ public class Node implements Connection.Handler {
                     }
                     outboundConnectionsByAddress.clear();
                     inboundConnectionsByAddress.clear();
-                    listeners.forEach(listener -> {
-                        try {
-                            listener.onShutdown(this);
-                        } catch (Exception e) {
-                            log.error("Calling onShutdown at listener {} failed", listener, e);
-                        }
-                    });
+                    listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onShutdown(this)));
                     listeners.clear();
                     setState(State.TERMINATED);
                 })
@@ -872,13 +854,7 @@ public class Node implements Connection.Handler {
                 newState, state.get(), networkId);
         state.set(newState);
         observableState.set(newState);
-        listeners.forEach(listener -> {
-            try {
-                listener.onStateChange(newState);
-            } catch (Exception e) {
-                log.error("Calling onStateChange at listener {} failed", listener, e);
-            }
-        });
+        listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onStateChange(newState)));
     }
 
     private boolean isShutdown() {
