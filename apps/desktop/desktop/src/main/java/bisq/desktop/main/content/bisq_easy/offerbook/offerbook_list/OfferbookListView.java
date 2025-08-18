@@ -17,9 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
-import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.threading.UIScheduler;
@@ -37,21 +35,17 @@ import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookView;
 import bisq.desktop.main.content.chat.BaseChatView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
-import com.google.common.base.Joiner;
 import javafx.collections.ListChangeListener;
 import javafx.collections.SetChangeListener;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.Tooltip;
-import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -526,8 +520,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
             TableCell<OfferbookListItem, OfferbookListItem>> getPaymentCellFactory() {
         return column -> new TableCell<>() {
-            private final HBox hbox = new HBox(5);
-            private final BisqTooltip tooltip = new BisqTooltip();
+            private final HBox hbox = new HBox(8);
 
             {
                 hbox.setAlignment(Pos.CENTER_RIGHT);
@@ -539,19 +532,9 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
 
                 if (item != null && !empty) {
                     hbox.getChildren().clear();
-                    for (FiatPaymentMethod fiatPaymentMethod : item.getFiatPaymentMethods()) {
-                        Node icon = !fiatPaymentMethod.isCustomPaymentMethod()
-                                ? ImageUtil.getImageViewById(fiatPaymentMethod.getPaymentRailName())
-                                : BisqEasyViewUtils.getCustomPaymentMethodIcon(fiatPaymentMethod.getDisplayString());
-                        hbox.getChildren().add(icon);
-                    }
-                    tooltip.setText(Joiner.on("\n").join(item.getFiatPaymentMethods().stream()
-                            .map(PaymentMethod::getDisplayString)
-                            .toList()));
-                    Tooltip.install(hbox, tooltip);
+                    BisqEasyViewUtils.addPaymentMethodsToHBox(item.getFiatPaymentMethods(), hbox);
                     setGraphic(hbox);
                 } else {
-                    Tooltip.uninstall(hbox, tooltip);
                     hbox.getChildren().clear();
                     setGraphic(null);
                 }
@@ -562,8 +545,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
             TableCell<OfferbookListItem, OfferbookListItem>> getSettlementCellFactory() {
         return column -> new TableCell<>() {
-            private final HBox hbox = new HBox(5);
-            private final BisqTooltip tooltip = new BisqTooltip();
+            private final HBox hbox = new HBox(8);
 
             {
                 hbox.setAlignment(Pos.CENTER_LEFT);
@@ -575,20 +557,9 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
 
                 if (item != null && !empty) {
                     hbox.getChildren().clear();
-                    for (BitcoinPaymentMethod bitcoinPaymentMethod : item.getBitcoinPaymentMethods()) {
-                        ImageView icon = ImageUtil.getImageViewById(bitcoinPaymentMethod.getPaymentRailName());
-                        ColorAdjust colorAdjust = new ColorAdjust();
-                        colorAdjust.setBrightness(-0.2);
-                        icon.setEffect(colorAdjust);
-                        hbox.getChildren().add(icon);
-                    }
-                    tooltip.setText(Joiner.on("\n").join(item.getBitcoinPaymentMethods().stream()
-                            .map(PaymentMethod::getDisplayString)
-                            .toList()));
-                    Tooltip.install(hbox, tooltip);
+                    BisqEasyViewUtils.addSettlementMethodsToHBox(item.getBitcoinPaymentMethods(), hbox);
                     setGraphic(hbox);
                 } else {
-                    Tooltip.uninstall(hbox, tooltip);
                     hbox.getChildren().clear();
                     setGraphic(null);
                 }
