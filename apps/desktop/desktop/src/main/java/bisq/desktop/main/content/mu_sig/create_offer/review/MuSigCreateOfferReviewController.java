@@ -20,6 +20,7 @@ package bisq.desktop.main.content.mu_sig.create_offer.review;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.AccountUtils;
+import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPrice;
@@ -68,8 +69,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class MuSigCreateOfferReviewController implements Controller {
@@ -148,11 +147,7 @@ public class MuSigCreateOfferReviewController implements Controller {
                 .collect(Collectors.toList());
         model.setPaymentMethodDetails(Joiner.on(", ").join(accountNames));
 
-        List<FiatPaymentMethod> fiatPaymentMethods = paymentMethods.stream()
-                .filter(e -> e instanceof FiatPaymentMethod)
-                .map(e -> (FiatPaymentMethod) e)
-                .collect(Collectors.toList());
-        checkArgument(!fiatPaymentMethods.isEmpty(), "fiatPaymentMethods must not be empty");
+        verifyPaymentMethods(paymentMethods);
 
         String offerId = StringUtils.createUid();
         List<AccountOption> offerOptions = selectedAccountByPaymentMethod.entrySet().stream().map(entry -> {
@@ -171,7 +166,7 @@ public class MuSigCreateOfferReviewController implements Controller {
                 market,
                 amountSpec,
                 priceSpec,
-                fiatPaymentMethods,
+                paymentMethods,
                 offerOptions);
         model.setOffer(offer);
 
@@ -386,6 +381,17 @@ public class MuSigCreateOfferReviewController implements Controller {
                             percentAsString, aboveOrBelow, marketPriceAsString));
                 }
             }
+        }
+    }
+
+    private void verifyPaymentMethods(List<PaymentMethod<?>> paymentMethods) {
+        if (paymentMethods == null || paymentMethods.isEmpty()) {
+            throw new IllegalArgumentException("No payment methods provided");
+        }
+        boolean allFiat = paymentMethods.stream().allMatch(pm -> pm instanceof FiatPaymentMethod);
+        boolean allCrypto = paymentMethods.stream().allMatch(pm -> pm instanceof CryptoPaymentMethod);
+        if (!(allFiat || allCrypto)) {
+            throw new IllegalArgumentException("All payment methods must be either fiat or crypto (no mixing).");
         }
     }
 }

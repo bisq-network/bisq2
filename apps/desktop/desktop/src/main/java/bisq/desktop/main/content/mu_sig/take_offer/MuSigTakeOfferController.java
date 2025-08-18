@@ -19,7 +19,7 @@ package bisq.desktop.main.content.mu_sig.take_offer;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
@@ -35,7 +35,6 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
 import lombok.EqualsAndHashCode;
@@ -107,13 +106,13 @@ public class MuSigTakeOfferController extends NavigationController implements In
 
         model.setAmountVisible(muSigOffer.hasAmountRange());
         List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = muSigOffer.getBaseSidePaymentMethodSpecs();
-        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = muSigOffer.getQuoteSidePaymentMethodSpecs();
+        List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs = muSigOffer.getQuoteSidePaymentMethodSpecs();
 
         boolean isSingleAccountForSinglePaymentMethod = false;
         boolean isSinglePaymentMethod = baseSidePaymentMethodSpecs.size() == 1 && quoteSidePaymentMethodSpecs.size() == 1;
         Set<Account<? extends PaymentMethod<?>, ?>> accountsForPaymentMethod = null;
         if (isSinglePaymentMethod) {
-            FiatPaymentMethod paymentMethod = quoteSidePaymentMethodSpecs.get(0).getPaymentMethod();
+            PaymentMethod<?> paymentMethod = quoteSidePaymentMethodSpecs.get(0).getPaymentMethod();
             String quoteCurrencyCode = muSigOffer.getMarket().getQuoteCurrencyCode();
             accountsForPaymentMethod = accountService.getAccounts(paymentMethod).stream()
                     .filter(account -> account.getAccountPayload().getSelectedCurrencyCodes().contains(quoteCurrencyCode))

@@ -17,7 +17,7 @@
 
 package bisq.offer.mu_sig;
 
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.application.BuildVersion;
 import bisq.common.market.Market;
@@ -27,7 +27,6 @@ import bisq.offer.Offer;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.options.OfferOption;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.PriceSpec;
@@ -43,7 +42,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 @Getter
-public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymentMethodSpec> {
+public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, PaymentMethodSpec<?>> {
     private static final int VERSION = 0;
 
     public MuSigOffer(String id,
@@ -52,7 +51,7 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                       Market market,
                       AmountSpec amountSpec,
                       PriceSpec priceSpec,
-                      List<FiatPaymentMethod> fiatPaymentMethods,
+                      List<PaymentMethod<?>> paymentMethods,
                       List<? extends OfferOption> offerOptions,
                       String tradeProtocolVersion
     ) {
@@ -65,7 +64,7 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                 priceSpec,
                 List.of(TradeProtocolType.MU_SIG),
                 PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec(),
-                PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(fiatPaymentMethods),
+                PaymentMethodSpecUtil.createPaymentMethodSpecs(paymentMethods, market),
                 offerOptions,
                 VERSION,
                 tradeProtocolVersion,
@@ -82,7 +81,7 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
                        PriceSpec priceSpec,
                        List<TradeProtocolType> protocolTypes,
                        List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
-                       List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs,
+                       List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs,
                        List<? extends OfferOption> offerOptions,
                        int version,
                        String tradeProtocolVersion,
@@ -130,8 +129,8 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymen
         List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = proto.getBaseSidePaymentSpecsList().stream()
                 .map(PaymentMethodSpec::protoToBitcoinPaymentMethodSpec)
                 .collect(Collectors.toList());
-        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = proto.getQuoteSidePaymentSpecsList().stream()
-                .map(PaymentMethodSpec::protoToFiatPaymentMethodSpec)
+        List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs = proto.getQuoteSidePaymentSpecsList().stream()
+                .map(PaymentMethodSpec::fromProto)
                 .collect(Collectors.toList());
         List<OfferOption> offerOptions = proto.getOfferOptionsList().stream()
                 .map(OfferOption::fromProto)
