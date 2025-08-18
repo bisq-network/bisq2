@@ -24,7 +24,6 @@ import bisq.contract.TwoPartyContract;
 import bisq.network.identity.NetworkId;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.user.profile.UserProfile;
@@ -50,7 +49,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
     private final long baseSideAmount;
     private final long quoteSideAmount;
     private final BitcoinPaymentMethodSpec baseSidePaymentMethodSpec;
-    private final FiatPaymentMethodSpec quoteSidePaymentMethodSpec;
+    private final PaymentMethodSpec<?> quoteSidePaymentMethodSpec;
     private final Optional<UserProfile> mediator;
     private final PriceSpec priceSpec;
     private final long marketPrice;
@@ -60,7 +59,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                          NetworkId takerNetworkId,
                          long baseSideAmount,
                          long quoteSideAmount,
-                         FiatPaymentMethodSpec quoteSidePaymentMethodSpec,
+                         PaymentMethodSpec<?> quoteSidePaymentMethodSpec,
                          Optional<UserProfile> mediator,
                          PriceSpec priceSpec,
                          long marketPrice) {
@@ -84,7 +83,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                          long baseSideAmount,
                          long quoteSideAmount,
                          BitcoinPaymentMethodSpec baseSidePaymentMethodSpec,
-                         FiatPaymentMethodSpec quoteSidePaymentMethodSpec,
+                         PaymentMethodSpec<?> quoteSidePaymentMethodSpec,
                          Optional<UserProfile> mediator,
                          PriceSpec priceSpec,
                          long marketPrice) {

@@ -296,19 +296,23 @@ public class MuSigCreateOfferReviewController implements Controller {
         }
         toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
 
-        applyHeaderFiatPaymentMethod();
+        String directionString = String.format("%s %s",
+                Res.get(direction.isSell() ? "offer.sell" : "offer.buy").toUpperCase(),
+                model.getMarket().getBaseCurrencyDisplayName());
+
+        applyHeaderPaymentMethod();
 
         muSigReviewDataDisplay.setToSendMinAmount(currentToSendMinAmount);
         muSigReviewDataDisplay.setToReceiveMinAmount(currentToReceiveMinAmount);
         muSigReviewDataDisplay.setRangeAmount(model.isRangeAmount());
-        muSigReviewDataDisplay.setDirection(Res.get("bisqEasy.tradeWizard.review.direction", Res.get(direction.isSell() ? "offer.sell" : "offer.buy").toUpperCase()));
+        muSigReviewDataDisplay.setDirection(directionString);
         muSigReviewDataDisplay.setToSendAmountDescription(toSendAmountDescription.toUpperCase());
         muSigReviewDataDisplay.setToSendMaxOrFixedAmount(currentToSendMaxOrFixedAmount);
         muSigReviewDataDisplay.setToSendCode(toSendCode);
         muSigReviewDataDisplay.setToReceiveAmountDescription(toReceiveAmountDescription.toUpperCase());
         muSigReviewDataDisplay.setToReceiveMaxOrFixedAmount(currentToReceiveMaxOrFixedAmount);
         muSigReviewDataDisplay.setToReceiveCode(toReceiveCode);
-        muSigReviewDataDisplay.setFiatPaymentMethodDescription(model.getPaymentMethodDescription().toUpperCase());
+        muSigReviewDataDisplay.setPaymentMethodDescription(model.getPaymentMethodDescription().toUpperCase());
     }
 
     public void reset() {
@@ -346,14 +350,14 @@ public class MuSigCreateOfferReviewController implements Controller {
     }
 
     private void resetSelectedPaymentMethod() {
-        model.setTakersSelectedFiatPaymentMethod(null);
+        model.setTakersSelectedPaymentMethod(null);
     }
 
-    private void applyHeaderFiatPaymentMethod() {
+    private void applyHeaderPaymentMethod() {
         List<PaymentMethod<?>> paymentMethods = model.getPaymentMethods();
         String bitcoinPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(paymentMethods);
-        model.setHeaderFiatPaymentMethod(bitcoinPaymentMethodsString);
-        muSigReviewDataDisplay.setFiatPaymentMethod(bitcoinPaymentMethodsString);
+        model.setHeaderPaymentMethod(bitcoinPaymentMethodsString);
+        muSigReviewDataDisplay.setPaymentMethod(bitcoinPaymentMethodsString);
     }
 
     private void applyPriceDetails(PriceSpec priceSpec, Market market) {

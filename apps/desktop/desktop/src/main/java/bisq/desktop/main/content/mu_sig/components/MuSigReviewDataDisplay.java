@@ -79,7 +79,7 @@ public class MuSigReviewDataDisplay {
         controller.model.getIsReceiveBtc().set(Asset.isBtc(value));
     }
 
-    public void setFiatPaymentMethodDescription(String value) {
+    public void setPaymentMethodDescription(String value) {
         controller.model.getPaymentMethodDescription().set(value);
     }
 
@@ -99,7 +99,7 @@ public class MuSigReviewDataDisplay {
         controller.model.getToReceiveMaxOrFixedAmount().set(value);
     }
 
-    public void setFiatPaymentMethod(String value) {
+    public void setPaymentMethod(String value) {
         controller.model.getPaymentMethodDisplayString().set(value);
     }
 

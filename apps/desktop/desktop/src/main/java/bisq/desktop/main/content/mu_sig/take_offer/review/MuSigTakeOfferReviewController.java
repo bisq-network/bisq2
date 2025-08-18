@@ -40,7 +40,6 @@ import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FloatPriceSpec;
@@ -136,8 +135,8 @@ public class MuSigTakeOfferReviewController implements Controller {
         if (paymentMethodSpec != null) {
             model.setTakersPaymentMethodSpec(paymentMethodSpec);
             model.setPaymentMethodDisplayString(paymentMethodSpec.getShortDisplayString());
-            muSigReviewDataDisplay.setFiatPaymentMethodDescription(Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription.fiat").toUpperCase());
-            muSigReviewDataDisplay.setFiatPaymentMethod(model.getPaymentMethodDisplayString());
+            muSigReviewDataDisplay.setPaymentMethodDescription(Res.get("muSig.takeOffer.review.paymentMethod.description").toUpperCase());
+            muSigReviewDataDisplay.setPaymentMethod(model.getPaymentMethodDisplayString());
         }
     }
 
@@ -156,16 +155,13 @@ public class MuSigTakeOfferReviewController implements Controller {
         checkArgument(muSigOffer.getBaseSidePaymentMethodSpecs().size() == 1);
         mainButtonsVisibleHandler.accept(false);
 
-        //todo
-        FiatPaymentMethodSpec fiatPaymentMethodSpec = (FiatPaymentMethodSpec) paymentMethodSpec;
-
         try {
             UserIdentity takerIdentity = userIdentityService.getSelectedUserIdentity();
             MuSigProtocol muSigProtocol = muSigService.takerCreatesProtocol(takerIdentity,
                     muSigOffer,
                     takersBaseSideAmount,
                     takersQuoteSideAmount,
-                    fiatPaymentMethodSpec,
+                    paymentMethodSpec,
                     model.getTakersAccount());
             MuSigTrade muSigTrade = muSigProtocol.getTrade();
             model.setMuSigTrade(muSigTrade);
@@ -287,8 +283,11 @@ public class MuSigTakeOfferReviewController implements Controller {
             model.setFeeDetails(Res.get("bisqEasy.takeOffer.review.sellerPaysMinerFeeLong"));
         }
 
-        muSigReviewDataDisplay.setDirection(Res.get("bisqEasy.tradeWizard.review.direction",
-                Res.get(takersDirection.isSell() ? "offer.sell" : "offer.buy").toUpperCase()));
+        String directionString = String.format("%s %s",
+                Res.get(takersDirection.isSell() ? "offer.sell" : "offer.buy").toUpperCase(),
+                model.getMuSigOffer().getMarket().getBaseCurrencyDisplayName());
+
+        muSigReviewDataDisplay.setDirection(directionString);
         muSigReviewDataDisplay.setToSendAmountDescription(toSendAmountDescription.toUpperCase());
         muSigReviewDataDisplay.setToSendMaxOrFixedAmount(toSendAmount);
         muSigReviewDataDisplay.setToSendCode(toSendCode);

@@ -41,7 +41,7 @@ class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private MuSigOffer offer;
     @Setter
-    private PaymentMethod<?> takersSelectedFiatPaymentMethod;
+    private PaymentMethod<?> takersSelectedPaymentMethod;
     @Setter
     private Monetary minBaseSideAmount;
     @Setter
@@ -61,7 +61,7 @@ class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private String headline;
     @Setter
-    private String headerFiatPaymentMethod;
+    private String headerPaymentMethod;
     @Setter
     private String detailsHeadline;
     @Setter
@@ -90,7 +90,7 @@ class MuSigCreateOfferReviewModel implements Model {
         direction = null;
         market = null;
         offer = null;
-        takersSelectedFiatPaymentMethod = null;
+        takersSelectedPaymentMethod = null;
         minBaseSideAmount = null;
         maxBaseSideAmount = null;
         fixBaseSideAmount = null;
@@ -100,7 +100,7 @@ class MuSigCreateOfferReviewModel implements Model {
         priceSpec = null;
         paymentMethods = null;
         headline = null;
-        headerFiatPaymentMethod = null;
+        headerPaymentMethod = null;
         detailsHeadline = null;
         isRangeAmount = false;
         paymentMethodDescription = null;

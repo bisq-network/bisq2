@@ -50,6 +50,8 @@ public class MuSigTakeOfferPaymentModel implements Model {
     private String singlePaymentMethodAccountSelectionDescription;
     @Setter
     private boolean isSinglePaymentMethod;
+    @Setter
+    private String paymentMethodCurrencyCode;
 
     private final ToggleGroup toggleGroup = new ToggleGroup();
     private final ObservableList<PaymentMethod<?>> offeredPaymentMethods = FXCollections.observableArrayList();
@@ -73,6 +75,7 @@ public class MuSigTakeOfferPaymentModel implements Model {
         subtitle = null;
         singlePaymentMethodAccountSelectionDescription = null;
         isSinglePaymentMethod = false;
+        paymentMethodCurrencyCode = null;
         toggleGroup.selectToggle(null);
         offeredPaymentMethods.clear();
         selectedPaymentMethodSpec.set(null);

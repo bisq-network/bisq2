@@ -517,7 +517,7 @@ public final class MuSigOpenTradesView extends ChatView<MuSigOpenTradesView, MuS
 
                 if (item != null && !empty) {
                     Node paymentMethodIcon = !item.isFiatPaymentMethodCustom()
-                            ? ImageUtil.getImageViewById(item.getFiatPaymentRail().name())
+                            ? ImageUtil.getImageViewById(item.getPaymentRail().name())
                             : MuSigViewUtils.getCustomPaymentMethodIcon(item.getFiatPaymentMethod());
                     pane.getChildren().add(paymentMethodIcon);
                     tooltip.setText(Res.get("muSig.openTrades.table.paymentMethod.tooltip",
