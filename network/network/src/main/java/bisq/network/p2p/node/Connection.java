@@ -29,6 +29,7 @@ import bisq.common.util.StringUtils;
 import bisq.network.NetworkExecutors;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
+import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
@@ -86,6 +87,7 @@ public abstract class Connection {
         void onConnectionClosed(CloseReason closeReason);
     }
 
+    private final AuthorizationService authorizationService;
     @Getter
     private final String id;
     @Getter
@@ -112,7 +114,8 @@ public abstract class Connection {
     private final ThreadPoolExecutor readExecutor;
     private final ThreadPoolExecutor sendExecutor;
 
-    protected Connection(String connectionId,
+    protected Connection(AuthorizationService authorizationService,
+                         String connectionId,
                          Socket socket,
                          Capability peersCapability,
                          NetworkLoadSnapshot peersNetworkLoadSnapshot,
@@ -120,6 +123,7 @@ public abstract class Connection {
                          ConnectionThrottle connectionThrottle,
                          Handler handler,
                          BiConsumer<Connection, Exception> errorHandler) {
+        this.authorizationService = authorizationService;
         this.id = connectionId;
         this.peersCapability = peersCapability;
         this.peersNetworkLoadSnapshot = peersNetworkLoadSnapshot;

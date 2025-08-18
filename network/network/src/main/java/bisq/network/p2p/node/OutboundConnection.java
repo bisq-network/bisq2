@@ -18,6 +18,7 @@
 package bisq.network.p2p.node;
 
 import bisq.common.network.Address;
+import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import lombok.Getter;
@@ -32,7 +33,8 @@ public class OutboundConnection extends Connection {
     @Getter
     private final Address address;
 
-    OutboundConnection(String connectionId,
+    OutboundConnection(AuthorizationService authorizationService,
+                       String connectionId,
                        Socket socket,
                        Address address,
                        Capability peersCapability,
@@ -41,7 +43,8 @@ public class OutboundConnection extends Connection {
                        ConnectionThrottle connectionThrottle,
                        Handler handler,
                        BiConsumer<Connection, Exception> errorHandler) {
-        super(connectionId,
+        super(authorizationService,
+                connectionId,
                 socket,
                 peersCapability,
                 peersNetworkLoadSnapshot,

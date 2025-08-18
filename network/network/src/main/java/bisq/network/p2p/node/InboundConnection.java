@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.node;
 
+import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.ServerSocketResult;
@@ -31,7 +32,8 @@ public class InboundConnection extends Connection {
     @Getter
     private final ServerSocketResult serverSocketResult;
 
-    InboundConnection(String connectionId,
+    InboundConnection(AuthorizationService authorizationService,
+                      String connectionId,
                       Socket socket,
                       ServerSocketResult serverSocketResult,
                       Capability peersCapability,
@@ -40,7 +42,8 @@ public class InboundConnection extends Connection {
                       ConnectionThrottle connectionThrottle,
                       Handler handler,
                       BiConsumer<Connection, Exception> errorHandler) {
-        super(connectionId,
+        super(authorizationService,
+                connectionId,
                 socket,
                 peersCapability,
                 peersNetworkLoadSnapshot,
