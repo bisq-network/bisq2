@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.top;
 
-
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.view.Model;
 import bisq.presentation.formatters.AmountFormatter;

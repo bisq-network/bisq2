@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.desktop.main.content.wallet.components;
 
 import bisq.desktop.common.utils.ImageUtil;
@@ -13,7 +30,7 @@ public class VerticalCard extends VBox {
     private static final int DEFAULT_IMAGE_WIDTH = 140;
     private static final int DEFAULT_IMAGE_HEIGHT = 140;
     private static final int DEFAULT_WIDTH = 200;
-    private static final int DEFAULT_HEIGHT = 290;
+    private static final int DEFAULT_HEIGHT = 270;
     private static final Insets CARD_PADDING = new Insets(20, 0, 30, 0);
     //private static final Insets IMAGE_MARGIN = new Insets(0, 0, 0, 7);
 
@@ -31,7 +48,7 @@ public class VerticalCard extends VBox {
         setMinHeight(DEFAULT_HEIGHT);
         setMaxHeight(DEFAULT_HEIGHT);
 
-       setAlignment(Pos.TOP_CENTER);
+        setAlignment(Pos.TOP_CENTER);
         //setPadding(CARD_PADDING);
         getStyleClass().add("bisq-card-bg");
 
@@ -48,7 +65,7 @@ public class VerticalCard extends VBox {
         captionLabel.getStyleClass().addAll("bisq-text-19", "text-fill-light-dimmed");
 
         VBox.setMargin(stepLabel, new Insets(-20,0,0,0));
-        VBox.setMargin(captionLabel, new Insets(20,0,30,0));
+        VBox.setMargin(captionLabel, new Insets(10,0,30,0));
         getChildren().addAll(stepLabel, imageView, captionLabel);
     }
 

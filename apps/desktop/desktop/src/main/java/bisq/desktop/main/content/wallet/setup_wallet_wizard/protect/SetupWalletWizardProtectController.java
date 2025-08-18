@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.wallet.create_wallet.protect;
+package bisq.desktop.main.content.wallet.setup_wallet_wizard.protect;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -26,15 +26,14 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CreateWalletProtectController implements Controller {
-
-    private final CreateWalletProtectModel model;
+public class SetupWalletWizardProtectController implements Controller {
+    private final SetupWalletWizardProtectModel model;
     @Getter
-    private final CreateWalletProtectView view;
+    private final SetupWalletWizardProtectView view;
 
-    public CreateWalletProtectController(ServiceProvider serviceProvider) {
-        model = new CreateWalletProtectModel();
-        view = new CreateWalletProtectView(model, this);
+    public SetupWalletWizardProtectController(ServiceProvider serviceProvider) {
+        model = new SetupWalletWizardProtectModel();
+        view = new SetupWalletWizardProtectView(model, this);
     }
 
     @Override
@@ -67,19 +66,17 @@ public class CreateWalletProtectController implements Controller {
                         .show();
             }
         }
-
     }
 
     public String getPassword() {
         return model.getPassword().get();
     }
 
-    public CreateWalletProtectModel getModel() {
+    public SetupWalletWizardProtectModel getModel() {
         return model;
     }
 
     private Region getPopupOwner() {
         return (Region) view.getRoot().getParent().getParent();
     }
-
 }
