@@ -63,6 +63,10 @@
     -fx-background-insets: 0;
 }
 
+.mu-sig-offerbook-offerlist-toggle-button-hbox .toggle-button:hover {
+    -fx-background-color: -bisq-dark-grey-50;
+}
+
 .mu-sig-offerbook-offerlist-toggle-button-hbox {
     -fx-alignment: center-right;
 }
