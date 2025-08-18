@@ -19,7 +19,6 @@ package bisq.network;
 
 import bisq.common.threading.AbortPolicyWithLogging;
 import bisq.common.threading.ExecutorFactory;
-import bisq.common.threading.MaxSizeAwareDeque;
 import bisq.common.threading.MaxSizeAwareQueue;
 import lombok.Getter;
 
@@ -28,10 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-// TODO use config to set core pool sized
 public class NetworkExecutors {
-    @Getter
-    private static ThreadPoolExecutor readExecutor;
     @Getter
     private static ThreadPoolExecutor sendExecutor;
     @Getter
@@ -45,7 +41,6 @@ public class NetworkExecutors {
                                   int nodeExecutorMaxPoolSize,
                                   int notifyExecutorMaxPoolSize) {
         checkArgument(!isInitialized, "initialize must not be called twice");
-        readExecutor = createReadExecutor(readExecutorMaxPoolSize);
         sendExecutor = createSendExecutor(sendExecutorMaxPoolSize);
         nodeExecutor = createNodeExecutor(nodeExecutorMaxPoolSize);
         notifyExecutor = createNotifyExecutor(notifyExecutorMaxPoolSize);
@@ -55,12 +50,10 @@ public class NetworkExecutors {
 
     public static void shutdown() {
         if (isInitialized) {
-            ExecutorFactory.shutdownAndAwaitTermination(readExecutor);
             ExecutorFactory.shutdownAndAwaitTermination(sendExecutor);
             ExecutorFactory.shutdownAndAwaitTermination(nodeExecutor);
             ExecutorFactory.shutdownAndAwaitTermination(notifyExecutor);
 
-            readExecutor = null;
             sendExecutor = null;
             nodeExecutor = null;
             notifyExecutor = null;
@@ -101,29 +94,6 @@ public class NetworkExecutors {
         queue.setExecutor(executor);
         return executor;
     }
-
-
-    /**
-     * We keep a core pool size of 12 which reflects the target peer group.
-     * We allow up to 40 threads which a keepAlive time of 30 seconds for the threads outside the core pool size.
-     * If all threads are busy, we add up to 20 tasks into a deque. Once that gets full we drop the newest added task.
-     * We choose the newest instead of dropping the oldest as it might serve better for protecting against attacks.
-     * This executor must only be used for direct network read operations, which happen in Connection and ConnectionHandshake.
-     */
-    private static ThreadPoolExecutor createReadExecutor(int maxPoolSize) {
-        MaxSizeAwareDeque deque = new MaxSizeAwareDeque(100);
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(
-                12,
-                maxPoolSize,
-                30,
-                TimeUnit.SECONDS,
-                deque,
-                ExecutorFactory.getThreadFactoryWithCounter("Network.read"),
-                new AbortPolicyWithLogging());
-        deque.setExecutor(executor);
-        return executor;
-    }
-
 
     /**
      * The core pool size is aligned to the broadcasters peer group size of 75% of the peer group (target 12),
