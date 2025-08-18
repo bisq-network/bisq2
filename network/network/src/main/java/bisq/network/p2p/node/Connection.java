@@ -20,6 +20,10 @@ package bisq.network.p2p.node;
 import bisq.common.network.Address;
 import bisq.common.network.DefaultPeerSocket;
 import bisq.common.network.PeerSocket;
+import bisq.common.threading.AbortPolicyWithLogging;
+import bisq.common.threading.ExecutorFactory;
+import bisq.common.threading.MaxSizeAwareDeque;
+import bisq.common.threading.MaxSizeAwareQueue;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkExecutors;
@@ -42,6 +46,8 @@ import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 
@@ -103,6 +109,8 @@ public abstract class Connection {
     private final Object writeLock = new Object();
     private volatile boolean shutdownStarted;
     private volatile boolean listeningStopped;
+    private final ThreadPoolExecutor readExecutor;
+    private final ThreadPoolExecutor sendExecutor;
 
     protected Connection(String connectionId,
                          Socket socket,
@@ -120,6 +128,9 @@ public abstract class Connection {
         this.connectionMetrics = connectionMetrics;
         requestResponseManager = new RequestResponseManager(connectionMetrics);
 
+        readExecutor = createReadExecutor();
+        sendExecutor = createSendExecutor();
+
         try {
             PeerSocket peerSocket = new DefaultPeerSocket(socket);
             this.networkEnvelopeSocket = new NetworkEnvelopeSocket(peerSocket);
@@ -130,7 +141,7 @@ public abstract class Connection {
             return;
         }
 
-        inputHandlerFuture = NetworkExecutors.getReadExecutor().submit(() -> {
+        inputHandlerFuture = readExecutor.submit(() -> {
             try {
                 long readTs = 0;
                 while (isInputStreamActive()) {
@@ -314,6 +325,9 @@ public abstract class Connection {
         NetworkExecutors.getSendExecutor().submit(() -> handler.handleConnectionClosed(this, closeReason));
         listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnectionClosed(closeReason)));
         listeners.clear();
+
+        ExecutorFactory.shutdownAndAwaitTermination(readExecutor);
+        ExecutorFactory.shutdownAndAwaitTermination(sendExecutor);
     }
 
     boolean isStopped() {
@@ -331,5 +345,33 @@ public abstract class Connection {
 
     private boolean isInputStreamActive() {
         return !listeningStopped && isRunning();
+    }
+
+    private ThreadPoolExecutor createReadExecutor() {
+        MaxSizeAwareDeque deque = new MaxSizeAwareDeque(100);
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                1,
+                3,
+                5,
+                TimeUnit.SECONDS,
+                deque,
+                ExecutorFactory.getThreadFactoryWithCounter("Network.read"),
+                new AbortPolicyWithLogging());
+        deque.setExecutor(executor);
+        return executor;
+    }
+
+    private ThreadPoolExecutor createSendExecutor() {
+        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(100);
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                1,
+                3,
+                5,
+                TimeUnit.SECONDS,
+                queue,
+                ExecutorFactory.getThreadFactoryWithCounter("Network.send"),
+                new AbortPolicyWithLogging());
+        queue.setExecutor(executor);
+        return executor;
     }
 }
