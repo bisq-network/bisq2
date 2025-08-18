@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event.workflow_run.head_sha }}
 
@@ -55,7 +55,7 @@ jobs:
       t_matrix: ${{ steps.calculate-pushes.outputs.t_matrix || '{"include":[]}' }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
@@ -188,7 +188,7 @@ jobs:
       matrix: ${{ fromJson(needs.calculate_and_push_sources.outputs.t_matrix) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # Re-use the same commit as the triggering workflow_run
           ref: ${{ github.event.workflow_run.head_sha }}
