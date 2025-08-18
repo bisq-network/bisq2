@@ -766,6 +766,10 @@
     -fx-image: url("/images/payment/cashapp.png");
 }
 
+#XMR {
+    -fx-image: url("/images/markets/crypto-menus/xmr-menu.png");
+}
+
 #CUSTOM_PAYMENT_1 {
     -fx-image: url("/images/payment/custom-payment-1.png");
 }
