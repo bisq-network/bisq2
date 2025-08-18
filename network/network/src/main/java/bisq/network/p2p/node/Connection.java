@@ -45,6 +45,7 @@ import java.net.Socket;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -254,6 +255,22 @@ public abstract class Connection {
     /* --------------------------------------------------------------------- */
     // Package scope API
     /* --------------------------------------------------------------------- */
+
+    CompletableFuture<Connection> sendAsync(EnvelopePayloadMessage envelopePayloadMessage) {
+        return CompletableFuture.supplyAsync(() -> {
+            if (isStopped()) {
+                log.debug("Send message failed as connection is already stopped {}", this);
+                throw new ConnectionClosedException(this);
+            }
+            AuthorizationToken token = authorizationService.createToken(envelopePayloadMessage,
+                    peersNetworkLoadSnapshot.getCurrentNetworkLoad(),
+                    getPeerAddress().getFullAddress(),
+                    sentMessageCounter.getAndIncrement(),
+                    peersCapability.getFeatures());
+            // maybeSimulateDelay();
+            return send(envelopePayloadMessage, token);
+        }, sendExecutor);
+    }
 
     Connection send(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken) {
         if (isStopped()) {

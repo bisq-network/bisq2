@@ -331,7 +331,18 @@ public class Node implements Connection.Handler {
     public CompletableFuture<Connection> sendAsync(EnvelopePayloadMessage envelopePayloadMessage,
                                                    Connection connection) {
         try {
-            return CompletableFuture.supplyAsync(() -> send(envelopePayloadMessage, connection), NetworkExecutors.getSendExecutor());
+            return connection.sendAsync(envelopePayloadMessage)
+                    .handle((con, exception) -> {
+                        if (exception != null) {
+                            if (connection.isRunning() && !(exception.getCause() instanceof SocketException)) {
+                                handleException(connection, exception);
+                                log.debug("Send message failed", exception);
+                                closeConnection(connection, CloseReason.EXCEPTION.exception(exception));
+                            }
+                            throw new ConnectionClosedException(connection);
+                        }
+                        return con;
+                    });
         } catch (Exception e) {
             return CompletableFuture.failedFuture(e);
         }
