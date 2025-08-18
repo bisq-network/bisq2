@@ -32,7 +32,8 @@ public class OutboundConnection extends Connection {
     @Getter
     private final Address address;
 
-    OutboundConnection(Socket socket,
+    OutboundConnection(String connectionId,
+                       Socket socket,
                        Address address,
                        Capability peersCapability,
                        NetworkLoadSnapshot peersNetworkLoadSnapshot,
@@ -40,7 +41,8 @@ public class OutboundConnection extends Connection {
                        ConnectionThrottle connectionThrottle,
                        Handler handler,
                        BiConsumer<Connection, Exception> errorHandler) {
-        super(socket,
+        super(connectionId,
+                socket,
                 peersCapability,
                 peersNetworkLoadSnapshot,
                 connectionMetrics,

@@ -29,6 +29,7 @@ import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -80,7 +81,7 @@ public abstract class Connection {
     }
 
     @Getter
-    private final String id = StringUtils.createUid();
+    private final String id;
     @Getter
     private final Capability peersCapability;
     @Getter
@@ -96,18 +97,22 @@ public abstract class Connection {
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     @Nullable
     private Future<?> inputHandlerFuture;
-    private final AtomicInteger sentMessageCounter = new AtomicInteger(0);
+    // We use counter value 0 in the handshake, thus we start here with 1 as it's not the first message
+    @Getter(AccessLevel.PACKAGE)
+    private final AtomicInteger sentMessageCounter = new AtomicInteger(1);
     private final Object writeLock = new Object();
     private volatile boolean shutdownStarted;
     private volatile boolean listeningStopped;
 
-    protected Connection(Socket socket,
+    protected Connection(String connectionId,
+                         Socket socket,
                          Capability peersCapability,
                          NetworkLoadSnapshot peersNetworkLoadSnapshot,
                          ConnectionMetrics connectionMetrics,
                          ConnectionThrottle connectionThrottle,
                          Handler handler,
                          BiConsumer<Connection, Exception> errorHandler) {
+        this.id = connectionId;
         this.peersCapability = peersCapability;
         this.peersNetworkLoadSnapshot = peersNetworkLoadSnapshot;
         this.connectionThrottle = connectionThrottle;
@@ -309,10 +314,6 @@ public abstract class Connection {
         NetworkExecutors.getSendExecutor().submit(() -> handler.handleConnectionClosed(this, closeReason));
         listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnectionClosed(closeReason)));
         listeners.clear();
-    }
-
-    AtomicInteger getSentMessageCounter() {
-        return sentMessageCounter;
     }
 
     boolean isStopped() {

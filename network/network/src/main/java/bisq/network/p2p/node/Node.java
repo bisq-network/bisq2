@@ -287,7 +287,8 @@ public class Node implements Connection.Handler {
 
             NetworkLoadSnapshot peersNetworkLoadSnapshot = new NetworkLoadSnapshot(result.getPeersNetworkLoad());
             ConnectionThrottle connectionThrottle = new ConnectionThrottle(peersNetworkLoadSnapshot, networkLoadSnapshot, config);
-            InboundConnection connection = new InboundConnection(socket,
+            InboundConnection connection = new InboundConnection(result.getConnectionId(),
+                    socket,
                     serverSocketResult,
                     result.getPeersCapability(),
                     peersNetworkLoadSnapshot,
@@ -344,7 +345,7 @@ public class Node implements Connection.Handler {
             AuthorizationToken token = authorizationService.createToken(envelopePayloadMessage,
                     connection.getPeersNetworkLoadSnapshot().getCurrentNetworkLoad(),
                     connection.getPeerAddress().getFullAddress(),
-                    connection.getSentMessageCounter().incrementAndGet(),
+                    connection.getSentMessageCounter().getAndIncrement(),
                     connection.getPeersCapability().getFeatures());
             maybeSimulateDelay();
             return connection.send(envelopePayloadMessage, token);
@@ -506,7 +507,8 @@ public class Node implements Connection.Handler {
         try {
             NetworkLoadSnapshot peersNetworkLoadSnapshot = new NetworkLoadSnapshot(result.getPeersNetworkLoad());
             ConnectionThrottle connectionThrottle = new ConnectionThrottle(peersNetworkLoadSnapshot, networkLoadSnapshot, config);
-            connection = new OutboundConnection(socket,
+            connection = new OutboundConnection(result.getConnectionId(),
+                    socket,
                     address,
                     result.getPeersCapability(),
                     peersNetworkLoadSnapshot,
