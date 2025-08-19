@@ -601,13 +601,9 @@ public class Node implements Connection.Handler {
     }
 
     CompletableFuture<Boolean> isPeerOnlineAsync(Address address) {
-        // When using Tor we make a hsFetch with a 1 min. timeout
-        return CompletableFuture.supplyAsync(() -> isPeerOnline(address), getExecutor());
+        return transportService.isPeerOnlineAsync(address);
     }
 
-    boolean isPeerOnline(Address address) {
-        return transportService.isPeerOnline(address); // Can be blocking
-    }
 
 
     /* --------------------------------------------------------------------- */

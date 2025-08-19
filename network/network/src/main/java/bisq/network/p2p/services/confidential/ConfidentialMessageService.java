@@ -247,32 +247,38 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                 .join();
 
         boolean peerDetectedOffline = isPeerOfflineFuture.isDone() && isPeerOfflineFuture.join();
-        if (peerDetectedOffline) {
-            // We got the result that the peer's onion service is not published in the tor network, thus it is likely that the peer is offline.
-            // It could be though the case that the connection creation running in parallel succeeds, and even we continue with sending a mailbox message
-            // the normal message sending succeeded. The peer would then get the message received 2 times, which does not cause harm.
-            // The result we return to the caller though contains the mailbox result. When the peer gets the ACK message the delivery state gets cleaned up.
-            throw new RuntimeException("peerDetectedOffline. receiverAddress=" + receiverAddress);
-        } else if (sendMessageFuture.isDone()) {
-            Optional<SendConfidentialMessageResult> result = sendMessageFuture.join();
-            if (result.isPresent()) {
-                // The countDownLatch was triggered by the getConnectionFuture's result.
-                // It can be either sentResult or storeMailBoxMessageResult
-                SendConfidentialMessageResult messageResult = result.get();
-                handleResult(envelopePayloadMessage, messageResult);
-                return messageResult;
+        try {
+            if (peerDetectedOffline) {
+                // We got the result that the peer's onion service is not published in the tor network, thus it is likely that the peer is offline.
+                // It could be though the case that the connection creation running in parallel succeeds, and even we continue with sending a mailbox message
+                // the normal message sending succeeded. The peer would then get the message received 2 times, which does not cause harm.
+                // The result we return to the caller though contains the mailbox result. When the peer gets the ACK message the delivery state gets cleaned up.
+                throw new RuntimeException("peerDetectedOffline. receiverAddress=" + receiverAddress);
+            } else if (sendMessageFuture.isDone()) {
+                Optional<SendConfidentialMessageResult> result = sendMessageFuture.join();
+                if (result.isPresent()) {
+                    // The countDownLatch was triggered by the getConnectionFuture's result.
+                    // It can be either sentResult or storeMailBoxMessageResult
+                    SendConfidentialMessageResult messageResult = result.get();
+                    handleResult(envelopePayloadMessage, messageResult);
+                    return messageResult;
+                } else {
+
+                    throw new RuntimeException("Could not send message as result from trySendInParallel was empty.");
+                }
             } else {
-                throw new RuntimeException("Could not send message as result from trySendInParallel was empty.");
+                throw new RuntimeException("Unexpected case: Peer detected online but no resultFuture provided in trySendOrFallback");
             }
-        } else {
-            throw new RuntimeException("Unexpected case: Peer detected online but no resultFuture provided in trySendOrFallback");
+        } finally {
+            // Make sure that the isPeerOfflineFuture is terminated in case we got a never completing future.
+            isPeerOfflineFuture.cancel(true);
         }
     }
 
     private CompletableFuture<Boolean> isPeerOnlineAsync(Address address,
                                                          NetworkId senderNetworkId,
                                                          long start) {
-        return nodesById.isPeerOnlineAsync(senderNetworkId, address) // Runs in NetworkNodeExecutor
+        return nodesById.isPeerOnlineAsync(senderNetworkId, address)
                 .whenComplete((isPeerOnline, throwable) -> {
                     // Can take about 3-5 sec.
                     if (throwable != null) {

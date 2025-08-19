@@ -341,11 +341,8 @@ public abstract class Connection {
         listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnectionClosed(closeReason)));
         listeners.clear();
 
-        // We might get called from readExecutor or sendExecutor, thus we do the shutdown in another thread
-        new Thread(() -> {
-            ExecutorFactory.shutdownAndAwaitTermination(readExecutor);
-            ExecutorFactory.shutdownAndAwaitTermination(sendExecutor);
-        }).start();
+        ExecutorFactory.shutdownAndAwaitTermination(readExecutor);
+        ExecutorFactory.shutdownAndAwaitTermination(sendExecutor);
     }
 
     boolean isStopped() {

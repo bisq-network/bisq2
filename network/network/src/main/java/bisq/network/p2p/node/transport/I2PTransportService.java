@@ -242,7 +242,7 @@ public class I2PTransportService implements TransportService {
     }
 
     @Override
-    public boolean isPeerOnline(Address address) {
+    public CompletableFuture<Boolean> isPeerOnlineAsync(Address address) {
         throw new UnsupportedOperationException("isPeerOnline needs to be implemented for I2P.");
     }
 }

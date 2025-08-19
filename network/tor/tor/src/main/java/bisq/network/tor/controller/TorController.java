@@ -113,7 +113,7 @@ public class TorController {
         return future;
     }
 
-    public CompletableFuture<Boolean> isOnionServiceOnline(String onionAddress) {
+    public CompletableFuture<Boolean> isOnionServiceOnlineAsync(String onionAddress) {
         if (isShutdownInProgress) {
             return CompletableFuture.completedFuture(false);
         }
@@ -122,7 +122,7 @@ public class TorController {
         }
 
         OnionServiceOnlineStateService onionServiceOnlineStateService = new OnionServiceOnlineStateService(torControlProtocol, onionAddress, isOnlineTimeout);
-        CompletableFuture<Boolean> future = onionServiceOnlineStateService.isOnionServiceOnline();
+        CompletableFuture<Boolean> future = onionServiceOnlineStateService.isOnionServiceOnlineAsync();
         future.whenComplete((r, t) -> onionServiceOnlineStateServiceMap.remove(onionAddress));
         onionServiceOnlineStateServiceMap.put(onionAddress, onionServiceOnlineStateService);
         return future;

@@ -148,7 +148,6 @@ public class ClearNetTransportService implements TransportService {
     @Override
     public Socket getSocket(Address address) throws IOException {
         address = getClearNetAddressTypeFacade().toPeersLocalAddress(address);
-
         log.debug("Create new Socket to {}", address);
         Socket socket = new Socket();
         socket.setSoTimeout(socketTimeout);
@@ -158,11 +157,11 @@ public class ClearNetTransportService implements TransportService {
     }
 
     @Override
-    public boolean isPeerOnline(Address address) {
+    public CompletableFuture<Boolean> isPeerOnlineAsync(Address address) {
         try (Socket ignored = getSocket(address)) {
-            return true;
+            return CompletableFuture.completedFuture(true);
         } catch (IOException e) {
-            return false;
+            return CompletableFuture.failedFuture(e);
         }
     }
 }
