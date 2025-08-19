@@ -20,8 +20,6 @@ package bisq.network.p2p.node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
-import bisq.network.p2p.node.transport.ServerSocketResult;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.Socket;
@@ -29,13 +27,10 @@ import java.util.function.BiConsumer;
 
 @Slf4j
 public class InboundConnection extends Connection {
-    @Getter
-    private final ServerSocketResult serverSocketResult;
 
     InboundConnection(AuthorizationService authorizationService,
                       String connectionId,
                       Socket socket,
-                      ServerSocketResult serverSocketResult,
                       Capability peersCapability,
                       NetworkLoadSnapshot peersNetworkLoadSnapshot,
                       ConnectionMetrics connectionMetrics,
@@ -51,7 +46,5 @@ public class InboundConnection extends Connection {
                 connectionThrottle,
                 handler,
                 errorHandler);
-        this.serverSocketResult = serverSocketResult;
-        log.debug("Create inboundConnection from server: {}", serverSocketResult);
     }
 }

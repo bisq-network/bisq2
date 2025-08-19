@@ -285,7 +285,6 @@ public class Node implements Connection.Handler {
             InboundConnection connection = new InboundConnection(authorizationService,
                     result.getConnectionId(),
                     socket,
-                    serverSocketResult,
                     result.getPeersCapability(),
                     peersNetworkLoadSnapshot,
                     result.getConnectionMetrics(),
