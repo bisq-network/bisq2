@@ -182,11 +182,16 @@ public final class ConnectionHandshake {
         private final Capability peersCapability;
         private final NetworkLoad peersNetworkLoad;
         private final ConnectionMetrics connectionMetrics;
+        private final String connectionId;
 
-        Result(Capability peersCapability, NetworkLoad peersNetworkLoad, ConnectionMetrics connectionMetrics) {
+        Result(Capability peersCapability,
+               NetworkLoad peersNetworkLoad,
+               ConnectionMetrics connectionMetrics,
+               String connectionId) {
             this.peersCapability = peersCapability;
             this.peersNetworkLoad = peersNetworkLoad;
             this.connectionMetrics = connectionMetrics;
+            this.connectionId = connectionId;
         }
     }
 
@@ -251,10 +256,11 @@ public final class ConnectionHandshake {
                 throw new ConnectionException(ADDRESS_BANNED, "PeerAddress is banned. address=" + address);
             }
 
+            String connectionId = StringUtils.createUid();
             boolean isAuthorized = authorizationService.isAuthorized(response,
                     responseNetworkEnvelope.getAuthorizationToken(),
                     myNetworkLoad,
-                    StringUtils.createUid(),
+                    connectionId,
                     myAddress.getFullAddress());
 
             if (!isAuthorized) {
@@ -267,7 +273,7 @@ public final class ConnectionHandshake {
             connectionMetrics.addRtt(rrt);
 
             log.debug("Servers capability {}, load={}", response.getCapability(), response.getNetworkLoad());
-            return new Result(response.getCapability(), response.getNetworkLoad(), connectionMetrics);
+            return new Result(response.getCapability(), response.getNetworkLoad(), connectionMetrics, connectionId);
         } catch (Exception e) {
             try {
                 networkEnvelopeSocket.close();
@@ -312,7 +318,6 @@ public final class ConnectionHandshake {
 
             Address myAddress = capability.getAddress();
             // As the request did not know our load at the initial request, they used the NetworkLoad.INITIAL_LOAD for the AuthorizationToken.
-            // ConnectionId is used only for guarding against pow re-use but as we do not have a connection yet, we just pass a random UID.
             String connectionId = StringUtils.createUid();
             boolean isAuthorized = authorizationService.isAuthorized(request,
                     requestNetworkEnvelope.getAuthorizationToken(),
@@ -344,7 +349,7 @@ public final class ConnectionHandshake {
             networkEnvelopeSocket.send(responseNetworkEnvelope); // Blocking
             connectionMetrics.onSent(responseNetworkEnvelope, System.currentTimeMillis() - startSendTs);
             connectionMetrics.addRtt(System.currentTimeMillis() - ts);
-            return new Result(requestersCapability, request.getNetworkLoad(), connectionMetrics);
+            return new Result(requestersCapability, request.getNetworkLoad(), connectionMetrics, connectionId);
         } catch (Exception e) {
             try {
                 networkEnvelopeSocket.close();

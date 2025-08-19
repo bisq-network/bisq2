@@ -31,7 +31,8 @@ public class InboundConnection extends Connection {
     @Getter
     private final ServerSocketResult serverSocketResult;
 
-    InboundConnection(Socket socket,
+    InboundConnection(String connectionId,
+                      Socket socket,
                       ServerSocketResult serverSocketResult,
                       Capability peersCapability,
                       NetworkLoadSnapshot peersNetworkLoadSnapshot,
@@ -39,7 +40,8 @@ public class InboundConnection extends Connection {
                       ConnectionThrottle connectionThrottle,
                       Handler handler,
                       BiConsumer<Connection, Exception> errorHandler) {
-        super(socket,
+        super(connectionId,
+                socket,
                 peersCapability,
                 peersNetworkLoadSnapshot,
                 connectionMetrics,
