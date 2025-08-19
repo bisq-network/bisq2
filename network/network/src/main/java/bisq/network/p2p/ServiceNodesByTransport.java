@@ -264,11 +264,12 @@ public class ServiceNodesByTransport {
                 .collect(Collectors.toSet());
     }
 
-    public Map<TransportType, Boolean> isPeerOnline(NetworkId networkId, AddressByTransportTypeMap peer) {
+    public Map<TransportType, CompletableFuture<Boolean>> isPeerOnlineAsync(NetworkId networkId,
+                                                                            AddressByTransportTypeMap peer) {
         return peer.entrySet().stream().map(entry -> {
                     TransportType transportType = entry.getKey();
                     if (map.containsKey(transportType)) {
-                        return new Pair<>(transportType, map.get(transportType).isPeerOnline(networkId, entry.getValue()));
+                        return new Pair<>(transportType, map.get(transportType).isPeerOnlineAsync(networkId, entry.getValue()));
                     } else {
                         return null;
                     }

@@ -352,8 +352,8 @@ public class ServiceNode implements Node.Listener {
         return nodesById.findNode(networkId);
     }
 
-    boolean isPeerOnline(NetworkId networkId, Address address) {
-        return nodesById.isPeerOnline(networkId, address);
+    CompletableFuture<Boolean> isPeerOnlineAsync(NetworkId networkId, Address address) {
+        return nodesById.isPeerOnlineAsync(networkId, address);
     }
 
     private void setState(State newState) {

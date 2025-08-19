@@ -84,7 +84,6 @@ import java.util.stream.Collectors;
 import static bisq.common.network.TransportType.TOR;
 import static bisq.network.p2p.services.data.DataService.Listener;
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
  * High level API for network access to p2p network as well to http services (over Tor). If user has only I2P selected
@@ -487,12 +486,12 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
 
     /* --------------------------------------------------------------------- */
-    // Check peer's online state (In case of Tor it checks if the onionservice is published)
+    // Check peer's online state (In case of Tor it checks if the onion service is published)
     /* --------------------------------------------------------------------- */
 
-    public CompletableFuture<Map<TransportType, Boolean>> isPeerOnline(NetworkId networkId,
+    public Map<TransportType, CompletableFuture<Boolean>> isPeerOnline(NetworkId networkId,
                                                                        AddressByTransportTypeMap peer) {
-        return supplyAsync(() -> serviceNodesByTransport.isPeerOnline(networkId, peer), NetworkExecutors.getNodeExecutor());
+        return serviceNodesByTransport.isPeerOnlineAsync(networkId, peer);
     }
 
 

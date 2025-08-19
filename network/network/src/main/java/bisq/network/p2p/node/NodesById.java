@@ -142,10 +142,6 @@ public class NodesById implements Node.Listener {
         return Optional.ofNullable(map.get(networkId));
     }
 
-    public boolean isPeerOnline(NetworkId networkId, Address address) {
-        return getOrCreateNode(networkId).isPeerOnline(address);
-    }
-
     public CompletableFuture<Boolean> isPeerOnlineAsync(NetworkId networkId, Address address) {
         return getOrCreateNode(networkId).isPeerOnlineAsync(address);
     }
