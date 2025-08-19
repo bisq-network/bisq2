@@ -30,6 +30,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+//TODO Extend RequestResponseHandler
 @Slf4j
 public class ReportRequestService implements Node.Listener {
     private static final long TIMEOUT_SEC = 60;
@@ -83,16 +84,16 @@ public class ReportRequestService implements Node.Listener {
     public CompletableFuture<Report> request(Address address) {
         return node.getOrCreateConnectionAsync(address)
                 .thenCompose(connection -> {
-                    String key = connection.getId();
-                    if (requestHandlerMap.containsKey(key)) {
+                    String connectionId = connection.getId();
+                    if (requestHandlerMap.containsKey(connectionId)) {
                         log.info("requestHandlerMap contains {}. " +
                                         "This is expected if the connection is still pending the response or the peer is not available " +
                                         "but the timeout has not triggered an exception yet. We skip that request. Connection={}",
-                                key, connection);
-                        return null;
+                                connectionId, connection);
+                        return CompletableFuture.failedFuture(new IllegalStateException("Report request already in progress for connectionId=" + connectionId));
                     }
                     ReportHandler handler = new ReportHandler(node, connection);
-                    requestHandlerMap.put(key, handler);
+                    requestHandlerMap.put(connectionId, handler);
                     return handler.request()
                             .orTimeout(TIMEOUT_SEC, TimeUnit.SECONDS)
                             .whenComplete((report, throwable) -> {
@@ -103,7 +104,7 @@ public class ReportRequestService implements Node.Listener {
                                     log.info("storageReporting successful for address {} with report: {}",
                                             address, report);
                                 }
-                                requestHandlerMap.remove(key);
+                                requestHandlerMap.remove(connectionId);
                             });
                 });
     }

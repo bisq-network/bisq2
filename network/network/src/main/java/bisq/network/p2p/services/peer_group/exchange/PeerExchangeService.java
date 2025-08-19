@@ -90,14 +90,12 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
     }
 
     public void shutdown() {
+        isShutdownInProgress = true;
         super.shutdown();
-
         if (executor != null) {
             ExecutorFactory.shutdownAndAwaitTermination(executor);
             executor = null;
         }
-
-        isShutdownInProgress = true;
     }
 
 
