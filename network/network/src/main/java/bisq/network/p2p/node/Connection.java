@@ -262,7 +262,7 @@ public abstract class Connection {
                 log.debug("Send message failed as connection is already stopped {}", this);
                 throw new ConnectionClosedException(this);
             }
-            AuthorizationToken authorizationToken = getAuthorizationToken(envelopePayloadMessage);
+            AuthorizationToken authorizationToken = createAuthorizationToken(envelopePayloadMessage);
             if (isStopped()) {
                 log.warn("Message not sent as connection has been shut down already. Message={}, Connection={}",
                         StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
@@ -274,41 +274,48 @@ public abstract class Connection {
 
             requestResponseManager.onSent(envelopePayloadMessage);
 
-            try {
-                NetworkEnvelope networkEnvelope = new NetworkEnvelope(authorizationToken, envelopePayloadMessage);
-                long ts = System.currentTimeMillis();
-                synchronized (writeLock) {
-                    try {
-                        networkEnvelopeSocket.send(networkEnvelope);
-                        connectionMetrics.onSent(networkEnvelope, System.currentTimeMillis() - ts);
-                        if (envelopePayloadMessage instanceof CloseConnectionMessage) {
-                            log.info("Sent {} from {}",
-                                    StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
-                        } else {
-                            log.debug("Sent {} from {}",
-                                    StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
-                        }
-                    } catch (Exception exception) {
-                        if (isRunning()) {
-                            throw exception;
-                        } else {
-                            log.info("Send message at stopped connection {} failed with {}", this, ExceptionUtil.getRootCauseMessage(exception));
-                        }
+            NetworkEnvelope networkEnvelope = createNetworkEnvelope(envelopePayloadMessage, authorizationToken);
+            long ts = System.currentTimeMillis();
+            synchronized (writeLock) {
+                try {
+                    networkEnvelopeSocket.send(networkEnvelope);
+                    connectionMetrics.onSent(networkEnvelope, System.currentTimeMillis() - ts);
+                    if (envelopePayloadMessage instanceof CloseConnectionMessage) {
+                        log.info("Sent {} from {}",
+                                StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
+                    } else {
+                        log.debug("Sent {} from {}",
+                                StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
+                    }
+                } catch (Exception exception) {
+                    if (isRunning()) {
+                        throw new ConnectionException(exception);
+                    } else {
+                        log.info("Send message at stopped connection {} failed with {}", this, ExceptionUtil.getRootCauseMessage(exception));
                     }
                 }
-                return this;
-            } catch (IOException exception) {
-                if (isRunning()) {
-                    log.warn("Send message at {} failed with {}", this, ExceptionUtil.getRootCauseMessage(exception));
-                    shutdown(CloseReason.EXCEPTION.exception(exception));
-                }
-                // We wrap any exception (also expected EOFException in case of connection close), to leave handling of the exception to the caller.
-                throw new ConnectionException(exception);
             }
+            return this;
         }, sendExecutor);
     }
 
-    private AuthorizationToken getAuthorizationToken(EnvelopePayloadMessage envelopePayloadMessage) {
+    private NetworkEnvelope createNetworkEnvelope(EnvelopePayloadMessage envelopePayloadMessage,
+                                                  AuthorizationToken authorizationToken) {
+        try {
+            // The verify method inside NetworkEnvelope constructor could throw an exception.
+            // This would be only the case if our data we want to send is invalid.
+            return new NetworkEnvelope(authorizationToken, envelopePayloadMessage);
+        } catch (Exception exception) {
+            if (isRunning()) {
+                log.warn("Cannot create NetworkEnvelope. {}", ExceptionUtil.getRootCauseMessage(exception));
+                shutdown(CloseReason.EXCEPTION.exception(exception));
+            }
+            // We wrap any exception (also expected EOFException in case of connection close), to leave handling of the exception to the caller.
+            throw new ConnectionException(exception);
+        }
+    }
+
+    private AuthorizationToken createAuthorizationToken(EnvelopePayloadMessage envelopePayloadMessage) {
         return authorizationService.createToken(envelopePayloadMessage,
                 peersNetworkLoadSnapshot.getCurrentNetworkLoad(),
                 getPeerAddress().getFullAddress(),
