@@ -62,6 +62,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
  * Creates nodesById, the default node and the services according to the Config.
@@ -209,6 +210,10 @@ public class ServiceNode implements Node.Listener {
     /* --------------------------------------------------------------------- */
     // API
     /* --------------------------------------------------------------------- */
+
+    CompletableFuture<Node> getInitializedDefaultNodeAsync(NetworkId defaultNetworkId) {
+        return supplyAsync(() -> getInitializedDefaultNode(defaultNetworkId), NetworkExecutors.getNodeExecutor());
+    }
 
     Node getInitializedDefaultNode(NetworkId defaultNetworkId) {
         defaultNode = nodesById.createAndConfigNode(defaultNetworkId, true);

@@ -136,9 +136,8 @@ public class ServiceNodesByTransport {
 
     public Map<TransportType, CompletableFuture<Node>> getInitializedDefaultNodeByTransport(NetworkId defaultNetworkId) {
         return map.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> supplyAsync(() ->
-                                entry.getValue().getInitializedDefaultNode(defaultNetworkId), NetworkExecutors.getNodeExecutor())));
+                .collect(Collectors.toMap(Map.Entry::getKey, entry ->
+                        entry.getValue().getInitializedDefaultNodeAsync(defaultNetworkId)));
     }
 
     public CompletableFuture<List<Boolean>> shutdown() {
