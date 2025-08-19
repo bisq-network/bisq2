@@ -110,12 +110,6 @@ public class NodesById implements Node.Listener {
         return getOrCreateNode(networkId).getOrCreateConnectionAsync(address);
     }
 
-    public Connection send(NetworkId senderNetworkId,
-                           EnvelopePayloadMessage envelopePayloadMessage,
-                           Connection connection) {
-        return getOrCreateNode(senderNetworkId).send(envelopePayloadMessage, connection);
-    }
-
     public CompletableFuture<Connection> sendAsync(NetworkId senderNetworkId,
                                                    EnvelopePayloadMessage envelopePayloadMessage,
                                                    Connection connection) {

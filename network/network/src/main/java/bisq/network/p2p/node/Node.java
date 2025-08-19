@@ -343,28 +343,6 @@ public class Node implements Connection.Handler {
         }
     }
 
-    Connection send(EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
-        if (connection.isStopped()) {
-            log.debug("Send message failed as connection is already stopped {}", this);
-            throw new ConnectionClosedException(connection);
-        }
-        try {
-            AuthorizationToken token = authorizationService.createToken(envelopePayloadMessage,
-                    connection.getPeersNetworkLoadSnapshot().getCurrentNetworkLoad(),
-                    connection.getPeerAddress().getFullAddress(),
-                    connection.getSentMessageCounter().getAndIncrement(),
-                    connection.getPeersCapability().getFeatures());
-            return connection.send(envelopePayloadMessage, token);
-        } catch (Exception exception) {
-            if (connection.isRunning() && !(exception.getCause() instanceof SocketException)) {
-                handleException(connection, exception);
-                log.debug("Send message failed", exception);
-                closeConnection(connection, CloseReason.EXCEPTION.exception(exception));
-            }
-            throw new ConnectionClosedException(connection);
-        }
-    }
-
 
     /* --------------------------------------------------------------------- */
     // Connection
