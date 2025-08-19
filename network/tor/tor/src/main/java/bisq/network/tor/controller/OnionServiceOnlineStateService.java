@@ -58,6 +58,9 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
                     boolean isSuccess;
                     try {
                         isSuccess = countDownLatch.await(timeout, TimeUnit.MILLISECONDS);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt(); // Restore interrupted state
+                        throw new RuntimeException(e);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }

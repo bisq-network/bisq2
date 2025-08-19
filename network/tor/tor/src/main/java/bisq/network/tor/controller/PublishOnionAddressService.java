@@ -19,11 +19,11 @@ package bisq.network.tor.controller;
 
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.StringUtils;
-import bisq.security.keys.TorKeyPair;
 import bisq.network.tor.controller.events.events.EventType;
 import bisq.network.tor.controller.events.events.HsDescEvent;
 import bisq.network.tor.controller.events.listener.FilteredHsDescEventListener;
 import bisq.network.tor.controller.exceptions.HsDescUploadFailedException;
+import bisq.security.keys.TorKeyPair;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,6 +59,9 @@ public class PublishOnionAddressService extends FilteredHsDescEventListener {
                     boolean isSuccess;
                     try {
                         isSuccess = countDownLatch.await(timeout, TimeUnit.MILLISECONDS);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt(); // Restore interrupted state
+                        throw new HsDescUploadFailedException(e);
                     } catch (Exception e) {
                         throw new HsDescUploadFailedException(e);
                     }
