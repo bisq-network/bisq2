@@ -332,19 +332,27 @@ public abstract class Connection {
             inputHandlerFuture.cancel(true);
         }
         try {
-            networkEnvelopeSocket.close();
+            if (networkEnvelopeSocket != null) {
+                networkEnvelopeSocket.close();
+            }
         } catch (IOException ignore) {
         }
         handler.handleConnectionClosed(this, closeReason);
         listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnectionClosed(closeReason)));
         listeners.clear();
 
-        ExecutorFactory.shutdownAndAwaitTermination(readExecutor);
-        ExecutorFactory.shutdownAndAwaitTermination(sendExecutor);
+        // We might get called from readExecutor or sendExecutor, thus we do the shutdown in another thread
+        new Thread(() -> {
+            ExecutorFactory.shutdownAndAwaitTermination(readExecutor);
+            ExecutorFactory.shutdownAndAwaitTermination(sendExecutor);
+        }).start();
     }
 
     boolean isStopped() {
-        return shutdownStarted || networkEnvelopeSocket.isClosed() || Thread.currentThread().isInterrupted();
+        return shutdownStarted
+                || networkEnvelopeSocket == null
+                || networkEnvelopeSocket.isClosed()
+                || Thread.currentThread().isInterrupted();
     }
 
 

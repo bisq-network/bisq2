@@ -85,7 +85,10 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
     }
 
     public void initialize() {
-        executor = ExecutorFactory.newSingleThreadExecutor("PeerExchangeService");
+        isShutdownInProgress = false;
+        if (executor == null || executor.isShutdown()) {
+            executor = ExecutorFactory.newSingleThreadExecutor("PeerExchangeService");
+        }
         super.initialize();
     }
 
@@ -127,6 +130,9 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
     /* --------------------------------------------------------------------- */
 
     private CompletableFuture<Boolean> retryPeerExchangeWithDelay() {
+        if (isShutdownInProgress) {
+            return CompletableFuture.completedFuture(false);
+        }
         int numRetries = numRetryAttempts.incrementAndGet();
         long delay = policy.getRetryDelay(numRetries);
         log.info("retryPeerExchangeWithDelay. delay={}", delay);

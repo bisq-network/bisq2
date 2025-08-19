@@ -31,6 +31,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -51,6 +52,7 @@ public class PublishOnionAddressService extends FilteredHsDescEventListener {
     }
 
     public CompletableFuture<Void> publish(int onionServicePort, int localPort) {
+        ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("PublishOnionAddressService");
         future = Optional.of(CompletableFuture.runAsync(() -> {
                     torControlProtocol.addHsDescEventListener(this);
 
@@ -66,11 +68,14 @@ public class PublishOnionAddressService extends FilteredHsDescEventListener {
                         throw new HsDescUploadFailedException(e);
                     }
                     if (!isSuccess) {
-                        throw new HsDescUploadFailedException("Could not get onion address upload completed in " + timeout / 1000 + " seconds");
+                        throw new HsDescUploadFailedException("Could not get onion address upload completed in " + timeout + " ms");
                     }
-                }, ExecutorFactory.newSingleThreadExecutor("PublishOnionAddressService"))
-                .whenComplete((nil, throwable) ->
-                        torControlProtocol.removeHsDescEventListener(this)));
+                }, executor)
+                .whenComplete((nil, throwable) -> {
+                            torControlProtocol.removeHsDescEventListener(this);
+                            ExecutorFactory.shutdownAndAwaitTermination(executor);
+                        }
+                ));
         return future.get();
     }
 
