@@ -186,8 +186,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        NetworkExecutors.initialize(config.getNodeExecutorMaxPoolSize(),
-                config.getNotifyExecutorMaxPoolSize());
+        NetworkExecutors.initialize(config.getNotifyExecutorMaxPoolSize());
 
         NetworkId defaultNetworkId = networkIdService.getOrCreateDefaultNetworkId();
         Map<TransportType, CompletableFuture<Node>> map = serviceNodesByTransport.getInitializedDefaultNodeByTransport(defaultNetworkId);

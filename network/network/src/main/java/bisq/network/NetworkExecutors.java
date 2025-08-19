@@ -29,15 +29,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public class NetworkExecutors {
     @Getter
-    private static ThreadPoolExecutor nodeExecutor;
-    @Getter
     private static ThreadPoolExecutor notifyExecutor;
     private static volatile boolean isInitialized;
 
-    public static void initialize(int nodeExecutorMaxPoolSize,
-                                  int notifyExecutorMaxPoolSize) {
+    public static void initialize(int notifyExecutorMaxPoolSize) {
         checkArgument(!isInitialized, "initialize must not be called twice");
-        nodeExecutor = createNodeExecutor(nodeExecutorMaxPoolSize);
         notifyExecutor = createNotifyExecutor(notifyExecutorMaxPoolSize);
 
         isInitialized = true;
@@ -45,34 +41,12 @@ public class NetworkExecutors {
 
     public static void shutdown() {
         if (isInitialized) {
-            ExecutorFactory.shutdownAndAwaitTermination(nodeExecutor);
             ExecutorFactory.shutdownAndAwaitTermination(notifyExecutor);
 
-            nodeExecutor = null;
             notifyExecutor = null;
-
             isInitialized = false;
         }
     }
-
-    /**
-     * Used for initializing the transportService, initializing the node and used as the blocking server thread.
-     * @return
-     */
-    private static ThreadPoolExecutor createNodeExecutor(int maxPoolSize) {
-        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(100);
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(
-                1,
-                maxPoolSize,
-                10,
-                TimeUnit.SECONDS,
-                queue,
-                ExecutorFactory.getThreadFactoryWithCounter("Network.node"),
-                new AbortPolicyWithLogging());
-        queue.setExecutor(executor);
-        return executor;
-    }
-
 
     private static ThreadPoolExecutor createNotifyExecutor(int maxPoolSize) {
         MaxSizeAwareQueue queue = new MaxSizeAwareQueue(100000);
