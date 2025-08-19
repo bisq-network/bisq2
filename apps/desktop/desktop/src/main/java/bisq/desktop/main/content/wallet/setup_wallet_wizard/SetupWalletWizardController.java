@@ -112,7 +112,7 @@ public class SetupWalletWizardController extends NavigationController {
             backString = Res.get("wallet.setupWallet.backButton");
             nextString = Res.get("wallet.setupWallet.nextButton");
         } else if (navigationTarget == NavigationTarget.SETUP_WALLET_PROTECT) {
-            backString = Res.get("wallet.protectWallet.button.skipStep");
+            backString = Res.get("action.back");
             nextString = Res.get("action.next");
         } else if (navigationTarget == NavigationTarget.SETUP_WALLET_BACKUP) {
             backString = Res.get("action.back");
@@ -124,6 +124,9 @@ public class SetupWalletWizardController extends NavigationController {
 
         model.getNextButtonText().set(nextString);
         model.getBackButtonText().set(backString);
+
+        boolean shouldShowHeader = navigationTarget != NavigationTarget.SETUP_OR_RESTORE_WALLET;
+        model.getShouldShowHeader().set(shouldShowHeader);
     }
 
     @Override

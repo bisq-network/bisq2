@@ -36,6 +36,7 @@ import java.util.List;
 @Slf4j
 @Getter
 public class SetupWalletWizardModel extends NavigationModel {
+    private final BooleanProperty shouldShowHeader = new SimpleBooleanProperty();
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
     private final StringProperty nextButtonText = new SimpleStringProperty();
     private final StringProperty backButtonText = new SimpleStringProperty();
