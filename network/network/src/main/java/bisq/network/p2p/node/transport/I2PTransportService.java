@@ -5,8 +5,8 @@ import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
+import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.NetworkUtils;
-import bisq.network.NetworkExecutors;
 import bisq.network.i2p.I2pClient;
 import bisq.network.i2p.I2pEmbeddedRouter;
 import bisq.network.identity.NetworkId;
@@ -164,9 +164,11 @@ public class I2PTransportService implements TransportService {
         if (i2pClient == null) {
             return CompletableFuture.completedFuture(true);
         }
-        return CompletableFuture.runAsync(i2pClient::shutdown, NetworkExecutors.getNodeExecutor())
-                .thenApply(nil -> true)
-                .whenComplete((result, throwable) -> setTransportState(TransportState.TERMINATED));
+        return CompletableFuture.runAsync(i2pClient::shutdown, ExecutorFactory.newSingleThreadExecutor("I2PTransportService.shutdown"))
+                .handle((result, throwable) -> {
+                    setTransportState(TransportState.TERMINATED);
+                    return true;
+                });
     }
 
     private boolean isEmbeddedRouter() {
