@@ -22,6 +22,7 @@ import bisq.common.network.Address;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.platform.MemoryReportService;
+import bisq.common.threading.ExecutorFactory;
 import bisq.network.NetworkExecutors;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -212,12 +213,7 @@ public class ServiceNode implements Node.Listener {
     /* --------------------------------------------------------------------- */
 
     CompletableFuture<Node> getInitializedDefaultNodeAsync(NetworkId defaultNetworkId) {
-        return supplyAsync(() -> getInitializedDefaultNode(defaultNetworkId), NetworkExecutors.getNodeExecutor());
-    }
-
-    Node getInitializedDefaultNode(NetworkId defaultNetworkId) {
         defaultNode = nodesById.createAndConfigNode(defaultNetworkId, true);
-
         Set<SupportedService> supportedServices = config.getSupportedServices();
         peerGroupManager = supportedServices.contains(SupportedService.PEER_GROUP) ?
                 Optional.of(new PeerGroupManager(defaultNode,
@@ -271,15 +267,17 @@ public class ServiceNode implements Node.Listener {
                 Optional.empty();
 
         setState(State.INITIALIZING);
-        transportService.initialize();// blocking
-        defaultNode.initialize();// blocking
-        peerGroupManager.ifPresentOrElse(peerGroupManager -> {
-                    peerGroupManager.initialize();// blocking
-                    setState(State.INITIALIZED);
-                },
-                () -> setState(State.INITIALIZED));
+        return supplyAsync(() -> {
+            transportService.initialize();// blocking
+            defaultNode.initialize();// blocking
+            peerGroupManager.ifPresentOrElse(peerGroupManager -> {
+                        peerGroupManager.initialize();// blocking
+                        setState(State.INITIALIZED);
+                    },
+                    () -> setState(State.INITIALIZED));
 
-        return defaultNode;
+            return defaultNode;
+        }, ExecutorFactory.newSingleThreadExecutor("DefaultNode.initialize"));
     }
 
     CompletableFuture<Boolean> shutdown() {

@@ -86,6 +86,7 @@ public class NodesById implements Node.Listener {
         Node node = new Node(networkId, isDefaultNode, nodeConfig, banList, keyBundleService, transportService, networkLoadSnapshot, authorizationService);
         map.put(networkId, node);
         node.addListener(this);
+        //todo
         listeners.forEach(listener -> {
             try {
                 listener.onNodeAdded(node);
