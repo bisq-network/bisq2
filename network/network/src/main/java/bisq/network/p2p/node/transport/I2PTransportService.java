@@ -23,6 +23,7 @@ import java.net.Socket;
 import java.nio.file.Path;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -164,11 +165,16 @@ public class I2PTransportService implements TransportService {
         if (i2pClient == null) {
             return CompletableFuture.completedFuture(true);
         }
-        return CompletableFuture.runAsync(i2pClient::shutdown, ExecutorFactory.newSingleThreadExecutor("I2PTransportService.shutdown"))
+        ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("I2PTransportService.shutdown");
+        return CompletableFuture.runAsync(i2pClient::shutdown, executor)
                 .handle((result, throwable) -> {
+                    if (throwable != null) {
+                        log.warn("I2P client shutdown failed", throwable);
+                    }
                     setTransportState(TransportState.TERMINATED);
                     return true;
-                });
+                })
+                .whenComplete((result, throwable) -> ExecutorFactory.shutdownAndAwaitTermination(executor));
     }
 
     private boolean isEmbeddedRouter() {

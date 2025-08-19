@@ -61,6 +61,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutorService;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
@@ -267,6 +268,7 @@ public class ServiceNode implements Node.Listener {
                 Optional.empty();
 
         setState(State.INITIALIZING);
+        ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("DefaultNode.initialize");
         return supplyAsync(() -> {
             transportService.initialize();// blocking
             defaultNode.initializeAsync().join();// blocking
@@ -277,7 +279,8 @@ public class ServiceNode implements Node.Listener {
                     () -> setState(State.INITIALIZED));
 
             return defaultNode;
-        }, ExecutorFactory.newSingleThreadExecutor("DefaultNode.initialize"));
+        }, executor)
+                .whenComplete((node, throwable) -> ExecutorFactory.shutdownAndAwaitTermination(executor));
     }
 
     CompletableFuture<Boolean> shutdown() {
