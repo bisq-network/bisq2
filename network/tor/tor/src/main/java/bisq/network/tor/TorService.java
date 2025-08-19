@@ -53,9 +53,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -246,16 +244,9 @@ public class TorService implements Service {
         }
     }
 
-    public boolean isOnionServiceOnline(String onionUrl) {
-        try {
-            return torController.isOnionServiceOnline(onionUrl).get(1, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            log.warn("Thread got interrupted at isOnionServiceOnline method", e);
-            Thread.currentThread().interrupt(); // Restore interrupted state
-            throw new RuntimeException(e);
-        } catch (ExecutionException | TimeoutException e) {
-            throw new RuntimeException(e);
-        }
+    public CompletableFuture<Boolean> isOnionServiceOnlineAsync(String onionUrl) {
+        return torController.isOnionServiceOnlineAsync(onionUrl)
+                .orTimeout(1, TimeUnit.MINUTES);
     }
 
     public Socket getSocket(String streamId) throws IOException {

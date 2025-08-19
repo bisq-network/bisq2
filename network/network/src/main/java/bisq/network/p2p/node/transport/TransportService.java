@@ -62,7 +62,7 @@ public interface TransportService {
         return Optional.empty();
     }
 
-    boolean isPeerOnline(Address address);
+    CompletableFuture<Boolean> isPeerOnlineAsync(Address address);
 
     default void setTransportState(TransportState newTransportState) {
         if (newTransportState == getTransportState().get()) {

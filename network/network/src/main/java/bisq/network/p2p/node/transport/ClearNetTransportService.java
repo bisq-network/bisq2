@@ -39,7 +39,6 @@ public class ClearNetTransportService implements TransportService {
             return new Config(dataDir,
                     config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
-                    config.getInt("devModeDelayInMs"),
                     config.getInt("sendMessageThrottleTime"),
                     config.getInt("receiveMessageThrottleTime"),
                     config.getInt("connectTimeoutMs"),
@@ -50,7 +49,6 @@ public class ClearNetTransportService implements TransportService {
         private final Path dataDir;
         private final int defaultNodePort;
         private final int socketTimeout;
-        private final int devModeDelayInMs;
         private final int sendMessageThrottleTime;
         private final int receiveMessageThrottleTime;
         private final int connectTimeoutMs;
@@ -59,7 +57,6 @@ public class ClearNetTransportService implements TransportService {
         public Config(Path dataDir,
                       int defaultNodePort,
                       int socketTimeout,
-                      int devModeDelayInMs,
                       int sendMessageThrottleTime,
                       int receiveMessageThrottleTime,
                       int connectTimeoutMs,
@@ -67,15 +64,14 @@ public class ClearNetTransportService implements TransportService {
             this.dataDir = dataDir;
             this.defaultNodePort = defaultNodePort;
             this.socketTimeout = socketTimeout;
-            this.devModeDelayInMs = devModeDelayInMs;
             this.sendMessageThrottleTime = sendMessageThrottleTime;
             this.receiveMessageThrottleTime = receiveMessageThrottleTime;
             this.connectTimeoutMs = connectTimeoutMs;
             this.clearNetAddressType = clearNetAddressType;
         }
     }
+
     private final int socketTimeout;
-    private final int devModeDelayInMs;
     private final int connectTimeoutMs;
     private boolean initializeCalled;
     @Getter
@@ -89,7 +85,6 @@ public class ClearNetTransportService implements TransportService {
 
     public ClearNetTransportService(TransportConfig config) {
         socketTimeout = config.getSocketTimeout();
-        devModeDelayInMs = config.getDevModeDelayInMs();
         connectTimeoutMs = ((Config) config).getConnectTimeoutMs();
         setTransportState(TransportState.NEW);
 
@@ -113,7 +108,6 @@ public class ClearNetTransportService implements TransportService {
         }
         setTransportState(TransportState.INITIALIZE);
         initializeCalled = true;
-        maybeSimulateDelay();
         setTransportState(TransportState.INITIALIZED);
     }
 
@@ -127,9 +121,10 @@ public class ClearNetTransportService implements TransportService {
         initializeServerSocketTimestampByNetworkId.clear();
         initializedServerSocketTimestampByNetworkId.clear();
         timestampByTransportState.clear();
-        return CompletableFuture.supplyAsync(() -> true,
-                        CompletableFuture.delayedExecutor(devModeDelayInMs, TimeUnit.MILLISECONDS))
-                .whenComplete((result, throwable) -> setTransportState(TransportState.TERMINATED));
+        return CompletableFuture.supplyAsync(() -> {
+            setTransportState(TransportState.TERMINATED);
+            return true;
+        });
     }
 
     @Override
@@ -138,7 +133,6 @@ public class ClearNetTransportService implements TransportService {
         initializeServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
         log.info("Create serverSocket at port {}", port);
 
-        maybeSimulateDelay();
         try {
             ServerSocket serverSocket = new ServerSocket(port);
             Address address = getClearNetAddressTypeFacade().toMyLocalAddress(port);
@@ -154,32 +148,21 @@ public class ClearNetTransportService implements TransportService {
     @Override
     public Socket getSocket(Address address) throws IOException {
         address = getClearNetAddressTypeFacade().toPeersLocalAddress(address);
-
         log.debug("Create new Socket to {}", address);
-        maybeSimulateDelay();
         Socket socket = new Socket();
         socket.setSoTimeout(socketTimeout);
         socket.connect(new InetSocketAddress(address.getHost(), address.getPort()), connectTimeoutMs);
-
         return socket;
     }
 
     @Override
-    public boolean isPeerOnline(Address address) {
-        try (Socket ignored = getSocket(address)) {
-            return true;
-        } catch (IOException e) {
-            return false;
-        }
-    }
-
-    private void maybeSimulateDelay() {
-        if (devModeDelayInMs > 0) {
-            try {
-                Thread.sleep(devModeDelayInMs);
-            } catch (Throwable t) {
-                log.error("Exception", t);
+    public CompletableFuture<Boolean> isPeerOnlineAsync(Address address) {
+        return CompletableFuture.supplyAsync(() -> {
+            try (Socket ignored = getSocket(address)) {
+                return true;
+            } catch (IOException e) {
+                return false;
             }
-        }
+        });
     }
 }

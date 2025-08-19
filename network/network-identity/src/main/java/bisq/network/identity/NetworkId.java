@@ -17,6 +17,7 @@
 
 package bisq.network.identity;
 
+import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.proto.NetworkProto;
 import bisq.security.keys.PubKey;
@@ -73,6 +74,10 @@ public final class NetworkId implements NetworkProto {
     public String getAddresses() {
         return "Addresses: " +
                 Joiner.on(", ").join(addressByTransportTypeMap.values());
+    }
+
+    public String getFirstAddress() {
+        return addressByTransportTypeMap.values().stream().findFirst().map(Address::toString).orElse("NA");
     }
 
     @Override

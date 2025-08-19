@@ -22,6 +22,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -202,8 +203,12 @@ public class ExecutorFactory {
     }
 
     public static boolean shutdownAndAwaitTermination(ExecutorService executor, long timeout, TimeUnit unit) {
+        // In case the caller would run in the executors thread it would lead to a deadlock,
+        // thus we wrap it into a new thread.
+        ExecutorService executorService = newSingleThreadExecutor("shutdownAndAwaitTermination");
         //noinspection UnstableApiUsage
-        return MoreExecutors.shutdownAndAwaitTermination(executor, timeout, unit);
+        return CompletableFuture.supplyAsync(() -> MoreExecutors.shutdownAndAwaitTermination(executor, timeout, unit), executorService)
+                .whenComplete((r, t) -> executorService.shutdown())
+                .join();
     }
-
 }

@@ -31,7 +31,14 @@ public class TopPanelModel implements Model {
     private final boolean muSigActivated;
     private final ObjectProperty<Coin> balanceAsCoinProperty = new SimpleObjectProperty<>(Coin.fromValue(0, "BTC"));
     private final ObservableValue<String> formattedBalanceProperty = Bindings.createStringBinding(
-            () -> AmountFormatter.formatBaseAmount(balanceAsCoinProperty.get()),
+            () -> {
+                Coin amount = balanceAsCoinProperty.get();
+                if (amount != null) {
+                    return AmountFormatter.formatBaseAmount(amount);
+                } else {
+                    return "";
+                }
+            },
             balanceAsCoinProperty
     );
 

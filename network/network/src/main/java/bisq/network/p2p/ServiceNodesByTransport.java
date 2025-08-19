@@ -26,7 +26,6 @@ import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.platform.MemoryReportService;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.network.NetworkExecutors;
 import bisq.network.SendMessageResult;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -63,7 +62,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
  * Maintains a map of ServiceNodes by transportType. Delegates to relevant ServiceNode.
@@ -101,14 +99,15 @@ public class ServiceNodesByTransport {
 
         supportedTransportTypes.forEach(transportType -> {
             TransportConfig transportConfig = configByTransportType.get(transportType);
+            int maxNumConnectedPeers = peerGroupServiceConfigByTransport.get(transportType).getPeerGroupConfig().getMaxNumConnectedPeers();
             Node.Config nodeConfig = new Node.Config(transportType,
                     supportedTransportTypes,
                     features,
                     transportConfig,
                     transportConfig.getSocketTimeout(),
-                    transportConfig.getDevModeDelayInMs(),
                     transportConfig.getSendMessageThrottleTime(),
-                    transportConfig.getReceiveMessageThrottleTime());
+                    transportConfig.getReceiveMessageThrottleTime(),
+                    maxNumConnectedPeers);
             Set<Address> seedAddresses = seedAddressesByTransport.get(transportType);
             checkNotNull(seedAddresses, "Seed nodes must be setup for %s", transportType);
             PeerGroupManager.Config peerGroupServiceConfig = peerGroupServiceConfigByTransport.get(transportType);
@@ -137,9 +136,8 @@ public class ServiceNodesByTransport {
 
     public Map<TransportType, CompletableFuture<Node>> getInitializedDefaultNodeByTransport(NetworkId defaultNetworkId) {
         return map.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> supplyAsync(() ->
-                                entry.getValue().getInitializedDefaultNode(defaultNetworkId), NetworkExecutors.getNodeExecutor())));
+                .collect(Collectors.toMap(Map.Entry::getKey, entry ->
+                        entry.getValue().getInitializedDefaultNodeAsync(defaultNetworkId)));
     }
 
     public CompletableFuture<List<Boolean>> shutdown() {
@@ -162,14 +160,12 @@ public class ServiceNodesByTransport {
     }
 
     public CompletableFuture<Node> supplyInitializedNode(TransportType transportType, NetworkId networkId) {
-        return supplyAsync(() -> {
-            ServiceNode serviceNode = map.get(transportType);
-            if (serviceNode.isNodeInitialized(networkId)) {
-                return serviceNode.findNode(networkId).orElseThrow();
-            } else {
-                return serviceNode.initializeNode(networkId);
-            }
-        }, NetworkExecutors.getNodeExecutor());
+        ServiceNode serviceNode = map.get(transportType);
+        if (serviceNode.isNodeInitialized(networkId)) {
+            return CompletableFuture.completedFuture(serviceNode.findNode(networkId).orElseThrow());
+        } else {
+            return serviceNode.initializeNodeAsync(networkId);
+        }
     }
 
     public void addSeedNodes(Set<AddressByTransportTypeMap> seedNodeMaps) {
@@ -265,11 +261,12 @@ public class ServiceNodesByTransport {
                 .collect(Collectors.toSet());
     }
 
-    public Map<TransportType, Boolean> isPeerOnline(NetworkId networkId, AddressByTransportTypeMap peer) {
+    public Map<TransportType, CompletableFuture<Boolean>> isPeerOnlineAsync(NetworkId networkId,
+                                                                            AddressByTransportTypeMap peer) {
         return peer.entrySet().stream().map(entry -> {
                     TransportType transportType = entry.getKey();
                     if (map.containsKey(transportType)) {
-                        return new Pair<>(transportType, map.get(transportType).isPeerOnline(networkId, entry.getValue()));
+                        return new Pair<>(transportType, map.get(transportType).isPeerOnlineAsync(networkId, entry.getValue()));
                     } else {
                         return null;
                     }

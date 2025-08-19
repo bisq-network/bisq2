@@ -22,6 +22,7 @@ import bisq.common.network.Address;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.platform.MemoryReportService;
+import bisq.common.threading.ExecutorFactory;
 import bisq.network.NetworkExecutors;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -60,8 +61,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutorService;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
  * Creates nodesById, the default node and the services according to the Config.
@@ -210,9 +213,8 @@ public class ServiceNode implements Node.Listener {
     // API
     /* --------------------------------------------------------------------- */
 
-    Node getInitializedDefaultNode(NetworkId defaultNetworkId) {
+    CompletableFuture<Node> getInitializedDefaultNodeAsync(NetworkId defaultNetworkId) {
         defaultNode = nodesById.createAndConfigNode(defaultNetworkId, true);
-
         Set<SupportedService> supportedServices = config.getSupportedServices();
         peerGroupManager = supportedServices.contains(SupportedService.PEER_GROUP) ?
                 Optional.of(new PeerGroupManager(defaultNode,
@@ -266,15 +268,19 @@ public class ServiceNode implements Node.Listener {
                 Optional.empty();
 
         setState(State.INITIALIZING);
-        transportService.initialize();// blocking
-        defaultNode.initialize();// blocking
-        peerGroupManager.ifPresentOrElse(peerGroupManager -> {
-                    peerGroupManager.initialize();// blocking
-                    setState(State.INITIALIZED);
-                },
-                () -> setState(State.INITIALIZED));
+        ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("DefaultNode.initialize");
+        return supplyAsync(() -> {
+            transportService.initialize();// blocking
+            defaultNode.initializeAsync().join();// blocking
+            peerGroupManager.ifPresentOrElse(peerGroupManager -> {
+                        peerGroupManager.initialize();// blocking
+                        setState(State.INITIALIZED);
+                    },
+                    () -> setState(State.INITIALIZED));
 
-        return defaultNode;
+            return defaultNode;
+        }, executor)
+                .whenComplete((node, throwable) -> ExecutorFactory.shutdownAndAwaitTermination(executor));
     }
 
     CompletableFuture<Boolean> shutdown() {
@@ -291,8 +297,8 @@ public class ServiceNode implements Node.Listener {
                 .whenComplete((result, throwable) -> setState(State.TERMINATED));
     }
 
-    Node initializeNode(NetworkId networkId) {
-        return nodesById.initializeNode(networkId);
+    CompletableFuture<Node> initializeNodeAsync(NetworkId networkId) {
+        return nodesById.initializeNodeAsync(networkId);
     }
 
     boolean isNodeInitialized(NetworkId networkId) {
@@ -352,8 +358,8 @@ public class ServiceNode implements Node.Listener {
         return nodesById.findNode(networkId);
     }
 
-    boolean isPeerOnline(NetworkId networkId, Address address) {
-        return nodesById.isPeerOnline(networkId, address);
+    CompletableFuture<Boolean> isPeerOnlineAsync(NetworkId networkId, Address address) {
+        return nodesById.isPeerOnlineAsync(networkId, address);
     }
 
     private void setState(State newState) {

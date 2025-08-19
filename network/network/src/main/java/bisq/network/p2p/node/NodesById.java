@@ -20,6 +20,7 @@ package bisq.network.p2p.node;
 
 import bisq.common.network.Address;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.network.NetworkExecutors;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
@@ -86,34 +87,16 @@ public class NodesById implements Node.Listener {
         Node node = new Node(networkId, isDefaultNode, nodeConfig, banList, keyBundleService, transportService, networkLoadSnapshot, authorizationService);
         map.put(networkId, node);
         node.addListener(this);
-        listeners.forEach(listener -> {
-            try {
-                listener.onNodeAdded(node);
-            } catch (Exception e) {
-                log.error("Calling onNodeAdded at listener {} failed", listener, e);
-            }
-        });
+        listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onNodeAdded(node)));
         return node;
     }
 
-    public Node initializeNode(NetworkId networkId) {
-        Node node = getOrCreateNode(networkId);
-        node.initialize();   // blocking
-        return node;
-    }
-
-    public Connection getOrCreateConnection(NetworkId networkId, Address address) {
-        return getOrCreateNode(networkId).getOrCreateConnection(address);
+    public CompletableFuture<Node> initializeNodeAsync(NetworkId networkId) {
+        return getOrCreateNode(networkId).initializeAsync();
     }
 
     public CompletableFuture<Connection> getOrCreateConnectionAsync(NetworkId networkId, Address address) {
         return getOrCreateNode(networkId).getOrCreateConnectionAsync(address);
-    }
-
-    public Connection send(NetworkId senderNetworkId,
-                           EnvelopePayloadMessage envelopePayloadMessage,
-                           Connection connection) {
-        return getOrCreateNode(senderNetworkId).send(envelopePayloadMessage, connection);
     }
 
     public CompletableFuture<Connection> sendAsync(NetworkId senderNetworkId,
@@ -148,10 +131,6 @@ public class NodesById implements Node.Listener {
         return Optional.ofNullable(map.get(networkId));
     }
 
-    public boolean isPeerOnline(NetworkId networkId, Address address) {
-        return getOrCreateNode(networkId).isPeerOnline(address);
-    }
-
     public CompletableFuture<Boolean> isPeerOnlineAsync(NetworkId networkId, Address address) {
         return getOrCreateNode(networkId).isPeerOnlineAsync(address);
     }
@@ -183,6 +162,7 @@ public class NodesById implements Node.Listener {
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
+        // We do not use NotifyExecutor here as we get called already from the NotifyExecutor
         nodeListeners.forEach(listener -> {
             try {
                 listener.onMessage(envelopePayloadMessage, connection, networkId);
@@ -194,6 +174,7 @@ public class NodesById implements Node.Listener {
 
     @Override
     public void onConnection(Connection connection) {
+        // We do not use NotifyExecutor here as we get called already from the NotifyExecutor
         nodeListeners.forEach(listener -> {
             try {
                 listener.onConnection(connection);
@@ -205,6 +186,7 @@ public class NodesById implements Node.Listener {
 
     @Override
     public void onDisconnect(Connection connection, CloseReason closeReason) {
+        // We do not use NotifyExecutor here as we get called already from the NotifyExecutor
         nodeListeners.forEach(listener -> {
             try {
                 listener.onDisconnect(connection, closeReason);
@@ -218,6 +200,8 @@ public class NodesById implements Node.Listener {
     public void onShutdown(Node node) {
         map.remove(node.getNetworkId());
         node.removeListener(this);
+
+        // We do not use NotifyExecutor here as we get called already from the NotifyExecutor
         listeners.forEach(listener -> {
             try {
                 listener.onNodeRemoved(node);

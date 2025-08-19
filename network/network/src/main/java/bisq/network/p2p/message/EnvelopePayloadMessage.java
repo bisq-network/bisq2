@@ -19,7 +19,6 @@ package bisq.network.p2p.message;
 
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.network.p2p.node.CloseConnectionMessage;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import bisq.network.p2p.services.confidential.ack.AckMessage;

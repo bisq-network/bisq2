@@ -235,44 +235,49 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                 receiverAddress, isPeerOfflineFuture, connection)
                 .exceptionally(e -> Optional.empty());
 
-        // The connection timeout is 120 seconds, we add a bit more here as it should never get triggered anyway.
-        // We get called from NetworkService on the NetworkNodeExecutor thread, thus the blocking join() call is ok.
-        CompletableFuture.anyOf(isPeerOfflineFuture, sendMessageFuture)
-                .orTimeout(150, TimeUnit.SECONDS)
-                .whenComplete((ignore, throwable) -> {
-                    if (throwable instanceof TimeoutException timeoutException) {
-                        log.error("Neither isPeerOffline resulted in a true result nor we got a connection created in 150 seconds. receiverAddress={}", receiverAddress);
-                    }
-                })
-                .join();
+        try {
+            // The connection timeout is 120 seconds, we add a bit more here as it should never get triggered anyway.
+            // We get called from NetworkService on the NetworkNodeExecutor thread, thus the blocking join() call is ok.
+            CompletableFuture.anyOf(isPeerOfflineFuture, sendMessageFuture)
+                    .orTimeout(150, TimeUnit.SECONDS)
+                    .whenComplete((ignore, throwable) -> {
+                        if (throwable instanceof TimeoutException timeoutException) {
+                            log.error("Neither isPeerOffline resulted in a true result nor we got a connection created in 150 seconds. receiverAddress={}", receiverAddress);
+                        }
+                    })
+                    .join();
 
-        boolean peerDetectedOffline = isPeerOfflineFuture.isDone() && isPeerOfflineFuture.join();
-        if (peerDetectedOffline) {
-            // We got the result that the peer's onion service is not published in the tor network, thus it is likely that the peer is offline.
-            // It could be though the case that the connection creation running in parallel succeeds, and even we continue with sending a mailbox message
-            // the normal message sending succeeded. The peer would then get the message received 2 times, which does not cause harm.
-            // The result we return to the caller though contains the mailbox result. When the peer gets the ACK message the delivery state gets cleaned up.
-            throw new RuntimeException("peerDetectedOffline. receiverAddress=" + receiverAddress);
-        } else if (sendMessageFuture.isDone()) {
-            Optional<SendConfidentialMessageResult> result = sendMessageFuture.join();
-            if (result.isPresent()) {
-                // The countDownLatch was triggered by the getConnectionFuture's result.
-                // It can be either sentResult or storeMailBoxMessageResult
-                SendConfidentialMessageResult messageResult = result.get();
-                handleResult(envelopePayloadMessage, messageResult);
-                return messageResult;
+            boolean peerDetectedOffline = Boolean.TRUE.equals(isPeerOfflineFuture.getNow(false));
+            if (peerDetectedOffline) {
+                // We got the result that the peer's onion service is not published in the tor network, thus it is likely that the peer is offline.
+                // It could be though the case that the connection creation running in parallel succeeds, and even we continue with sending a mailbox message
+                // the normal message sending succeeded. The peer would then get the message received 2 times, which does not cause harm.
+                // The result we return to the caller though contains the mailbox result. When the peer gets the ACK message the delivery state gets cleaned up.
+                throw new RuntimeException("peerDetectedOffline. receiverAddress=" + receiverAddress);
+            } else if (sendMessageFuture.isDone()) {
+                Optional<SendConfidentialMessageResult> result = sendMessageFuture.join();
+                if (result.isPresent()) {
+                    // The countDownLatch was triggered by the getConnectionFuture's result.
+                    // It can be either sentResult or storeMailBoxMessageResult
+                    SendConfidentialMessageResult messageResult = result.get();
+                    handleResult(envelopePayloadMessage, messageResult);
+                    return messageResult;
+                } else {
+                    throw new RuntimeException("Could not send message. Result from trySendAsync was empty.");
+                }
             } else {
-                throw new RuntimeException("Could not send message as result from trySendInParallel was empty.");
+                throw new RuntimeException("Unexpected case: Peer not detected offline but no result from trySendAsync available.");
             }
-        } else {
-            throw new RuntimeException("Unexpected case: Peer detected online but no resultFuture provided in trySendOrFallback");
+        } finally {
+            // Make sure that the isPeerOfflineFuture is terminated in case we got a never completing future.
+            isPeerOfflineFuture.cancel(true);
         }
     }
 
     private CompletableFuture<Boolean> isPeerOnlineAsync(Address address,
                                                          NetworkId senderNetworkId,
                                                          long start) {
-        return nodesById.isPeerOnlineAsync(senderNetworkId, address) // Runs in NetworkNodeExecutor
+        return nodesById.isPeerOnlineAsync(senderNetworkId, address)
                 .whenComplete((isPeerOnline, throwable) -> {
                     // Can take about 3-5 sec.
                     if (throwable != null) {
@@ -298,28 +303,26 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                                                                     String receiverAddress,
                                                                                     CompletableFuture<Boolean> isPeerOfflineFuture,
                                                                                     Connection connection) {
-        return supplyAsync(() -> {
-            try {
-                ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
-                try {
-                    nodesById.send(senderNetworkId, confidentialMessage, connection);
-                    log.info("Sent message to {} after {} ms", receiverAddress, System.currentTimeMillis() - start);
-                    SendConfidentialMessageResult sentResult = new SendConfidentialMessageResult(MessageDeliveryStatus.SENT);
-                    boolean detectedOffLine = isPeerOfflineFuture.isDone() && isPeerOfflineFuture.join();
-                    if (detectedOffLine) {
-                        log.info("We had detected that the peer is offline, but we succeeded to create a connection and send the message. receiverAddress={}", receiverAddress);
+        // The work for encryption is left to the caller thread.
+        ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
+        return nodesById.sendAsync(senderNetworkId, confidentialMessage, connection)
+                .handle((con, throwable) -> {
+                    if (throwable == null) {
+                        log.info("Sent message to {} after {} ms", receiverAddress, System.currentTimeMillis() - start);
+                        SendConfidentialMessageResult sentResult = new SendConfidentialMessageResult(MessageDeliveryStatus.SENT);
+                        boolean detectedOffLine = isPeerOfflineFuture.isDone() && isPeerOfflineFuture.join();
+                        if (detectedOffLine) {
+                            log.info("We had detected that the peer is offline, but we succeeded to create a connection and send the message. receiverAddress={}", receiverAddress);
+                        }
+                        return Optional.of(sentResult);
+                    } else if (!isShutdownInProgress) {
+                        log.info("Creating confidentialMessage failed");
+                        var exception = throwable instanceof Exception e ? e : new RuntimeException(throwable);
+                        return maybeStoreInMailbox(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, isPeerOfflineFuture, confidentialMessage, receiverAddress, start);
+                    } else {
+                        return Optional.empty();
                     }
-                    return Optional.of(sentResult);
-                } catch (Exception exception) {
-                    return maybeStoreInMailbox(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, isPeerOfflineFuture, confidentialMessage, receiverAddress, start);
-                }
-            } catch (Exception exception) {
-                if (!isShutdownInProgress) {
-                    log.info("Creating confidentialMessage failed");
-                }
-                return Optional.empty();
-            }
-        }, NetworkExecutors.getSendExecutor());
+                });
     }
 
 

@@ -103,8 +103,8 @@ public class TorTransportService implements TransportService {
     }
 
     @Override
-    public boolean isPeerOnline(Address address) {
-        return torService.isOnionServiceOnline(address.getHost()); // Can be blocking
+    public CompletableFuture<Boolean> isPeerOnlineAsync(Address address) {
+        return torService.isOnionServiceOnlineAsync(address.getHost());
     }
 
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {

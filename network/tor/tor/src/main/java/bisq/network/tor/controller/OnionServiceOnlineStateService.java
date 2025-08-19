@@ -17,6 +17,8 @@
 
 package bisq.network.tor.controller;
 
+import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.StringUtils;
 import bisq.network.tor.controller.events.events.EventType;
 import bisq.network.tor.controller.events.events.HsDescEvent;
 import bisq.network.tor.controller.events.events.HsDescFailedEvent;
@@ -28,6 +30,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -39,6 +43,7 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
     private boolean isOnline;
     @Getter
     private Optional<CompletableFuture<Boolean>> future = Optional.empty();
+    private final ExecutorService executor;
 
     public OnionServiceOnlineStateService(TorControlProtocol torControlProtocol, String onionAddress, long timeout) {
         super(EventType.HS_DESC, onionAddress, Set.of(HsDescEvent.Action.FAILED, HsDescEvent.Action.RECEIVED));
@@ -46,9 +51,15 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
         this.torControlProtocol = torControlProtocol;
         this.onionAddress = onionAddress;
         this.timeout = timeout;
+        executor = ExecutorFactory.boundedCachedPool("OnionServiceOnlineStateService-" + StringUtils.truncate(onionAddress, 12),
+                1,
+                10,
+                5,
+                20,
+                new ThreadPoolExecutor.AbortPolicy());
     }
 
-    public CompletableFuture<Boolean> isOnionServiceOnline() {
+    public CompletableFuture<Boolean> isOnionServiceOnlineAsync() {
         future = Optional.of(CompletableFuture.supplyAsync(() -> {
                     torControlProtocol.addHsDescEventListener(this);
 
@@ -58,6 +69,9 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
                     boolean isSuccess;
                     try {
                         isSuccess = countDownLatch.await(timeout, TimeUnit.MILLISECONDS);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt(); // Restore interrupted state
+                        throw new RuntimeException(e);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -66,9 +80,11 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
                     }
 
                     return isOnline;
-                })
-                .whenComplete((nil, throwable) ->
-                        torControlProtocol.removeHsDescEventListener(this)));
+                }, executor)
+                .whenComplete((isOnline, throwable) -> {
+                    torControlProtocol.removeHsDescEventListener(this);
+
+                }));
         return future.get();
     }
 
@@ -77,6 +93,7 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
         if (countDownLatch.getCount() > 0) {
             countDownLatch.countDown();
         }
+        ExecutorFactory.shutdownAndAwaitTermination(executor);
     }
 
     @Override
