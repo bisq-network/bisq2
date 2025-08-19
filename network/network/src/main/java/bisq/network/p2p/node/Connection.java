@@ -276,28 +276,24 @@ public abstract class Connection {
 
             try {
                 NetworkEnvelope networkEnvelope = new NetworkEnvelope(authorizationToken, envelopePayloadMessage);
-                boolean success = false;
                 long ts = System.currentTimeMillis();
                 synchronized (writeLock) {
                     try {
                         networkEnvelopeSocket.send(networkEnvelope);
-                        success = true;
+                        connectionMetrics.onSent(networkEnvelope, System.currentTimeMillis() - ts);
+                        if (envelopePayloadMessage instanceof CloseConnectionMessage) {
+                            log.info("Sent {} from {}",
+                                    StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
+                        } else {
+                            log.debug("Sent {} from {}",
+                                    StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
+                        }
                     } catch (Exception exception) {
                         if (isRunning()) {
                             throw exception;
                         } else {
                             log.info("Send message at stopped connection {} failed with {}", this, ExceptionUtil.getRootCauseMessage(exception));
                         }
-                    }
-                }
-                if (success) {
-                    connectionMetrics.onSent(networkEnvelope, System.currentTimeMillis() - ts);
-                    if (envelopePayloadMessage instanceof CloseConnectionMessage) {
-                        log.info("Sent {} from {}",
-                                StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
-                    } else {
-                        log.debug("Sent {} from {}",
-                                StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
                     }
                 }
                 return this;
