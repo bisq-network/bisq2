@@ -262,11 +262,7 @@ public abstract class Connection {
                 log.debug("Send message failed as connection is already stopped {}", this);
                 throw new ConnectionClosedException(this);
             }
-            AuthorizationToken authorizationToken = authorizationService.createToken(envelopePayloadMessage,
-                    peersNetworkLoadSnapshot.getCurrentNetworkLoad(),
-                    getPeerAddress().getFullAddress(),
-                    sentMessageCounter.getAndIncrement(),
-                    peersCapability.getFeatures());
+            AuthorizationToken authorizationToken = getAuthorizationToken(envelopePayloadMessage);
             if (isStopped()) {
                 log.warn("Message not sent as connection has been shut down already. Message={}, Connection={}",
                         StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
@@ -314,6 +310,14 @@ public abstract class Connection {
                 throw new ConnectionException(exception);
             }
         }, sendExecutor);
+    }
+
+    private AuthorizationToken getAuthorizationToken(EnvelopePayloadMessage envelopePayloadMessage) {
+        return authorizationService.createToken(envelopePayloadMessage,
+                peersNetworkLoadSnapshot.getCurrentNetworkLoad(),
+                getPeerAddress().getFullAddress(),
+                sentMessageCounter.getAndIncrement(),
+                peersCapability.getFeatures());
     }
 
     void stopListening() {
