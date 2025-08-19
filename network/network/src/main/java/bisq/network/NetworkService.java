@@ -187,9 +187,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        NetworkExecutors.initialize(config.getReadExecutorMaxPoolSize(),
-                config.getSendExecutorMaxPoolSize(),
-                config.getNodeExecutorMaxPoolSize(),
+        NetworkExecutors.initialize(config.getNodeExecutorMaxPoolSize(),
                 config.getNotifyExecutorMaxPoolSize());
 
         NetworkId defaultNetworkId = networkIdService.getOrCreateDefaultNetworkId();

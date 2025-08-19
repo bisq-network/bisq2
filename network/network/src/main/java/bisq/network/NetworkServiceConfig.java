@@ -84,8 +84,6 @@ public final class NetworkServiceConfig {
 
         return new NetworkServiceConfig(baseDir.toAbsolutePath().toString(),
                 config.getInt("version"),
-                config.getInt("readExecutorMaxPoolSize"),
-                config.getInt("sendExecutorMaxPoolSize"),
                 config.getInt("nodeExecutorMaxPoolSize"),
                 config.getInt("notifyExecutorMaxPoolSize"),
                 supportedTransportTypes,
@@ -175,8 +173,6 @@ public final class NetworkServiceConfig {
 
     private final String baseDir;
     private final int version;
-    private final int readExecutorMaxPoolSize;
-    private final int sendExecutorMaxPoolSize;
     private final int nodeExecutorMaxPoolSize;
     private final int notifyExecutorMaxPoolSize;
     private final Set<TransportType> supportedTransportTypes;
@@ -192,8 +188,6 @@ public final class NetworkServiceConfig {
 
     public NetworkServiceConfig(String baseDir,
                                 int version,
-                                int readExecutorMaxPoolSize,
-                                int sendExecutorMaxPoolSize,
                                 int nodeExecutorMaxPoolSize,
                                 int notifyExecutorMaxPoolSize,
                                 Set<TransportType> supportedTransportTypes,
@@ -208,8 +202,6 @@ public final class NetworkServiceConfig {
                                 Optional<String> socks5ProxyAddress) {
         this.baseDir = baseDir;
         this.version = version;
-        this.readExecutorMaxPoolSize = readExecutorMaxPoolSize;
-        this.sendExecutorMaxPoolSize = sendExecutorMaxPoolSize;
         this.nodeExecutorMaxPoolSize = nodeExecutorMaxPoolSize;
         this.notifyExecutorMaxPoolSize = notifyExecutorMaxPoolSize;
         this.supportedTransportTypes = supportedTransportTypes;

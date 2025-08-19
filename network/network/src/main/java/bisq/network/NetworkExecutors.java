@@ -34,9 +34,7 @@ public class NetworkExecutors {
     private static ThreadPoolExecutor notifyExecutor;
     private static volatile boolean isInitialized;
 
-    public static void initialize(int readExecutorMaxPoolSize,
-                                  int sendExecutorMaxPoolSize,
-                                  int nodeExecutorMaxPoolSize,
+    public static void initialize(int nodeExecutorMaxPoolSize,
                                   int notifyExecutorMaxPoolSize) {
         checkArgument(!isInitialized, "initialize must not be called twice");
         nodeExecutor = createNodeExecutor(nodeExecutorMaxPoolSize);
