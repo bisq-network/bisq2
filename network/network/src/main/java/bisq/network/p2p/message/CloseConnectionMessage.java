@@ -1,7 +1,7 @@
-package bisq.network.p2p.node;
+package bisq.network.p2p.message;
 
 import bisq.common.proto.ProtobufUtils;
-import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.node.CloseReason;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

@@ -27,6 +27,7 @@ import bisq.common.threading.MaxSizeAwareQueue;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkExecutors;
+import bisq.network.p2p.message.CloseConnectionMessage;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationService;
@@ -267,13 +268,12 @@ public abstract class Connection {
             if (isStopped()) {
                 throw new ConnectionClosedException(this);
             }
-
             try {
-                requestResponseManager.onSent(envelopePayloadMessage);
                 NetworkEnvelope networkEnvelope = createNetworkEnvelope(envelopePayloadMessage, authorizationToken);
                 long ts = System.currentTimeMillis();
                 synchronized (writeLock) {
                     networkEnvelopeSocket.send(networkEnvelope);
+                    requestResponseManager.onSent(envelopePayloadMessage);
                     connectionMetrics.onSent(networkEnvelope, System.currentTimeMillis() - ts);
                     if (envelopePayloadMessage instanceof CloseConnectionMessage) {
                         log.info("Sent {} from {}", StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);

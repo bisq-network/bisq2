@@ -30,6 +30,7 @@ import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkExecutors;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.message.CloseConnectionMessage;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
