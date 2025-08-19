@@ -189,7 +189,7 @@ public abstract class Connection {
                                 networkEnvelope.getAuthorizationToken(),
                                 this);
                         if (isMessageAuthorized) {
-                            NetworkExecutors.getSendExecutor().submit(() -> handler.handleNetworkMessage(envelopePayloadMessage, this));
+                            handler.handleNetworkMessage(envelopePayloadMessage, this);
                             listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onNetworkMessage(envelopePayloadMessage)));
                         }
                     }

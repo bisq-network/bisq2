@@ -637,8 +637,7 @@ public class Node implements Connection.Handler {
     }
 
     @Override
-    public void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage,
-                                     Connection connection) {
+    public void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
         if (isShutdown()) {
             return;
         }
