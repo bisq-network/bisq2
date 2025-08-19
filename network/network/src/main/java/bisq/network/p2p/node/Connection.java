@@ -263,19 +263,20 @@ public abstract class Connection {
             if (isStopped()) {
                 throw new ConnectionClosedException(this);
             }
-            AuthorizationToken authorizationToken = createAuthorizationToken(envelopePayloadMessage);
+
             connectionThrottle.throttleSendMessage();
             if (isStopped()) {
                 throw new ConnectionClosedException(this);
             }
             try {
-                NetworkEnvelope networkEnvelope = createNetworkEnvelope(envelopePayloadMessage, authorizationToken);
-                long ts = System.currentTimeMillis();
                 synchronized (writeLock) {
+                    AuthorizationToken authorizationToken = createAuthorizationToken(envelopePayloadMessage);
+                    NetworkEnvelope networkEnvelope = createNetworkEnvelope(envelopePayloadMessage, authorizationToken);
+                    long ts = System.currentTimeMillis();
                     networkEnvelopeSocket.send(networkEnvelope);
+                    connectionMetrics.onSent(networkEnvelope, System.currentTimeMillis() - ts);
                 }
                 requestResponseManager.onSent(envelopePayloadMessage);
-                connectionMetrics.onSent(networkEnvelope, System.currentTimeMillis() - ts);
                 if (envelopePayloadMessage instanceof CloseConnectionMessage) {
                     log.info("Sent {} from {}", StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
                 }
