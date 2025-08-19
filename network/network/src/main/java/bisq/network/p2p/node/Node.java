@@ -22,6 +22,9 @@ import bisq.common.network.Address;
 import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
+import bisq.common.threading.AbortPolicyWithLogging;
+import bisq.common.threading.ExecutorFactory;
+import bisq.common.threading.MaxSizeAwareQueue;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
@@ -58,6 +61,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -137,6 +141,7 @@ public class Node implements Connection.Handler {
         }
     }
 
+    private final ThreadPoolExecutor executor;
     private final BanList banList;
     private final TransportService transportService;
     private final AuthorizationService authorizationService;
@@ -190,6 +195,8 @@ public class Node implements Connection.Handler {
         this.transportService = transportService;
         this.authorizationService = authorizationService;
         this.networkLoadSnapshot = networkLoadSnapshot;
+
+        executor = createExecutor();
     }
 
 
@@ -296,7 +303,7 @@ public class Node implements Connection.Handler {
                     connectionHandshakes.remove(connectionHandshake.getId());
                 }
             }
-        }, NetworkExecutors.getNodeExecutor());
+        }, executor);
     }
 
     private InboundConnection createInboundConnection(Socket socket, ConnectionHandshake.Result result) {
@@ -407,7 +414,7 @@ public class Node implements Connection.Handler {
         log.debug("Create outbound connection to {}", address);
         // myCapability is set once we have start our sever which happens in initialize()
         return myCapability.map(capability -> CompletableFuture.supplyAsync(() ->
-                        createOutboundConnection(address, capability), NetworkExecutors.getNodeExecutor()))
+                        createOutboundConnection(address, capability), executor))
                 .orElseGet(() -> CompletableFuture.supplyAsync(() -> {
                     int port = networkId.getAddressByTransportTypeMap().get(transportType).getPort();
                     log.warn("We create an outbound connection but we have not initialized our server. " +
@@ -416,7 +423,7 @@ public class Node implements Connection.Handler {
                     initialize();
                     checkArgument(myCapability.isPresent(), "myCapability must be present after initializeServer got called");
                     return createOutboundConnection(address, myCapability.get());
-                }, NetworkExecutors.getNodeExecutor()));
+                }, executor));
     }
 
     private Connection createOutboundConnection(Address address, Capability myCapability) {
@@ -600,7 +607,8 @@ public class Node implements Connection.Handler {
     }
 
     CompletableFuture<Boolean> isPeerOnlineAsync(Address address) {
-        return CompletableFuture.supplyAsync(() -> isPeerOnline(address), NetworkExecutors.getNodeExecutor());
+        // When using Tor we make a hsFetch with a 1 min. timeout
+        return CompletableFuture.supplyAsync(() -> isPeerOnline(address), executor);
     }
 
     boolean isPeerOnline(Address address) {
@@ -905,4 +913,21 @@ public class Node implements Connection.Handler {
             log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(envelopePayloadMessage.toString()));
         }
     }
+
+    private ThreadPoolExecutor createExecutor() {
+        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(100);
+        // We give a large max pool size as at startup we create many connections in parallel.
+        // After startup, it is expected that pool shrinks to 1-3 threads
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                1,
+                12,
+                5,
+                TimeUnit.SECONDS,
+                queue,
+                ExecutorFactory.getThreadFactoryWithCounter("Node-" + getNetworkId().getKeyId()),
+                new AbortPolicyWithLogging());
+        queue.setExecutor(executor);
+        return executor;
+    }
+
 }

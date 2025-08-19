@@ -67,7 +67,7 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
 
                     return isOnline;
                 })
-                .whenComplete((nil, throwable) ->
+                .whenComplete((isOnline, throwable) ->
                         torControlProtocol.removeHsDescEventListener(this)));
         return future.get();
     }
