@@ -159,7 +159,8 @@ public abstract class Connection {
                     readTs = System.currentTimeMillis();
                     if (proto == null) {
                         log.info("Proto from networkEnvelopeSocket.receiveNextEnvelope() is null. " +
-                                "This is expected if the input stream has reached EOF.");
+                                "This is expected if the input stream has reached EOF. We shut down the connection.");
+                        shutdown(CloseReason.EXCEPTION.exception(new EOFException("Input stream reached EOF")));
                         return;
                     }
 
