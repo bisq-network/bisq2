@@ -20,6 +20,7 @@ package bisq.network.p2p.node;
 
 import bisq.common.network.Address;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.network.NetworkExecutors;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
@@ -86,14 +87,7 @@ public class NodesById implements Node.Listener {
         Node node = new Node(networkId, isDefaultNode, nodeConfig, banList, keyBundleService, transportService, networkLoadSnapshot, authorizationService);
         map.put(networkId, node);
         node.addListener(this);
-        //todo
-        listeners.forEach(listener -> {
-            try {
-                listener.onNodeAdded(node);
-            } catch (Exception e) {
-                log.error("Calling onNodeAdded at listener {} failed", listener, e);
-            }
-        });
+        listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onNodeAdded(node)));
         return node;
     }
 
@@ -168,6 +162,7 @@ public class NodesById implements Node.Listener {
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
+        // We do not use NotifyExecutor here as we get called already from the NotifyExecutor
         nodeListeners.forEach(listener -> {
             try {
                 listener.onMessage(envelopePayloadMessage, connection, networkId);
@@ -179,6 +174,7 @@ public class NodesById implements Node.Listener {
 
     @Override
     public void onConnection(Connection connection) {
+        // We do not use NotifyExecutor here as we get called already from the NotifyExecutor
         nodeListeners.forEach(listener -> {
             try {
                 listener.onConnection(connection);
@@ -190,6 +186,7 @@ public class NodesById implements Node.Listener {
 
     @Override
     public void onDisconnect(Connection connection, CloseReason closeReason) {
+        // We do not use NotifyExecutor here as we get called already from the NotifyExecutor
         nodeListeners.forEach(listener -> {
             try {
                 listener.onDisconnect(connection, closeReason);
@@ -203,20 +200,8 @@ public class NodesById implements Node.Listener {
     public void onShutdown(Node node) {
         map.remove(node.getNetworkId());
         node.removeListener(this);
-        listeners.forEach(listener -> {
-            try {
-                listener.onNodeRemoved(node);
-            } catch (Exception e) {
-                log.error("Calling onNodeRemoved at listener {} failed", listener, e);
-            }
-        });
-        nodeListeners.forEach(listener -> {
-            try {
-                listener.onShutdown(node);
-            } catch (Exception e) {
-                log.error("Calling onShutdown at listener {} failed", listener, e);
-            }
-        });
+        listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onNodeRemoved(node)));
+        nodeListeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onShutdown(node)));
     }
 
 
