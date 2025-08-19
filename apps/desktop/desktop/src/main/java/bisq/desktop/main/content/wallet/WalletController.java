@@ -19,6 +19,7 @@ package bisq.desktop.main.content.wallet;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.wallet.dashboard.WalletDashboardController;
 import bisq.desktop.main.content.wallet.receive.WalletReceiveController;
@@ -51,5 +52,13 @@ public class WalletController extends ContentTabController<WalletModel> {
             case WALLET_SETTINGS -> Optional.of(new WalletSettingsController(serviceProvider));
             default -> Optional.empty();
         };
+    }
+
+    void onSetupWalletButtonClicked() {
+        Navigation.navigateTo(NavigationTarget.SETUP_WALLET);
+    }
+
+    void onRestoreWalletLinkClicked() {
+        //todo
     }
 }
