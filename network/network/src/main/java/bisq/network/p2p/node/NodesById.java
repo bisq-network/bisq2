@@ -200,8 +200,22 @@ public class NodesById implements Node.Listener {
     public void onShutdown(Node node) {
         map.remove(node.getNetworkId());
         node.removeListener(this);
-        listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onNodeRemoved(node)));
-        nodeListeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onShutdown(node)));
+
+        // We do not use NotifyExecutor here as we get called already from the NotifyExecutor
+        listeners.forEach(listener -> {
+            try {
+                listener.onNodeRemoved(node);
+            } catch (Exception e) {
+                log.error("Calling onNodeRemoved at listener {} failed", listener, e);
+            }
+        });
+        nodeListeners.forEach(listener -> {
+            try {
+                listener.onShutdown(node);
+            } catch (Exception e) {
+                log.error("Calling onShutdown at listener {} failed", listener, e);
+            }
+        });
     }
 
 
