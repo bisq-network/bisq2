@@ -403,7 +403,7 @@ public class Node implements Connection.Handler {
         log.debug("Create outbound connection to {}", address);
         // myCapability is set once we have start our sever which happens in initialize()
         return myCapability.map(capability -> CompletableFuture.supplyAsync(() ->
-                        createOutboundConnection(address, capability), NetworkExecutors.getSendExecutor()))
+                        createOutboundConnection(address, capability), NetworkExecutors.getNodeExecutor()))
                 .orElseGet(() -> CompletableFuture.supplyAsync(() -> {
                     int port = networkId.getAddressByTransportTypeMap().get(transportType).getPort();
                     log.warn("We create an outbound connection but we have not initialized our server. " +
