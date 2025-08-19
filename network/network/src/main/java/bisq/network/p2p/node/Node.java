@@ -258,60 +258,59 @@ public class Node implements Connection.Handler {
 
     private CompletableFuture<Void> handleNewClientSocketAsync(Socket socket, Capability myCapability) {
         return CompletableFuture.runAsync(() -> {
-            handleNewClientSocket(socket, myCapability);
+            ConnectionHandshake connectionHandshake = null;
+            try {
+                connectionHandshake = new ConnectionHandshake(socket,
+                        banList,
+                        myCapability,
+                        authorizationService,
+                        keyBundle);
+                connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
+                log.debug("Inbound handshake request at: {}", myCapability.getAddress());
+                ConnectionHandshake.Result result = connectionHandshake.onSocket(networkLoadSnapshot.getCurrentNetworkLoad()); // Blocking call
+
+                Address address = result.getPeersCapability().getAddress();
+                log.debug("Inbound handshake completed: Initiated by {} to {}", address, myCapability.getAddress());
+
+                // As time passed we check again if connection is still not available
+                if (inboundConnectionsByAddress.containsKey(address)) {
+                    log.warn("Have already an InboundConnection from {}. This can happen when a " +
+                            "handshake was in progress while we received a new connection from that address. " +
+                            "We close the existing connection (instead of closing the new socket) as the existing connection might be a stale connection.", address);
+                    inboundConnectionsByAddress.get(address).shutdown(CloseReason.MAYBE_STALE_CONNECTION);
+                }
+
+                InboundConnection connection = createInboundConnection(socket, result);
+                inboundConnectionsByAddress.put(connection.getPeerAddress(), connection);
+                listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnection(connection)));
+            } catch (Throwable throwable) {
+                try {
+                    socket.close();
+                } catch (IOException ignore) {
+                }
+
+                handleException(throwable);
+            } finally {
+                if (connectionHandshake != null) {
+                    connectionHandshake.shutdown();
+                    connectionHandshakes.remove(connectionHandshake.getId());
+                }
+            }
         }, NetworkExecutors.getNodeExecutor());
     }
 
-    private void handleNewClientSocket(Socket socket, Capability myCapability) {
-        ConnectionHandshake connectionHandshake = null;
-        try {
-            connectionHandshake = new ConnectionHandshake(socket,
-                    banList,
-                    myCapability,
-                    authorizationService,
-                    keyBundle);
-            connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
-            log.debug("Inbound handshake request at: {}", myCapability.getAddress());
-
-            ConnectionHandshake.Result result = connectionHandshake.onSocket(networkLoadSnapshot.getCurrentNetworkLoad()); // Blocking call
-
-            Address address = result.getPeersCapability().getAddress();
-            log.debug("Inbound handshake completed: Initiated by {} to {}", address, myCapability.getAddress());
-
-            // As time passed we check again if connection is still not available
-            if (inboundConnectionsByAddress.containsKey(address)) {
-                log.warn("Have already an InboundConnection from {}. This can happen when a " +
-                        "handshake was in progress while we received a new connection from that address. " +
-                        "We close the existing connection (instead of closing the new socket) as the existing connection might be a stale connection.", address);
-                inboundConnectionsByAddress.get(address).shutdown(CloseReason.MAYBE_STALE_CONNECTION);
-            }
-
-            NetworkLoadSnapshot peersNetworkLoadSnapshot = new NetworkLoadSnapshot(result.getPeersNetworkLoad());
-            ConnectionThrottle connectionThrottle = new ConnectionThrottle(peersNetworkLoadSnapshot, networkLoadSnapshot, config);
-            InboundConnection connection = new InboundConnection(authorizationService,
-                    result.getConnectionId(),
-                    socket,
-                    result.getPeersCapability(),
-                    peersNetworkLoadSnapshot,
-                    result.getConnectionMetrics(),
-                    connectionThrottle,
-                    this,
-                    this::handleException);
-            inboundConnectionsByAddress.put(connection.getPeerAddress(), connection);
-            listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnection(connection)));
-        } catch (Throwable throwable) {
-            try {
-                socket.close();
-            } catch (IOException ignore) {
-            }
-
-            handleException(throwable);
-        } finally {
-            if (connectionHandshake != null) {
-                connectionHandshake.shutdown();
-                connectionHandshakes.remove(connectionHandshake.getId());
-            }
-        }
+    private InboundConnection createInboundConnection(Socket socket, ConnectionHandshake.Result result) {
+        NetworkLoadSnapshot peersNetworkLoadSnapshot = new NetworkLoadSnapshot(result.getPeersNetworkLoad());
+        ConnectionThrottle connectionThrottle = new ConnectionThrottle(peersNetworkLoadSnapshot, networkLoadSnapshot, config);
+        return new InboundConnection(authorizationService,
+                result.getConnectionId(),
+                socket,
+                result.getPeersCapability(),
+                peersNetworkLoadSnapshot,
+                result.getConnectionMetrics(),
+                connectionThrottle,
+                this,
+                this::handleException);
     }
 
 
