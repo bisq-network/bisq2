@@ -123,6 +123,7 @@ public class Node implements Connection.Handler {
         private final int socketTimeout; // in ms
         private final int sendMessageThrottleTime;
         private final int receiveMessageThrottleTime;
+        private final int maxNumConnectedPeers;
 
         public Config(TransportType transportType,
                       Set<TransportType> supportedTransportTypes,
@@ -130,7 +131,8 @@ public class Node implements Connection.Handler {
                       TransportConfig transportConfig,
                       int socketTimeout,
                       int sendMessageThrottleTime,
-                      int receiveMessageThrottleTime) {
+                      int receiveMessageThrottleTime,
+                      int maxNumConnectedPeers) {
             this.transportType = transportType;
             this.supportedTransportTypes = supportedTransportTypes;
             this.features = features;
@@ -138,6 +140,7 @@ public class Node implements Connection.Handler {
             this.socketTimeout = socketTimeout;
             this.sendMessageThrottleTime = sendMessageThrottleTime;
             this.receiveMessageThrottleTime = receiveMessageThrottleTime;
+            this.maxNumConnectedPeers = maxNumConnectedPeers;
         }
     }
 
@@ -911,15 +914,17 @@ public class Node implements Connection.Handler {
 
     private ThreadPoolExecutor createExecutor() {
         MaxSizeAwareQueue queue = new MaxSizeAwareQueue(100);
-        // We give a large max pool size as at startup we create many connections in parallel.
+        // We use maxNumConnectedPeers (default 12) for the max pool size and add some extra tolerance as at startup we
+        // create many connections in parallel.
         // After startup, it is expected that pool shrinks to 1-3 threads
+        int maximumPoolSize = config.getMaxNumConnectedPeers() + 4;
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 1,
-                12,
+                maximumPoolSize,
                 5,
                 TimeUnit.SECONDS,
                 queue,
-                ExecutorFactory.getThreadFactoryWithCounter("Node-" + getNetworkId().getKeyId()),
+                ExecutorFactory.getThreadFactoryWithCounter("Node-" + StringUtils.truncate(getNetworkId().getFirstAddress(), 8)),
                 new AbortPolicyWithLogging());
         queue.setExecutor(executor);
         return executor;

@@ -99,13 +99,15 @@ public class ServiceNodesByTransport {
 
         supportedTransportTypes.forEach(transportType -> {
             TransportConfig transportConfig = configByTransportType.get(transportType);
+            int maxNumConnectedPeers = peerGroupServiceConfigByTransport.get(transportType).getPeerGroupConfig().getMaxNumConnectedPeers();
             Node.Config nodeConfig = new Node.Config(transportType,
                     supportedTransportTypes,
                     features,
                     transportConfig,
                     transportConfig.getSocketTimeout(),
                     transportConfig.getSendMessageThrottleTime(),
-                    transportConfig.getReceiveMessageThrottleTime());
+                    transportConfig.getReceiveMessageThrottleTime(),
+                    maxNumConnectedPeers);
             Set<Address> seedAddresses = seedAddressesByTransport.get(transportType);
             checkNotNull(seedAddresses, "Seed nodes must be setup for %s", transportType);
             PeerGroupManager.Config peerGroupServiceConfig = peerGroupServiceConfigByTransport.get(transportType);
