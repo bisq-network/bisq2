@@ -50,7 +50,7 @@ public class VerticalCard extends VBox {
 
         setAlignment(Pos.TOP_CENTER);
         //setPadding(CARD_PADDING);
-        getStyleClass().add("bisq-card-bg");
+        getStyleClass().add("bisq-card-dark-bg");
 
        // buildUI(step, imageId, caption, imageWidth, imageHeight);
 
