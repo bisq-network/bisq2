@@ -248,7 +248,7 @@ public class Node implements Connection.Handler {
         myCapability = Optional.of(Capability.myCapability(serverSocketResult.getAddress(), new ArrayList<>(supportedTransportTypes), new ArrayList<>(features)));
         server = Optional.of(new Server(serverSocketResult,
                 socketTimeout,
-                socket -> onClientSocket(socket, myCapability.get()),
+                socket -> handleNewClientSocketAsync(socket, myCapability.get()),
                 exception -> {
                     handleException(exception);
                     // If server fails we shut down the node
@@ -256,7 +256,13 @@ public class Node implements Connection.Handler {
                 }));
     }
 
-    private void onClientSocket(Socket socket, Capability myCapability) {
+    private CompletableFuture<Void> handleNewClientSocketAsync(Socket socket, Capability myCapability) {
+        return CompletableFuture.runAsync(() -> {
+            handleNewClientSocket(socket, myCapability);
+        }, NetworkExecutors.getNodeExecutor());
+    }
+
+    private void handleNewClientSocket(Socket socket, Capability myCapability) {
         ConnectionHandshake connectionHandshake = null;
         try {
             connectionHandshake = new ConnectionHandshake(socket,

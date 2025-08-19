@@ -20,7 +20,6 @@ package bisq.network.p2p.node;
 import bisq.common.network.Address;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.StringUtils;
-import bisq.network.NetworkExecutors;
 import bisq.network.p2p.node.transport.ServerSocketResult;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -55,12 +54,13 @@ public final class Server {
                     socket.setSoTimeout(socketTimeout);
                     log.debug("Accepted new connection on server: {}", serverSocketResult);
                     if (isNotStopped()) {
-                        // Call handler on new thread
-                        NetworkExecutors.getSendExecutor().submit(() -> socketHandler.accept(socket));
+                        // Consumer is expected to be non-blocking
+                        socketHandler.accept(socket);
                     }
                 }
             } catch (IOException e) {
                 if (!isStopped.get()) {
+                    // Consumer is expected to be non-blocking
                     exceptionHandler.accept(e);
                     shutdown();
                 }
