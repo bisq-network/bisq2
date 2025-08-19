@@ -63,6 +63,7 @@ public class OutboundConnection extends Connection {
      */
     @Override
     public Address getPeerAddress() {
-        return address;
+        // In case we get called from constructor address would be null
+        return address != null ? address : peersCapability.getAddress();
     }
 }

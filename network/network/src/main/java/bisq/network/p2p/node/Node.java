@@ -924,7 +924,7 @@ public class Node implements Connection.Handler {
                 5,
                 TimeUnit.SECONDS,
                 queue,
-                ExecutorFactory.getThreadFactoryWithCounter("Node-" + StringUtils.truncate(getNetworkId().getFirstAddress(), 8)),
+                ExecutorFactory.getThreadFactoryWithCounter("Node-" + StringUtils.truncate(getNetworkId().getFirstAddress(), 12)),
                 new AbortPolicyWithLogging());
         queue.setExecutor(executor);
         return executor;

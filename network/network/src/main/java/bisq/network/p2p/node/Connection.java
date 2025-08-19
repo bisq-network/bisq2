@@ -92,7 +92,7 @@ public abstract class Connection {
     @Getter
     private final String id;
     @Getter
-    private final Capability peersCapability;
+    protected final Capability peersCapability;
     @Getter
     private final NetworkLoadSnapshot peersNetworkLoadSnapshot;
     @Getter
@@ -352,10 +352,6 @@ public abstract class Connection {
     // Private
     /* --------------------------------------------------------------------- */
 
-    private String getThreadNameId() {
-        return StringUtils.truncate(getPeerAddress().toString() + "-" + id.substring(0, 8));
-    }
-
     private boolean isInputStreamActive() {
         return !listeningStopped && isRunning();
     }
@@ -368,7 +364,7 @@ public abstract class Connection {
                 5,
                 TimeUnit.SECONDS,
                 deque,
-                ExecutorFactory.getThreadFactoryWithCounter("Network.read"),
+                ExecutorFactory.getThreadFactoryWithCounter("Connection.read-" + StringUtils.truncate(getPeerAddress(), 12)),
                 new AbortPolicyWithLogging());
         deque.setExecutor(executor);
         return executor;
@@ -382,7 +378,7 @@ public abstract class Connection {
                 5,
                 TimeUnit.SECONDS,
                 queue,
-                ExecutorFactory.getThreadFactoryWithCounter("Network.send"),
+                ExecutorFactory.getThreadFactoryWithCounter("Connection.send-" + StringUtils.truncate(getPeerAddress(), 12)),
                 new AbortPolicyWithLogging());
         queue.setExecutor(executor);
         return executor;
