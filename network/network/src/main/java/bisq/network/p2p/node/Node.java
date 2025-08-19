@@ -413,19 +413,25 @@ public class Node implements Connection.Handler {
     }
 
     private CompletableFuture<Connection> createOutboundConnectionAsync(Address address) {
-        log.debug("Create outbound connection to {}", address);
         // myCapability is set once we have start our sever which happens in initialize()
-        return myCapability.map(capability -> CompletableFuture.supplyAsync(() ->
-                        createOutboundConnection(address, capability), executor))
-                .orElseGet(() -> CompletableFuture.supplyAsync(() -> {
+        return myCapability.map(capability -> createOutboundConnectionAsync(address, capability))
+                .orElseGet(() -> {
                     int port = networkId.getAddressByTransportTypeMap().get(transportType).getPort();
                     log.warn("We create an outbound connection but we have not initialized our server. " +
                             "We create a server on port {} now but clients better control node " +
                             "life cycle themselves.", port);
-                    initializeAsync().join(); //todo
-                    checkArgument(myCapability.isPresent(), "myCapability must be present after initializeServer got called");
-                    return createOutboundConnection(address, myCapability.get());
-                }, executor));
+                    return initializeAsync()
+                            .thenCompose(node -> {
+                                checkArgument(myCapability.isPresent(), "myCapability must be present after initializeServer got called");
+                                return createOutboundConnectionAsync(address, myCapability.get());
+                            });
+                });
+    }
+
+    private CompletableFuture<Connection> createOutboundConnectionAsync(Address address, Capability myCapability) {
+        return CompletableFuture.supplyAsync(() -> {
+            return createOutboundConnection(address, myCapability);
+        });
     }
 
     private Connection createOutboundConnection(Address address, Capability myCapability) {
