@@ -259,41 +259,30 @@ public abstract class Connection {
     CompletableFuture<Connection> sendAsync(EnvelopePayloadMessage envelopePayloadMessage) {
         return CompletableFuture.supplyAsync(() -> {
             if (isStopped()) {
-                log.debug("Send message failed as connection is already stopped {}", this);
                 throw new ConnectionClosedException(this);
             }
             AuthorizationToken authorizationToken = createAuthorizationToken(envelopePayloadMessage);
+            connectionThrottle.throttleSendMessage();
             if (isStopped()) {
-                log.warn("Message not sent as connection has been shut down already. Message={}, Connection={}",
-                        StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
-                // We do not throw a ConnectionClosedException here
-                return this;
+                throw new ConnectionClosedException(this);
             }
 
-            connectionThrottle.throttleSendMessage();
-
-            requestResponseManager.onSent(envelopePayloadMessage);
-
-            NetworkEnvelope networkEnvelope = createNetworkEnvelope(envelopePayloadMessage, authorizationToken);
-            long ts = System.currentTimeMillis();
-            synchronized (writeLock) {
-                try {
+            try {
+                requestResponseManager.onSent(envelopePayloadMessage);
+                NetworkEnvelope networkEnvelope = createNetworkEnvelope(envelopePayloadMessage, authorizationToken);
+                long ts = System.currentTimeMillis();
+                synchronized (writeLock) {
                     networkEnvelopeSocket.send(networkEnvelope);
                     connectionMetrics.onSent(networkEnvelope, System.currentTimeMillis() - ts);
                     if (envelopePayloadMessage instanceof CloseConnectionMessage) {
-                        log.info("Sent {} from {}",
-                                StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
-                    } else {
-                        log.debug("Sent {} from {}",
-                                StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
-                    }
-                } catch (Exception exception) {
-                    if (isRunning()) {
-                        throw new ConnectionException(exception);
-                    } else {
-                        log.info("Send message at stopped connection {} failed with {}", this, ExceptionUtil.getRootCauseMessage(exception));
+                        log.info("Sent {} from {}", StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
                     }
                 }
+            } catch (Exception exception) {
+                if (exception instanceof ConnectionException connectionException) {
+                    throw connectionException;
+                }
+                throw new ConnectionException(exception);
             }
             return this;
         }, sendExecutor);
