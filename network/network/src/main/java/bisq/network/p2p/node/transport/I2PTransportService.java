@@ -164,7 +164,7 @@ public class I2PTransportService implements TransportService {
         if (i2pClient == null) {
             return CompletableFuture.completedFuture(true);
         }
-        return CompletableFuture.runAsync(i2pClient::shutdown, NetworkExecutors.getSendExecutor())
+        return CompletableFuture.runAsync(i2pClient::shutdown, NetworkExecutors.getNodeExecutor())
                 .thenApply(nil -> true)
                 .whenComplete((result, throwable) -> setTransportState(TransportState.TERMINATED));
     }

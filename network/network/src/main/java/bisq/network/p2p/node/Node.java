@@ -596,7 +596,7 @@ public class Node implements Connection.Handler {
     }
 
     CompletableFuture<Boolean> isPeerOnlineAsync(Address address) {
-        return CompletableFuture.supplyAsync(() -> isPeerOnline(address), NetworkExecutors.getSendExecutor());
+        return CompletableFuture.supplyAsync(() -> isPeerOnline(address), NetworkExecutors.getNodeExecutor());
     }
 
     boolean isPeerOnline(Address address) {
