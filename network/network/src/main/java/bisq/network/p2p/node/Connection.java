@@ -334,7 +334,7 @@ public abstract class Connection {
             networkEnvelopeSocket.close();
         } catch (IOException ignore) {
         }
-        NetworkExecutors.getSendExecutor().submit(() -> handler.handleConnectionClosed(this, closeReason));
+        handler.handleConnectionClosed(this, closeReason);
         listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnectionClosed(closeReason)));
         listeners.clear();
 
