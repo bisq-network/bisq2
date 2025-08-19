@@ -361,16 +361,6 @@ public class Node implements Connection.Handler {
     // Connection
     /* --------------------------------------------------------------------- */
 
-    public Connection getOrCreateConnection(Address address) {
-        if (outboundConnectionsByAddress.containsKey(address)) {
-            return outboundConnectionsByAddress.get(address);
-        } else if (inboundConnectionsByAddress.containsKey(address)) {
-            return inboundConnectionsByAddress.get(address);
-        } else {
-            return createOutboundConnection(address);
-        }
-    }
-
     public CompletableFuture<Connection> getOrCreateConnectionAsync(Address address) {
         if (outboundConnectionsByAddress.containsKey(address)) {
             return CompletableFuture.completedFuture(outboundConnectionsByAddress.get(address));
@@ -408,10 +398,6 @@ public class Node implements Connection.Handler {
     // OutboundConnection
     /* --------------------------------------------------------------------- */
 
-    private Connection createOutboundConnection(Address address) {
-        return createOutboundConnectionAsync(address).join();
-    }
-
     private CompletableFuture<Connection> createOutboundConnectionAsync(Address address) {
         // myCapability is set once we have start our sever which happens in initialize()
         return myCapability.map(capability -> createOutboundConnectionAsync(address, capability))
@@ -430,28 +416,24 @@ public class Node implements Connection.Handler {
 
     private CompletableFuture<Connection> createOutboundConnectionAsync(Address address, Capability myCapability) {
         return CompletableFuture.supplyAsync(() -> {
-            return createOutboundConnection(address, myCapability);
-        });
-    }
-
-    private Connection createOutboundConnection(Address address, Capability myCapability) {
-        // This code can be removed once no old versions are expected anymore.
-        Capability candidate = Capability.withVersion(myCapability, PREFERRED_VERSION);
-        log.info("Create outbound connection to {} with capability version 1", address);
-        try {
-            return doCreateOutboundConnection(address, candidate);
-        } catch (ConnectionException e) {
-            if (e.getCause() != null && e.getReason() != null && e.getReason() == HANDSHAKE_FAILED) {
-                log.warn("Handshake at creating outbound connection to {} failed. We try again with capability version 0. Error: {}",
-                        address, ExceptionUtil.getRootCauseMessage(e));
-                int version = PREFERRED_VERSION == 0 ? 1 : 0;
-                candidate = Capability.withVersion(myCapability, version);
+            // This code can be removed once no old versions are expected anymore.
+            Capability candidate = Capability.withVersion(myCapability, PREFERRED_VERSION);
+            log.info("Create outbound connection to {} with capability version 1", address);
+            try {
                 return doCreateOutboundConnection(address, candidate);
-            } else {
-                // In case of other ConnectExceptions we don't try again as peer is offline
-                throw e;
+            } catch (ConnectionException e) {
+                if (e.getCause() != null && e.getReason() != null && e.getReason() == HANDSHAKE_FAILED) {
+                    log.warn("Handshake at creating outbound connection to {} failed. We try again with capability version 0. Error: {}",
+                            address, ExceptionUtil.getRootCauseMessage(e));
+                    int version = PREFERRED_VERSION == 0 ? 1 : 0;
+                    candidate = Capability.withVersion(myCapability, version);
+                    return doCreateOutboundConnection(address, candidate);
+                } else {
+                    // In case of other ConnectExceptions we don't try again as peer is offline
+                    throw e;
+                }
             }
-        }
+        }, executor);
     }
 
     private Connection doCreateOutboundConnection(Address address, Capability myCapability) {

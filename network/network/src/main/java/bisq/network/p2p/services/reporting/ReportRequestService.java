@@ -81,28 +81,30 @@ public class ReportRequestService implements Node.Listener {
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Report> request(Address address) {
-        Connection connection = node.getOrCreateConnection(address);
-        String key = connection.getId();
-        if (requestHandlerMap.containsKey(key)) {
-            log.info("requestHandlerMap contains {}. " +
-                            "This is expected if the connection is still pending the response or the peer is not available " +
-                            "but the timeout has not triggered an exception yet. We skip that request. Connection={}",
-                    key, connection);
-            return null;
-        }
-        ReportHandler handler = new ReportHandler(node, connection);
-        requestHandlerMap.put(key, handler);
-        return handler.request()
-                .orTimeout(TIMEOUT_SEC, TimeUnit.SECONDS)
-                .whenComplete((report, throwable) -> {
-                    if (throwable != null) {
-                        log.error("storageReporting failed for address {} with exception: {}",
-                                address, throwable.getMessage());
-                    } else {
-                        log.info("storageReporting successful for address {} with report: {}",
-                                address, report);
+        return node.getOrCreateConnectionAsync(address)
+                .thenCompose(connection -> {
+                    String key = connection.getId();
+                    if (requestHandlerMap.containsKey(key)) {
+                        log.info("requestHandlerMap contains {}. " +
+                                        "This is expected if the connection is still pending the response or the peer is not available " +
+                                        "but the timeout has not triggered an exception yet. We skip that request. Connection={}",
+                                key, connection);
+                        return null;
                     }
-                    requestHandlerMap.remove(key);
+                    ReportHandler handler = new ReportHandler(node, connection);
+                    requestHandlerMap.put(key, handler);
+                    return handler.request()
+                            .orTimeout(TIMEOUT_SEC, TimeUnit.SECONDS)
+                            .whenComplete((report, throwable) -> {
+                                if (throwable != null) {
+                                    log.error("storageReporting failed for address {} with exception: {}",
+                                            address, throwable.getMessage());
+                                } else {
+                                    log.info("storageReporting successful for address {} with report: {}",
+                                            address, report);
+                                }
+                                requestHandlerMap.remove(key);
+                            });
                 });
     }
 }
