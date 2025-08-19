@@ -203,7 +203,7 @@ public class Node implements Connection.Handler {
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Node> initializeAsync() {
-        executor = createExecutor();
+
         return CompletableFuture.supplyAsync(() -> {
             if (startingStateLatch.isPresent() && startingStateLatch.get().getCount() > 0) {
                 try {
@@ -249,7 +249,7 @@ public class Node implements Connection.Handler {
                 }
             }
             return this;
-        }, executor);
+        }, getExecutor());
     }
 
     private void createServerAndListen() {
@@ -305,7 +305,7 @@ public class Node implements Connection.Handler {
                     connectionHandshakes.remove(connectionHandshake.getId());
                 }
             }
-        }, executor);
+        }, getExecutor());
     }
 
     private InboundConnection createInboundConnection(Socket socket, ConnectionHandshake.Result result) {
@@ -433,7 +433,7 @@ public class Node implements Connection.Handler {
                     throw e;
                 }
             }
-        }, executor);
+        }, getExecutor());
     }
 
     private Connection doCreateOutboundConnection(Address address, Capability myCapability) {
@@ -598,7 +598,7 @@ public class Node implements Connection.Handler {
 
     CompletableFuture<Boolean> isPeerOnlineAsync(Address address) {
         // When using Tor we make a hsFetch with a 1 min. timeout
-        return CompletableFuture.supplyAsync(() -> isPeerOnline(address), executor);
+        return CompletableFuture.supplyAsync(() -> isPeerOnline(address), getExecutor());
     }
 
     boolean isPeerOnline(Address address) {
@@ -925,4 +925,10 @@ public class Node implements Connection.Handler {
         return executor;
     }
 
+    private ThreadPoolExecutor getExecutor() {
+        if (executor == null) {
+            executor = createExecutor();
+        }
+        return executor;
+    }
 }
