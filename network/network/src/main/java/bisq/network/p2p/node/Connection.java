@@ -273,11 +273,11 @@ public abstract class Connection {
                 long ts = System.currentTimeMillis();
                 synchronized (writeLock) {
                     networkEnvelopeSocket.send(networkEnvelope);
-                    requestResponseManager.onSent(envelopePayloadMessage);
-                    connectionMetrics.onSent(networkEnvelope, System.currentTimeMillis() - ts);
-                    if (envelopePayloadMessage instanceof CloseConnectionMessage) {
-                        log.info("Sent {} from {}", StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
-                    }
+                }
+                requestResponseManager.onSent(envelopePayloadMessage);
+                connectionMetrics.onSent(networkEnvelope, System.currentTimeMillis() - ts);
+                if (envelopePayloadMessage instanceof CloseConnectionMessage) {
+                    log.info("Sent {} from {}", StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
                 }
             } catch (Exception exception) {
                 if (exception instanceof ConnectionException connectionException) {
