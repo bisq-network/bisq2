@@ -106,7 +106,6 @@ public class ServiceNodesByTransport {
                     features,
                     transportConfig,
                     transportConfig.getSocketTimeout(),
-                    transportConfig.getDevModeDelayInMs(),
                     transportConfig.getSendMessageThrottleTime(),
                     transportConfig.getReceiveMessageThrottleTime());
             Set<Address> seedAddresses = seedAddressesByTransport.get(transportType);

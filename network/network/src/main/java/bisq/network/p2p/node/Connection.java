@@ -267,7 +267,6 @@ public abstract class Connection {
                     getPeerAddress().getFullAddress(),
                     sentMessageCounter.getAndIncrement(),
                     peersCapability.getFeatures());
-            // maybeSimulateDelay();
             return send(envelopePayloadMessage, token);
         }, sendExecutor);
     }

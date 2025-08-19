@@ -26,10 +26,6 @@ public interface TransportConfig {
 
     int getSocketTimeout(); // in ms
 
-    default int getDevModeDelayInMs() {
-        return 0;
-    }
-
     int getSendMessageThrottleTime(); // in ms
 
     int getReceiveMessageThrottleTime(); // in ms
