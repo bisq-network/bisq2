@@ -29,8 +29,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public class NetworkExecutors {
     @Getter
-    private static ThreadPoolExecutor sendExecutor;
-    @Getter
     private static ThreadPoolExecutor nodeExecutor;
     @Getter
     private static ThreadPoolExecutor notifyExecutor;
@@ -41,7 +39,6 @@ public class NetworkExecutors {
                                   int nodeExecutorMaxPoolSize,
                                   int notifyExecutorMaxPoolSize) {
         checkArgument(!isInitialized, "initialize must not be called twice");
-        sendExecutor = createSendExecutor(sendExecutorMaxPoolSize);
         nodeExecutor = createNodeExecutor(nodeExecutorMaxPoolSize);
         notifyExecutor = createNotifyExecutor(notifyExecutorMaxPoolSize);
 
@@ -50,11 +47,9 @@ public class NetworkExecutors {
 
     public static void shutdown() {
         if (isInitialized) {
-            ExecutorFactory.shutdownAndAwaitTermination(sendExecutor);
             ExecutorFactory.shutdownAndAwaitTermination(nodeExecutor);
             ExecutorFactory.shutdownAndAwaitTermination(notifyExecutor);
 
-            sendExecutor = null;
             nodeExecutor = null;
             notifyExecutor = null;
 
@@ -90,32 +85,6 @@ public class NetworkExecutors {
                 TimeUnit.SECONDS,
                 queue,
                 ExecutorFactory.getThreadFactoryWithCounter("Network.notify"),
-                new AbortPolicyWithLogging());
-        queue.setExecutor(executor);
-        return executor;
-    }
-
-    /**
-     * The core pool size is aligned to the broadcasters peer group size of 75% of the peer group (target 12),
-     * thus resulting in 9 in case we broadcast our own message.
-     * We use a higher queue capacity to allow network bursts to some extent.
-     * This pool must be used only for sending messages to the network, either in Connection or in ConnectionHandshake.
-     * <p>
-     * Sending a message start with creating the handshake which starts with creating the socket which is a blocking operation.
-     * Then sending the message (blocking) and waiting for the response (blocking read). After successful handshake we create the connection.
-     * Every send after that will only have the blocking send operation, but there is a throttle to avoid network burst with a Thread.sleep.
-     * Thus, the send operation can take  longer as the actual network IO operation.
-     * This whole process is all covered by that executor.
-     */
-    private static ThreadPoolExecutor createSendExecutor(int maxPoolSize) {
-        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(1000);
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(
-                9,
-                maxPoolSize,
-                30,
-                TimeUnit.SECONDS,
-                queue,
-                ExecutorFactory.getThreadFactoryWithCounter("Network.send"),
                 new AbortPolicyWithLogging());
         queue.setExecutor(executor);
         return executor;
