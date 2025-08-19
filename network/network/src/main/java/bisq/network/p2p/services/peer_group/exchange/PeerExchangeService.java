@@ -18,9 +18,9 @@
 package bisq.network.p2p.services.peer_group.exchange;
 
 import bisq.common.network.Address;
+import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Delay;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.network.NetworkExecutors;
 import bisq.network.p2p.common.RequestResponseHandler;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -66,6 +67,7 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
         }
     }
 
+    private ExecutorService executor;
     private final PeerGroupService peerGroupService;
     private final PeerExchangePolicy policy;
     private final AtomicInteger numRetryAttempts = new AtomicInteger();
@@ -83,11 +85,18 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
     }
 
     public void initialize() {
+        executor = ExecutorFactory.newSingleThreadExecutor("PeerExchangeService");
         super.initialize();
     }
 
     public void shutdown() {
         super.shutdown();
+
+        if (executor != null) {
+            ExecutorFactory.shutdownAndAwaitTermination(executor);
+            executor = null;
+        }
+
         isShutdownInProgress = true;
     }
 
@@ -124,7 +133,7 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
         long delay = policy.getRetryDelay(numRetries);
         log.info("retryPeerExchangeWithDelay. delay={}", delay);
         return Delay.run(this::retryPeerExchange)
-                .withExecutor(NetworkExecutors.getSendExecutor())
+                .withExecutor(executor)
                 .after(delay);
     }
 
@@ -143,16 +152,17 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
 
         CompletableFuture<Boolean> resultFuture = new CompletableFuture<>();
         BatchedPeerExchangePolicy batchedPeerExchangePolicy = new BatchedPeerExchangePolicy(peerGroupService, node, minSuccess, candidates.size());
-        Stream<CompletableFuture<PeerExchangeResponse>> futures = candidates.stream().map(address -> {
-            CompletableFuture<PeerExchangeResponse> requestFuture = requestPeerExchange(address);
-            return requestFuture
-                    .whenComplete((response, throwable) -> {
-                        batchedPeerExchangePolicy.trackSuccess(throwable);
-                        if (batchedPeerExchangePolicy.wasMinSuccessReached()) {
-                            resultFuture.complete(true);
-                        }
-                    });
-        });
+        Stream<CompletableFuture<PeerExchangeResponse>> futures = candidates.stream()
+                .map(address -> {
+                    CompletableFuture<PeerExchangeResponse> requestFuture = requestPeerExchange(address);
+                    return requestFuture
+                            .whenComplete((response, throwable) -> {
+                                batchedPeerExchangePolicy.trackSuccess(throwable);
+                                if (batchedPeerExchangePolicy.wasMinSuccessReached()) {
+                                    resultFuture.complete(true);
+                                }
+                            });
+                });
         CompletableFutureUtils.allOf(futures)
                 .orTimeout(90, SECONDS)
                 .whenComplete((result, throwable) -> {
