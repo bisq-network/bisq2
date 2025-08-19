@@ -26,7 +26,6 @@ import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.platform.MemoryReportService;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.network.NetworkExecutors;
 import bisq.network.SendMessageResult;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -63,7 +62,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
  * Maintains a map of ServiceNodes by transportType. Delegates to relevant ServiceNode.
@@ -160,14 +158,12 @@ public class ServiceNodesByTransport {
     }
 
     public CompletableFuture<Node> supplyInitializedNode(TransportType transportType, NetworkId networkId) {
-        return supplyAsync(() -> {
-            ServiceNode serviceNode = map.get(transportType);
-            if (serviceNode.isNodeInitialized(networkId)) {
-                return serviceNode.findNode(networkId).orElseThrow();
-            } else {
-                return serviceNode.initializeNode(networkId);
-            }
-        }, NetworkExecutors.getNodeExecutor());
+        ServiceNode serviceNode = map.get(transportType);
+        if (serviceNode.isNodeInitialized(networkId)) {
+            return CompletableFuture.completedFuture(serviceNode.findNode(networkId).orElseThrow());
+        } else {
+            return serviceNode.initializeNodeAsync(networkId);
+        }
     }
 
     public void addSeedNodes(Set<AddressByTransportTypeMap> seedNodeMaps) {

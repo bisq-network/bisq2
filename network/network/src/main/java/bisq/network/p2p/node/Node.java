@@ -202,52 +202,54 @@ public class Node implements Connection.Handler {
     // Server
     /* --------------------------------------------------------------------- */
 
-    public void initialize() {
+    public CompletableFuture<Node> initializeAsync() {
         executor = createExecutor();
-
-        if (startingStateLatch.isPresent() && startingStateLatch.get().getCount() > 0) {
-            try {
-                log.info("Our node is still starting up. We block the calling thread until state is RUNNING or a throw and exception after a timeout. Node: {}", getNodeInfo());
-                boolean success = startingStateLatch.get().await(120, TimeUnit.SECONDS);
-                if (!success) {
-                    String errorMessage = "We got called a repeated initialize. State has not change from STARTING to RUNNING in 120 sec. Node: " + getNodeInfo();
-                    log.warn(errorMessage);
-                    throw new RuntimeException(new TimeoutException(errorMessage));
-                } else {
-                    log.debug("We are now in RUNNING state");
-                }
-            } catch (InterruptedException e) {
-                log.warn("Thread got interrupted at initialize method", e);
-                Thread.currentThread().interrupt(); // Restore interrupted state
-            }
-        }
-        synchronized (state) {
-            switch (state.get()) {
-                case NEW: {
-                    setState(STARTING);
-                    startingStateLatch = Optional.of(new CountDownLatch(1));
-                    createServerAndListen();
-                    startingStateLatch.get().countDown();
-                    setState(State.RUNNING);
-                    break;
-                }
-                case STARTING: {
-                    throw new IllegalStateException("STARTING state should never be reached here as we use a " +
-                            "countDownLatch to block while in STARTING state. NetworkId=" + networkId + "; transportType=" + transportType);
-                }
-                case RUNNING: {
-                    log.debug("Got called while already running. We ignore that call.");
-                    break;
-                }
-                case STOPPING:
-                    throw new IllegalStateException("Already stopping. NetworkId=" + networkId + "; transportType=" + transportType);
-                case TERMINATED:
-                    throw new IllegalStateException("Already terminated. NetworkId=" + networkId + "; transportType=" + transportType);
-                default: {
-                    throw new IllegalStateException("Unhandled state " + state.get());
+        return CompletableFuture.supplyAsync(() -> {
+            if (startingStateLatch.isPresent() && startingStateLatch.get().getCount() > 0) {
+                try {
+                    log.info("Our node is still starting up. We block the calling thread until state is RUNNING or a throw and exception after a timeout. Node: {}", getNodeInfo());
+                    boolean success = startingStateLatch.get().await(120, TimeUnit.SECONDS);
+                    if (!success) {
+                        String errorMessage = "We got called a repeated initialize. State has not change from STARTING to RUNNING in 120 sec. Node: " + getNodeInfo();
+                        log.warn(errorMessage);
+                        throw new RuntimeException(new TimeoutException(errorMessage));
+                    } else {
+                        log.debug("We are now in RUNNING state");
+                    }
+                } catch (InterruptedException e) {
+                    log.warn("Thread got interrupted at initialize method", e);
+                    Thread.currentThread().interrupt(); // Restore interrupted state
                 }
             }
-        }
+            synchronized (state) {
+                switch (state.get()) {
+                    case NEW: {
+                        setState(STARTING);
+                        startingStateLatch = Optional.of(new CountDownLatch(1));
+                        createServerAndListen();
+                        startingStateLatch.get().countDown();
+                        setState(State.RUNNING);
+                        break;
+                    }
+                    case STARTING: {
+                        throw new IllegalStateException("STARTING state should never be reached here as we use a " +
+                                "countDownLatch to block while in STARTING state. NetworkId=" + networkId + "; transportType=" + transportType);
+                    }
+                    case RUNNING: {
+                        log.debug("Got called while already running. We ignore that call.");
+                        break;
+                    }
+                    case STOPPING:
+                        throw new IllegalStateException("Already stopping. NetworkId=" + networkId + "; transportType=" + transportType);
+                    case TERMINATED:
+                        throw new IllegalStateException("Already terminated. NetworkId=" + networkId + "; transportType=" + transportType);
+                    default: {
+                        throw new IllegalStateException("Unhandled state " + state.get());
+                    }
+                }
+            }
+            return this;
+        }, executor);
     }
 
     private void createServerAndListen() {
@@ -420,7 +422,7 @@ public class Node implements Connection.Handler {
                     log.warn("We create an outbound connection but we have not initialized our server. " +
                             "We create a server on port {} now but clients better control node " +
                             "life cycle themselves.", port);
-                    initialize();
+                    initializeAsync().join(); //todo
                     checkArgument(myCapability.isPresent(), "myCapability must be present after initializeServer got called");
                     return createOutboundConnection(address, myCapability.get());
                 }, executor));

@@ -97,10 +97,8 @@ public class NodesById implements Node.Listener {
         return node;
     }
 
-    public Node initializeNode(NetworkId networkId) {
-        Node node = getOrCreateNode(networkId);
-        node.initialize();   // blocking
-        return node;
+    public CompletableFuture<Node> initializeNodeAsync(NetworkId networkId) {
+        return getOrCreateNode(networkId).initializeAsync();
     }
 
     public Connection getOrCreateConnection(NetworkId networkId, Address address) {

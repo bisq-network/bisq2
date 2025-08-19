@@ -269,7 +269,7 @@ public class ServiceNode implements Node.Listener {
         setState(State.INITIALIZING);
         return supplyAsync(() -> {
             transportService.initialize();// blocking
-            defaultNode.initialize();// blocking
+            defaultNode.initializeAsync().join();// blocking
             peerGroupManager.ifPresentOrElse(peerGroupManager -> {
                         peerGroupManager.initialize();// blocking
                         setState(State.INITIALIZED);
@@ -294,8 +294,8 @@ public class ServiceNode implements Node.Listener {
                 .whenComplete((result, throwable) -> setState(State.TERMINATED));
     }
 
-    Node initializeNode(NetworkId networkId) {
-        return nodesById.initializeNode(networkId);
+    CompletableFuture<Node> initializeNodeAsync(NetworkId networkId) {
+        return nodesById.initializeNodeAsync(networkId);
     }
 
     boolean isNodeInitialized(NetworkId networkId) {
