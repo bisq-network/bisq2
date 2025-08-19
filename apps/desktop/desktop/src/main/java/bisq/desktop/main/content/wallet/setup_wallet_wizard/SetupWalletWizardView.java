@@ -193,11 +193,14 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
         return label;
     }
 
-    // TODO: Generalise into OverlayWizardView
     private void applyProgress(int progressIndex, boolean delay) {
+        if (progressIndex == 0) {
+            return; // First step does not have a progress label.
+        }
+
         if (progressIndex < progressLabelList.size()) {
             progressLabelList.forEach(label -> label.setOpacity(OPACITY));
-            Label label = progressLabelList.get(progressIndex);
+            Label label = progressLabelList.get(progressIndex - 1); // -1 because first step does not have a progress label.
             if (delay) {
                 UIScheduler.run(() -> Transitions.fade(label, OPACITY, 1, ManagedDuration.getHalfOfDefaultDurationMillis()))
                         .after(ManagedDuration.getHalfOfDefaultDurationMillis());
@@ -207,7 +210,6 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
         }
     }
 
-    // TODO: Generalise into OverlayWizardView
     private HBox createProgressBox() {
         HBox progressBox = new HBox(10);
         progressBox.setAlignment(Pos.CENTER);
@@ -215,12 +217,6 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
         progressBox.setMaxHeight(TOP_PANE_HEIGHT);
         progressBox.setPadding(new Insets(0, 20, 0, 5));
         progressLabelList.clear();
-
-        Label setupOrRestoreWallet = createAndGetProgressLabel(Res.get("wallet.setupOrRestore").toUpperCase(Locale.ROOT));
-        progressLabelList.add(setupOrRestoreWallet);
-        progressBox.getChildren().add(setupOrRestoreWallet);
-
-        progressBox.getChildren().add(getHLine());
 
         Label protectWallet = createAndGetProgressLabel(Res.get("wallet.protectWallet").toUpperCase(Locale.ROOT));
         progressLabelList.add(protectWallet);
