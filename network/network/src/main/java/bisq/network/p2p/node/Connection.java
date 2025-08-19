@@ -262,62 +262,58 @@ public abstract class Connection {
                 log.debug("Send message failed as connection is already stopped {}", this);
                 throw new ConnectionClosedException(this);
             }
-            AuthorizationToken token = authorizationService.createToken(envelopePayloadMessage,
+            AuthorizationToken authorizationToken = authorizationService.createToken(envelopePayloadMessage,
                     peersNetworkLoadSnapshot.getCurrentNetworkLoad(),
                     getPeerAddress().getFullAddress(),
                     sentMessageCounter.getAndIncrement(),
                     peersCapability.getFeatures());
-            return send(envelopePayloadMessage, token);
-        }, sendExecutor);
-    }
+            if (isStopped()) {
+                log.warn("Message not sent as connection has been shut down already. Message={}, Connection={}",
+                        StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
+                // We do not throw a ConnectionClosedException here
+                return this;
+            }
 
-    Connection send(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken) {
-        if (isStopped()) {
-            log.warn("Message not sent as connection has been shut down already. Message={}, Connection={}",
-                    StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
-            // We do not throw a ConnectionClosedException here
-            return this;
-        }
+            connectionThrottle.throttleSendMessage();
 
-        connectionThrottle.throttleSendMessage();
+            requestResponseManager.onSent(envelopePayloadMessage);
 
-        requestResponseManager.onSent(envelopePayloadMessage);
-
-        try {
-            NetworkEnvelope networkEnvelope = new NetworkEnvelope(authorizationToken, envelopePayloadMessage);
-            boolean success = false;
-            long ts = System.currentTimeMillis();
-            synchronized (writeLock) {
-                try {
-                    networkEnvelopeSocket.send(networkEnvelope);
-                    success = true;
-                } catch (Exception exception) {
-                    if (isRunning()) {
-                        throw exception;
-                    } else {
-                        log.info("Send message at stopped connection {} failed with {}", this, ExceptionUtil.getRootCauseMessage(exception));
+            try {
+                NetworkEnvelope networkEnvelope = new NetworkEnvelope(authorizationToken, envelopePayloadMessage);
+                boolean success = false;
+                long ts = System.currentTimeMillis();
+                synchronized (writeLock) {
+                    try {
+                        networkEnvelopeSocket.send(networkEnvelope);
+                        success = true;
+                    } catch (Exception exception) {
+                        if (isRunning()) {
+                            throw exception;
+                        } else {
+                            log.info("Send message at stopped connection {} failed with {}", this, ExceptionUtil.getRootCauseMessage(exception));
+                        }
                     }
                 }
-            }
-            if (success) {
-                connectionMetrics.onSent(networkEnvelope, System.currentTimeMillis() - ts);
-                if (envelopePayloadMessage instanceof CloseConnectionMessage) {
-                    log.info("Sent {} from {}",
-                            StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
-                } else {
-                    log.debug("Sent {} from {}",
-                            StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
+                if (success) {
+                    connectionMetrics.onSent(networkEnvelope, System.currentTimeMillis() - ts);
+                    if (envelopePayloadMessage instanceof CloseConnectionMessage) {
+                        log.info("Sent {} from {}",
+                                StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
+                    } else {
+                        log.debug("Sent {} from {}",
+                                StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
+                    }
                 }
+                return this;
+            } catch (IOException exception) {
+                if (isRunning()) {
+                    log.warn("Send message at {} failed with {}", this, ExceptionUtil.getRootCauseMessage(exception));
+                    shutdown(CloseReason.EXCEPTION.exception(exception));
+                }
+                // We wrap any exception (also expected EOFException in case of connection close), to leave handling of the exception to the caller.
+                throw new ConnectionException(exception);
             }
-            return this;
-        } catch (IOException exception) {
-            if (isRunning()) {
-                log.warn("Send message at {} failed with {}", this, ExceptionUtil.getRootCauseMessage(exception));
-                shutdown(CloseReason.EXCEPTION.exception(exception));
-            }
-            // We wrap any exception (also expected EOFException in case of connection close), to leave handling of the exception to the caller.
-            throw new ConnectionException(exception);
-        }
+        }, sendExecutor);
     }
 
     void stopListening() {
