@@ -34,14 +34,15 @@ public class SetupWalletWizardSetupOrRestoreView extends View<VBox, SetupWalletW
     public SetupWalletWizardSetupOrRestoreView(SetupWalletWizardSetupOrRestoreModel model, SetupWalletWizardSetupOrRestoreController controller) {
         super(new VBox(25), model, controller);
 
-        Label headlineLabel = new Label(Res.get("wallet.headline"));
+        Label headlineLabel = new Label(Res.get("wallet.setupOrRestoreWallet.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
-//        WrappingText descriptionLabel = new WrappingText(Res.get("wallet.description"),"bisq-text-3");
+        Label descriptionLabel = new Label(Res.get("wallet.setupOrRestoreWallet.description"));
+        descriptionLabel.getStyleClass().add("bisq-text-3");
 
-        VBox card1 = new VerticalCard("1", "wallet-password", Res.get("wallet.instruction.caption1"));
-        VBox card2 = new VerticalCard("2", "wallet-seeds", Res.get("wallet.instruction.caption2"));
-        VBox card3 = new VerticalCard("3", "wallet-verify", Res.get("wallet.instruction.caption3"));
+        VBox card1 = new VerticalCard("1", "wallet-password", Res.get("wallet.setupOrRestoreWallet.instruction.caption1"));
+        VBox card2 = new VerticalCard("2", "wallet-seeds", Res.get("wallet.setupOrRestoreWallet.instruction.caption2"));
+        VBox card3 = new VerticalCard("3", "wallet-verify", Res.get("wallet.setupOrRestoreWallet.instruction.caption3"));
 
         HBox cardContainer = new HBox(25);
         cardContainer.setAlignment(Pos.CENTER);
@@ -49,7 +50,7 @@ public class SetupWalletWizardSetupOrRestoreView extends View<VBox, SetupWalletW
         cardContainer.getChildren().addAll(card1, card2, card3);
 
         root.setAlignment(Pos.CENTER);
-        root.getChildren().addAll(headlineLabel, /*descriptionLabel, */cardContainer);
+        root.getChildren().addAll(headlineLabel, descriptionLabel, cardContainer);
     }
 
     @Override

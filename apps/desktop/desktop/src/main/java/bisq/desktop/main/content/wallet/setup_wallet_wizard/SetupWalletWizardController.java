@@ -109,10 +109,10 @@ public class SetupWalletWizardController extends NavigationController {
     protected void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
         String nextString = "", backString = "";
         if (navigationTarget == NavigationTarget.SETUP_OR_RESTORE_WALLET) {
-            backString = Res.get("wallet.setupWallet.backButton");
-            nextString = Res.get("wallet.setupWallet.nextButton");
+            backString = Res.get("wallet.setupOrRestoreWallet.backButton");
+            nextString = Res.get("wallet.setupOrRestoreWallet.nextButton");
         } else if (navigationTarget == NavigationTarget.SETUP_WALLET_PROTECT) {
-            backString = Res.get("wallet.protectWallet.button.skipStep");
+            backString = Res.get("action.back");
             nextString = Res.get("action.next");
         } else if (navigationTarget == NavigationTarget.SETUP_WALLET_BACKUP) {
             backString = Res.get("action.back");
@@ -124,6 +124,9 @@ public class SetupWalletWizardController extends NavigationController {
 
         model.getNextButtonText().set(nextString);
         model.getBackButtonText().set(backString);
+
+        boolean shouldShowHeader = navigationTarget != NavigationTarget.SETUP_OR_RESTORE_WALLET;
+        model.getShouldShowHeader().set(shouldShowHeader);
     }
 
     @Override
@@ -137,7 +140,6 @@ public class SetupWalletWizardController extends NavigationController {
         };
     }
 
-    // TODO: Generalise into OverlayWizardController
     void onNext() {
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
@@ -156,16 +158,19 @@ public class SetupWalletWizardController extends NavigationController {
             model.getCurrentIndex().set(nextIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
             model.getSelectedChildTarget().set(nextTarget);
+            model.getNextButtonDisabled().set(false);
             Navigation.navigateTo(nextTarget);
         }
     }
 
     void onBack() {
         int prevIndex = model.getCurrentIndex().get() - 1;
-        if (prevIndex == -1) { // Handling 'Skip this step' in Protect your wallet
-            handleSkipProtectStep();
-        } else if (prevIndex >= 0) {
-            handleStepBack(prevIndex);
+        if (prevIndex >= 0) {
+            model.setAnimateRightOut(true);
+            model.getCurrentIndex().set(prevIndex);
+            NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
+            model.getSelectedChildTarget().set(nextTarget);
+            Navigation.navigateTo(nextTarget);
         }
     }
 

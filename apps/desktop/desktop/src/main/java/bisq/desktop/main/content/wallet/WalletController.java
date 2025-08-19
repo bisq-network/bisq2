@@ -17,10 +17,8 @@
 
 package bisq.desktop.main.content.wallet;
 
-import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.wallet.dashboard.WalletDashboardController;
 import bisq.desktop.main.content.wallet.receive.WalletReceiveController;
@@ -28,7 +26,6 @@ import bisq.desktop.main.content.wallet.send.WalletSendController;
 import bisq.desktop.main.content.wallet.settings.WalletSettingsController;
 import bisq.desktop.main.content.wallet.txs.WalletTxsController;
 import bisq.desktop.navigation.NavigationTarget;
-import bisq.wallet.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,29 +35,11 @@ import java.util.Optional;
 public class WalletController extends ContentTabController<WalletModel> {
     @Getter
     private final WalletView view;
-    private final WalletService walletService;
-    private Pin isWalletInitializedPin;
 
     public WalletController(ServiceProvider serviceProvider) {
         super(new WalletModel(), NavigationTarget.WALLET, serviceProvider);
-        this.walletService = serviceProvider.getWalletService().orElseThrow();
+
         view = new WalletView(model, this);
-    }
-
-    @Override
-    public void onActivate() {
-        super.onActivate();
-       /* isWalletInitializedPin = FxBindings.bind(model.getIsWalletInitialized())
-                .to(walletService.getIsWalletInitialized());*/
-    }
-
-    @Override
-    public void onDeactivate() {
-        super.onDeactivate();
-      /*  if (isWalletInitializedPin != null) {
-            isWalletInitializedPin.unbind();
-            isWalletInitializedPin = null;
-        }*/
     }
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {

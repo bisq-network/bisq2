@@ -55,8 +55,8 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
     private static final double OPACITY = 0.35;
 
     private final List<Label> progressLabelList = new ArrayList<>();
-    private final HBox progressBox;
-    private final Button nextButton, backButton, closeButton;
+    private final HBox progressBarHeader, closeButtonBox;
+    private final Button nextButton, backButton, progressBarHeaderCloseButton, closeButton;
     private final VBox content;
     private final ChangeListener<Number> currentIndexListener;
     private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
@@ -67,20 +67,20 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(POPUP_HEIGHT);
 
-        progressBox = createProgressBox();
+        HBox progressBox = createProgressBox();
+
+        progressBarHeaderCloseButton = BisqIconButton.createIconButton("close");
+        progressBarHeader = new HBox();
+        progressBarHeader.setAlignment(Pos.CENTER);
+        progressBarHeader.setStyle("-fx-background-color: -bisq-dark-grey-20");
+        progressBarHeader.setMinHeight(TOP_PANE_HEIGHT);
+        progressBarHeader.setMaxHeight(TOP_PANE_HEIGHT);
+        progressBarHeader.setPadding(new Insets(0, 20, 0, 50));
+        progressBarHeader.getChildren().addAll(Spacer.fillHBox(), progressBox, Spacer.fillHBox(), progressBarHeaderCloseButton);
 
         closeButton = BisqIconButton.createIconButton("close");
-
-        HBox hBox = new HBox();
-        hBox.setAlignment(Pos.CENTER);
-        hBox.setStyle("-fx-background-color: -bisq-dark-grey-20");
-        hBox.setMinHeight(TOP_PANE_HEIGHT);
-        hBox.setMaxHeight(TOP_PANE_HEIGHT);
-        hBox.setPadding(new Insets(0, 20, 0, 50));
-        hBox.getChildren().addAll(Spacer.fillHBox(),
-                progressBox,
-                Spacer.fillHBox(),
-                closeButton);
+        closeButtonBox = new HBox(Spacer.fillHBox(), closeButton);
+        closeButtonBox.setPadding(new Insets(16, 20, 0, 0));
 
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
@@ -97,7 +97,7 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
 
         VBox.setMargin(buttons, new Insets(0, 0, BUTTON_BOTTOM, 0));
         VBox.setMargin(content, new Insets(0, 40, 0, 40));
-        root.getChildren().addAll(hBox, content, Spacer.fillVBox(), buttons);
+        root.getChildren().addAll(progressBarHeader, closeButtonBox, content, Spacer.fillVBox(), buttons);
 
         viewChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -124,10 +124,14 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
 
     @Override
     protected void onViewAttached() {
+        progressBarHeader.visibleProperty().bind(model.getShouldShowHeader());
+        progressBarHeader.managedProperty().bind(model.getShouldShowHeader());
+        closeButtonBox.visibleProperty().bind(model.getShouldShowHeader().not());
+        closeButtonBox.managedProperty().bind(model.getShouldShowHeader().not());
+
         nextButton.textProperty().bind(model.getNextButtonText());
         nextButton.visibleProperty().bind(model.getNextButtonVisible());
         nextButton.managedProperty().bind(model.getNextButtonVisible());
-        nextButton.disableProperty().bind(model.getNextButtonDisabled());
 
         backButton.textProperty().bind(model.getBackButtonText());
         backButton.visibleProperty().bind(model.getBackButtonVisible());
@@ -138,6 +142,7 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
 
         nextButton.setOnAction(e -> controller.onNext());
         backButton.setOnAction(evt -> controller.onBack());
+        progressBarHeaderCloseButton.setOnAction(e -> controller.onClose());
         closeButton.setOnAction(e -> controller.onClose());
         root.setOnKeyPressed(controller::onKeyPressed); // To handle Enter, Esc
 
@@ -146,10 +151,14 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
 
     @Override
     protected void onViewDetached() {
+        progressBarHeader.visibleProperty().unbind();
+        progressBarHeader.managedProperty().unbind();
+        closeButtonBox.visibleProperty().unbind();
+        closeButtonBox.managedProperty().unbind();
+
         nextButton.textProperty().unbind();
         nextButton.visibleProperty().unbind();
         nextButton.managedProperty().unbind();
-        nextButton.disableProperty().unbind();
 
         backButton.textProperty().unbind();
         backButton.visibleProperty().unbind();
@@ -160,6 +169,7 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
 
         nextButton.setOnAction(null);
         backButton.setOnAction(null);
+        progressBarHeaderCloseButton.setOnAction(null);
         closeButton.setOnAction(null);
         root.setOnKeyPressed(null);
     }
@@ -181,11 +191,14 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
         return label;
     }
 
-    // TODO: Generalise into OverlayWizardView
     private void applyProgress(int progressIndex, boolean delay) {
+        if (progressIndex == 0) {
+            return; // First step does not have a progress label.
+        }
+
         if (progressIndex < progressLabelList.size()) {
             progressLabelList.forEach(label -> label.setOpacity(OPACITY));
-            Label label = progressLabelList.get(progressIndex);
+            Label label = progressLabelList.get(progressIndex - 1); // -1 because first step does not have a progress label.
             if (delay) {
                 UIScheduler.run(() -> Transitions.fade(label, OPACITY, 1, ManagedDuration.getHalfOfDefaultDurationMillis()))
                         .after(ManagedDuration.getHalfOfDefaultDurationMillis());
@@ -195,7 +208,6 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
         }
     }
 
-    // TODO: Generalise into OverlayWizardView
     private HBox createProgressBox() {
         HBox progressBox = new HBox(10);
         progressBox.setAlignment(Pos.CENTER);
@@ -203,12 +215,6 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
         progressBox.setMaxHeight(TOP_PANE_HEIGHT);
         progressBox.setPadding(new Insets(0, 20, 0, 5));
         progressLabelList.clear();
-
-        Label setupOrRestoreWallet = createAndGetProgressLabel(Res.get("wallet.setupOrRestore").toUpperCase(Locale.ROOT));
-        progressLabelList.add(setupOrRestoreWallet);
-        progressBox.getChildren().add(setupOrRestoreWallet);
-
-        progressBox.getChildren().add(getHLine());
 
         Label protectWallet = createAndGetProgressLabel(Res.get("wallet.protectWallet").toUpperCase(Locale.ROOT));
         progressLabelList.add(protectWallet);
