@@ -269,13 +269,18 @@ public abstract class Connection {
                 throw new ConnectionClosedException(this);
             }
             try {
+                long spentTime;
+                NetworkEnvelope networkEnvelope;
+                // We want to keep the creation of the AuthorizationToken and the sending synchronized to avoid
+                // out of order issues with sentMessageCounter.
                 synchronized (writeLock) {
                     AuthorizationToken authorizationToken = createAuthorizationToken(envelopePayloadMessage);
-                    NetworkEnvelope networkEnvelope = createNetworkEnvelope(envelopePayloadMessage, authorizationToken);
+                    networkEnvelope = createNetworkEnvelope(envelopePayloadMessage, authorizationToken);
                     long ts = System.currentTimeMillis();
                     networkEnvelopeSocket.send(networkEnvelope);
-                    connectionMetrics.onSent(networkEnvelope, System.currentTimeMillis() - ts);
+                    spentTime = System.currentTimeMillis() - ts;
                 }
+                connectionMetrics.onSent(networkEnvelope, spentTime);
                 requestResponseManager.onSent(envelopePayloadMessage);
                 if (envelopePayloadMessage instanceof CloseConnectionMessage) {
                     log.info("Sent {} from {}", StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
