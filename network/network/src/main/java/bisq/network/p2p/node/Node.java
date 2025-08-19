@@ -141,7 +141,7 @@ public class Node implements Connection.Handler {
         }
     }
 
-    private final ThreadPoolExecutor executor;
+    private ThreadPoolExecutor executor;
     private final BanList banList;
     private final TransportService transportService;
     private final AuthorizationService authorizationService;
@@ -195,8 +195,6 @@ public class Node implements Connection.Handler {
         this.transportService = transportService;
         this.authorizationService = authorizationService;
         this.networkLoadSnapshot = networkLoadSnapshot;
-
-        executor = createExecutor();
     }
 
 
@@ -205,6 +203,8 @@ public class Node implements Connection.Handler {
     /* --------------------------------------------------------------------- */
 
     public void initialize() {
+        executor = createExecutor();
+
         if (startingStateLatch.isPresent() && startingStateLatch.get().getCount() > 0) {
             try {
                 log.info("Our node is still starting up. We block the calling thread until state is RUNNING or a throw and exception after a timeout. Node: {}", getNodeInfo());
@@ -737,6 +737,11 @@ public class Node implements Connection.Handler {
                     listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onShutdown(this)));
                     listeners.clear();
                     setState(State.TERMINATED);
+
+                    if (executor != null) {
+                        ExecutorFactory.shutdownAndAwaitTermination(executor);
+                        executor = null;
+                    }
                 })
                 .handle((list, throwable) -> throwable == null);
     }
