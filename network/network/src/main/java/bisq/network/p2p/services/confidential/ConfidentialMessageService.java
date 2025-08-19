@@ -235,19 +235,19 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                 receiverAddress, isPeerOfflineFuture, connection)
                 .exceptionally(e -> Optional.empty());
 
-        // The connection timeout is 120 seconds, we add a bit more here as it should never get triggered anyway.
-        // We get called from NetworkService on the NetworkNodeExecutor thread, thus the blocking join() call is ok.
-        CompletableFuture.anyOf(isPeerOfflineFuture, sendMessageFuture)
-                .orTimeout(150, TimeUnit.SECONDS)
-                .whenComplete((ignore, throwable) -> {
-                    if (throwable instanceof TimeoutException timeoutException) {
-                        log.error("Neither isPeerOffline resulted in a true result nor we got a connection created in 150 seconds. receiverAddress={}", receiverAddress);
-                    }
-                })
-                .join();
-
-        boolean peerDetectedOffline = isPeerOfflineFuture.isDone() && isPeerOfflineFuture.join();
         try {
+            // The connection timeout is 120 seconds, we add a bit more here as it should never get triggered anyway.
+            // We get called from NetworkService on the NetworkNodeExecutor thread, thus the blocking join() call is ok.
+            CompletableFuture.anyOf(isPeerOfflineFuture, sendMessageFuture)
+                    .orTimeout(150, TimeUnit.SECONDS)
+                    .whenComplete((ignore, throwable) -> {
+                        if (throwable instanceof TimeoutException timeoutException) {
+                            log.error("Neither isPeerOffline resulted in a true result nor we got a connection created in 150 seconds. receiverAddress={}", receiverAddress);
+                        }
+                    })
+                    .join();
+
+            boolean peerDetectedOffline = Boolean.TRUE.equals(isPeerOfflineFuture.getNow(false));
             if (peerDetectedOffline) {
                 // We got the result that the peer's onion service is not published in the tor network, thus it is likely that the peer is offline.
                 // It could be though the case that the connection creation running in parallel succeeds, and even we continue with sending a mailbox message
@@ -263,11 +263,10 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                     handleResult(envelopePayloadMessage, messageResult);
                     return messageResult;
                 } else {
-
-                    throw new RuntimeException("Could not send message as result from trySendInParallel was empty.");
+                    throw new RuntimeException("Could not send message. Result from trySendAsync was empty.");
                 }
             } else {
-                throw new RuntimeException("Unexpected case: Peer detected online but no resultFuture provided in trySendOrFallback");
+                throw new RuntimeException("Unexpected case: Peer not detected offline but no result from trySendAsync available.");
             }
         } finally {
             // Make sure that the isPeerOfflineFuture is terminated in case we got a never completing future.

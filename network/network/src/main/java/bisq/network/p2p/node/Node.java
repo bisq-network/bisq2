@@ -145,7 +145,8 @@ public class Node implements Connection.Handler {
         }
     }
 
-    private ThreadPoolExecutor executor;
+    private final Object executorLock = new Object();
+    private volatile ThreadPoolExecutor executor;
     private final BanList banList;
     private final TransportService transportService;
     private final AuthorizationService authorizationService;
@@ -728,9 +729,11 @@ public class Node implements Connection.Handler {
                     listeners.clear();
                     setState(State.TERMINATED);
 
-                    if (executor != null) {
-                        ExecutorFactory.shutdownAndAwaitTermination(executor);
-                        executor = null;
+                    synchronized (executorLock) {
+                        if (executor != null) {
+                            ExecutorFactory.shutdownAndAwaitTermination(executor);
+                            executor = null;
+                        }
                     }
                 })
                 .handle((list, throwable) -> throwable == null);
@@ -927,9 +930,11 @@ public class Node implements Connection.Handler {
         return executor;
     }
 
-    private ThreadPoolExecutor getExecutor() {
-        if (executor == null) {
-            executor = createExecutor();
+    private synchronized ThreadPoolExecutor getExecutor() {
+        synchronized (executorLock) {
+            if (executor == null) {
+                executor = createExecutor();
+            }
         }
         return executor;
     }

@@ -152,16 +152,17 @@ public class ClearNetTransportService implements TransportService {
         Socket socket = new Socket();
         socket.setSoTimeout(socketTimeout);
         socket.connect(new InetSocketAddress(address.getHost(), address.getPort()), connectTimeoutMs);
-
         return socket;
     }
 
     @Override
     public CompletableFuture<Boolean> isPeerOnlineAsync(Address address) {
-        try (Socket ignored = getSocket(address)) {
-            return CompletableFuture.completedFuture(true);
-        } catch (IOException e) {
-            return CompletableFuture.failedFuture(e);
-        }
+        return CompletableFuture.supplyAsync(() -> {
+            try (Socket ignored = getSocket(address)) {
+                return true;
+            } catch (IOException e) {
+                return false;
+            }
+        });
     }
 }
