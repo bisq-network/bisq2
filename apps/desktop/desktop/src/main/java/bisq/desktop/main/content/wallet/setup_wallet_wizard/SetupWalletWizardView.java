@@ -132,7 +132,6 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
         nextButton.textProperty().bind(model.getNextButtonText());
         nextButton.visibleProperty().bind(model.getNextButtonVisible());
         nextButton.managedProperty().bind(model.getNextButtonVisible());
-        nextButton.disableProperty().bind(model.getShouldShowHeader());
 
         backButton.textProperty().bind(model.getBackButtonText());
         backButton.visibleProperty().bind(model.getBackButtonVisible());
@@ -160,7 +159,6 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
         nextButton.textProperty().unbind();
         nextButton.visibleProperty().unbind();
         nextButton.managedProperty().unbind();
-        nextButton.disableProperty().unbind();
 
         backButton.textProperty().unbind();
         backButton.visibleProperty().unbind();

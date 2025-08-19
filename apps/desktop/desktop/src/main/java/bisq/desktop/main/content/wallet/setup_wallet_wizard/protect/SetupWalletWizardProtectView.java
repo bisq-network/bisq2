@@ -86,5 +86,4 @@ public class SetupWalletWizardProtectView extends View<StackPane, SetupWalletWiz
         field.setMaxWidth(380);
         return field;
     }
-
 }

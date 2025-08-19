@@ -140,7 +140,6 @@ public class SetupWalletWizardController extends NavigationController {
         };
     }
 
-    // TODO: Generalise into OverlayWizardController
     void onNext() {
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
@@ -159,16 +158,19 @@ public class SetupWalletWizardController extends NavigationController {
             model.getCurrentIndex().set(nextIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
             model.getSelectedChildTarget().set(nextTarget);
+            model.getNextButtonDisabled().set(false);
             Navigation.navigateTo(nextTarget);
         }
     }
 
     void onBack() {
         int prevIndex = model.getCurrentIndex().get() - 1;
-        if (prevIndex == -1) { // Handling 'Skip this step' in Protect your wallet
-            handleSkipProtectStep();
-        } else if (prevIndex >= 0) {
-            handleStepBack(prevIndex);
+        if (prevIndex >= 0) {
+            model.setAnimateRightOut(true);
+            model.getCurrentIndex().set(prevIndex);
+            NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
+            model.getSelectedChildTarget().set(nextTarget);
+            Navigation.navigateTo(nextTarget);
         }
     }
 
