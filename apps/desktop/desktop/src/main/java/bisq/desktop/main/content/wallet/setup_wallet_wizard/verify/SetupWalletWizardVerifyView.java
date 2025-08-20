@@ -37,7 +37,7 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWizardVerifyModel, SetupWalletWizardVerifyController> {
-    private final static int FEEDBACK_WIDTH = 700;
+    private static final int FEEDBACK_WIDTH = 700;
     private static final int ANSWER_BUTTONS_COUNT = 3;
     private static final int BUTTON_MIN_WIDTH = 160;
     private static final int CONTENT_SPACING = 10;

@@ -36,6 +36,5 @@ public class SetupWalletWizardBackupModel implements Model {
             seedWords[i] = new SimpleStringProperty("");
         }
     }
-
 }
 
