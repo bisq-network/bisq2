@@ -102,6 +102,4 @@ public class SetupWalletWizardBackupController implements Controller {
     private Region getPopupOwner() {
         return (Region) view.getRoot().getParent().getParent();
     }
-
-
 }

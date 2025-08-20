@@ -37,7 +37,7 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class SetupWalletWizardBackupView extends View<StackPane, SetupWalletWizardBackupModel, SetupWalletWizardBackupController> {
-    VBox content;
+    private final VBox content;
     private final List<Label> seedLabelList = new ArrayList<>();
     private final List<ChangeListener<String>> seedWordListeners = new ArrayList<>();
     private final ChangeListener<SeedState> seedStateListener;
@@ -126,7 +126,6 @@ public class SetupWalletWizardBackupView extends View<StackPane, SetupWalletWiza
     }
 
     private void updateUI(SeedState state) {
-
         switch (state) {
             case LOADING -> {
                 root.getChildren().clear();
@@ -146,5 +145,4 @@ public class SetupWalletWizardBackupView extends View<StackPane, SetupWalletWiza
             }
         }
     }
-
 }

@@ -88,6 +88,10 @@ public class WalletService implements Service {
         return client.shutdown();
     }
 
+    public void walletInitialized() {
+        walletInitialized.set(true);
+    }
+
     public void encryptWallet(String password) {
         client.encryptWallet(password);
     }
