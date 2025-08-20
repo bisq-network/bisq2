@@ -36,8 +36,9 @@ public class MockWalletService extends WalletService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        if ((DevMode.isDevMode() && DevMode.devModeWalletSetup())) {
-            walletInitialized.set(true);
+        if (DevMode.isDevMode() && DevMode.isDevModeWalletSetup()) {
+            setWalletInitialized();
+            log.info("Wallet initialized");
         }
         return CompletableFuture.completedFuture(true);
     }
@@ -45,10 +46,6 @@ public class MockWalletService extends WalletService {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         return CompletableFuture.completedFuture(true);
-    }
-
-    public void walletInitialized() {
-        walletInitialized.set(true);
     }
 
     public void encryptWallet(String password) {

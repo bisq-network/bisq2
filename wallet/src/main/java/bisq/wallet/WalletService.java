@@ -43,7 +43,6 @@ public class WalletService implements Service {
     protected final Observable<Coin> balance = new Observable<>();
     protected final ObservableSet<Transaction> transactions = new ObservableSet<>();
     protected final ObservableSet<String> walletAddresses = new ObservableSet<>();
-    @Getter
     protected final Observable<Boolean> walletInitialized = new Observable<>(false);
     protected final Config config;
     private final WalletGrpcClient client;
@@ -88,7 +87,12 @@ public class WalletService implements Service {
         return client.shutdown();
     }
 
-    public void walletInitialized() {
+    public ReadOnlyObservable<Boolean> getWalletInitialized() {
+        return walletInitialized;
+    }
+
+    /** Marks the wallet as initialized (i.e., setup wizard completed). */
+    public void setWalletInitialized() {
         walletInitialized.set(true);
     }
 

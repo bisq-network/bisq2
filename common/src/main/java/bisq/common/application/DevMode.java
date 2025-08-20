@@ -38,9 +38,9 @@ public class DevMode {
     }
 
     @Setter
-    private static boolean devModeWalletSetup;
+    private static boolean isDevModeWalletSetup;
 
-    public static boolean devModeWalletSetup() {
-        return devModeWalletSetup;
+    public static boolean isDevModeWalletSetup() {
+        return isDevModeWalletSetup;
     }
 }

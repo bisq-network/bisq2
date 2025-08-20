@@ -39,13 +39,13 @@ import java.util.Optional;
 public class WalletController extends ContentTabController<WalletModel> {
     @Getter
     private final WalletView view;
-    private final WalletService walletService;
+    private final Optional<WalletService> walletService;
     private Pin isWalletInitializedPin;
 
     public WalletController(ServiceProvider serviceProvider) {
         super(new WalletModel(), NavigationTarget.WALLET, serviceProvider);
 
-        walletService = serviceProvider.getWalletService().orElse(null);
+        walletService = serviceProvider.getWalletService();
 
         view = new WalletView(model, this);
     }
@@ -65,9 +65,8 @@ public class WalletController extends ContentTabController<WalletModel> {
     public void onActivate() {
         super.onActivate();
 
-        if (walletService != null) {
-            isWalletInitializedPin = FxBindings.bind(model.getIsWalletInitialized()).to(walletService.getWalletInitialized());
-        }
+        walletService.ifPresent(service ->
+                isWalletInitializedPin = FxBindings.bind(model.getIsWalletInitialized()).to(service.getWalletInitialized()));
     }
 
     @Override
@@ -76,6 +75,7 @@ public class WalletController extends ContentTabController<WalletModel> {
 
         if (isWalletInitializedPin != null) {
             isWalletInitializedPin.unbind();
+            isWalletInitializedPin = null;
         }
     }
 
