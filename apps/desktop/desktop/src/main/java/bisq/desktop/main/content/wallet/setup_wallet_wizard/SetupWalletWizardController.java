@@ -63,17 +63,17 @@ public class SetupWalletWizardController extends NavigationController {
         view = new SetupWalletWizardView(model, this);
 
         setupWalletWizardSetupOrRestoreController = new SetupWalletWizardSetupOrRestoreController(serviceProvider);
-        setupWalletWizardProtectController = new SetupWalletWizardProtectController(serviceProvider);
+        setupWalletWizardProtectController = new SetupWalletWizardProtectController(serviceProvider,
+                this::onNext,
+                this::setMainButtonsVisibleState);
         setupWalletWizardBackupController = new SetupWalletWizardBackupController(serviceProvider,
                 this::setMainButtonsVisibleState,
-                this::onBack
-        );
+                this::onBack);
         setupWalletWizardVerifyController = new SetupWalletWizardVerifyController(
                 serviceProvider,
                 this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo,
-                this::onBack
-        );
+                this::onBack);
 
         this.walletService = serviceProvider.getWalletService().orElseThrow();
     }
@@ -127,6 +127,9 @@ public class SetupWalletWizardController extends NavigationController {
 
         boolean shouldShowHeader = navigationTarget != NavigationTarget.SETUP_OR_RESTORE_WALLET;
         model.getShouldShowHeader().set(shouldShowHeader);
+
+        boolean shouldShowSkipThisStep = navigationTarget == NavigationTarget.SETUP_WALLET_PROTECT;
+        model.getSkipThisStepHyperLinkVisible().set(shouldShowSkipThisStep);
     }
 
     @Override
@@ -174,30 +177,10 @@ public class SetupWalletWizardController extends NavigationController {
         }
     }
 
-    private void handleSkipProtectStep() {
-        // Validate we're actually on the protection step
-        if (model.getNavigationTarget() != NavigationTarget.SETUP_WALLET_PROTECT) {
-            log.warn("Skip protection step called from invalid state: {}", model.getNavigationTarget());
-            return;
+    void onSkipThisStep() {
+        if (model.getNavigationTarget() == NavigationTarget.SETUP_WALLET_PROTECT) {
+            setupWalletWizardProtectController.handleSkipProtectStep();
         }
-        int nextIndex = model.getCurrentIndex().get() + 1;
-        log.info("Skipping protect step, moving to index {}", nextIndex);
-        //walletService.setNoEncryption();
-        model.setAnimateRightOut(false);
-        model.getCurrentIndex().set(nextIndex);
-        NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
-        model.getSelectedChildTarget().set(nextTarget);
-        Navigation.navigateTo(nextTarget);
-    }
-
-    // TODO: Generalise into OverlayWizardController
-    private void handleStepBack(int prevIndex) {
-        log.info("Navigating back to index {}", prevIndex);
-        model.setAnimateRightOut(true);
-        model.getCurrentIndex().set(prevIndex);
-        NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
-        model.getSelectedChildTarget().set(nextTarget);
-        Navigation.navigateTo(nextTarget);
     }
 
     void onClose() {
@@ -220,6 +203,7 @@ public class SetupWalletWizardController extends NavigationController {
     private void setMainButtonsVisibleState(boolean value) {
         model.getNextButtonVisible().set(value);
         model.getBackButtonVisible().set(value);
+        model.getSkipThisStepHyperLinkVisible().set(value);
     }
 
     private void reset() {

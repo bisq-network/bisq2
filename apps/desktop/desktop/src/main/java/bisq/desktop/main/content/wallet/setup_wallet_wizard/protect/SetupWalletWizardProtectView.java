@@ -17,31 +17,42 @@
 
 package bisq.desktop.main.content.wallet.setup_wallet_wizard.protect;
 
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialPasswordField;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 
 @Slf4j
 public class SetupWalletWizardProtectView extends View<StackPane, SetupWalletWizardProtectModel, SetupWalletWizardProtectController> {
+    private static final double OVERLAY_WIDTH = 700;
+
     private final MaterialTextField passwordField, confirmPasswordField;
+    private final VBox content, skipProtectStepOverlay;
+    private final Button skipProtectStepOverlayBackButton, skipProtectStepOverlayNextButton;
+    private Subscription shouldShowSkipProtectStepOverlayPin;
 
     public SetupWalletWizardProtectView(SetupWalletWizardProtectModel model,
                                         SetupWalletWizardProtectController controller) {
         super(new StackPane(), model, controller);
 
         root.setAlignment(Pos.CENTER);
-        VBox content = new VBox(10);
+        content = new VBox(10);
         content.setAlignment(Pos.TOP_CENTER);
 
         Label headlineLabel = new Label(Res.get("wallet.protectWallet.headline"));
@@ -61,15 +72,35 @@ public class SetupWalletWizardProtectView extends View<StackPane, SetupWalletWiz
         confirmPasswordField = addField(Res.get("wallet.protectWallet.password.confirmPassword"), Res.get("wallet.protectWallet.password.confirmPassword.placeholder"));
         confirmPasswordField.setValidators(model.getConfirmPasswordValidator());
 
+        skipProtectStepOverlayBackButton = new Button(Res.get("wallet.protectWallet.skipStepOverlay.backButton"));
+        skipProtectStepOverlayNextButton = new Button(Res.get("wallet.protectWallet.skipStepOverlay.nextButton"));
+        skipProtectStepOverlayNextButton.setDefaultButton(true);
+        skipProtectStepOverlay = new VBox(20);
+        configSkipProtectStepOverlay();
+        StackPane.setMargin(skipProtectStepOverlay, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
+
         content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, descriptionLabel, passwordField, confirmPasswordField, Spacer.fillVBox());
 
-        root.getChildren().addAll(content);
+        root.getChildren().addAll(content, skipProtectStepOverlay);
     }
 
     @Override
     protected void onViewAttached() {
         passwordField.textProperty().bindBidirectional(model.getPassword());
         confirmPasswordField.textProperty().bindBidirectional(model.getConfirmPassword());
+
+        shouldShowSkipProtectStepOverlayPin = EasyBind.subscribe(model.getShouldShowSkipProtectStepOverlay(), shouldShow -> {
+            skipProtectStepOverlay.setVisible(shouldShow);
+            if (shouldShow) {
+                Transitions.blurStrong(content, 0);
+                Transitions.slideInTop(skipProtectStepOverlay, 450);
+            } else {
+                Transitions.removeEffect(content);
+            }
+        });
+
+        skipProtectStepOverlayBackButton.setOnAction(e -> controller.onDoSkipProtectStep());
+        skipProtectStepOverlayNextButton.setOnAction(e -> controller.onCloseOverlay());
     }
 
     @Override
@@ -79,11 +110,44 @@ public class SetupWalletWizardProtectView extends View<StackPane, SetupWalletWiz
 
         passwordField.textProperty().unbindBidirectional(model.getPassword());
         confirmPasswordField.textProperty().unbindBidirectional(model.getConfirmPassword());
+
+        shouldShowSkipProtectStepOverlayPin.unsubscribe();
+
+        skipProtectStepOverlayBackButton.setOnAction(null);
+        skipProtectStepOverlayNextButton.setOnAction(null);
     }
 
     private MaterialTextField addField(String description, @Nullable String prompt) {
         MaterialPasswordField field = new MaterialPasswordField(description, prompt);
         field.setMaxWidth(380);
         return field;
+    }
+
+    private void configSkipProtectStepOverlay() {
+        VBox overlayContent = new VBox(40);
+        overlayContent.setAlignment(Pos.TOP_CENTER);
+        overlayContent.getStyleClass().setAll("trade-wizard-feedback-bg");
+        overlayContent.setPadding(new Insets(30));
+        overlayContent.setMaxWidth(OVERLAY_WIDTH);
+
+        skipProtectStepOverlay.setVisible(false);
+        skipProtectStepOverlay.setAlignment(Pos.TOP_CENTER);
+
+        Label headlineLabel = new Label(Res.get("wallet.protectWallet.skipStepOverlay.headline"));
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
+
+        Label subtitleLabel = new Label(Res.get("wallet.protectWallet.skipStepOverlay.description"));
+        subtitleLabel.setMinWidth(OVERLAY_WIDTH - 100);
+        subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
+        subtitleLabel.setWrapText(true);
+        subtitleLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
+
+        HBox buttonsBox = new HBox(10, skipProtectStepOverlayBackButton, skipProtectStepOverlayNextButton);
+        buttonsBox.setAlignment(Pos.CENTER);
+
+        VBox.setMargin(headlineLabel, new Insets(20, 0, 0, 0));
+        VBox.setMargin(buttonsBox, new Insets(15, 0, 10, 0));
+        overlayContent.getChildren().addAll(headlineLabel, subtitleLabel, buttonsBox);
+        skipProtectStepOverlay.getChildren().addAll(overlayContent, Spacer.fillVBox());
     }
 }
