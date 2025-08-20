@@ -43,6 +43,8 @@ public class WalletService implements Service {
     protected final Observable<Coin> balance = new Observable<>();
     protected final ObservableSet<Transaction> transactions = new ObservableSet<>();
     protected final ObservableSet<String> walletAddresses = new ObservableSet<>();
+    @Getter
+    protected final Observable<Boolean> walletInitialized = new Observable<>(false);
     protected final Config config;
     private final WalletGrpcClient client;
 

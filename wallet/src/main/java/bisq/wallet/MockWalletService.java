@@ -17,6 +17,7 @@
 
 package bisq.wallet;
 
+import bisq.common.application.DevMode;
 import bisq.common.monetary.Coin;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.wallet.vo.Transaction;
@@ -35,9 +36,8 @@ public class MockWalletService extends WalletService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        if (!config.isEnabled()) {
-            log.info("WalletService was disabled");
-            return CompletableFuture.completedFuture(false);
+        if ((DevMode.isDevMode() && DevMode.devModeWalletSetup())) {
+            walletInitialized.set(true);
         }
         return CompletableFuture.completedFuture(true);
     }
@@ -45,6 +45,10 @@ public class MockWalletService extends WalletService {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         return CompletableFuture.completedFuture(true);
+    }
+
+    public void walletInitialized() {
+        walletInitialized.set(true);
     }
 
     public void encryptWallet(String password) {

@@ -18,6 +18,7 @@
 package bisq.common.application;
 
 import lombok.Setter;
+
 public class DevMode {
     @Setter
     private static boolean isDevMode;
@@ -34,5 +35,12 @@ public class DevMode {
 
     public static long devModeReputationScore() {
         return devModeReputationScore;
+    }
+
+    @Setter
+    private static boolean devModeWalletSetup;
+
+    public static boolean devModeWalletSetup() {
+        return devModeWalletSetup;
     }
 }
