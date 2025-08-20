@@ -61,9 +61,6 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
                 Navigation.navigateTo(NavigationTarget.SETUP_WALLET);
             }
         });
-
-        setupWalletButton.setOnAction(e -> controller.onSetupWalletButtonClicked());
-        restoreWalletLink.setOnAction(e -> controller.onRestoreWalletLinkClicked());
     }
 
     @Override
@@ -72,8 +69,12 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
 
         isWalletInitializedPin.unsubscribe();
 
-        setupWalletButton.setOnAction(null);
-        restoreWalletLink.setOnAction(null);
+        if (setupWalletButton != null) {
+            setupWalletButton.setOnAction(null);
+        }
+        if (restoreWalletLink != null) {
+            restoreWalletLink.setOnAction(null);
+        }
     }
 
     private void setContentToTabs() {
@@ -87,13 +88,19 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
     private void setContentToNotInitialized() {
         Label label = new Label(Res.get("wallet.noSetup.headline"));
         label.getStyleClass().addAll("thin-text", "very-large-text");
+
         setupWalletButton = new Button(Res.get("wallet.noSetup.button.setup"));
         setupWalletButton.setDefaultButton(true);
+        setupWalletButton.setOnAction(e -> controller.onSetupWalletButtonClicked());
+
         restoreWalletLink = new Hyperlink(Res.get("wallet.noSetup.button.restore"));
+        restoreWalletLink.setOnAction(e -> controller.onRestoreWalletLinkClicked());
+
         VBox contentBox = new VBox(20);
         contentBox.getChildren().addAll(label, setupWalletButton, restoreWalletLink);
         contentBox.getStyleClass().add("bisq-common-bg");
         contentBox.setAlignment(Pos.CENTER);
+
         VBox.setVgrow(contentBox, Priority.ALWAYS);
         VBox.setMargin(label, new Insets(0, 0, 20, 0));
         root.setPadding(new Insets(40, 40, 20, 40));
