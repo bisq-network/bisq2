@@ -196,9 +196,10 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
             return; // First step does not have a progress label.
         }
 
-        if (progressIndex < progressLabelList.size()) {
+        int idx = progressIndex - 1; // First step does not have a progress label.
+        if (idx >= 0 && idx < progressLabelList.size()) {
             progressLabelList.forEach(label -> label.setOpacity(OPACITY));
-            Label label = progressLabelList.get(progressIndex - 1); // -1 because first step does not have a progress label.
+            Label label = progressLabelList.get(idx);
             if (delay) {
                 UIScheduler.run(() -> Transitions.fade(label, OPACITY, 1, ManagedDuration.getHalfOfDefaultDurationMillis()))
                         .after(ManagedDuration.getHalfOfDefaultDurationMillis());

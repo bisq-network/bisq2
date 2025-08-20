@@ -22,13 +22,20 @@ import bisq.desktop.main.content.ContentTabView;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class WalletView extends ContentTabView<WalletModel, WalletController> {
+    private Button setupWalletButton;
+    private Hyperlink restoreWalletLink;
     private Subscription isWalletInitializedPin;
 
     public WalletView(WalletModel model, WalletController controller) {
@@ -61,6 +68,13 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
         super.onViewDetached();
 
         isWalletInitializedPin.unsubscribe();
+
+        if (setupWalletButton != null) {
+            setupWalletButton.setOnAction(null);
+        }
+        if (restoreWalletLink != null) {
+            restoreWalletLink.setOnAction(null);
+        }
     }
 
     private void setContentToTabs() {
@@ -72,8 +86,25 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
     }
 
     private void setContentToNotInitialized() {
-        root.setPadding(new Insets(40));
-        root.getChildren().setAll(new Label("TODO"));
+        Label label = new Label(Res.get("wallet.noSetup.headline"));
+        label.getStyleClass().addAll("thin-text", "very-large-text");
+
+        setupWalletButton = new Button(Res.get("wallet.noSetup.button.setup"));
+        setupWalletButton.setDefaultButton(true);
+        setupWalletButton.setOnAction(e -> controller.onSetupWalletButtonClicked());
+
+        restoreWalletLink = new Hyperlink(Res.get("wallet.noSetup.button.restore"));
+        restoreWalletLink.setOnAction(e -> controller.onRestoreWalletLinkClicked());
+
+        VBox contentBox = new VBox(20);
+        contentBox.getChildren().addAll(label, setupWalletButton, restoreWalletLink);
+        contentBox.getStyleClass().add("bisq-common-bg");
+        contentBox.setAlignment(Pos.CENTER);
+
+        VBox.setVgrow(contentBox, Priority.ALWAYS);
+        VBox.setMargin(label, new Insets(0, 0, 20, 0));
+        root.setPadding(new Insets(40, 40, 20, 40));
+        root.getChildren().setAll(contentBox);
     }
 
     private WalletModel getModel() {
