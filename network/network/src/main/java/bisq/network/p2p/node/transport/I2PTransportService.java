@@ -19,6 +19,7 @@ package bisq.network.p2p.node.transport;
 
 import bisq.common.network.Address;
 import bisq.common.network.TransportConfig;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
@@ -43,6 +44,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class I2PTransportService implements TransportService {
@@ -111,11 +113,6 @@ public class I2PTransportService implements TransportService {
         @Override
         public int getSocketTimeout() {
             return 0;
-        }
-
-        @Override
-        public int getDevModeDelayInMs() {
-            return TransportConfig.super.getDevModeDelayInMs();
         }
     }
 
@@ -288,12 +285,7 @@ public class I2PTransportService implements TransportService {
 
     @Override
     public CompletableFuture<Boolean> isPeerOnlineAsync(Address address) {
-        return CompletableFuture.supplyAsync(() -> isPeerOnline(address));
-    }
-
-    @Override
-    public boolean isPeerOnline(Address address) {
-        return i2pClient.isPeerOnline(address.getHost());
+        return CompletableFuture.supplyAsync(() -> i2pClient.isPeerOnline(address.getHost()));
     }
 
     @Getter
