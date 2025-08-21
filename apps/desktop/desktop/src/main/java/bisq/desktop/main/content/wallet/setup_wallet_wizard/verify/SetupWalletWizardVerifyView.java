@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.wallet.setup_wallet_wizard.verify;
 
 import bisq.desktop.common.Transitions;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
@@ -31,6 +32,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
+import javafx.util.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -40,7 +42,7 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
     private static final int FEEDBACK_WIDTH = 700;
     private static final int ANSWER_BUTTONS_COUNT = 3;
     private static final int BUTTON_MIN_WIDTH = 160;
-    private static final int CONTENT_SPACING = 10;
+    private static final int CONTENT_SPACING = 30;
     private static final int BUTTON_SPACING = 20;
 
     private final VBox content;
@@ -51,6 +53,7 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
     private final VBox createWalletSuccess;
     private final Button createWalletSuccessButton;
     private Subscription showCreateWalletSuccessPin;
+    private Subscription transitionSubscription;
 
     public SetupWalletWizardVerifyView(SetupWalletWizardVerifyModel model,
                                        SetupWalletWizardVerifyController controller) {
@@ -62,15 +65,13 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
 
         Label headlineLabel = new Label(Res.get("wallet.verifySeeds.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
-        VBox.setMargin(headlineLabel, new Insets(0, 0, 20, 0));
 
         questionLabel = new Label();
-        questionLabel.getStyleClass().add("bisq-text-1");
-        VBox.setMargin(questionLabel, new Insets(0, 0, 20, 0));
+        questionLabel.getStyleClass().addAll("bisq-text-1", "text-fill-grey-dimmed");
 
         HBox answerButtonsRow = new HBox(BUTTON_SPACING);
         answerButtonsRow.setAlignment(Pos.CENTER);
-        VBox.setMargin(answerButtonsRow, new Insets(0, 0, 20, 0));
+        VBox.setMargin(answerButtonsRow, new Insets(10, 0, 0, 0));
 
         for (int i = 0; i < ANSWER_BUTTONS_COUNT; i++) {
             Button btn = new Button();
@@ -102,22 +103,28 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
 
         createWalletSuccessButton.setOnAction(e -> controller.onCreateWallet());
 
-        showCreateWalletSuccessPin = EasyBind.subscribe(model.getCurrentScreenState(),
-                state -> {
-                    boolean show = state == SetupWalletWizardVerifyModel.ScreenState.SUCCESS;
-                    createWalletSuccess.setVisible(show);
-                    if (show) {
-                        Transitions.blurStrong(content, 0);
-                        Transitions.slideInTop(createWalletSuccess, 450);
-                    } else {
-                        Transitions.removeEffect(content);
-                    }
-                });
+        showCreateWalletSuccessPin = EasyBind.subscribe(model.getCurrentScreenState(), state -> {
+            boolean show = state == SetupWalletWizardVerifyModel.ScreenState.SUCCESS;
+            createWalletSuccess.setVisible(show);
+            if (show) {
+                Transitions.blurStrong(content, 0);
+                Transitions.slideInTop(createWalletSuccess, 450);
+            } else {
+                Transitions.removeEffect(content);
+            }
+        });
+
+        transitionSubscription = EasyBind.subscribe(model.getShouldTransitionToNextQuestion(), shouldTransition -> {
+            if (shouldTransition) {
+                showNextQuestionWithDelayAndAnimation();
+            }
+        });
     }
 
     @Override
     protected void onViewDetached() {
         showCreateWalletSuccessPin.unsubscribe();
+        transitionSubscription.unsubscribe();
         createWalletSuccessButton.setOnAction(null);
         model.getCurrentQuestionIndex().removeListener(questionIndexListener);
         model.getSelectedAnswerIndex().removeListener(answerIndexListener);
@@ -128,7 +135,9 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
         model.getSelectedAnswerIndex().set(-1);
         if (qIdx >= model.getQuestionPositions().size()) {
             questionLabel.setText(Res.get("wallet.verifySeeds.success.title"));
-            for (Button btn : answerButtons) btn.setVisible(false);
+            for (Button btn : answerButtons) {
+                btn.setVisible(false);
+            }
             return;
         }
         int pos = model.getQuestionPositions().get(qIdx);
@@ -168,7 +177,7 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
     }
 
     private VBox getFeedbackContentBox() {
-        VBox contentBox = new VBox(20);
+        VBox contentBox = new VBox(40);
         contentBox.setAlignment(Pos.TOP_CENTER);
         contentBox.getStyleClass().setAll("trade-wizard-feedback-bg");
         contentBox.setPadding(new Insets(30));
@@ -183,6 +192,26 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
         subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
         subtitleLabel.setMinHeight(100);
         subtitleLabel.setWrapText(true);
-        subtitleLabel.getStyleClass().add("bisq-text-21");
+        subtitleLabel.getStyleClass().addAll("bisq-text-21", "text-fill-grey-dimmed");
+    }
+
+    private void showNextQuestionWithDelayAndAnimation() {
+        if (Transitions.useAnimations()) {
+            UIScheduler.run(this::slideNextQuestion).after(250);
+        } else {
+            controller.onGoToNextQuestion();
+        }
+    }
+
+    private void slideNextQuestion() {
+        Transitions.slideOutHorizontal(content, Duration.millis(450), () -> {
+            controller.onGoToNextQuestion();
+            content.setTranslateX(content.getWidth());
+            Transitions.slideInRight(content, 450, () -> {
+                for (Button btn : answerButtons) {
+                    btn.setDisable(false);
+                }
+            });
+        }, false);
     }
 }

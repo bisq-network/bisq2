@@ -18,8 +18,10 @@
 package bisq.desktop.main.content.wallet.setup_wallet_wizard.verify;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -43,6 +45,7 @@ public class SetupWalletWizardVerifyModel implements Model {
     private final StringProperty[] seedWords = new StringProperty[SEED_WORD_COUNT];
 
     private final IntegerProperty selectedAnswerIndex = new SimpleIntegerProperty(INVALID_INDEX);
+    private final BooleanProperty shouldTransitionToNextQuestion = new SimpleBooleanProperty(false);
 
     public enum ScreenState {
         QUIZ,
@@ -92,4 +95,4 @@ public class SetupWalletWizardVerifyModel implements Model {
         currentQuestionIndex.set(0);
         selectedAnswerIndex.set(-1);
     }
-} 
+}

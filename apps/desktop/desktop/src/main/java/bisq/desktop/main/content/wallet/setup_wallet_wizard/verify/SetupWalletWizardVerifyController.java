@@ -33,6 +33,7 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class SetupWalletWizardVerifyController implements Controller {
+    @Getter
     private final SetupWalletWizardVerifyModel model;
     @Getter
     private final SetupWalletWizardVerifyView view;
@@ -66,26 +67,23 @@ public class SetupWalletWizardVerifyController implements Controller {
     public void onDeactivate() {
     }
 
-    public void onAnswerSelected(int idx) {
+    void onAnswerSelected(int idx) {
         model.getSelectedAnswerIndex().set(idx);
     }
 
-    public void onNextWordSelected() {
+    void onNextWordSelected() {
         int qIdx = model.getCurrentQuestionIndex().get();
         int selectedIdx = model.getSelectedAnswerIndex().get();
-        // Defensive: do nothing if no answer selected
         if (selectedIdx == -1) {
             return;
         }
         int correctIdx = model.getCorrectAnswerIndices().get(qIdx);
         if (selectedIdx == correctIdx) {
-            if (qIdx == SetupWalletWizardVerifyModel.QUESTIONS_COUNT - 1) { // Last Q
-                // Use settings if needed
-                //walletService.setIsWalletBackedup(true);
+            if (qIdx == SetupWalletWizardVerifyModel.QUESTIONS_COUNT - 1) {
                 model.getCurrentScreenState().set(SetupWalletWizardVerifyModel.ScreenState.SUCCESS);
                 navigationButtonsVisibleHandler.accept(false);
             } else {
-                model.getCurrentQuestionIndex().set(qIdx + 1);
+                model.getShouldTransitionToNextQuestion().set(true);
             }
         } else {
             new Popup().warning(Res.get("wallet.verifySeeds.wrongWord.description"))
@@ -97,11 +95,33 @@ public class SetupWalletWizardVerifyController implements Controller {
         }
     }
 
-    public SetupWalletWizardVerifyModel getModel() {
-        return model;
+    void onCreateWallet() {
+        walletService.setWalletInitialized();
+        closeAndNavigateToHandler.accept(NavigationTarget.WALLET);
     }
 
-    public void setSeedWords(List<String> seedWords) {
+    void onGoToNextQuestion() {
+        int qIdx = model.getCurrentQuestionIndex().get();
+        model.getCurrentQuestionIndex().set(qIdx + 1);
+        model.getShouldTransitionToNextQuestion().set(false);
+    }
+
+    private void loadSeedWordsAsync(WalletService walletService) {
+        walletService.getSeedWords().thenAccept(seedWords -> UIThread.run(() -> {
+            setSeedWords(seedWords);
+        })).exceptionally(ex -> {
+            Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+
+            log.error("loadSeedWordsAsync :: Failed to load seed words", cause);
+
+            new Popup().invalid("wallet.backupSeeds.error.failedToLoad")
+                    .owner((Region) view.getRoot().getParent().getParent()).show();
+
+            return null;
+        });
+    }
+
+    private void setSeedWords(List<String> seedWords) {
         if (seedWords.size() != 12) {
             throw new IllegalArgumentException("Expected 12 seed words, got " + seedWords.size());
         }
@@ -111,32 +131,7 @@ public class SetupWalletWizardVerifyController implements Controller {
         model.setupQuestions(seedWords);
     }
 
-    private void loadSeedWordsAsync(WalletService walletService) {
-        walletService.getSeedWords()
-                .thenAccept(seedWords ->
-                        UIThread.run(() -> {
-                            setSeedWords(seedWords);
-                        }))
-                .exceptionally(ex -> {
-                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-
-                    log.error("loadSeedWordsAsync :: Failed to load seed words", cause);
-
-                    new Popup().invalid("wallet.backupSeeds.error.failedToLoad")
-                            .owner((Region) view.getRoot().getParent().getParent())
-                            .show();
-
-                    return null;
-                });
-    }
-
-    void onCreateWallet() {
-        walletService.setWalletInitialized();
-        closeAndNavigateToHandler.accept(NavigationTarget.WALLET);
-    }
-
     private Region getPopupOwner() {
         return (Region) view.getRoot().getParent().getParent();
     }
-
 }
