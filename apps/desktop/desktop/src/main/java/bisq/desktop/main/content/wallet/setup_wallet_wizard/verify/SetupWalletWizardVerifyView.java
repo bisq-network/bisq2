@@ -44,10 +44,8 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
     private static final int BUTTON_SPACING = 20;
 
     private final VBox content;
-    private final Label headlineLabel, questionLabel;
-    private final HBox answerButtonsRow;
+    private final Label questionLabel;
     private final Button[] answerButtons = new Button[ANSWER_BUTTONS_COUNT];
-    private final Button nextWordButton;
     private final ChangeListener<Number> questionIndexListener, answerIndexListener;
 
     private final VBox createWalletSuccess;
@@ -62,7 +60,7 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
         content = new VBox(CONTENT_SPACING);
         content.setAlignment(Pos.CENTER);
 
-        headlineLabel = new Label(Res.get("wallet.verifySeeds.headline"));
+        Label headlineLabel = new Label(Res.get("wallet.verifySeeds.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
         VBox.setMargin(headlineLabel, new Insets(0, 0, 20, 0));
 
@@ -70,7 +68,7 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
         questionLabel.getStyleClass().add("bisq-text-1");
         VBox.setMargin(questionLabel, new Insets(0, 0, 20, 0));
 
-        answerButtonsRow = new HBox(BUTTON_SPACING);
+        HBox answerButtonsRow = new HBox(BUTTON_SPACING);
         answerButtonsRow.setAlignment(Pos.CENTER);
         VBox.setMargin(answerButtonsRow, new Insets(0, 0, 20, 0));
 
@@ -83,14 +81,10 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
             answerButtonsRow.getChildren().add(btn);
         }
 
-        nextWordButton = new Button(Res.get("wallet.verifySeeds.button.question.nextWord"));
-        nextWordButton.setDefaultButton(true);
-        nextWordButton.setOnAction(e -> controller.onNextWordSelected());
-
         questionIndexListener = (obs, oldVal, newVal) -> updateQuestion();
         answerIndexListener = (obs, oldVal, newVal) -> updateButtonStylesAndNextState();
 
-        content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, questionLabel, answerButtonsRow, nextWordButton, Spacer.fillVBox());
+        content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, questionLabel, answerButtonsRow, Spacer.fillVBox());
 
         createWalletSuccessButton = new Button(Res.get("wallet.verifySeeds.button.success.nextStep"));
         createWalletSuccess = new VBox(20);
@@ -137,9 +131,6 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
             for (Button btn : answerButtons) btn.setVisible(false);
             return;
         }
-        if (qIdx == SetupWalletWizardVerifyModel.QUESTIONS_COUNT - 1) { // 'Finish' for last button
-            nextWordButton.setText(Res.get("wallet.verifySeeds.button.question.nextWord.last"));
-        }
         int pos = model.getQuestionPositions().get(qIdx);
         questionLabel.setText(Res.get("wallet.verifySeeds.question", (pos + 1)));
         for (int i = 0; i < ANSWER_BUTTONS_COUNT; i++) {
@@ -153,14 +144,9 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
     private void updateButtonStylesAndNextState() {
         int selected = model.getSelectedAnswerIndex().get();
         for (int i = 0; i < ANSWER_BUTTONS_COUNT; i++) {
-            if (i == selected) {
-                answerButtons[i].getStyleClass().add("outlined-button");
-            } else {
-                answerButtons[i].getStyleClass().remove("outlined-button");
-            }
+            answerButtons[i].setDefaultButton(i == selected);
         }
-        // Enable next button only if an answer is selected
-        nextWordButton.setDisable(selected == -1);
+        controller.onNextWordSelected();
     }
 
     private void configCreateWalletSuccess() {

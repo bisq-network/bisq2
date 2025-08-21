@@ -139,4 +139,4 @@ public class SetupWalletWizardVerifyController implements Controller {
         return (Region) view.getRoot().getParent().getParent();
     }
 
-} 
+}
