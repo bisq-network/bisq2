@@ -25,23 +25,38 @@ import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.function.Consumer;
+
 @Slf4j
 public class SetupWalletWizardProtectController implements Controller {
+    @Getter
     private final SetupWalletWizardProtectModel model;
     @Getter
     private final SetupWalletWizardProtectView view;
+    private final Runnable onNextHandler;
+    private final Consumer<Boolean> navigationButtonsVisibleHandler;
 
-    public SetupWalletWizardProtectController(ServiceProvider serviceProvider) {
+    public SetupWalletWizardProtectController(ServiceProvider serviceProvider,
+                                              Runnable onNextHandler,
+                                              Consumer<Boolean> navigationButtonsVisibleHandler) {
         model = new SetupWalletWizardProtectModel();
         view = new SetupWalletWizardProtectView(model, this);
+        this.onNextHandler = onNextHandler;
+        this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
     }
 
     @Override
     public void onActivate() {
+        model.setSkipProtectStep(false);
     }
 
     @Override
     public void onDeactivate() {
+    }
+
+    public void handleSkipProtectStep() {
+        model.getShouldShowSkipProtectStepOverlay().set(true);
+        navigationButtonsVisibleHandler.accept(false);
     }
 
     public boolean isValid() {
@@ -49,10 +64,9 @@ public class SetupWalletWizardProtectController implements Controller {
         String confirmPassword = model.getConfirmPassword().get();
         boolean passwordValid = model.getPasswordValidator().validateAndGet();
         boolean confirmPasswordValid = model.getConfirmPasswordValidator().validateAndGet();
-
-        return passwordValid &&
-                confirmPasswordValid &&
-                password.equals(confirmPassword);
+        boolean isPasswordSetupCorrectly = passwordValid && confirmPasswordValid && password.equals(confirmPassword);
+        boolean shouldSkipThisStep = model.isSkipProtectStep();
+        return isPasswordSetupCorrectly || shouldSkipThisStep;
     }
 
     public void handleInvalidInput() {
@@ -72,8 +86,16 @@ public class SetupWalletWizardProtectController implements Controller {
         return model.getPassword().get();
     }
 
-    public SetupWalletWizardProtectModel getModel() {
-        return model;
+    void onConfirmSkipProtectStep() {
+        model.getShouldShowSkipProtectStepOverlay().set(false);
+        navigationButtonsVisibleHandler.accept(true);
+        model.setSkipProtectStep(true);
+        onNextHandler.run();
+    }
+
+    void onCancelSkipProtectStep() {
+        model.getShouldShowSkipProtectStepOverlay().set(false);
+        navigationButtonsVisibleHandler.accept(true);
     }
 
     private Region getPopupOwner() {

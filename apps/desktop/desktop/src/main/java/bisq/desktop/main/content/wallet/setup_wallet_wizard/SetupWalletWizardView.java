@@ -34,6 +34,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
@@ -42,6 +43,7 @@ import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+
 import java.util.List;
 import java.util.Locale;
 
@@ -49,14 +51,15 @@ import java.util.Locale;
 public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizardModel, SetupWalletWizardController> {
     public static final double POPUP_HEIGHT = OverlayModel.HEIGHT;
     public static final double TOP_PANE_HEIGHT = 55;
-    public static final double BUTTON_HEIGHT = 32;
-    public static final double BUTTON_BOTTOM = 40;
+    public static final double BUTTON_HEIGHT = 33;
+    public static final double BUTTON_BOTTOM = 60;
     public static final double CONTENT_HEIGHT = POPUP_HEIGHT - TOP_PANE_HEIGHT - BUTTON_HEIGHT - BUTTON_BOTTOM;
     private static final double OPACITY = 0.35;
 
     private final List<Label> progressLabelList = new ArrayList<>();
     private final HBox progressBarHeader, closeButtonBox;
     private final Button nextButton, backButton, progressBarHeaderCloseButton, closeButton;
+    private final Hyperlink skipThisStepHyperLink;
     private final VBox content;
     private final ChangeListener<Number> currentIndexListener;
     private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
@@ -87,17 +90,22 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
 
         backButton = new Button(Res.get("action.back"));
         backButton.setFocusTraversable(false);
-        HBox buttons = new HBox(10, backButton, nextButton);
-        buttons.setAlignment(Pos.CENTER);
+        HBox backAndNextButtons = new HBox(10, backButton, nextButton);
+        backAndNextButtons.setAlignment(Pos.CENTER);
+
+        skipThisStepHyperLink = new Hyperlink(Res.get("wallet.skipThisStep"));
+        VBox allButtons = new VBox(5, backAndNextButtons, skipThisStepHyperLink);
+        allButtons.setAlignment(Pos.CENTER);
 
         content = new VBox();
         content.setMinHeight(CONTENT_HEIGHT);
         content.setMaxHeight(CONTENT_HEIGHT);
         content.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(buttons, new Insets(0, 0, BUTTON_BOTTOM, 0));
+        VBox.setMargin(backAndNextButtons, new Insets(0, 0, BUTTON_BOTTOM, 0));
+        VBox.setMargin(skipThisStepHyperLink, new Insets(-50, 0, 30, 0));
         VBox.setMargin(content, new Insets(0, 40, 0, 40));
-        root.getChildren().addAll(progressBarHeader, closeButtonBox, content, Spacer.fillVBox(), buttons);
+        root.getChildren().addAll(progressBarHeader, closeButtonBox, content, Spacer.fillVBox(), allButtons);
 
         viewChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -137,11 +145,15 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
         backButton.visibleProperty().bind(model.getBackButtonVisible());
         backButton.managedProperty().bind(model.getBackButtonVisible());
 
+        skipThisStepHyperLink.visibleProperty().bind(model.getSkipThisStepHyperLinkVisible());
+        skipThisStepHyperLink.managedProperty().bind(model.getSkipThisStepHyperLinkVisible());
+
         model.getCurrentIndex().addListener(currentIndexListener);
         model.getView().addListener(viewChangeListener);
 
         nextButton.setOnAction(e -> controller.onNext());
-        backButton.setOnAction(evt -> controller.onBack());
+        backButton.setOnAction(e -> controller.onBack());
+        skipThisStepHyperLink.setOnAction(e -> controller.onSkipThisStep());
         progressBarHeaderCloseButton.setOnAction(e -> controller.onClose());
         closeButton.setOnAction(e -> controller.onClose());
         root.setOnKeyPressed(controller::onKeyPressed); // To handle Enter, Esc
@@ -164,11 +176,15 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
         backButton.visibleProperty().unbind();
         backButton.managedProperty().unbind();
 
+        skipThisStepHyperLink.visibleProperty().unbind();
+        skipThisStepHyperLink.managedProperty().unbind();
+
         model.getCurrentIndex().removeListener(currentIndexListener);
         model.getView().removeListener(viewChangeListener);
 
         nextButton.setOnAction(null);
         backButton.setOnAction(null);
+        skipThisStepHyperLink.setOnAction(null);
         progressBarHeaderCloseButton.setOnAction(null);
         closeButton.setOnAction(null);
         root.setOnKeyPressed(null);
