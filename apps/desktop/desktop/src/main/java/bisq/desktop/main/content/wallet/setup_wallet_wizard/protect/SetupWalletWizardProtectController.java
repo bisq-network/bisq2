@@ -86,14 +86,14 @@ public class SetupWalletWizardProtectController implements Controller {
         return model.getPassword().get();
     }
 
-    void onDoSkipProtectStep() {
+    void onConfirmSkipProtectStep() {
         model.getShouldShowSkipProtectStepOverlay().set(false);
         navigationButtonsVisibleHandler.accept(true);
         model.setSkipProtectStep(true);
         onNextHandler.run();
     }
 
-    void onCloseOverlay() {
+    void onCancelSkipProtectStep() {
         model.getShouldShowSkipProtectStepOverlay().set(false);
         navigationButtonsVisibleHandler.accept(true);
     }

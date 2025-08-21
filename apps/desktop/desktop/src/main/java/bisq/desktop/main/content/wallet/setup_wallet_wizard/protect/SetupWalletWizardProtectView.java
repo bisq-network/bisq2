@@ -99,8 +99,8 @@ public class SetupWalletWizardProtectView extends View<StackPane, SetupWalletWiz
             }
         });
 
-        skipProtectStepOverlayBackButton.setOnAction(e -> controller.onDoSkipProtectStep());
-        skipProtectStepOverlayNextButton.setOnAction(e -> controller.onCloseOverlay());
+        skipProtectStepOverlayBackButton.setOnAction(e -> controller.onConfirmSkipProtectStep());
+        skipProtectStepOverlayNextButton.setOnAction(e -> controller.onCancelSkipProtectStep());
     }
 
     @Override

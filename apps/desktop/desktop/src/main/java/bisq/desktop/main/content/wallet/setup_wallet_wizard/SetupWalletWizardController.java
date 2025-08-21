@@ -154,8 +154,12 @@ public class SetupWalletWizardController extends NavigationController {
                     setupWalletWizardProtectController.handleInvalidInput();
                     return;
                 }
-                String password = setupWalletWizardProtectController.getPassword();
-                walletService.encryptWallet(password);
+
+                // Only encrypt if the user actually set a password (i.e., did not skip)
+                if (!setupWalletWizardProtectController.getModel().isSkipProtectStep()) {
+                    String password = setupWalletWizardProtectController.getPassword();
+                    walletService.encryptWallet(password);
+                }
             }
             model.setAnimateRightOut(false);
             model.getCurrentIndex().set(nextIndex);
@@ -203,7 +207,8 @@ public class SetupWalletWizardController extends NavigationController {
     private void setMainButtonsVisibleState(boolean value) {
         model.getNextButtonVisible().set(value);
         model.getBackButtonVisible().set(value);
-        model.getSkipThisStepHyperLinkVisible().set(value);
+        boolean isProtectStep = model.getNavigationTarget() == NavigationTarget.SETUP_WALLET_PROTECT;
+        model.getSkipThisStepHyperLinkVisible().set(isProtectStep && value);
     }
 
     private void reset() {
