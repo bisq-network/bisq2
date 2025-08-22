@@ -136,14 +136,14 @@ public class Transitions {
 
 
     public static Timeline slideOutRight(Region node, Runnable finishedHandler) {
-        return slideOutHorizontal(node, finishedHandler, true);
+        return slideOutHorizontal(node, ManagedDuration.getQuoterOfDefaultDuration(), finishedHandler, true);
     }
 
     public static Timeline slideOutLeft(Region node, Runnable finishedHandler) {
-        return slideOutHorizontal(node, finishedHandler, false);
+        return slideOutHorizontal(node, ManagedDuration.getQuoterOfDefaultDuration(), finishedHandler, false);
     }
 
-    public static Timeline slideOutHorizontal(Region node, Runnable finishedHandler, boolean slideOutRight) {
+    public static Timeline slideOutHorizontal(Region node, Duration duration, Runnable finishedHandler, boolean slideOutRight) {
         Timeline timeline = new Timeline();
         if (node == null) {
             if (finishedHandler != null) {
@@ -164,7 +164,6 @@ public class Transitions {
         }
 
         node.setOpacity(1);
-        Duration duration = ManagedDuration.getQuoterOfDefaultDuration();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
         keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                 new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR),

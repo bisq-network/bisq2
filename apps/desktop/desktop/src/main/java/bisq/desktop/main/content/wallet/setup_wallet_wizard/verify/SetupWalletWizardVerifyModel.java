@@ -18,8 +18,10 @@
 package bisq.desktop.main.content.wallet.setup_wallet_wizard.verify;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -33,8 +35,8 @@ import java.util.List;
 @Getter
 public class SetupWalletWizardVerifyModel implements Model {
     public static final int QUESTIONS_COUNT = 6;
+    static final int INVALID_INDEX = -1;
     private static final int SEED_WORD_COUNT = 12;
-    private static final int INVALID_INDEX = -1;
 
     private final IntegerProperty currentQuestionIndex = new SimpleIntegerProperty(0);
     private final List<Integer> questionPositions = new ArrayList<>(); // 0-based positions
@@ -43,6 +45,7 @@ public class SetupWalletWizardVerifyModel implements Model {
     private final StringProperty[] seedWords = new StringProperty[SEED_WORD_COUNT];
 
     private final IntegerProperty selectedAnswerIndex = new SimpleIntegerProperty(INVALID_INDEX);
+    private final BooleanProperty shouldTransitionToNextQuestion = new SimpleBooleanProperty(false);
 
     public enum ScreenState {
         QUIZ,
@@ -90,6 +93,7 @@ public class SetupWalletWizardVerifyModel implements Model {
 
     public void reset() {
         currentQuestionIndex.set(0);
-        selectedAnswerIndex.set(-1);
+        selectedAnswerIndex.set(INVALID_INDEX);
+        shouldTransitionToNextQuestion.set(false);
     }
-} 
+}

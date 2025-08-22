@@ -167,6 +167,8 @@ public class MuSigCreateOfferPriceController implements Controller {
     @Override
     public void onDeactivate() {
         model.getIsOverlayVisible().set(false);
+        model.setShouldFocusPriceComponent(false);
+        navigationButtonsVisibleHandler.accept(true);
 
         priceInputPin.unsubscribe();
         isPriceInvalidPin.unsubscribe();
@@ -174,11 +176,6 @@ public class MuSigCreateOfferPriceController implements Controller {
         percentageInputPin.unsubscribe();
         priceSliderValuePin.unsubscribe();
         percentagePin.unsubscribe();
-
-        navigationButtonsVisibleHandler.accept(true);
-        model.getIsOverlayVisible().set(false);
-
-        model.setShouldFocusPriceComponent(false);
     }
 
     void onPercentageFocused(boolean focused) {
