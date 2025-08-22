@@ -36,10 +36,10 @@ public class I2PKeyGeneration {
     }
 
     public static I2PKeyPair generateKeyPair() {
-        try (ByteArrayOutputStream arrayStream = new ByteArrayOutputStream()) {
+        try (ByteArrayOutputStream identityBytesStream = new ByteArrayOutputStream()) {
             I2PClient client = I2PClientFactory.createClient();
-            Destination destination = client.createDestination(arrayStream, SigType.EdDSA_SHA512_Ed25519);
-            return new I2PKeyPair(destination);
+            Destination destination = client.createDestination(identityBytesStream, SigType.EdDSA_SHA512_Ed25519);
+            return new I2PKeyPair(identityBytesStream.toByteArray(), destination);
         } catch (I2PException | IOException e) {
             throw new RuntimeException("Failed to generate new I2P Destination", e);
         }

@@ -19,9 +19,13 @@ package bisq.security.keys;
 
 import bisq.common.file.FileUtils;
 import lombok.extern.slf4j.Slf4j;
-import net.i2p.data.DataFormatException;
+import net.i2p.client.streaming.I2PSocketManager;
+import net.i2p.client.streaming.I2PSocketManagerFactory;
+import net.i2p.data.Base64;
 import net.i2p.data.Destination;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.file.Path;
 
 @Slf4j
@@ -30,22 +34,30 @@ public class I2PKeyUtils {
         Path i2pPrivateKeyDir = I2PKeyGeneration.getDestinationFilePath(storageDir, tag, "");
         Path destination_b64Path = I2PKeyGeneration.getDestinationFilePath(storageDir, tag, "destination_b64");
         Path destination_b32Path = I2PKeyGeneration.getDestinationFilePath(storageDir, tag, "destination_b32");
+        Path identityBase64Path = I2PKeyGeneration.getDestinationFilePath(storageDir, tag, "identity_b64");
         try {
             log.info("Storing the I2P private key into {}", i2pPrivateKeyDir);
             FileUtils.makeDirs(i2pPrivateKeyDir);
             FileUtils.writeToFile(i2pKeyPair.getDestinationBase64(), destination_b64Path.toFile());
             FileUtils.writeToFile(i2pKeyPair.getDestinationBase32(), destination_b32Path.toFile());
+            FileUtils.writeToFile(Base64.encode(i2pKeyPair.getIdentityBytes()), identityBase64Path.toFile());
         } catch (Exception e) {
             log.error("Could not persist I2P destination files", e);
         }
     }
 
-    public static I2PKeyPair fromDestinationBase64(String destinationBase64) {
-        try {
-            Destination destination = new Destination(destinationBase64);
-            return new I2PKeyPair(destination);
-        } catch (DataFormatException e) {
-            throw new RuntimeException(e);
+    public static I2PKeyPair fromIdentityBase64(String identityBase64) {
+        byte[] identityBytes = Base64.decode(identityBase64);
+        Destination destination = destinationFromIdentityBytes(identityBytes);
+        return new I2PKeyPair(identityBytes, destination);
+    }
+
+    public static Destination destinationFromIdentityBytes(byte[] identityBytes) {
+        try (ByteArrayInputStream identityBytesStream = new ByteArrayInputStream(identityBytes)) {
+            I2PSocketManager manager = I2PSocketManagerFactory.createManager(identityBytesStream);
+            return manager.getSession().getMyDestination();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to generate new I2P Destination", e);
         }
     }
 }

@@ -49,7 +49,8 @@ message TorKeyPair {
   string onionAddress = 3;
 }
 message I2PKeyPair {
-  bytes destinationBytes = 1; // contains both private and public key material
+  bytes identityBytes = 1;    // contains both private and public key material
+  bytes destinationBytes = 2; // contains only the public key material
 }
 message KeyBundle {
   string keyId = 1;

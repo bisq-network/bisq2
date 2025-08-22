@@ -178,11 +178,13 @@ public class I2pClient {
                 long ts = System.currentTimeMillis();
                 log.info("Creating server socket manager for session {} on port {}", sessionId, port);
 
-                byte[] destinationBytes = i2PKeyPair.getDestinationBytes();
+                byte[] identityBytes = i2PKeyPair.getIdentityBytes();
+                log.error("getDestinationBytes {}", i2PKeyPair.getDestinationBytes().length);
+                log.error("identityBytes {}", identityBytes.length); //679
                 I2PSocketManager manager;
-                try (ByteArrayInputStream privKeyStream = new ByteArrayInputStream(destinationBytes)) {
-                    manager = I2PSocketManagerFactory.createDisconnectedManager(privKeyStream, host, port, null);
-                } catch (I2PSessionException e) {
+                try (ByteArrayInputStream identityBytesStream = new ByteArrayInputStream(identityBytes)) {
+                    manager = I2PSocketManagerFactory.createDisconnectedManager(identityBytesStream, host, port, new Properties());
+                } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
 

@@ -1030,7 +1030,6 @@ public class DtoMappings {
         }
     }
 
-
     public static class TorKeyPairMapping {
         public static TorKeyPair toBisq2Model(TorKeyPairDto value) {
             return new TorKeyPair(
@@ -1051,14 +1050,11 @@ public class DtoMappings {
 
     public static class I2PKeyPairMapping {
         public static I2PKeyPair toBisq2Model(I2PKeyPairDto dto) {
-            return new I2PKeyPair(dto.getDestinationBytes());
+            return new I2PKeyPair(dto.identityBytes(), dto.destinationBytes());
         }
 
         public static I2PKeyPairDto fromBisq2Model(I2PKeyPair model) {
-            if (model == null) return null;
-            I2PKeyPairDto dto = new I2PKeyPairDto();
-            dto.setDestinationBytes(model.getDestinationBytes());
-            return dto;
+            return new I2PKeyPairDto(model.getIdentityBytes(), model.getDestinationBytes());
         }
     }
 

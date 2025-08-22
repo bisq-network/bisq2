@@ -30,13 +30,15 @@ import net.i2p.data.Destination;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-// TODO we only maintain the public key material here, thus KeyPair is the wrong term.
-// Investigate if we can create the private key material as well, as we do in tor, and if we need that for
-// handshake validation, or if not rename class to I2pDestination
 @Slf4j
 @EqualsAndHashCode
 @ToString
 public class I2PKeyPair implements PersistableProto {
+    // fullKeyMaterial only contains private and public key material
+    @Getter
+    private final byte[] identityBytes;
+
+    // Destination only contains public key material
     @Getter
     private final byte[] destinationBytes;
 
@@ -44,18 +46,21 @@ public class I2PKeyPair implements PersistableProto {
     private transient String destinationBase32;
     private transient String destinationBase64;
 
-    public I2PKeyPair(Destination destination) {
+    public I2PKeyPair(byte[] identityBytes, Destination destination) {
+        this.identityBytes = identityBytes;
         this.destination = destination;
         this.destinationBytes = destination.toByteArray();
     }
 
-    public I2PKeyPair(byte[] destinationBytes) {
+    public I2PKeyPair(byte[] identityBytes, byte[] destinationBytes) {
+        this.identityBytes = identityBytes;
         this.destinationBytes = destinationBytes;
     }
 
     @Override
     public Message.Builder getBuilder(boolean serializeForHash) {
         return bisq.security.protobuf.I2PKeyPair.newBuilder()
+                .setIdentityBytes(ByteString.copyFrom(identityBytes))
                 .setDestinationBytes(ByteString.copyFrom(destinationBytes));
     }
 
@@ -65,7 +70,8 @@ public class I2PKeyPair implements PersistableProto {
     }
 
     public static I2PKeyPair fromProto(bisq.security.protobuf.I2PKeyPair proto) {
-        return new I2PKeyPair(proto.getDestinationBytes().toByteArray());
+        return new I2PKeyPair(proto.getIdentityBytes().toByteArray(),
+                proto.getDestinationBytes().toByteArray());
     }
 
     public Destination getDestination() {

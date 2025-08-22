@@ -46,7 +46,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import net.i2p.client.streaming.RouterRestartException;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -209,7 +208,6 @@ public class Node implements Connection.Handler {
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Node> initializeAsync() {
-
         return CompletableFuture.supplyAsync(() -> {
             if (startingStateLatch.isPresent() && startingStateLatch.get().getCount() > 0) {
                 try {
