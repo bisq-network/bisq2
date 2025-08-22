@@ -29,6 +29,7 @@ import net.i2p.client.streaming.I2PSocketOptions;
 import net.i2p.data.DataFormatException;
 import net.i2p.data.Destination;
 
+import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -52,7 +53,8 @@ public class I2pClient {
     private final ExecutorService routerInitExecutor;
 
     private final boolean embeddedRouter;
-    private I2pEmbeddedRouter i2pRouter;
+    @Nullable
+    private I2pEmbeddedRouter embeddedI2pRouter;
     private final long socketTimeout;
     private final String dirPath;
     private I2PSession i2pSession;
@@ -79,7 +81,7 @@ public class I2pClient {
         if (isEmbeddedRouter) {
             routerInitExecutor.submit(() -> {
                 long start = System.currentTimeMillis();
-                this.i2pRouter = I2pEmbeddedRouter.getInitializedI2pEmbeddedRouter();
+                this.embeddedI2pRouter = I2pEmbeddedRouter.getInitializedI2pEmbeddedRouter();
                 log.info("Embedded I2P router initialized asynchronously. Took {} ms.", System.currentTimeMillis() - start);
             });
         }
@@ -140,8 +142,8 @@ public class I2pClient {
         });
         sessionMap.clear();
 
-        if (embeddedRouter && i2pRouter != null) {
-            i2pRouter.shutdown();
+        if (embeddedRouter && embeddedI2pRouter != null) {
+            embeddedI2pRouter.shutdown();
         }
 
         routerInitExecutor.shutdownNow();
@@ -263,11 +265,14 @@ public class I2pClient {
         if (destination == null) {
             return false;
         }
-        if (i2pRouter == null) {
+
+        if (embeddedI2pRouter == null) {
             log.warn("I2P router not yet initialized, cannot check peer status for: {}", peer);
-            return false;
+            // todo how to support it with external router?
+            // We need to return true, otherwise we would always send a mailbox msg in case of ext router
+            return true;
         }
-        return i2pRouter.isPeerOnline(destination);
+        return embeddedI2pRouter.isPeerOnline(destination);
     }
 
     public Destination lookupDest(String address) {
