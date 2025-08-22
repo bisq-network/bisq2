@@ -109,11 +109,6 @@ public class I2PTransportService implements TransportService {
             this.receiveMessageThrottleTime = receiveMessageThrottleTime;
             this.proxyList = proxyList;
         }
-
-        @Override
-        public int getSocketTimeout() {
-            return 0;
-        }
     }
 
     private final int socketTimeout;
