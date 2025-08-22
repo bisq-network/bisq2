@@ -31,7 +31,6 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Arrays;
 import java.util.Objects;
@@ -154,29 +153,23 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
         }
 
         model.getSaveButtonDisabled().set(true);
-        try {
-            userIdentityService.createAndPublishNewUserProfile(
-                            nickName,
-                            model.getKeyPair(),
-                            model.getPubKeyHash(),
-                            model.getProofOfWork(),
-                            CURRENT_AVATARS_VERSION,
-                            model.getTerms().get(),
-                            model.getStatement().get())
-                    .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
-                        if (throwable == null) {
-                            model.getCreateProfileProgress().set(0);
-                            close();
-                        } else {
-                            model.getSaveButtonDisabled().set(false);
-                            new Popup().error(throwable).show();
-                        }
-                    }));
-        } catch (GeneralSecurityException e) {
-            log.error("Error creating user profile", e);
-            model.getSaveButtonDisabled().set(false);
-            new Popup().error(e).show();
-        }
+        userIdentityService.createAndPublishNewUserProfile(
+                        nickName,
+                        model.getKeyPair(),
+                        model.getPubKeyHash(),
+                        model.getProofOfWork(),
+                        CURRENT_AVATARS_VERSION,
+                        model.getTerms().get(),
+                        model.getStatement().get())
+                .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
+                    if (throwable == null) {
+                        model.getCreateProfileProgress().set(0);
+                        close();
+                    } else {
+                        model.getSaveButtonDisabled().set(false);
+                        new Popup().error(throwable).show();
+                    }
+                }));
     }
 
     protected void close() {

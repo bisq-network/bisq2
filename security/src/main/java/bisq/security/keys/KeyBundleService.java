@@ -170,18 +170,17 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
         }
     }
 
-    public KeyBundle createAndPersistKeyBundle(String identityTag, KeyPair keyPair) throws GeneralSecurityException {
-        String keyId = getKeyIdFromTag(identityTag);
-        TorKeyPair torKeyPair = TorKeyGeneration.generateKeyPair();
-        I2PKeyPair i2pKeyPair = null;
+    public KeyBundle createAndPersistKeyBundle(String identityTag, KeyPair keyPair) {
         try {
-            i2pKeyPair = I2PKeyGeneration.generateKeyPair(i2pPersistencePath, identityTag);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
+            String keyId = getKeyIdFromTag(identityTag);
+            TorKeyPair torKeyPair = TorKeyGeneration.generateKeyPair();
+            I2PKeyPair i2pKeyPair = I2PKeyGeneration.generateKeyPair(i2pPersistencePath, identityTag);
+            KeyBundle keyBundle = new KeyBundle(keyId, keyPair, torKeyPair, i2pKeyPair);
+            persistKeyBundle(keyId, keyBundle);
+            return keyBundle;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        KeyBundle keyBundle = new KeyBundle(keyId, keyPair, torKeyPair, i2pKeyPair);
-        persistKeyBundle(keyId, keyBundle);
-        return keyBundle;
     }
 
     public CompletableFuture<KeyBundle> getOrCreateKeyBundleAsync(String keyId) {
