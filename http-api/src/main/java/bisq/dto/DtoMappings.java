@@ -1051,13 +1051,13 @@ public class DtoMappings {
 
     public static class I2PKeyPairMapping {
         public static I2PKeyPair toBisq2Model(I2PKeyPairDto dto) {
-            return new I2PKeyPair(dto.getDestinationKey());
+            return new I2PKeyPair(dto.getDestinationBytes());
         }
 
         public static I2PKeyPairDto fromBisq2Model(I2PKeyPair model) {
             if (model == null) return null;
             I2PKeyPairDto dto = new I2PKeyPairDto();
-            dto.setDestinationKey(model.getDestinationBytes());
+            dto.setDestinationBytes(model.getDestinationBytes());
             return dto;
         }
     }

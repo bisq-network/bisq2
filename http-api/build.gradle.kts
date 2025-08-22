@@ -35,6 +35,7 @@ dependencies {
     implementation("network:network-identity")
 
     implementation(libs.typesafe.config)
+    implementation(libs.bundles.i2p)
     implementation(libs.bundles.rest.api.libs)
     implementation(libs.bundles.websocket.libs)
 }

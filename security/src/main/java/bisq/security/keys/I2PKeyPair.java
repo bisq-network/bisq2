@@ -44,6 +44,11 @@ public class I2PKeyPair implements PersistableProto {
     private transient String destinationBase32;
     private transient String destinationBase64;
 
+    public I2PKeyPair(Destination destination) {
+        this.destination = destination;
+        this.destinationBytes = destination.toByteArray();
+    }
+
     public I2PKeyPair(byte[] destinationBytes) {
         this.destinationBytes = destinationBytes;
     }

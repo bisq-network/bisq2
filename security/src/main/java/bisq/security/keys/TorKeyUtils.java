@@ -35,4 +35,8 @@ public class TorKeyUtils {
             log.error("Could not persist torIdentity", e);
         }
     }
+
+    public static TorKeyPair fromPrivateKey(String privateKeyEncoded) {
+        return TorKeyGeneration.generateKeyPair(Hex.decode(privateKeyEncoded));
+    }
 }

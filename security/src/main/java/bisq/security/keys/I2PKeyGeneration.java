@@ -17,76 +17,31 @@
 
 package bisq.security.keys;
 
-import net.i2p.I2PException;
-import net.i2p.client.I2PClientFactory;
-import net.i2p.data.DataFormatException;
-import net.i2p.data.Destination;
-import net.i2p.crypto.SigType;
 import lombok.extern.slf4j.Slf4j;
+import net.i2p.I2PException;
+import net.i2p.client.I2PClient;
+import net.i2p.client.I2PClientFactory;
+import net.i2p.crypto.SigType;
+import net.i2p.data.Destination;
 
-import java.io.IOException;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileReader;
-import java.nio.file.Files;
+import java.io.IOException;
 import java.nio.file.Path;
-import java.security.GeneralSecurityException;
 
 @Slf4j
 public class I2PKeyGeneration {
-
-    public static I2PKeyPair generateKeyPair(Path storageDir, String tag) throws IOException, GeneralSecurityException {
-
+    public static Path getDestinationFilePath(Path storageDir, String tag, String suffix) {
         Path targetDir = storageDir.resolve(tag);
-        Path destFilePath = targetDir.resolve("destination_b64");
-
-        if (Files.exists(destFilePath)) {
-            byte[] localDestinationKey = null;
-            try (FileReader fileReader = new FileReader(destFilePath.toFile())) {
-                char[] destKeyBuffer = new char[(int) destFilePath.toFile().length()];
-                fileReader.read(destKeyBuffer);
-                localDestinationKey = net.i2p.data.Base64.decode(new String(destKeyBuffer));
-                Destination dest = rebuildDestinationFromBytes(localDestinationKey);
-                return new I2PKeyPair(localDestinationKey);
-            } catch (IOException | DataFormatException e) {
-                log.warn("Failed to load existing I2P destination from {}: {}.  Will generate fresh.", destFilePath, e.getMessage());
-            }
-        }
-
-        byte[] freshDest = generateFreshDestination();
-        return new I2PKeyPair(freshDest);
+        return targetDir.resolve(suffix);
     }
 
-    /**
-     * Given raw Destination-bytes (the output of Destination.toByteArray()),
-     * reconstruct a Destination object.
-     *
-     * @param destBytes Byte array from I2P’s createDestination.
-     * @return a fully-formed Destination
-     * @throws IOException If the InputStream fails
-     * @throws DataFormatException If the bytes are not a valid Destination
-     */
-    private static Destination rebuildDestinationFromBytes(byte[] destBytes) throws IOException, DataFormatException {
-        try (ByteArrayInputStream in = new ByteArrayInputStream(destBytes)) {
-            return Destination.create(in);
-        }
-    }
-
-    /**
-     * Calls I2PClientFactory to build a brand-new Destination (ECDSA_SHA512_P521).
-     * We return it to the caller so they can choose to persist or not.
-     *
-     * @return a fresh Destination
-     * @throws GeneralSecurityException if any I2PException or parse error occurs
-     */
-    private static byte[] generateFreshDestination() throws GeneralSecurityException {
-        ByteArrayOutputStream arrayStream = new ByteArrayOutputStream();
-        try {
-            I2PClientFactory.createClient().createDestination(arrayStream, SigType.ECDSA_SHA512_P521);
+    public static I2PKeyPair generateKeyPair() {
+        try (ByteArrayOutputStream arrayStream = new ByteArrayOutputStream()) {
+            I2PClient client = I2PClientFactory.createClient();
+            Destination destination = client.createDestination(arrayStream, SigType.EdDSA_SHA512_Ed25519);
+            return new I2PKeyPair(destination);
         } catch (I2PException | IOException e) {
-            throw new GeneralSecurityException("Failed to generate new I2P Destination", e);
+            throw new RuntimeException("Failed to generate new I2P Destination", e);
         }
-
-        return arrayStream.toByteArray();
     }
 }

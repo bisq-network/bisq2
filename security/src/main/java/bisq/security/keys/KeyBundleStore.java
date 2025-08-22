@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-final class KeyBundleStore implements PersistableStore<KeyBundleStore> {
+public final class KeyBundleStore implements PersistableStore<KeyBundleStore> {
     // Secret uid used for deriving keyIds
     // As the keyID is public in the mailbox message we do not want to leak any information of the user identity
     // to the network.
@@ -97,6 +97,12 @@ final class KeyBundleStore implements PersistableStore<KeyBundleStore> {
     Optional<KeyBundle> findKeyBundle(String keyId) {
         synchronized (keyBundleById) {
             return Optional.ofNullable(keyBundleById.get(keyId));
+        }
+    }
+
+    boolean hadEmptyI2PKeyPair() {
+        synchronized (keyBundleById) {
+            return keyBundleById.values().stream().anyMatch(KeyBundle::isHadEmptyI2PKeyPair);
         }
     }
 

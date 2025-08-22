@@ -19,26 +19,33 @@ package bisq.security.keys;
 
 import bisq.common.file.FileUtils;
 import lombok.extern.slf4j.Slf4j;
+import net.i2p.data.DataFormatException;
+import net.i2p.data.Destination;
 
-import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 @Slf4j
 public class I2PKeyUtils {
     public static void writeDestination(I2PKeyPair i2pKeyPair, Path storageDir, String tag) {
-        Path targetPath = Paths.get(storageDir.toString(), tag);
-        File i2pPrivateKeyDir = targetPath.toFile();
+        Path i2pPrivateKeyDir = I2PKeyGeneration.getDestinationFilePath(storageDir, tag, "");
+        Path destination_b64Path = I2PKeyGeneration.getDestinationFilePath(storageDir, tag, "destination_b64");
+        Path destination_b32Path = I2PKeyGeneration.getDestinationFilePath(storageDir, tag, "destination_b32");
         try {
             log.info("Storing the I2P private key into {}", i2pPrivateKeyDir);
             FileUtils.makeDirs(i2pPrivateKeyDir);
-            String dir = i2pPrivateKeyDir.getAbsolutePath();
-
-            FileUtils.writeToFile(i2pKeyPair.getDestinationBase64(), Paths.get(dir, "destination_b64").toFile());
-            FileUtils.writeToFile(i2pKeyPair.getDestinationBase32(), Paths.get(dir, "destination_b32").toFile());
-
+            FileUtils.writeToFile(i2pKeyPair.getDestinationBase64(), destination_b64Path.toFile());
+            FileUtils.writeToFile(i2pKeyPair.getDestinationBase32(), destination_b32Path.toFile());
         } catch (Exception e) {
-            log.error("Could not persist I2P identity", e);
+            log.error("Could not persist I2P destination files", e);
+        }
+    }
+
+    public static I2PKeyPair fromDestinationBase64(String destinationBase64) {
+        try {
+            Destination destination = new Destination(destinationBase64);
+            return new I2PKeyPair(destination);
+        } catch (DataFormatException e) {
+            throw new RuntimeException(e);
         }
     }
 }
