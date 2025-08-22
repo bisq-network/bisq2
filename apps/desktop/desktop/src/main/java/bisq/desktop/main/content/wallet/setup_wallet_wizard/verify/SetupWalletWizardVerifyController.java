@@ -65,6 +65,7 @@ public class SetupWalletWizardVerifyController implements Controller {
 
     @Override
     public void onDeactivate() {
+        navigationButtonsVisibleHandler.accept(true);
     }
 
     void onAnswerSelected(int idx) {
@@ -81,7 +82,6 @@ public class SetupWalletWizardVerifyController implements Controller {
         if (selectedIdx == correctIdx) {
             if (qIdx == SetupWalletWizardVerifyModel.QUESTIONS_COUNT - 1) {
                 model.getCurrentScreenState().set(SetupWalletWizardVerifyModel.ScreenState.SUCCESS);
-                navigationButtonsVisibleHandler.accept(false);
             } else {
                 model.getShouldTransitionToNextQuestion().set(true);
             }
@@ -114,8 +114,9 @@ public class SetupWalletWizardVerifyController implements Controller {
 
             log.error("loadSeedWordsAsync :: Failed to load seed words", cause);
 
-            new Popup().invalid("wallet.backupSeeds.error.failedToLoad")
-                    .owner((Region) view.getRoot().getParent().getParent()).show();
+            new Popup().invalid(Res.get("wallet.backupSeeds.error.failedToLoad"))
+                    .owner(getPopupOwner())
+                    .show();
 
             return null;
         });

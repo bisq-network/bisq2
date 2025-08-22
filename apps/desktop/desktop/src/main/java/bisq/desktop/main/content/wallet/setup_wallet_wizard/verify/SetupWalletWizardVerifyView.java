@@ -37,6 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Arrays;
+
 @Slf4j
 public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWizardVerifyModel, SetupWalletWizardVerifyController> {
     private static final int FEEDBACK_WIDTH = 700;
@@ -45,15 +47,13 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
     private static final int CONTENT_SPACING = 30;
     private static final int BUTTON_SPACING = 20;
 
-    private final VBox content;
+    private final VBox content, createWalletSuccess;
     private final Label questionLabel;
     private final Button[] answerButtons = new Button[ANSWER_BUTTONS_COUNT];
     private final ChangeListener<Number> questionIndexListener, answerIndexListener;
-
-    private final VBox createWalletSuccess;
     private final Button createWalletSuccessButton;
-    private Subscription showCreateWalletSuccessPin;
-    private Subscription transitionSubscription;
+    private Subscription showCreateWalletSuccessPin, transitionSubscriptionPin;
+    private UIScheduler slideNextQuestionScheduler;
 
     public SetupWalletWizardVerifyView(SetupWalletWizardVerifyModel model,
                                        SetupWalletWizardVerifyController controller) {
@@ -97,12 +97,6 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
 
     @Override
     protected void onViewAttached() {
-        model.getCurrentQuestionIndex().addListener(questionIndexListener);
-        model.getSelectedAnswerIndex().addListener(answerIndexListener);
-        updateQuestion();
-
-        createWalletSuccessButton.setOnAction(e -> controller.onCreateWallet());
-
         showCreateWalletSuccessPin = EasyBind.subscribe(model.getCurrentScreenState(), state -> {
             boolean show = state == SetupWalletWizardVerifyModel.ScreenState.SUCCESS;
             createWalletSuccess.setVisible(show);
@@ -114,20 +108,33 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
             }
         });
 
-        transitionSubscription = EasyBind.subscribe(model.getShouldTransitionToNextQuestion(), shouldTransition -> {
+        transitionSubscriptionPin = EasyBind.subscribe(model.getShouldTransitionToNextQuestion(), shouldTransition -> {
             if (shouldTransition) {
                 showNextQuestionWithDelayAndAnimation();
             }
         });
+
+        createWalletSuccessButton.setOnAction(e -> controller.onCreateWallet());
+
+        model.getCurrentQuestionIndex().addListener(questionIndexListener);
+        model.getSelectedAnswerIndex().addListener(answerIndexListener);
+        updateQuestion();
     }
 
     @Override
     protected void onViewDetached() {
         showCreateWalletSuccessPin.unsubscribe();
-        transitionSubscription.unsubscribe();
+        transitionSubscriptionPin.unsubscribe();
+
         createWalletSuccessButton.setOnAction(null);
+
         model.getCurrentQuestionIndex().removeListener(questionIndexListener);
         model.getSelectedAnswerIndex().removeListener(answerIndexListener);
+
+        if (slideNextQuestionScheduler != null) {
+            slideNextQuestionScheduler.stop();
+            slideNextQuestionScheduler = null;
+        }
     }
 
     private void updateQuestion() {
@@ -135,9 +142,7 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
         model.getSelectedAnswerIndex().set(-1);
         if (qIdx >= model.getQuestionPositions().size()) {
             questionLabel.setText(Res.get("wallet.verifySeeds.success.title"));
-            for (Button btn : answerButtons) {
-                btn.setVisible(false);
-            }
+            Arrays.stream(answerButtons).forEach(btn -> btn.setVisible(false));
             return;
         }
         int pos = model.getQuestionPositions().get(qIdx);
@@ -155,7 +160,10 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
         for (int i = 0; i < ANSWER_BUTTONS_COUNT; i++) {
             answerButtons[i].setDefaultButton(i == selected);
         }
-        controller.onNextWordSelected();
+        // Only delegate when the user has actually selected something
+        if (selected != SetupWalletWizardVerifyModel.INVALID_INDEX) {
+            controller.onNextWordSelected();
+        }
     }
 
     private void configCreateWalletSuccess() {
@@ -197,7 +205,7 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
 
     private void showNextQuestionWithDelayAndAnimation() {
         if (Transitions.useAnimations()) {
-            UIScheduler.run(this::slideNextQuestion).after(250);
+            slideNextQuestionScheduler = UIScheduler.run(this::slideNextQuestion).after(400);
         } else {
             controller.onGoToNextQuestion();
         }
@@ -206,12 +214,7 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
     private void slideNextQuestion() {
         Transitions.slideOutHorizontal(content, Duration.millis(450), () -> {
             controller.onGoToNextQuestion();
-            content.setTranslateX(content.getWidth());
-            Transitions.slideInRight(content, 450, () -> {
-                for (Button btn : answerButtons) {
-                    btn.setDisable(false);
-                }
-            });
+            Transitions.slideInRight(content, 450, () -> {});
         }, false);
     }
 }

@@ -35,8 +35,8 @@ import java.util.List;
 @Getter
 public class SetupWalletWizardVerifyModel implements Model {
     public static final int QUESTIONS_COUNT = 6;
+    static final int INVALID_INDEX = -1;
     private static final int SEED_WORD_COUNT = 12;
-    private static final int INVALID_INDEX = -1;
 
     private final IntegerProperty currentQuestionIndex = new SimpleIntegerProperty(0);
     private final List<Integer> questionPositions = new ArrayList<>(); // 0-based positions
