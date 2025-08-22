@@ -54,15 +54,15 @@ public interface TransportService {
 
     CompletableFuture<Boolean> shutdown();
 
-    ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle);
+    ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle, String nodeId);
 
-    Socket getSocket(Address address) throws IOException;
+    Socket getSocket(Address address, String nodeId) throws IOException;
 
     default Optional<Socks5Proxy> getSocksProxy() throws IOException {
         return Optional.empty();
     }
 
-    CompletableFuture<Boolean> isPeerOnlineAsync(Address address);
+    CompletableFuture<Boolean> isPeerOnlineAsync(Address address, String nodeId);
 
     default void setTransportState(TransportState newTransportState) {
         if (newTransportState == getTransportState().get()) {

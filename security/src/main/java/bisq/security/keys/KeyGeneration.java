@@ -56,8 +56,9 @@ public class KeyGeneration {
             KeyPairGenerator generator = KeyPairGenerator.getInstance(ECDH, "BC");
             generator.initialize(ecSpec, new SecureRandom());
             return generator.generateKeyPair();
-        } catch (Exception e) {
-            throw new RuntimeException();
+        } catch (GeneralSecurityException e) {
+            throw new IllegalStateException(
+                    "Failed to generate ECDH key pair (curve=" + CURVE + ", provider=BC)", e);
         }
     }
 

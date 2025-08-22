@@ -115,7 +115,7 @@ public class NetworkInfo {
                             .ifPresent(serviceNode -> serviceNode.getPeerGroupManager()
                                     .ifPresent(peerGroupManager -> {
                                         applyNumTargetConnections(type, peerGroupManager);
-                                        applyNumConnections(type, serviceNode, peerGroupManager);
+                                        applyNumConnections(type, serviceNode);
                                         serviceNode.getInventoryService()
                                                 .ifPresent(inventoryService -> applyInventoryInfo(serviceNode, inventoryService));
                                     })));
@@ -200,10 +200,7 @@ public class NetworkInfo {
             updateInventoryDataChangeFlag();
         }
 
-        private void applyNumConnections(TransportType type,
-                                         ServiceNode serviceNode,
-                                         PeerGroupManager peerGroupManager) {
-            Node node = peerGroupManager.getNode();
+        private void applyNumConnections(TransportType type, ServiceNode serviceNode) {
             Node defaultNode = serviceNode.getDefaultNode();
             defaultNode.addListener(new Node.Listener() {
                 @Override
@@ -214,16 +211,16 @@ public class NetworkInfo {
 
                 @Override
                 public void onConnection(Connection connection) {
-                    UIThread.run(() -> onNumConnectionsChanged(type, node));
+                    UIThread.run(() -> onNumConnectionsChanged(type, defaultNode));
                 }
 
                 @Override
                 public void onDisconnect(Connection connection, CloseReason closeReason) {
-                    UIThread.run(() -> onNumConnectionsChanged(type, node));
+                    UIThread.run(() -> onNumConnectionsChanged(type, defaultNode));
                 }
             });
 
-            onNumConnectionsChanged(type, node);
+            onNumConnectionsChanged(type, defaultNode);
         }
 
         private void onNavigateToNetworkInfo() {

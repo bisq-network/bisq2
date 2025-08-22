@@ -128,7 +128,7 @@ public class ClearNetTransportService implements TransportService {
     }
 
     @Override
-    public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle) {
+    public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle, String nodeId) {
         int port = networkId.getAddressByTransportTypeMap().get(TransportType.CLEAR).getPort();
         initializeServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
         log.info("Create serverSocket at port {}", port);
@@ -146,7 +146,7 @@ public class ClearNetTransportService implements TransportService {
     }
 
     @Override
-    public Socket getSocket(Address address) throws IOException {
+    public Socket getSocket(Address address, String nodeId) throws IOException {
         address = getClearNetAddressTypeFacade().toPeersLocalAddress(address);
         log.debug("Create new Socket to {}", address);
         Socket socket = new Socket();
@@ -156,9 +156,9 @@ public class ClearNetTransportService implements TransportService {
     }
 
     @Override
-    public CompletableFuture<Boolean> isPeerOnlineAsync(Address address) {
+    public CompletableFuture<Boolean> isPeerOnlineAsync(Address address, String nodeId) {
         return CompletableFuture.supplyAsync(() -> {
-            try (Socket ignored = getSocket(address)) {
+            try (Socket ignored = getSocket(address, nodeId)) {
                 return true;
             } catch (IOException e) {
                 return false;

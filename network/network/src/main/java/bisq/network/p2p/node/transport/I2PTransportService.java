@@ -37,11 +37,11 @@ import lombok.extern.slf4j.Slf4j;
 import net.i2p.data.Destination;
 
 import java.io.IOException;
+import java.net.NoRouteToHostException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -115,8 +115,6 @@ public class I2PTransportService implements TransportService {
     private final int socketTimeout;
     private final String i2pDirPath;
     private I2pClient i2pClient;
-    private boolean initializeCalled;
-    private String sessionId;
     private final I2PTransportService.Config config;
     @Getter
     public final Observable<TransportState> transportState = new Observable<>(TransportState.NEW);
@@ -126,6 +124,8 @@ public class I2PTransportService implements TransportService {
     public final ObservableHashMap<NetworkId, Long> initializeServerSocketTimestampByNetworkId = new ObservableHashMap<>();
     @Getter
     public final ObservableHashMap<NetworkId, Long> initializedServerSocketTimestampByNetworkId = new ObservableHashMap<>();
+    private volatile boolean initializeCalled;
+    private volatile boolean isShutdownInProgress;
 
     public I2PTransportService(TransportConfig config) {
         // Demonstrate potential usage of specific config.
@@ -171,7 +171,7 @@ public class I2PTransportService implements TransportService {
                 }
             }
 
-            i2pClient = I2pClient.getI2pClient(i2pDirPath,
+            i2pClient = new I2pClient(i2pDirPath,
                     config.getI2cpHost(),
                     config.getI2cpPort(),
                     config.getSocketTimeout(),
@@ -186,6 +186,7 @@ public class I2PTransportService implements TransportService {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        isShutdownInProgress = true;
         if (!initializeCalled) {
             return CompletableFuture.completedFuture(true);
         }
@@ -211,64 +212,58 @@ public class I2PTransportService implements TransportService {
                 .whenComplete((result, throwable) -> ExecutorFactory.shutdownAndAwaitTermination(executor));
     }
 
-
     @Override
-    public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle) {
+    public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle, String nodeId) {
         try {
             int port = networkId.getAddressByTransportTypeMap().get(TransportType.I2P).getPort();
             initializeServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
             log.debug("Create serverSocket");
-            sessionId = UUID.randomUUID().toString(); //todo
             I2PKeyPair i2PKeyPair = keyBundle.getI2PKeyPair();
-            //todo what happens for updateing users? is i2PKeyPair null? it should be created in that case
-            if (i2PKeyPair == null) {
-                throw new ConnectionException("I2P KeyPair is null for networkId: " + networkId);
-            }
-            //TODO: Investigate why not using port passed as parameter and if no port, find one?
-            //Pass parameters to connect with Local instance
-            int i2pPort = port;
-            if (!useEmbeddedRouter()) {
-                i2pPort = config.getI2cpPort(); //todo
-            }
-            ServerSocket serverSocket = i2pClient.getServerSocket(i2PKeyPair, sessionId, config.getI2cpHost(), i2pPort);
+            ServerSocket serverSocket = i2pClient.getServerSocket(i2PKeyPair, nodeId);
             String destinationBase64 = i2PKeyPair.getDestinationBase64();
-            // Port is irrelevant for I2P
             Address address = new Address(destinationBase64, port);
-
             initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
-
             log.info("ServerSocket created. destinationBase32={}, destinationBase64={}", i2PKeyPair.getDestinationBase32(), destinationBase64);
             return new ServerSocketResult(serverSocket, address);
         } catch (Exception exception) {
-            log.error("getServerSocket failed", exception);
+            if (!isShutdownInProgress) {
+                log.error("getServerSocket failed", exception);
+            }
             throw new ConnectionException(exception);
         }
     }
 
     @Override
-    public Socket getSocket(Address address) throws IOException {
+    public Socket getSocket(Address address, String nodeId) throws IOException {
         try {
-            //todo check usage of sessionId
-            log.debug("Create new Socket to {} with sessionId={}", address, sessionId);
             long ts = System.currentTimeMillis();
             // We use base64 in the address host field
-            String destinationBase64 = address.getHost();
-            Destination destination = new Destination(destinationBase64);
-            Socket socket = i2pClient.getSocket(destination, sessionId);
+            String peersDestinationBase64 = address.getHost();
+            Destination peersDestination = new Destination(peersDestinationBase64);
+            Socket socket = i2pClient.getSocket(peersDestination, nodeId);
             socket.setSoTimeout(socketTimeout);
             log.info("I2P socket to {} created. Took {} ms", address, System.currentTimeMillis() - ts);
             return socket;
+        } catch (NoRouteToHostException exception) {
+            if (!isShutdownInProgress) {
+                log.info("NoRouteToHostException {}", exception.getMessage());
+            }
+            throw exception;
         } catch (IOException exception) {
-            log.error("getSocket failed", exception);
+            if (!isShutdownInProgress) {
+                log.error("getSocket failed", exception);
+            }
             throw exception;
         } catch (Exception exception) {
-            log.error("getSocket failed", exception);
+            if (!isShutdownInProgress) {
+                log.error("getSocket failed", exception);
+            }
             throw new RuntimeException(exception);
         }
     }
 
     @Override
-    public CompletableFuture<Boolean> isPeerOnlineAsync(Address address) {
+    public CompletableFuture<Boolean> isPeerOnlineAsync(Address address, String nodeId) {
         return CompletableFuture.supplyAsync(() -> i2pClient.isPeerOnline(address.getHost()));
     }
 

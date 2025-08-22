@@ -132,7 +132,8 @@ public class NodesById implements Node.Listener {
     }
 
     public CompletableFuture<Boolean> isPeerOnlineAsync(NetworkId networkId, Address address) {
-        return getOrCreateNode(networkId).isPeerOnlineAsync(address);
+        Node node = getOrCreateNode(networkId);
+        return node.isPeerOnlineAsync(address, node.getNodeId());
     }
 
     public Collection<Node> getAllNodes() {
