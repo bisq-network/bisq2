@@ -42,7 +42,6 @@ google-libphonenumber-lib = { strictly = '9.0.8' }
 grpc = { strictly = '1.61.0' }
 
 i2p-lib = { strictly = '2.7.0' }
-i2p-v2 = { strictly = '2.4.0' }
 
 jackson-lib = { strictly = '2.17.2' }
 jakarta-lib = { strictly = '2.2.0' }

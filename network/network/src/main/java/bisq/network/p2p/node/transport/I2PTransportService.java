@@ -34,6 +34,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import net.i2p.data.Destination;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -230,13 +231,13 @@ public class I2PTransportService implements TransportService {
                 i2pPort = config.getI2cpPort(); //todo
             }
             ServerSocket serverSocket = i2pClient.getServerSocket(i2PKeyPair, sessionId, config.getI2cpHost(), i2pPort);
-            String destination = keyBundle.getI2PKeyPair().getBase64Destination();
+            String destinationBase64 = i2PKeyPair.getDestinationBase64();
             // Port is irrelevant for I2P
-            Address address = new Address(destination, port);
+            Address address = new Address(destinationBase64, port);
 
             initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
 
-            log.debug("ServerSocket created. SessionId={}, destination={}", sessionId, destination);
+            log.info("ServerSocket created. destinationBase32={}, destinationBase64={}", i2PKeyPair.getDestinationBase32(), destinationBase64);
             return new ServerSocketResult(serverSocket, address);
         } catch (Exception exception) {
             log.error("getServerSocket failed", exception);
@@ -250,13 +251,19 @@ public class I2PTransportService implements TransportService {
             //todo check usage of sessionId
             log.debug("Create new Socket to {} with sessionId={}", address, sessionId);
             long ts = System.currentTimeMillis();
-            Socket socket = i2pClient.getSocket(address.getHost(), sessionId);
+            // We use base64 in the address host field
+            String destinationBase64 = address.getHost();
+            Destination destination = new Destination(destinationBase64);
+            Socket socket = i2pClient.getSocket(destination, sessionId);
             socket.setSoTimeout(socketTimeout);
             log.info("I2P socket to {} created. Took {} ms", address, System.currentTimeMillis() - ts);
             return socket;
         } catch (IOException exception) {
             log.error("getSocket failed", exception);
             throw exception;
+        } catch (Exception exception) {
+            log.error("getSocket failed", exception);
+            throw new RuntimeException(exception);
         }
     }
 

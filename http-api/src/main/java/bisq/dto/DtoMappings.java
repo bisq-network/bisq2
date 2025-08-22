@@ -19,7 +19,11 @@ package bisq.dto;
 
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
@@ -28,8 +32,8 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
-import bisq.common.market.Market;
 import bisq.common.encoding.Hex;
+import bisq.common.market.Market;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
@@ -114,16 +118,16 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.options.OfferOption;
 import bisq.offer.options.ReputationOption;
 import bisq.offer.options.TradeTermsOption;
-import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
-import bisq.account.payment_method.PaymentMethodSpec;
-import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.security.DigestUtil;
-import bisq.security.keys.*;
+import bisq.security.keys.I2PKeyPair;
+import bisq.security.keys.KeyBundle;
+import bisq.security.keys.KeyGeneration;
+import bisq.security.keys.PubKey;
+import bisq.security.keys.TorKeyPair;
 import bisq.security.pow.ProofOfWork;
 import bisq.settings.SettingsService;
 import bisq.trade.TradeRole;
@@ -1045,18 +1049,16 @@ public class DtoMappings {
         }
     }
 
-    public class I2PKeyPairMapping {
+    public static class I2PKeyPairMapping {
+        public static I2PKeyPair toBisq2Model(I2PKeyPairDto dto) {
+            return new I2PKeyPair(dto.getDestinationKey());
+        }
 
         public static I2PKeyPairDto fromBisq2Model(I2PKeyPair model) {
             if (model == null) return null;
             I2PKeyPairDto dto = new I2PKeyPairDto();
-            dto.setDestinationKey(model.getDestination());
+            dto.setDestinationKey(model.getDestinationBytes());
             return dto;
-        }
-
-        public static I2PKeyPair toBisq2Model(I2PKeyPairDto dto) {
-            byte[] destinationKey = dto.getDestinationKey();
-            return new I2PKeyPair(destinationKey);
         }
     }
 

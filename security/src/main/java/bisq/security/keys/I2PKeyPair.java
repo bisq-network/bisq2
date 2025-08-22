@@ -30,23 +30,28 @@ import net.i2p.data.Destination;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
+// TODO we only maintain the public key material here, thus KeyPair is the wrong term.
+// Investigate if we can create the private key material as well, as we do in tor, and if we need that for
+// handshake validation, or if not rename class to I2pDestination
 @Slf4j
-@Getter
 @EqualsAndHashCode
 @ToString
 public class I2PKeyPair implements PersistableProto {
-    private final byte[] destination;
+    @Getter
+    private final byte[] destinationBytes;
 
-    public I2PKeyPair(byte[] destination) {
-        if (destination == null) {
-            throw new IllegalArgumentException("destination must not be null");
-        }
-        this.destination = destination;
+    private transient Destination destination;
+    private transient String destinationBase32;
+    private transient String destinationBase64;
+
+    public I2PKeyPair(byte[] destinationBytes) {
+        this.destinationBytes = destinationBytes;
     }
 
     @Override
     public Message.Builder getBuilder(boolean serializeForHash) {
-        return bisq.security.protobuf.I2PKeyPair.newBuilder().setDestinationKey(ByteString.copyFrom(destination));
+        return bisq.security.protobuf.I2PKeyPair.newBuilder()
+                .setDestinationBytes(ByteString.copyFrom(destinationBytes));
     }
 
     @Override
@@ -55,36 +60,31 @@ public class I2PKeyPair implements PersistableProto {
     }
 
     public static I2PKeyPair fromProto(bisq.security.protobuf.I2PKeyPair proto) {
-        byte[] destBytes = proto.getDestinationKey().toByteArray();
-        if (destBytes.length == 0) {
-            throw new IllegalArgumentException("Missing destinationKey bytes");
-        }
-        Destination dest;
-        try (ByteArrayInputStream in = new ByteArrayInputStream(destBytes)) {
-            dest = Destination.create(in);
-        } catch (IOException | DataFormatException e) {
-            throw new IllegalStateException("Failed to deserialize destinationKey", e);
-        }
-        return new I2PKeyPair(destBytes);
+        return new I2PKeyPair(proto.getDestinationBytes().toByteArray());
     }
 
-    public String getBase32Address() {
-        Destination dest;
-        try (ByteArrayInputStream in = new ByteArrayInputStream(destination)) {
-            dest = Destination.create(in);
-        } catch (IOException | DataFormatException e) {
-            throw new IllegalStateException("Failed to deserialize destinationKey", e);
+    public Destination getDestination() {
+        if (destination == null) {
+            try (ByteArrayInputStream inputStream = new ByteArrayInputStream(destinationBytes)) {
+                destination = Destination.create(inputStream);
+            } catch (IOException | DataFormatException e) {
+                throw new IllegalStateException("Failed to deserialize destinationKey", e);
+            }
         }
-        return dest.toBase32();
+        return destination;
     }
 
-    public String getBase64Destination() {
-        Destination dest;
-        try (ByteArrayInputStream in = new ByteArrayInputStream(destination)) {
-            dest = Destination.create(in);
-        } catch (IOException | DataFormatException e) {
-            throw new IllegalStateException("Failed to deserialize destinationKey", e);
+    public String getDestinationBase32() {
+        if (destinationBase32 == null) {
+            destinationBase32 = getDestination().toBase32();
         }
-        return dest.toBase64();
+        return destinationBase32;
+    }
+
+    public String getDestinationBase64() {
+        if (destinationBase64 == null) {
+            destinationBase64 = getDestination().toBase64();
+        }
+        return destinationBase64;
     }
 }

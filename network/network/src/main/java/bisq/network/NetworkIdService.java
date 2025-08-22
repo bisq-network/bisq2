@@ -42,7 +42,6 @@ import java.security.KeyPair;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -152,7 +151,7 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
     private Address getAddressByTransport(KeyBundle keyBundle, int port, TransportType transportType) {
         return switch (transportType) {
             case TOR -> new Address(keyBundle.getTorKeyPair().getOnionAddress(), port);
-            case I2P -> new Address(keyBundle.getI2PKeyPair().getBase64Destination(), port);
+            case I2P -> new Address(keyBundle.getI2PKeyPair().getDestinationBase64(), port);
             case CLEAR -> FacadeProvider.getClearNetAddressTypeFacade().toMyLocalAddress(port);
         };
     }
