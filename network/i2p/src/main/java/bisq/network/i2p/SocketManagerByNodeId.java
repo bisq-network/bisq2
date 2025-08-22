@@ -61,7 +61,7 @@ public class SocketManagerByNodeId {
             byte[] identityBytes = i2PKeyPair.getIdentityBytes();
             I2PSocketManager manager;
             try (ByteArrayInputStream identityBytesStream = new ByteArrayInputStream(identityBytes)) {
-               manager = I2PSocketManagerFactory.createDisconnectedManager(identityBytesStream, i2cpHost, i2cpPort, getProperties());
+                manager = I2PSocketManagerFactory.createDisconnectedManager(identityBytesStream, i2cpHost, i2cpPort, getProperties());
             } catch (I2PSessionException | IOException e) {
                 throw new RuntimeException(e);
             }
@@ -91,21 +91,19 @@ public class SocketManagerByNodeId {
 
     private void applyOptions(I2PSocketManager manager) {
         I2PSocketOptions options = manager.buildOptions();
-        options.setConnectTimeout(Math.toIntExact(socketTimeout));
-        options.setReadTimeout((int) TimeUnit.MINUTES.toMillis(3));
-        options.setWriteTimeout((int) TimeUnit.MINUTES.toMillis(2));
-        //options.setMaxBufferSize(256 * 1024);
+        options.setConnectTimeout(socketTimeout); // 120 sec; DEFAULT_CONNECT_TIMEOUT = 60 * 1000
+        options.setReadTimeout(TimeUnit.MINUTES.toMillis(3)); // default -1 -> wait forever
+        options.setWriteTimeout(TimeUnit.MINUTES.toMillis(3)); // default -1 -> wait forever
+        //options.setMaxBufferSize(256 * 1024); // DEFAULT_BUFFER_SIZE = 1024*64;
         manager.setDefaultOptions(options);
     }
 
     private static Properties getProperties() {
         Properties props = new Properties();
-        props.setProperty("inbound.quantity", "3");
-        props.setProperty("outbound.quantity", "3");
+        props.setProperty("inbound.quantity", "3"); // num parallel tunnels; default 3
+        props.setProperty("outbound.quantity", "3");// default 3
         props.setProperty("i2cp.closeOnIdle", "false");
         props.setProperty("i2cp.reduceOnIdle", "false");
         return props;
     }
-
-
 }

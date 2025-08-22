@@ -17,13 +17,12 @@
 
 package bisq.network.i2p;
 
-import bisq.network.i2p.util.I2PNameResolver;
+import bisq.network.i2p.embedded.I2pEmbeddedRouter;
 import bisq.security.keys.I2PKeyPair;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.I2PAppContext;
 import net.i2p.client.I2PSessionException;
 import net.i2p.client.streaming.I2PSocketManager;
-import net.i2p.data.DataFormatException;
 import net.i2p.data.Destination;
 
 import java.io.IOException;
@@ -73,7 +72,7 @@ public class I2pClient {
         return serverSocket;
     }
 
-    public Socket getSocket(Destination peersDestination, String nodeId) throws IOException, I2PSessionException {
+    public Socket getSocket(Destination peersDestination, String nodeId) throws IOException {
         long ts = System.currentTimeMillis();
         I2PSocketManager manager = socketManagerByNodeId.getSocketManager(nodeId);
         Socket socket = manager.connectToSocket(peersDestination, socketTimeout);
@@ -81,36 +80,23 @@ public class I2pClient {
         return socket;
     }
 
-    private Destination getDestinationFor(String peer) throws IOException {
+    // The lease can be still present for about 10 min after peer has been offline
+    public boolean isLeaseFoundInNetDb(Destination peersDestination, String nodeId) {
+        I2PSocketManager manager = socketManagerByNodeId.getSocketManager(nodeId);
         try {
-            if (peer.endsWith(".b32.i2p") || peer.endsWith(".i2p")) {
-                return I2PNameResolver.getDestinationFor(peer);
-            }
-            return new Destination(peer);
-        } catch (DataFormatException e) {
-            log.warn("Invalid destination format: {}", peer);
-            throw new IOException("Invalid destination format", e);
-        }
-    }
-
-    public boolean isPeerOnline(String peer) {
-        Destination destination;
-        try {
-            destination = getDestinationFor(peer);
-        } catch (IOException e) {
-            log.warn("Failed to resolve destination for peer: {}", peer, e);
-            return false;
-        }
-        if (destination == null) {
-            return false;
+            Destination resultDestination = manager.getSession().lookupDest(peersDestination.getHash());
+            return resultDestination != null;
+        } catch (I2PSessionException e) {
+            throw new RuntimeException(e);
         }
 
-        if (embeddedI2pRouter.isEmpty()) {
+/*        if (embeddedI2pRouter.isEmpty()) {
             log.warn("I2P router not yet initialized, cannot check peer status for: {}", peer);
             // todo how to support it with external router?
             // We need to return true, otherwise we would always send a mailbox msg in case of ext router
             return true;
         }
-        return embeddedI2pRouter.get().isPeerOnline(destination);
+        // Tracks recent failed connection attempts your router has seen.
+        return embeddedI2pRouter.get().isPeerOnline(destination);*/
     }
 }

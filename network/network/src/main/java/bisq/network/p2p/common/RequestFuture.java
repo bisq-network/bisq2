@@ -47,7 +47,10 @@ public class RequestFuture<T extends Request, R extends Response> extends Comple
         node.sendAsync(request, connection)
                 .whenComplete((result, throwable) -> {
                     if (throwable != null) {
-                        log.warn("Sending {} to {} failed. {}",
+                        log.warn("Sending failed.\n" +
+                                        "Request: {}\n" +
+                                        "Peer: {}\n" +
+                                        "Error: {}",
                                 StringUtils.truncate(request),
                                 connection.getPeerAddress(),
                                 ExceptionUtil.getRootCauseMessage(throwable));

@@ -1,4 +1,4 @@
-package bisq.network.i2p.util;
+package bisq.network.i2p.embedded.log;
 
 import net.i2p.util.Log;
 import org.slf4j.Logger;

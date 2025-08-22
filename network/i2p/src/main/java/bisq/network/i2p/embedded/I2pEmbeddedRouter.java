@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.i2p;
+package bisq.network.i2p.embedded;
 
 import bisq.common.timer.Scheduler;
-import bisq.network.i2p.util.I2PLogManager;
+import bisq.network.i2p.embedded.log.I2PLogManager;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.client.I2PClient;
@@ -456,6 +456,7 @@ public class I2pEmbeddedRouter {
         }
     }
 
+    // Tracks recent failed connection attempts the router has seen.
     public boolean isPeerOnline(Destination destination) {
         return !routerContext.commSystem().wasUnreachable(destination.getHash());
     }

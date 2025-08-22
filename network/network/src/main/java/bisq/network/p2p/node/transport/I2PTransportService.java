@@ -25,7 +25,7 @@ import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.NetworkUtils;
 import bisq.network.i2p.I2pClient;
-import bisq.network.i2p.I2pEmbeddedRouter;
+import bisq.network.i2p.embedded.I2pEmbeddedRouter;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.security.keys.I2PKeyPair;
@@ -34,6 +34,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import net.i2p.data.DataFormatException;
 import net.i2p.data.Destination;
 
 import java.io.IOException;
@@ -264,7 +265,13 @@ public class I2PTransportService implements TransportService {
 
     @Override
     public CompletableFuture<Boolean> isPeerOnlineAsync(Address address, String nodeId) {
-        return CompletableFuture.supplyAsync(() -> i2pClient.isPeerOnline(address.getHost()));
+        String peersDestinationBase64 = address.getHost();
+        try {
+            Destination peersDestination = new Destination(peersDestinationBase64);
+            return CompletableFuture.supplyAsync(() -> i2pClient.isLeaseFoundInNetDb(peersDestination, nodeId));
+        } catch (DataFormatException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private boolean useEmbeddedRouter() {

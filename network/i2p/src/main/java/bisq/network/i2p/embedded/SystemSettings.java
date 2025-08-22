@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.i2p;
+package bisq.network.i2p.embedded;
 
 import java.io.File;
 import java.io.IOException;
