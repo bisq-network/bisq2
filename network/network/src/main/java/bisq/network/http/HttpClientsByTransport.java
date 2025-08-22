@@ -17,6 +17,7 @@
 
 package bisq.network.http;
 
+import bisq.common.network.Address;
 import bisq.common.network.TransportType;
 import bisq.network.http.utils.Socks5ProxyProvider;
 import bisq.network.p2p.node.transport.I2PTransportService;
@@ -37,14 +38,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class HttpClientsByTransport {
     private static final Duration CACHE_TTL = Duration.ofSeconds(60);
 
-    private final List<I2PTransportService.ProxyEndpoint> proxyList;
+    private final List<Address> proxyList;
     private final AtomicInteger counter = new AtomicInteger();
 
     private static final class CacheEntry {
-        final I2PTransportService.ProxyEndpoint endpoint;
+        final Address endpoint;
         final Instant expiry;
 
-        CacheEntry(I2PTransportService.ProxyEndpoint ep, Instant expiry) {
+        CacheEntry(Address ep, Instant expiry) {
             this.endpoint = ep;
             this.expiry = expiry;
         }
@@ -79,7 +80,7 @@ public class HttpClientsByTransport {
 
             case I2P -> {
                 // Get a healthy proxy endpoint with TTL caching
-                I2PTransportService.ProxyEndpoint ep = getHealthyEndpoint();
+                Address ep = getHealthyEndpoint();
                 Proxy proxy = new Proxy(Proxy.Type.HTTP,
                         new InetSocketAddress(ep.getHost(), ep.getPort()));
                 yield new ClearNetHttpClient(url, userAgent, proxy);
@@ -89,7 +90,7 @@ public class HttpClientsByTransport {
         };
     }
 
-    private I2PTransportService.ProxyEndpoint getHealthyEndpoint() {
+    private Address getHealthyEndpoint() {
         Instant now = Instant.now();
         CacheEntry entry = cache;
         if (entry != null && now.isBefore(entry.expiry)) {
@@ -99,7 +100,7 @@ public class HttpClientsByTransport {
         int size = proxyList.size();
         for (int i = 0; i < size; i++) {
             int idx = Math.floorMod(counter.getAndIncrement(), size);
-            I2PTransportService.ProxyEndpoint candidate = proxyList.get(idx);
+            Address candidate = proxyList.get(idx);
             if (isReachable(candidate, 500)) {
                 cache = new CacheEntry(candidate, now.plus(CACHE_TTL));
                 return candidate;
@@ -108,7 +109,7 @@ public class HttpClientsByTransport {
         throw new RuntimeException("No reachable I2P proxy available");
     }
 
-    private boolean isReachable(I2PTransportService.ProxyEndpoint ep, int timeoutMs) {
+    private boolean isReachable(Address ep, int timeoutMs) {
         try (Socket s = new Socket()) {
             s.connect(new InetSocketAddress(ep.getHost(), ep.getPort()), timeoutMs);
             return true;

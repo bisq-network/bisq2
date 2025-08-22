@@ -65,7 +65,7 @@ public class I2PTransportService implements TransportService {
                     config.getBoolean("extendedI2pLogging"),
                     config.getInt("sendMessageThrottleTime"),
                     config.getInt("receiveMessageThrottleTime"),
-                    config.getConfigList("proxyList").stream().map(c -> new ProxyEndpoint(c.getString("host"), c.getInt("port"))).collect(Collectors.toList()));
+                    config.getConfigList("proxyList").stream().map(c -> new Address(c.getString("host"), c.getInt("port"))).collect(Collectors.toList()));
         }
 
         private final int defaultNodePort;
@@ -80,7 +80,7 @@ public class I2PTransportService implements TransportService {
         private final boolean extendedI2pLogging;
         private final int sendMessageThrottleTime;
         private final int receiveMessageThrottleTime;
-        private final List<ProxyEndpoint> proxyList;
+        private final List<Address> proxyList;
 
         public Config(Path dataDir,
                       int defaultNodePort,
@@ -94,7 +94,7 @@ public class I2PTransportService implements TransportService {
                       boolean extendedI2pLogging,
                       int sendMessageThrottleTime,
                       int receiveMessageThrottleTime,
-                      List<ProxyEndpoint> proxyList) {
+                      List<Address> proxyList) {
             this.dataDir = dataDir;
             this.defaultNodePort = defaultNodePort;
             this.socketTimeout = socketTimeout;
@@ -114,7 +114,6 @@ public class I2PTransportService implements TransportService {
     private final int socketTimeout;
     private final String i2pDirPath;
     private I2pClient i2pClient;
-    //    private PreventSleepService preventSleepService;
     private boolean initializeCalled;
     private String sessionId;
     private final I2PTransportService.Config config;
@@ -148,38 +147,40 @@ public class I2PTransportService implements TransportService {
         setTransportState(TransportState.INITIALIZE);
         initializeCalled = true;
         log.debug("Initialize");
-
-        //If embedded router, start it already ...
-        boolean isEmbeddedRouter = isEmbeddedRouter();
-        if (isEmbeddedRouter) {
-            if (!I2pEmbeddedRouter.isInitialized()) {
-                I2pEmbeddedRouter.getI2pEmbeddedRouter(i2pDirPath,
-                        config.getInboundKBytesPerSecond(),
-                        config.getOutboundKBytesPerSecond(),
-                        config.getBandwidthSharePercentage(),
-                        config.isExtendedI2pLogging());
-            }
-            while (!I2pEmbeddedRouter.isRouterRunning()) {
-                try {
-                    //noinspection BusyWait
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    log.warn("Thread got interrupted at initialize method", e);
-                    Thread.currentThread().interrupt(); // Restore interrupted state
+        try {
+            //If embedded router, start it already ...
+            boolean useEmbeddedRouter = useEmbeddedRouter();
+            if (useEmbeddedRouter) {
+                //todo
+                if (!I2pEmbeddedRouter.isInitialized()) {
+                    I2pEmbeddedRouter.getI2pEmbeddedRouter(i2pDirPath,
+                            config.getInboundKBytesPerSecond(),
+                            config.getOutboundKBytesPerSecond(),
+                            config.getBandwidthSharePercentage(),
+                            config.isExtendedI2pLogging());
+                }
+                while (!I2pEmbeddedRouter.isRouterRunning()) {
+                    try {
+                        //noinspection BusyWait
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        log.warn("Thread got interrupted at initialize method", e);
+                        Thread.currentThread().interrupt(); // Restore interrupted state
+                    }
                 }
             }
-            i2pClient = getClient(true);
-        } else {
-            i2pClient = getClient(false);
+
+            i2pClient = I2pClient.getI2pClient(i2pDirPath,
+                    config.getI2cpHost(),
+                    config.getI2cpPort(),
+                    config.getSocketTimeout(),
+                    useEmbeddedRouter);
+
+            setTransportState(TransportState.INITIALIZED);
+        } catch (Exception e) {
+            log.error("Initializing I2P failed", e);
+            shutdown();
         }
-        //    preventSleepService = new PreventSleepService();
-//        try {
-//            log.info("Prevent from sleep service initialized");
-//            preventSleepService.initialize();
-//        } catch (IOException e) {
-//            log.warn("Prevent-sleep service could not be started – continuing without it: {}", e.getMessage());
-//        }
-        setTransportState(TransportState.INITIALIZED);
     }
 
     @Override
@@ -209,43 +210,24 @@ public class I2PTransportService implements TransportService {
                 .whenComplete((result, throwable) -> ExecutorFactory.shutdownAndAwaitTermination(executor));
     }
 
-    private boolean isEmbeddedRouter() {
-        if (config.isEmbeddedRouter()) {
-            // Is there a running router? If so, ignore the config for embedded router if exists
-            if (NetworkUtils.isPortInUse("127.0.0.1", 7654)) {
-                log.info("Embedded router parameter set to true, but there's a service running on 127.0.0.1:7654...");
-                return false;
-            }
-            return true;
-        }
-        return false;
-    }
-
-    private I2pClient getClient(boolean isEmbeddedRouter) {
-        return I2pClient.getI2pClient(i2pDirPath,
-                config.getI2cpHost(),
-                config.getI2cpPort(),
-                config.getSocketTimeout(),
-                isEmbeddedRouter);
-    }
-
 
     @Override
     public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle) {
-        int port = networkId.getAddressByTransportTypeMap().get(TransportType.I2P).getPort();
-        initializeServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
-        log.debug("Create serverSocket");
         try {
-            sessionId = UUID.randomUUID().toString();
+            int port = networkId.getAddressByTransportTypeMap().get(TransportType.I2P).getPort();
+            initializeServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
+            log.debug("Create serverSocket");
+            sessionId = UUID.randomUUID().toString(); //todo
             I2PKeyPair i2PKeyPair = keyBundle.getI2PKeyPair();
+            //todo what happens for updateing users? is i2PKeyPair null? it should be created in that case
             if (i2PKeyPair == null) {
                 throw new ConnectionException("I2P KeyPair is null for networkId: " + networkId);
             }
             //TODO: Investigate why not using port passed as parameter and if no port, find one?
             //Pass parameters to connect with Local instance
             int i2pPort = port;
-            if (!isEmbeddedRouter()) {
-                i2pPort = config.getI2cpPort();
+            if (!useEmbeddedRouter()) {
+                i2pPort = config.getI2cpPort(); //todo
             }
             ServerSocket serverSocket = i2pClient.getServerSocket(i2PKeyPair, sessionId, config.getI2cpHost(), i2pPort);
             String destination = keyBundle.getI2PKeyPair().getBase64Destination();
@@ -257,7 +239,7 @@ public class I2PTransportService implements TransportService {
             log.debug("ServerSocket created. SessionId={}, destination={}", sessionId, destination);
             return new ServerSocketResult(serverSocket, address);
         } catch (Exception exception) {
-            exception.printStackTrace();
+            log.error("getServerSocket failed", exception);
             throw new ConnectionException(exception);
         }
     }
@@ -273,7 +255,7 @@ public class I2PTransportService implements TransportService {
             log.info("I2P socket to {} created. Took {} ms", address, System.currentTimeMillis() - ts);
             return socket;
         } catch (IOException exception) {
-            log.error(exception.toString(), exception);
+            log.error("getSocket failed", exception);
             throw exception;
         }
     }
@@ -283,14 +265,17 @@ public class I2PTransportService implements TransportService {
         return CompletableFuture.supplyAsync(() -> i2pClient.isPeerOnline(address.getHost()));
     }
 
-    @Getter
-    public static class ProxyEndpoint {
-        private final String host;
-        private final int port;
-
-        public ProxyEndpoint(String host, int port) {
-            this.host = host;
-            this.port = port;
+    private boolean useEmbeddedRouter() {
+        if (config.isEmbeddedRouter()) {
+            // Is there a running router? If so, ignore the config for embedded router if exists
+            int defaultI2cpPort = 7654;
+            boolean isExternalRouterReachable = NetworkUtils.isPortInUse("127.0.0.1", defaultI2cpPort);
+            if (isExternalRouterReachable) {
+                log.info("Embedded router parameter set to true, but there's a service running on 127.0.0.1:7654...");
+            } else {
+                return true;
+            }
         }
+        return false;
     }
 }
