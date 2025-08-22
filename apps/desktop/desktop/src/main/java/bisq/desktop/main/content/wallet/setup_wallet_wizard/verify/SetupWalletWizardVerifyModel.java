@@ -93,6 +93,7 @@ public class SetupWalletWizardVerifyModel implements Model {
 
     public void reset() {
         currentQuestionIndex.set(0);
-        selectedAnswerIndex.set(-1);
+        selectedAnswerIndex.set(INVALID_INDEX);
+        shouldTransitionToNextQuestion.set(false);
     }
 }

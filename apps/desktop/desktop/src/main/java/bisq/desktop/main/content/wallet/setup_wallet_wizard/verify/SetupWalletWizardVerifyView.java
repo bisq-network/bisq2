@@ -139,7 +139,7 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
 
     private void updateQuestion() {
         int qIdx = model.getCurrentQuestionIndex().get();
-        model.getSelectedAnswerIndex().set(-1);
+        model.getSelectedAnswerIndex().set(SetupWalletWizardVerifyModel.INVALID_INDEX);
         if (qIdx >= model.getQuestionPositions().size()) {
             questionLabel.setText(Res.get("wallet.verifySeeds.success.title"));
             Arrays.stream(answerButtons).forEach(btn -> btn.setVisible(false));
