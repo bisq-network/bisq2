@@ -55,6 +55,17 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
                 }
             }
 
+            val i2pRouterProject = project.parent?.childProjects?.filter { e -> e.key == "i2p-router-app" }?.map { e -> e.value.project }?.first()
+            i2pRouterProject?.let { i2pRouter ->
+                val desktopProject = project.parent?.childProjects?.filter { e -> e.key == "desktop" }?.map { e -> e.value.project }?.first()
+                desktopProject?.let { desktop ->
+                    val processResourcesInDesktop = desktop.tasks.named("processResources")
+                    val processI2pRouterForDesktopProvider = i2pRouter.tasks.named("processI2pRouterForDesktop")
+                    processResourcesInDesktop.get().dependsOn(processI2pRouterForDesktopProvider)
+                    dependsOn(processI2pRouterForDesktopProvider)
+                }
+            }
+
             dependsOn(generateHashesTask)
 
             jdkDirectory.set(getJPackageJdkDirectory(extension))

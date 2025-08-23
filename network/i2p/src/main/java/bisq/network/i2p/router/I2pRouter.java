@@ -60,7 +60,7 @@ public class I2pRouter {
     private volatile Router router;
     private volatile boolean isShutdownInProgress;
 
-    private I2pRouter(String i2pDirPath) {
+    public I2pRouter(String i2pDirPath) {
         this(i2pDirPath, false, 512, 512, 50);
     }
 
