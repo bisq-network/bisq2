@@ -100,8 +100,9 @@ public class SocketManagerByNodeId {
 
     private static Properties getProperties() {
         Properties props = new Properties();
-        props.setProperty("inbound.quantity", "3"); // num parallel tunnels; default 3
-        props.setProperty("outbound.quantity", "3");// default 3
+        // Number of parallel tunnels; default DEFAULT_TUNNEL_QUANTITY = 3
+        props.setProperty("inbound.quantity", "3");
+        props.setProperty("outbound.quantity", "3");
         props.setProperty("i2cp.closeOnIdle", "false");
         props.setProperty("i2cp.reduceOnIdle", "false");
         return props;
