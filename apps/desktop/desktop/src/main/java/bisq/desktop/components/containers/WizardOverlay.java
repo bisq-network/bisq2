@@ -19,6 +19,7 @@ package bisq.desktop.components.containers;
 
 import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -39,6 +40,10 @@ public class WizardOverlay extends VBox {
 
     private final StackPane owner;
 
+    public WizardOverlay(StackPane owner, String headline, Label headlineIcon, String text, Button... buttons) {
+        this(owner, headline, Optional.of(headlineIcon), Collections.singletonList(text), buttons);
+    }
+
     public WizardOverlay(StackPane owner, String headline, Label headlineIcon, List<String> texts, Button... buttons) {
         this(owner, headline, Optional.of(headlineIcon), texts, buttons);
     }
@@ -58,12 +63,12 @@ public class WizardOverlay extends VBox {
 
         HBox headlineBox = new HBox(15);
         headlineBox.setAlignment(Pos.CENTER);
+        VBox.setMargin(headlineBox, new Insets(20, 0, 0, 0));
 
         iconLabel.ifPresent(label -> headlineBox.getChildren().add(label));
 
         Label headlineLabel = new Label(Res.get(headline));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
-        VBox.setMargin(headlineLabel, new Insets(20, 0, 0, 0));
         headlineBox.getChildren().add(headlineLabel);
 
         VBox textBox = new VBox(15);
@@ -87,6 +92,8 @@ public class WizardOverlay extends VBox {
         setAlignment(Pos.TOP_CENTER);
         content.getChildren().addAll(headlineBox, textBox, buttonsBox);
         getChildren().addAll(content, Spacer.fillVBox());
+
+        StackPane.setMargin(this, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
     }
 
     public void updateOverlayVisibility(VBox content,

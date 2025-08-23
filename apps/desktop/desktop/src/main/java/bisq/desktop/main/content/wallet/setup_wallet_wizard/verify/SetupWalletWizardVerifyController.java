@@ -19,11 +19,13 @@ package bisq.desktop.main.content.wallet.setup_wallet_wizard.verify;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.wallet.WalletService;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -86,13 +88,18 @@ public class SetupWalletWizardVerifyController implements Controller {
                 model.getShouldTransitionToNextQuestion().set(true);
             }
         } else {
-            new Popup().warning(Res.get("wallet.verifySeeds.wrongWord.description"))
-                    .owner(getPopupOwner())
-                    .headline(Res.get("wallet.verifySeeds.wrongWord.title"))
-                    .hideCloseButton()
-                    .onAction(onBackHandler)
-                    .show();
+            model.getShouldShowWrongWordOverlay().set(true);
         }
+    }
+
+    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onWrongWord);
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, () -> {});
+    }
+
+    void onWrongWord() {
+        onBackHandler.run();
+        model.getShouldShowWrongWordOverlay().set(false);
     }
 
     void onCreateWallet() {

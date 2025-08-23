@@ -17,12 +17,15 @@
 
 package bisq.desktop.main.content.wallet.setup_wallet_wizard.verify;
 
+import bisq.desktop.common.Icons;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.containers.WizardOverlay;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -51,8 +54,9 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
     private final Label questionLabel;
     private final Button[] answerButtons = new Button[ANSWER_BUTTONS_COUNT];
     private final ChangeListener<Number> questionIndexListener, answerIndexListener;
-    private final Button createWalletSuccessButton;
-    private Subscription showCreateWalletSuccessPin, transitionSubscriptionPin;
+    private final Button createWalletSuccessButton, goBackButton;
+    private final WizardOverlay wrongWordOverlay;
+    private Subscription showCreateWalletSuccessPin, transitionSubscriptionPin, shouldShowWrongWordOverlayPin;
     private UIScheduler slideNextQuestionScheduler;
 
     public SetupWalletWizardVerifyView(SetupWalletWizardVerifyModel model,
@@ -82,6 +86,16 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
             answerButtonsRow.getChildren().add(btn);
         }
 
+        Label warningIcon = new Label();
+        Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, warningIcon, "1.7em");
+        goBackButton = new Button(Res.get("wallet.verifySeeds.wrongWord.closeButton"));
+        goBackButton.setDefaultButton(true);
+        wrongWordOverlay = new WizardOverlay(root,
+                "wallet.verifySeeds.wrongWord.title",
+                warningIcon,
+                "wallet.verifySeeds.wrongWord.description",
+                goBackButton);
+
         questionIndexListener = (obs, oldVal, newVal) -> updateQuestion();
         answerIndexListener = (obs, oldVal, newVal) -> updateButtonStylesAndNextState();
 
@@ -92,7 +106,7 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
         configCreateWalletSuccess();
         StackPane.setMargin(createWalletSuccess, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
 
-        root.getChildren().addAll(content, createWalletSuccess);
+        root.getChildren().addAll(content, createWalletSuccess, wrongWordOverlay);
     }
 
     @Override
@@ -114,7 +128,13 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
             }
         });
 
+        shouldShowWrongWordOverlayPin = EasyBind.subscribe(model.getShouldShowWrongWordOverlay(), shouldShow ->
+            wrongWordOverlay.updateOverlayVisibility(content,
+                    shouldShow,
+                    controller::onKeyPressedWhileShowingOverlay));
+
         createWalletSuccessButton.setOnAction(e -> controller.onCreateWallet());
+        goBackButton.setOnAction(e -> controller.onWrongWord());
 
         model.getCurrentQuestionIndex().addListener(questionIndexListener);
         model.getSelectedAnswerIndex().addListener(answerIndexListener);
@@ -125,8 +145,10 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
     protected void onViewDetached() {
         showCreateWalletSuccessPin.unsubscribe();
         transitionSubscriptionPin.unsubscribe();
+        shouldShowWrongWordOverlayPin.unsubscribe();
 
         createWalletSuccessButton.setOnAction(null);
+        goBackButton.setOnAction(null);
 
         model.getCurrentQuestionIndex().removeListener(questionIndexListener);
         model.getSelectedAnswerIndex().removeListener(answerIndexListener);
