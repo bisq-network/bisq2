@@ -18,7 +18,6 @@
 package bisq.network.i2p;
 
 import bisq.common.threading.ExecutorFactory;
-import bisq.network.i2p.embedded.I2pEmbeddedRouter;
 import bisq.security.keys.I2PKeyPair;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.I2PAppContext;
@@ -29,44 +28,36 @@ import net.i2p.data.Destination;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Slf4j
 public class I2pClient {
     private final int socketTimeout;
     private final SocketManagerByNodeId socketManagerByNodeId;
-    private Optional<I2pEmbeddedRouter> embeddedI2pRouter = Optional.empty();
-    private final ExecutorService routerInitExecutor;
     private volatile boolean isShutdownInProgress;
 
     public I2pClient(String dirPath, String i2cpHost,
                      int i2cpPort,
                      int socketTimeout,
-                     int connectTimeout,
-                     boolean isEmbeddedRouter) {
+                     int connectTimeout) {
         this.socketTimeout = socketTimeout;
         socketManagerByNodeId = new SocketManagerByNodeId(i2cpHost, i2cpPort, connectTimeout);
-        this.routerInitExecutor = Executors.newSingleThreadExecutor();
-        if (isEmbeddedRouter) {
-            routerInitExecutor.submit(() -> {
-                long start = System.currentTimeMillis();
-                embeddedI2pRouter = Optional.of(I2pEmbeddedRouter.getInitializedI2pEmbeddedRouter());
-                log.info("Embedded I2P router initialized asynchronously. Took {} ms.", System.currentTimeMillis() - start);
-            });
-        }
+
         I2PAppContext.getGlobalContext().logManager().setBaseLogfilename(dirPath + "/client/logs/i2p-@.log");
         log.info("I2P client created with i2cpHost={}, i2cpPort={}, socketTimeout={}", i2cpHost, i2cpPort, socketTimeout);
     }
 
-    public void shutdown() {
-        isShutdownInProgress = true;
-        long ts = System.currentTimeMillis();
-        socketManagerByNodeId.shutdown();
-        ExecutorFactory.shutdownAndAwaitTermination(routerInitExecutor);
-        embeddedI2pRouter.ifPresent(I2pEmbeddedRouter::shutdown);
-        log.info("I2P shutdown completed. Took {} ms.", System.currentTimeMillis() - ts);
+    public CompletableFuture<Boolean> shutdown() {
+        ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("I2PTransportService.shutdown");
+        return CompletableFuture.supplyAsync(() -> {
+                    isShutdownInProgress = true;
+                    long ts = System.currentTimeMillis();
+                    socketManagerByNodeId.shutdown();
+                    log.info("I2P shutdown completed. Took {} ms.", System.currentTimeMillis() - ts);
+                    return true;
+                }, executor)
+                .whenComplete((result, throwable) -> ExecutorFactory.shutdownAndAwaitTermination(executor));
     }
 
     public ServerSocket getServerSocket(I2PKeyPair i2PKeyPair, String nodeId) throws IOException, I2PSessionException {

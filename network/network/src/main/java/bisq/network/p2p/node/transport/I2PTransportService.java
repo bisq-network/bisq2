@@ -22,10 +22,9 @@ import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
-import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.NetworkUtils;
 import bisq.network.i2p.I2pClient;
-import bisq.network.i2p.embedded.I2pEmbeddedRouter;
+import bisq.network.i2p.router.I2pRouter;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.security.keys.I2PKeyPair;
@@ -43,8 +42,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -132,6 +131,7 @@ public class I2PTransportService implements TransportService {
     public final ObservableHashMap<NetworkId, Long> initializeServerSocketTimestampByNetworkId = new ObservableHashMap<>();
     @Getter
     public final ObservableHashMap<NetworkId, Long> initializedServerSocketTimestampByNetworkId = new ObservableHashMap<>();
+    private Optional<I2pRouter> i2pEmbeddedRouter = Optional.empty();
     private volatile boolean initializeCalled;
     private volatile boolean isShutdownInProgress;
 
@@ -157,34 +157,20 @@ public class I2PTransportService implements TransportService {
         initializeCalled = true;
         log.debug("Initialize");
         try {
-            //If embedded router, start it already ...
-            boolean useEmbeddedRouter = useEmbeddedRouter();
-            if (useEmbeddedRouter) {
-                //todo
-                if (!I2pEmbeddedRouter.isInitialized()) {
-                    I2pEmbeddedRouter.getI2pEmbeddedRouter(i2pDirPath,
-                            config.getInboundKBytesPerSecond(),
-                            config.getOutboundKBytesPerSecond(),
-                            config.getBandwidthSharePercentage(),
-                            config.isExtendedI2pLogging());
-                }
-                while (!I2pEmbeddedRouter.isRouterRunning()) {
-                    try {
-                        //noinspection BusyWait
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        log.warn("Thread got interrupted at initialize method", e);
-                        Thread.currentThread().interrupt(); // Restore interrupted state
-                    }
-                }
+            if (useEmbeddedRouter() && i2pEmbeddedRouter.isEmpty()) {
+                i2pEmbeddedRouter = Optional.of(new I2pRouter(i2pDirPath,
+                        true,
+                        config.getInboundKBytesPerSecond(),
+                        config.getOutboundKBytesPerSecond(),
+                        config.getBandwidthSharePercentage()));
+                i2pEmbeddedRouter.get().start().join();
             }
 
             i2pClient = new I2pClient(i2pDirPath,
                     config.getI2cpHost(),
                     config.getI2cpPort(),
                     config.getSocketTimeout(),
-                    config.getConnectTimeout(),
-                    useEmbeddedRouter);
+                    config.getConnectTimeout());
 
             setTransportState(TransportState.INITIALIZED);
         } catch (Exception e) {
@@ -206,19 +192,17 @@ public class I2PTransportService implements TransportService {
         initializedServerSocketTimestampByNetworkId.clear();
         timestampByTransportState.clear();
 
+        i2pEmbeddedRouter.map(router -> router.shutdown()
+                .orTimeout(2, TimeUnit.SECONDS)
+                .join());
+        i2pEmbeddedRouter = Optional.empty();
+
         if (i2pClient == null) {
             return CompletableFuture.completedFuture(true);
         }
-        ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("I2PTransportService.shutdown");
-        return CompletableFuture.runAsync(i2pClient::shutdown, executor)
-                .handle((result, throwable) -> {
-                    if (throwable != null) {
-                        log.warn("I2P client shutdown failed", throwable);
-                    }
-                    setTransportState(TransportState.TERMINATED);
-                    return true;
-                })
-                .whenComplete((result, throwable) -> ExecutorFactory.shutdownAndAwaitTermination(executor));
+        return i2pClient.shutdown()
+                .whenComplete((result, throwable) ->
+                        setTransportState(TransportState.TERMINATED));
     }
 
     @Override
