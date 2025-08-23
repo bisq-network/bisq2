@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.containers;
 
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -28,26 +29,37 @@ import javafx.scene.layout.VBox;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public class WizardOverlay extends VBox {
     private static final double OVERLAY_WIDTH = 700;
 
-    public WizardOverlay(String headline, String text, Button... buttons) {
-        this(headline, Collections.singletonList(text), buttons);
+    public WizardOverlay(String headline, Label headlineIcon, List<String> texts, Button... buttons) {
+        this(headline, Optional.of(headlineIcon), texts, buttons);
     }
 
-    public WizardOverlay(String headline, List<String> texts, Button... buttons) {
+    public WizardOverlay(String headline, String text, Button... buttons) {
+        this(headline, Optional.empty(), Collections.singletonList(text), buttons);
+    }
+
+    private WizardOverlay(String headline, Optional<Label> iconLabel, List<String> texts, Button... buttons) {
         VBox content = new VBox(40);
         content.setAlignment(Pos.TOP_CENTER);
         content.getStyleClass().setAll("trade-wizard-feedback-bg");
         content.setPadding(new Insets(30));
         content.setMaxWidth(OVERLAY_WIDTH);
 
+        HBox headlineBox = new HBox(15);
+        headlineBox.setAlignment(Pos.CENTER);
+
+        iconLabel.ifPresent(label -> headlineBox.getChildren().add(label));
+
         Label headlineLabel = new Label(Res.get(headline));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
         VBox.setMargin(headlineLabel, new Insets(20, 0, 0, 0));
-        content.getChildren().add(headlineLabel);
+        headlineBox.getChildren().add(headlineLabel);
 
+        VBox textBox = new VBox(10);
         texts.stream()
             .map(t -> {
                 Label textLabel = new Label(Res.get(t));
@@ -56,26 +68,33 @@ public class WizardOverlay extends VBox {
                 textLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
                 return textLabel;
             })
-            .forEach(content.getChildren()::add);
+            .forEach(textBox.getChildren()::add);
 
         HBox buttonsBox = new HBox(10, buttons);
         buttonsBox.setAlignment(Pos.CENTER);
         VBox.setMargin(buttonsBox, new Insets(15, 0, 10, 0));
-        content.getChildren().add(buttonsBox);
 
         setSpacing(20);
         setVisible(false);
         setAlignment(Pos.TOP_CENTER);
+        content.getChildren().addAll(headlineBox, textBox, buttonsBox);
         getChildren().addAll(content, Spacer.fillVBox());
     }
 
     public void updateOverlayVisibility(VBox content, boolean shouldShow) {
-        setVisible(shouldShow);
         if (shouldShow) {
+            setVisible(true);
+            setOpacity(1);
             Transitions.blurStrong(content, 0);
             Transitions.slideInTop(this, 450);
+            // TODO: runnable
         } else {
             Transitions.removeEffect(content);
+            if (isVisible()) {
+                Transitions.fadeOut(this, ManagedDuration.getHalfOfDefaultDurationMillis(),
+                        () -> setVisible(false));
+            }
+            // TODO: runnable
         }
     }
 }
