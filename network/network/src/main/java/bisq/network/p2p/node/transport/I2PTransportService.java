@@ -22,10 +22,9 @@ import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
-import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.NetworkUtils;
 import bisq.network.i2p.I2pClient;
-import bisq.network.i2p.embedded.I2pEmbeddedRouter;
+import bisq.network.i2p.router.I2pRouter;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.security.keys.I2PKeyPair;
@@ -43,10 +42,12 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class I2PTransportService implements TransportService {
@@ -132,6 +133,7 @@ public class I2PTransportService implements TransportService {
     public final ObservableHashMap<NetworkId, Long> initializeServerSocketTimestampByNetworkId = new ObservableHashMap<>();
     @Getter
     public final ObservableHashMap<NetworkId, Long> initializedServerSocketTimestampByNetworkId = new ObservableHashMap<>();
+    private Optional<I2pRouter> embeddedRouter = Optional.empty();
     private volatile boolean initializeCalled;
     private volatile boolean isShutdownInProgress;
 
@@ -157,34 +159,22 @@ public class I2PTransportService implements TransportService {
         initializeCalled = true;
         log.debug("Initialize");
         try {
-            //If embedded router, start it already ...
-            boolean useEmbeddedRouter = useEmbeddedRouter();
-            if (useEmbeddedRouter) {
-                //todo
-                if (!I2pEmbeddedRouter.isInitialized()) {
-                    I2pEmbeddedRouter.getI2pEmbeddedRouter(i2pDirPath,
-                            config.getInboundKBytesPerSecond(),
-                            config.getOutboundKBytesPerSecond(),
-                            config.getBandwidthSharePercentage(),
-                            config.isExtendedI2pLogging());
-                }
-                while (!I2pEmbeddedRouter.isRouterRunning()) {
-                    try {
-                        //noinspection BusyWait
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        log.warn("Thread got interrupted at initialize method", e);
-                        Thread.currentThread().interrupt(); // Restore interrupted state
-                    }
-                }
+            if (useEmbeddedRouter() && embeddedRouter.isEmpty()) {
+                I2pRouter router = new I2pRouter(i2pDirPath,
+                        true,
+                        config.getInboundKBytesPerSecond(),
+                        config.getOutboundKBytesPerSecond(),
+                        config.getBandwidthSharePercentage());
+                embeddedRouter = Optional.of(router);
+                boolean success = router.start().get();
+                checkArgument(success, "Starting I2P router failed.");
             }
 
             i2pClient = new I2pClient(i2pDirPath,
                     config.getI2cpHost(),
                     config.getI2cpPort(),
                     config.getSocketTimeout(),
-                    config.getConnectTimeout(),
-                    useEmbeddedRouter);
+                    config.getConnectTimeout());
 
             setTransportState(TransportState.INITIALIZED);
         } catch (Exception e) {
@@ -195,10 +185,10 @@ public class I2PTransportService implements TransportService {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        isShutdownInProgress = true;
-        if (!initializeCalled) {
+        if (!initializeCalled || isShutdownInProgress) {
             return CompletableFuture.completedFuture(true);
         }
+        isShutdownInProgress = true;
         initializeCalled = false;
         setTransportState(TransportState.STOPPING);
 
@@ -206,19 +196,24 @@ public class I2PTransportService implements TransportService {
         initializedServerSocketTimestampByNetworkId.clear();
         timestampByTransportState.clear();
 
-        if (i2pClient == null) {
-            return CompletableFuture.completedFuture(true);
-        }
-        ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("I2PTransportService.shutdown");
-        return CompletableFuture.runAsync(i2pClient::shutdown, executor)
-                .handle((result, throwable) -> {
-                    if (throwable != null) {
-                        log.warn("I2P client shutdown failed", throwable);
-                    }
-                    setTransportState(TransportState.TERMINATED);
-                    return true;
+
+        CompletableFuture<Boolean> routerShutdown = embeddedRouter
+                .map(router -> router.shutdown().orTimeout(3, TimeUnit.SECONDS))
+                .orElse(CompletableFuture.completedFuture(true));
+        embeddedRouter = Optional.empty();
+
+        CompletableFuture<Boolean> clientShutdown = (i2pClient == null)
+                ? CompletableFuture.completedFuture(true)
+                : i2pClient.shutdown();
+
+        return routerShutdown
+                .exceptionally(ex -> {
+                    // Don’t fail the whole shutdown; log and continue with client shutdown.
+                    log.warn("Embedded router shutdown failed/timed out; continuing with client shutdown.", ex);
+                    return false;
                 })
-                .whenComplete((result, throwable) -> ExecutorFactory.shutdownAndAwaitTermination(executor));
+                .thenCompose(ignored -> clientShutdown)
+                .whenComplete((result, throwable) -> setTransportState(TransportState.TERMINATED));
     }
 
     @Override
@@ -276,7 +271,15 @@ public class I2PTransportService implements TransportService {
         String peersDestinationBase64 = address.getHost();
         try {
             Destination peersDestination = new Destination(peersDestinationBase64);
-            return CompletableFuture.supplyAsync(() -> i2pClient.isLeaseFoundInNetDb(peersDestination, nodeId));
+            return CompletableFuture.supplyAsync(() -> {
+                boolean leaseFoundInNetDb = i2pClient.isLeaseFoundInNetDb(peersDestination, nodeId);
+                if (!leaseFoundInNetDb) {
+                    return false;
+                }
+
+                return embeddedRouter.map(i2pRouter -> !i2pRouter.wasUnreachable(peersDestination))
+                        .orElse(true);
+            });
         } catch (DataFormatException e) {
             return CompletableFuture.failedFuture(new IOException("Invalid I2P destination", e));
         }
