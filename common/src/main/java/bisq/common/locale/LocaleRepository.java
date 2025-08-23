@@ -18,9 +18,12 @@
 package bisq.common.locale;
 
 import bisq.common.file.PropertiesReader;
+import bisq.common.util.StringUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.Set;
@@ -32,12 +35,21 @@ public class LocaleRepository {
     private static Locale defaultLocale;
 
     static {
-        Properties properties = PropertiesReader.getProperties("bisq.properties");
-        if (properties != null) {
-            Locale locale = new Locale(properties.getProperty("language"), properties.getProperty("country"));
+        String propertyFileName = "bisq.properties";
+        Locale locale = Locale.getDefault();
+        try {
+            Properties properties = PropertiesReader.getProperties(propertyFileName);
+            String language = properties.getProperty("language"); // e.g., "en"
+            String country = properties.getProperty("country");   // e.g., "US"
+            String countryTag = StringUtils.isNotEmpty(country) ? "-" + country : "";
+            String tag = language + countryTag;
+            locale = Locale.forLanguageTag(tag);
+        } catch (FileNotFoundException ignore) {
+            log.debug("No {} property file found. This is expected", propertyFileName);
+        } catch (IOException e) {
+            log.warn("Could not load properties from {}", propertyFileName);
+        } finally {
             setDefaultLocale(locale);
-        } else {
-            setDefaultLocale(Locale.getDefault());
         }
     }
 
