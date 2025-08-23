@@ -91,14 +91,9 @@ public class I2pClient {
         }
         long ts = System.currentTimeMillis();
         I2PSocketManager manager = socketManagerByNodeId.getSocketManager(nodeId);
-        try {
-            Socket socket = manager.connectToSocket(peersDestination, socketTimeout);
-            log.info("Client socket for nodeId {} created. Took {} ms.", nodeId, System.currentTimeMillis() - ts);
-            return socket;
-        } catch (IOException e) {
-            socketManagerByNodeId.disposeSocketManager(nodeId);
-            throw e;
-        }
+        Socket socket = manager.connectToSocket(peersDestination, socketTimeout);
+        log.info("Client socket for nodeId {} created. Took {} ms.", nodeId, System.currentTimeMillis() - ts);
+        return socket;
     }
 
     // The lease can be still present for about 10 min after peer has been offline
