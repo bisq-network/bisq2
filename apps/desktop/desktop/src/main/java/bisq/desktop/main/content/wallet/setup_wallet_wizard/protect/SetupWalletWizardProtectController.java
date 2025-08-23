@@ -18,9 +18,11 @@
 package bisq.desktop.main.content.wallet.setup_wallet_wizard.protect;
 
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -96,6 +98,11 @@ public class SetupWalletWizardProtectController implements Controller {
     void onCancelSkipProtectStep() {
         model.getShouldShowSkipProtectStepOverlay().set(false);
         navigationButtonsVisibleHandler.accept(true);
+    }
+
+    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onCancelSkipProtectStep);
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onConfirmSkipProtectStep);
     }
 
     private Region getPopupOwner() {

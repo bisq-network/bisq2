@@ -73,7 +73,8 @@ public class SetupWalletWizardProtectView extends View<StackPane, SetupWalletWiz
         skipProtectStepOverlayBackButton = new Button(Res.get("wallet.protectWallet.skipStepOverlay.backButton"));
         skipProtectStepOverlayNextButton = new Button(Res.get("wallet.protectWallet.skipStepOverlay.nextButton"));
         skipProtectStepOverlayNextButton.setDefaultButton(true);
-        skipProtectStepOverlay = new WizardOverlay("wallet.protectWallet.skipStepOverlay.headline",
+        skipProtectStepOverlay = new WizardOverlay(root,
+                "wallet.protectWallet.skipStepOverlay.headline",
                 "wallet.protectWallet.skipStepOverlay.description",
                 skipProtectStepOverlayBackButton,
                 skipProtectStepOverlayNextButton);
@@ -90,7 +91,9 @@ public class SetupWalletWizardProtectView extends View<StackPane, SetupWalletWiz
         confirmPasswordField.textProperty().bindBidirectional(model.getConfirmPassword());
 
         shouldShowSkipProtectStepOverlayPin = EasyBind.subscribe(model.getShouldShowSkipProtectStepOverlay(), shouldShow ->
-            skipProtectStepOverlay.updateOverlayVisibility(content, shouldShow));
+            skipProtectStepOverlay.updateOverlayVisibility(content,
+                    shouldShow,
+                    controller::onKeyPressedWhileShowingOverlay));
 
         skipProtectStepOverlayBackButton.setOnAction(e -> controller.onConfirmSkipProtectStep());
         skipProtectStepOverlayNextButton.setOnAction(e -> controller.onCancelSkipProtectStep());

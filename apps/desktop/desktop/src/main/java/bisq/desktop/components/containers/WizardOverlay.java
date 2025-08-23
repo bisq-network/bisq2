@@ -20,11 +20,14 @@ package bisq.desktop.components.containers;
 import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.i18n.Res;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 import java.util.Collections;
@@ -34,15 +37,19 @@ import java.util.Optional;
 public class WizardOverlay extends VBox {
     private static final double OVERLAY_WIDTH = 700;
 
-    public WizardOverlay(String headline, Label headlineIcon, List<String> texts, Button... buttons) {
-        this(headline, Optional.of(headlineIcon), texts, buttons);
+    private final StackPane owner;
+
+    public WizardOverlay(StackPane owner, String headline, Label headlineIcon, List<String> texts, Button... buttons) {
+        this(owner, headline, Optional.of(headlineIcon), texts, buttons);
     }
 
-    public WizardOverlay(String headline, String text, Button... buttons) {
-        this(headline, Optional.empty(), Collections.singletonList(text), buttons);
+    public WizardOverlay(StackPane owner, String headline, String text, Button... buttons) {
+        this(owner, headline, Optional.empty(), Collections.singletonList(text), buttons);
     }
 
-    private WizardOverlay(String headline, Optional<Label> iconLabel, List<String> texts, Button... buttons) {
+    private WizardOverlay(StackPane owner, String headline, Optional<Label> iconLabel, List<String> texts, Button... buttons) {
+        this.owner = owner;
+
         VBox content = new VBox(40);
         content.setAlignment(Pos.TOP_CENTER);
         content.getStyleClass().setAll("trade-wizard-feedback-bg");
@@ -59,7 +66,7 @@ public class WizardOverlay extends VBox {
         VBox.setMargin(headlineLabel, new Insets(20, 0, 0, 0));
         headlineBox.getChildren().add(headlineLabel);
 
-        VBox textBox = new VBox(10);
+        VBox textBox = new VBox(15);
         texts.stream()
             .map(t -> {
                 Label textLabel = new Label(Res.get(t));
@@ -69,6 +76,7 @@ public class WizardOverlay extends VBox {
                 return textLabel;
             })
             .forEach(textBox.getChildren()::add);
+        VBox.setMargin(textBox, new Insets(0, 30, 0, 30));
 
         HBox buttonsBox = new HBox(10, buttons);
         buttonsBox.setAlignment(Pos.CENTER);
@@ -81,20 +89,26 @@ public class WizardOverlay extends VBox {
         getChildren().addAll(content, Spacer.fillVBox());
     }
 
-    public void updateOverlayVisibility(VBox content, boolean shouldShow) {
+    public void updateOverlayVisibility(VBox content,
+                                        boolean shouldShow,
+                                        EventHandler<? super KeyEvent> onKeyPressedHandler) {
         if (shouldShow) {
             setVisible(true);
             setOpacity(1);
             Transitions.blurStrong(content, 0);
             Transitions.slideInTop(this, 450);
-            // TODO: runnable
+            owner.setOnKeyPressed(onKeyPressedHandler);
         } else {
             Transitions.removeEffect(content);
             if (isVisible()) {
                 Transitions.fadeOut(this, ManagedDuration.getHalfOfDefaultDurationMillis(),
                         () -> setVisible(false));
             }
-            // TODO: runnable
+            owner.setOnKeyPressed(null);
+            // Return the focus to the wizard
+            if (owner.getParent() != null) {
+                owner.getParent().requestFocus();
+            }
         }
     }
 }
