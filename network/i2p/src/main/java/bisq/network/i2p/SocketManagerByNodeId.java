@@ -31,7 +31,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -43,9 +43,11 @@ public class SocketManagerByNodeId {
     private static class DisconnectListener implements I2PSocketManager.DisconnectListener {
         private final String nodeId;
         private final I2PSocketManager manager;
-        private final Consumer<String> disposeHandler;
+        private final BiConsumer<String, I2PSocketManager> disposeHandler;
 
-        public DisconnectListener(String nodeId, I2PSocketManager manager, Consumer<String> disposeHandler) {
+        public DisconnectListener(String nodeId,
+                                  I2PSocketManager manager,
+                                  BiConsumer<String, I2PSocketManager> disposeHandler) {
             this.nodeId = nodeId;
             this.manager = manager;
             this.disposeHandler = disposeHandler;
@@ -57,7 +59,7 @@ public class SocketManagerByNodeId {
             // Defensive: remove listener explicitly in case destroySocketManager()
             // does not clean up listeners itself.
             manager.removeDisconnectListener(this);
-            disposeHandler.accept(nodeId);
+            disposeHandler.accept(nodeId, manager);
         }
     }
 
@@ -110,6 +112,19 @@ public class SocketManagerByNodeId {
                     manager.destroySocketManager();
                     socketManagerByNodeId.remove(nodeId);
                 });
+    }
+
+    synchronized void disposeSocketManager(String nodeId, I2PSocketManager expected) {
+        I2PSocketManager current = socketManagerByNodeId.get(nodeId);
+        // Use object identity to be sure it's the same reference.
+        if (current == expected) {
+            current.destroySocketManager();
+            socketManagerByNodeId.remove(nodeId);
+        } else {
+            // Old manager disconnected after replacement; only destroy the old one.
+            expected.destroySocketManager();
+            log.info("Ignored disconnect from stale manager for nodeId {}", nodeId);
+        }
     }
 
     private void applyOptions(I2PSocketManager manager) {
