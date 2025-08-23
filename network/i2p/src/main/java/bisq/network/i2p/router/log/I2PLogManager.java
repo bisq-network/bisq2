@@ -1,4 +1,4 @@
-package bisq.network.i2p.embedded.log;
+package bisq.network.i2p.router.log;
 
 import net.i2p.I2PAppContext;
 import net.i2p.util.Log;
@@ -14,6 +14,8 @@ public class I2PLogManager extends LogManager {
 
     public I2PLogManager() {
         super(I2PAppContext.getGlobalContext());
+        setDefaultLimit(Log.STR_INFO);
+        setFileSize(10_000_000);
     }
 
     @Override

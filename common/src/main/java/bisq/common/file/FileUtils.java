@@ -525,19 +525,20 @@ public class FileUtils {
         if (url.getProtocol().equals("file")) {
             // Running from IDE / filesystem
             Path sourceDir = Paths.get(url.toURI());
-            Files.walk(sourceDir)
-                    .forEach(path -> {
-                        Path dest = targetDir.resolve(sourceDir.relativize(path));
-                        try {
-                            if (Files.isDirectory(path)) {
-                                Files.createDirectories(dest);
-                            } else {
-                                Files.copy(path, dest, StandardCopyOption.REPLACE_EXISTING);
-                            }
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
+            try (Stream<Path> pathStream = Files.walk(sourceDir)) {
+                pathStream.forEach(path -> {
+                    Path dest = targetDir.resolve(sourceDir.relativize(path));
+                    try {
+                        if (Files.isDirectory(path)) {
+                            Files.createDirectories(dest);
+                        } else {
+                            Files.copy(path, dest, StandardCopyOption.REPLACE_EXISTING);
                         }
-                    });
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                });
+            }
         } else if (url.getProtocol().equals("jar")) {
             // Running from JAR
             String urlPath = url.getPath();
