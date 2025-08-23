@@ -29,10 +29,10 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 public class ReportRequestService extends LeechRequestResponseHandler<ReportRequest, ReportResponse> {
-    private static final long TIMEOUT = SECONDS.toMillis(60);
+    private static final long REQUEST_TIMEOUT_MS = SECONDS.toMillis(60);
 
     public ReportRequestService(Node node) {
-        super(node, TIMEOUT);
+        super(node, REQUEST_TIMEOUT_MS);
 
         this.initialize();
     }
