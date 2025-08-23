@@ -32,7 +32,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 public class ReportResponseService extends RequestResponseHandler<ReportRequest, ReportResponse> {
-    private static final long TIMEOUT = SECONDS.toMillis(120);
+    private static final long REQUEST_TIMEOUT_MS = SECONDS.toMillis(120);
 
     private final DataService dataService;
     private final NetworkLoadSnapshot networkLoadSnapshot;
@@ -42,7 +42,7 @@ public class ReportResponseService extends RequestResponseHandler<ReportRequest,
                                  DataService dataService,
                                  NetworkLoadSnapshot networkLoadSnapshot,
                                  MemoryReportService memoryReportService) {
-        super(node, TIMEOUT);
+        super(node, REQUEST_TIMEOUT_MS);
         this.dataService = dataService;
         this.networkLoadSnapshot = networkLoadSnapshot;
         this.memoryReportService = memoryReportService;
@@ -53,9 +53,7 @@ public class ReportResponseService extends RequestResponseHandler<ReportRequest,
     @Override
     protected ReportResponse createResponse(Connection connection, ReportRequest request) {
         Report report = createStorageReport();
-        ReportResponse response = new ReportResponse(request.getRequestId(), report);
-        log.info("Received a ReportRequest from {}", connection.getPeerAddress());
-        return response;
+        return new ReportResponse(request.getRequestId(), report);
     }
 
     @Override

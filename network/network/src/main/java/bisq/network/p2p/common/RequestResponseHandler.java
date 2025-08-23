@@ -39,12 +39,12 @@ import java.util.concurrent.TimeoutException;
 @Slf4j
 public abstract class RequestResponseHandler<T extends Request, R extends Response> implements Node.Listener {
     protected final Node node;
-    protected final long timeout;
+    protected final long requestTimeoutMs;
     protected final Map<String, RequestFuture<T, R>> requestFuturesByConnectionId = new ConcurrentHashMap<>();
 
-    public RequestResponseHandler(Node node, long timeout) {
+    public RequestResponseHandler(Node node, long requestTimeoutMs) {
         this.node = node;
-        this.timeout = timeout;
+        this.requestTimeoutMs = requestTimeoutMs;
     }
 
     public void initialize() {
@@ -86,11 +86,11 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
                 return existing;
             }
             RequestFuture<T, R> requestFuture = new RequestFuture<>(node, connection, request);
-            requestFuture.orTimeout(timeout, TimeUnit.MILLISECONDS)
+            requestFuture.orTimeout(requestTimeoutMs, TimeUnit.MILLISECONDS)
                     .whenComplete((response, throwable) -> {
                         requestFuturesByConnectionId.remove(k);
                         if (throwable instanceof TimeoutException) {
-                            log.warn("[{}]Request to {} timed out after {} ms", this.getClass().getSimpleName(), connection.getPeerAddress(), timeout);
+                            log.warn("[{}]Request to {} timed out after {} ms", this.getClass().getSimpleName(), connection.getPeerAddress(), requestTimeoutMs);
                         } else if (throwable != null) {
                             log.warn("[{}]Request to {} failed: {}", this.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
                         } else {

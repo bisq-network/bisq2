@@ -25,8 +25,8 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 
 public abstract class LeechRequestResponseHandler<T extends Request, R extends Response> extends RequestResponseHandler<T, R> {
-    public LeechRequestResponseHandler(Node node, long timeout) {
-        super(node, timeout);
+    public LeechRequestResponseHandler(Node node, long requestTimeoutMs) {
+        super(node, requestTimeoutMs);
     }
 
     @Override
