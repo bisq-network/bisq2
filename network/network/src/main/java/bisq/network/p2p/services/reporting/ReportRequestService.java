@@ -18,64 +18,29 @@
 package bisq.network.p2p.services.reporting;
 
 import bisq.common.network.Address;
-import bisq.network.identity.NetworkId;
-import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.node.CloseReason;
-import bisq.network.p2p.node.Connection;
+import bisq.network.p2p.common.LeechRequestResponseHandler;
 import bisq.network.p2p.node.Node;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
-//TODO Extend RequestResponseHandler
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 @Slf4j
-public class ReportRequestService implements Node.Listener {
-    private static final long TIMEOUT_SEC = 60;
-
-    private final Node node;
-    private final Map<String, ReportHandler> requestHandlerMap = new ConcurrentHashMap<>();
+public class ReportRequestService extends LeechRequestResponseHandler<ReportRequest, ReportResponse> {
+    private static final long TIMEOUT = SECONDS.toMillis(60);
 
     public ReportRequestService(Node node) {
-        this.node = node;
+        super(node, TIMEOUT);
 
-        initialize();
-    }
-
-    public void initialize() {
-        node.addListener(this);
-    }
-
-    public void shutdown() {
-        node.removeListener(this);
-        requestHandlerMap.values().forEach(ReportHandler::dispose);
-        requestHandlerMap.clear();
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // Node.Listener
-    /* --------------------------------------------------------------------- */
-
-    @Override
-    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
+        this.initialize();
     }
 
     @Override
-    public void onConnection(Connection connection) {
+    protected Class<ReportResponse> getResponseClass() {
+        return ReportResponse.class;
     }
-
-    @Override
-    public void onDisconnect(Connection connection, CloseReason closeReason) {
-        String key = connection.getId();
-        if (requestHandlerMap.containsKey(key)) {
-            requestHandlerMap.get(key).dispose();
-            requestHandlerMap.remove(key);
-        }
-    }
-
 
     /* --------------------------------------------------------------------- */
     // API
@@ -84,28 +49,9 @@ public class ReportRequestService implements Node.Listener {
     public CompletableFuture<Report> request(Address address) {
         return node.getOrCreateConnectionAsync(address)
                 .thenCompose(connection -> {
-                    String connectionId = connection.getId();
-                    if (requestHandlerMap.containsKey(connectionId)) {
-                        log.info("requestHandlerMap contains {}. " +
-                                        "This is expected if the connection is still pending the response or the peer is not available " +
-                                        "but the timeout has not triggered an exception yet. We skip that request. Connection={}",
-                                connectionId, connection);
-                        return CompletableFuture.failedFuture(new IllegalStateException("Report request already in progress for connectionId=" + connectionId));
-                    }
-                    ReportHandler handler = new ReportHandler(node, connection);
-                    requestHandlerMap.put(connectionId, handler);
-                    return handler.request()
-                            .orTimeout(TIMEOUT_SEC, TimeUnit.SECONDS)
-                            .whenComplete((report, throwable) -> {
-                                if (throwable != null) {
-                                    log.error("storageReporting failed for address {} with exception: {}",
-                                            address, throwable.getMessage());
-                                } else {
-                                    log.info("storageReporting successful for address {} with report: {}",
-                                            address, report);
-                                }
-                                requestHandlerMap.remove(connectionId);
-                            });
+                    ReportRequest reportRequest = new ReportRequest(UUID.randomUUID().toString());
+                    return request(connection, reportRequest)
+                            .thenApply(ReportResponse::getReport);
                 });
     }
 }
