@@ -17,6 +17,7 @@
 
 package bisq.network.i2p;
 
+import bisq.common.threading.ExecutorFactory;
 import bisq.network.i2p.embedded.I2pEmbeddedRouter;
 import bisq.security.keys.I2PKeyPair;
 import lombok.extern.slf4j.Slf4j;
@@ -40,9 +41,13 @@ public class I2pClient {
     private final ExecutorService routerInitExecutor;
     private volatile boolean isShutdownInProgress;
 
-    public I2pClient(String dirPath, String i2cpHost, int i2cpPort, int socketTimeout, boolean isEmbeddedRouter) {
+    public I2pClient(String dirPath, String i2cpHost,
+                     int i2cpPort,
+                     int socketTimeout,
+                     int connectTimeout,
+                     boolean isEmbeddedRouter) {
         this.socketTimeout = socketTimeout;
-        socketManagerByNodeId = new SocketManagerByNodeId(i2cpHost, i2cpPort, socketTimeout);
+        socketManagerByNodeId = new SocketManagerByNodeId(i2cpHost, i2cpPort, socketTimeout, connectTimeout);
         this.routerInitExecutor = Executors.newSingleThreadExecutor();
         if (isEmbeddedRouter) {
             routerInitExecutor.submit(() -> {
@@ -59,25 +64,41 @@ public class I2pClient {
         isShutdownInProgress = true;
         long ts = System.currentTimeMillis();
         socketManagerByNodeId.shutdown();
+        ExecutorFactory.shutdownAndAwaitTermination(routerInitExecutor);
         embeddedI2pRouter.ifPresent(I2pEmbeddedRouter::shutdown);
-        routerInitExecutor.shutdownNow();
         log.info("I2P shutdown completed. Took {} ms.", System.currentTimeMillis() - ts);
     }
 
     public ServerSocket getServerSocket(I2PKeyPair i2PKeyPair, String nodeId) throws IOException, I2PSessionException {
+        if (isShutdownInProgress) {
+            throw new IllegalStateException("I2P client is shutting down");
+        }
         long ts = System.currentTimeMillis();
-        I2PSocketManager manager = socketManagerByNodeId.getSocketManager(i2PKeyPair, nodeId);
-        ServerSocket serverSocket = manager.getStandardServerSocket();
-        log.info("Server socket for nodeId {} created. Took {} ms.", nodeId, System.currentTimeMillis() - ts);
-        return serverSocket;
+        I2PSocketManager manager = socketManagerByNodeId.createNewSocketManager(i2PKeyPair, nodeId);
+        try {
+            ServerSocket serverSocket = manager.getStandardServerSocket();
+            log.info("Server socket for nodeId {} created. Took {} ms.", nodeId, System.currentTimeMillis() - ts);
+            return serverSocket;
+        } catch (IOException e) {
+            socketManagerByNodeId.disposeSocketManager(nodeId);
+            throw e;
+        }
     }
 
     public Socket getSocket(Destination peersDestination, String nodeId) throws IOException {
+        if (isShutdownInProgress) {
+            throw new IllegalStateException("I2P client is shutting down");
+        }
         long ts = System.currentTimeMillis();
         I2PSocketManager manager = socketManagerByNodeId.getSocketManager(nodeId);
-        Socket socket = manager.connectToSocket(peersDestination, socketTimeout);
-        log.info("Client socket for nodeId {} created. Took {} ms.", nodeId, System.currentTimeMillis() - ts);
-        return socket;
+        try {
+            Socket socket = manager.connectToSocket(peersDestination, socketTimeout);
+            log.info("Client socket for nodeId {} created. Took {} ms.", nodeId, System.currentTimeMillis() - ts);
+            return socket;
+        } catch (IOException e) {
+            socketManagerByNodeId.disposeSocketManager(nodeId);
+            throw e;
+        }
     }
 
     // The lease can be still present for about 10 min after peer has been offline

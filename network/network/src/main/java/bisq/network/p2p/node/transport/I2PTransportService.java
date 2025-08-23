@@ -58,6 +58,7 @@ public class I2PTransportService implements TransportService {
             return new Config(dataDir,
                     config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
+                    (int) TimeUnit.SECONDS.toMillis(config.getInt("connectTimeout")),
                     config.getInt("inboundKBytesPerSecond"),
                     config.getInt("outboundKBytesPerSecond"),
                     config.getInt("bandwidthSharePercentage"),
@@ -67,11 +68,15 @@ public class I2PTransportService implements TransportService {
                     config.getBoolean("extendedI2pLogging"),
                     config.getInt("sendMessageThrottleTime"),
                     config.getInt("receiveMessageThrottleTime"),
-                    config.getConfigList("proxyList").stream().map(c -> new Address(c.getString("host"), c.getInt("port"))).collect(Collectors.toList()));
+                    config.getConfigList("proxyList").stream()
+                            .map(c -> new Address(c.getString("host"), c.getInt("port")))
+                            .collect(Collectors.toList()));
         }
 
         private final int defaultNodePort;
         private final int socketTimeout;
+        // How long should the client wait for the peer to accept a new connection (peers serverSocket accept) 
+        private final int connectTimeout;
         private final int inboundKBytesPerSecond;
         private final int outboundKBytesPerSecond;
         private final int bandwidthSharePercentage;
@@ -87,6 +92,7 @@ public class I2PTransportService implements TransportService {
         public Config(Path dataDir,
                       int defaultNodePort,
                       int socketTimeout,
+                      int connectTimeout,
                       int inboundKBytesPerSecond,
                       int outboundKBytesPerSecond,
                       int bandwidthSharePercentage,
@@ -100,6 +106,7 @@ public class I2PTransportService implements TransportService {
             this.dataDir = dataDir;
             this.defaultNodePort = defaultNodePort;
             this.socketTimeout = socketTimeout;
+            this.connectTimeout = connectTimeout;
             this.inboundKBytesPerSecond = inboundKBytesPerSecond;
             this.outboundKBytesPerSecond = outboundKBytesPerSecond;
             this.bandwidthSharePercentage = bandwidthSharePercentage;
@@ -176,6 +183,7 @@ public class I2PTransportService implements TransportService {
                     config.getI2cpHost(),
                     config.getI2cpPort(),
                     config.getSocketTimeout(),
+                    config.getConnectTimeout(),
                     useEmbeddedRouter);
 
             setTransportState(TransportState.INITIALIZED);
@@ -270,7 +278,7 @@ public class I2PTransportService implements TransportService {
             Destination peersDestination = new Destination(peersDestinationBase64);
             return CompletableFuture.supplyAsync(() -> i2pClient.isLeaseFoundInNetDb(peersDestination, nodeId));
         } catch (DataFormatException e) {
-            throw new RuntimeException(e);
+            return CompletableFuture.failedFuture(new IOException("Invalid I2P destination", e));
         }
     }
 

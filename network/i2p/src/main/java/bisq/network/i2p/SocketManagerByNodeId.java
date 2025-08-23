@@ -32,21 +32,25 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SocketManagerByNodeId {
-    private final Map<String, I2PSocketManager> socketManagerByNodeId = new ConcurrentHashMap<>();
     private final String i2cpHost;
     private final int i2cpPort;
     private final int socketTimeout;
+    private final int connectTimeout;
+    private final Map<String, I2PSocketManager> socketManagerByNodeId = new ConcurrentHashMap<>();
 
     public SocketManagerByNodeId(String i2cpHost,
                                  int i2cpPort,
-                                 int socketTimeout) {
+                                 int socketTimeout,
+                                 int connectTimeout) {
         this.i2cpHost = i2cpHost;
         this.i2cpPort = i2cpPort;
         this.socketTimeout = socketTimeout;
+        this.connectTimeout = connectTimeout;
     }
 
     synchronized void shutdown() {
@@ -54,26 +58,23 @@ public class SocketManagerByNodeId {
         socketManagerByNodeId.clear();
     }
 
-    synchronized I2PSocketManager getSocketManager(I2PKeyPair i2PKeyPair, String nodeId) {
-        return socketManagerByNodeId.computeIfAbsent(nodeId, key -> {
-            long ts = System.currentTimeMillis();
-            log.info("Creating server socket manager for session {} on localPort {}", nodeId, i2cpPort);
-            byte[] identityBytes = i2PKeyPair.getIdentityBytes();
-            I2PSocketManager manager;
-            try (ByteArrayInputStream identityBytesStream = new ByteArrayInputStream(identityBytes)) {
-                manager = I2PSocketManagerFactory.createDisconnectedManager(identityBytesStream, i2cpHost, i2cpPort, getProperties());
-            } catch (I2PSessionException | IOException e) {
-                throw new RuntimeException(e);
-            }
-            manager.setAcceptTimeout(120_000);
-            applyOptions(manager);
-            manager.addDisconnectListener(() -> {
-                log.warn("I2P socket disconnected");
-                //todo
-            });
-            log.info("Server socket manager ready for session {}. Took {} ms.", nodeId, System.currentTimeMillis() - ts);
-            return manager;
-        });
+    synchronized I2PSocketManager createNewSocketManager(I2PKeyPair i2PKeyPair, String nodeId) {
+        checkArgument(!socketManagerByNodeId.containsKey(nodeId),
+                "createNewSocketManager for nodeID %s must be called only once. ", nodeId);
+
+        long ts = System.currentTimeMillis();
+        log.info("Creating server socket manager for session {} on localPort {}", nodeId, i2cpPort);
+        byte[] identityBytes = i2PKeyPair.getIdentityBytes();
+        I2PSocketManager manager;
+        try (ByteArrayInputStream identityBytesStream = new ByteArrayInputStream(identityBytes)) {
+            manager = I2PSocketManagerFactory.createDisconnectedManager(identityBytesStream, i2cpHost, i2cpPort, getProperties());
+        } catch (I2PSessionException | IOException e) {
+            throw new RuntimeException(e);
+        }
+        applyOptions(manager);
+        log.info("Server socket manager ready for session {}. Took {} ms.", nodeId, System.currentTimeMillis() - ts);
+        socketManagerByNodeId.put(nodeId, manager);
+        return manager;
     }
 
     I2PSocketManager getSocketManager(String nodeId) {
@@ -91,7 +92,10 @@ public class SocketManagerByNodeId {
 
     private void applyOptions(I2PSocketManager manager) {
         I2PSocketOptions options = manager.buildOptions();
-        options.setConnectTimeout(socketTimeout); // 120 sec; DEFAULT_CONNECT_TIMEOUT = 60 * 1000
+        // 120 sec; DEFAULT_CONNECT_TIMEOUT = 60 * 1000
+        // Seems to be the same as `manager.setAcceptTimeout(connectTimeout);`
+        options.setConnectTimeout(connectTimeout);
+
         options.setReadTimeout(TimeUnit.MINUTES.toMillis(3)); // default -1 -> wait forever
         options.setWriteTimeout(TimeUnit.MINUTES.toMillis(3)); // default -1 -> wait forever
         //options.setMaxBufferSize(256 * 1024); // DEFAULT_BUFFER_SIZE = 1024*64;
