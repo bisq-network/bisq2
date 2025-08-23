@@ -49,7 +49,7 @@ public class ReportRequestService extends LeechRequestResponseHandler<ReportRequ
     public CompletableFuture<Report> request(Address address) {
         return node.getOrCreateConnectionAsync(address)
                 .thenCompose(connection -> {
-                    ReportRequest reportRequest = new ReportRequest(UUID.randomUUID().toString());
+                    ReportRequest reportRequest = new ReportRequest(createRequestId());
                     return request(connection, reportRequest)
                             .thenApply(ReportResponse::getReport);
                 });

@@ -31,12 +31,12 @@ public abstract class LeechRequestResponseHandler<T extends Request, R extends R
 
     @Override
     protected R createResponse(Connection connection, T request) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Leech mode: inbound request handling is disabled");
     }
 
     @Override
     protected Class<T> getRequestClass() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Leech mode: request class is not supported");
     }
 
     /* --------------------------------------------------------------------- */

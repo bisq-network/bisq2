@@ -30,9 +30,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -82,7 +82,7 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
     protected CompletableFuture<R> request(Connection connection, T request) {
         return requestFuturesByConnectionId.compute(connection.getId(), (k, existing) -> {
             if (existing != null && !existing.isDone()) {
-                log.warn("[{}]Reusing pending request future for {}", this.getClass().getSimpleName(), connection.getPeerAddress());
+                log.warn("[{}] Reusing pending request future for {}", this.getClass().getSimpleName(), connection.getPeerAddress());
                 return existing;
             }
             RequestFuture<T, R> requestFuture = new RequestFuture<>(node, connection, request);
@@ -90,11 +90,11 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
                     .whenComplete((response, throwable) -> {
                         requestFuturesByConnectionId.remove(k);
                         if (throwable instanceof TimeoutException) {
-                            log.warn("[{}]Request to {} timed out after {} ms", this.getClass().getSimpleName(), connection.getPeerAddress(), requestTimeoutMs);
+                            log.warn("[{}] Request to {} timed out after {} ms", this.getClass().getSimpleName(), connection.getPeerAddress(), requestTimeoutMs);
                         } else if (throwable != null) {
-                            log.warn("[{}]Request to {} failed: {}", this.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
+                            log.warn("[{}] Request to {} failed: {}", this.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
                         } else {
-                            log.debug("[{}]Request to {} completed", this.getClass().getSimpleName(), connection.getPeerAddress());
+                            log.debug("[{}] Request to {} completed", this.getClass().getSimpleName(), connection.getPeerAddress());
                         }
                     });
             return requestFuture;
@@ -116,15 +116,15 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
     }
 
     protected void processRequest(Connection connection, T request) {
-        log.info("Received {} from {}", StringUtils.truncate(request), connection.getPeerAddress());
+        log.info("[{}] Received {} from {}", this.getClass().getSimpleName(), StringUtils.truncate(request), connection.getPeerAddress());
         onRequest(connection, request);
         R response = createResponse(connection, request);
         node.sendAsync(response, connection)
                 .whenComplete((result, throwable) -> {
                     if (throwable != null) {
-                        log.warn("Sending {} to {} failed. {}", StringUtils.truncate(response), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
+                        log.warn("[{}] Sending {} to {} failed. {}", this.getClass().getSimpleName(), StringUtils.truncate(response), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
                     } else {
-                        log.info("Sent {} to {}", StringUtils.truncate(response), connection.getPeerAddress());
+                        log.info("[{}] Sent {} to {}", this.getClass().getSimpleName(), StringUtils.truncate(response), connection.getPeerAddress());
                     }
                 });
     }
@@ -149,6 +149,6 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
     }
 
     protected int createNonce() {
-        return new Random().nextInt();
+        return ThreadLocalRandom.current().nextInt();
     }
 }
