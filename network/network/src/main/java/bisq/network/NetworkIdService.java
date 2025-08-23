@@ -42,7 +42,6 @@ import java.security.KeyPair;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -136,14 +135,13 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
 
     private int getPortByTransport(String tag, TransportType transportType) {
         boolean isDefault = tag.equals("default");
-        /*  return isDefault ?
-                            defaultPorts.computeIfAbsent(TransportType.I2P, key-> NetworkUtils.selectRandomPort()) :
-                            NetworkUtils.selectRandomPort();*/
         return switch (transportType) {
             case TOR -> isDefault ?
                     defaultPortByTransportType.computeIfAbsent(TransportType.TOR, key -> NetworkUtils.selectRandomPort()) :
                     NetworkUtils.selectRandomPort();
-            case I2P -> throw new RuntimeException("I2P not unsupported yet");
+            case I2P -> isDefault ?
+                    defaultPortByTransportType.computeIfAbsent(TransportType.I2P, key-> NetworkUtils.selectRandomPort()) :
+                    NetworkUtils.selectRandomPort();
             case CLEAR -> isDefault ?
                     defaultPortByTransportType.computeIfAbsent(TransportType.CLEAR, key -> NetworkUtils.findFreeSystemPort()) :
                     NetworkUtils.findFreeSystemPort();
@@ -151,10 +149,9 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
     }
 
     private Address getAddressByTransport(KeyBundle keyBundle, int port, TransportType transportType) {
-        //return new Address(keyBundle.getI2pKeyPair().getDestination(), port);
         return switch (transportType) {
             case TOR -> new Address(keyBundle.getTorKeyPair().getOnionAddress(), port);
-            case I2P -> throw new RuntimeException("I2P not unsupported yet");
+            case I2P -> new Address(keyBundle.getI2PKeyPair().getDestinationBase64(), port);
             case CLEAR -> FacadeProvider.getClearNetAddressTypeFacade().toMyLocalAddress(port);
         };
     }

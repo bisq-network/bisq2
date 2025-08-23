@@ -25,7 +25,14 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
 import org.bouncycastle.math.ec.ECCurve;
 
-import java.security.*;
+import java.security.GeneralSecurityException;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.Security;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -43,11 +50,16 @@ public class KeyGeneration {
         }
     }
 
-    public static KeyPair generateKeyPair() throws GeneralSecurityException {
-        ECGenParameterSpec ecSpec = new ECGenParameterSpec(CURVE);
-        KeyPairGenerator generator = KeyPairGenerator.getInstance(ECDH, "BC");
-        generator.initialize(ecSpec, new SecureRandom());
-        return generator.generateKeyPair();
+    public static KeyPair generateKeyPair() {
+        try {
+            ECGenParameterSpec ecSpec = new ECGenParameterSpec(CURVE);
+            KeyPairGenerator generator = KeyPairGenerator.getInstance(ECDH, "BC");
+            generator.initialize(ecSpec, new SecureRandom());
+            return generator.generateKeyPair();
+        } catch (GeneralSecurityException e) {
+            throw new IllegalStateException(
+                    "Failed to generate ECDH key pair (curve=" + CURVE + ", provider=BC)", e);
+        }
     }
 
     public static PublicKey generatePublic(byte[] encodedKey) throws GeneralSecurityException {

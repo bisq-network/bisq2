@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.network.p2p.node.transport;
 
 import bisq.common.network.Address;
@@ -8,23 +25,28 @@ import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.NetworkUtils;
 import bisq.network.i2p.I2pClient;
-import bisq.network.i2p.I2pEmbeddedRouter;
+import bisq.network.i2p.embedded.I2pEmbeddedRouter;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
+import bisq.security.keys.I2PKeyPair;
 import bisq.security.keys.KeyBundle;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import net.i2p.data.DataFormatException;
+import net.i2p.data.Destination;
 
 import java.io.IOException;
+import java.net.NoRouteToHostException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
-import java.util.UUID;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class I2PTransportService implements TransportService {
@@ -36,6 +58,7 @@ public class I2PTransportService implements TransportService {
             return new Config(dataDir,
                     config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
+                    (int) TimeUnit.SECONDS.toMillis(config.getInt("connectTimeout")),
                     config.getInt("inboundKBytesPerSecond"),
                     config.getInt("outboundKBytesPerSecond"),
                     config.getInt("bandwidthSharePercentage"),
@@ -44,11 +67,16 @@ public class I2PTransportService implements TransportService {
                     config.getBoolean("embeddedRouter"),
                     config.getBoolean("extendedI2pLogging"),
                     config.getInt("sendMessageThrottleTime"),
-                    config.getInt("receiveMessageThrottleTime"));
+                    config.getInt("receiveMessageThrottleTime"),
+                    config.getConfigList("proxyList").stream()
+                            .map(c -> new Address(c.getString("host"), c.getInt("port")))
+                            .collect(Collectors.toList()));
         }
 
         private final int defaultNodePort;
         private final int socketTimeout;
+        // How long should the client wait for the peer to accept a new connection (peers serverSocket accept) 
+        private final int connectTimeout;
         private final int inboundKBytesPerSecond;
         private final int outboundKBytesPerSecond;
         private final int bandwidthSharePercentage;
@@ -59,10 +87,12 @@ public class I2PTransportService implements TransportService {
         private final boolean extendedI2pLogging;
         private final int sendMessageThrottleTime;
         private final int receiveMessageThrottleTime;
+        private final List<Address> proxyList;
 
         public Config(Path dataDir,
                       int defaultNodePort,
                       int socketTimeout,
+                      int connectTimeout,
                       int inboundKBytesPerSecond,
                       int outboundKBytesPerSecond,
                       int bandwidthSharePercentage,
@@ -71,10 +101,12 @@ public class I2PTransportService implements TransportService {
                       boolean embeddedRouter,
                       boolean extendedI2pLogging,
                       int sendMessageThrottleTime,
-                      int receiveMessageThrottleTime) {
+                      int receiveMessageThrottleTime,
+                      List<Address> proxyList) {
             this.dataDir = dataDir;
             this.defaultNodePort = defaultNodePort;
             this.socketTimeout = socketTimeout;
+            this.connectTimeout = connectTimeout;
             this.inboundKBytesPerSecond = inboundKBytesPerSecond;
             this.outboundKBytesPerSecond = outboundKBytesPerSecond;
             this.bandwidthSharePercentage = bandwidthSharePercentage;
@@ -84,14 +116,13 @@ public class I2PTransportService implements TransportService {
             this.extendedI2pLogging = extendedI2pLogging;
             this.sendMessageThrottleTime = sendMessageThrottleTime;
             this.receiveMessageThrottleTime = receiveMessageThrottleTime;
+            this.proxyList = proxyList;
         }
     }
 
     private final int socketTimeout;
     private final String i2pDirPath;
     private I2pClient i2pClient;
-    private boolean initializeCalled;
-    private String sessionId;
     private final I2PTransportService.Config config;
     @Getter
     public final Observable<TransportState> transportState = new Observable<>(TransportState.NEW);
@@ -101,6 +132,8 @@ public class I2PTransportService implements TransportService {
     public final ObservableHashMap<NetworkId, Long> initializeServerSocketTimestampByNetworkId = new ObservableHashMap<>();
     @Getter
     public final ObservableHashMap<NetworkId, Long> initializedServerSocketTimestampByNetworkId = new ObservableHashMap<>();
+    private volatile boolean initializeCalled;
+    private volatile boolean isShutdownInProgress;
 
     public I2PTransportService(TransportConfig config) {
         // Demonstrate potential usage of specific config.
@@ -123,35 +156,46 @@ public class I2PTransportService implements TransportService {
         setTransportState(TransportState.INITIALIZE);
         initializeCalled = true;
         log.debug("Initialize");
-
-        //If embedded router, start it already ...
-        boolean isEmbeddedRouter = isEmbeddedRouter();
-        if (isEmbeddedRouter) {
-            if (!I2pEmbeddedRouter.isInitialized()) {
-                I2pEmbeddedRouter.getI2pEmbeddedRouter(i2pDirPath,
-                        config.getInboundKBytesPerSecond(),
-                        config.getOutboundKBytesPerSecond(),
-                        config.getBandwidthSharePercentage(),
-                        config.isExtendedI2pLogging());
-            }
-            while (!I2pEmbeddedRouter.isRouterRunning()) {
-                try {
-                    //noinspection BusyWait
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    log.warn("Thread got interrupted at initialize method", e);
-                    Thread.currentThread().interrupt(); // Restore interrupted state
+        try {
+            //If embedded router, start it already ...
+            boolean useEmbeddedRouter = useEmbeddedRouter();
+            if (useEmbeddedRouter) {
+                //todo
+                if (!I2pEmbeddedRouter.isInitialized()) {
+                    I2pEmbeddedRouter.getI2pEmbeddedRouter(i2pDirPath,
+                            config.getInboundKBytesPerSecond(),
+                            config.getOutboundKBytesPerSecond(),
+                            config.getBandwidthSharePercentage(),
+                            config.isExtendedI2pLogging());
+                }
+                while (!I2pEmbeddedRouter.isRouterRunning()) {
+                    try {
+                        //noinspection BusyWait
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        log.warn("Thread got interrupted at initialize method", e);
+                        Thread.currentThread().interrupt(); // Restore interrupted state
+                    }
                 }
             }
-            i2pClient = getClient(true);
-        } else {
-            i2pClient = getClient(false);
+
+            i2pClient = new I2pClient(i2pDirPath,
+                    config.getI2cpHost(),
+                    config.getI2cpPort(),
+                    config.getSocketTimeout(),
+                    config.getConnectTimeout(),
+                    useEmbeddedRouter);
+
+            setTransportState(TransportState.INITIALIZED);
+        } catch (Exception e) {
+            log.error("Initializing I2P failed", e);
+            shutdown();
         }
-        setTransportState(TransportState.INITIALIZED);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        isShutdownInProgress = true;
         if (!initializeCalled) {
             return CompletableFuture.completedFuture(true);
         }
@@ -177,72 +221,78 @@ public class I2PTransportService implements TransportService {
                 .whenComplete((result, throwable) -> ExecutorFactory.shutdownAndAwaitTermination(executor));
     }
 
-    private boolean isEmbeddedRouter() {
-        if (config.isEmbeddedRouter()) {
-            // Is there a running router? If so, ignore the config for embedded router if exists
-            if (NetworkUtils.isPortInUse("127.0.0.1", 7654)) {
-                log.info("Embedded router parameter set to true, but there's a service running on 127.0.0.1:7654...");
-                return false;
-            }
-            return true;
-        }
-        return false;
-    }
-
-    private I2pClient getClient(boolean isEmbeddedRouter) {
-        return I2pClient.getI2pClient(i2pDirPath,
-                config.getI2cpHost(),
-                config.getI2cpPort(),
-                config.getSocketTimeout(),
-                isEmbeddedRouter);
-    }
-
-
     @Override
-    public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle) {
-        int port = networkId.getAddressByTransportTypeMap().get(TransportType.I2P).getPort();
-        initializeServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
-        log.debug("Create serverSocket");
+    public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle, String nodeId) {
         try {
-            sessionId = UUID.randomUUID().toString();
-            //TODO: Investigate why not using port passed as parameter and if no port, find one?
-            //Pass parameters to connect with Local instance
-            int i2pPort = port;
-            if (!isEmbeddedRouter()) {
-                i2pPort = config.getI2cpPort();
-            }
-            ServerSocket serverSocket = i2pClient.getServerSocket(sessionId, config.getI2cpHost(), i2pPort);
-            String destination = i2pClient.getMyDestination(sessionId);
-            // Port is irrelevant for I2P
-            Address address = new Address(destination, port);
-
+            int port = networkId.getAddressByTransportTypeMap().get(TransportType.I2P).getPort();
+            initializeServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
+            log.debug("Create serverSocket");
+            I2PKeyPair i2PKeyPair = keyBundle.getI2PKeyPair();
+            ServerSocket serverSocket = i2pClient.getServerSocket(i2PKeyPair, nodeId);
+            String destinationBase64 = i2PKeyPair.getDestinationBase64();
+            Address address = new Address(destinationBase64, port);
             initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
-
-            log.debug("ServerSocket created. SessionId={}, destination={}", sessionId, destination);
+            log.info("ServerSocket created. destinationBase32={}, destinationBase64={}", i2PKeyPair.getDestinationBase32(), destinationBase64);
             return new ServerSocketResult(serverSocket, address);
         } catch (Exception exception) {
+            if (!isShutdownInProgress) {
+                log.error("getServerSocket failed", exception);
+            }
             throw new ConnectionException(exception);
         }
     }
 
     @Override
-    public Socket getSocket(Address address) throws IOException {
+    public Socket getSocket(Address address, String nodeId) throws IOException {
         try {
-            //todo check usage of sessionId
-            log.debug("Create new Socket to {} with sessionId={}", address, sessionId);
             long ts = System.currentTimeMillis();
-            Socket socket = i2pClient.getSocket(address.getHost(), sessionId);
+            // We use base64 in the address host field
+            String peersDestinationBase64 = address.getHost();
+            Destination peersDestination = new Destination(peersDestinationBase64);
+            Socket socket = i2pClient.getSocket(peersDestination, nodeId);
             socket.setSoTimeout(socketTimeout);
             log.info("I2P socket to {} created. Took {} ms", address, System.currentTimeMillis() - ts);
             return socket;
-        } catch (IOException exception) {
-            log.error(exception.toString(), exception);
+        } catch (NoRouteToHostException exception) {
+            if (!isShutdownInProgress) {
+                log.info("NoRouteToHostException {}", exception.getMessage());
+            }
             throw exception;
+        } catch (IOException exception) {
+            if (!isShutdownInProgress) {
+                log.error("getSocket failed", exception);
+            }
+            throw exception;
+        } catch (Exception exception) {
+            if (!isShutdownInProgress) {
+                log.error("getSocket failed", exception);
+            }
+            throw new IOException(exception);
         }
     }
 
     @Override
-    public CompletableFuture<Boolean> isPeerOnlineAsync(Address address) {
-        throw new UnsupportedOperationException("isPeerOnline needs to be implemented for I2P.");
+    public CompletableFuture<Boolean> isPeerOnlineAsync(Address address, String nodeId) {
+        String peersDestinationBase64 = address.getHost();
+        try {
+            Destination peersDestination = new Destination(peersDestinationBase64);
+            return CompletableFuture.supplyAsync(() -> i2pClient.isLeaseFoundInNetDb(peersDestination, nodeId));
+        } catch (DataFormatException e) {
+            return CompletableFuture.failedFuture(new IOException("Invalid I2P destination", e));
+        }
+    }
+
+    private boolean useEmbeddedRouter() {
+        if (config.isEmbeddedRouter()) {
+            // Is there a running router? If so, ignore the config for embedded router if exists
+            int defaultI2cpPort = 7654;
+            boolean isExternalRouterReachable = NetworkUtils.isPortInUse("127.0.0.1", defaultI2cpPort);
+            if (isExternalRouterReachable) {
+                log.info("Embedded router parameter set to true, but there's a service running on 127.0.0.1:7654...");
+            } else {
+                return true;
+            }
+        }
+        return false;
     }
 }

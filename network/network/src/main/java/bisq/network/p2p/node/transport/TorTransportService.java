@@ -65,7 +65,7 @@ public class TorTransportService implements TransportService {
     }
 
     @Override
-    public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle) {
+    public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle, String nodeId) {
         try {
             int port = networkId.getAddressByTransportTypeMap().get(TransportType.TOR).getPort();
             initializeServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
@@ -86,7 +86,7 @@ public class TorTransportService implements TransportService {
     }
 
     @Override
-    public Socket getSocket(Address address) throws IOException {
+    public Socket getSocket(Address address, String nodeId) throws IOException {
         long ts = System.currentTimeMillis();
         log.info("Start creating tor socket to {}", address);
         Socket socket = torService.getSocket(null); // Blocking call. Takes 5-15 sec usually.
@@ -103,7 +103,7 @@ public class TorTransportService implements TransportService {
     }
 
     @Override
-    public CompletableFuture<Boolean> isPeerOnlineAsync(Address address) {
+    public CompletableFuture<Boolean> isPeerOnlineAsync(Address address, String nodeId) {
         return torService.isOnionServiceOnlineAsync(address.getHost());
     }
 

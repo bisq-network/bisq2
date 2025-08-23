@@ -17,16 +17,50 @@
 
 package bisq.network.http;
 
+import bisq.common.network.Address;
 import bisq.common.network.TransportType;
 import bisq.network.http.utils.Socks5ProxyProvider;
+import bisq.network.p2p.node.transport.I2PTransportService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.net.Socket;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Creates HTTP clients for each transport, using cached I2P proxy selection with TTL-based health checks.
+ */
 public class HttpClientsByTransport {
-    public HttpClientsByTransport() {
+    private static final Duration CACHE_TTL = Duration.ofSeconds(60);
+
+    private final List<Address> proxyList;
+    private final AtomicInteger counter = new AtomicInteger();
+
+    private static final class CacheEntry {
+        final Address endpoint;
+        final Instant expiry;
+
+        CacheEntry(Address ep, Instant expiry) {
+            this.endpoint = ep;
+            this.expiry = expiry;
+        }
+    }
+
+    private volatile CacheEntry cache = null;
+
+    /**
+     * @param i2pConfig loaded from NetworkServiceConfig for TransportType.I2P
+     */
+    public HttpClientsByTransport(I2PTransportService.Config i2pConfig) {
+        this.proxyList = i2pConfig == null ? List.of() : List.copyOf(i2pConfig.getProxyList());
+        if (proxyList.isEmpty() && i2pConfig != null) {
+            throw new IllegalArgumentException("I2P proxyList must not be empty");
+        }
     }
 
     public BaseHttpClient getHttpClient(String url,
@@ -43,13 +77,44 @@ public class HttpClientsByTransport {
                 yield new TorHttpClient(url, userAgent, socks5ProxyProvider);
                 // If we have a socks5ProxyAddress defined in options we use that as proxy
             }
-            case I2P ->
-                // The I2P router exposes a local HTTP proxy on port 4444 for I2P destinations
-                // Note: only works with external I2P router (embedded one doesn't provide this proxy by default)
-                    new ClearNetHttpClient(url, userAgent,
-                            new Proxy(Proxy.Type.HTTP, new InetSocketAddress("localhost", 4444))
-                    );
+
+            case I2P -> {
+                // Get a healthy proxy endpoint with TTL caching
+                Address ep = getHealthyEndpoint();
+                Proxy proxy = new Proxy(Proxy.Type.HTTP,
+                        new InetSocketAddress(ep.getHost(), ep.getPort()));
+                yield new ClearNetHttpClient(url, userAgent, proxy);
+            }
+
             case CLEAR -> new ClearNetHttpClient(url, userAgent);
         };
+    }
+
+    private Address getHealthyEndpoint() {
+        Instant now = Instant.now();
+        CacheEntry entry = cache;
+        if (entry != null && now.isBefore(entry.expiry)) {
+            return entry.endpoint;
+        }
+        // TTL expired or not set: probe next endpoints in round-robin order
+        int size = proxyList.size();
+        for (int i = 0; i < size; i++) {
+            int idx = Math.floorMod(counter.getAndIncrement(), size);
+            Address candidate = proxyList.get(idx);
+            if (isReachable(candidate, 500)) {
+                cache = new CacheEntry(candidate, now.plus(CACHE_TTL));
+                return candidate;
+            }
+        }
+        throw new RuntimeException("No reachable I2P proxy available");
+    }
+
+    private boolean isReachable(Address ep, int timeoutMs) {
+        try (Socket s = new Socket()) {
+            s.connect(new InetSocketAddress(ep.getHost(), ep.getPort()), timeoutMs);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

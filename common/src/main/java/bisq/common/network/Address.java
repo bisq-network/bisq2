@@ -25,6 +25,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Locale;
 import java.util.StringTokenizer;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -64,7 +65,7 @@ public final class Address implements NetworkProto, Comparable<Address> {
             NetworkDataValidation.validateText(host, 45);
         } else {
             // I2P
-            NetworkDataValidation.validateText(host, 512);
+            NetworkDataValidation.validateText(host, 600);
         }
     }
 
@@ -93,8 +94,12 @@ public final class Address implements NetworkProto, Comparable<Address> {
     }
 
     public boolean isI2pAddress() {
-        //TODO (deferred) add more specific check
-        return !isClearNetAddress() && !isTorAddress();
+        String lowerHost = host.toLowerCase(Locale.ROOT);
+        // Base32: always 60 characters
+        // Base64: ~512–528 characters
+        return lowerHost.matches("^[a-z2-7]{52}\\.b32\\.i2p$")
+                || lowerHost.endsWith(".i2p")
+                || lowerHost.matches("^[a-z0-9~\\-=]{500,600}(:\\d{1,5})?$");
     }
 
     public boolean isLocalhost() {

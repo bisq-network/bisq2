@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -92,7 +93,9 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
                             Set<Address> seedNodeAddresses,
                             BanList banList) {
         this.config = config;
-        this.seedNodeAddresses = seedNodeAddresses;
+        this.seedNodeAddresses = seedNodeAddresses.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(CopyOnWriteArraySet::new));
         this.banList = banList;
 
         persistence = persistenceService.getOrCreatePersistence(this,

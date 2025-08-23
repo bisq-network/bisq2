@@ -1,4 +1,4 @@
-package bisq.network.i2p.util;
+package bisq.network.i2p.embedded.log;
 
 import net.i2p.I2PAppContext;
 import net.i2p.util.Log;
@@ -25,8 +25,7 @@ public class I2PLogManager extends LogManager {
                 log = new I2pLogs2Slf4j(cls);
                 classLogs.put(cls, log);
             }
-        }
-        else {
+        } else {
             log = stringLogs.get(name);
             if (log == null) {
                 log = new I2pLogs2Slf4j(name);

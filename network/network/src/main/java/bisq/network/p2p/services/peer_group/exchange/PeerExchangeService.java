@@ -118,6 +118,9 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
     }
 
     public CompletableFuture<Boolean> extendPeerGroup() {
+        if (isShutdownInProgress) {
+            return CompletableFuture.completedFuture(false);
+        }
         log.info("Extend peerGroup");
         List<Address> candidates = policy.getAddressesForExtendingPeerGroup();
         int minSuccess = policy.getMinSuccessForExtendPeerGroup(candidates);
@@ -176,7 +179,12 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
                         }
                     }
                     if (throwable != null && !resultFuture.isDone()) {
-                        resultFuture.completeExceptionally(throwable);
+                        if (!isShutdownInProgress) {
+                            resultFuture.completeExceptionally(throwable);
+                        } else {
+                            // During shutdown, suppress exceptions but still complete to avoid hanging callers
+                            resultFuture.complete(false);
+                        }
                     } else if (!resultFuture.isDone()) {
                         resultFuture.complete(false);
                     }

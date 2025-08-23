@@ -46,6 +46,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
+import static bisq.network.p2p.services.peer_group.PeerGroupManager.State.STOPPING;
+import static bisq.network.p2p.services.peer_group.PeerGroupManager.State.TERMINATED;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -171,7 +173,7 @@ public class PeerGroupManager implements Node.Listener {
     }
 
     public void shutdown() {
-        setState(State.STOPPING);
+        setState(STOPPING);
         node.removeListener(this);
         peerExchangeService.shutdown();
         keepAliveService.shutdown();
@@ -181,7 +183,7 @@ public class PeerGroupManager implements Node.Listener {
         maybeCreateConnectionsScheduler.ifPresent(Scheduler::stop);
         maybeCreateConnectionsScheduler = Optional.empty();
         listeners.clear();
-        setState(State.TERMINATED);
+        setState(TERMINATED);
     }
 
 
@@ -368,6 +370,9 @@ public class PeerGroupManager implements Node.Listener {
     }
 
     private void maybeCreateConnections() {
+        if (isShutdown()) {
+            return;
+        }
         log.debug("{} called maybeCreateConnections", node);
         int minNumConnectedPeers = peerGroupService.getMinNumConnectedPeers();
         if (getMissingOutboundConnections() <= 0) {
@@ -455,5 +460,9 @@ public class PeerGroupManager implements Node.Listener {
 
     private int getMissingOutboundConnections() {
         return peerGroupService.getMinOutboundConnections() - (int) node.getActiveOutboundConnections().count();
+    }
+
+    private boolean isShutdown() {
+        return state.get() == STOPPING || state.get() == TERMINATED;
     }
 }

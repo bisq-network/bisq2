@@ -130,7 +130,7 @@ public class PeerConnectionsManager {
     }
 
     private Capability createServerAndListen(Node node) throws IOException {
-        ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, node.getKeyBundle());
+        ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, node.getKeyBundle(), node.getNodeId());
         List<TransportType> supportedTransportTypes = new ArrayList<>(config.getSupportedTransportTypes());
         List<Feature> features = new ArrayList<>(config.getFeatures());
         Capability serverCapability = Capability.myCapability(serverSocketResult.getAddress(), supportedTransportTypes, features);

@@ -19,7 +19,11 @@ package bisq.dto;
 
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
@@ -28,8 +32,8 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
-import bisq.common.market.Market;
 import bisq.common.encoding.Hex;
+import bisq.common.market.Market;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
@@ -84,6 +88,7 @@ import bisq.dto.offer.price.spec.FixPriceSpecDto;
 import bisq.dto.offer.price.spec.FloatPriceSpecDto;
 import bisq.dto.offer.price.spec.MarketPriceSpecDto;
 import bisq.dto.offer.price.spec.PriceSpecDto;
+import bisq.dto.security.keys.I2PKeyPairDto;
 import bisq.dto.security.keys.KeyBundleDto;
 import bisq.dto.security.keys.KeyPairDto;
 import bisq.dto.security.keys.PrivateKeyDto;
@@ -113,15 +118,12 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.options.OfferOption;
 import bisq.offer.options.ReputationOption;
 import bisq.offer.options.TradeTermsOption;
-import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
-import bisq.account.payment_method.PaymentMethodSpec;
-import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.security.DigestUtil;
+import bisq.security.keys.I2PKeyPair;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
@@ -1028,7 +1030,6 @@ public class DtoMappings {
         }
     }
 
-
     public static class TorKeyPairMapping {
         public static TorKeyPair toBisq2Model(TorKeyPairDto value) {
             return new TorKeyPair(
@@ -1047,21 +1048,32 @@ public class DtoMappings {
         }
     }
 
+    public static class I2PKeyPairMapping {
+        public static I2PKeyPair toBisq2Model(I2PKeyPairDto dto) {
+            return new I2PKeyPair(dto.identityBytes(), dto.destinationBytes());
+        }
+
+        public static I2PKeyPairDto fromBisq2Model(I2PKeyPair model) {
+            return new I2PKeyPairDto(model.getIdentityBytes(), model.getDestinationBytes());
+        }
+    }
+
 
     public static class KeyBundleMapping {
         public static KeyBundle toBisq2Model(KeyBundleDto value) {
             return new KeyBundle(
                     value.keyId(),
                     KeyPairMapping.toBisq2Model(value.keyPair()),
-                    TorKeyPairMapping.toBisq2Model(value.torKeyPair())
-            );
+                    TorKeyPairMapping.toBisq2Model(value.torKeyPair()),
+                    I2PKeyPairMapping.toBisq2Model(value.i2pKeyPair()));
         }
 
         public static KeyBundleDto fromBisq2Model(KeyBundle value) {
             return new KeyBundleDto(
                     value.getKeyId(),
                     KeyPairMapping.fromBisq2Model(value.getKeyPair()),
-                    TorKeyPairMapping.fromBisq2Model(value.getTorKeyPair())
+                    TorKeyPairMapping.fromBisq2Model(value.getTorKeyPair()),
+                    I2PKeyPairMapping.fromBisq2Model(value.getI2PKeyPair())
             );
         }
     }

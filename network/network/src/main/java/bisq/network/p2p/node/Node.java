@@ -177,6 +177,8 @@ public class Node implements Connection.Handler {
     public final Observable<State> observableState = new Observable<>(State.NEW);
     @Getter
     public final NetworkLoadSnapshot networkLoadSnapshot;
+    @Getter
+    private final String nodeId;
     private final Config config;
     private Optional<CountDownLatch> startingStateLatch = Optional.empty();
 
@@ -200,6 +202,7 @@ public class Node implements Connection.Handler {
         this.transportService = transportService;
         this.authorizationService = authorizationService;
         this.networkLoadSnapshot = networkLoadSnapshot;
+        nodeId = networkId.getId();
     }
 
 
@@ -208,7 +211,6 @@ public class Node implements Connection.Handler {
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Node> initializeAsync() {
-
         return CompletableFuture.supplyAsync(() -> {
             if (startingStateLatch.isPresent() && startingStateLatch.get().getCount() > 0) {
                 try {
@@ -258,7 +260,7 @@ public class Node implements Connection.Handler {
     }
 
     private void createServerAndListen() {
-        ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, keyBundle); // blocking
+        ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, keyBundle, nodeId); // blocking
         myCapability = Optional.of(Capability.myCapability(serverSocketResult.getAddress(), new ArrayList<>(supportedTransportTypes), new ArrayList<>(features)));
         server = Optional.of(new Server(serverSocketResult,
                 socketTimeout,
@@ -483,7 +485,7 @@ public class Node implements Connection.Handler {
 
     private Socket createSocket(Address address) {
         try {
-            return transportService.getSocket(address); // Blocking call
+            return transportService.getSocket(address, nodeId); // Blocking call
         } catch (IOException e) {
             handleException(e);
             throw new ConnectionException(e);
@@ -552,7 +554,7 @@ public class Node implements Connection.Handler {
             }
             return result;
         } catch (Exception exception) {
-            log.error("Starting outbound handshake failed", exception);
+            log.error("Starting outbound handshake failed. {}", exception.getMessage());
             try {
                 socket.close();
             } catch (IOException ignore) {
@@ -601,8 +603,8 @@ public class Node implements Connection.Handler {
         return (int) getAllActiveConnections().count();
     }
 
-    CompletableFuture<Boolean> isPeerOnlineAsync(Address address) {
-        return transportService.isPeerOnlineAsync(address);
+    CompletableFuture<Boolean> isPeerOnlineAsync(Address address, String nodeId) {
+        return transportService.isPeerOnlineAsync(address, nodeId);
     }
 
 
