@@ -31,25 +31,46 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SocketManagerByNodeId {
+
+    // Self-managing listener. Does remove itself at sessionDisconnected and call dispose.
+    private static class DisconnectListener implements I2PSocketManager.DisconnectListener {
+        private final String nodeId;
+        private final I2PSocketManager manager;
+        private final Consumer<String> disposeHandler;
+
+        public DisconnectListener(String nodeId, I2PSocketManager manager, Consumer<String> disposeHandler) {
+            this.nodeId = nodeId;
+            this.manager = manager;
+            this.disposeHandler = disposeHandler;
+        }
+
+        @Override
+        public void sessionDisconnected() {
+            log.warn("I2P socket manager for nodeId {} disconnected; disposing and removing from cache", nodeId);
+            // Defensive: remove listener explicitly in case destroySocketManager()
+            // does not clean up listeners itself.
+            manager.removeDisconnectListener(this);
+            disposeHandler.accept(nodeId);
+        }
+    }
+
     private final String i2cpHost;
     private final int i2cpPort;
-    private final int socketTimeout;
     private final int connectTimeout;
     private final Map<String, I2PSocketManager> socketManagerByNodeId = new ConcurrentHashMap<>();
 
     public SocketManagerByNodeId(String i2cpHost,
                                  int i2cpPort,
-                                 int socketTimeout,
                                  int connectTimeout) {
         this.i2cpHost = i2cpHost;
         this.i2cpPort = i2cpPort;
-        this.socketTimeout = socketTimeout;
         this.connectTimeout = connectTimeout;
     }
 
@@ -71,6 +92,7 @@ public class SocketManagerByNodeId {
         } catch (I2PSessionException | IOException e) {
             throw new RuntimeException(e);
         }
+        manager.addDisconnectListener(new DisconnectListener(nodeId, manager, this::disposeSocketManager));
         applyOptions(manager);
         log.info("Server socket manager ready for session {}. Took {} ms.", nodeId, System.currentTimeMillis() - ts);
         socketManagerByNodeId.put(nodeId, manager);

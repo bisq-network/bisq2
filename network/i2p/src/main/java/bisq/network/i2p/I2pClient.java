@@ -47,7 +47,7 @@ public class I2pClient {
                      int connectTimeout,
                      boolean isEmbeddedRouter) {
         this.socketTimeout = socketTimeout;
-        socketManagerByNodeId = new SocketManagerByNodeId(i2cpHost, i2cpPort, socketTimeout, connectTimeout);
+        socketManagerByNodeId = new SocketManagerByNodeId(i2cpHost, i2cpPort, connectTimeout);
         this.routerInitExecutor = Executors.newSingleThreadExecutor();
         if (isEmbeddedRouter) {
             routerInitExecutor.submit(() -> {
