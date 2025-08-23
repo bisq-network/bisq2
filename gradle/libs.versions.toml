@@ -183,7 +183,6 @@ glassfish-jersey = ['glassfish-jersey-jdk-http', 'glassfish-jersey-json-jackson'
     'glassfish-jaxb-runtime']
 grpc = ['grpc-protobuf', 'grpc-services', 'grpc-stub']
 i2p = ['i2p-core', 'i2p-router', 'i2p-streaming']
-i2p-v2 = ['i2p-core-v2', 'i2p-streaming-v2']
 jackson = ['jackson-core', 'jackson-annotations', 'jackson-databind', 'jackson-datatype']
 springfox-libs = ['springfox-boot-starter', 'springfox-swagger2', 'springfox-swagger-ui']
 rest-api-libs = ['swagger-jaxrs2-jakarta', 'glassfish-jersey-jdk-http', 'glassfish-jersey-json-jackson',
