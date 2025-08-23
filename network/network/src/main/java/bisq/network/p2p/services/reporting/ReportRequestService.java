@@ -22,7 +22,6 @@ import bisq.network.p2p.common.LeechRequestResponseHandler;
 import bisq.network.p2p.node.Node;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
