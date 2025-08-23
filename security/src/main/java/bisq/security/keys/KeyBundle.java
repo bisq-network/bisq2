@@ -68,6 +68,7 @@ public class KeyBundle implements PersistableProto {
         if (!(o instanceof KeyBundle keyBundle)) return false;
 
         return Objects.equals(torKeyPair, keyBundle.torKeyPair) &&
+                Objects.equals(i2PKeyPair, keyBundle.i2PKeyPair) &&
                 Objects.equals(keyId, keyBundle.keyId) &&
                 Arrays.equals(encodedPrivateKey, keyBundle.encodedPrivateKey) &&
                 Arrays.equals(encodedPublicKey, keyBundle.encodedPublicKey);
@@ -76,6 +77,7 @@ public class KeyBundle implements PersistableProto {
     @Override
     public int hashCode() {
         int result = Objects.hashCode(torKeyPair);
+        result = 31 * result + Objects.hashCode(i2PKeyPair);
         result = 31 * result + Objects.hashCode(keyId);
         result = 31 * result + Arrays.hashCode(encodedPrivateKey);
         result = 31 * result + Arrays.hashCode(encodedPublicKey);

@@ -198,7 +198,7 @@ public class I2pEmbeddedRouter {
         setupDirectory("config", "i2p.dir.config");
         setupDirectory("router", "i2p.dir.router");
         setupDirectory("pid", "i2p.dir.pid");
-        setupDirectory("log", "i2p.dir.log");
+        setupDirectory("embedded-router-logs", "i2p.dir.log");
         setupDirectory("app", "i2p.dir.app");
 
         // Set up client properties

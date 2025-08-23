@@ -267,7 +267,7 @@ public class I2PTransportService implements TransportService {
             if (!isShutdownInProgress) {
                 log.error("getSocket failed", exception);
             }
-            throw new RuntimeException(exception);
+            throw new IOException(exception);
         }
     }
 

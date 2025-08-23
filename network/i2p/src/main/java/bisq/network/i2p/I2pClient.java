@@ -56,7 +56,7 @@ public class I2pClient {
                 log.info("Embedded I2P router initialized asynchronously. Took {} ms.", System.currentTimeMillis() - start);
             });
         }
-        I2PAppContext.getGlobalContext().logManager().setBaseLogfilename(dirPath + "/logs/i2p-@.log");
+        I2PAppContext.getGlobalContext().logManager().setBaseLogfilename(dirPath + "/client/logs/i2p-@.log");
         log.info("I2P client created with i2cpHost={}, i2cpPort={}, socketTimeout={}", i2cpHost, i2cpPort, socketTimeout);
     }
 

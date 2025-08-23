@@ -181,6 +181,9 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
                     if (throwable != null && !resultFuture.isDone()) {
                         if (!isShutdownInProgress) {
                             resultFuture.completeExceptionally(throwable);
+                        } else {
+                            // During shutdown, suppress exceptions but still complete to avoid hanging callers
+                            resultFuture.complete(false);
                         }
                     } else if (!resultFuture.isDone()) {
                         resultFuture.complete(false);

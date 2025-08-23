@@ -10,7 +10,6 @@ import org.bouncycastle.crypto.digests.SHA512Digest;
 import java.util.Objects;
 
 @Slf4j
-@Getter
 @ToString
 public class TorKeyPair implements PersistableProto {
     @ToString.Exclude
@@ -25,8 +24,8 @@ public class TorKeyPair implements PersistableProto {
     }
 
     public TorKeyPair(byte[] privateKey, byte[] publicKey, String onionAddress) {
-        this.privateKey = privateKey;
-        this.publicKey = publicKey;
+        this.privateKey = privateKey.clone();
+        this.publicKey = publicKey.clone();
         this.onionAddress = onionAddress;
     }
 
@@ -78,6 +77,14 @@ public class TorKeyPair implements PersistableProto {
         secretScalar[31] |= 64;
 
         return secretScalar;
+    }
+
+    public byte[] getPrivateKey() {
+        return privateKey.clone();
+    }
+
+    public byte[] getPublicKey() {
+        return publicKey.clone();
     }
 
     @Override

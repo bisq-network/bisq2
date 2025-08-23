@@ -20,41 +20,35 @@ package bisq.security.keys;
 import bisq.common.proto.PersistableProto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.data.DataFormatException;
 import net.i2p.data.Destination;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 @Slf4j
-@EqualsAndHashCode
-@ToString
 public class I2PKeyPair implements PersistableProto {
     // fullKeyMaterial only contains private and public key material
-    @Getter
     private final byte[] identityBytes;
 
     // Destination only contains public key material
-    @Getter
     private final byte[] destinationBytes;
-
     private transient Destination destination;
+
     private transient String destinationBase32;
     private transient String destinationBase64;
 
     public I2PKeyPair(byte[] identityBytes, Destination destination) {
-        this.identityBytes = identityBytes;
+        this.identityBytes = identityBytes.clone();
         this.destination = destination;
         this.destinationBytes = destination.toByteArray();
     }
 
     public I2PKeyPair(byte[] identityBytes, byte[] destinationBytes) {
-        this.identityBytes = identityBytes;
-        this.destinationBytes = destinationBytes;
+        this.identityBytes = identityBytes.clone();
+        this.destinationBytes = destinationBytes.clone();
     }
 
     @Override
@@ -97,5 +91,33 @@ public class I2PKeyPair implements PersistableProto {
             destinationBase64 = getDestination().toBase64();
         }
         return destinationBase64;
+    }
+
+    public byte[] getIdentityBytes() {
+        return identityBytes.clone();
+    }
+
+    public byte[] getDestinationBytes() {
+        return destinationBytes.clone();
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (!(o instanceof I2PKeyPair that)) return false;
+
+        return Arrays.equals(identityBytes, that.identityBytes);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(identityBytes);
+    }
+
+    @Override
+    public String toString() {
+        return "I2PKeyPair{" +
+                "destinationBase32='" + getDestinationBase32() + '\'' +
+                ", destinationBase64='" + getDestinationBase64() + '\'' +
+                '}';
     }
 }

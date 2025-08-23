@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -94,7 +95,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
         this.config = config;
         this.seedNodeAddresses = seedNodeAddresses.stream()
                 .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(CopyOnWriteArraySet::new));
         this.banList = banList;
 
         persistence = persistenceService.getOrCreatePersistence(this,
@@ -245,10 +246,6 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     }
 
     public boolean isNotBanned(Address address) {
-        // Special handling for I2P addresses during initial integration phase
-        if (address.getTransportType() == TransportType.I2P) {
-                  return true;  // Temporarily bypass ban checks for I2P addresses
-              }
         return banList.isNotBanned(address);
     }
 
