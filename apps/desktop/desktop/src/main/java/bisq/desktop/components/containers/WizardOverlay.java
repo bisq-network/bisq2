@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.containers;
 
+import bisq.desktop.common.Transitions;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -56,5 +57,13 @@ public class WizardOverlay extends VBox {
         getChildren().addAll(content, Spacer.fillVBox());
     }
 
-
+    public void updateOverlayVisibility(VBox content, boolean shouldShow) {
+        setVisible(shouldShow);
+        if (shouldShow) {
+            Transitions.blurStrong(content, 0);
+            Transitions.slideInTop(this, 450);
+        } else {
+            Transitions.removeEffect(content);
+        }
+    }
 }

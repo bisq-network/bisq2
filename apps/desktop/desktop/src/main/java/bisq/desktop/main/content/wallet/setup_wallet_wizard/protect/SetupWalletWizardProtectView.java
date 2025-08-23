@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.wallet.setup_wallet_wizard.protect;
 
-import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.containers.WizardOverlay;
@@ -90,15 +89,8 @@ public class SetupWalletWizardProtectView extends View<StackPane, SetupWalletWiz
         passwordField.textProperty().bindBidirectional(model.getPassword());
         confirmPasswordField.textProperty().bindBidirectional(model.getConfirmPassword());
 
-        shouldShowSkipProtectStepOverlayPin = EasyBind.subscribe(model.getShouldShowSkipProtectStepOverlay(), shouldShow -> {
-            skipProtectStepOverlay.setVisible(shouldShow);
-            if (shouldShow) {
-                Transitions.blurStrong(content, 0);
-                Transitions.slideInTop(skipProtectStepOverlay, 450);
-            } else {
-                Transitions.removeEffect(content);
-            }
-        });
+        shouldShowSkipProtectStepOverlayPin = EasyBind.subscribe(model.getShouldShowSkipProtectStepOverlay(), shouldShow ->
+            skipProtectStepOverlay.updateOverlayVisibility(content, shouldShow));
 
         skipProtectStepOverlayBackButton.setOnAction(e -> controller.onConfirmSkipProtectStep());
         skipProtectStepOverlayNextButton.setOnAction(e -> controller.onCancelSkipProtectStep());
