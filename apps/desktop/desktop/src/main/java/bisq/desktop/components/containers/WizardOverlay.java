@@ -26,10 +26,17 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+import java.util.Collections;
+import java.util.List;
+
 public class WizardOverlay extends VBox {
     private static final double OVERLAY_WIDTH = 700;
 
     public WizardOverlay(String headline, String text, Button... buttons) {
+        this(headline, Collections.singletonList(text), buttons);
+    }
+
+    public WizardOverlay(String headline, List<String> texts, Button... buttons) {
         VBox content = new VBox(40);
         content.setAlignment(Pos.TOP_CENTER);
         content.getStyleClass().setAll("trade-wizard-feedback-bg");
@@ -38,18 +45,23 @@ public class WizardOverlay extends VBox {
 
         Label headlineLabel = new Label(Res.get(headline));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
+        VBox.setMargin(headlineLabel, new Insets(20, 0, 0, 0));
+        content.getChildren().add(headlineLabel);
 
-        Label textLabel = new Label(Res.get(text));
-        textLabel.setMinWidth(OVERLAY_WIDTH - 100);
-        textLabel.setMaxWidth(textLabel.getMinWidth());
-        textLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
+        texts.stream()
+            .map(t -> {
+                Label textLabel = new Label(Res.get(t));
+                textLabel.setMinWidth(OVERLAY_WIDTH - 100);
+                textLabel.setMaxWidth(textLabel.getMinWidth());
+                textLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
+                return textLabel;
+            })
+            .forEach(content.getChildren()::add);
 
         HBox buttonsBox = new HBox(10, buttons);
         buttonsBox.setAlignment(Pos.CENTER);
-
-        VBox.setMargin(headlineLabel, new Insets(20, 0, 0, 0));
         VBox.setMargin(buttonsBox, new Insets(15, 0, 10, 0));
-        content.getChildren().addAll(headlineLabel, textLabel, buttonsBox);
+        content.getChildren().add(buttonsBox);
 
         setSpacing(20);
         setVisible(false);
