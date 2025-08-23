@@ -28,6 +28,7 @@ import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -35,15 +36,21 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.UncheckedIOException;
 import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -51,6 +58,8 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -170,6 +179,14 @@ public class FileUtils {
             }
             Thread.sleep(100);
         }
+    }
+
+    public static void makeDirIfNotExists(File dir) throws IOException {
+        makeDirIfNotExists(dir.toPath());
+    }
+
+    public static void makeDirIfNotExists(Path dirPath) throws IOException {
+        makeDirIfNotExists(dirPath.toString());
     }
 
     public static void makeDirIfNotExists(String dirName) throws IOException {
@@ -495,6 +512,57 @@ public class FileUtils {
         }
         if (exception.get() != null) {
             throw exception.get();
+        }
+    }
+
+    public static void copyResourceDirectory(String resourcePath,
+                                             Path targetDir) throws IOException, URISyntaxException {
+        URL url = FileUtils.class.getClassLoader().getResource(resourcePath);
+        if (url == null) {
+            throw new FileNotFoundException("Resource not found: " + resourcePath);
+        }
+
+        if (url.getProtocol().equals("file")) {
+            // Running from IDE / filesystem
+            Path sourceDir = Paths.get(url.toURI());
+            Files.walk(sourceDir)
+                    .forEach(path -> {
+                        Path dest = targetDir.resolve(sourceDir.relativize(path));
+                        try {
+                            if (Files.isDirectory(path)) {
+                                Files.createDirectories(dest);
+                            } else {
+                                Files.copy(path, dest, StandardCopyOption.REPLACE_EXISTING);
+                            }
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    });
+        } else if (url.getProtocol().equals("jar")) {
+            // Running from JAR
+            String urlPath = url.getPath();
+            String jarPath = urlPath.substring(5, urlPath.indexOf("!"));
+            try (JarFile jar = new JarFile(URLDecoder.decode(jarPath, StandardCharsets.UTF_8))) {
+                Enumeration<JarEntry> entries = jar.entries();
+                while (entries.hasMoreElements()) {
+                    JarEntry entry = entries.nextElement();
+                    String name = entry.getName();
+                    if (name.startsWith(resourcePath + "/")) {
+                        String entryRelative = name.substring(resourcePath.length() + 1);
+                        Path outPath = targetDir.resolve(entryRelative);
+                        if (entry.isDirectory()) {
+                            Files.createDirectories(outPath);
+                        } else {
+                            try (InputStream in = jar.getInputStream(entry)) {
+                                Files.createDirectories(outPath.getParent());
+                                Files.copy(in, outPath, StandardCopyOption.REPLACE_EXISTING);
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            throw new UnsupportedOperationException("Unsupported protocol: " + url.getProtocol());
         }
     }
 }
