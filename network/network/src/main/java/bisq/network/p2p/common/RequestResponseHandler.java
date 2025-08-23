@@ -82,7 +82,7 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
     protected CompletableFuture<R> request(Connection connection, T request) {
         return requestFuturesByConnectionId.compute(connection.getId(), (k, existing) -> {
             if (existing != null && !existing.isDone()) {
-                log.warn("Reusing pending request future for {}", connection.getPeerAddress());
+                log.warn("[{}]Reusing pending request future for {}", this.getClass().getSimpleName(), connection.getPeerAddress());
                 return existing;
             }
             RequestFuture<T, R> requestFuture = new RequestFuture<>(node, connection, request);
@@ -90,11 +90,11 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
                     .whenComplete((response, throwable) -> {
                         requestFuturesByConnectionId.remove(k);
                         if (throwable instanceof TimeoutException) {
-                            log.warn("Request to {} timed out after {} ms", connection.getPeerAddress(), timeout);
+                            log.warn("[{}]Request to {} timed out after {} ms", this.getClass().getSimpleName(), connection.getPeerAddress(), timeout);
                         } else if (throwable != null) {
-                            log.warn("Request to {} failed: {}", connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
+                            log.warn("[{}]Request to {} failed: {}", this.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
                         } else {
-                            log.debug("Request to {} completed", connection.getPeerAddress());
+                            log.debug("[{}]Request to {} completed", this.getClass().getSimpleName(), connection.getPeerAddress());
                         }
                     });
             return requestFuture;
