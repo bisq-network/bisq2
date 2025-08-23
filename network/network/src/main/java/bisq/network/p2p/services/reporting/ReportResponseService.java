@@ -18,10 +18,7 @@
 package bisq.network.p2p.services.reporting;
 
 import bisq.common.platform.MemoryReportService;
-import bisq.common.util.ExceptionUtil;
-import bisq.network.identity.NetworkId;
-import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.node.CloseReason;
+import bisq.network.p2p.common.RequestResponseHandler;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
@@ -31,11 +28,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.TreeMap;
 
-@Slf4j
-public class ReportResponseService implements Node.Listener {
-    private static final long TIMEOUT_SEC = 120;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
-    private final Node node;
+@Slf4j
+public class ReportResponseService extends RequestResponseHandler<ReportRequest, ReportResponse> {
+    private static final long TIMEOUT = SECONDS.toMillis(120);
+
     private final DataService dataService;
     private final NetworkLoadSnapshot networkLoadSnapshot;
     private final MemoryReportService memoryReportService;
@@ -44,46 +42,31 @@ public class ReportResponseService implements Node.Listener {
                                  DataService dataService,
                                  NetworkLoadSnapshot networkLoadSnapshot,
                                  MemoryReportService memoryReportService) {
-        this.node = node;
+        super(node, TIMEOUT);
         this.dataService = dataService;
         this.networkLoadSnapshot = networkLoadSnapshot;
         this.memoryReportService = memoryReportService;
 
-        node.addListener(this);
-    }
-
-    public void shutdown() {
-        node.removeListener(this);
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // Node.Listener
-    /* --------------------------------------------------------------------- */
-
-    @Override
-    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-        if (envelopePayloadMessage instanceof ReportRequest request) {
-            Report report = createStorageReport();
-            ReportResponse response = new ReportResponse(request.getRequestId(), report);
-            log.info("Received a ReportRequest from {}", connection.getPeerAddress());
-            node.sendAsync(response, connection)
-                    .whenComplete((result, throwable) -> {
-                        if (throwable != null) {
-                            log.warn("Sending {} to {} failed. {}", response.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
-                        }
-                    });
-        }
+        this.initialize();
     }
 
     @Override
-    public void onConnection(Connection connection) {
+    protected ReportResponse createResponse(Connection connection, ReportRequest request) {
+        Report report = createStorageReport();
+        ReportResponse response = new ReportResponse(request.getRequestId(), report);
+        log.info("Received a ReportRequest from {}", connection.getPeerAddress());
+        return response;
     }
 
     @Override
-    public void onDisconnect(Connection connection, CloseReason closeReason) {
+    protected Class<ReportRequest> getRequestClass() {
+        return ReportRequest.class;
     }
 
+    @Override
+    protected Class<ReportResponse> getResponseClass() {
+        return ReportResponse.class;
+    }
 
     /* --------------------------------------------------------------------- */
     // Private
