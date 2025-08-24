@@ -46,6 +46,7 @@ public class SetupWalletWizardVerifyModel implements Model {
 
     private final IntegerProperty selectedAnswerIndex = new SimpleIntegerProperty(INVALID_INDEX);
     private final BooleanProperty shouldTransitionToNextQuestion = new SimpleBooleanProperty(false);
+    private final BooleanProperty shouldShowWrongWordOverlay = new SimpleBooleanProperty(false);
 
     public enum ScreenState {
         QUIZ,
@@ -95,5 +96,6 @@ public class SetupWalletWizardVerifyModel implements Model {
         currentQuestionIndex.set(0);
         selectedAnswerIndex.set(INVALID_INDEX);
         shouldTransitionToNextQuestion.set(false);
+        shouldShowWrongWordOverlay.set(false);
     }
 }

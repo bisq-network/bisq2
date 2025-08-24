@@ -22,7 +22,6 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.containers.WizardOverlay;
 import bisq.desktop.components.controls.MaterialPasswordField;
 import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -78,7 +77,6 @@ public class SetupWalletWizardProtectView extends View<StackPane, SetupWalletWiz
                 "wallet.protectWallet.skipStepOverlay.description",
                 skipProtectStepOverlayBackButton,
                 skipProtectStepOverlayNextButton);
-        StackPane.setMargin(skipProtectStepOverlay, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
 
         content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, descriptionLabel, passwordField, confirmPasswordField, Spacer.fillVBox());
 

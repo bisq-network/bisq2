@@ -30,7 +30,6 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
@@ -129,7 +128,6 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
 
         Label warningIcon = new Label();
         Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, warningIcon, "1.7em");
-        warningIcon.getStyleClass().add("text-fill-light-dimmed");
         backToBuyButton = new Button(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.backToBuy"));
         gainReputationButton = new Button(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.gainReputation"));
         gainReputationButton.setDefaultButton(true);
@@ -139,7 +137,6 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         reputationInfoOverlay = new WizardOverlay(root, "bisqEasy.tradeWizard.directionAndMarket.feedback.headline",
                 warningIcon, reputationInfoText, backToBuyButton, gainReputationButton);
 
-        StackPane.setMargin(reputationInfoOverlay, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
         root.getChildren().addAll(content, reputationInfoOverlay);
         root.setAlignment(Pos.CENTER);
         root.getStyleClass().add("bisq-easy-trade-wizard-direction-step");
