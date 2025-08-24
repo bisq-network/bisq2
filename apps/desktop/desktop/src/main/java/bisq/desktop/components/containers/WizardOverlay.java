@@ -105,6 +105,7 @@ public class WizardOverlay extends VBox {
             setOpacity(1);
             Transitions.blurStrong(content, 0);
             Transitions.slideInTop(this, 450);
+            owner.requestFocus();
             owner.setOnKeyPressed(onKeyPressedHandler);
         } else {
             Transitions.removeEffect(content);
