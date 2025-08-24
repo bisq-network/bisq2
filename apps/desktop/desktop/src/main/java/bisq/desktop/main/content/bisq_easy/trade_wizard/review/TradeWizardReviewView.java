@@ -25,12 +25,12 @@ import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.containers.WizardOverlay;
 import bisq.desktop.components.controls.TextFlowUtils;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferView;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -59,7 +59,8 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     private final Label headline, detailsHeadline,
             bitcoinPaymentMethod, bitcoinPaymentMethodDescription, fiatPaymentMethod, fiatPaymentMethodDescription, fee, feeDetails,
             priceDetails, priceDescription;
-    private final VBox takeOfferStatus, sendTakeOfferMessageFeedback, createOfferSuccess, takeOfferSuccess;
+    private final VBox takeOfferStatus, sendTakeOfferMessageFeedback, takeOfferSuccess;
+    private final WizardOverlay createOfferSuccessOverlay;
     private final Button createOfferSuccessButton, takeOfferSuccessButton;
     private final GridPane gridPane;
     private final StackPane bitcoinPaymentMethodValuePane, fiatPaymentMethodValuePane;
@@ -176,11 +177,13 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         GridPane.setColumnSpan(line3, 4);
         gridPane.add(line3, 0, rowIndex);
 
-
         // Feedback overlays
         createOfferSuccessButton = new Button(Res.get("bisqEasy.tradeWizard.review.createOfferSuccessButton"));
-        createOfferSuccess = new VBox(20);
-        configCreateOfferSuccess();
+        createOfferSuccessButton.setDefaultButton(true);
+        createOfferSuccessOverlay = new WizardOverlay(root,
+                "bisqEasy.tradeWizard.review.createOfferSuccess.headline",
+                "bisqEasy.tradeWizard.review.createOfferSuccess.subTitle",
+                createOfferSuccessButton);
 
         takeOfferStatus = new VBox();
         takeOfferStatus.setVisible(false);
@@ -194,9 +197,8 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         configTakeOfferSuccess();
 
         StackPane.setMargin(gridPane, new Insets(40));
-        StackPane.setMargin(createOfferSuccess, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
         StackPane.setMargin(takeOfferStatus, new Insets(-TakeOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
-        root.getChildren().addAll(gridPane, createOfferSuccess, takeOfferStatus);
+        root.getChildren().addAll(gridPane, createOfferSuccessOverlay, takeOfferStatus);
     }
 
     @Override
@@ -223,16 +225,10 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         createOfferSuccessButton.setOnAction(e -> controller.onShowOfferbook());
         takeOfferSuccessButton.setOnAction(e -> controller.onShowOpenTrades());
 
-        showCreateOfferSuccessPin = EasyBind.subscribe(model.getShowCreateOfferSuccess(),
-                show -> {
-                    createOfferSuccess.setVisible(show);
-                    if (show) {
-                        Transitions.blurStrong(gridPane, 0);
-                        Transitions.slideInTop(createOfferSuccess, 450);
-                    } else {
-                        Transitions.removeEffect(gridPane);
-                    }
-                });
+        showCreateOfferSuccessPin = EasyBind.subscribe(model.getShowCreateOfferSuccess(), shouldShow ->
+                createOfferSuccessOverlay.updateOverlayVisibility(gridPane,
+                        shouldShow,
+                        controller::onKeyPressedWhileShowingOverlay));
 
         takeOfferStatusPin = EasyBind.subscribe(model.getTakeOfferStatus(), this::showTakeOfferStatusFeedback);
 
@@ -346,24 +342,6 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
             takeOfferStatus.setVisible(false);
             Transitions.removeEffect(gridPane);
         }
-    }
-
-    private void configCreateOfferSuccess() {
-        VBox contentBox = getFeedbackContentBox();
-
-        createOfferSuccess.setVisible(false);
-        createOfferSuccess.setAlignment(Pos.TOP_CENTER);
-
-        Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.review.createOfferSuccess.headline"));
-        headlineLabel.getStyleClass().add("bisq-text-headline-2");
-
-        Label subtitleLabel = new Label(Res.get("bisqEasy.tradeWizard.review.createOfferSuccess.subTitle"));
-        configFeedbackSubtitleLabel(subtitleLabel);
-
-        createOfferSuccessButton.setDefaultButton(true);
-        VBox.setMargin(createOfferSuccessButton, new Insets(10, 0, 0, 0));
-        contentBox.getChildren().addAll(headlineLabel, subtitleLabel, createOfferSuccessButton);
-        createOfferSuccess.getChildren().addAll(contentBox, Spacer.fillVBox());
     }
 
     private void configSendTakeOfferMessageFeedback() {

@@ -24,6 +24,7 @@ import bisq.i18n.Res;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyEvent;
@@ -40,12 +41,12 @@ public class WizardOverlay extends VBox {
 
     private final StackPane owner;
 
-    public WizardOverlay(StackPane owner, String headline, Label headlineIcon, String text, Button... buttons) {
-        this(owner, headline, Optional.of(headlineIcon), Collections.singletonList(text), buttons);
+    public WizardOverlay(StackPane owner, String headline, Label headlineIcon, List<String> texts, Button... buttons) {
+        this(owner, headline, Optional.ofNullable(headlineIcon), texts, buttons);
     }
 
-    public WizardOverlay(StackPane owner, String headline, Label headlineIcon, List<String> texts, Button... buttons) {
-        this(owner, headline, Optional.of(headlineIcon), texts, buttons);
+    public WizardOverlay(StackPane owner, String headline, Label headlineIcon, String text, Button... buttons) {
+        this(owner, headline, Optional.ofNullable(headlineIcon), Collections.singletonList(text), buttons);
     }
 
     public WizardOverlay(StackPane owner, String headline, String text, Button... buttons) {
@@ -96,7 +97,7 @@ public class WizardOverlay extends VBox {
         StackPane.setMargin(this, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
     }
 
-    public void updateOverlayVisibility(VBox content,
+    public void updateOverlayVisibility(Node content,
                                         boolean shouldShow,
                                         EventHandler<? super KeyEvent> onKeyPressedHandler) {
         if (shouldShow) {
@@ -104,6 +105,7 @@ public class WizardOverlay extends VBox {
             setOpacity(1);
             Transitions.blurStrong(content, 0);
             Transitions.slideInTop(this, 450);
+            owner.requestFocus();
             owner.setOnKeyPressed(onKeyPressedHandler);
         } else {
             Transitions.removeEffect(content);

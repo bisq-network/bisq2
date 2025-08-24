@@ -92,7 +92,12 @@ public class SetupWalletWizardVerifyController implements Controller {
         }
     }
 
-    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
+    void onKeyPressedWhileShowingSuccessOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onCreateWallet);
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, () -> {});
+    }
+
+    void onKeyPressedWhileShowingWrongWordOverlay(KeyEvent keyEvent) {
         KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onWrongWord);
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, () -> {});
     }
