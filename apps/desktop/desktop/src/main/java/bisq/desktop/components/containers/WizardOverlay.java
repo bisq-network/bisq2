@@ -41,12 +41,12 @@ public class WizardOverlay extends VBox {
 
     private final StackPane owner;
 
-    public WizardOverlay(StackPane owner, String headline, Label headlineIcon, String text, Button... buttons) {
-        this(owner, headline, Optional.of(headlineIcon), Collections.singletonList(text), buttons);
+    public WizardOverlay(StackPane owner, String headline, Label headlineIcon, List<String> texts, Button... buttons) {
+        this(owner, headline, Optional.ofNullable(headlineIcon), texts, buttons);
     }
 
-    public WizardOverlay(StackPane owner, String headline, Label headlineIcon, List<String> texts, Button... buttons) {
-        this(owner, headline, Optional.of(headlineIcon), texts, buttons);
+    public WizardOverlay(StackPane owner, String headline, Label headlineIcon, String text, Button... buttons) {
+        this(owner, headline, Optional.ofNullable(headlineIcon), Collections.singletonList(text), buttons);
     }
 
     public WizardOverlay(StackPane owner, String headline, String text, Button... buttons) {
