@@ -6,10 +6,16 @@ plugins {
     id("bisq.gradle.i2p_router.I2pRouterAppPlugin")
     application
     alias(libs.plugins.shadow)
+    alias(libs.plugins.openjfx)
 }
 
 application {
     mainClass.set("bisq.i2p_router.I2PRouterApp")
+}
+
+javafx {
+    version = "21.0.6"
+    modules = listOf("javafx.controls", "javafx.media")
 }
 
 sourceSets {
@@ -25,6 +31,7 @@ dependencies {
     implementation("network:network")
     implementation("network:i2p")
 
+    implementation(libs.fxmisc.easybind)
     implementation(libs.typesafe.config)
     implementation(libs.bundles.i2p)
 }

@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -58,6 +59,31 @@ public class CompletableFutureUtils {
                         Stream.of(list)
                                 .map(CompletableFuture::join)
                                 .collect(Collectors.<T>toList())
+                );
+    }
+
+    public static <T> CompletableFuture<List<T>> failureTolerantAllOf(Collection<CompletableFuture<T>> collection) {
+        //noinspection unchecked
+        return failureTolerantAllOf(collection.toArray(new CompletableFuture[0]));
+    }
+
+    public static <T> CompletableFuture<List<T>> failureTolerantAllOf(Stream<CompletableFuture<T>> stream) {
+        return failureTolerantAllOf(stream.collect(Collectors.toList()));
+    }
+
+    /**
+     * Variation of allOf which does not fail if one future fails
+     */
+    @SafeVarargs
+    public static <T> CompletableFuture<List<T>> failureTolerantAllOf(CompletableFuture<T>... list) {
+        List<CompletableFuture<T>> nonFailing = Stream.of(list)
+                .map(future -> future.handle((result, throwable) -> throwable == null ? result : null))
+                .toList();
+        return allOf(nonFailing)
+                .thenApply(v -> nonFailing.stream()
+                        .map(CompletableFuture::join)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList())
                 );
     }
 

@@ -1,0 +1,227 @@
+@font-face {
+    font-family: "IBM Plex Sans Light";
+    src: url("/fonts/IBMPlexSans-Light.ttf");
+}
+
+.root {
+    -fx-font-family: "IBM Plex Sans";
+    -fx-font-size: 13;
+}
+
+.background {
+    -fx-background-color: #1c1c1c;
+}
+
+.overlay-background {
+    -fx-background-color: rgba(0, 0, 0, 0.75);
+}
+
+.headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 2.4em;
+    -fx-font-family: "IBM Plex Sans Thin";
+}
+
+.white-text {
+    -fx-font-size: 1.3em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.green-text {
+    -fx-font-size: 1.3em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq2-green;
+}
+
+.grey-text {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1.1em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.router-state-details {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.highlight {
+    -fx-fill: -bisq2-green-dim-20;
+    -fx-text-fill: -bisq2-green-dim-20;
+}
+
+.warn {
+    -fx-fill: -bisq2-yellow-dim-20;
+    -fx-text-fill: -bisq2-yellow-dim-20;
+}
+
+.router-setup-details {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.error-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.2em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.error-text {
+    -fx-fill: -bisq-error;
+    -fx-text-fill: -bisq-error;
+    -fx-font-size: 1.1em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+#bisq-i2p-router-logo {
+    -fx-image: url("/images/bisq-i2p-router-logo.png");
+}
+#bisq-logo {
+    -fx-image: url("/images/bisq-logo.png");
+}
+
+#connecting {
+    -fx-image: url("/images/connecting.png");
+}
+#connected {
+    -fx-image: url("/images/connected.png");
+}
+#not-connected {
+    -fx-image: url("/images/not-connected.png");
+}
+
+#spinning-circle {
+    -fx-image: url("/images/spinning-circle.png");
+}
+
+.code-block {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Mono";
+    -fx-font-size: 1em;
+}
+
+.text-area {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-background-color: #242424;
+    -fx-background-radius: 0;
+    -fx-border-style: none;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.text-area > .scroll-pane {
+    -fx-background-color: null;
+}
+
+.text-area > .scroll-pane > .scroll-bar:horizontal {
+    -fx-background-radius: 0;
+}
+
+.text-area > .scroll-pane > .scroll-bar:vertical {
+    -fx-background-radius: 0;
+}
+
+.text-area > .scroll-pane > .corner {
+    -fx-background-radius: 0;
+}
+
+.text-area .content {
+    /* is 1px less top and bottom than TextInput because of scrollPane border */
+    -fx-padding: 0.25em 0.583em 0.25em 0.583em; /* 3 7 3 7 */
+    -fx-cursor: text;
+    -fx-background-color: #242424;
+    -fx-background-radius: 0;
+}
+
+.text-area:focused .content {
+    -fx-background-color: #242424;
+}
+
+
+.button {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 4;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-border-radius: 4;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-padding: 5 32 5 32;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.15);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 10, 0.4, 0, 2);
+}
+
+.button:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 10, 0.35, 0, 2);
+}
+
+.button:disabled {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-text-fill: derive(-fx-light-text-color, -20%);
+}
+
+.button-reduced-padding {
+    -fx-label-padding: 0 -15 0 -15;
+}
+
+.button:default,
+.default-button {
+    -fx-background-color: -fx-default-button;
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.button:default:hover {
+    -fx-background-color: -bisq-green-hover;
+}
+
+.button:default:pressed {
+    -fx-background-color: -bisq-green-pressed;
+}
+
+.button:default:disabled {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+    -fx-text-fill: derive(-fx-light-text-color, -20%);
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * ProgressBar                                                                 *
+ *                                                                             *
+ ******************************************************************************/
+
+.progress-bar {
+    -fx-indeterminate-bar-animation-time: 1;
+}
+
+.progress-bar > .track {
+    -fx-background-color: -bisq-dark-grey-50;
+}
+
+.progress-bar > .bar,
+.progress-bar:indeterminate > .bar {
+    -fx-background-color: -bisq2-green;
+    -fx-padding: 1.5;
+}
+
+.progress-bar > .track,
+.progress-bar > .bar {
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+}

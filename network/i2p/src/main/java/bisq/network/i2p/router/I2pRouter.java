@@ -34,8 +34,8 @@ import java.util.concurrent.TimeUnit;
 @Getter
 public class I2pRouter {
     public static void main(String[] args) {
-        String i2pDirPath = PlatformUtils.getUserDataDir().resolve("bisq2_i2p_embedded_router").toString();
-        I2pRouter router = new I2pRouter(i2pDirPath);
+        String i2pDirPath = PlatformUtils.getUserDataDir().resolve("bisq2_i2p_router").toString();
+        I2pRouter router = new I2pRouter(i2pDirPath, 7654);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             Thread.currentThread().setName("I2pRouter.shutdownHook");
@@ -55,32 +55,52 @@ public class I2pRouter {
         keepRunning();
     }
 
+    @Getter
     private final String dirPath;
+    @Getter
+    private final String i2cpHost;
+    @Getter
+    private final int i2cpPort;
+    private final long routerStartupTimeout;
     private final RouterSetup routerSetup;
     private final RouterStateObserver routerStateObserver;
 
     private volatile Router router;
     private volatile boolean isShutdownInProgress;
 
-    public I2pRouter(String i2pDirPath) {
-        this(i2pDirPath, false, 512, 512, 50);
+    public I2pRouter(String i2pDirPath, int i2cpPort) {
+        this(i2pDirPath,
+                "127.0.0.1",
+                i2cpPort,
+                I2pLogLevel.DEBUG,
+                false,
+                (int) TimeUnit.SECONDS.toMillis(300),
+                512,
+                512,
+                50);
     }
 
     public I2pRouter(String i2pDirPath,
+                     String i2cpHost,
+                     int i2cpPort,
+                     I2pLogLevel i2pLogLevel,
                      boolean isEmbedded,
+                     long routerStartupTimeout,
                      int inboundKBytesPerSecond,
                      int outboundKBytesPerSecond,
                      int bandwidthSharePercentage) {
         this.dirPath = i2pDirPath;
+        this.i2cpHost = i2cpHost;
+        this.i2cpPort = i2cpPort;
+        this.routerStartupTimeout = routerStartupTimeout;
 
-        // Must be set before I2P router is created as otherwise log outputs are routed by I2P log system
-        System.setProperty("I2P_DISABLE_OUTPUT_OVERRIDE", "true");
-
-        // Having IPv6 enabled can cause problems with certain configurations.
-        System.setProperty("java.net.preferIPv4Stack", "true");
+        log.info("I2CP listening on: {}:{}", i2cpHost, i2cpPort);
 
         routerStateObserver = new RouterStateObserver();
         routerSetup = new RouterSetup(i2pDirPath,
+                i2cpHost,
+                i2cpPort,
+                i2pLogLevel,
                 isEmbedded,
                 inboundKBytesPerSecond,
                 outboundKBytesPerSecond,
@@ -95,20 +115,23 @@ public class I2pRouter {
 
                         log.info("Launching router");
                         long ts = System.currentTimeMillis();
+
                         router = new Router();
+                        router.getContext().logManager().setDefaultLimit(routerSetup.getI2pLogLevel().name());
+
                         router.setKillVMOnEnd(false);
                         log.info("Router created");
 
                         CountDownLatch latch = new CountDownLatch(1);
-                        routerStateObserver.getState().addObserver(state -> {
-                            if (state == RouterStateObserver.State.RUNNING_OK) {
+                        routerStateObserver.getProcessState().addObserver(state -> {
+                            if (state == RouterStateObserver.ProcessState.RUNNING) {
                                 latch.countDown();
                             }
                         });
                         routerStateObserver.start(router);
 
                         router.runRouter();
-                        latch.await(3, TimeUnit.MINUTES); //todo use config
+                        latch.await(routerStartupTimeout, TimeUnit.MILLISECONDS);
 
                         log.info("Starting router and connecting to I2P network took {} ms", System.currentTimeMillis() - ts);
                         return true;
@@ -134,6 +157,7 @@ public class I2pRouter {
         ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("I2pRouter.shutdown");
         return CompletableFuture.supplyAsync(() -> {
                     long ts = System.currentTimeMillis();
+                    routerStateObserver.startShutdown();
                     router.shutdown(1);
                     log.info("I2P router shutdown completed. Took {} ms.", System.currentTimeMillis() - ts);
                     return true;
@@ -144,12 +168,20 @@ public class I2pRouter {
                 });
     }
 
-    public ReadOnlyObservable<RouterStateObserver.State> getState() {
-        return routerStateObserver.getState();
+    public ReadOnlyObservable<RouterStateObserver.ProcessState> getProcessState() {
+        return routerStateObserver.getProcessState();
     }
 
-    public ReadOnlyObservable<Integer> getOutboundTunnelCount() {
-        return routerStateObserver.getOutboundTunnelCount();
+    public ReadOnlyObservable<RouterStateObserver.NetworkState> getNetworkState() {
+        return routerStateObserver.getNetworkState();
+    }
+
+    public ReadOnlyObservable<RouterStateObserver.RouterState> getRouterState() {
+        return routerStateObserver.getRouterState();
+    }
+
+    public ReadOnlyObservable<RouterStateObserver.TunnelInfo> getTunnelInfo() {
+        return routerStateObserver.getTunnelInfo();
     }
 
     // Tracks recent failed connection attempts

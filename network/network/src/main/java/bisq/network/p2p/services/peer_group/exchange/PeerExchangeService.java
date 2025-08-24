@@ -170,7 +170,8 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
                                 }
                             });
                 });
-        CompletableFutureUtils.allOf(futures)
+
+        CompletableFutureUtils.failureTolerantAllOf(futures)
                 .orTimeout(90, SECONDS)
                 .whenComplete((result, throwable) -> {
                     if (doRetryIfNeeded) {
