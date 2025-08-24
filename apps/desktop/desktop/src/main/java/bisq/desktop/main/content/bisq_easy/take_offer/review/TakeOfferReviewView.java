@@ -21,17 +21,13 @@ import bisq.common.application.DevMode;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.containers.WizardOverlay;
 import bisq.desktop.components.controls.TextFlowUtils;
-import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
-import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferView;
 import bisq.i18n.Res;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.ColumnConstraints;
@@ -39,27 +35,26 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Slf4j
 class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOfferReviewController> {
     public static final String DESCRIPTION_STYLE = "trade-wizard-review-description";
     public static final String VALUE_STYLE = "trade-wizard-review-value";
     public static final String DETAILS_STYLE = "trade-wizard-review-details";
-    private static final int FEEDBACK_WIDTH = 700;
 
-    private final VBox sendTakeOfferMessageFeedbackOverlay;
     private final Button takeOfferSuccessButton;
     private final Label priceDetails, bitcoinPaymentMethod, fiatPaymentMethod, fee, feeDetails;
     private final GridPane content;
     private final TextFlow price;
     private final WaitingAnimation takeOfferSendMessageWaitingAnimation;
-    private final WizardOverlay takeOfferSuccessOverlay;
+    private final WizardOverlay takeOfferSuccessOverlay, sendTakeOfferMessageOverlay;
     private Subscription takeOfferStatusPin;
     private boolean minWaitingTimePassed = false;
 
@@ -162,10 +157,14 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         content.add(line3, 0, rowIndex);
 
         // Feedback overlay
-        sendTakeOfferMessageFeedbackOverlay = new VBox(20);
-        sendTakeOfferMessageFeedbackOverlay.setVisible(false);
+        List<String> reputationInfoText = Arrays.asList(
+                "bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.subTitle",
+                "bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.info");
         takeOfferSendMessageWaitingAnimation = new WaitingAnimation(WaitingState.TAKE_BISQ_EASY_OFFER);
-        configSendTakeOfferMessageFeedback();
+        sendTakeOfferMessageOverlay = new WizardOverlay(root,
+                "bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.headline",
+                takeOfferSendMessageWaitingAnimation,
+                reputationInfoText);
 
         takeOfferSuccessButton = new Button(Res.get("bisqEasy.takeOffer.review.takeOfferSuccessButton"));
         takeOfferSuccessButton.setDefaultButton(true);
@@ -175,8 +174,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
                 takeOfferSuccessButton);
 
         StackPane.setMargin(content, new Insets(40));
-        StackPane.setMargin(sendTakeOfferMessageFeedbackOverlay, new Insets(-TakeOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
-        root.getChildren().addAll(content, sendTakeOfferMessageFeedbackOverlay, takeOfferSuccessOverlay);
+        root.getChildren().addAll(content, sendTakeOfferMessageOverlay, takeOfferSuccessOverlay);
     }
 
     @Override
@@ -208,89 +206,28 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
     private void showTakeOfferStatusFeedback(TakeOfferReviewModel.TakeOfferStatus status) {
         if (status == TakeOfferReviewModel.TakeOfferStatus.SENT) {
-            sendTakeOfferMessageFeedbackOverlay.setVisible(true);
+            sendTakeOfferMessageOverlay.setVisible(true);
 
             Transitions.blurStrong(content, 0);
-            Transitions.slideInTop(sendTakeOfferMessageFeedbackOverlay, 450);
+            Transitions.slideInTop(sendTakeOfferMessageOverlay, 450);
             takeOfferSendMessageWaitingAnimation.playIndefinitely();
 
             UIScheduler.run(() -> {
                 minWaitingTimePassed = true;
                 if (model.getTakeOfferStatus().get() == TakeOfferReviewModel.TakeOfferStatus.SUCCESS) {
-//                    takeOfferStatus.getChildren().setAll(takeOfferSuccessOverlay);
-                    sendTakeOfferMessageFeedbackOverlay.setVisible(false);
+                    sendTakeOfferMessageOverlay.setVisible(false);
                     takeOfferSuccessOverlay.setVisible(true);
                     takeOfferSendMessageWaitingAnimation.stop();
                 }
-            }).after(DevMode.isDevMode() ? 4000 : 4000);
+            }).after(DevMode.isDevMode() ? 500 : 4000);
         } else if (status == TakeOfferReviewModel.TakeOfferStatus.SUCCESS && minWaitingTimePassed) {
-//            takeOfferStatus.getChildren().setAll(takeOfferSuccessOverlay);
-            sendTakeOfferMessageFeedbackOverlay.setVisible(false);
+            sendTakeOfferMessageOverlay.setVisible(false);
             takeOfferSuccessOverlay.setVisible(true);
             takeOfferSendMessageWaitingAnimation.stop();
         } else if (status == TakeOfferReviewModel.TakeOfferStatus.NOT_STARTED) {
-            sendTakeOfferMessageFeedbackOverlay.setVisible(false);
+            sendTakeOfferMessageOverlay.setVisible(false);
             Transitions.removeEffect(content);
         }
-    }
-
-    private void configSendTakeOfferMessageFeedback() {
-        VBox contentBox = getFeedbackContentBox();
-
-        sendTakeOfferMessageFeedbackOverlay.setAlignment(Pos.TOP_CENTER);
-
-        Label headlineLabel = new Label(Res.get("bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.headline"));
-        headlineLabel.getStyleClass().add("trade-wizard-take-offer-send-message-headline");
-        HBox title = new HBox(10, takeOfferSendMessageWaitingAnimation, headlineLabel);
-        title.setAlignment(Pos.CENTER);
-
-        WrappingText subtitleLabel = new WrappingText(Res.get("bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.subTitle"),
-                "trade-wizard-take-offer-send-message-sub-headline");
-        WrappingText info = new WrappingText(Res.get("bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.info"),
-                "trade-wizard-take-offer-send-message-info");
-        VBox subtitle = new VBox(10, subtitleLabel, info);
-        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        info.setTextAlignment(TextAlignment.CENTER);
-        subtitle.setAlignment(Pos.CENTER);
-
-        contentBox.getChildren().addAll(title, subtitle);
-        sendTakeOfferMessageFeedbackOverlay.getChildren().addAll(contentBox, Spacer.fillVBox());
-    }
-
-    private void configTakeOfferSuccess() {
-        VBox contentBox = getFeedbackContentBox();
-
-        takeOfferSuccessOverlay.setAlignment(Pos.TOP_CENTER);
-
-        Label headlineLabel = new Label(Res.get("bisqEasy.takeOffer.review.takeOfferSuccess.headline"));
-        headlineLabel.getStyleClass().add("trade-wizard-take-offer-send-message-headline");
-
-        Label subtitleLabel = new Label(Res.get("bisqEasy.takeOffer.review.takeOfferSuccess.subTitle"));
-        configFeedbackSubtitleLabel(subtitleLabel);
-
-        takeOfferSuccessButton.setDefaultButton(true);
-        VBox.setMargin(takeOfferSuccessButton, new Insets(10, 0, 0, 0));
-        contentBox.getChildren().addAll(headlineLabel, subtitleLabel, takeOfferSuccessButton);
-        takeOfferSuccessOverlay.getChildren().addAll(contentBox, Spacer.fillVBox());
-    }
-
-    private VBox getFeedbackContentBox() {
-        VBox contentBox = new VBox(20);
-        contentBox.setAlignment(Pos.TOP_CENTER);
-        contentBox.getStyleClass().setAll("trade-wizard-feedback-bg");
-        contentBox.setPadding(new Insets(30));
-        contentBox.setMaxWidth(FEEDBACK_WIDTH);
-        return contentBox;
-    }
-
-    private void configFeedbackSubtitleLabel(Label subtitleLabel) {
-        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.setMinWidth(FEEDBACK_WIDTH - 150);
-        subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
-        subtitleLabel.setMinHeight(100);
-        subtitleLabel.setWrapText(true);
-        subtitleLabel.getStyleClass().add("trade-wizard-take-offer-send-message-sub-headline");
     }
 
     private Region getLine() {
