@@ -156,15 +156,15 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         GridPane.setColumnSpan(line3, 4);
         content.add(line3, 0, rowIndex);
 
-        // Feedback overlay
-        List<String> reputationInfoText = Arrays.asList(
+        // Overlays
+        List<String> takeOfferSendMessageTexts = Arrays.asList(
                 "bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.subTitle",
                 "bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.info");
         takeOfferSendMessageWaitingAnimation = new WaitingAnimation(WaitingState.TAKE_BISQ_EASY_OFFER);
         sendTakeOfferMessageOverlay = new WizardOverlay(root,
                 "bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.headline",
                 takeOfferSendMessageWaitingAnimation,
-                reputationInfoText);
+                takeOfferSendMessageTexts);
 
         takeOfferSuccessButton = new Button(Res.get("bisqEasy.takeOffer.review.takeOfferSuccessButton"));
         takeOfferSuccessButton.setDefaultButton(true);
