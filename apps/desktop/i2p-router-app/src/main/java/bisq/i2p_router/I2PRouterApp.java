@@ -17,43 +17,195 @@
 
 package bisq.i2p_router;
 
+
+import bisq.common.file.FileUtils;
+import bisq.common.logging.LogSetup;
+import bisq.common.platform.OS;
 import bisq.common.platform.PlatformUtils;
-import bisq.network.i2p.router.I2pRouter;
+import bisq.i2p_router.common.utils.ImageUtil;
+import bisq.i2p_router.common.utils.KeyHandlerUtil;
+import bisq.i18n.Res;
+import bisq.i2p_router.gui.Controller;
+import bisq.i2p_router.gui.View;
+import bisq.i2p_router.service.I2pRouterService;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.scene.Scene;
+import javafx.scene.image.Image;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.paint.Paint;
+import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.TimeUnit;
+import javax.swing.*;
+import java.awt.*;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+
+import static java.util.Objects.requireNonNull;
 
 @Slf4j
-public class I2PRouterApp {
-    public static void main(String[] args) {
-        String i2pDirPath = PlatformUtils.getUserDataDir().resolve("bisq2_i2p_embedded_router").toString();
-        I2pRouter router = new I2pRouter(i2pDirPath);
+public class I2PRouterApp extends Application {
+    private static final double WIDTH = 800;
+    private static final double HEIGHT = 600;
+    private final I2pRouterService service;
+    private Controller controller;
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            Thread.currentThread().setName("I2pRouter.shutdownHook");
-            router.shutdown();
-        }));
+    public I2PRouterApp() {
+        service = new I2pRouterService();
 
-        router.start()
-                .orTimeout(3, TimeUnit.MINUTES)
-                .whenComplete((result, throwable) -> {
-                    if (throwable != null || !result) {
-                        router.shutdown();
-                        log.error("I2P router failed to start, exiting.");
-                        System.exit(1);
-                    }
-                });
-
-        keepRunning();
-    }
-
-    private static void keepRunning() {
-        try {
-            // Keep running
-            Thread.currentThread().join();
-        } catch (InterruptedException e) {
-            log.warn("Thread got interrupted at keepRunning method", e);
-            Thread.currentThread().interrupt(); // Restore interrupted state
+        // Taskbar is only supported on mac
+        if (OS.isMacOs()) {
+            ImageIcon image = new ImageIcon(Objects.requireNonNull(I2PRouterApp.class.getResource("/images/app-icon.png")));
+            Taskbar.getTaskbar().setIconImage(image.getImage());
         }
     }
+
+    @Override
+    public void init() {
+        Parameters parameters = getParameters();
+        setupLogging(parameters);
+        setupRes(parameters);
+        controller = new Controller(WIDTH, HEIGHT, service, this::shutdown);
+        service.onApplicationReady(parameters);
+        controller.onApplicationReady(parameters);
+    }
+
+    @Override
+    public void start(Stage primaryStage) {
+        // Prevent JavaFX app from exiting when window closes
+        Platform.setImplicitExit(false);
+
+        setupStage(primaryStage, controller.getView());
+        service.initialize()
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        log.error("Initializing service failed", throwable);
+                        shutdown();
+                    }
+                });
+        controller.onActivate();
+    }
+
+    private CompletableFuture<Boolean> shutdown() {
+        return service.shutdown()
+                .whenComplete((result, throwable) -> {
+                    if (controller != null) {
+                        controller.onDeactivate();
+                    }
+                    try {
+                        Platform.exit();
+                    } catch (Exception e) {
+                        System.exit(0);
+                    }
+                });
+    }
+
+    private void setupStage(Stage stage, View view) {
+        stage.setTitle("Bisq I2P Router");
+        Scene scene = new Scene(view, WIDTH, HEIGHT);
+        scene.setFill(Paint.valueOf("#1c1c1c"));
+        scene.getStylesheets().addAll(requireNonNull(this.getClass().getResource("/css/base.css")).toExternalForm(),
+                requireNonNull(this.getClass().getResource("/css/i2p_router_app.css")).toExternalForm());
+        stage.setScene(scene);
+        stage.sizeToScene();
+
+        if (SystemTray.isSupported()) {
+            stage.setOnCloseRequest(event -> {
+                event.consume();
+                stage.hide();
+            });
+
+            scene.addEventHandler(KeyEvent.KEY_PRESSED,
+                    event -> KeyHandlerUtil.handleCloseKeyEvent(event, () -> {
+                        event.consume();
+                        stage.hide();
+                    }));
+            PopupMenu popupMenu = new PopupMenu();
+
+            SystemTray systemTray = SystemTray.getSystemTray();
+            URL iconUrl = getClass().getResource("/images/tray-icon.png");
+            java.awt.Image icon = Toolkit.getDefaultToolkit().getImage(iconUrl);
+            TrayIcon trayIcon = new TrayIcon(icon, "Bisq I2P Router", popupMenu);
+            trayIcon.setImageAutoSize(true);
+            try {
+                systemTray.add(trayIcon);
+            } catch (AWTException e) {
+                log.error("Error at adding trayIcon", e);
+            }
+
+            MenuItem showItem = new MenuItem("Show Window");
+            showItem.addActionListener(e -> {
+                Platform.runLater(() -> {
+                    if (stage.isShowing()) {
+                        stage.hide();
+                        showItem.setLabel("Show Window");
+                    } else {
+                        stage.show();
+                        showItem.setLabel("Hide Window");
+                    }
+                });
+            });
+            popupMenu.add(showItem);
+
+            MenuItem exitItem = new MenuItem("Exit");
+            exitItem.addActionListener(e -> {
+                systemTray.remove(trayIcon);
+                shutdown();
+            });
+            popupMenu.add(exitItem);
+        } else {
+            stage.setOnCloseRequest(event -> {
+                event.consume();
+                shutdown();
+            });
+
+            scene.addEventHandler(KeyEvent.KEY_PRESSED,
+                    event -> KeyHandlerUtil.handleCloseKeyEvent(event, () -> {
+                        event.consume();
+                        shutdown();
+                    }));
+        }
+
+        //stage.getIcons().add(I2PRouterApp.getImageByPath("images/tray-icon.png"));
+        stage.setX(0);
+        stage.setY(0);
+        stage.show();
+    }
+
+    public static Image getImageByPath(String path) {
+        try (InputStream resourceAsStream = ImageUtil.class.getClassLoader().getResourceAsStream(path)) {
+            if (resourceAsStream == null) {
+                return null;
+            }
+            return new Image(Objects.requireNonNull(resourceAsStream));
+        } catch (Exception e) {
+            log.error("Loading image failed: path={}", path, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void setupLogging(Parameters parameters) {
+        String logFile = PlatformUtils.getUserDataDir().resolve("Bisq-i2p-router-app").toAbsolutePath() + FileUtils.FILE_SEP + "i2p-router-app";
+        String logFileParam = parameters.getNamed().get("logFile");
+        if (logFileParam != null) {
+            logFile = URLDecoder.decode(logFileParam, StandardCharsets.UTF_8);
+        }
+        LogSetup.setup(logFile);
+        log.info("I2P router app logging to {}", logFile);
+    }
+
+    private void setupRes(Parameters parameters) {
+        String language = "en";
+        String languageParam = parameters.getNamed().get("language");
+        if (languageParam != null) {
+            language = URLDecoder.decode(languageParam, StandardCharsets.UTF_8);
+        }
+        Res.setLanguage(language);
+    }
 }
+

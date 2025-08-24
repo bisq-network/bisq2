@@ -24,6 +24,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.util.NetworkUtils;
 import bisq.network.i2p.I2pClient;
+import bisq.network.i2p.router.I2pLogLevel;
 import bisq.network.i2p.router.I2pRouter;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
@@ -60,6 +61,7 @@ public class I2PTransportService implements TransportService {
                     config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("connectTimeout")),
+                    (int) TimeUnit.SECONDS.toMillis(config.getInt("routerStartupTimeout")),
                     config.getInt("inboundKBytesPerSecond"),
                     config.getInt("outboundKBytesPerSecond"),
                     config.getInt("bandwidthSharePercentage"),
@@ -78,6 +80,7 @@ public class I2PTransportService implements TransportService {
         private final int socketTimeout;
         // How long should the client wait for the peer to accept a new connection (peers serverSocket accept) 
         private final int connectTimeout;
+        private final int routerStartupTimeout;
         private final int inboundKBytesPerSecond;
         private final int outboundKBytesPerSecond;
         private final int bandwidthSharePercentage;
@@ -94,6 +97,7 @@ public class I2PTransportService implements TransportService {
                       int defaultNodePort,
                       int socketTimeout,
                       int connectTimeout,
+                      int routerStartupTimeout,
                       int inboundKBytesPerSecond,
                       int outboundKBytesPerSecond,
                       int bandwidthSharePercentage,
@@ -108,6 +112,7 @@ public class I2PTransportService implements TransportService {
             this.defaultNodePort = defaultNodePort;
             this.socketTimeout = socketTimeout;
             this.connectTimeout = connectTimeout;
+            this.routerStartupTimeout = routerStartupTimeout;
             this.inboundKBytesPerSecond = inboundKBytesPerSecond;
             this.outboundKBytesPerSecond = outboundKBytesPerSecond;
             this.bandwidthSharePercentage = bandwidthSharePercentage;
@@ -161,7 +166,11 @@ public class I2PTransportService implements TransportService {
         try {
             if (useEmbeddedRouter() && embeddedRouter.isEmpty()) {
                 I2pRouter router = new I2pRouter(i2pDirPath,
+                        config.getI2cpHost(),
+                        config.getI2cpPort(),
+                        I2pLogLevel.INFO,
                         true,
+                        config.getRouterStartupTimeout(),
                         config.getInboundKBytesPerSecond(),
                         config.getOutboundKBytesPerSecond(),
                         config.getBandwidthSharePercentage());

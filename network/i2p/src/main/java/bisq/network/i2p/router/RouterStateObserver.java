@@ -18,9 +18,11 @@
 package bisq.network.i2p.router;
 
 import bisq.common.observable.Observable;
-import bisq.common.observable.Pin;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.timer.Scheduler;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.router.CommSystemFacade;
 import net.i2p.router.Router;
@@ -52,7 +54,7 @@ public class RouterStateObserver {
     }
 
     // High level state combining process and network state
-    public enum State {
+    public enum RouterState {
         NEW,
         STARTING,
         RUNNING_TESTING,
@@ -64,73 +66,128 @@ public class RouterStateObserver {
         FAILED
     }
 
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static class TunnelInfo {
+        private final int inboundClientTunnelCount;
+        private final int outboundTunnelCount;
+        private final int outboundClientTunnelCount;
+
+        public TunnelInfo() {
+            this(0, 0, 0);
+        }
+
+        public TunnelInfo(int inboundClientTunnelCount, int outboundTunnelCount, int outboundClientTunnelCount) {
+            this.inboundClientTunnelCount = inboundClientTunnelCount;
+            this.outboundTunnelCount = outboundTunnelCount;
+            this.outboundClientTunnelCount = outboundClientTunnelCount;
+        }
+    }
+
     private final Runnable shutdownTask;
     private final AtomicReference<NetworkState> networkState = new AtomicReference<>(NetworkState.NEW);
     private final AtomicReference<ProcessState> processState = new AtomicReference<>(ProcessState.NEW);
-    private final AtomicReference<State> state = new AtomicReference<>(State.NEW);
-    private final Observable<State> stateObservable = new Observable<>(State.NEW);
-    private final Observable<Integer> outboundTunnelCount = new Observable<>(0);
+    private final AtomicReference<RouterState> routerState = new AtomicReference<>(RouterState.NEW);
+    private final AtomicReference<CommSystemFacade.Status> rawNetworkState = new AtomicReference<>(null);
+
+    private final Observable<NetworkState> networkStateObservable = new Observable<>(networkState.get());
+    private final Observable<ProcessState> processStateObservable = new Observable<>(processState.get());
+    private final Observable<RouterState> routerStateObservable = new Observable<>(routerState.get());
+
+    private final Observable<TunnelInfo> tunnelInfo = new Observable<>(new TunnelInfo());
 
     private volatile Router router;
+    private volatile RouterContext routerContext;
     private volatile Scheduler scheduler;
-    private volatile Pin statusPin;
+    private volatile boolean isShutdownInProgress;
 
     RouterStateObserver() {
-        shutdownTask = () -> processState.set(ProcessState.STOPPING);
+        shutdownTask = () -> {
+            if (processState.get() != ProcessState.STOPPED && processState.get() != ProcessState.FAILED) {
+                setProcessState(ProcessState.STOPPING);
+            }
+            updateRouterState();
+        };
     }
 
     void start(Router router) {
         this.router = router;
-        RouterContext routerContext = router.getContext();
+        routerContext = router.getContext();
 
         routerContext.addShutdownTask(shutdownTask);
-        routerContext.addFinalShutdownTask(() -> processState.set(ProcessState.STOPPED));
+        routerContext.addFinalShutdownTask(() -> {
+            if (processState.get() != ProcessState.STOPPED && processState.get() != ProcessState.FAILED) {
+                setProcessState(ProcessState.STOPPED);
+            }
+            setNetworkState(NetworkState.DISCONNECTED);
+            updateRouterState();
+        });
 
-        scheduler = Scheduler.run(() -> {
-                    updateNetworkState();
-                    updateProcessState();
-                    updateState();
-                    TunnelManagerFacade tunnelManager = routerContext.tunnelManager();
-                    if (tunnelManager != null) {
-                        outboundTunnelCount.set(tunnelManager.getOutboundTunnelCount());
-                    }
-                })
+        scheduler = Scheduler.run(this::updateStates)
                 .host(this)
                 .runnableName("updateState")
                 .periodically(1, TimeUnit.SECONDS);
     }
 
-    void shutdown() {
-        if (statusPin != null) {
-            statusPin.unbind();
+    private void updateStates() {
+        if (isShutdownInProgress) {
+            return;
         }
+        updateNetworkState();
+        updateProcessState();
+        updateRouterState();
+        updateTunnelInfo(routerContext);
+    }
+
+    void startShutdown() {
+        processState.set(ProcessState.STOPPING);
+        updateStates();
+    }
+
+    void shutdown() {
+        if (router == null || isShutdownInProgress) {
+            return;
+        }
+        updateStates();
+
+        isShutdownInProgress = true;
+
         if (scheduler != null) {
             scheduler.stop();
         }
 
-        router.getContext().removeShutdownTask(shutdownTask);
-
-        if (state.get() != State.STOPPED && state.get() != State.FAILED) {
-            processState.set(ProcessState.STOPPED);
-        }
+        routerContext.removeShutdownTask(shutdownTask);
+        tunnelInfo.set(new TunnelInfo());
     }
 
-    ReadOnlyObservable<State> getState() {
-        return stateObservable;
+    ReadOnlyObservable<ProcessState> getProcessState() {
+        return processStateObservable;
     }
 
-    ReadOnlyObservable<Integer> getOutboundTunnelCount() {
-        return outboundTunnelCount;
+    ReadOnlyObservable<NetworkState> getNetworkState() {
+        return networkStateObservable;
+    }
+
+    ReadOnlyObservable<RouterState> getRouterState() {
+        return routerStateObservable;
+    }
+
+    ReadOnlyObservable<TunnelInfo> getTunnelInfo() {
+        return tunnelInfo;
     }
 
     void handleRouterException(Exception exception) {
         processState.set(ProcessState.FAILED);
-        updateState();
+        updateRouterState();
     }
 
     private void updateNetworkState() {
-        CommSystemFacade.Status status = router.getContext().commSystem().getStatus();
-        networkState.set(toNetworkState(status));
+        CommSystemFacade commSystemFacade = routerContext.commSystem();
+        CommSystemFacade.Status value = commSystemFacade.getStatus();
+        setRawNetworkState(value);
+        NetworkState networkState = toNetworkState(value);
+        setNetworkState(networkState);
     }
 
     private void updateProcessState() {
@@ -143,16 +200,16 @@ public class RouterStateObserver {
         if (!router.isAlive()) {
             // Router is not alive yet → either still starting or stopped
             if (current == ProcessState.NEW || current == ProcessState.STARTING) {
-                processState.compareAndSet(current, ProcessState.STARTING);
+                setProcessState(ProcessState.STARTING);
             } else if (current == ProcessState.STOPPING || current == ProcessState.STOPPED) {
-                processState.set(ProcessState.STOPPED);
+                setProcessState(ProcessState.STOPPED);
             }
             return;
         }
 
         // Router thread is alive → initialization in progress
         if (current == ProcessState.NEW || current == ProcessState.STARTING) {
-            processState.set(ProcessState.INITIALIZING);
+            setProcessState(ProcessState.INITIALIZING);
         }
 
         // isRunning: if router is RUNNING, i. e NetDB and Expl. tunnels are ready.
@@ -162,26 +219,39 @@ public class RouterStateObserver {
 
         // RouterInfo becomes available → fully running
         if (router.getRouterInfo() != null) {
-            processState.set(ProcessState.RUNNING);
+            setProcessState(ProcessState.RUNNING);
         }
     }
 
-    private void updateState() {
-        state.set(switch (processState.get()) {
-            case NEW -> State.NEW;
-            case STARTING, INITIALIZING -> State.STARTING;
+    private void updateRouterState() {
+        RouterState value = switch (processState.get()) {
+            case NEW -> RouterState.NEW;
+            case STARTING, INITIALIZING -> RouterState.STARTING;
             case RUNNING -> switch (networkState.get()) {
-                case NEW -> State.RUNNING_DISCONNECTED; // Not expected
-                case OK -> State.RUNNING_OK;
-                case TESTING -> State.RUNNING_TESTING;
-                case FIREWALLED -> State.RUNNING_FIREWALLED;
-                case UNKNOWN, DISCONNECTED -> State.RUNNING_DISCONNECTED;
+                case NEW -> RouterState.RUNNING_DISCONNECTED; // Not expected
+                case OK -> RouterState.RUNNING_OK;
+                case TESTING -> RouterState.RUNNING_TESTING;
+                case FIREWALLED -> RouterState.RUNNING_FIREWALLED;
+                case UNKNOWN, DISCONNECTED -> RouterState.RUNNING_DISCONNECTED;
             };
-            case STOPPING -> State.STOPPING;
-            case STOPPED -> State.STOPPED;
-            case FAILED -> State.FAILED;
-        });
-        stateObservable.set(state.get());
+            case STOPPING -> RouterState.STOPPING;
+            case STOPPED -> RouterState.STOPPED;
+            case FAILED -> RouterState.FAILED;
+        };
+        setRouterState(value);
+    }
+
+    private void updateTunnelInfo(RouterContext routerContext) {
+        TunnelManagerFacade tunnelManager = routerContext.tunnelManager();
+        if (tunnelManager != null) {
+            TunnelInfo value = new TunnelInfo(tunnelManager.getInboundClientTunnelCount(),
+                    tunnelManager.getOutboundTunnelCount(),
+                    tunnelManager.getOutboundClientTunnelCount());
+            if (!tunnelInfo.get().equals(value)) {
+                log.info("Update inboundClientTunnelCount: {}", value);
+            }
+            tunnelInfo.set(value);
+        }
     }
 
     private static NetworkState toNetworkState(CommSystemFacade.Status status) {
@@ -216,5 +286,45 @@ public class RouterStateObserver {
             case HOSED -> // "Port Conflict" (treat as effectively firewalled/limited)
                     NetworkState.FIREWALLED;
         };
+    }
+
+    private void setRawNetworkState(CommSystemFacade.Status value) {
+        if (!value.equals(rawNetworkState.get())) {
+            log.info("Update rawNetworkState: {}", value);
+        }
+        rawNetworkState.set(value);
+    }
+
+    private void setNetworkState(NetworkState value) {
+        if (networkState.get() == NetworkState.DISCONNECTED) {
+            return;
+        }
+        if (!value.equals(networkState.get())) {
+            log.info("Update networkState: {}", value);
+        }
+        networkState.set(value);
+        networkStateObservable.set(value);
+    }
+
+    private void setProcessState(ProcessState value) {
+        if (processState.get() == ProcessState.FAILED || processState.get() == ProcessState.STOPPED) {
+            return;
+        }
+        if (!value.equals(processState.get())) {
+            log.info("Update processState: {}", value);
+        }
+        processState.set(value);
+        processStateObservable.set(value);
+    }
+
+    private void setRouterState(RouterState value) {
+        if (routerState.get() == RouterState.FAILED || routerState.get() == RouterState.STOPPED) {
+            return;
+        }
+        if (!value.equals(routerState.get())) {
+            log.info("Update routerState: {}", value);
+        }
+        routerState.set(value);
+        routerStateObservable.set(value);
     }
 }
