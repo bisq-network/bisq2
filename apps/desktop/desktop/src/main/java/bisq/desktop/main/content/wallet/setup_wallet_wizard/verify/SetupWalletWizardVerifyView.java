@@ -51,7 +51,7 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
     private final Label questionLabel;
     private final Button[] answerButtons = new Button[ANSWER_BUTTONS_COUNT];
     private final ChangeListener<Number> questionIndexListener, answerIndexListener;
-    private final Button createWalletSuccessButton, wrongWorldGoBackButton;
+    private final Button createWalletSuccessButton, wrongWordGoBackButton;
     private final WizardOverlay wrongWordOverlay, createWalletSuccessOverlay;
     private Subscription showCreateWalletSuccessPin, transitionSubscriptionPin, shouldShowWrongWordOverlayPin;
     private UIScheduler slideNextQuestionScheduler;
@@ -85,13 +85,13 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
 
         Label warningIcon = new Label();
         Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, warningIcon, "1.7em");
-        wrongWorldGoBackButton = new Button(Res.get("wallet.verifySeeds.wrongWord.closeButton"));
-        wrongWorldGoBackButton.setDefaultButton(true);
+        wrongWordGoBackButton = new Button(Res.get("wallet.verifySeeds.wrongWord.closeButton"));
+        wrongWordGoBackButton.setDefaultButton(true);
         wrongWordOverlay = new WizardOverlay(root,
                 "wallet.verifySeeds.wrongWord.title",
                 warningIcon,
                 "wallet.verifySeeds.wrongWord.description",
-                wrongWorldGoBackButton);
+                wrongWordGoBackButton);
 
         createWalletSuccessButton = new Button(Res.get("wallet.verifySeeds.button.success.nextStep"));
         createWalletSuccessButton.setDefaultButton(true);
@@ -128,7 +128,7 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
                     controller::onKeyPressedWhileShowingWrongWordOverlay));
 
         createWalletSuccessButton.setOnAction(e -> controller.onCreateWallet());
-        wrongWorldGoBackButton.setOnAction(e -> controller.onWrongWord());
+        wrongWordGoBackButton.setOnAction(e -> controller.onWrongWord());
 
         model.getCurrentQuestionIndex().addListener(questionIndexListener);
         model.getSelectedAnswerIndex().addListener(answerIndexListener);
@@ -142,7 +142,7 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
         shouldShowWrongWordOverlayPin.unsubscribe();
 
         createWalletSuccessButton.setOnAction(null);
-        wrongWorldGoBackButton.setOnAction(null);
+        wrongWordGoBackButton.setOnAction(null);
 
         model.getCurrentQuestionIndex().removeListener(questionIndexListener);
         model.getSelectedAnswerIndex().removeListener(answerIndexListener);
