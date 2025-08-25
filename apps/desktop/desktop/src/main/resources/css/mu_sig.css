@@ -155,3 +155,19 @@
 .mu-sig-my-offers-table .table-row-cell:selected .quote-currency-market-logo {
     -fx-fill: -bisq-dark-grey-40 !important;
 }
+
+.mu-sig-my-offers-table .export-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-border-color: -fx-grey-button;
+}
+
+.mu-sig-my-offers-table .export-button:hover {
+    -fx-background-color: -bisq-dark-grey-30;
+    -fx-effect: none;
+}
+
+.mu-sig-my-offers-table .export-button:pressed {
+    -fx-background-color: -bisq-dark-grey-10;
+    -fx-effect: none;
+}

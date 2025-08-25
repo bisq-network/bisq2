@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.my_offers;
 
+import bisq.common.market.Market;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
 import javafx.collections.FXCollections;
@@ -33,9 +34,11 @@ import java.util.function.Predicate;
 @Getter
 public class MuSigMyOffersModel implements Model {
     @Setter
-    private String numOffers;
-    @Setter
     private boolean shouldShowMyProfileColumn;
+    @Setter
+    private Set<String> myUserProfileIds;
+    @Setter
+    private Market muSigMarket;
 
     private final Set<String> muSigMyOffersIds = new HashSet<>();
     private final ObservableList<MuSigOfferListItem> muSigMyOffersListItems = FXCollections.observableArrayList();
