@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class WizardOverlay extends VBox {
-    private static final double OVERLAY_WIDTH = 700;
+    public static final double OVERLAY_WIDTH = 700;
 
     private final Node owner;
 
