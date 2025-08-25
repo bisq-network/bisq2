@@ -93,7 +93,6 @@ dependencies {
     }
 }
 
-
 tasks {
     named<Jar>("jar") {
         manifest {

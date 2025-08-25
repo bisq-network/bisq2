@@ -23,87 +23,85 @@ import bisq.common.file.FileUtils;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.platform.OS;
 import bisq.common.threading.ExecutorFactory;
+import com.typesafe.config.Config;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Optional;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class I2pRouterProcessLauncher {
-    private final String i2pRouterDir;
-    private Optional<Process> runningProcess = Optional.empty();
 
-    public I2pRouterProcessLauncher(String baseDir) {
-        this.i2pRouterDir = baseDir + "/webcam";
+    private final Config i2pConfig;
+    private final Path i2pRouterDir;
+
+    public I2pRouterProcessLauncher(Config i2pConfig, Path baseDir) {
+        this.i2pConfig = i2pConfig;
+        this.i2pRouterDir = baseDir.resolve("i2p-router").toAbsolutePath();
     }
 
-    public CompletableFuture<Process> start( ) {
+    public CompletableFuture<Process> start() {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 String version = FileUtils.readStringFromResource("i2p-router-app/version.txt");
-                String jarFilePath = i2pRouterDir + "/i2p-router-app-" + version + "-all.jar";
-                File jarFile = new File(jarFilePath);
+                Path jarFilePath = i2pRouterDir.resolve("i2p-router-app-" + version + "-all.jar");
 
-                if (!jarFile.exists() || DevMode.isDevMode()) {
+                // Extract ZIP if jar missing or dev mode
+                if (!Files.exists(jarFilePath) || DevMode.isDevMode()) {
                     String resourcePath = "i2p-router-app/i2p-router-app-" + version + ".zip";
-                    InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
-                    File destDir = new File(i2pRouterDir);
-                    ZipFileExtractor zipFileExtractor = new ZipFileExtractor(inputStream, destDir);
-                    zipFileExtractor.extractArchive();
-                    log.info("Extracted zip file {} to {}", resourcePath, i2pRouterDir);
-                }
-
-                String logFileParam = "--logFile=" + URLEncoder.encode(i2pRouterDir, StandardCharsets.UTF_8) + FileUtils.FILE_SEP + "i2p-router-app";
-                String languageParam = "--language=" + LanguageRepository.getDefaultLanguage();
-
-                String pathToJavaExe = System.getProperty("java.home") + "/bin/java";
-                ProcessBuilder processBuilder;
-                if (OS.isMacOs()) {
-                    String iconPath = i2pRouterDir + "/i2p-router-app-icon.png";
-                    File bisqIcon = new File(iconPath);
-                    if (!bisqIcon.exists()) {
-                        FileUtils.resourceToFile("images/webcam/i2p-router-app-icon@2x.png", bisqIcon);
+                    try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
+                        if (inputStream == null) throw new FileNotFoundException("Resource not found: " + resourcePath);
+                        new ZipFileExtractor(inputStream, i2pRouterDir.toFile()).extractArchive();
                     }
-                    String jvmArgs = "-Xdock:icon=" + iconPath;
-                    processBuilder = new ProcessBuilder(pathToJavaExe, jvmArgs, "-jar", jarFilePath, logFileParam, languageParam);
-                } else {
-                    processBuilder = new ProcessBuilder(pathToJavaExe, "-jar", jarFilePath, logFileParam, languageParam);
+                    log.info("Extracted zip {} to {}", resourcePath, i2pRouterDir);
                 }
-                log.info("ProcessBuilder commands: {}", processBuilder.command());
+
+                // JVM & app arguments
+                List<String> command = new ArrayList<>();
+                command.add("nohup"); // detach on Unix
+                String javaExe = System.getProperty("java.home") + "/bin/java";
+                command.add(javaExe);
+
+                if (OS.isMacOs()) {
+                    Path iconPath = i2pRouterDir.resolve("i2p-router-app-icon.png");
+                    if (!Files.exists(iconPath)) {
+                        FileUtils.resourceToFile("images/i2p_router/i2p-router-app-icon@2x.png", iconPath.toFile());
+                    }
+                    command.add("-Xdock:icon=" + iconPath);
+                }
+
+                command.add("-jar");
+                command.add(jarFilePath.toString());
+                command.add("--i2pRouterDir=" + i2pRouterDir);
+                command.add("--i2cpHost=" + i2pConfig.getString("i2cpHost"));
+                command.add("--i2cpPort=" + i2pConfig.getInt("i2cpPort"));
+                command.add("--language=" + LanguageRepository.getDefaultLanguage());
+
+                ProcessBuilder processBuilder = new ProcessBuilder(command);
+                processBuilder.directory(i2pRouterDir.toFile());
+                processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
+                processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
+
+                log.info("Launching I2P router with command: {}", processBuilder.command());
                 Process process = processBuilder.start();
-                runningProcess = Optional.of(process);
-                log.info("Process successful launched: {}; port={}", process);
+
+                log.info("I2P router launched: pid={}, process={}", process.pid(), process);
                 return process;
+
             } catch (Exception e) {
-                log.error("Launching process failed", e);
+                log.error("Failed to launch I2P router process", e);
                 throw new RuntimeException(e);
             }
         }, ExecutorFactory.newSingleThreadScheduledExecutor("I2pRouterProcessLauncher"));
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.supplyAsync(() -> runningProcess.map(process -> {
-            log.info("Process shutdown. runningProcess={}", runningProcess);
-            process.destroy();
-            boolean terminatedGraceFully = false;
-            try {
-                terminatedGraceFully = process.waitFor(2, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                log.warn("Thread got interrupted at shutdown", e);
-                Thread.currentThread().interrupt(); // Restore interrupted state
-            }
-
-            if (process.isAlive()) {
-                log.warn("Stopping i2p router app process gracefully did not terminate it. We destroy it forcibly.");
-                process.destroyForcibly();
-                terminatedGraceFully = false;
-            }
-            return terminatedGraceFully;
-        }).orElse(true));
+        // implement graceful shutdown later
+        return CompletableFuture.completedFuture(true);
     }
 }

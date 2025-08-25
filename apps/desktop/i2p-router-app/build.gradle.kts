@@ -10,7 +10,7 @@ plugins {
 }
 
 application {
-    mainClass.set("bisq.i2p_router.I2PRouterApp")
+    mainClass.set("bisq.i2p_router.I2PRouterAppLauncher")
 }
 
 javafx {
@@ -44,7 +44,7 @@ tasks {
                 mapOf(
                     Pair("Implementation-Title", project.name),
                     Pair("Implementation-Version", project.version),
-                    Pair("Main-Class", "bisq.i2p_router.I2PRouterApp")
+                    Pair("Main-Class", "bisq.i2p_router.I2PRouterAppLauncher")
                 )
             )
         }

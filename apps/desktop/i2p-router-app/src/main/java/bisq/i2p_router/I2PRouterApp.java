@@ -18,13 +18,12 @@
 package bisq.i2p_router;
 
 
-import bisq.common.file.FileUtils;
 import bisq.common.logging.LogSetup;
 import bisq.common.platform.OS;
 import bisq.common.platform.PlatformUtils;
+import bisq.i18n.Res;
 import bisq.i2p_router.common.utils.ImageUtil;
 import bisq.i2p_router.common.utils.KeyHandlerUtil;
-import bisq.i18n.Res;
 import bisq.i2p_router.gui.Controller;
 import bisq.i2p_router.gui.View;
 import bisq.i2p_router.service.I2pRouterService;
@@ -41,9 +40,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.InputStream;
 import java.net.URL;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.Objects.requireNonNull;
@@ -54,6 +53,7 @@ public class I2PRouterApp extends Application {
     private static final double HEIGHT = 600;
     private final I2pRouterService service;
     private Controller controller;
+    private String i2pRouterDir;
 
     public I2PRouterApp() {
         service = new I2pRouterService();
@@ -68,10 +68,13 @@ public class I2PRouterApp extends Application {
     @Override
     public void init() {
         Parameters parameters = getParameters();
-        setupLogging(parameters);
+        log.error("Parameters {}", parameters);
+        i2pRouterDir = Optional.ofNullable(parameters.getNamed().get("i2pRouterDir"))
+                .orElse(PlatformUtils.getUserDataDir().resolve("Bisq_I2P_router").toString());
+        setupLogging(parameters, i2pRouterDir);
         setupRes(parameters);
         controller = new Controller(WIDTH, HEIGHT, service, this::shutdown);
-        service.onApplicationReady(parameters);
+        service.onApplicationReady(parameters, i2pRouterDir);
         controller.onApplicationReady(parameters);
     }
 
@@ -189,22 +192,14 @@ public class I2PRouterApp extends Application {
         }
     }
 
-    private void setupLogging(Parameters parameters) {
-        String logFile = PlatformUtils.getUserDataDir().resolve("Bisq-i2p-router-app").toAbsolutePath() + FileUtils.FILE_SEP + "i2p-router-app";
-        String logFileParam = parameters.getNamed().get("logFile");
-        if (logFileParam != null) {
-            logFile = URLDecoder.decode(logFileParam, StandardCharsets.UTF_8);
-        }
-        LogSetup.setup(logFile);
-        log.info("I2P router app logging to {}", logFile);
+    private void setupLogging(Parameters parameters, String i2pRouterDir) {
+        String fileName = Path.of(i2pRouterDir).resolve("i2p_router").toString();
+        LogSetup.setup(fileName);
+        log.info("I2P router app logging to {}", fileName);
     }
 
     private void setupRes(Parameters parameters) {
-        String language = "en";
-        String languageParam = parameters.getNamed().get("language");
-        if (languageParam != null) {
-            language = URLDecoder.decode(languageParam, StandardCharsets.UTF_8);
-        }
+        String language = Optional.ofNullable(parameters.getNamed().get("language")).orElse("en");
         Res.setLanguage(language);
     }
 }

@@ -25,11 +25,13 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.burningman.BurningmanService;
 import bisq.chat.ChatService;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.platform.OS;
 import bisq.common.util.ExceptionUtil;
 import bisq.contract.ContractService;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.i2p_router.I2pRouterAppService;
 import bisq.desktop.webcam.WebcamAppService;
 import bisq.evolution.updater.UpdaterService;
 import bisq.http_api.HttpApiService;
@@ -59,7 +61,9 @@ import bisq.wallet.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -109,6 +113,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     private final OpenTradeItemsService openTradeItemsService;
     private final MuSigService muSigService;
     private final BurningmanService burningmanService;
+    private final Optional<I2pRouterAppService> i2pRouterAppService;
 
     public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
         super("desktop", args);
@@ -123,9 +128,17 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 ? Optional.of(new MockWalletService(walletCfg))
                 : Optional.empty();
 
+        com.typesafe.config.Config networkConfig = getConfig("network");
+        Set<TransportType> supportedTransportTypes = new HashSet<>(networkConfig.getEnumList(TransportType.class, "supportedTransportTypes"));
+        if (supportedTransportTypes.contains(TransportType.I2P)) {
+            com.typesafe.config.Config i2pConfig = networkConfig.getConfig("configByTransportType").getConfig("i2p");
+            i2pRouterAppService = Optional.of(new I2pRouterAppService(i2pConfig, config.getBaseDir()));
+        } else {
+            i2pRouterAppService = Optional.empty();
+        }
 
         networkService = new NetworkService(NetworkServiceConfig.from(config.getBaseDir(),
-                getConfig("network")),
+                networkConfig),
                 persistenceService,
                 securityService.getKeyBundleService(),
                 securityService.getHashCashProofOfWorkService(),
@@ -269,6 +282,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         // Move initialization work off the current thread and use a ForkJoinPool.commonPool instead.
         return supplyAsync(() -> memoryReportService.initialize()
                 .thenCompose(result -> securityService.initialize())
+                .thenCompose(result -> i2pRouterAppService.map(I2pRouterAppService::initialize)
+                        .orElseGet(() -> CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> {
                     setState(State.INITIALIZE_NETWORK);
                     return networkService.initialize();
@@ -353,6 +368,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> bondedRolesService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> identityService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> networkService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> i2pRouterAppService.map(I2pRouterAppService::shutdown)
+                        .orElseGet(() -> CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> walletService.map(service -> service.shutdown().exceptionally(this::logError))
                         .orElse(CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> securityService.shutdown().exceptionally(this::logError))

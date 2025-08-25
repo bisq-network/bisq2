@@ -28,8 +28,8 @@ import javafx.application.Application;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
@@ -44,27 +44,22 @@ public class I2pRouterService implements Service {
     private Application.Parameters parameters;
     private volatile I2pRouter router;
     private Pin statusPin;
-    private int i2cpPort = 7654;
-    private String dataDir = "bisq2_i2p_router";
+    private String i2cpHost;
+    private int i2cpPort;
+    private String i2pRouterDir;
 
     public I2pRouterService() {
     }
 
-    public void onApplicationReady(Application.Parameters parameters) {
-        String portParam = parameters.getNamed().get("i2cpPort");
-        if (portParam != null) {
-            i2cpPort = Integer.parseInt(portParam);
-        }
-
-        String dataDirParam = parameters.getNamed().get("dataDir");
-        if (dataDirParam != null) {
-            dataDir = dataDirParam;
-        }
+    public void onApplicationReady(Application.Parameters parameters, String i2pRouterDir) {
+        i2cpHost = Optional.ofNullable(parameters.getNamed().get("i2cpHost")).orElse("127.0.0.1");
+        i2cpPort = Optional.ofNullable(parameters.getNamed().get("i2cpPort")).map(Integer::parseInt).orElse(7654);
+        this.i2pRouterDir = i2pRouterDir;
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        String i2pDirPath = PlatformUtils.getUserDataDir().resolve(dataDir).toString();
+        String i2pDirPath = PlatformUtils.getUserDataDir().resolve(i2pRouterDir).toString();
         router = new I2pRouter(i2pDirPath, i2cpPort);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -72,7 +67,7 @@ public class I2pRouterService implements Service {
             router.shutdown();
         }));
 
-        router.start()
+      /*  router.start()
                 .orTimeout(3, TimeUnit.MINUTES)
                 .whenComplete((result, throwable) -> {
                     if (throwable != null || !result) {
@@ -80,7 +75,7 @@ public class I2pRouterService implements Service {
                         log.error("I2P router failed to start, exiting.");
                         System.exit(1);
                     }
-                });
+                });*/
 
         return CompletableFuture.completedFuture(true);
     }

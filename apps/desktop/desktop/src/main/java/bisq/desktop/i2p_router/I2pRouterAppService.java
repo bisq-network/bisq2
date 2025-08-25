@@ -17,33 +17,56 @@
 
 package bisq.desktop.i2p_router;
 
-import bisq.application.ApplicationService;
+import bisq.common.application.Service;
+import bisq.common.util.NetworkUtils;
+import com.typesafe.config.Config;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.file.Path;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class I2pRouterAppService {
+public class I2pRouterAppService implements Service {
     private final I2pRouterProcessLauncher i2pRouterProcessLauncher;
+    private final Config i2pConfig;
 
-    public I2pRouterAppService(ApplicationService.Config config) {
-        String baseDir = config.getBaseDir().toAbsolutePath().toString();
-        i2pRouterProcessLauncher = new I2pRouterProcessLauncher(baseDir);
+    public I2pRouterAppService(Config i2pConfig, Path baseDir) {
+        this.i2pConfig = i2pConfig;
+        i2pRouterProcessLauncher = new I2pRouterProcessLauncher(i2pConfig, baseDir);
     }
 
-    public void start() {
-        i2pRouterProcessLauncher.start()
+    @Override
+    public CompletableFuture<Boolean> initialize() {
+        String i2cpHost = i2pConfig.getString("i2cpHost");
+        int i2cpPort = i2pConfig.getInt("i2cpPort");
+        if (NetworkUtils.isPortInUse(i2cpHost, i2cpPort)) {
+            log.info("I2CP is already running, so we do not launch our router process");
+            return CompletableFuture.completedFuture(true);
+        }
+
+        log.info("I2CP is not running. We start the i2p router application as new process");
+        return i2pRouterProcessLauncher.start()
                 .whenComplete((process, throwable) -> {
                     if (throwable != null) {
                         log.error("i2pRouterProcessLauncher.start failed", throwable);
                         shutdown();
+                    } else {
+                        log.info("We started the i2p router application as new Java process");
                     }
+                })
+                .thenApply(Objects::nonNull)
+                .thenApply(e->{
+                    try {
+                        Thread.sleep(100000);
+                    } catch (InterruptedException ea) {
+                    }
+                    return  e;
                 });
-        log.info("We start the i2p router application as new Java process");
     }
 
+    @Override
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         return i2pRouterProcessLauncher.shutdown();
     }
 }
