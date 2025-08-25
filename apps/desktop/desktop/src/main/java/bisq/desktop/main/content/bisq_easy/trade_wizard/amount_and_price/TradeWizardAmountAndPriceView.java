@@ -60,8 +60,6 @@ public class TradeWizardAmountAndPriceView extends View<VBox, TradeWizardAmountA
 
         StackPane layeredContent = new StackPane(content, amountOverlay, priceOverlay);
         StackPane.setMargin(amountOverlay, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
-        // For unclear reasons the priceOverlay is not centered
-        StackPane.setMargin(priceOverlay, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 70));
         root.getChildren().addAll(layeredContent);
         root.getStyleClass().add("amount-and-price-step");
     }

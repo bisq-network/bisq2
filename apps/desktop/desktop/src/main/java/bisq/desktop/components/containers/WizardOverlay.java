@@ -39,66 +39,56 @@ import java.util.Optional;
 public class WizardOverlay extends VBox {
     private static final double OVERLAY_WIDTH = 700;
 
-    private final StackPane owner;
+    private final Node owner;
 
-    public WizardOverlay(StackPane owner, String headline, Node headlineIcon, List<String> texts, Button... buttons) {
+    public WizardOverlay(Node owner, String headline, Node headlineIcon, List<String> texts, Button... buttons) {
         this(owner, headline, Optional.ofNullable(headlineIcon), texts, buttons);
     }
 
-    public WizardOverlay(StackPane owner, String headline, Node headlineIcon, String text, Button... buttons) {
+    public WizardOverlay(Node owner, String headline, Node headlineIcon, String text, Button... buttons) {
         this(owner, headline, Optional.ofNullable(headlineIcon), Collections.singletonList(text), buttons);
     }
 
-    public WizardOverlay(StackPane owner, String headline, String text, Button... buttons) {
+    public WizardOverlay(Node owner, String headline, String text, Button... buttons) {
         this(owner, headline, Optional.empty(), Collections.singletonList(text), buttons);
     }
 
-    private WizardOverlay(StackPane owner, String headline, Optional<Node> headlineIcon, List<String> texts, Button... buttons) {
+    public WizardOverlay(Node owner, String headline, VBox textContent, Button... buttons) {
         this.owner = owner;
 
-        VBox content = new VBox(40);
-        content.setAlignment(Pos.TOP_CENTER);
-        content.getStyleClass().setAll("trade-wizard-feedback-bg");
-        content.setPadding(new Insets(30));
-        content.setMaxWidth(OVERLAY_WIDTH);
+        VBox content = createAndGetContent();
 
-        HBox headlineBox = new HBox(15);
-        headlineBox.setAlignment(Pos.CENTER);
-        VBox.setMargin(headlineBox, new Insets(20, 0, 0, 0));
+        HBox headlineBox = createAndGetHeadlineBox(headline, Optional.empty());
+        content.getChildren().add(headlineBox);
 
-        headlineIcon.ifPresent(label -> headlineBox.getChildren().add(label));
-
-        Label headlineLabel = new Label(Res.get(headline));
-        headlineLabel.getStyleClass().add("bisq-text-headline-2");
-        headlineBox.getChildren().add(headlineLabel);
-
-        VBox textBox = new VBox(15);
-        texts.stream()
-            .map(t -> {
-                Label textLabel = new Label(Res.get(t));
-                textLabel.setMinWidth(OVERLAY_WIDTH - 100);
-                textLabel.setMaxWidth(textLabel.getMinWidth());
-                textLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
-                return textLabel;
-            })
-            .forEach(textBox.getChildren()::add);
-        VBox.setMargin(textBox, new Insets(0, 30, 0, 30));
-
-        content.getChildren().addAll(headlineBox, textBox);
+        VBox.setMargin(textContent, new Insets(0, 30, 0, 30));
+        content.getChildren().add(textContent);
 
         if (buttons != null) {
-            HBox buttonsBox = new HBox(10, buttons);
-            buttonsBox.setAlignment(Pos.CENTER);
-            VBox.setMargin(buttonsBox, new Insets(15, 0, 10, 0));
+            HBox buttonsBox = createAndGetButtonsBox(buttons);
             content.getChildren().add(buttonsBox);
         }
 
-        setSpacing(20);
-        setVisible(false);
-        setAlignment(Pos.TOP_CENTER);
-        getChildren().addAll(content, Spacer.fillVBox());
+        setupWizardOverlay(content);
+    }
 
-        StackPane.setMargin(this, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
+    private WizardOverlay(Node owner, String headline, Optional<Node> headlineIcon, List<String> texts, Button... buttons) {
+        this.owner = owner;
+
+        VBox content = createAndGetContent();
+
+        HBox headlineBox = createAndGetHeadlineBox(headline, headlineIcon);
+        content.getChildren().add(headlineBox);
+
+        VBox textBox = createAndGetTextBox(texts);
+        content.getChildren().add(textBox);
+
+        if (buttons != null) {
+            HBox buttonsBox = createAndGetButtonsBox(buttons);
+            content.getChildren().add(buttonsBox);
+        }
+
+        setupWizardOverlay(content);
     }
 
     public void updateOverlayVisibility(Node content,
@@ -123,5 +113,57 @@ public class WizardOverlay extends VBox {
                 owner.getParent().requestFocus();
             }
         }
+    }
+
+    private VBox createAndGetContent() {
+        VBox content = new VBox(40);
+        content.setAlignment(Pos.TOP_CENTER);
+        content.getStyleClass().setAll("trade-wizard-feedback-bg");
+        content.setPadding(new Insets(30));
+        content.setMaxWidth(OVERLAY_WIDTH);
+        return content;
+    }
+
+    private HBox createAndGetHeadlineBox(String headline, Optional<Node> headlineIcon) {
+        HBox headlineBox = new HBox(15);
+        headlineBox.setAlignment(Pos.CENTER);
+        VBox.setMargin(headlineBox, new Insets(20, 0, 0, 0));
+
+        headlineIcon.ifPresent(label -> headlineBox.getChildren().add(label));
+
+        Label headlineLabel = new Label(Res.get(headline));
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
+        headlineBox.getChildren().add(headlineLabel);
+        return headlineBox;
+    }
+
+    private VBox createAndGetTextBox(List<String> texts) {
+        VBox textBox = new VBox(15);
+        texts.stream()
+                .map(t -> {
+                    Label textLabel = new Label(Res.get(t));
+                    textLabel.setMinWidth(OVERLAY_WIDTH - 100);
+                    textLabel.setMaxWidth(textLabel.getMinWidth());
+                    textLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
+                    return textLabel;
+                })
+                .forEach(textBox.getChildren()::add);
+        VBox.setMargin(textBox, new Insets(0, 30, 0, 30));
+        return textBox;
+    }
+
+    private HBox createAndGetButtonsBox(Button... buttons) {
+        HBox buttonsBox = new HBox(10, buttons);
+        buttonsBox.setAlignment(Pos.CENTER);
+        VBox.setMargin(buttonsBox, new Insets(15, 0, 10, 0));
+        return buttonsBox;
+    }
+
+    private void setupWizardOverlay(VBox content) {
+        setSpacing(20);
+        setVisible(false);
+        setAlignment(Pos.TOP_CENTER);
+        getChildren().addAll(content, Spacer.fillVBox());
+        StackPane.setMargin(this, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
     }
 }
