@@ -33,7 +33,7 @@ public class ReportRequestService extends LeechRequestResponseHandler<ReportRequ
     public ReportRequestService(Node node) {
         super(node, REQUEST_TIMEOUT_MS);
 
-        this.initialize();
+        initialize();
     }
 
     @Override

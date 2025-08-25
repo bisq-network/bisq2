@@ -47,7 +47,7 @@ public class ReportResponseService extends RequestResponseHandler<ReportRequest,
         this.networkLoadSnapshot = networkLoadSnapshot;
         this.memoryReportService = memoryReportService;
 
-        this.initialize();
+        initialize();
     }
 
     @Override
