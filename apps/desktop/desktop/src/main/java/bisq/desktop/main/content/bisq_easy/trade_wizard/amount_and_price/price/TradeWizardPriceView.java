@@ -22,6 +22,7 @@ import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.containers.WizardOverlay;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.UnorderedList;
 import bisq.desktop.components.controls.validator.PercentageValidator;
@@ -58,7 +59,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
     private final PriceInputBox percentageInputBox;
     @Getter
-    private final VBox overlay;
+    private final WizardOverlay overlay;
     private final Pane priceInputBox;
     private final Button percentagePriceButton, fixedPriceButton, closeOverlayButton;
     private final Label warningIcon, feedbackSentence, minSliderValue, maxSliderValue;
@@ -154,8 +155,15 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         feedbackBox.setAlignment(Pos.CENTER);
 
         // Overlay
+        Label learnWhyIntroLabel = new Label(Res.get("bisqEasy.price.feedback.learnWhySection.description.intro"));
+        learnWhyIntroLabel.getStyleClass().addAll("learn-why-text", "wrap-text");
+        UnorderedList learnWhyExpositionList = new UnorderedList(Res.get("bisqEasy.price.feedback.learnWhySection.description.exposition"),
+                "learn-why-text", 7, 10, "- ", "- ");
         closeOverlayButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.closeButton"));
-        overlay = createOverlay();
+        overlay = new WizardOverlay(root,
+                "bisqEasy.price.feedback.learnWhySection.title",
+                new VBox(40, learnWhyIntroLabel, learnWhyExpositionList),
+                closeOverlayButton);
 
         VBox.setMargin(sliderBoxAndMarketPriceMarker, new Insets(22.5, 0, 0, 0));
         root.setAlignment(Pos.TOP_CENTER);
@@ -279,23 +287,5 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
             percentagePriceButton.setGraphic(percentagePriceIconGreen);
             fixedPriceButton.setGraphic(fixedPriceIconGrey);
         }
-    }
-
-    private VBox createOverlay() {
-        Label headlineLabel = new Label(Res.get("bisqEasy.price.feedback.learnWhySection.title"));
-        headlineLabel.getStyleClass().addAll("learn-why-title-label", "large-text");
-        Label learnWhyIntroLabel = new Label(Res.get("bisqEasy.price.feedback.learnWhySection.description.intro"));
-        learnWhyIntroLabel.getStyleClass().addAll("learn-why-text", "learn-why-intro-label", "wrap-text");
-        UnorderedList learnWhyExpositionList = new UnorderedList(Res.get("bisqEasy.price.feedback.learnWhySection.description.exposition"),
-                "learn-why-text", 7, 10, "- ", "- ");
-        VBox.setMargin(closeOverlayButton, new Insets(10, 0, 0, 0));
-        VBox content = new VBox(40, headlineLabel, learnWhyIntroLabel, learnWhyExpositionList, closeOverlayButton);
-        content.setAlignment(Pos.TOP_CENTER);
-        content.getStyleClass().setAll("trade-wizard-feedback-bg");
-        content.setPadding(new Insets(30));
-
-        VBox vBox = new VBox(content, Spacer.fillVBox());
-        content.setMaxWidth(700);
-        return vBox;
     }
 }

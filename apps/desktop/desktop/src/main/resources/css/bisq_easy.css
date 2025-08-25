@@ -1283,26 +1283,10 @@
     -fx-padding: 50;
 }
 
-.bisq-easy-trade-wizard-price-step .learn-why-overlay .learn-why-title-label {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-padding: 0 0 15 0;
-}
-
 .learn-why-text {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-size: 1.15em;
-    -fx-font-family: "IBM Plex Sans Light";
-}
-
-.bisq-easy-trade-wizard-price-step .learn-why-overlay .learn-why-intro-label {
-    -fx-wrap-text: true;
-    -fx-line-spacing: 5px;
-    -fx-max-height: 48;
-    -fx-min-height: 48;
-    -fx-pref-height: 48;
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1.1em;
 }
 
 .bisq-easy-trade-wizard-price-step .learn-why-overlay .unordered-list {

@@ -20,7 +20,6 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price;
 import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -59,9 +58,6 @@ public class TradeWizardAmountAndPriceView extends View<VBox, TradeWizardAmountA
         content.getStyleClass().add("content-box");
 
         StackPane layeredContent = new StackPane(content, amountOverlay, priceOverlay);
-        StackPane.setMargin(amountOverlay, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
-        // For unclear reasons the priceOverlay is not centered
-        StackPane.setMargin(priceOverlay, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 70));
         root.getChildren().addAll(layeredContent);
         root.getStyleClass().add("amount-and-price-step");
     }

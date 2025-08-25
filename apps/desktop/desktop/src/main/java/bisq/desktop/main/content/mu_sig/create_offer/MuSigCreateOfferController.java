@@ -125,6 +125,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
         marketPin = EasyBind.subscribe(muSigCreateOfferDirectionAndMarketController.getMarket(), market -> {
             muSigCreateOfferPaymentController.setMarket(market);
             muSigCreateOfferAmountAndPriceController.setMarket(market);
+            muSigCreateOfferReviewController.setMarket(market);
             updateNextButtonDisabledState();
         });
         priceSpecPin = EasyBind.subscribe(muSigCreateOfferAmountAndPriceController.getPriceSpec(),

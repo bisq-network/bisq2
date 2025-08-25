@@ -118,8 +118,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
         // Offer table
         muSigOfferListView = new RichTableView<>(model.getSortedMuSigOfferListItems());
-        muSigOfferListView.getSubheader().setVisible(false);
-        muSigOfferListView.getSubheader().setManaged(false);
+        muSigOfferListView.getSubheaderBox().setVisible(false);
+        muSigOfferListView.getSubheaderBox().setManaged(false);
         muSigOfferListView.getStyleClass().add("muSig-offerbook-table");
         configMuSigOfferListView();
 
