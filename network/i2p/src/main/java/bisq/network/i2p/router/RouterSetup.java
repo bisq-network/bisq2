@@ -19,6 +19,7 @@ package bisq.network.i2p.router;
 
 import bisq.common.file.FileUtils;
 import bisq.common.file.PropertiesReader;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.client.I2PClient;
 import net.i2p.data.DataHelper;
@@ -33,23 +34,45 @@ import java.util.Properties;
 
 @Slf4j
 class RouterSetup {
+
+    private final String i2cpHost;
+    private final int i2cpPort;
+    @Getter
+    private final I2pLogLevel i2pLogLevel;
     private final boolean isEmbedded;
     private final int inboundKBytesPerSecond;
     private final int outboundKBytesPerSecond;
     private final int bandwidthSharePercentage;
     private final File i2pDir;
+    private Properties properties;
 
     RouterSetup(String i2pDirPath,
+                String i2cpHost,
+                int i2cpPort,
+                I2pLogLevel i2pLogLevel,
                 boolean isEmbedded,
                 int inboundKBytesPerSecond,
                 int outboundKBytesPerSecond,
                 int bandwidthSharePercentage) {
+        this.i2cpHost = i2cpHost;
+        this.i2cpPort = i2cpPort;
+        this.i2pLogLevel = i2pLogLevel;
         this.isEmbedded = isEmbedded;
         this.inboundKBytesPerSecond = inboundKBytesPerSecond;
         this.outboundKBytesPerSecond = outboundKBytesPerSecond;
         this.bandwidthSharePercentage = bandwidthSharePercentage;
 
         i2pDir = new File(i2pDirPath);
+
+
+        // Must be set before I2P router is created as otherwise log outputs are routed by I2P log system
+        System.setProperty("I2P_DISABLE_OUTPUT_OVERRIDE", "true");
+
+        // Having IPv6 enabled can cause problems with certain configurations.
+        System.setProperty("java.net.preferIPv4Stack", "true");
+
+        System.setProperty("i2cp.host", i2cpHost);
+        System.setProperty("i2cp.port", String.valueOf(i2cpPort));
     }
 
     void initialize() throws IOException, URISyntaxException {
@@ -60,15 +83,12 @@ class RouterSetup {
 
     private void setupDirectories() throws IOException {
         createDirectoryAndSetProperty("", "i2p.dir.base");
-        createDirectoryAndSetProperty("config", "i2p.dir.config");
         createDirectoryAndSetProperty("router", "i2p.dir.router");
         createDirectoryAndSetProperty("pid", "i2p.dir.pid");
-        createDirectoryAndSetProperty("logs", "i2p.dir.log");
-        createDirectoryAndSetProperty("app", "i2p.dir.app");
     }
 
     private void setupProperties() {
-        Properties properties = new Properties();
+        properties = new Properties();
         if (isEmbedded) {
             // When used as embedded router I2P uses in-process communication instead of TPC
             properties.put(I2PClient.PROP_TCP_HOST, "internal");
@@ -78,8 +98,8 @@ class RouterSetup {
             properties.put("i2cp.disableInterface", "true");
         } else {
             // When started as separate process
-            properties.put(I2PClient.PROP_TCP_HOST, "127.0.0.1");
-            properties.put(I2PClient.PROP_TCP_PORT, "7654");
+            properties.put(I2PClient.PROP_TCP_HOST, i2cpHost);
+            properties.put(I2PClient.PROP_TCP_PORT, String.valueOf(i2cpPort));
 
             // We need to have the interface enables
             properties.put("i2cp.disableInterface", "false");
