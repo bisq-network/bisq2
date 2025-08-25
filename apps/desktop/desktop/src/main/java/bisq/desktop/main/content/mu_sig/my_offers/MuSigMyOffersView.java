@@ -60,8 +60,9 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 controller::applySearchPredicate);
         muSigMyOffersListView.getStyleClass().add("mu-sig-my-offers-table");
         createOfferButton = new Button(Res.get("muSig.myOffers.createOfferButton"));
+        createOfferButton.getStyleClass().addAll("create-offer-button", "normal-text");
+        HBox.setMargin(createOfferButton, new Insets(0, 0, 0, 15));
         muSigMyOffersListView.getHeaderBox().getChildren().add(createOfferButton);
-
         configMuSigMyOffersListView();
         VBox.setVgrow(muSigMyOffersListView, Priority.ALWAYS);
 
