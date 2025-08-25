@@ -20,6 +20,9 @@ package bisq.desktop.main.content.mu_sig.my_offers;
 import bisq.account.AccountService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
+import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
@@ -42,7 +45,7 @@ import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Set;
+import java.util.Optional;
 
 @Slf4j
 public class MuSigMyOffersController implements Controller {
@@ -57,6 +60,7 @@ public class MuSigMyOffersController implements Controller {
     private final ReputationService reputationService;
     private final AccountService accountService;
     private final SettingsService settingsService;
+    private Pin offersPin;
 
     public MuSigMyOffersController(ServiceProvider serviceProvider) {
         muSigService = serviceProvider.getMuSigService();
@@ -74,27 +78,59 @@ public class MuSigMyOffersController implements Controller {
 
     @Override
     public void onActivate() {
-        UIThread.run(() -> {
-            Set<String> myUserProfileIds = userIdentityService.getMyUserProfileIds();
-            muSigService.getOffers().forEach(muSigOffer -> {
-                boolean isMyOffer = myUserProfileIds.contains(muSigOffer.getMakersUserProfileId());
-                if (isMyOffer) {
-                    String offerId = muSigOffer.getId();
-                    if (!model.getMuSigMyOffersIds().contains(offerId)) {
-                        model.getMuSigMyOffersListItems().add(new MuSigOfferListItem(muSigOffer,
-                                marketPriceService,
-                                userProfileService,
-                                identityService,
-                                reputationService,
-                                accountService));
-                        model.getMuSigMyOffersIds().add(offerId);
-                        updateFilteredMuSigMyOffersListItems();
-                    }
-                }
-            });
+        model.setMyUserProfileIds(userIdentityService.getMyUserProfileIds());
+        model.setShouldShowMyProfileColumn(model.getMyUserProfileIds().size() > 1);
+        model.setMuSigMarket(settingsService.getSelectedMuSigMarket().get());
 
-            model.setNumOffers(Res.get("muSig.myOffers.numOffers", model.getMuSigMyOffersIds().size()));
-            model.setShouldShowMyProfileColumn(myUserProfileIds.size() > 1);
+        offersPin = muSigService.getObservableOffers().addObserver(new CollectionObserver<>() {
+            @Override
+            public void add(MuSigOffer muSigOffer) {
+                UIThread.run(() -> {
+                    boolean isMyOffer = model.getMyUserProfileIds().contains(muSigOffer.getMakersUserProfileId());
+                    if (isMyOffer) {
+                        String offerId = muSigOffer.getId();
+                        if (!model.getMuSigMyOffersIds().contains(offerId)) {
+                            model.getMuSigMyOffersListItems().add(new MuSigOfferListItem(muSigOffer,
+                                    marketPriceService,
+                                    userProfileService,
+                                    identityService,
+                                    reputationService,
+                                    accountService));
+                            model.getMuSigMyOffersIds().add(offerId);
+                            updateFilteredMuSigMyOffersListItems();
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void remove(Object element) {
+                if (element instanceof MuSigOffer muSigOffer) {
+                    UIThread.run(() -> {
+                        boolean isMyOffer = model.getMyUserProfileIds().contains(muSigOffer.getMakersUserProfileId());
+                        if (isMyOffer) {
+                            String offerId = muSigOffer.getId();
+                            Optional<MuSigOfferListItem> toRemove = model.getMuSigMyOffersListItems().stream()
+                                    .filter(item -> item.getOffer().getId().equals(offerId))
+                                    .findAny();
+                            toRemove.ifPresent(offer -> {
+                                model.getMuSigMyOffersListItems().remove(offer);
+                                model.getMuSigMyOffersIds().remove(offerId);
+                            });
+                            updateFilteredMuSigMyOffersListItems();
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void clear() {
+                UIThread.run(() -> {
+                    model.getMuSigMyOffersListItems().clear();
+                    model.getMuSigMyOffersIds().clear();
+                    updateFilteredMuSigMyOffersListItems();
+                });
+            }
         });
     }
 
@@ -103,10 +139,14 @@ public class MuSigMyOffersController implements Controller {
         model.getMuSigMyOffersListItems().forEach(MuSigOfferListItem::dispose);
         model.getMuSigMyOffersListItems().clear();
         model.getMuSigMyOffersIds().clear();
+
+        offersPin.unbind();
     }
 
     void onCreateOffer() {
-        Market market = settingsService.getSelectedMuSigMarket().get();
+        Market market = model.getMuSigMarket() != null
+                ? model.getMuSigMarket()
+                : MarketRepository.getDefaultBtcFiatMarket();
         Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER,
                 new MuSigCreateOfferController.InitData(market));
     }
