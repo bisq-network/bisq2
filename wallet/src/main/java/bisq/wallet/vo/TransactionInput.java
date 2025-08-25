@@ -30,7 +30,7 @@ public final class TransactionInput {
     private final String prevOutTxId;
     private final int prevOutIndex;
     private final long sequenceNumber; // Is unsigned int in Bitcoin, thus not fits into signed Integer in Java
-    private final String scriptSig;
+    private final byte[] scriptSig;
     private final String witness;
 
     public static TransactionInput fromProto(bisq.wallet.protobuf.TransactionInput input) {
@@ -38,7 +38,7 @@ public final class TransactionInput {
                 input.getPrevOutTxId(),
                 input.getPrevOutIndex(),
                 input.getSequenceNumber(),
-                input.getScriptSig(),
+                input.getScriptSig().toByteArray(),
                 input.getWitness()
         );
     }

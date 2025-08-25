@@ -29,13 +29,13 @@ import lombok.ToString;
 public final class TransactionOutput {
     private final long value;
     private final String address;
-    private final String scriptPubKey;
+    private final byte[] scriptPubKey;
 
     public static TransactionOutput fromProto(bisq.wallet.protobuf.TransactionOutput output) {
         return new TransactionOutput(
                 output.getValue(),
                 output.getAddress(),
-                output.getScriptPubKey()
+                output.getScriptPubKey().toByteArray()
         );
     }
 }

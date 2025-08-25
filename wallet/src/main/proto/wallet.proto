@@ -72,7 +72,7 @@ message ListUtxosResponse {
 message SendToAddressRequest {
     optional string passphrase = 1;
     string address = 2;
-    sint64 amount = 3;
+    uint64 amount = 3;
 }
 
 message SendToAddressResponse {
@@ -89,7 +89,7 @@ message GetBalanceRequest {}
 
 message GetBalanceResponse {
     // Balance in satoshis
-    sint64 balance = 1;
+    uint64 balance = 1;
 }
 
 message GetSeedWordsRequest {}
@@ -116,34 +116,34 @@ message DecryptWalletResponse {
 
 message TransactionInput {
     string prevOutTxId = 1;
-    sint32 prevOutIndex = 2;
-    sint64 sequenceNumber = 3;
-    string scriptSig = 4;
+    int32 prevOutIndex = 2;
+    int64 sequenceNumber = 3;
+    bytes scriptSig = 4;
     string witness = 5;
 }
 
 message TransactionOutput {
-    sint64 value = 1;
+    uint64 value = 1;
     string address = 2;
-    string scriptPubKey = 3;
+    bytes scriptPubKey = 3;
 }
 
 message Transaction {
     string txId = 1;
     repeated TransactionInput inputs = 2;
     repeated TransactionOutput outputs = 3;
-    sint64 lockTime = 4;
-    sint32 blockHeight = 5;
-    sint64 date = 6; // Unix timestamp
-    sint32 numConfirmations = 7;
-    sint64 amount = 8;
+    uint64 lockTime = 4;
+    uint32 blockHeight = 5;
+    uint64 date = 6; // Unix timestamp
+    uint32 numConfirmations = 7;
+    uint64 amount = 8;
     bool incoming = 9;
 }
 
 message Utxo {
     string txId = 1;
-    sint32 vout = 2;
-    sint64 amount = 3;
+    uint32 vout = 2;
+    uint64 amount = 3;
     string address = 4;
-    sint32 numConfirmations = 5;
+    uint32 numConfirmations = 5;
 }
