@@ -19,16 +19,21 @@ package bisq.desktop.main.content.mu_sig.my_offers;
 
 import bisq.account.AccountService;
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.market.Market;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
+import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.mu_sig.MuSigService;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.settings.SettingsService;
 import bisq.user.banned.RateLimitExceededException;
 import bisq.user.banned.UserProfileBannedException;
 import bisq.user.identity.UserIdentityService;
@@ -51,6 +56,7 @@ public class MuSigMyOffersController implements Controller {
     private final IdentityService identityService;
     private final ReputationService reputationService;
     private final AccountService accountService;
+    private final SettingsService settingsService;
 
     public MuSigMyOffersController(ServiceProvider serviceProvider) {
         muSigService = serviceProvider.getMuSigService();
@@ -60,6 +66,7 @@ public class MuSigMyOffersController implements Controller {
         identityService = serviceProvider.getIdentityService();
         reputationService = serviceProvider.getUserService().getReputationService();
         accountService = serviceProvider.getAccountService();
+        settingsService = serviceProvider.getSettingsService();
 
         model = new MuSigMyOffersModel();
         view = new MuSigMyOffersView(model, this);
@@ -96,6 +103,12 @@ public class MuSigMyOffersController implements Controller {
         model.getMuSigMyOffersListItems().forEach(MuSigOfferListItem::dispose);
         model.getMuSigMyOffersListItems().clear();
         model.getMuSigMyOffersIds().clear();
+    }
+
+    void onCreateOffer() {
+        Market market = settingsService.getSelectedMuSigMarket().get();
+        Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER,
+                new MuSigCreateOfferController.InitData(market));
     }
 
     void onRemoveOffer(MuSigOffer muSigOffer) {

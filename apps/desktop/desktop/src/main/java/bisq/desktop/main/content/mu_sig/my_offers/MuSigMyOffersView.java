@@ -28,6 +28,7 @@ import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
@@ -46,6 +47,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
     private static final double SIDE_PADDING = 40;
 
     private final RichTableView<MuSigOfferListItem> muSigMyOffersListView;
+    private final Button createOfferButton;
     private BisqTableColumn<MuSigOfferListItem> myProfileColumn;
 
     public MuSigMyOffersView(MuSigMyOffersModel model, MuSigMyOffersController controller) {
@@ -57,6 +59,9 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 Res.get("muSig.myOffers.numOffers"),
                 controller::applySearchPredicate);
         muSigMyOffersListView.getStyleClass().add("mu-sig-my-offers-table");
+        createOfferButton = new Button(Res.get("muSig.myOffers.createOfferButton"));
+        muSigMyOffersListView.getHeaderBox().getChildren().add(createOfferButton);
+
         configMuSigMyOffersListView();
         VBox.setVgrow(muSigMyOffersListView, Priority.ALWAYS);
 
@@ -170,6 +175,8 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
         muSigMyOffersListView.sort();
         myProfileColumn.visibleProperty().set(model.isShouldShowMyProfileColumn());
 
+        createOfferButton.setOnAction(e -> controller.onCreateOffer());
+
         List<String> csvHeaders = muSigMyOffersListView.buildCsvHeaders();
         csvHeaders.add(Res.get("muSig.myOffers.table.header.market").toUpperCase());
         csvHeaders.add(Res.get("muSig.myOffers.table.header.myProfile").toUpperCase());
@@ -208,6 +215,8 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
     @Override
     protected void onViewDetached() {
         muSigMyOffersListView.dispose();
+
+        createOfferButton.setOnAction(null);
     }
 
     private Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>, TableCell<MuSigOfferListItem, MuSigOfferListItem>> getActionButtonsCellFactory() {
