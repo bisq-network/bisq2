@@ -28,7 +28,7 @@ import bisq.network.p2p.node.Node;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-public abstract class ResponseHandler<T extends Request, R extends Response> extends BaseHandler implements Node.Listener, LifecycleHandler {
+public abstract class ResponseHandler<T extends Request, R extends Response> extends BaseHandler implements Node.Listener, HandlerLifecycle {
     protected final Node node;
     private final ResponseHandlerDelegate<T, R> responseHandlerDelegate;
 
@@ -56,7 +56,7 @@ public abstract class ResponseHandler<T extends Request, R extends Response> ext
     }
 
     /* --------------------------------------------------------------------- */
-    // LifecycleHandler implementation
+    // HandlerLifecycle implementation
     /* --------------------------------------------------------------------- */
 
     public void initialize() {

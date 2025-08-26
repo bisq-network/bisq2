@@ -26,7 +26,7 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 
 
-public abstract class RequestHandler<T extends Request, R extends Response> extends BaseHandler implements Node.Listener, LifecycleHandler {
+public abstract class RequestHandler<T extends Request, R extends Response> extends BaseHandler implements Node.Listener, HandlerLifecycle {
     protected final Node node;
     private final RequestHandlerDelegate<T, R> requestHandlerDelegate;
 
@@ -61,7 +61,7 @@ public abstract class RequestHandler<T extends Request, R extends Response> exte
     }
 
     /* --------------------------------------------------------------------- */
-    // LifecycleHandler implementation
+    // HandlerLifecycle implementation
     /* --------------------------------------------------------------------- */
 
     public void initialize() {

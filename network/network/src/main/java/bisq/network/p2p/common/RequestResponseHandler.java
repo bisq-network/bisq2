@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public abstract class RequestResponseHandler<T extends Request, R extends Response> extends BaseHandler implements Node.Listener, LifecycleHandler {
+public abstract class RequestResponseHandler<T extends Request, R extends Response> extends BaseHandler implements Node.Listener, HandlerLifecycle {
     protected final Node node;
     private final RequestHandlerDelegate<T, R> requestHandlerDelegate;
     private final ResponseHandlerDelegate<T, R> responseHandlerDelegate;
@@ -87,7 +87,7 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
     }
 
     /* --------------------------------------------------------------------- */
-    // LifecycleHandler implementation
+    // HandlerLifecycle implementation
     /* --------------------------------------------------------------------- */
 
     public void initialize() {

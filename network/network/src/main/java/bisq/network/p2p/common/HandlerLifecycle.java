@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.common;
 
-public interface LifecycleHandler {
+public interface HandlerLifecycle {
     void initialize();
 
     void shutdown();

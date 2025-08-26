@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @Slf4j
-class ResponseHandlerDelegate<T extends Request, R extends Response> implements LifecycleHandler {
+class ResponseHandlerDelegate<T extends Request, R extends Response> implements HandlerLifecycle {
     private final Node node;
     private final long timeout;
     private final Class<R> responseClass;
@@ -95,7 +95,7 @@ class ResponseHandlerDelegate<T extends Request, R extends Response> implements 
     }
 
     /* --------------------------------------------------------------------- */
-    // LifecycleHandler implementation
+    // HandlerLifecycle implementation
     /* --------------------------------------------------------------------- */
 
     @Override

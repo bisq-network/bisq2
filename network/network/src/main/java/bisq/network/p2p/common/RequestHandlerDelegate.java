@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-class RequestHandlerDelegate<T extends Request, R extends Response> implements LifecycleHandler {
+class RequestHandlerDelegate<T extends Request, R extends Response> implements HandlerLifecycle {
 
     interface Callback<T extends Request, R extends Response> {
         R createResponse(Connection connection, T request);
@@ -69,7 +69,7 @@ class RequestHandlerDelegate<T extends Request, R extends Response> implements L
     }
 
     /* --------------------------------------------------------------------- */
-    // LifecycleHandler implementation
+    // HandlerLifecycle implementation
     /* --------------------------------------------------------------------- */
 
     @Override
