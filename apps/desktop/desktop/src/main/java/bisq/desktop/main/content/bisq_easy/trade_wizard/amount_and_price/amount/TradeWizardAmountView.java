@@ -191,7 +191,7 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
 
         learnHowToBuildReputationBox.setAlignment(Pos.CENTER);
 
-        linkToWikiText.setMaxWidth(amountLimitInfo.getMinWidth());
+        linkToWikiText.setMaxWidth(linkToWikiText.getMinWidth());
         linkToWikiText.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
 
         linkToWiki.getStyleClass().addAll("normal-text", "text-fill-green");

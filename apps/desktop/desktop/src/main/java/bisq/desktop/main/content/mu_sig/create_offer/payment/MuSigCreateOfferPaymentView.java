@@ -56,7 +56,6 @@ import java.util.Set;
 @Slf4j
 public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOfferPaymentModel, MuSigCreateOfferPaymentController> {
     private final static int FEEDBACK_WIDTH = 700;
-    private static final double TWO_COLUMN_WIDTH = 20.75;
 
     private final GridPane gridPane;
     private final Label noAccountOverlayHeadline, multipleAccountOverlayHeadline;

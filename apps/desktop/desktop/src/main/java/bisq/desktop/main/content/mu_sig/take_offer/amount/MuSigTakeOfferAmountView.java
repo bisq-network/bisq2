@@ -19,12 +19,10 @@ package bisq.desktop.main.content.mu_sig.take_offer.amount;
 
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Icons;
-import bisq.desktop.common.ManagedDuration;
-import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.containers.WizardOverlay;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
@@ -43,7 +41,8 @@ import org.fxmisc.easybind.Subscription;
 public class MuSigTakeOfferAmountView extends View<StackPane, MuSigTakeOfferAmountModel, MuSigTakeOfferAmountController> {
     private final Label headlineLabel, amountLimitInfo, amountLimitInfoOverlayInfo, linkToWikiText, warningIcon;
     private final Hyperlink amountLimitInfoAmount, learnMore, linkToWiki;
-    private final VBox content, amountLimitInfoOverlay;
+    private final VBox content;
+    private final WizardOverlay amountLimitInfoOverlay;
     private final Button closeOverlayButton;
     private final HBox amountLimitInfoHBox;
     private Subscription isAmountLimitInfoVisiblePin, isWarningIconVisiblePin;
@@ -83,12 +82,14 @@ public class MuSigTakeOfferAmountView extends View<StackPane, MuSigTakeOfferAmou
         content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountComponentRoot, amountLimitInfoHBox, Spacer.fillVBox());
 
         amountLimitInfoOverlayInfo = new Label();
-        linkToWikiText = new Label();
         closeOverlayButton = new Button(Res.get("bisqEasy.tradeWizard.amount.limitInfo.overlay.close"));
+        linkToWikiText = new Label();
         linkToWiki = new Hyperlink("https://bisq.wiki/Reputation");
-        amountLimitInfoOverlay = getAmountLimitInfoOverlay(amountLimitInfoOverlayInfo, closeOverlayButton, linkToWikiText, linkToWiki);
+        amountLimitInfoOverlay = new WizardOverlay(root,
+                "bisqEasy.tradeWizard.amount.limitInfo.overlay.headline",
+                createAndGetOverlayContent(amountLimitInfoOverlayInfo, linkToWikiText, linkToWiki),
+                closeOverlayButton);
 
-        StackPane.setMargin(amountLimitInfoOverlay, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
         root.getChildren().addAll(content, amountLimitInfoOverlay);
     }
 
@@ -110,26 +111,8 @@ public class MuSigTakeOfferAmountView extends View<StackPane, MuSigTakeOfferAmou
         amountLimitInfoHBox.managedProperty().bind(model.getIsAmountLimitInfoVisible());
         amountLimitInfoHBox.visibleProperty().bind(model.getIsAmountLimitInfoVisible());
 
-        isAmountLimitInfoVisiblePin = EasyBind.subscribe(model.getIsAmountLimitInfoOverlayVisible(), isAmountLimitInfoVisible -> {
-            if (isAmountLimitInfoVisible) {
-                amountLimitInfoOverlay.setVisible(true);
-                amountLimitInfoOverlay.setOpacity(1);
-                Transitions.blurStrong(content, 0);
-                Transitions.slideInTop(amountLimitInfoOverlay, 450);
-                root.setOnKeyPressed(controller::onKeyPressedWhileShowingOverlay);
-            } else {
-                Transitions.removeEffect(content);
-                if (amountLimitInfoOverlay.isVisible()) {
-                    Transitions.fadeOut(amountLimitInfoOverlay, ManagedDuration.getHalfOfDefaultDurationMillis(),
-                            () -> amountLimitInfoOverlay.setVisible(false));
-                }
-                root.setOnKeyPressed(null);
-                // Return the focus to the wizard
-                if (root.getParent() != null) {
-                    root.getParent().requestFocus();
-                }
-            }
-        });
+        isAmountLimitInfoVisiblePin = EasyBind.subscribe(model.getIsAmountLimitInfoOverlayVisible(), isAmountLimitInfoVisible ->
+            amountLimitInfoOverlay.updateOverlayVisibility(content, isAmountLimitInfoVisible, controller::onKeyPressedWhileShowingOverlay));
 
         isWarningIconVisiblePin = EasyBind.subscribe(model.getIsWarningIconVisible(), isWarningIconVisible -> {
             warningIcon.setVisible(isWarningIconVisible);
@@ -168,19 +151,18 @@ public class MuSigTakeOfferAmountView extends View<StackPane, MuSigTakeOfferAmou
         root.setOnKeyPressed(null);
     }
 
-    private static VBox getAmountLimitInfoOverlay(Label amountLimitInfoOverlayInfo,
-                                                  Button closeOverlayButton,
-                                                  Label linkToWikiText,
-                                                  Hyperlink linkToWiki) {
-        Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.amount.limitInfo.overlay.headline"));
-        headlineLabel.getStyleClass().add("bisq-text-headline-2");
+    private static VBox createAndGetOverlayContent(Label amountLimitInfoOverlayInfo,
+                                                   Label linkToWikiText,
+                                                   Hyperlink linkToWiki) {
+        amountLimitInfoOverlayInfo.setMinWidth(WizardOverlay.OVERLAY_WIDTH - 100);
+        amountLimitInfoOverlayInfo.setMaxWidth(amountLimitInfoOverlayInfo.getMinWidth());
+        amountLimitInfoOverlayInfo.setMinHeight(Label.USE_PREF_SIZE);
+        amountLimitInfoOverlayInfo.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
 
-        amountLimitInfoOverlayInfo.setAlignment(Pos.BASELINE_LEFT);
-        amountLimitInfoOverlayInfo.getStyleClass().addAll("bisq-text-21", "wrap-text");
+        linkToWikiText.setMaxWidth(linkToWikiText.getMinWidth());
+        linkToWikiText.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
 
-        linkToWikiText.getStyleClass().addAll("bisq-text-21", "wrap-text");
-
-        linkToWiki.getStyleClass().addAll("bisq-text-21");
+        linkToWiki.getStyleClass().addAll("normal-text", "text-fill-green");
         String tooltipText = Browser.hyperLinksGetCopiedWithoutPopup()
                 ? Res.get("popup.hyperlink.copy.tooltip", linkToWiki.getText())
                 : Res.get("popup.hyperlink.openInBrowser.tooltip", linkToWiki.getText());
@@ -189,18 +171,6 @@ public class MuSigTakeOfferAmountView extends View<StackPane, MuSigTakeOfferAmou
         HBox linkBox = new HBox(5, linkToWikiText, linkToWiki);
         linkBox.setAlignment(Pos.BASELINE_LEFT);
 
-        VBox overlayText = new VBox(20, amountLimitInfoOverlayInfo, linkBox);
-        overlayText.setAlignment(Pos.TOP_LEFT);
-        overlayText.setFillWidth(true);
-
-        VBox.setMargin(linkBox, new Insets(-22.5, 0, 20, 0));
-        VBox content = new VBox(20, headlineLabel, overlayText, closeOverlayButton);
-        content.setAlignment(Pos.TOP_CENTER);
-        content.getStyleClass().setAll("trade-wizard-feedback-bg");
-        content.setPadding(new Insets(30));
-
-        VBox vBox = new VBox(content, Spacer.fillVBox());
-        vBox.setMaxWidth(700);
-        return vBox;
+        return new VBox(amountLimitInfoOverlayInfo, linkBox);
     }
 }
