@@ -1,0 +1,98 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+syntax = "proto3";
+
+package i2p;
+
+option java_multiple_files = true;
+option java_package = "bisq.i2p.protobuf";
+
+service I2pRouterMonitor {
+  rpc SubscribeProcessState (SubscribeRequest) returns (stream ProcessStateUpdate);
+  rpc SubscribeNetworkState (SubscribeRequest) returns (stream NetworkStateUpdate);
+  rpc SubscribeRouterState (SubscribeRequest) returns (stream RouterStateUpdate);
+  rpc SubscribeTunnelInfo (SubscribeRequest) returns (stream TunnelInfoUpdate);
+}
+
+enum Topic {
+  TOPIC_UNSPECIFIED = 0;
+  TOPIC_PROCESS_STATE = 1;
+  TOPIC_NETWORK_STATE = 2;
+  TOPIC_ROUTER_STATE = 3;
+  TOPIC_TUNNEL_INFO = 4;
+}
+
+message SubscribeRequest {
+  Topic topic = 1;
+}
+
+message ProcessStateUpdate {
+  ProcessState value = 1;
+}
+
+message NetworkStateUpdate {
+  NetworkState value = 1;
+}
+
+message RouterStateUpdate {
+  RouterState value = 1;
+}
+
+message TunnelInfoUpdate {
+  TunnelInfo value = 1;
+}
+
+enum ProcessState {
+  PROCESSSTATE_UNSPECIFIED = 0;
+  PROCESSSTATE_NEW = 1;
+  PROCESSSTATE_STARTING = 2;
+  PROCESSSTATE_INITIALIZING = 3;
+  PROCESSSTATE_RUNNING = 4;
+  PROCESSSTATE_STOPPING = 5;
+  PROCESSSTATE_STOPPED = 6;
+  PROCESSSTATE_FAILED = 7;
+}
+
+enum NetworkState {
+  NETWORKSTATE_UNSPECIFIED = 0;
+  NETWORKSTATE_NEW = 1;
+  NETWORKSTATE_UNKNOWN_SIGNAL = 2;
+  NETWORKSTATE_TESTING = 3;
+  NETWORKSTATE_OK = 4;
+  NETWORKSTATE_FIREWALLED = 5;
+  NETWORKSTATE_DISCONNECTED = 6;
+}
+
+enum RouterState {
+  ROUTERSTATE_UNSPECIFIED = 0;
+  ROUTERSTATE_NEW = 1;
+  ROUTERSTATE_STARTING = 2;
+  ROUTERSTATE_RUNNING_TESTING = 3;
+  ROUTERSTATE_RUNNING_OK = 4;
+  ROUTERSTATE_RUNNING_FIREWALLED = 5;
+  ROUTERSTATE_RUNNING_DISCONNECTED = 6;
+  ROUTERSTATE_STOPPING = 7;
+  ROUTERSTATE_STOPPED = 8;
+  ROUTERSTATE_FAILED = 9;
+}
+
+message TunnelInfo {
+  int32 inboundClientTunnelCount = 1;
+  int32 outboundTunnelCount = 2;
+  int32 outboundClientTunnelCount = 3;
+}

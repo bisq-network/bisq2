@@ -17,7 +17,7 @@
 
 package bisq.i2p_router.gui;
 
-import bisq.network.i2p.router.RouterStateObserver.RouterState;
+import bisq.network.i2p.router.state.RouterState;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;

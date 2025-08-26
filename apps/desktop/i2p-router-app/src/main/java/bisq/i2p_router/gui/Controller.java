@@ -24,7 +24,10 @@ import bisq.i18n.Res;
 import bisq.i2p_router.common.threading.UIClock;
 import bisq.i2p_router.common.threading.UIThread;
 import bisq.i2p_router.service.I2pRouterService;
-import bisq.network.i2p.router.RouterStateObserver;
+import bisq.network.i2p.router.state.NetworkState;
+import bisq.network.i2p.router.state.ProcessState;
+import bisq.network.i2p.router.state.RouterState;
+import bisq.network.i2p.router.state.TunnelInfo;
 import javafx.application.Application;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import static bisq.network.i2p.router.RouterStateObserver.RouterState.RUNNING_OK;
+import static bisq.network.i2p.router.state.RouterState.RUNNING_OK;
 
 
 @Slf4j
@@ -65,11 +68,11 @@ public class Controller {
                 model.getVersion(),
                 service.getI2cpHost(),
                 String.valueOf(service.getI2cpPort())));
-        model.getDateDirPath().set(service.getDirPath());
+        model.getDateDirPath().set(service.getI2pDirPath().toAbsolutePath().toString());
 
         model.getButtonLabel().set(Res.get("stop"));
         model.getButtonDisabled().set(false);
-        model.getRouterStateString().set(Res.get("routerState." + RouterStateObserver.RouterState.STARTING.name()));
+        model.getRouterStateString().set(Res.get("routerState." + RouterState.STARTING.name()));
 
         processStatePin = service.getProcessState().addObserver(value -> UIThread.run(this::updateRouterStateDetails));
         networkStatePin = service.getNetworkState().addObserver(value -> UIThread.run(this::updateRouterStateDetails));
@@ -137,18 +140,18 @@ public class Controller {
         String processStateString = "N/A";
         String networkStateString = "N/A";
 
-        RouterStateObserver.TunnelInfo tunnelInfo = service.getTunnelInfo().get();
+        TunnelInfo tunnelInfo = service.getTunnelInfo().get();
         if (tunnelInfo != null) {
             outboundTunnelCount = tunnelInfo.getOutboundTunnelCount();
             outboundClientTunnelCount = tunnelInfo.getOutboundClientTunnelCount();
             inboundClientTunnelCount = tunnelInfo.getInboundClientTunnelCount();
 
         }
-        RouterStateObserver.ProcessState processState = service.getProcessState().get();
+        ProcessState processState = service.getProcessState().get();
         if (processState != null) {
             processStateString = Res.get("processState." + processState.name());
         }
-        RouterStateObserver.NetworkState networkState = service.getNetworkState().get();
+        NetworkState networkState = service.getNetworkState().get();
         if (networkState != null) {
             networkStateString = Res.get("networkState." + networkState.name());
         }

@@ -19,65 +19,75 @@ package bisq.i2p_router.service;
 
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
-import bisq.common.observable.Pin;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.platform.PlatformUtils;
+import bisq.network.i2p.grpc.server.GrpcRouterMonitorServer;
+import bisq.network.i2p.grpc.server.GrpcRouterMonitorService;
 import bisq.network.i2p.router.I2pRouter;
-import bisq.network.i2p.router.RouterStateObserver;
+import bisq.network.i2p.router.log.I2pLogLevel;
+import bisq.network.i2p.router.state.NetworkState;
+import bisq.network.i2p.router.state.ProcessState;
+import bisq.network.i2p.router.state.RouterMonitor;
+import bisq.network.i2p.router.state.RouterState;
+import bisq.network.i2p.router.state.TunnelInfo;
 import javafx.application.Application;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
 public class I2pRouterService implements Service {
+    private final String i2cpHost;
+    private final int i2cpPort;
+    @Getter
+    private final Path i2pDirPath;
 
-    private volatile boolean shutdownInProgress;
     @Getter
     private final Observable<Throwable> throwable = new Observable<>();
 
-    @Getter
-    private final Observable<String> statusMessage = new Observable<>();
-    private Application.Parameters parameters;
     private volatile I2pRouter router;
-    private Pin statusPin;
-    private String i2cpHost;
-    private int i2cpPort;
-    private String i2pRouterDir;
+    private GrpcRouterMonitorServer monitorServer;
+    private GrpcRouterMonitorService monitorService;
+    private volatile RouterMonitor routerMonitor;
+    private volatile boolean shutdownInProgress;
 
-    public I2pRouterService() {
-    }
-
-    public void onApplicationReady(Application.Parameters parameters, String i2pRouterDir) {
+    public I2pRouterService(Application.Parameters parameters, String i2pRouterDir) {
         i2cpHost = Optional.ofNullable(parameters.getNamed().get("i2cpHost")).orElse("127.0.0.1");
         i2cpPort = Optional.ofNullable(parameters.getNamed().get("i2cpPort")).map(Integer::parseInt).orElse(7654);
-        this.i2pRouterDir = i2pRouterDir;
+        i2pDirPath = PlatformUtils.getUserDataDir().resolve(i2pRouterDir);
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        String i2pDirPath = PlatformUtils.getUserDataDir().resolve(i2pRouterDir).toString();
-        router = new I2pRouter(i2pDirPath, i2cpPort);
+        router = new I2pRouter(i2pDirPath,
+                i2cpHost,
+                i2cpPort,
+                I2pLogLevel.DEBUG,
+                false,
+                (int) TimeUnit.SECONDS.toMillis(10),
+                512,
+                512,
+                50);
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            Thread.currentThread().setName("I2pRouter.shutdownHook");
-            router.shutdown();
-        }));
+        routerMonitor = router.getRouterMonitor();
 
-      /*  router.start()
-                .orTimeout(3, TimeUnit.MINUTES)
+        monitorService = new GrpcRouterMonitorService(router);
+        monitorServer = new GrpcRouterMonitorServer(7777, monitorService);
+
+        return monitorServer.initialize()
+                .thenCompose(result -> monitorService.initialize())
+                .thenCompose(result -> router.startRouter())
                 .whenComplete((result, throwable) -> {
-                    if (throwable != null || !result) {
-                        router.shutdown();
+                    if (throwable != null) {
                         log.error("I2P router failed to start, exiting.");
-                        System.exit(1);
+                        shutdown();
                     }
-                });*/
-
-        return CompletableFuture.completedFuture(true);
+                });
     }
 
     @Override
@@ -87,16 +97,17 @@ public class I2pRouterService implements Service {
         }
         shutdownInProgress = true;
 
-        if (statusPin != null) {
-            statusPin.unbind();
-        }
-        return router.shutdown();
+        return Optional.ofNullable(monitorServer)
+                .map(GrpcRouterMonitorServer::shutdown)
+                .orElse(CompletableFuture.completedFuture(true))
+                .thenCompose(result ->
+                        Optional.ofNullable(monitorService)
+                                .map(GrpcRouterMonitorService::shutdown)
+                                .orElse(CompletableFuture.completedFuture(true)))
+                .thenCompose(result -> router.shutdown());
     }
 
-    public String getDirPath() {
-        return router.getDirPath();
-    }
-
+    // Delegates
     public String getI2cpHost() {
         return router.getI2cpHost();
     }
@@ -105,19 +116,19 @@ public class I2pRouterService implements Service {
         return router.getI2cpPort();
     }
 
-    public ReadOnlyObservable<RouterStateObserver.ProcessState> getProcessState() {
-        return router.getProcessState();
+    public ReadOnlyObservable<ProcessState> getProcessState() {
+        return router.getRouterMonitor().getProcessState();
     }
 
-    public ReadOnlyObservable<RouterStateObserver.NetworkState> getNetworkState() {
-        return router.getNetworkState();
+    public ReadOnlyObservable<NetworkState> getNetworkState() {
+        return router.getRouterMonitor().getNetworkState();
     }
 
-    public ReadOnlyObservable<RouterStateObserver.RouterState> getState() {
-        return router.getRouterState();
+    public ReadOnlyObservable<RouterState> getState() {
+        return router.getRouterMonitor().getRouterState();
     }
 
-    public ReadOnlyObservable<RouterStateObserver.TunnelInfo> getTunnelInfo() {
-        return router.getTunnelInfo();
+    public ReadOnlyObservable<TunnelInfo> getTunnelInfo() {
+        return router.getRouterMonitor().getTunnelInfo();
     }
 }

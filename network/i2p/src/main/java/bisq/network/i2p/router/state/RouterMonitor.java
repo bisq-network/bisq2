@@ -15,14 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.i2p.router;
+package bisq.network.i2p.router.state;
 
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.timer.Scheduler;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.router.CommSystemFacade;
 import net.i2p.router.Router;
@@ -33,58 +30,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
-public class RouterStateObserver {
-    public enum NetworkState {
-        NEW,
-        UNKNOWN,     // no reliable signal yet
-        TESTING,     // bootstrapping / mixed "Testing"
-        OK,          // at least one family (v4 or v6) confirmed OK
-        FIREWALLED,  // reachable only in limited ways (no confirmed OK)
-        DISCONNECTED // no connectivity
-    }
-
-    public enum ProcessState {
-        NEW,
-        STARTING,
-        INITIALIZING,
-        RUNNING,
-        STOPPING,
-        STOPPED,
-        FAILED
-    }
-
-    // High level state combining process and network state
-    public enum RouterState {
-        NEW,
-        STARTING,
-        RUNNING_TESTING,
-        RUNNING_OK,
-        RUNNING_FIREWALLED,
-        RUNNING_DISCONNECTED,
-        STOPPING,
-        STOPPED,
-        FAILED
-    }
-
-    @Getter
-    @ToString
-    @EqualsAndHashCode
-    public static class TunnelInfo {
-        private final int inboundClientTunnelCount;
-        private final int outboundTunnelCount;
-        private final int outboundClientTunnelCount;
-
-        public TunnelInfo() {
-            this(0, 0, 0);
-        }
-
-        public TunnelInfo(int inboundClientTunnelCount, int outboundTunnelCount, int outboundClientTunnelCount) {
-            this.inboundClientTunnelCount = inboundClientTunnelCount;
-            this.outboundTunnelCount = outboundTunnelCount;
-            this.outboundClientTunnelCount = outboundClientTunnelCount;
-        }
-    }
-
+public class RouterMonitor implements RouterObserver {
     private final Runnable shutdownTask;
     private final AtomicReference<NetworkState> networkState = new AtomicReference<>(NetworkState.NEW);
     private final AtomicReference<ProcessState> processState = new AtomicReference<>(ProcessState.NEW);
@@ -94,27 +40,23 @@ public class RouterStateObserver {
     private final Observable<NetworkState> networkStateObservable = new Observable<>(networkState.get());
     private final Observable<ProcessState> processStateObservable = new Observable<>(processState.get());
     private final Observable<RouterState> routerStateObservable = new Observable<>(routerState.get());
-
     private final Observable<TunnelInfo> tunnelInfo = new Observable<>(new TunnelInfo());
 
-    private volatile Router router;
-    private volatile RouterContext routerContext;
+    private final Router router;
+    private final RouterContext routerContext;
     private volatile Scheduler scheduler;
     private volatile boolean isShutdownInProgress;
 
-    RouterStateObserver() {
+    public RouterMonitor(Router router) {
+        this.router = router;
+        routerContext = router.getContext();
+
         shutdownTask = () -> {
             if (processState.get() != ProcessState.STOPPED && processState.get() != ProcessState.FAILED) {
                 setProcessState(ProcessState.STOPPING);
             }
             updateRouterState();
         };
-    }
-
-    void start(Router router) {
-        this.router = router;
-        routerContext = router.getContext();
-
         routerContext.addShutdownTask(shutdownTask);
         routerContext.addFinalShutdownTask(() -> {
             if (processState.get() != ProcessState.STOPPED && processState.get() != ProcessState.FAILED) {
@@ -123,29 +65,21 @@ public class RouterStateObserver {
             setNetworkState(NetworkState.DISCONNECTED);
             updateRouterState();
         });
+    }
 
+    public void startPolling() {
         scheduler = Scheduler.run(this::updateStates)
                 .host(this)
                 .runnableName("updateState")
                 .periodically(1, TimeUnit.SECONDS);
     }
 
-    private void updateStates() {
-        if (isShutdownInProgress) {
-            return;
-        }
-        updateNetworkState();
-        updateProcessState();
-        updateRouterState();
-        updateTunnelInfo(routerContext);
-    }
-
-    void startShutdown() {
+    public void startShutdown() {
         processState.set(ProcessState.STOPPING);
         updateStates();
     }
 
-    void shutdown() {
+    public void shutdown() {
         if (router == null || isShutdownInProgress) {
             return;
         }
@@ -161,25 +95,39 @@ public class RouterStateObserver {
         tunnelInfo.set(new TunnelInfo());
     }
 
-    ReadOnlyObservable<ProcessState> getProcessState() {
+    @Override
+    public ReadOnlyObservable<ProcessState> getProcessState() {
         return processStateObservable;
     }
 
-    ReadOnlyObservable<NetworkState> getNetworkState() {
+    @Override
+    public ReadOnlyObservable<NetworkState> getNetworkState() {
         return networkStateObservable;
     }
 
-    ReadOnlyObservable<RouterState> getRouterState() {
+    @Override
+    public ReadOnlyObservable<RouterState> getRouterState() {
         return routerStateObservable;
     }
 
-    ReadOnlyObservable<TunnelInfo> getTunnelInfo() {
+    @Override
+    public ReadOnlyObservable<TunnelInfo> getTunnelInfo() {
         return tunnelInfo;
     }
 
-    void handleRouterException(Exception exception) {
+    public void handleRouterException(Exception exception) {
         processState.set(ProcessState.FAILED);
         updateRouterState();
+    }
+
+    private void updateStates() {
+        if (isShutdownInProgress) {
+            return;
+        }
+        updateNetworkState();
+        updateProcessState();
+        updateRouterState();
+        updateTunnelInfo(routerContext);
     }
 
     private void updateNetworkState() {

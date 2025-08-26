@@ -7,6 +7,8 @@ plugins {
     application
     alias(libs.plugins.shadow)
     alias(libs.plugins.openjfx)
+    id("bisq.protobuf")
+    id("bisq.grpc")
 }
 
 application {

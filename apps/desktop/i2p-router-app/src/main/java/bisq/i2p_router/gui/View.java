@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import static bisq.network.i2p.router.RouterStateObserver.RouterState.RUNNING_OK;
+import static bisq.network.i2p.router.state.RouterState.RUNNING_OK;
 
 @Slf4j
 public class View extends StackPane {

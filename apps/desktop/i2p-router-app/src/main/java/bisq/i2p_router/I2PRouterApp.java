@@ -18,7 +18,6 @@
 package bisq.i2p_router;
 
 
-import bisq.common.logging.LogSetup;
 import bisq.common.platform.OS;
 import bisq.common.platform.PlatformUtils;
 import bisq.i18n.Res;
@@ -40,7 +39,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.InputStream;
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -51,12 +49,11 @@ import static java.util.Objects.requireNonNull;
 public class I2PRouterApp extends Application {
     private static final double WIDTH = 800;
     private static final double HEIGHT = 600;
-    private final I2pRouterService service;
+    private I2pRouterService i2pRouterService;
     private Controller controller;
     private String i2pRouterDir;
 
     public I2PRouterApp() {
-        service = new I2pRouterService();
 
         // Taskbar is only supported on mac
         if (OS.isMacOs()) {
@@ -68,13 +65,13 @@ public class I2PRouterApp extends Application {
     @Override
     public void init() {
         Parameters parameters = getParameters();
-        log.error("Parameters {}", parameters);
         i2pRouterDir = Optional.ofNullable(parameters.getNamed().get("i2pRouterDir"))
-                .orElse(PlatformUtils.getUserDataDir().resolve("Bisq_I2P_router").toString());
-        setupLogging(parameters, i2pRouterDir);
+                .orElse(PlatformUtils.getUserDataDir().resolve("Bisq2_I2P_router").toString());
         setupRes(parameters);
-        controller = new Controller(WIDTH, HEIGHT, service, this::shutdown);
-        service.onApplicationReady(parameters, i2pRouterDir);
+
+        i2pRouterService = new I2pRouterService(parameters, i2pRouterDir);
+
+        controller = new Controller(WIDTH, HEIGHT, i2pRouterService, this::shutdown);
         controller.onApplicationReady(parameters);
     }
 
@@ -84,7 +81,7 @@ public class I2PRouterApp extends Application {
         Platform.setImplicitExit(false);
 
         setupStage(primaryStage, controller.getView());
-        service.initialize()
+        i2pRouterService.initialize()
                 .whenComplete((result, throwable) -> {
                     if (throwable != null) {
                         log.error("Initializing service failed", throwable);
@@ -95,7 +92,10 @@ public class I2PRouterApp extends Application {
     }
 
     private CompletableFuture<Boolean> shutdown() {
-        return service.shutdown()
+        if (i2pRouterService == null) {
+            return CompletableFuture.completedFuture(false);
+        }
+        return i2pRouterService.shutdown()
                 .whenComplete((result, throwable) -> {
                     if (controller != null) {
                         controller.onDeactivate();
@@ -190,12 +190,6 @@ public class I2PRouterApp extends Application {
             log.error("Loading image failed: path={}", path, e);
             throw new RuntimeException(e);
         }
-    }
-
-    private void setupLogging(Parameters parameters, String i2pRouterDir) {
-        String fileName = Path.of(i2pRouterDir).resolve("i2p_router").toString();
-        LogSetup.setup(fileName);
-        log.info("I2P router app logging to {}", fileName);
     }
 
     private void setupRes(Parameters parameters) {

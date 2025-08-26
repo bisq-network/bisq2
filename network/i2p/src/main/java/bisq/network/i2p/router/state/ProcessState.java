@@ -15,12 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.i2p.router;
+package bisq.network.i2p.router.state;
 
-public enum I2pLogLevel {
-    DEBUG,
-    INFO,
-    WARN,
-    ERROR,
-    CRIT,
-}
+import bisq.common.proto.ProtoEnum;
+import bisq.common.proto.ProtobufUtils;
+
+public enum ProcessState implements ProtoEnum {
+    NEW,
+    STARTING,
+    INITIALIZING,
+    RUNNING,
+    STOPPING,
+    STOPPED,
+    FAILED;
+
+
+    @Override
+    public bisq.i2p.protobuf.ProcessState toProtoEnum() {
+        return bisq.i2p.protobuf.ProcessState.valueOf(getProtobufEnumPrefix() + name());
+    }
+
+    public static ProcessState fromProto(bisq.i2p.protobuf.ProcessState proto) {
+        return ProtobufUtils.enumFromProto(ProcessState.class, proto.name(), NEW);
+    }
+    }

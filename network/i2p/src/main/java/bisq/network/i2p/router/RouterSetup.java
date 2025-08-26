@@ -19,10 +19,14 @@ package bisq.network.i2p.router;
 
 import bisq.common.file.FileUtils;
 import bisq.common.file.PropertiesReader;
+import bisq.common.logging.LogSetup;
+import bisq.network.i2p.router.log.I2pLogLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.client.I2PClient;
 import net.i2p.data.DataHelper;
+import net.i2p.router.Router;
+import net.i2p.router.RouterContext;
 import net.i2p.util.OrderedProperties;
 
 import java.io.File;
@@ -30,6 +34,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.Properties;
 
 @Slf4j
@@ -39,31 +44,30 @@ class RouterSetup {
     private final int i2cpPort;
     @Getter
     private final I2pLogLevel i2pLogLevel;
-    private final boolean isEmbedded;
+    private final boolean isInProcess;
     private final int inboundKBytesPerSecond;
     private final int outboundKBytesPerSecond;
     private final int bandwidthSharePercentage;
     private final File i2pDir;
-    private Properties properties;
 
-    RouterSetup(String i2pDirPath,
+    RouterSetup(Path i2pDirPath,
                 String i2cpHost,
                 int i2cpPort,
                 I2pLogLevel i2pLogLevel,
-                boolean isEmbedded,
+                boolean isInProcess,
                 int inboundKBytesPerSecond,
                 int outboundKBytesPerSecond,
                 int bandwidthSharePercentage) {
         this.i2cpHost = i2cpHost;
         this.i2cpPort = i2cpPort;
         this.i2pLogLevel = i2pLogLevel;
-        this.isEmbedded = isEmbedded;
+        this.isInProcess = isInProcess;
         this.inboundKBytesPerSecond = inboundKBytesPerSecond;
         this.outboundKBytesPerSecond = outboundKBytesPerSecond;
         this.bandwidthSharePercentage = bandwidthSharePercentage;
 
-        i2pDir = new File(i2pDirPath);
-
+        i2pDir = i2pDirPath.toFile();
+        setupLogging();
 
         // Must be set before I2P router is created as otherwise log outputs are routed by I2P log system
         System.setProperty("I2P_DISABLE_OUTPUT_OVERRIDE", "true");
@@ -73,12 +77,29 @@ class RouterSetup {
 
         System.setProperty("i2cp.host", i2cpHost);
         System.setProperty("i2cp.port", String.valueOf(i2cpPort));
+        //todo
+        // System.setProperty("router.reseedDisable", "true");
     }
 
-    void initialize() throws IOException, URISyntaxException {
-        setupDirectories();
-        setupProperties();
-        setupCertificatesDirectories();
+    void initialize() {
+        try {
+            setupDirectories();
+            setupProperties();
+            setupCertificatesDirectories();
+        } catch (IOException | URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    void setI2pLogLevel(Router router) {
+        RouterContext routerContext = router.getContext();
+        routerContext.logManager().setDefaultLimit(i2pLogLevel.name());
+    }
+
+    private void setupLogging() {
+        String fileName = i2pDir.toPath().resolve("i2p_router").toString();
+        LogSetup.setup(fileName);
+        log.info("I2P router app logging to {}", fileName);
     }
 
     private void setupDirectories() throws IOException {
@@ -88,8 +109,8 @@ class RouterSetup {
     }
 
     private void setupProperties() {
-        properties = new Properties();
-        if (isEmbedded) {
+        Properties properties = new Properties();
+        if (isInProcess) {
             // When used as embedded router I2P uses in-process communication instead of TPC
             properties.put(I2PClient.PROP_TCP_HOST, "internal");
             properties.put(I2PClient.PROP_TCP_PORT, "internal");
@@ -101,7 +122,7 @@ class RouterSetup {
             properties.put(I2PClient.PROP_TCP_HOST, i2cpHost);
             properties.put(I2PClient.PROP_TCP_PORT, String.valueOf(i2cpPort));
 
-            // We need to have the interface enables
+            // We need to have the interface enabled
             properties.put("i2cp.disableInterface", "false");
         }
 
