@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.reporting;
 
 import bisq.common.platform.MemoryReportService;
-import bisq.network.p2p.common.RequestResponseHandler;
+import bisq.network.p2p.common.RequestHandler;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
@@ -28,11 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.TreeMap;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-
 @Slf4j
-public class ReportResponseService extends RequestResponseHandler<ReportRequest, ReportResponse> {
-    private static final long REQUEST_TIMEOUT_MS = SECONDS.toMillis(120);
+public class ReportResponseService extends RequestHandler<ReportRequest, ReportResponse> {
 
     private final DataService dataService;
     private final NetworkLoadSnapshot networkLoadSnapshot;
@@ -42,7 +39,7 @@ public class ReportResponseService extends RequestResponseHandler<ReportRequest,
                                  DataService dataService,
                                  NetworkLoadSnapshot networkLoadSnapshot,
                                  MemoryReportService memoryReportService) {
-        super(node, REQUEST_TIMEOUT_MS);
+        super(node);
         this.dataService = dataService;
         this.networkLoadSnapshot = networkLoadSnapshot;
         this.memoryReportService = memoryReportService;
@@ -59,11 +56,6 @@ public class ReportResponseService extends RequestResponseHandler<ReportRequest,
     @Override
     protected Class<ReportRequest> getRequestClass() {
         return ReportRequest.class;
-    }
-
-    @Override
-    protected Class<ReportResponse> getResponseClass() {
-        return ReportResponse.class;
     }
 
     /* --------------------------------------------------------------------- */

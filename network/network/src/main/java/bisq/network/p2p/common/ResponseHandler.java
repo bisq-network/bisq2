@@ -24,33 +24,17 @@ import bisq.network.p2p.message.Response;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-@Slf4j
-public abstract class RequestResponseHandler<T extends Request, R extends Response> extends BaseHandler implements Node.Listener, LifecycleHandler {
+public abstract class ResponseHandler<T extends Request, R extends Response> extends BaseHandler implements Node.Listener, LifecycleHandler {
     protected final Node node;
-    private final RequestHandlerDelegate<T, R> requestHandlerDelegate;
     private final ResponseHandlerDelegate<T, R> responseHandlerDelegate;
 
-    public RequestResponseHandler(Node node, long timeout) {
+    public ResponseHandler(Node node, long timeout) {
         this.node = node;
-
-        this.requestHandlerDelegate = new RequestHandlerDelegate<>(node, getRequestClass(), new RequestHandlerDelegate.Callback<>() {
-            @Override
-            public R createResponse(Connection connection, T request) {
-                return RequestResponseHandler.this.createResponse(connection, request);
-            }
-
-            @Override
-            public void onRequest(Connection connection, T request) {
-                RequestResponseHandler.this.onRequest(connection, request);
-            }
-        });
         this.responseHandlerDelegate = new ResponseHandlerDelegate<>(node, timeout, getResponseClass());
-
     }
 
     /* --------------------------------------------------------------------- */
@@ -72,34 +56,16 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
     }
 
     /* --------------------------------------------------------------------- */
-    // RequestHandler implementation
-    /* --------------------------------------------------------------------- */
-
-    protected abstract R createResponse(Connection connection, T request);
-
-    protected abstract Class<T> getRequestClass();
-
-    protected void onRequest(Connection connection, T request) {
-    }
-
-    protected void processRequest(Connection connection, T request) {
-        requestHandlerDelegate.processRequest(connection, request);
-    }
-
-    /* --------------------------------------------------------------------- */
     // LifecycleHandler implementation
     /* --------------------------------------------------------------------- */
 
     public void initialize() {
         node.addListener(this);
-        requestHandlerDelegate.initialize();
         responseHandlerDelegate.initialize();
     }
 
     public void shutdown() {
         node.removeListener(this);
-
-        requestHandlerDelegate.shutdown();
         responseHandlerDelegate.shutdown();
     }
 
@@ -110,7 +76,6 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
         responseHandlerDelegate.resolveResponse(envelopePayloadMessage).ifPresent(response -> processResponse(connection, response));
-        requestHandlerDelegate.resolveRequest(envelopePayloadMessage).ifPresent(request -> processRequest(connection, request));
     }
 
     @Override
@@ -122,3 +87,4 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
         responseHandlerDelegate.processOnDisconnect(connection, closeReason);
     }
 }
+

@@ -24,51 +24,25 @@ import bisq.network.p2p.message.Response;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
-@Slf4j
-public abstract class RequestResponseHandler<T extends Request, R extends Response> extends BaseHandler implements Node.Listener, LifecycleHandler {
+public abstract class RequestHandler<T extends Request, R extends Response> extends BaseHandler implements Node.Listener, LifecycleHandler {
     protected final Node node;
     private final RequestHandlerDelegate<T, R> requestHandlerDelegate;
-    private final ResponseHandlerDelegate<T, R> responseHandlerDelegate;
 
-    public RequestResponseHandler(Node node, long timeout) {
+    public RequestHandler(Node node) {
         this.node = node;
-
         this.requestHandlerDelegate = new RequestHandlerDelegate<>(node, getRequestClass(), new RequestHandlerDelegate.Callback<>() {
             @Override
             public R createResponse(Connection connection, T request) {
-                return RequestResponseHandler.this.createResponse(connection, request);
+                return RequestHandler.this.createResponse(connection, request);
             }
 
             @Override
             public void onRequest(Connection connection, T request) {
-                RequestResponseHandler.this.onRequest(connection, request);
+                RequestHandler.this.onRequest(connection, request);
             }
         });
-        this.responseHandlerDelegate = new ResponseHandlerDelegate<>(node, timeout, getResponseClass());
-
-    }
-
-    /* --------------------------------------------------------------------- */
-    // ResponseHandler implementation
-    /* --------------------------------------------------------------------- */
-
-    protected Map<String, RequestFuture<T, R>> getRequestFuturesByConnectionId() {
-        return responseHandlerDelegate.getRequestFuturesByConnectionId();
-    }
-
-    protected CompletableFuture<R> request(Connection connection, T request) {
-        return responseHandlerDelegate.request(connection, request);
-    }
-
-    protected abstract Class<R> getResponseClass();
-
-    protected void processResponse(Connection connection, R response) {
-        responseHandlerDelegate.processResponse(connection, response);
     }
 
     /* --------------------------------------------------------------------- */
@@ -93,14 +67,11 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
     public void initialize() {
         node.addListener(this);
         requestHandlerDelegate.initialize();
-        responseHandlerDelegate.initialize();
     }
 
     public void shutdown() {
         node.removeListener(this);
-
         requestHandlerDelegate.shutdown();
-        responseHandlerDelegate.shutdown();
     }
 
     /* --------------------------------------------------------------------- */
@@ -109,7 +80,6 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-        responseHandlerDelegate.resolveResponse(envelopePayloadMessage).ifPresent(response -> processResponse(connection, response));
         requestHandlerDelegate.resolveRequest(envelopePayloadMessage).ifPresent(request -> processRequest(connection, request));
     }
 
@@ -119,6 +89,6 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
 
     @Override
     public void onDisconnect(Connection connection, CloseReason closeReason) {
-        responseHandlerDelegate.processOnDisconnect(connection, closeReason);
     }
 }
+
