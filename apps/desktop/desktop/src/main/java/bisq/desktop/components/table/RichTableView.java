@@ -86,7 +86,7 @@ public class RichTableView<T> extends VBox {
     private final ChangeListener<Toggle> toggleChangeListener;
     private final ListChangeListener<T> listChangeListener;
     private final String entriesUnit;
-    private final HBox subheader;
+    private final HBox headerBox, subheaderBox;
     private Subscription searchTextPin;
     @Setter
     private Optional<List<String>> csvHeaders = Optional.empty();
@@ -176,7 +176,7 @@ public class RichTableView<T> extends VBox {
         exportButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
         exportButton.getStyleClass().addAll("export-button", "normal-text");
 
-        HBox headerBox = new HBox(5, headlineLabel, numEntriesLabel, Spacer.fillHBox(), exportButton);
+        headerBox = new HBox(5, headlineLabel, numEntriesLabel, Spacer.fillHBox(), exportButton);
         headerBox.getStyleClass().add("chat-container-header");
 
         VBox headerWithLineBox = new VBox(headerBox, Layout.hLine());
@@ -199,10 +199,10 @@ public class RichTableView<T> extends VBox {
         tooltip = new BisqTooltip();
         filterMenu.setTooltip(tooltip);
 
-        subheader = new HBox(searchBox, Spacer.fillHBox(), filterMenu);
-        subheader.getStyleClass().add("rich-table-subheader");
-        subheader.setAlignment(Pos.CENTER);
-        subheader.setPadding(new Insets(0, 20, 0, 20));
+        subheaderBox = new HBox(searchBox, Spacer.fillHBox(), filterMenu);
+        subheaderBox.getStyleClass().add("rich-table-subheader");
+        subheaderBox.setAlignment(Pos.CENTER);
+        subheaderBox.setPadding(new Insets(0, 20, 0, 20));
 
         // TableView
         tableView = new BisqTableView<>(sortedList);
@@ -210,7 +210,7 @@ public class RichTableView<T> extends VBox {
         tableView.setMinHeight(200);
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
-        getChildren().addAll(headerWithLineBox, subheader, tableView);
+        getChildren().addAll(headerWithLineBox, subheaderBox, tableView);
         VBox.setVgrow(this, Priority.ALWAYS);
         getStyleClass().add("rich-table-view-box");
 
