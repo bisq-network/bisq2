@@ -114,6 +114,7 @@ public class MuSigMyOffersController implements Controller {
                                     .filter(item -> item.getOffer().getId().equals(offerId))
                                     .findAny();
                             toRemove.ifPresent(offer -> {
+                                offer.dispose();
                                 model.getMuSigMyOffersListItems().remove(offer);
                                 model.getMuSigMyOffersIds().remove(offerId);
                             });
@@ -126,6 +127,7 @@ public class MuSigMyOffersController implements Controller {
             @Override
             public void clear() {
                 UIThread.run(() -> {
+                    model.getMuSigMyOffersListItems().forEach(MuSigOfferListItem::dispose);
                     model.getMuSigMyOffersListItems().clear();
                     model.getMuSigMyOffersIds().clear();
                     updateFilteredMuSigMyOffersListItems();
