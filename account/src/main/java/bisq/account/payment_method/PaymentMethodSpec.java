@@ -74,11 +74,6 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
         return builder;
     }
 
-    // Alternative signature would be: `public static <T extends PaymentMethodSpec<?>> T fromProto(bisq.account.protobuf.PaymentMethodSpec proto)`
-    // This would require an unsafe cast  (T) for the return type.
-    // The caller would provide the expected type. E.g. `PaymentMethodSpec::<BitcoinPaymentMethodSpec>fromProto`
-    // By using specific methods we avoid those issues and the code is more readable without generics overhead.
-
     public static FiatPaymentMethodSpec protoToFiatPaymentMethodSpec(bisq.account.protobuf.PaymentMethodSpec proto) {
         return switch (proto.getMessageCase()) {
             case FIATPAYMENTMETHODSPEC -> FiatPaymentMethodSpec.fromProto(proto);
@@ -95,8 +90,16 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
         };
     }
 
-    public static PaymentMethodSpec<?> fromProto(bisq.account.protobuf.PaymentMethodSpec proto) {
-        return switch (proto.getMessageCase()) {
+    // Alternative signature would be: `public static <T extends PaymentMethodSpec<?>> T fromProto(bisq.account.protobuf.PaymentMethodSpec proto)`
+    // This would require an unsafe cast  (T) for the return type.
+    // The caller would provide the expected type. E.g. `PaymentMethodSpec::<BitcoinPaymentMethodSpec>fromProto`
+    // By using specific methods we avoid those issues and the code is more readable without generics overhead.
+    /**
+     * Generic fromProto method to support all PaymentMethodSpec types.
+     * Usage: PaymentMethodSpec.fromProto(proto, FiatPaymentMethodSpec.class)
+     */
+    public static <T extends PaymentMethodSpec<?>> T fromProto(bisq.account.protobuf.PaymentMethodSpec proto, Class<T> clazz) {
+        Object result = switch (proto.getMessageCase()) {
             case BITCOINPAYMENTMETHODSPEC -> BitcoinPaymentMethodSpec.fromProto(proto);
             case FIATPAYMENTMETHODSPEC -> FiatPaymentMethodSpec.fromProto(proto);
             case STABLECOINPAYMENTMETHODSPEC -> StableCoinPaymentMethodSpec.fromProto(proto);
@@ -104,6 +107,12 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
             case CBDCPAYMENTMETHODSPEC -> CbdcPaymentMethodSpec.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
+        if (clazz.isInstance(result)) {
+            return clazz.cast(result);
+        } else {
+            throw new UnresolvableProtobufMessageException(
+                "Proto message does not match expected type: " + clazz.getSimpleName(), proto);
+        }
     }
 
     public String getPaymentMethodName() {
