@@ -50,7 +50,22 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
             }
         });
         this.responseHandlerDelegate = new ResponseHandlerDelegate<>(node, timeout, getResponseClass());
+    }
 
+    /* --------------------------------------------------------------------- */
+    // HandlerLifecycle implementation
+    /* --------------------------------------------------------------------- */
+
+    public void initialize() {
+        node.addListener(this);
+        requestHandlerDelegate.initialize();
+        responseHandlerDelegate.initialize();
+    }
+
+    public void shutdown() {
+        node.removeListener(this);
+        requestHandlerDelegate.shutdown();
+        responseHandlerDelegate.shutdown();
     }
 
     /* --------------------------------------------------------------------- */
@@ -87,30 +102,19 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
     }
 
     /* --------------------------------------------------------------------- */
-    // HandlerLifecycle implementation
-    /* --------------------------------------------------------------------- */
-
-    public void initialize() {
-        node.addListener(this);
-        requestHandlerDelegate.initialize();
-        responseHandlerDelegate.initialize();
-    }
-
-    public void shutdown() {
-        node.removeListener(this);
-
-        requestHandlerDelegate.shutdown();
-        responseHandlerDelegate.shutdown();
-    }
-
-    /* --------------------------------------------------------------------- */
     // Node.Listener implementation
     /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-        responseHandlerDelegate.resolveResponse(envelopePayloadMessage).ifPresent(response -> processResponse(connection, response));
-        requestHandlerDelegate.resolveRequest(envelopePayloadMessage).ifPresent(request -> processRequest(connection, request));
+        try {
+            responseHandlerDelegate.resolveResponse(envelopePayloadMessage)
+                    .ifPresent(response -> processResponse(connection, response));
+            requestHandlerDelegate.resolveRequest(envelopePayloadMessage)
+                    .ifPresent(request -> processRequest(connection, request));
+        } catch (Throwable t) {
+            log.error("Error handling message: {}", connection, t);
+        }
     }
 
     @Override

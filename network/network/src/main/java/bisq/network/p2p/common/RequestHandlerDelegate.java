@@ -48,6 +48,18 @@ class RequestHandlerDelegate<T extends Request, R extends Response> implements H
         this.callback = callback;
     }
 
+    /* --------------------------------------------------------------------- */
+    // HandlerLifecycle implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public void initialize() {
+    }
+
+    @Override
+    public void shutdown() {
+    }
+
     protected Optional<T> resolveRequest(EnvelopePayloadMessage message) {
         return requestClass.isInstance(message)
                 ? Optional.of(requestClass.cast(message))
@@ -67,18 +79,4 @@ class RequestHandlerDelegate<T extends Request, R extends Response> implements H
                     }
                 });
     }
-
-    /* --------------------------------------------------------------------- */
-    // HandlerLifecycle implementation
-    /* --------------------------------------------------------------------- */
-
-    @Override
-    public void initialize() {
-    }
-
-    @Override
-    public void shutdown() {
-    }
-
-
 }

@@ -16,7 +16,7 @@
  */
 
 package bisq.network.p2p.common;
-
+// TODO Define a superclass Service and a Lifecycle interface in the common package, and consider better naming.
 public interface HandlerLifecycle {
     void initialize();
 

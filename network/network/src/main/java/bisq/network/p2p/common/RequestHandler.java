@@ -24,8 +24,9 @@ import bisq.network.p2p.message.Response;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
+import lombok.extern.slf4j.Slf4j;
 
-
+@Slf4j
 public abstract class RequestHandler<T extends Request, R extends Response> extends BaseHandler implements Node.Listener, HandlerLifecycle {
     protected final Node node;
     private final RequestHandlerDelegate<T, R> requestHandlerDelegate;
@@ -46,6 +47,20 @@ public abstract class RequestHandler<T extends Request, R extends Response> exte
     }
 
     /* --------------------------------------------------------------------- */
+    // HandlerLifecycle implementation
+    /* --------------------------------------------------------------------- */
+
+    public void initialize() {
+        node.addListener(this);
+        requestHandlerDelegate.initialize();
+    }
+
+    public void shutdown() {
+        node.removeListener(this);
+        requestHandlerDelegate.shutdown();
+    }
+
+    /* --------------------------------------------------------------------- */
     // RequestHandler implementation
     /* --------------------------------------------------------------------- */
 
@@ -61,26 +76,17 @@ public abstract class RequestHandler<T extends Request, R extends Response> exte
     }
 
     /* --------------------------------------------------------------------- */
-    // HandlerLifecycle implementation
-    /* --------------------------------------------------------------------- */
-
-    public void initialize() {
-        node.addListener(this);
-        requestHandlerDelegate.initialize();
-    }
-
-    public void shutdown() {
-        node.removeListener(this);
-        requestHandlerDelegate.shutdown();
-    }
-
-    /* --------------------------------------------------------------------- */
     // Node.Listener implementation
     /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-        requestHandlerDelegate.resolveRequest(envelopePayloadMessage).ifPresent(request -> processRequest(connection, request));
+        try {
+            requestHandlerDelegate.resolveRequest(envelopePayloadMessage)
+                    .ifPresent(request -> processRequest(connection, request));
+        } catch (Throwable t) {
+            log.error("Error handling message: {}", connection, t);
+        }
     }
 
     @Override

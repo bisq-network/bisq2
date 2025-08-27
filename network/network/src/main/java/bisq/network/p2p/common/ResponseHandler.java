@@ -24,10 +24,12 @@ import bisq.network.p2p.message.Response;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+@Slf4j
 public abstract class ResponseHandler<T extends Request, R extends Response> extends BaseHandler implements Node.Listener, HandlerLifecycle {
     protected final Node node;
     private final ResponseHandlerDelegate<T, R> responseHandlerDelegate;
@@ -35,6 +37,20 @@ public abstract class ResponseHandler<T extends Request, R extends Response> ext
     public ResponseHandler(Node node, long timeout) {
         this.node = node;
         this.responseHandlerDelegate = new ResponseHandlerDelegate<>(node, timeout, getResponseClass());
+    }
+
+    /* --------------------------------------------------------------------- */
+    // HandlerLifecycle implementation
+    /* --------------------------------------------------------------------- */
+
+    public void initialize() {
+        node.addListener(this);
+        responseHandlerDelegate.initialize();
+    }
+
+    public void shutdown() {
+        node.removeListener(this);
+        responseHandlerDelegate.shutdown();
     }
 
     /* --------------------------------------------------------------------- */
@@ -56,26 +72,17 @@ public abstract class ResponseHandler<T extends Request, R extends Response> ext
     }
 
     /* --------------------------------------------------------------------- */
-    // HandlerLifecycle implementation
-    /* --------------------------------------------------------------------- */
-
-    public void initialize() {
-        node.addListener(this);
-        responseHandlerDelegate.initialize();
-    }
-
-    public void shutdown() {
-        node.removeListener(this);
-        responseHandlerDelegate.shutdown();
-    }
-
-    /* --------------------------------------------------------------------- */
     // Node.Listener implementation
     /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-        responseHandlerDelegate.resolveResponse(envelopePayloadMessage).ifPresent(response -> processResponse(connection, response));
+        try {
+            responseHandlerDelegate.resolveResponse(envelopePayloadMessage)
+                    .ifPresent(response -> processResponse(connection, response));
+        } catch (Throwable t) {
+            log.error("Error handling message: {}", connection, t);
+        }
     }
 
     @Override

@@ -24,6 +24,7 @@ import bisq.network.p2p.message.Response;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -38,12 +39,27 @@ class ResponseHandlerDelegate<T extends Request, R extends Response> implements 
     private final Node node;
     private final long timeout;
     private final Class<R> responseClass;
+    @Getter
     private final Map<String, RequestFuture<T, R>> requestFuturesByConnectionId = new ConcurrentHashMap<>();
 
     ResponseHandlerDelegate(Node node, long timeout, Class<R> responseClass) {
         this.node = node;
         this.timeout = timeout;
         this.responseClass = responseClass;
+    }
+
+    /* --------------------------------------------------------------------- */
+    // HandlerLifecycle implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public void initialize() {
+    }
+
+    @Override
+    public void shutdown() {
+        requestFuturesByConnectionId.values().forEach(handler -> handler.cancel(true));
+        requestFuturesByConnectionId.clear();
     }
 
     public Optional<R> resolveResponse(EnvelopePayloadMessage message) {
@@ -64,7 +80,7 @@ class ResponseHandlerDelegate<T extends Request, R extends Response> implements 
             RequestFuture<T, R> requestFuture = new RequestFuture<>(node, connection, request);
             requestFuture.orTimeout(timeout, TimeUnit.MILLISECONDS)
                     .whenComplete((response, throwable) -> {
-                        requestFuturesByConnectionId.remove(k);
+                        requestFuturesByConnectionId.remove(k, requestFuture);
                         if (throwable instanceof TimeoutException) {
                             log.warn("[{}] Request to {} timed out after {} ms", request.getClass().getSimpleName(), connection.getPeerAddress(), timeout);
                         } else if (throwable != null) {
@@ -78,7 +94,8 @@ class ResponseHandlerDelegate<T extends Request, R extends Response> implements 
     }
 
     protected void processResponse(Connection connection, R response) {
-        Optional.ofNullable(requestFuturesByConnectionId.get(connection.getId())).ifPresent(handler -> handler.handleResponse(response));
+        Optional.ofNullable(requestFuturesByConnectionId.get(connection.getId()))
+                .ifPresent(handler -> handler.handleResponse(response));
     }
 
     public void processOnDisconnect(Connection connection, CloseReason closeReason) {
@@ -88,24 +105,5 @@ class ResponseHandlerDelegate<T extends Request, R extends Response> implements 
             }
             return null; // removes entry
         });
-    }
-
-    public Map<String, RequestFuture<T, R>> getRequestFuturesByConnectionId(){
-        return requestFuturesByConnectionId;
-    }
-
-    /* --------------------------------------------------------------------- */
-    // HandlerLifecycle implementation
-    /* --------------------------------------------------------------------- */
-
-    @Override
-    public void initialize() {
-
-    }
-
-    @Override
-    public void shutdown() {
-        requestFuturesByConnectionId.values().forEach(handler -> handler.cancel(true));
-        requestFuturesByConnectionId.clear();
     }
 }
