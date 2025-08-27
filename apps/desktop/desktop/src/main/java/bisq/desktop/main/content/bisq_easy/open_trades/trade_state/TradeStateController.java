@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
@@ -36,6 +35,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetailsController;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.*;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
@@ -137,31 +137,34 @@ public class TradeStateController implements Controller {
                     }));
 
             errorMessagePin = bisqEasyTrade.errorMessageObservable().addObserver(errorMessage -> {
-                        if (errorMessage != null) {
-                            String key = "errorMessage_" + model.getBisqEasyTrade().get().getId();
-                            if (dontShowAgainService.showAgain(key)) {
-                                UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
-                                                errorMessage,
-                                                StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 2000)))
-                                        .dontShowAgainId(key)
-                                        .show());
-                            }
-                        }
+                if (errorMessage == null) {
+                    return;
+                }
+                String key = "errorMessage_" + model.getBisqEasyTrade().get().getId();
+                if (dontShowAgainService.showAgain(key)) {
+                    switch (bisqEasyTrade.getErrorCode()) {
+                        case TRADE_AMOUNT_VALIDATION_FAILED ->
+                                UIThread.run(() -> new Popup().warning(errorMessage).dontShowAgainId(key).show());
+                        default ->
+                                UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup", errorMessage, StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 2000))).dontShowAgainId(key).show());
                     }
-            );
+
+                }
+            });
             peersErrorMessagePin = bisqEasyTrade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
-                        if (peersErrorMessage != null) {
-                            String key = "peersErrorMessage_" + model.getBisqEasyTrade().get().getId();
-                            if (dontShowAgainService.showAgain(key)) {
-                                UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.popup",
-                                                peersErrorMessage,
-                                                StringUtils.truncate(bisqEasyTrade.getPeersErrorStackTrace(), 2000)))
-                                        .dontShowAgainId(key)
-                                        .show());
-                            }
-                        }
+                if (peersErrorMessage == null) {
+                    return;
+                }
+                String key = "peersErrorMessage_" + model.getBisqEasyTrade().get().getId();
+                if (dontShowAgainService.showAgain(key)) {
+                    switch (bisqEasyTrade.getPeersErrorCode()) {
+                        case TRADE_AMOUNT_VALIDATION_FAILED ->
+                                UIThread.run(() -> new Popup().warning(peersErrorMessage).dontShowAgainId(key).show());
+                        default ->
+                                UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.popup", peersErrorMessage, StringUtils.truncate(bisqEasyTrade.getPeersErrorStackTrace(), 2000))).dontShowAgainId(key).show());
                     }
-            );
+                }
+            });
 
             hasBuyerAcceptedPriceSpecPin = EasyBind.subscribe(model.getHasBuyerAcceptedSellersPriceSpec(),
                     hasAccepted -> updateShouldShowSellerPriceApprovalOverlay());

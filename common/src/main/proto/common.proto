@@ -121,3 +121,8 @@ message Address {
 message AddressByTransportTypeMap {
   map<string, Address> addressByTransportType = 1;
 }
+
+enum ErrorCode {
+    ERRORCODE_UNSPECIFIED = 0;
+    ERRORCODE_TRADE_AMOUNT_VALIDATION_FAILED = 1;
+}
