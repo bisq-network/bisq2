@@ -63,7 +63,7 @@ public class MuSigCreateOfferPaymentController implements Controller {
     private final Region owner;
     private final AccountService accountService;
     private final Consumer<Boolean> navigationButtonsVisibleHandler;
-    private Subscription paymentMethodWithoutAccountPin;
+    private Subscription paymentMethodWithoutAccountPin, paymentMethodWithMultipleAccountsPin;
 
     public MuSigCreateOfferPaymentController(ServiceProvider serviceProvider,
                                              Region owner,
@@ -130,8 +130,18 @@ public class MuSigCreateOfferPaymentController implements Controller {
 
         paymentMethodWithoutAccountPin = EasyBind.subscribe(model.getPaymentMethodWithoutAccount(), paymentMethod -> {
             if (paymentMethod != null) {
-                model.getNoAccountOverlayHeadlineText().set(Res.get("muSig.createOffer.paymentMethod.noAccountOverlay.headline", paymentMethod.getShortDisplayString()));
+                model.getNoAccountOverlayHeadlineText().set(
+                        Res.get("muSig.createOffer.paymentMethod.noAccountOverlay.headline",
+                                paymentMethod.getShortDisplayString()));
                 updateShouldShowNoAccountOverlay(true);
+            }
+        });
+        paymentMethodWithMultipleAccountsPin = EasyBind.subscribe(model.getPaymentMethodWithMultipleAccounts(), paymentMethod -> {
+            if (paymentMethod != null) {
+                model.getMultipleAccountsOverlayHeadlineText().set(
+                        Res.get("muSig.createOffer.paymentMethod.multipleAccountOverlay.headline",
+                                paymentMethod.getShortDisplayString()));
+                updateShouldShowMultipleAccountsOverlay(true);
             }
         });
     }
@@ -140,8 +150,10 @@ public class MuSigCreateOfferPaymentController implements Controller {
     public void onDeactivate() {
         model.getAccountsByPaymentMethod().clear();
         updateShouldShowNoAccountOverlay(false);
+        updateShouldShowMultipleAccountsOverlay(false);
 
         paymentMethodWithoutAccountPin.unsubscribe();
+        paymentMethodWithMultipleAccountsPin.unsubscribe();
     }
 
     void onTogglePaymentMethod(PaymentMethod<?> paymentMethod, PaymentMethodChipButton button) {
@@ -181,6 +193,7 @@ public class MuSigCreateOfferPaymentController implements Controller {
             model.getSelectedAccountByPaymentMethod().put(paymentMethod, account);
             model.getPaymentMethodWithMultipleAccounts().set(null);
         }
+        updateShouldShowMultipleAccountsOverlay(false);
     }
 
     void onOpenCreateAccountScreen() {
@@ -202,23 +215,28 @@ public class MuSigCreateOfferPaymentController implements Controller {
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseNoAccountOverlay);
     }
 
-    void onCloseMultipleAccountsOverlay(PaymentMethod<?> paymentMethod) {
+    void onCloseMultipleAccountsOverlay() {
+        PaymentMethod<?> paymentMethod = model.getPaymentMethodWithMultipleAccounts().get();
+        if (paymentMethod != null) {
+            model.getSelectedPaymentMethods().remove(paymentMethod);
+        }
         model.getPaymentMethodWithMultipleAccounts().set(null);
-        model.getSelectedPaymentMethods().remove(paymentMethod);
+        updateShouldShowMultipleAccountsOverlay(false);
     }
 
-    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
-        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
-        });
-        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, () -> {
-            model.getPaymentMethodWithoutAccount().set(null);
-            model.getPaymentMethodWithMultipleAccounts().set(null);
-        });
+    void onKeyPressedWhileShowingMultipleAccountsOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {});
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseMultipleAccountsOverlay);
     }
 
     private void updateShouldShowNoAccountOverlay(boolean shouldShow) {
         navigationButtonsVisibleHandler.accept(!shouldShow);
         model.getShouldShowNoAccountOverlay().set(shouldShow);
+    }
+
+    private void updateShouldShowMultipleAccountsOverlay(boolean shouldShow) {
+        navigationButtonsVisibleHandler.accept(!shouldShow);
+        model.getShouldShowMultipleAccountsOverlay().set(shouldShow);
     }
 
     private static List<String> getAccountCurrencyCodes(AccountPayload<? extends PaymentMethod<?>> accountPayload) {
