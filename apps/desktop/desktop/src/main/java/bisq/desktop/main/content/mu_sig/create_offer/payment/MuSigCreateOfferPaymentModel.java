@@ -23,8 +23,12 @@ import bisq.common.market.Market;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -50,6 +54,8 @@ public class MuSigCreateOfferPaymentModel implements Model {
 
     private final ObjectProperty<PaymentMethod<?>> paymentMethodWithoutAccount = new SimpleObjectProperty<>();
     private final ObjectProperty<PaymentMethod<?>> paymentMethodWithMultipleAccounts = new SimpleObjectProperty<>();
+    private final BooleanProperty shouldShowNoAccountOverlay = new SimpleBooleanProperty();
+    private final StringProperty noAccountOverlayHeadlineText = new SimpleStringProperty();
 
     private final ObservableList<Account<? extends PaymentMethod<?>, ?>> accountsForPaymentMethod = FXCollections.observableArrayList();
     private final SortedList<Account<? extends PaymentMethod<?>, ?>> sortedAccountsForPaymentMethod = new SortedList<>(accountsForPaymentMethod);
@@ -67,6 +73,8 @@ public class MuSigCreateOfferPaymentModel implements Model {
         market.set(null);
         paymentMethodWithoutAccount.set(null);
         paymentMethodWithMultipleAccounts.set(null);
+        shouldShowNoAccountOverlay.set(false);
+        noAccountOverlayHeadlineText.set("");
         accountsForPaymentMethod.clear();
         sortedAccountsForPaymentMethod.clear();
         selectedAccountByPaymentMethod.clear();

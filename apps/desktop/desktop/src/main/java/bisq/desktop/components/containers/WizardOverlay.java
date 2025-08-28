@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.containers;
 
+import bisq.common.data.Pair;
 import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
@@ -31,6 +32,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import lombok.Getter;
 
 import java.util.Collections;
 import java.util.List;
@@ -40,6 +42,8 @@ public class WizardOverlay extends VBox {
     public static final double OVERLAY_WIDTH = 700;
 
     private final Node owner;
+    @Getter
+    private final Label headlineLabel;
 
     public WizardOverlay(Node owner, String headline, Node headlineIcon, List<String> texts, Button... buttons) {
         this(owner, headline, Optional.ofNullable(headlineIcon), texts, buttons);
@@ -58,7 +62,9 @@ public class WizardOverlay extends VBox {
 
         VBox content = createAndGetContent();
 
-        HBox headlineBox = createAndGetHeadlineBox(headline, Optional.empty());
+        Pair<Label, HBox> headlineAndHeadlineBox = createAndGetHeadlineAndHeadlineBox(headline, Optional.empty());
+        headlineLabel = headlineAndHeadlineBox.getFirst();
+        HBox headlineBox = headlineAndHeadlineBox.getSecond();
         content.getChildren().add(headlineBox);
 
         VBox.setMargin(textContent, new Insets(0, 30, 0, 30));
@@ -77,7 +83,9 @@ public class WizardOverlay extends VBox {
 
         VBox content = createAndGetContent();
 
-        HBox headlineBox = createAndGetHeadlineBox(headline, headlineIcon);
+        Pair<Label, HBox> headlineAndHeadlineBox = createAndGetHeadlineAndHeadlineBox(headline, headlineIcon);
+        headlineLabel = headlineAndHeadlineBox.getFirst();
+        HBox headlineBox = headlineAndHeadlineBox.getSecond();
         content.getChildren().add(headlineBox);
 
         VBox textBox = createAndGetTextBox(texts);
@@ -124,7 +132,7 @@ public class WizardOverlay extends VBox {
         return content;
     }
 
-    private HBox createAndGetHeadlineBox(String headline, Optional<Node> headlineIcon) {
+    private Pair<Label, HBox> createAndGetHeadlineAndHeadlineBox(String headline, Optional<Node> headlineIcon) {
         HBox headlineBox = new HBox(15);
         headlineBox.setAlignment(Pos.CENTER);
         VBox.setMargin(headlineBox, new Insets(20, 0, 0, 0));
@@ -134,7 +142,7 @@ public class WizardOverlay extends VBox {
         Label headlineLabel = new Label(Res.get(headline));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
         headlineBox.getChildren().add(headlineLabel);
-        return headlineBox;
+        return new Pair<>(headlineLabel, headlineBox);
     }
 
     private VBox createAndGetTextBox(List<String> texts) {
