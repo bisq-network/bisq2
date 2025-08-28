@@ -42,6 +42,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -61,6 +63,7 @@ public class MuSigCreateOfferPaymentController implements Controller {
     private final Region owner;
     private final AccountService accountService;
     private final Consumer<Boolean> navigationButtonsVisibleHandler;
+    private Subscription paymentMethodWithoutAccountPin;
 
     public MuSigCreateOfferPaymentController(ServiceProvider serviceProvider,
                                              Region owner,
@@ -124,26 +127,20 @@ public class MuSigCreateOfferPaymentController implements Controller {
                 )));
         model.getPaymentMethodWithoutAccount().set(null);
         model.getPaymentMethodWithMultipleAccounts().set(null);
+
+        paymentMethodWithoutAccountPin = EasyBind.subscribe(model.getPaymentMethodWithoutAccount(), paymentMethod -> {
+            if (paymentMethod != null) {
+                model.getNoAccountOverlayHeadlineText().set(Res.get("muSig.createOffer.paymentMethod.noAccountOverlay.headline", paymentMethod.getShortDisplayString()));
+                updateShouldShowNoAccountOverlay(true);
+            }
+        });
     }
 
     @Override
     public void onDeactivate() {
         model.getAccountsByPaymentMethod().clear();
-    }
 
-    void onShowNoAccountOverlay() {
-        navigationButtonsVisibleHandler.accept(false);
-        model.getShouldShowNoAccountOverlay().set(true);
-    }
-
-    void onCloseNoAccountOverlay() {
-        PaymentMethod<?> paymentMethod = model.getPaymentMethodWithoutAccount().get();
-        if (paymentMethod != null) {
-            model.getSelectedPaymentMethods().remove(paymentMethod);
-        }
-        model.getPaymentMethodWithoutAccount().set(null);
-        navigationButtonsVisibleHandler.accept(true);
-        model.getShouldShowNoAccountOverlay().set(false);
+        paymentMethodWithoutAccountPin.unsubscribe();
     }
 
     void onTogglePaymentMethod(PaymentMethod<?> paymentMethod, PaymentMethodChipButton button) {
@@ -190,14 +187,23 @@ public class MuSigCreateOfferPaymentController implements Controller {
         OverlayController.hide(() -> Navigation.navigateTo(NavigationTarget.FIAT_PAYMENT_ACCOUNTS));
     }
 
-    void onCloseMultipleAccountsOverlay(PaymentMethod<?> paymentMethod) {
-        model.getPaymentMethodWithMultipleAccounts().set(null);
-        model.getSelectedPaymentMethods().remove(paymentMethod);
+    void onCloseNoAccountOverlay() {
+        PaymentMethod<?> paymentMethod = model.getPaymentMethodWithoutAccount().get();
+        if (paymentMethod != null) {
+            model.getSelectedPaymentMethods().remove(paymentMethod);
+        }
+        model.getPaymentMethodWithoutAccount().set(null);
+        updateShouldShowNoAccountOverlay(false);
     }
 
     void onKeyPressedWhileShowingNoAccountOverlay(KeyEvent keyEvent) {
         KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onOpenCreateAccountScreen);
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseNoAccountOverlay);
+    }
+
+    void onCloseMultipleAccountsOverlay(PaymentMethod<?> paymentMethod) {
+        model.getPaymentMethodWithMultipleAccounts().set(null);
+        model.getSelectedPaymentMethods().remove(paymentMethod);
     }
 
     void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
@@ -207,6 +213,11 @@ public class MuSigCreateOfferPaymentController implements Controller {
             model.getPaymentMethodWithoutAccount().set(null);
             model.getPaymentMethodWithMultipleAccounts().set(null);
         });
+    }
+
+    private void updateShouldShowNoAccountOverlay(boolean shouldShow) {
+        navigationButtonsVisibleHandler.accept(!shouldShow);
+        model.getShouldShowNoAccountOverlay().set(shouldShow);
     }
 
     private static List<String> getAccountCurrencyCodes(AccountPayload<? extends PaymentMethod<?>> accountPayload) {

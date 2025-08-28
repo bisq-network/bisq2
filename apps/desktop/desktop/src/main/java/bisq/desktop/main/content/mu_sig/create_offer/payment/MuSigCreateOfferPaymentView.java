@@ -67,9 +67,8 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
     private final List<PaymentMethodChipButton> paymentMethodChipButtons = new ArrayList<>();
 
     private final ListChangeListener<PaymentMethod<?>> paymentMethodListener;
-    private Subscription paymentMethodWithoutAccountPin, paymentMethodWithMultipleAccountsPin,
-            shouldShowNoAccountOverlayPin;
     private final ListChangeListener<PaymentMethod<?>> selectedPaymentMethodsListener;
+    private Subscription paymentMethodWithMultipleAccountsPin, shouldShowNoAccountOverlayPin;
 
     public MuSigCreateOfferPaymentView(MuSigCreateOfferPaymentModel model,
                                        MuSigCreateOfferPaymentController controller) {
@@ -119,15 +118,10 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
 
     @Override
     protected void onViewAttached() {
+        noAccountOverlay.getHeadlineLabel().textProperty().bind(model.getNoAccountOverlayHeadlineText());
+
         shouldShowNoAccountOverlayPin = EasyBind.subscribe(model.getShouldShowNoAccountOverlay(), shouldShow ->
                 noAccountOverlay.updateOverlayVisibility(content, shouldShow, controller::onKeyPressedWhileShowingNoAccountOverlay));
-
-        paymentMethodWithoutAccountPin = EasyBind.subscribe(model.getPaymentMethodWithoutAccount(), paymentMethod -> {
-            if (paymentMethod != null) {
-                noAccountOverlay.getHeadlineLabel().setText(Res.get("muSig.createOffer.paymentMethod.noAccountOverlay.headline", paymentMethod.getShortDisplayString()));
-                controller.onShowNoAccountOverlay();
-            }
-        });
 
         paymentMethodWithMultipleAccountsPin = EasyBind.subscribe(model.getPaymentMethodWithMultipleAccounts(),
                 paymentMethod -> {
@@ -171,8 +165,9 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
 
     @Override
     protected void onViewDetached() {
+        noAccountOverlay.getHeadlineLabel().textProperty().unbind();
+
         shouldShowNoAccountOverlayPin.unsubscribe();
-        paymentMethodWithoutAccountPin.unsubscribe();
         paymentMethodWithMultipleAccountsPin.unsubscribe();
 
         paymentMethodChipButtons.forEach(PaymentMethodChipButton::dispose);
