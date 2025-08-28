@@ -139,6 +139,7 @@ public class MuSigCreateOfferPaymentController implements Controller {
     @Override
     public void onDeactivate() {
         model.getAccountsByPaymentMethod().clear();
+        updateShouldShowNoAccountOverlay(false);
 
         paymentMethodWithoutAccountPin.unsubscribe();
     }
