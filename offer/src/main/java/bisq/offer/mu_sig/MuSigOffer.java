@@ -129,8 +129,10 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, PaymentMet
         List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = proto.getBaseSidePaymentSpecsList().stream()
                 .map(PaymentMethodSpec::protoToBitcoinPaymentMethodSpec)
                 .collect(Collectors.toList());
+        Market market = Market.fromProto(proto.getMarket());
+        Class<? extends PaymentMethodSpec<?>> clazz = PaymentMethodSpecUtil.getPaymentMethodSpecClass(market);
         List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs = proto.getQuoteSidePaymentSpecsList().stream()
-                .map(PaymentMethodSpec::fromProto)
+                .map(pmProto -> PaymentMethodSpec.fromProto(pmProto, clazz))
                 .collect(Collectors.toList());
         List<OfferOption> offerOptions = proto.getOfferOptionsList().stream()
                 .map(OfferOption::fromProto)
@@ -139,7 +141,7 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, PaymentMet
                 proto.getDate(),
                 NetworkId.fromProto(proto.getMakerNetworkId()),
                 Direction.fromProto(proto.getDirection()),
-                Market.fromProto(proto.getMarket()),
+                market,
                 AmountSpec.fromProto(proto.getAmountSpec()),
                 PriceSpec.fromProto(proto.getPriceSpec()),
                 protocolTypes,

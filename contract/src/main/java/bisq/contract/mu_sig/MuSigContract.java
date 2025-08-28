@@ -17,7 +17,9 @@
 
 package bisq.contract.mu_sig;
 
+import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.common.market.Market;
 import bisq.contract.Party;
 import bisq.contract.Role;
 import bisq.contract.TwoPartyContract;
@@ -139,14 +141,16 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
     public static MuSigContract fromProto(bisq.contract.protobuf.Contract proto) {
         bisq.contract.protobuf.TwoPartyContract twoPartyContractProto = proto.getTwoPartyContract();
         bisq.contract.protobuf.MuSigContract muSigContractProto = twoPartyContractProto.getMuSigContract();
+        MuSigOffer muSigOffer = MuSigOffer.fromProto(proto.getOffer());
+        Market market = muSigOffer.getMarket();
         return new MuSigContract(proto.getTakeOfferDate(),
-                MuSigOffer.fromProto(proto.getOffer()),
+                muSigOffer,
                 TradeProtocolType.fromProto(proto.getTradeProtocolType()),
                 Party.fromProto(twoPartyContractProto.getTaker()),
                 muSigContractProto.getBaseSideAmount(),
                 muSigContractProto.getQuoteSideAmount(),
                 PaymentMethodSpec.protoToBitcoinPaymentMethodSpec(muSigContractProto.getBaseSidePaymentMethodSpec()),
-                PaymentMethodSpec.protoToFiatPaymentMethodSpec(muSigContractProto.getQuoteSidePaymentMethodSpec()),
+                PaymentMethodSpec.fromProto(muSigContractProto.getQuoteSidePaymentMethodSpec(), PaymentMethodSpecUtil.getPaymentMethodSpecClass(market)),
                 muSigContractProto.hasMediator() ?
                         Optional.of(UserProfile.fromProto(muSigContractProto.getMediator())) :
                         Optional.empty(),

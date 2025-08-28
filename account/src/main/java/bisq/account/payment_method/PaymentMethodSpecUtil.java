@@ -114,4 +114,14 @@ public class PaymentMethodSpecUtil {
             throw new UnsupportedOperationException("createPaymentMethodSpecs only supports fiat and altcoins. CurrencyCode: " + currencyCode);
         }
     }
+
+    public static Class<? extends PaymentMethodSpec<?>> getPaymentMethodSpecClass(Market market) {
+        if (market.isBtcFiatMarket()) {
+            return FiatPaymentMethodSpec.class;
+        } else if (market.isCrypto()) {
+            return CryptoPaymentMethodSpec.class;
+        } else {
+            throw new IllegalArgumentException("Unsupported market type: " + market);
+        }
+    }
 }
