@@ -90,14 +90,6 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
         };
     }
 
-    // Alternative signature would be: `public static <T extends PaymentMethodSpec<?>> T fromProto(bisq.account.protobuf.PaymentMethodSpec proto)`
-    // This would require an unsafe cast  (T) for the return type.
-    // The caller would provide the expected type. E.g. `PaymentMethodSpec::<BitcoinPaymentMethodSpec>fromProto`
-    // By using specific methods we avoid those issues and the code is more readable without generics overhead.
-    /**
-     * Generic fromProto method to support all PaymentMethodSpec types.
-     * Usage: PaymentMethodSpec.fromProto(proto, FiatPaymentMethodSpec.class)
-     */
     public static <T extends PaymentMethodSpec<?>> T fromProto(bisq.account.protobuf.PaymentMethodSpec proto, Class<T> clazz) {
         Object result = switch (proto.getMessageCase()) {
             case BITCOINPAYMENTMETHODSPEC -> BitcoinPaymentMethodSpec.fromProto(proto);
