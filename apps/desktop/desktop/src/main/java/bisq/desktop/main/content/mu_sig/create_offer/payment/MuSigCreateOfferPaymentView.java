@@ -19,7 +19,6 @@ package bisq.desktop.main.content.mu_sig.create_offer.payment;
 
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.utils.ImageUtil;
@@ -63,7 +62,7 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
 
     private final ListChangeListener<PaymentMethod<?>> paymentMethodListener;
     private final ListChangeListener<PaymentMethod<?>> selectedPaymentMethodsListener;
-    private Subscription paymentMethodWithMultipleAccountsPin, shouldShowNoAccountOverlayPin;
+    private Subscription shouldShowNoAccountOverlayPin, shouldShowMultipleAccountsOverlayPin;
 
     public MuSigCreateOfferPaymentView(MuSigCreateOfferPaymentModel model,
                                        MuSigCreateOfferPaymentController controller) {
@@ -120,40 +119,16 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
 
         shouldShowNoAccountOverlayPin = EasyBind.subscribe(model.getShouldShowNoAccountOverlay(), shouldShow ->
                 noAccountOverlay.updateOverlayVisibility(content, shouldShow, controller::onKeyPressedWhileShowingNoAccountOverlay));
-
-        paymentMethodWithMultipleAccountsPin = EasyBind.subscribe(model.getPaymentMethodWithMultipleAccounts(),
-                paymentMethod -> {
-                    accountSelection.setOnChangeConfirmed(null);
-                    multipleAccountOverlayCloseButton.setOnAction(null);
-                    if (paymentMethod != null) {
-                        multipleAccountsOverlay.setVisible(true);
-                        model.getMultipleAccountsOverlayHeadlineText().set(Res.get("muSig.createOffer.paymentMethod.multipleAccountOverlay.headline", paymentMethod.getShortDisplayString()));
-                        accountSelection.setOnChangeConfirmed(e -> {
-                            Account<?, ?> account = accountSelection.getSelectionModel().getSelectedItem();
-                            if (account != null) {
-                                findPaymentMethodChipButton(paymentMethod)
-                                        .ifPresent(button -> button.setAccountName(account.getAccountName()));
-                                controller.onSelectAccount(account, paymentMethod);
-                                UIThread.runOnNextRenderFrame(() -> accountSelection.getSelectionModel().select(null));
-                            }
-                        });
-                        multipleAccountOverlayCloseButton.setOnAction(e -> controller.onCloseMultipleAccountsOverlay(paymentMethod));
-                        root.setOnKeyPressed(controller::onKeyPressedWhileShowingOverlay);
-                        Transitions.blurStrong(content, 0);
-                        Transitions.slideInTop(multipleAccountsOverlay, 450);
-                    } else {
-                        root.setOnKeyPressed(null);
-                        multipleAccountsOverlay.setVisible(false);
-                        Transitions.removeEffect(content);
-                    }
-                });
-
+        shouldShowMultipleAccountsOverlayPin = EasyBind.subscribe(model.getShouldShowMultipleAccountsOverlay(), shouldShow ->
+                multipleAccountsOverlay.updateOverlayVisibility(content, shouldShow, controller::onKeyPressedWhileShowingMultipleAccountsOverlay));
 
         model.getSelectedPaymentMethods().addListener(selectedPaymentMethodsListener);
         model.getPaymentMethods().addListener(paymentMethodListener);
 
         noAccountOverlayCloseButton.setOnAction(e -> controller.onCloseNoAccountOverlay());
         createAccountButton.setOnAction(e -> controller.onOpenCreateAccountScreen());
+        multipleAccountOverlayCloseButton.setOnAction(e -> controller.onCloseMultipleAccountsOverlay());
+        accountSelection.setOnChangeConfirmed(e -> accountSelectionConfirmed());
 
         root.setOnMousePressed(e -> root.requestFocus());
 
@@ -167,7 +142,7 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
         multipleAccountsOverlay.getHeadlineLabel().textProperty().unbind();
 
         shouldShowNoAccountOverlayPin.unsubscribe();
-        paymentMethodWithMultipleAccountsPin.unsubscribe();
+        shouldShowMultipleAccountsOverlayPin.unsubscribe();
 
         paymentMethodChipButtons.forEach(PaymentMethodChipButton::dispose);
 
@@ -267,5 +242,16 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
         VBox vBox = new VBox(20, subtitleLabel, accountSelection);
         vBox.setAlignment(Pos.CENTER);
         return vBox;
+    }
+
+    private void accountSelectionConfirmed() {
+        PaymentMethod<?> paymentMethod = model.getPaymentMethodWithMultipleAccounts().get();
+        Account<?, ?> account = accountSelection.getSelectionModel().getSelectedItem();
+        if (paymentMethod != null && account != null) {
+            findPaymentMethodChipButton(paymentMethod)
+                    .ifPresent(button -> button.setAccountName(account.getAccountName()));
+            controller.onSelectAccount(account, paymentMethod);
+            UIThread.runOnNextRenderFrame(() -> accountSelection.getSelectionModel().select(null));
+        }
     }
 }
