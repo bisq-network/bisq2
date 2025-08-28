@@ -30,25 +30,12 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public abstract class RequestResponseHandler<T extends Request, R extends Response> extends BaseHandler implements Node.Listener, HandlerLifecycle {
+public abstract class ResponseHandler<T extends Request, R extends Response> extends BaseHandler implements Node.Listener, HandlerLifecycle {
     protected final Node node;
-    private final RequestHandlerDelegate<T, R> requestHandlerDelegate;
     private final ResponseHandlerDelegate<T, R> responseHandlerDelegate;
 
-    public RequestResponseHandler(Node node, long timeout) {
+    public ResponseHandler(Node node, long timeout) {
         this.node = node;
-
-        this.requestHandlerDelegate = new RequestHandlerDelegate<>(node, getRequestClass(), new RequestHandlerDelegate.Callback<>() {
-            @Override
-            public R createResponse(Connection connection, T request) {
-                return RequestResponseHandler.this.createResponse(connection, request);
-            }
-
-            @Override
-            public void onRequest(Connection connection, T request) {
-                RequestResponseHandler.this.onRequest(connection, request);
-            }
-        });
         this.responseHandlerDelegate = new ResponseHandlerDelegate<>(node, timeout, getResponseClass());
     }
 
@@ -58,13 +45,11 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
 
     public void initialize() {
         node.addListener(this);
-        requestHandlerDelegate.initialize();
         responseHandlerDelegate.initialize();
     }
 
     public void shutdown() {
         node.removeListener(this);
-        requestHandlerDelegate.shutdown();
         responseHandlerDelegate.shutdown();
     }
 
@@ -87,21 +72,6 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
     }
 
     /* --------------------------------------------------------------------- */
-    // RequestHandler implementation
-    /* --------------------------------------------------------------------- */
-
-    protected abstract R createResponse(Connection connection, T request);
-
-    protected abstract Class<T> getRequestClass();
-
-    protected void onRequest(Connection connection, T request) {
-    }
-
-    protected void processRequest(Connection connection, T request) {
-        requestHandlerDelegate.processRequest(connection, request);
-    }
-
-    /* --------------------------------------------------------------------- */
     // Node.Listener implementation
     /* --------------------------------------------------------------------- */
 
@@ -110,8 +80,6 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
         try {
             responseHandlerDelegate.resolveResponse(envelopePayloadMessage)
                     .ifPresent(response -> processResponse(connection, response));
-            requestHandlerDelegate.resolveRequest(envelopePayloadMessage)
-                    .ifPresent(request -> processRequest(connection, request));
         } catch (Throwable t) {
             log.error("Error handling message: {}", connection, t);
         }
@@ -126,3 +94,4 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
         responseHandlerDelegate.processOnDisconnect(connection, closeReason);
     }
 }
+

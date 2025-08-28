@@ -117,7 +117,7 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
         this.config = config;
 
         inventoryFilterFactory = new InventoryFilterFactory(myFeatures, dataService, config);
-        model = new InventoryRequestModel(requestFuturesByConnectionId);
+        model = new InventoryRequestModel(getRequestFuturesByConnectionId());
         policy = new InventoryRequestPolicy(config, model, inventoryFilterFactory, node, peerGroupManager.getPeerGroupService());
         initialize();
     }
@@ -296,6 +296,6 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
     }
 
     private void updateNumPendingRequests() {
-        model.getNumPendingRequests().set(requestFuturesByConnectionId.size());
+        model.getNumPendingRequests().set(getRequestFuturesByConnectionId().size());
     }
 }
