@@ -67,7 +67,8 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
     private final List<PaymentMethodChipButton> paymentMethodChipButtons = new ArrayList<>();
 
     private final ListChangeListener<PaymentMethod<?>> paymentMethodListener;
-    private Subscription paymentMethodWithoutAccountPin, paymentMethodWithMultipleAccountsPin;
+    private Subscription paymentMethodWithoutAccountPin, paymentMethodWithMultipleAccountsPin,
+            shouldShowNoAccountOverlayPin;
     private final ListChangeListener<PaymentMethod<?>> selectedPaymentMethodsListener;
 
     public MuSigCreateOfferPaymentView(MuSigCreateOfferPaymentModel model,
@@ -118,24 +119,15 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
 
     @Override
     protected void onViewAttached() {
-        paymentMethodWithoutAccountPin = EasyBind.subscribe(model.getPaymentMethodWithoutAccount(),
-                paymentMethod -> {
-                    noAccountOverlayCloseButton.setOnAction(null);
-                    createAccountButton.setOnAction(null);
-                    if (paymentMethod != null) {
-                        noAccountOverlay.setVisible(true);
-                        noAccountOverlay.getHeadlineLabel().setText(Res.get("muSig.createOffer.paymentMethod.noAccountOverlay.headline", paymentMethod.getShortDisplayString()));
-                        noAccountOverlayCloseButton.setOnAction(e -> controller.onCloseNoAccountOverlay(paymentMethod));
-                        createAccountButton.setOnAction(e -> controller.onOpenCreateAccountScreen(paymentMethod));
-                        root.setOnKeyPressed(controller::onKeyPressedWhileShowingOverlay);
-                        Transitions.blurStrong(content, 0);
-                        Transitions.slideInTop(noAccountOverlay, 450);
-                    } else {
-                        root.setOnKeyPressed(null);
-                        noAccountOverlay.setVisible(false);
-                        Transitions.removeEffect(content);
-                    }
-                });
+        shouldShowNoAccountOverlayPin = EasyBind.subscribe(model.getShouldShowNoAccountOverlay(), shouldShow ->
+                noAccountOverlay.updateOverlayVisibility(content, shouldShow, controller::onKeyPressedWhileShowingNoAccountOverlay));
+
+        paymentMethodWithoutAccountPin = EasyBind.subscribe(model.getPaymentMethodWithoutAccount(), paymentMethod -> {
+            if (paymentMethod != null) {
+                noAccountOverlay.getHeadlineLabel().setText(Res.get("muSig.createOffer.paymentMethod.noAccountOverlay.headline", paymentMethod.getShortDisplayString()));
+                controller.onShowNoAccountOverlay();
+            }
+        });
 
         paymentMethodWithMultipleAccountsPin = EasyBind.subscribe(model.getPaymentMethodWithMultipleAccounts(),
                 paymentMethod -> {
@@ -166,8 +158,10 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
 
 
         model.getSelectedPaymentMethods().addListener(selectedPaymentMethodsListener);
-
         model.getPaymentMethods().addListener(paymentMethodListener);
+
+        noAccountOverlayCloseButton.setOnAction(e -> controller.onCloseNoAccountOverlay());
+        createAccountButton.setOnAction(e -> controller.onOpenCreateAccountScreen());
 
         root.setOnMousePressed(e -> root.requestFocus());
 
@@ -177,6 +171,7 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
 
     @Override
     protected void onViewDetached() {
+        shouldShowNoAccountOverlayPin.unsubscribe();
         paymentMethodWithoutAccountPin.unsubscribe();
         paymentMethodWithMultipleAccountsPin.unsubscribe();
 

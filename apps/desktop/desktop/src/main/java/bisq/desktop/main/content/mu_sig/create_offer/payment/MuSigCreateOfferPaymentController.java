@@ -46,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -59,11 +60,14 @@ public class MuSigCreateOfferPaymentController implements Controller {
     private final MuSigCreateOfferPaymentView view;
     private final Region owner;
     private final AccountService accountService;
+    private final Consumer<Boolean> navigationButtonsVisibleHandler;
 
     public MuSigCreateOfferPaymentController(ServiceProvider serviceProvider,
-                                             Region owner) {
+                                             Region owner,
+                                             Consumer<Boolean> navigationButtonsVisibleHandler) {
         accountService = serviceProvider.getAccountService();
         this.owner = owner;
+        this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
 
         model = new MuSigCreateOfferPaymentModel();
         view = new MuSigCreateOfferPaymentView(model, this);
@@ -127,6 +131,21 @@ public class MuSigCreateOfferPaymentController implements Controller {
         model.getAccountsByPaymentMethod().clear();
     }
 
+    void onShowNoAccountOverlay() {
+        navigationButtonsVisibleHandler.accept(false);
+        model.getShouldShowNoAccountOverlay().set(true);
+    }
+
+    void onCloseNoAccountOverlay() {
+        PaymentMethod<?> paymentMethod = model.getPaymentMethodWithoutAccount().get();
+        if (paymentMethod != null) {
+            model.getSelectedPaymentMethods().remove(paymentMethod);
+        }
+        model.getPaymentMethodWithoutAccount().set(null);
+        navigationButtonsVisibleHandler.accept(true);
+        model.getShouldShowNoAccountOverlay().set(false);
+    }
+
     void onTogglePaymentMethod(PaymentMethod<?> paymentMethod, PaymentMethodChipButton button) {
         if (button.isSelected()) {
             if (!model.getSelectedPaymentMethods().contains(paymentMethod)) {
@@ -166,21 +185,19 @@ public class MuSigCreateOfferPaymentController implements Controller {
         }
     }
 
-    void onOpenCreateAccountScreen(PaymentMethod<?> paymentMethod) {
-        model.getPaymentMethodWithoutAccount().set(null);
-        model.getSelectedPaymentMethods().remove(paymentMethod);
-        OverlayController.hide();
-        Navigation.navigateTo(NavigationTarget.FIAT_PAYMENT_ACCOUNTS);
-    }
-
-    void onCloseNoAccountOverlay(PaymentMethod<?> paymentMethod) {
-        model.getPaymentMethodWithoutAccount().set(null);
-        model.getSelectedPaymentMethods().remove(paymentMethod);
+    void onOpenCreateAccountScreen() {
+        onCloseNoAccountOverlay();
+        OverlayController.hide(() -> Navigation.navigateTo(NavigationTarget.FIAT_PAYMENT_ACCOUNTS));
     }
 
     void onCloseMultipleAccountsOverlay(PaymentMethod<?> paymentMethod) {
         model.getPaymentMethodWithMultipleAccounts().set(null);
         model.getSelectedPaymentMethods().remove(paymentMethod);
+    }
+
+    void onKeyPressedWhileShowingNoAccountOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onOpenCreateAccountScreen);
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseNoAccountOverlay);
     }
 
     void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
