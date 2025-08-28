@@ -118,6 +118,8 @@ public class MuSigCreateOfferPaymentController implements Controller {
                         Account::getPaymentMethod,
                         Collectors.toList()
                 )));
+        model.getPaymentMethodWithoutAccount().set(null);
+        model.getPaymentMethodWithMultipleAccounts().set(null);
     }
 
     @Override
