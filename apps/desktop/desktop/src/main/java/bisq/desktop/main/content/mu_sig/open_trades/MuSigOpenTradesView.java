@@ -31,6 +31,7 @@ import bisq.desktop.components.table.DateColumnUtil;
 import bisq.desktop.main.content.chat.ChatView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
+import bisq.desktop.main.content.mu_sig.MuSigViewUtils;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import javafx.beans.InvalidationListener;
