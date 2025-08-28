@@ -56,6 +56,7 @@ public class MuSigCreateOfferPaymentModel implements Model {
     private final ObjectProperty<PaymentMethod<?>> paymentMethodWithMultipleAccounts = new SimpleObjectProperty<>();
     private final BooleanProperty shouldShowNoAccountOverlay = new SimpleBooleanProperty();
     private final StringProperty noAccountOverlayHeadlineText = new SimpleStringProperty();
+    private final StringProperty multipleAccountsOverlayHeadlineText = new SimpleStringProperty();
 
     private final ObservableList<Account<? extends PaymentMethod<?>, ?>> accountsForPaymentMethod = FXCollections.observableArrayList();
     private final SortedList<Account<? extends PaymentMethod<?>, ?>> sortedAccountsForPaymentMethod = new SortedList<>(accountsForPaymentMethod);
@@ -75,6 +76,7 @@ public class MuSigCreateOfferPaymentModel implements Model {
         paymentMethodWithMultipleAccounts.set(null);
         shouldShowNoAccountOverlay.set(false);
         noAccountOverlayHeadlineText.set("");
+        multipleAccountsOverlayHeadlineText.set("");
         accountsForPaymentMethod.clear();
         sortedAccountsForPaymentMethod.clear();
         selectedAccountByPaymentMethod.clear();
