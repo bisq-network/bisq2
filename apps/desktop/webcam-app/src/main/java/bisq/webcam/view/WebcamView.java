@@ -63,7 +63,7 @@ public class WebcamView extends StackPane {
         waitingAnimation = new WaitingAnimation();
         waitingAnimation.setAlignment(Pos.CENTER);
 
-        headline = new Label(Res.get("connecting", deviceNumber));
+        headline = new Label(Res.get("webcam.connecting", deviceNumber));
         headline.setAlignment(Pos.CENTER);
         headline.setTextAlignment(TextAlignment.CENTER);
         headline.setWrapText(true);
@@ -81,7 +81,7 @@ public class WebcamView extends StackPane {
         errorIcon.setFitWidth(78);
         errorIcon.setPreserveRatio(true);
 
-        retryButton = new Button(Res.get("retry"));
+        retryButton = new Button(Res.get("webcam.retry"));
         retryButton.getStyleClass().add("retry-button");
         retryButton.setOnAction(e -> retyHandler.run());
 
@@ -99,7 +99,7 @@ public class WebcamView extends StackPane {
             log.error("Could not read version. Run gradle task `copyWebcamAppVersionToResources`.", e);
         }
 
-        Label version = new Label(Res.get("version", versionNumber));
+        Label version = new Label(Res.get("webcam.version", versionNumber));
         version.setAlignment(Pos.CENTER_RIGHT);
         version.setTextAlignment(TextAlignment.RIGHT);
         version.setWrapText(true);
@@ -156,13 +156,13 @@ public class WebcamView extends StackPane {
 
     public void applyDeviceNumber(int deviceNumber) {
         if (errorMessageTextArea.getText().isEmpty()) {
-            String text = Res.get("connecting", deviceNumber);
+            String text = Res.get("webcam.connecting", deviceNumber);
             if (this.deviceNumber > -1) {
                 String previous = failedConnections.getText();
                 if (previous.isEmpty()) {
-                    failedConnections.setText(Res.get("connectingFailed", deviceNumber - 1));
+                    failedConnections.setText(Res.get("webcam.connectingFailed", deviceNumber - 1));
                 } else {
-                    failedConnections.setText(previous + "\n" + Res.get("connectingFailed", deviceNumber - 1));
+                    failedConnections.setText(previous + "\n" + Res.get("webcam.connectingFailed", deviceNumber - 1));
                 }
             }
             headline.setText(text);

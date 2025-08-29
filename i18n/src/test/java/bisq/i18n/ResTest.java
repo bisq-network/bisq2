@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ResTest {
     @BeforeAll
     public static void setup() {
-        Res.setLanguage("en");
+        Res.setAndApplyLanguage("en");
     }
 
     @Test

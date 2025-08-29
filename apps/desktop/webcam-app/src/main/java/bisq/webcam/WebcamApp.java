@@ -40,8 +40,8 @@ import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.swing.ImageIcon;
-import java.awt.Taskbar;
+import javax.swing.*;
+import java.awt.*;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -49,7 +49,10 @@ import java.util.Objects;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
 
-import static bisq.common.data.WebcamControlSignals.*;
+import static bisq.common.data.WebcamControlSignals.ERROR_MESSAGE_PREFIX;
+import static bisq.common.data.WebcamControlSignals.IMAGE_RECOGNIZED;
+import static bisq.common.data.WebcamControlSignals.QR_CODE_PREFIX;
+import static bisq.common.data.WebcamControlSignals.RESTART;
 import static java.util.Objects.requireNonNull;
 
 @Slf4j
@@ -95,7 +98,7 @@ public class WebcamApp extends Application {
             if (languageParam != null) {
                 language = URLDecoder.decode(languageParam, StandardCharsets.UTF_8);
             }
-            Res.setLanguage(language);
+            Res.setAndApplyLanguage(language);
 
             qrCodeSender = new QrCodeSender(port);
         } catch (Exception e) {
@@ -175,7 +178,11 @@ public class WebcamApp extends Application {
                 if (!imageDetected) {
                     imageDetected = true;
                     qrCodeSender.send(IMAGE_RECOGNIZED)
-                            .whenComplete((nil, throwable) -> handleError(throwable));
+                            .whenComplete((nil, throwable) -> {
+                                if (throwable != null) {
+                                    handleError(throwable);
+                                }
+                            });
                 }
                 Platform.runLater(() -> webcamView.setWebcamImage(image));
             }
@@ -183,7 +190,11 @@ public class WebcamApp extends Application {
         webcamService.getQrCode().addObserver(qrCode -> {
             if (qrCode != null) {
                 qrCodeSender.send(QR_CODE_PREFIX, qrCode)
-                        .whenComplete((nil, throwable) -> handleError(throwable));
+                        .whenComplete((nil, throwable) -> {
+                            if (throwable != null) {
+                                handleError(throwable);
+                            }
+                        });
             }
         });
         webcamService.getCameraDeviceLookup().getDeviceNumber().addObserver(deviceNumber -> {
@@ -196,7 +207,7 @@ public class WebcamApp extends Application {
 
     private void handleError(Throwable throwable) {
         String errorMessage = getErrorMessage(throwable);
-        Platform.runLater(() -> webcamView.applyErrorMessage(Res.get("errorHeadline"), errorMessage));
+        Platform.runLater(() -> webcamView.applyErrorMessage(Res.get("webcam.errorHeadline"), errorMessage));
     }
 
     private static String getErrorMessage(Throwable throwable) {
@@ -205,7 +216,7 @@ public class WebcamApp extends Application {
         } else if (throwable instanceof WebcamException) {
             return ((WebcamException) throwable).getLocalizedErrorMessage();
         } else if (throwable instanceof TimeoutException) {
-            return Res.get("TimeoutException", throwable.getMessage());
+            return Res.get("webcam.timeoutException", throwable.getMessage());
         } else {
             return throwable.toString();
         }
