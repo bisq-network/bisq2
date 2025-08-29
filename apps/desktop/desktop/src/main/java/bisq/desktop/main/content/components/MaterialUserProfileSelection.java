@@ -55,7 +55,7 @@ public class MaterialUserProfileSelection extends Pane {
 
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> {
-        onWidthChanged((double) newValue);
+        onWidthChanged(newValue.doubleValue());
         layoutIconButton();
     };
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener

@@ -76,7 +76,7 @@ public class MaterialTextField extends Pane {
     private Optional<StringConverter<Number>> stringConverter = Optional.empty();
     private ChangeListener<Number> iconButtonHeightListener;
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
-    private final ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> onWidthChanged((double) newValue);
+    private final ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> onWidthChanged(newValue.doubleValue());
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Boolean> textInputControlFocusListener = (observable, oldValue, newValue) -> onInputTextFieldFocus(newValue);
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
