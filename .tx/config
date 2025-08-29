@@ -135,3 +135,12 @@ minimum_perc           = 0
 resource_name          = mu_sig.properties
 replace_edited_strings = false
 keep_translations      = false
+
+[o:bisq:p:bisq-2:r:webcamproperties]
+file_filter            = i18n/src/main/resources/webcam_<lang>.properties
+source_file            = i18n/src/main/resources/webcam.properties
+type                   = UNICODEPROPERTIES
+minimum_perc           = 0
+resource_name          = webcam.properties
+replace_edited_strings = false
+keep_translations      = false

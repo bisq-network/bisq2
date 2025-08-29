@@ -28,6 +28,7 @@ sourceSets {
 }
 
 dependencies {
+    implementation("bisq:i18n")
     implementation(libs.zxing)
     implementation(libs.sarxos)
     implementation(libs.javacv) {

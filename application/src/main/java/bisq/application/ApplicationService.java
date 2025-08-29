@@ -201,7 +201,7 @@ public abstract class ApplicationService implements Service {
         CountryRepository.applyDefaultLocale(locale);
         LanguageRepository.setDefaultLanguage(locale.getLanguage());
         FiatCurrencyRepository.setLocale(locale);
-        Res.setLanguage(LanguageRepository.getDefaultLanguage());
+        Res.setAndApplyLanguage(LanguageRepository.getDefaultLanguage());
         ResolverConfig.config();
 
         String absoluteDataDirPath = dataDir.toAbsolutePath().toString();
