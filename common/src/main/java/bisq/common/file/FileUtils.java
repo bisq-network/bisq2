@@ -28,7 +28,6 @@ import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -36,7 +35,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.UncheckedIOException;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -47,7 +45,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -515,55 +512,74 @@ public class FileUtils {
         }
     }
 
-    public static void copyResourceDirectory(String resourcePath,
-                                             Path targetDir) throws IOException, URISyntaxException {
-        URL url = FileUtils.class.getClassLoader().getResource(resourcePath);
-        if (url == null) {
-            throw new FileNotFoundException("Resource not found: " + resourcePath);
+    public static Set<String> listResources(String resourceDir) throws IOException, URISyntaxException {
+        // Resource paths always use forward slashes on all OS.
+        String normalized = resourceDir.replace('\\', '/');
+        if (!normalized.endsWith("/")) {
+            normalized = normalized + "/";
         }
-
-        if (url.getProtocol().equals("file")) {
-            // Running from IDE / filesystem
-            Path sourceDir = Paths.get(url.toURI());
-            try (Stream<Path> pathStream = Files.walk(sourceDir)) {
-                pathStream.forEach(path -> {
-                    Path dest = targetDir.resolve(sourceDir.relativize(path));
-                    try {
-                        if (Files.isDirectory(path)) {
-                            Files.createDirectories(dest);
-                        } else {
-                            Files.copy(path, dest, StandardCopyOption.REPLACE_EXISTING);
-                        }
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    }
-                });
+        URL dirURL = FileUtils.class.getClassLoader().getResource(normalized);
+        if (dirURL == null) {
+            throw new IOException("Resource directory not found: " + normalized);
+        }
+        String protocol = dirURL.getProtocol();
+        if ("file".equals(protocol)) {
+            File dir = new File(dirURL.toURI());
+            if (!dir.isDirectory()) {
+                throw new IOException("Resource path is not a directory: " + dir);
             }
-        } else if (url.getProtocol().equals("jar")) {
-            // Running from JAR
-            String urlPath = url.getPath();
-            String jarPath = urlPath.substring(5, urlPath.indexOf("!"));
-            try (JarFile jar = new JarFile(URLDecoder.decode(jarPath, StandardCharsets.UTF_8))) {
+            try (Stream<Path> stream = Files.walk(dir.toPath())) {
+                return stream
+                        .filter(Files::isRegularFile)
+                        .map(path -> dir.toPath().relativize(path).toString().replace(File.separatorChar, '/'))
+                        .collect(Collectors.toSet());
+            }
+        } else if ("jar".equals(protocol)) {
+            String jarUrlPath = dirURL.getPath();
+            int bangIndex = jarUrlPath.indexOf('!');
+            String jarFilePath = jarUrlPath.substring(0, bangIndex);
+            if (jarFilePath.startsWith("file:")) {
+                jarFilePath = jarFilePath.substring(5);
+            }
+            jarFilePath = URLDecoder.decode(jarFilePath, StandardCharsets.UTF_8);
+            Set<String> resourceFiles = new HashSet<>();
+            try (JarFile jar = new JarFile(jarFilePath)) {
                 Enumeration<JarEntry> entries = jar.entries();
                 while (entries.hasMoreElements()) {
                     JarEntry entry = entries.nextElement();
                     String name = entry.getName();
-                    if (name.startsWith(resourcePath + "/")) {
-                        String entryRelative = name.substring(resourcePath.length() + 1);
-                        Path outPath = targetDir.resolve(entryRelative);
-                        if (entry.isDirectory()) {
-                            Files.createDirectories(outPath);
-                        } else {
-                            try (InputStream in = jar.getInputStream(entry)) {
-                                Files.createDirectories(outPath.getParent());
-                                Files.copy(in, outPath, StandardCopyOption.REPLACE_EXISTING);
-                            }
-                        }
+                    if (!entry.isDirectory() && name.startsWith(normalized)) {
+                        resourceFiles.add(name.substring(normalized.length()));
                     }
                 }
             }
+            return resourceFiles;
         } else {
-            throw new UnsupportedOperationException("Unsupported protocol: " + url.getProtocol());
+            throw new IOException("Unsupported URL protocol: " + protocol);
+        }
+    }
+
+    public static void copyResourceDirectory(String resourceDir,
+                                             Path i2pDirPath) throws IOException, URISyntaxException {
+        // Resource paths always use forward slashes on all OS.
+        String normalized = resourceDir.replace('\\', '/');
+        if (!normalized.endsWith("/")) {
+            normalized = normalized + "/";
+        }
+        Set<String> resources = listResources(normalized);
+        for (String resourceFile : resources) {
+            String resourcePath = normalized + resourceFile; // classpath uses '/'
+            File targetFile = i2pDirPath.resolve(resourceFile).toFile(); // preserve relative layout
+            try {
+                Path parent = targetFile.toPath().getParent();
+                if (parent != null) {
+                    Files.createDirectories(parent);
+                }
+                FileUtils.resourceToFile(resourcePath, targetFile);
+            } catch (IOException e) {
+                log.error("Could not copy resource {} to {}", resourcePath, targetFile, e);
+                throw e;
+            }
         }
     }
 }
