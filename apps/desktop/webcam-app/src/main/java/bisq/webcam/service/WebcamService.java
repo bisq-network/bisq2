@@ -99,7 +99,7 @@ public class WebcamService implements Service {
         isRunning = false;
         executor.ifPresent(executor -> ExecutorFactory.shutdownAndAwaitTermination(executor, 1000));
         return CompletableFuture.supplyAsync(() -> {
-                    while (!isStopped) {
+                    while (!isStopped && !Thread.currentThread().isInterrupted()) {
                         try {
                             //noinspection BusyWait
                             Thread.sleep(100);

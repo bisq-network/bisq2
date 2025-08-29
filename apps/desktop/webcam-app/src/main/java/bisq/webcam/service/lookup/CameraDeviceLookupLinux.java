@@ -69,7 +69,7 @@ public class CameraDeviceLookupLinux implements CameraDeviceLookup {
                     Thread.currentThread().interrupt(); // Restore interrupted state
                     throw new WebcamException(ErrorCode.INTERRUPTED_EXCEPTION, e);
                 }
-            } while (deviceNumber.get() < maxDeviceNumber);
+            } while (deviceNumber.get() < maxDeviceNumber && !Thread.currentThread().isInterrupted());
             ErrorCode errorCode = ignoredException instanceof WebcamException
                     ? ((WebcamException) ignoredException).getErrorCode()
                     : ErrorCode.NO_DEVICE_FOUND;
