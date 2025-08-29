@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.mu_sig.open_trades;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentRail;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.notifications.ChatNotification;
@@ -51,8 +52,7 @@ class MuSigOpenTradeListItem implements DateTableItem {
 
     private final UserProfile myUserProfile, peersUserProfile;
     private final String offerId, tradeId, shortTradeId, myUserName, directionalTitle, peersUserName, dateString, timeString,
-            market, priceString, baseAmountString, quoteAmountString, myRole,
-            fiatPaymentMethod;
+            market, priceString, baseAmountString, quoteAmountString, myRole, paymentMethodDisplayName;
     private final long date, price, baseAmount, quoteAmount;
     private final ChatNotificationService chatNotificationService;
     private final ReputationScore reputationScore;
@@ -61,7 +61,7 @@ class MuSigOpenTradeListItem implements DateTableItem {
     private final Pin changedChatNotificationPin, isInMediationPin;
     private final BitcoinPaymentRail bitcoinPaymentRail;
     private final PaymentRail paymentRail;
-    private final boolean isFiatPaymentMethodCustom;
+    private final PaymentMethod<?> paymentMethod;
 
     private long peerNumNotifications, mediatorNumNotifications;
     private String mediatorUserName = "";
@@ -98,8 +98,8 @@ class MuSigOpenTradeListItem implements DateTableItem {
         quoteAmountString = MuSigTradeFormatter.formatQuoteSideAmountWithCode(trade);
         bitcoinPaymentRail = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
         paymentRail = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
-        fiatPaymentMethod = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
-        isFiatPaymentMethodCustom = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().isCustomPaymentMethod();
+        paymentMethodDisplayName = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
+        paymentMethod = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod();
 
         myRole = MuSigTradeFormatter.getMakerTakerRole(trade);
         reputationScore = reputationService.getReputationScore(peersUserProfile);

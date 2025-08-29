@@ -15,9 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.open_trades;
+package bisq.desktop.main.content.mu_sig;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.data.Quadruple;
@@ -89,6 +90,17 @@ public class MuSigViewUtils {
         StackPane stackPane = new StackPane(customPaymentIcon, initialLabel);
         stackPane.setAlignment(Pos.CENTER);
         return stackPane;
+    }
+
+    public static String getPaymentMethodImageId(PaymentMethod<?> paymentMethod) {
+        if (paymentMethod instanceof FiatPaymentMethod fiatPaymentMethod) {
+            return fiatPaymentMethod.getPaymentRailName();
+        } else if (paymentMethod instanceof CryptoPaymentMethod cryptoPaymentMethod) {
+            return cryptoPaymentMethod.getCode();
+        } else {
+            log.error("Unknown payment method type: {}", paymentMethod.getClass().getSimpleName());
+            return "";
+        }
     }
 
     public static HBox getPaymentAndSettlementMethodsBox(List<FiatPaymentMethod> paymentMethods,

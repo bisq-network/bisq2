@@ -31,6 +31,7 @@ import bisq.desktop.components.table.DateColumnUtil;
 import bisq.desktop.main.content.chat.ChatView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
+import bisq.desktop.main.content.mu_sig.MuSigViewUtils;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import javafx.beans.InvalidationListener;
@@ -374,7 +375,7 @@ public final class MuSigOpenTradesView extends ChatView<MuSigOpenTradesView, MuS
         tableView.getColumns().add(new BisqTableColumn.Builder<MuSigOpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.paymentMethod"))
                 .minWidth(60)
-                .comparator(Comparator.comparing(MuSigOpenTradeListItem::getFiatPaymentMethod))
+                .comparator(Comparator.comparing(MuSigOpenTradeListItem::getPaymentMethodDisplayName))
                 .setCellFactory(getPaymentMethodCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<MuSigOpenTradeListItem>()
@@ -516,12 +517,11 @@ public final class MuSigOpenTradesView extends ChatView<MuSigOpenTradesView, MuS
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    Node paymentMethodIcon = !item.isFiatPaymentMethodCustom()
-                            ? ImageUtil.getImageViewById(item.getPaymentRail().name())
-                            : MuSigViewUtils.getCustomPaymentMethodIcon(item.getFiatPaymentMethod());
+                    Node paymentMethodIcon = ImageUtil.getImageViewById(
+                            MuSigViewUtils.getPaymentMethodImageId(item.getPaymentMethod()));
                     pane.getChildren().add(paymentMethodIcon);
                     tooltip.setText(Res.get("muSig.openTrades.table.paymentMethod.tooltip",
-                            item.getFiatPaymentMethod()));
+                            item.getPaymentMethodDisplayName()));
                     Tooltip.install(pane, tooltip);
                     setGraphic(pane);
                 } else {
@@ -540,5 +540,4 @@ public final class MuSigOpenTradesView extends ChatView<MuSigOpenTradesView, MuS
     private MuSigOpenTradesController getController() {
         return (MuSigOpenTradesController) controller;
     }
-
 }

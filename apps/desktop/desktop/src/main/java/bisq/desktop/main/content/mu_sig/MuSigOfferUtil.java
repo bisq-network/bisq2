@@ -18,8 +18,6 @@
 package bisq.desktop.main.content.mu_sig;
 
 import bisq.account.payment_method.PaymentMethod;
-import bisq.account.payment_method.crypto.CryptoPaymentMethod;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.common.data.Pair;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -81,7 +79,7 @@ public class MuSigOfferUtil {
                 if (item != null && !empty) {
                     hbox.getChildren().clear();
                     for (PaymentMethod<?> paymentMethod : item.getPaymentMethods()) {
-                        Node icon = ImageUtil.getImageViewById(getPaymentMethodImageId(paymentMethod));
+                        Node icon = ImageUtil.getImageViewById(MuSigViewUtils.getPaymentMethodImageId(paymentMethod));
                         Optional<Double> opacity = Optional.ofNullable(item.getAccountAvailableByPaymentMethod().get(paymentMethod))
                                 .map(isAccountAvailable -> isAccountAvailable ? 1 : 0.2);
                         if (opacity.isPresent()) {
@@ -98,17 +96,6 @@ public class MuSigOfferUtil {
                     Tooltip.uninstall(hbox, tooltip);
                     hbox.getChildren().clear();
                     setGraphic(null);
-                }
-            }
-
-            private String getPaymentMethodImageId(PaymentMethod<?> paymentMethod) {
-                if (paymentMethod instanceof FiatPaymentMethod fiatPaymentMethod) {
-                    return fiatPaymentMethod.getPaymentRailName();
-                } else if (paymentMethod instanceof CryptoPaymentMethod cryptoPaymentMethod) {
-                    return cryptoPaymentMethod.getCode();
-                } else {
-                    log.error("Unknown payment method type: {}", paymentMethod.getClass().getSimpleName());
-                    return "";
                 }
             }
         };
