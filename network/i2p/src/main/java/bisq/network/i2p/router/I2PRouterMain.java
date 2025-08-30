@@ -52,7 +52,7 @@ public class I2PRouterMain {
                     50);
 
             i2pBridgeService = new Bi2pGrpcService(i2pRouter);
-            i2pGrpcServer = new Bi2pGrpcServer(7777, i2pBridgeService);
+            i2pGrpcServer = new Bi2pGrpcServer("127.0.0.1", 7777, i2pBridgeService);
             i2pGrpcServer.initialize();
             i2pBridgeService.initialize();
 

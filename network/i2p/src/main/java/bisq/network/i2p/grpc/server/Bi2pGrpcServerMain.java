@@ -33,7 +33,7 @@ public final class Bi2pGrpcServerMain {
         Bi2pGrpc.Bi2pImplBase mockService = new Bi2pGrpc.Bi2pImplBase() {
             @Override
             public void subscribeNetworkState(bisq.bi2p.protobuf.SubscribeRequest request,
-                                             StreamObserver<NetworkStateUpdate> responseObserver) {
+                                              StreamObserver<NetworkStateUpdate> responseObserver) {
                 CompletableFuture.runAsync(() -> {
                     NetworkState[] states = NetworkState.values();
                     for (int i = 1; i < states.length; i++) {
@@ -52,7 +52,7 @@ public final class Bi2pGrpcServerMain {
                 });
             }
         };
-        Bi2pGrpcServer i2pGrpcServer = new Bi2pGrpcServer(7777, mockService);
+        Bi2pGrpcServer i2pGrpcServer = new Bi2pGrpcServer("127.0.0.1", 7777, mockService);
         i2pGrpcServer.initialize();
         keepRunning();
     }

@@ -17,14 +17,15 @@
 
 package bisq.network.i2p.grpc.server;
 
+import bisq.bi2p.protobuf.Bi2pGrpc;
 import bisq.common.application.Service;
 import bisq.common.threading.ExecutorFactory;
-import bisq.bi2p.protobuf.Bi2pGrpc;
 import io.grpc.Server;
-import io.grpc.ServerBuilder;
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -33,9 +34,9 @@ import java.util.concurrent.TimeUnit;
 public final class Bi2pGrpcServer implements Service {
     private final Server server;
 
-    public Bi2pGrpcServer(int port, Bi2pGrpc.Bi2pImplBase service) {
-        server = ServerBuilder
-                .forPort(port)
+    public Bi2pGrpcServer(String host, int port, Bi2pGrpc.Bi2pImplBase service) {
+        server = NettyServerBuilder
+                .forAddress(new InetSocketAddress(host, port))
                 .addService(service)
                 .build();
     }

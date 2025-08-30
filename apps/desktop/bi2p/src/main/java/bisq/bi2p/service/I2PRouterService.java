@@ -75,7 +75,7 @@ public class I2PRouterService implements Service {
                 80);
 
         monitorService = new Bi2pGrpcService(router);
-        monitorServer = new Bi2pGrpcServer(bi2pGrpcPort, monitorService);
+        monitorServer = new Bi2pGrpcServer(bi2pGrpcHost, bi2pGrpcPort, monitorService);
     }
 
     @Override
