@@ -40,7 +40,7 @@ public class LogRedirector {
         System.setOut(new PrintStream(System.out, true) {
             @Override
             public void println(String logLine) {
-                doLog(logLine);
+                doLog(String.valueOf(logLine));
             }
 
             @Override
@@ -55,7 +55,7 @@ public class LogRedirector {
 
             @Override
             public void print(String s) {
-                doLog(s);
+                doLog(String.valueOf(s));
             }
 
             @Override
@@ -67,7 +67,7 @@ public class LogRedirector {
         System.setErr(new PrintStream(System.err, true) {
             @Override
             public void println(String logLine) {
-                doLog(logLine);
+                doLog(String.valueOf(logLine));
             }
 
             @Override
@@ -82,7 +82,7 @@ public class LogRedirector {
 
             @Override
             public void print(String s) {
-                doLog(s);
+                doLog(String.valueOf(s));
             }
 
             @Override
