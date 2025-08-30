@@ -17,8 +17,6 @@
 
 package bisq.dto.settings;
 
-import bisq.dto.common.currency.MarketDto;
-
 import java.util.Set;
 
 public record SettingsDto(boolean isTacAccepted,
@@ -27,7 +25,6 @@ public record SettingsDto(boolean isTacAccepted,
                           String languageCode,
                           Set<String> supportedLanguageCodes,
                           double maxTradePriceDeviation,
-                          MarketDto selectedMarket,
                           int numDaysAfterRedactingTradeData,
                           boolean useAnimations) {
 }

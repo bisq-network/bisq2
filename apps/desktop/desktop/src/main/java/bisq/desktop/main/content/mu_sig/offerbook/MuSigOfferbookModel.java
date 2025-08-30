@@ -19,6 +19,7 @@ package bisq.desktop.main.content.mu_sig.offerbook;
 
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.common.asset.CryptoAsset;
+import bisq.common.market.Market;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
 import javafx.beans.property.BooleanProperty;
@@ -55,6 +56,7 @@ public class MuSigOfferbookModel implements Model {
     private final StringProperty baseCurrencyIconId = new SimpleStringProperty("");
     private final StringProperty quoteCurrencyIconId = new SimpleStringProperty("");
 
+    private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
     private final Set<String> muSigOfferIds = new HashSet<>();
     private final ObservableList<MuSigOfferListItem> muSigOfferListItems = FXCollections.observableArrayList();
     private final FilteredList<MuSigOfferListItem> filteredMuSigOfferListItems = new FilteredList<>(muSigOfferListItems);
