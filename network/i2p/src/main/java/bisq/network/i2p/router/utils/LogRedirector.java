@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.i2p.util.Log;
 
 import java.io.PrintStream;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -97,7 +98,7 @@ public class LogRedirector {
             log.info(message);
             return;
         }
-        String trimmed = message.trim().toUpperCase();
+        String trimmed = message.trim().toUpperCase(Locale.ROOT);
         if (trimmed.startsWith(Log.STR_DEBUG)) {
             log.debug(message);
         } else if (trimmed.startsWith(Log.STR_WARN) || trimmed.startsWith("WARNING")) {
