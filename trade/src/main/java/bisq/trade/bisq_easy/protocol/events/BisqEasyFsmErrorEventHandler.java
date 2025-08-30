@@ -17,6 +17,7 @@
 
 package bisq.trade.bisq_easy.protocol.events;
 
+import bisq.common.fsm.ErrorCode;
 import bisq.common.fsm.FsmErrorEvent;
 import bisq.common.fsm.FsmException;
 import bisq.common.util.ExceptionUtil;
@@ -30,11 +31,13 @@ import static bisq.common.util.StringUtils.createUid;
 import static bisq.common.util.StringUtils.truncate;
 import static bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage.MAX_LENGTH_ERROR_MESSAGE;
 import static bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage.MAX_LENGTH_STACKTRACE;
+import static java.util.Objects.requireNonNullElse;
 
 @Slf4j
 public class BisqEasyFsmErrorEventHandler extends BisqEasyTradeEventHandlerAsMessageSender<BisqEasyTrade, FsmErrorEvent> {
     private String errorMessage;
     private String errorStackTrace;
+    private ErrorCode errorCode;
 
     public BisqEasyFsmErrorEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
@@ -45,12 +48,14 @@ public class BisqEasyFsmErrorEventHandler extends BisqEasyTradeEventHandlerAsMes
         FsmException fsmException = event.getFsmException();
         errorMessage = ExceptionUtil.getRootCauseMessage(fsmException);
         errorStackTrace = ExceptionUtil.getSafeStackTraceAsString(fsmException);
+        errorCode = requireNonNullElse(fsmException.getErrorCode(), ErrorCode.UNSPECIFIED);
     }
 
     @Override
     protected void commit() {
         // Set errorStackTrace first as we use errorMessage observable in the handler code accessing both fields
         trade.setErrorStackTrace(errorStackTrace);
+        trade.setErrorCode(errorCode);
         trade.setErrorMessage(errorMessage);
     }
 
@@ -64,6 +69,7 @@ public class BisqEasyFsmErrorEventHandler extends BisqEasyTradeEventHandlerAsMes
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 truncate(errorMessage, MAX_LENGTH_ERROR_MESSAGE),
-                truncate(errorStackTrace, MAX_LENGTH_STACKTRACE)));
+                truncate(errorStackTrace, MAX_LENGTH_STACKTRACE),
+                trade.getErrorCode()));
     }
 }

@@ -17,7 +17,9 @@
 
 package bisq.desktop.main.content.bisq_easy.take_offer.review;
 
+import bisq.account.payment_method.BitcoinPaymentMethodSpec;
 import bisq.account.payment_method.BitcoinPaymentRail;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannelDomain;
@@ -45,8 +47,6 @@ import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
@@ -206,8 +206,12 @@ public class TakeOfferReviewController implements Controller {
         log.info("Selected mediator for trade {}: {}", bisqEasyTrade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
         model.setBisqEasyTrade(bisqEasyTrade);
         errorMessagePin = bisqEasyTrade.errorMessageObservable().addObserver(errorMessage -> {
-                    if (errorMessage != null) {
-                        UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
+                    if (errorMessage == null) {
+                        return;
+                    }
+                    switch (bisqEasyTrade.getErrorCode()) {
+                        case TRADE_AMOUNT_VALIDATION_FAILED -> UIThread.run(() -> new Popup().warning(errorMessage).show());
+                        default -> UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
                                         errorMessage,
                                         StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 2000)))
                                 .show());
@@ -215,8 +219,13 @@ public class TakeOfferReviewController implements Controller {
                 }
         );
         peersErrorMessagePin = bisqEasyTrade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
-                    if (peersErrorMessage != null) {
-                        UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.popup",
+                    if (peersErrorMessage == null) {
+                        return;
+                    }
+                    switch (bisqEasyTrade.getPeersErrorCode()) {
+                        case TRADE_AMOUNT_VALIDATION_FAILED ->
+                                UIThread.run(() -> new Popup().warning(peersErrorMessage).show());
+                        default -> UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.popup",
                                         peersErrorMessage,
                                         StringUtils.truncate(bisqEasyTrade.getPeersErrorStackTrace(), 2000)))
                                 .show());

@@ -17,6 +17,7 @@
 
 package bisq.trade;
 
+import bisq.common.fsm.ErrorCode;
 import bisq.common.fsm.FsmModel;
 import bisq.common.fsm.State;
 import bisq.common.observable.Observable;
@@ -29,6 +30,7 @@ import bisq.offer.Offer;
 import bisq.security.DigestUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -92,6 +94,10 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     // transient fields are excluded by default for EqualsAndHashCode
     private transient final TradeRole tradeRole;
     private final C contract;
+    @Setter
+    private ErrorCode errorCode = ErrorCode.UNSPECIFIED;
+    @Setter
+    private ErrorCode peersErrorCode = ErrorCode.UNSPECIFIED;
     private final Observable<String> errorMessage = new Observable<>();
     private final Observable<String> errorStackTrace = new Observable<>();
     private final Observable<String> peersErrorMessage = new Observable<>();

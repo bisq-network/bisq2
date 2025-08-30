@@ -146,6 +146,7 @@ message BisqEasyCancelTradeMessage {
 message BisqEasyReportErrorMessage {
   string errorMessage = 1;
   string stackTrace = 2;
+  common.ErrorCode errorCode = 3;
 }
 
 

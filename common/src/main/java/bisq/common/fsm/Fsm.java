@@ -116,21 +116,34 @@ public abstract class Fsm<M extends FsmModel> {
                             .forEach(e -> model.eventQueue.add(event));
                 }
             } catch (Exception exception) {
-                log.error("Error at handling {}.", event, exception);
-                FsmException fsmException = new FsmException(exception, event);
-                // In case of an exception we fire the FsmErrorEvent to trigger an error state.
-                // We apply that only if the event which triggered the exception was not the FsmErrorEvent itself
-                // to avoid potential recursive calls if the error handling code causes a follow-up exception.
-                if (!(event instanceof FsmErrorEvent)) {
-                    persist();
-                    handle(new FsmErrorEvent(fsmException));
-                }
-                // We throw the exception to allow specific error handling to the implementation class.
-                throw fsmException;
+                handleException(event, exception);
             } finally {
                 persist();
             }
         }
+    }
+
+    private void handleException(Event event, Exception exception) {
+        log.error("Error handling event: {}", event, exception);
+
+        ErrorCode errorCode = determineErrorCode(exception);
+        FsmException fsmException = new FsmException(exception, errorCode, event);
+
+        // In case of an exception we fire the FsmErrorEvent to trigger an error state.
+        // We apply that only if the event which triggered the exception was not the FsmErrorEvent itself
+        // to avoid potential recursive calls if the error handling code causes a follow-up exception.
+        if (!(event instanceof FsmErrorEvent)) {
+            persist();
+            handle(new FsmErrorEvent(fsmException));
+        }
+        throw fsmException;
+    }
+
+    private ErrorCode determineErrorCode(Exception exception) {
+        if (exception instanceof TradeAmountValidationException) {
+            return ErrorCode.TRADE_AMOUNT_VALIDATION_FAILED;
+        }
+        return ErrorCode.UNSPECIFIED;
     }
 
     protected abstract void persist();

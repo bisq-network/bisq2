@@ -17,20 +17,8 @@
 
 package bisq.common.fsm;
 
-import lombok.Getter;
-
-@Getter
-public class FsmException extends RuntimeException {
-    private final Event event;
-    private final ErrorCode errorCode;
-
-    public FsmException(Throwable cause, Event event) {
-        this(cause, ErrorCode.UNSPECIFIED, event);
-    }
-
-    public FsmException(Throwable cause, ErrorCode errorCode, Event event) {
-        super(cause);
-        this.event = event;
-        this.errorCode = errorCode;
+public class TradeAmountValidationException extends RuntimeException {
+    public TradeAmountValidationException(String message) {
+        super(message);
     }
 }
