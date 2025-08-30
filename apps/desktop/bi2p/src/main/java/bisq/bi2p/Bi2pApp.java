@@ -46,6 +46,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.Objects.requireNonNull;
 
@@ -60,6 +61,9 @@ public class Bi2pApp extends Application {
     // For now, we have it turned on always, but maybe we allow to turn off in UI or by options, thus we leave it
     // as Observable.
     private final Observable<Boolean> preventStandbyMode = new Observable<>(true);
+    private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
+    private SystemTray systemTray;
+    private TrayIcon trayIcon;
 
     public Bi2pApp() {
         // Taskbar is only supported on mac
@@ -103,9 +107,18 @@ public class Bi2pApp extends Application {
     }
 
     private CompletableFuture<Boolean> shutdown() {
+        if (shuttingDown.getAndSet(true)) {
+            return CompletableFuture.completedFuture(false);
+        }
         if (i2pRouterService == null) {
             doShutdown();
             return CompletableFuture.completedFuture(false);
+        }
+        if (systemTray != null && trayIcon != null) {
+            try {
+                systemTray.remove(trayIcon);
+            } catch (Exception ignore) {
+            }
         }
         return i2pRouterService.shutdown()
                 .whenComplete((result, throwable) -> doShutdown());
@@ -143,10 +156,10 @@ public class Bi2pApp extends Application {
                     }));
             PopupMenu popupMenu = new PopupMenu();
 
-            SystemTray systemTray = SystemTray.getSystemTray();
+            systemTray = SystemTray.getSystemTray();
             URL iconUrl = getClass().getResource("/images/tray_icon/bi2p-tray_32@2x.png");
             java.awt.Image icon = Toolkit.getDefaultToolkit().getImage(iconUrl);
-            TrayIcon trayIcon = new TrayIcon(icon, "Bisq I2P Router", popupMenu);
+            trayIcon = new TrayIcon(icon, "Bisq I2P Router", popupMenu);
             trayIcon.setImageAutoSize(true);
             try {
                 systemTray.add(trayIcon);
