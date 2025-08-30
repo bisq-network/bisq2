@@ -144,3 +144,14 @@ minimum_perc           = 0
 resource_name          = webcam.properties
 replace_edited_strings = false
 keep_translations      = false
+
+[o:bisq:p:bisq-2:r:bi2pproperties]
+file_filter            = i18n/src/main/resources/bi2p_<lang>.properties
+source_file            = i18n/src/main/resources/bi2p.properties
+type                   = UNICODEPROPERTIES
+minimum_perc           = 0
+resource_name          = bi2p.properties
+replace_edited_strings = false
+keep_translations      = false
+
+

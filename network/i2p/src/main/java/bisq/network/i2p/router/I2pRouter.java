@@ -17,14 +17,16 @@
 
 package bisq.network.i2p.router;
 
-import bisq.common.platform.PlatformUtils;
 import bisq.common.threading.ExecutorFactory;
+import bisq.network.i2p.router.utils.I2PLogLevel;
+import bisq.network.i2p.router.utils.LogRedirector;
+import bisq.network.i2p.router.state.RouterMonitor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.data.Destination;
 import net.i2p.router.Router;
 
-import java.io.IOException;
+import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -32,73 +34,56 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Getter
 public class I2pRouter {
-    public static void main(String[] args) {
-        String i2pDirPath = PlatformUtils.getUserDataDir().resolve("bisq2_i2p_embedded_router").toString();
-        I2pRouter router = new I2pRouter(i2pDirPath);
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            Thread.currentThread().setName("I2pRouter.shutdownHook");
-            router.shutdown();
-        }));
-
-        router.start()
-                .orTimeout(3, TimeUnit.MINUTES)
-                .whenComplete((result, throwable) -> {
-                    if (throwable != null || !result) {
-                        router.shutdown();
-                        log.error("I2P router failed to start, exiting.");
-                        System.exit(1);
-                    }
-                });
-
-        keepRunning();
-    }
-
-    private final String dirPath;
+    private final String i2cpHost;
+    private final int i2cpPort;
+    private final long routerStartupTimeout;
     private final RouterSetup routerSetup;
-    private final RouterStatusObserver routerStatus;
-    private volatile Router router;
+    @Getter
+    private final RouterMonitor routerMonitor;
+    private final Router router;
     private volatile boolean isShutdownInProgress;
 
-    private I2pRouter(String i2pDirPath) {
-        this(i2pDirPath, false, 512, 512, 50);
-    }
-
-    public I2pRouter(String i2pDirPath,
+    public I2pRouter(Path i2pDirPath,
+                     String i2cpHost,
+                     int i2cpPort,
+                     I2PLogLevel i2pLogLevel,
                      boolean isEmbedded,
+                     long routerStartupTimeout,
                      int inboundKBytesPerSecond,
                      int outboundKBytesPerSecond,
                      int bandwidthSharePercentage) {
-        this.dirPath = i2pDirPath;
+        this.i2cpHost = i2cpHost;
+        this.i2cpPort = i2cpPort;
+        this.routerStartupTimeout = routerStartupTimeout;
 
-        // Must be set before I2P router is created as otherwise log outputs are routed by I2P log system
-        System.setProperty("I2P_DISABLE_OUTPUT_OVERRIDE", "true");
+        LogRedirector.redirectSystemStreams();
+        log.info("I2CP listening on: {}:{}", i2cpHost, i2cpPort);
 
         routerSetup = new RouterSetup(i2pDirPath,
+                i2cpHost,
+                i2cpPort,
+                i2pLogLevel,
                 isEmbedded,
                 inboundKBytesPerSecond,
                 outboundKBytesPerSecond,
                 bandwidthSharePercentage);
+        routerSetup.initialize();
 
-        routerStatus = new RouterStatusObserver();
+        router = new Router();
+        log.info("Router created");
+        router.setKillVMOnEnd(false);
+
+        routerSetup.setI2pLogLevel(router);
+        routerMonitor = new RouterMonitor(router);
     }
 
-    public CompletableFuture<Boolean> start() {
-        ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("I2pRouter.start");
+    public CompletableFuture<Boolean> startRouter() {
+        ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("I2pRouter.runRouter");
         return CompletableFuture.supplyAsync(() -> {
                     try {
-                        routerSetup.initialize();
-
-                        log.info("Launching router");
                         long ts = System.currentTimeMillis();
-                        router = new Router();
-                        log.info("Router created");
-                        router.setKillVMOnEnd(false);
-                        routerStatus.start(router.getContext());
-
+                        routerMonitor.startPolling();
                         router.runRouter();
-                        awaitRunning();
-
                         log.info("Starting router took {} ms", System.currentTimeMillis() - ts);
                         return true;
                     } catch (Exception e) {
@@ -106,54 +91,38 @@ public class I2pRouter {
                         throw new RuntimeException(e);
                     }
                 }, executor)
-                .orTimeout(3, TimeUnit.MINUTES)
+                .orTimeout(routerStartupTimeout, TimeUnit.MILLISECONDS)
                 .whenComplete((result, throwable) -> ExecutorFactory.shutdownAndAwaitTermination(executor));
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        if (router == null || isShutdownInProgress) {
+        if (isShutdownInProgress) {
             return CompletableFuture.completedFuture(true);
         }
+        isShutdownInProgress = true;
+
         ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("I2pRouter.shutdown");
         return CompletableFuture.supplyAsync(() -> {
-                    isShutdownInProgress = true;
                     long ts = System.currentTimeMillis();
+                    routerMonitor.startShutdown();
                     router.shutdown(1);
                     log.info("I2P router shutdown completed. Took {} ms.", System.currentTimeMillis() - ts);
                     return true;
                 }, executor)
-                .whenComplete((result, throwable) -> ExecutorFactory.shutdownAndAwaitTermination(executor));
+                .orTimeout(5, TimeUnit.SECONDS)
+                .whenComplete((result, throwable) -> {
+                    ExecutorFactory.shutdownAndAwaitTermination(executor);
+                    routerMonitor.shutdown();
+                });
     }
-
 
     // Tracks recent failed connection attempts
     public boolean wasUnreachable(Destination destination) {
         return router.getContext().commSystem().wasUnreachable(destination.getHash());
     }
 
-    private void awaitRunning() throws IOException {
-        while (!router.isRunning()) {
-            try {
-                //noinspection BusyWait
-                Thread.sleep(100);
-                if (!router.isAlive()) {
-                    log.error("Router died while starting");
-                    throw new IOException("Router died while starting");
-                }
-            } catch (InterruptedException e) {
-                log.warn("Thread got interrupted at awaitRunning", e);
-                Thread.currentThread().interrupt(); // Restore interrupted state
-            }
-        }
-    }
-
-    private static void keepRunning() {
-        try {
-            // Keep running
-            Thread.currentThread().join();
-        } catch (InterruptedException e) {
-            log.warn("Thread got interrupted at keepRunning method", e);
-            Thread.currentThread().interrupt(); // Restore interrupted state
-        }
+    // Checks whether a communication session has been successfully established with that specific destination.
+    public boolean isEstablished(Destination destination) {
+        return router.getContext().commSystem().isEstablished(destination.getHash());
     }
 }

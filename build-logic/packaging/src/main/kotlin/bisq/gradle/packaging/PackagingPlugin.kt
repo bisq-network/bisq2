@@ -55,6 +55,17 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
                 }
             }
 
+            val bi2pProject = project.parent?.childProjects?.filter { e -> e.key == "bi2p" }?.map { e -> e.value.project }?.first()
+            bi2pProject?.let { bi2p ->
+                val desktopProject = project.parent?.childProjects?.filter { e -> e.key == "desktop" }?.map { e -> e.value.project }?.first()
+                desktopProject?.let { desktop ->
+                    val processResourcesInDesktop = desktop.tasks.named("processResources")
+                    val processBi2pForDesktopProvider = bi2p.tasks.named("processBi2pForDesktop")
+                    processResourcesInDesktop.get().dependsOn(processBi2pForDesktopProvider)
+                    dependsOn(processBi2pForDesktopProvider)
+                }
+            }
+
             dependsOn(generateHashesTask)
 
             jdkDirectory.set(getJPackageJdkDirectory(extension))

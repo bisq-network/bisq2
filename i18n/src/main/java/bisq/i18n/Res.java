@@ -54,7 +54,8 @@ public class Res {
             "authorized_role",
             "account",
             "mu_sig",
-            "webcam"
+            "webcam",
+            "bi2p"
     );
 
     private static volatile List<ResourceBundle> bundles = List.of();

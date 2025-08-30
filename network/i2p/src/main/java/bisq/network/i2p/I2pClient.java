@@ -28,6 +28,7 @@ import net.i2p.data.Destination;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
@@ -37,7 +38,7 @@ public class I2pClient {
     private final SocketManagerByNodeId socketManagerByNodeId;
     private volatile boolean isShutdownInProgress;
 
-    public I2pClient(String dirPath,
+    public I2pClient(Path clientDir,
                      String i2cpHost,
                      int i2cpPort,
                      int socketTimeout,
@@ -45,8 +46,8 @@ public class I2pClient {
         this.socketTimeout = socketTimeout;
         socketManagerByNodeId = new SocketManagerByNodeId(i2cpHost, i2cpPort, connectTimeout);
 
-        I2PAppContext.getGlobalContext().logManager().setBaseLogfilename(dirPath + "/client/logs/i2p-@.log");
-        log.info("I2P client created with i2cpHost={}, i2cpPort={}, socketTimeout={}", i2cpHost, i2cpPort, socketTimeout);
+        I2PAppContext.getGlobalContext().logManager().setBaseLogfilename(clientDir+ "/log-@.log");
+        log.info("I2P client created with i2cpHost={}, i2cpPort={}", i2cpHost, i2cpPort);
     }
 
     public CompletableFuture<Boolean> shutdown() {

@@ -34,6 +34,8 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
+import bisq.network.p2p.node.transport.I2PTransportService;
+import bisq.network.p2p.node.transport.TransportService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -108,13 +110,25 @@ public class BootstrapElement {
             networkService.getServiceNodesByTransport().findServiceNode(transportType)
                     .ifPresent(serviceNode -> {
                         String bootstrapElementTypeName = bootstrapElementType.name();
-                        String initializingKey = "splash.stateInfo.initializing." + bootstrapElementTypeName;
-                        String initializedKey = "splash.stateInfo.initialized." + bootstrapElementTypeName;
+
+                        String transportTypeName = Res.get("splash.bootstrapState.network." + transportType.name());
+                        TransportService transportService = serviceNode.getTransportService();
+                        String initializingKey;
+                        String initializedKey;
+                        if (transportService instanceof I2PTransportService i2PTransportService &&
+                                bootstrapElementType == BootstrapElementType.TRANSPORT) {
+                            String routerMode = i2PTransportService.getRouterMode().name();
+                            initializingKey = "splash.stateInfo.initializing." + bootstrapElementTypeName + ".I2P." + routerMode;
+                            initializedKey = "splash.stateInfo.initialized." + bootstrapElementTypeName + ".I2P." + routerMode;
+                        } else {
+                            initializingKey = "splash.stateInfo.initializing." + bootstrapElementTypeName;
+                            initializedKey = "splash.stateInfo.initialized." + bootstrapElementTypeName;
+                        }
+
                         switch (bootstrapElementType) {
                             case TRANSPORT -> {
-                                String transportTypeName = Res.get("splash.bootstrapState.network." + transportType.name());
                                 model.getIconId().set(getIconId(transportType));
-                                pins.add(serviceNode.getTransportService().getTimestampByTransportState().addObserver((state, timestamp) -> {
+                                pins.add(transportService.getTimestampByTransportState().addObserver((state, timestamp) -> {
                                     UIThread.run(() -> {
                                         switch (state) {
                                             case INITIALIZE -> {
@@ -139,7 +153,7 @@ public class BootstrapElement {
                                 String transportSpecificInitializingKey = initializingKey + "." + transportType.name();
                                 String transportSpecificInitializedKey = initializedKey + "." + transportType.name();
                                 model.getIconId().set("rocket");
-                                pins.add(serviceNode.getTransportService().getInitializeServerSocketTimestampByNetworkId().addObserver((networkId, timestamp) -> {
+                                pins.add(transportService.getInitializeServerSocketTimestampByNetworkId().addObserver((networkId, timestamp) -> {
                                     UIThread.run(() -> {
                                         String tag = identityService.findAnyIdentityByNetworkId(networkId).map(Identity::getTag).orElse(Res.get("data.na"));
                                         if (identityTag.isPresent() && identityTag.get().equals(tag)) {
@@ -152,7 +166,7 @@ public class BootstrapElement {
                                         }
                                     });
                                 }));
-                                pins.add(serviceNode.getTransportService().getInitializedServerSocketTimestampByNetworkId().addObserver((networkId, timestamp) -> {
+                                pins.add(transportService.getInitializedServerSocketTimestampByNetworkId().addObserver((networkId, timestamp) -> {
                                     UIThread.run(() -> {
                                         String tag = identityService.findAnyIdentityByNetworkId(networkId).map(Identity::getTag).orElse(Res.get("data.na"));
                                         if (identityTag.isPresent() && identityTag.get().equals(tag)) {
