@@ -25,9 +25,9 @@ import bisq.network.i2p.grpc.client.Bi2pGrpcClientService;
 import bisq.network.i2p.grpc.messages.PeerAvailabilityResponse;
 import bisq.network.i2p.router.I2PRouter;
 import bisq.network.i2p.router.RouterSetup;
-import bisq.network.i2p.router.utils.I2PLogLevel;
 import bisq.network.i2p.router.state.ProcessState;
 import bisq.network.i2p.router.state.RouterObserver;
+import bisq.network.i2p.router.utils.I2PLogLevel;
 import bisq.network.p2p.node.transport.I2PTransportService;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.data.Destination;
@@ -151,9 +151,11 @@ public class I2PRouterFacade {
             log.info("Bisq I2P router launched. Awaiting running state.");
             awaitGrpcMonitorServerAvailable();
             awaitRouterRunningUsingGrpcMonitor();
-        } catch (TimeoutException | ExecutionException | InterruptedException e) {
-            log.warn("No Grpc monitor server detected. Trying to use that router but not knowing it's state. " +
-                    "This should not happen in normal circumstances.");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("No Grpc monitor server detected (interrupted). Proceeding without monitor state.", e);
+        } catch (TimeoutException | ExecutionException e) {
+            log.warn("No Grpc monitor server detected. Proceeding without monitor state.", e);
         }
     }
 
@@ -166,9 +168,11 @@ public class I2PRouterFacade {
             }
             log.info("Grpc monitor server detected. Awaiting running state.");
             awaitRouterRunningUsingGrpcMonitor();
-        } catch (TimeoutException | ExecutionException | InterruptedException e) {
-            log.warn("No Grpc monitor server detected. Trying to use that router but not knowing it's state. " +
-                    "This should not happen in normal circumstances.");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("No Grpc monitor server detected (interrupted). Proceeding without monitor state.", e);
+        } catch (TimeoutException | ExecutionException e) {
+            log.warn("No Grpc monitor server detected. Proceeding without monitor state.", e);
         }
     }
 

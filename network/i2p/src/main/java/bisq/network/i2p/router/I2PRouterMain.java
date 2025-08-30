@@ -36,9 +36,10 @@ public class I2PRouterMain {
     private static I2PRouter i2pRouter;
     private static Bi2pGrpcService i2pBridgeService;
     private static Bi2pGrpcServer i2pGrpcServer;
+    private static ExecutorService executor;
 
     public static void main(String[] args) {
-        ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("I2pRouter.start");
+        executor = ExecutorFactory.newSingleThreadExecutor("I2pRouter.start");
         CompletableFuture.runAsync(() -> {
             Path i2pDirPath = PlatformUtils.getUserDataDir().resolve("Bisq2_I2P_router");
             i2pRouter = new I2PRouter(i2pDirPath,
@@ -64,7 +65,7 @@ public class I2PRouterMain {
             i2pRouter.startRouter()
                     .whenComplete((result, throwable) -> {
                         if (throwable != null) {
-                            log.error("I2P router failed to start, exiting.");
+                            log.error("I2P router failed to start, exiting.", throwable);
                             shutdown();
                             System.exit(PlatformUtils.EXIT_FAILURE);
                         }
@@ -78,6 +79,7 @@ public class I2PRouterMain {
         if (i2pBridgeService != null) i2pBridgeService.shutdown().join();
         if (i2pGrpcServer != null) i2pGrpcServer.shutdown().join();
         if (i2pRouter != null) i2pRouter.shutdown().join();
+        ExecutorFactory.shutdownAndAwaitTermination(executor);
     }
 
     private static void keepRunning() {
