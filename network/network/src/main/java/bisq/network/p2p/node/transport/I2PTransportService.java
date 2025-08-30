@@ -23,7 +23,7 @@ import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.network.i2p.I2pClient;
+import bisq.network.i2p.I2PClient;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.transport.i2p.I2PRouterFacade;
@@ -137,7 +137,7 @@ public class I2PTransportService implements TransportService {
     private final I2PRouterFacade i2pRouterFacade;
     @Getter
     private final RouterMode routerMode;
-    private volatile I2pClient i2pClient;
+    private volatile I2PClient i2pClient;
     private final I2PTransportService.Config i2pConfig;
     @Getter
     public final Observable<TransportState> transportState = new Observable<>(TransportState.NEW);
@@ -172,7 +172,7 @@ public class I2PTransportService implements TransportService {
                     .get();
 
             Path clientDir = i2pConfig.getDataDir().resolve("client");
-            i2pClient = new I2pClient(clientDir,
+            i2pClient = new I2PClient(clientDir,
                     i2pConfig.getI2cpHost(),
                     i2pConfig.getI2cpPort(),
                     i2pConfig.getSocketTimeout(),

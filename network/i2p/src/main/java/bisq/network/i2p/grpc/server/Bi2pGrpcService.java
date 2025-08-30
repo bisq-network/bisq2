@@ -26,7 +26,7 @@ import bisq.network.i2p.grpc.messages.NetworkStateUpdate;
 import bisq.network.i2p.grpc.messages.ProcessStateUpdate;
 import bisq.network.i2p.grpc.messages.RouterStateUpdate;
 import bisq.network.i2p.grpc.messages.TunnelInfoUpdate;
-import bisq.network.i2p.router.I2pRouter;
+import bisq.network.i2p.router.I2PRouter;
 import bisq.network.i2p.router.state.RouterMonitor;
 import io.grpc.stub.ServerCallStreamObserver;
 import io.grpc.stub.StreamObserver;
@@ -46,7 +46,7 @@ public class Bi2pGrpcService extends Bi2pGrpc.Bi2pImplBase implements Service {
     private final Set<Pin> pins = new HashSet<>();
     private final RouterMonitor routerMonitor;
 
-    public Bi2pGrpcService(I2pRouter i2pRouter) {
+    public Bi2pGrpcService(I2PRouter i2pRouter) {
         routerMonitor = i2pRouter.getRouterMonitor();
     }
 

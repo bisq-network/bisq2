@@ -33,12 +33,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 @Slf4j
-public class I2pClient {
+public class I2PClient {
     private final int socketTimeout;
     private final SocketManagerByNodeId socketManagerByNodeId;
     private volatile boolean isShutdownInProgress;
 
-    public I2pClient(Path clientDir,
+    public I2PClient(Path clientDir,
                      String i2cpHost,
                      int i2cpPort,
                      int socketTimeout,

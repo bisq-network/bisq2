@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Getter
 public class I2PRouterMain {
-    private static I2pRouter i2pRouter;
+    private static I2PRouter i2pRouter;
     private static Bi2pGrpcService i2pBridgeService;
     private static Bi2pGrpcServer i2pGrpcServer;
 
@@ -41,7 +41,7 @@ public class I2PRouterMain {
         ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("I2pRouter.start");
         CompletableFuture.runAsync(() -> {
             Path i2pDirPath = PlatformUtils.getUserDataDir().resolve("Bisq2_I2P_router");
-            i2pRouter = new I2pRouter(i2pDirPath,
+            i2pRouter = new I2PRouter(i2pDirPath,
                     "127.0.0.1",
                     8888,
                     I2PLogLevel.DEBUG,

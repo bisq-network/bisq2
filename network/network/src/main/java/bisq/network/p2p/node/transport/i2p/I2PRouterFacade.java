@@ -23,7 +23,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.network.i2p.grpc.client.Bi2pGrpcClientService;
 import bisq.network.i2p.grpc.messages.PeerAvailabilityResponse;
-import bisq.network.i2p.router.I2pRouter;
+import bisq.network.i2p.router.I2PRouter;
 import bisq.network.i2p.router.RouterSetup;
 import bisq.network.i2p.router.utils.I2PLogLevel;
 import bisq.network.i2p.router.state.ProcessState;
@@ -54,7 +54,7 @@ public class I2PRouterFacade {
     private final Path i2pRouterDir;
 
     private volatile Bi2pGrpcClientService grpcRouterMonitorService;
-    private volatile I2pRouter i2pRouter;
+    private volatile I2PRouter i2pRouter;
     private volatile Bi2pProcessLauncher i2pRouterProcessLauncher;
 
     private volatile Pin processStatePin;
@@ -180,7 +180,7 @@ public class I2PRouterFacade {
     private void startEmbeddedRouter() throws TimeoutException, ExecutionException, InterruptedException, IOException, URISyntaxException {
         log.info("Embedded I2P router is used. No external router detected.");
 
-        i2pRouter = new I2pRouter(i2pRouterDir,
+        i2pRouter = new I2PRouter(i2pRouterDir,
                 i2cpHost,
                 i2cpPort,
                 I2PLogLevel.INFO,

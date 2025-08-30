@@ -23,7 +23,7 @@ import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.platform.PlatformUtils;
 import bisq.network.i2p.grpc.server.Bi2pGrpcServer;
 import bisq.network.i2p.grpc.server.Bi2pGrpcService;
-import bisq.network.i2p.router.I2pRouter;
+import bisq.network.i2p.router.I2PRouter;
 import bisq.network.i2p.router.RouterSetup;
 import bisq.network.i2p.router.utils.I2PLogLevel;
 import bisq.network.i2p.router.state.NetworkState;
@@ -51,7 +51,7 @@ public class I2PRouterService implements Service {
     private final Path i2pDirPath;
     @Getter
     private final Observable<Throwable> throwable = new Observable<>();
-    private final I2pRouter router;
+    private final I2PRouter router;
     private final Bi2pGrpcServer monitorServer;
     private final Bi2pGrpcService monitorService;
     private volatile boolean shutdownInProgress;
@@ -64,7 +64,7 @@ public class I2PRouterService implements Service {
         i2pDirPath = PlatformUtils.getUserDataDir().resolve(bi2pDir);
         log.info("I2CP {}:{}; Grpc server listening at: {}:{}", i2cpHost, i2cpPort, bi2pGrpcHost, bi2pGrpcPort);
 
-        router = new I2pRouter(i2pDirPath,
+        router = new I2PRouter(i2pDirPath,
                 i2cpHost,
                 i2cpPort,
                 I2PLogLevel.INFO,

@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Getter
-public class I2pRouter {
+public class I2PRouter {
     private final String i2cpHost;
     private final int i2cpPort;
     private final long routerStartupTimeout;
@@ -43,7 +43,7 @@ public class I2pRouter {
     private final Router router;
     private volatile boolean isShutdownInProgress;
 
-    public I2pRouter(Path i2pDirPath,
+    public I2PRouter(Path i2pDirPath,
                      String i2cpHost,
                      int i2cpPort,
                      I2PLogLevel i2pLogLevel,
