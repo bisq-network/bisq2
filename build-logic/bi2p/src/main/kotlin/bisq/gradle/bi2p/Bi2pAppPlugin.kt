@@ -10,10 +10,11 @@ import org.gradle.kotlin.dsl.register
 
 class Bi2pAppPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-
         val copyBi2pAppVersionToDesktop = project.tasks.register<Copy>("copyBi2pAppVersionToDesktop") {
-            val desktopProject = project.parent?.childProjects?.filter { e -> e.key == "desktop" }?.map { e -> e.value.project }?.first()
-            desktopProject?.tasks?.let {
+            val desktopProject = project.rootProject.findProject(":apps:desktop")
+                ?: project.rootProject.subprojects.find { it.name == "desktop" }
+            requireNotNull(desktopProject) { "Desktop project not found (expected ':apps:desktop')." }
+            desktopProject.tasks.let {
                 from(project.layout.projectDirectory.asFile.absolutePath + "/version.txt")
                 include("version.txt")
                 into(desktopProject.layout.buildDirectory.dir("generated/src/main/resources/bi2p"))
@@ -42,8 +43,10 @@ class Bi2pAppPlugin : Plugin<Project> {
             dependsOn(zipBi2pAppShadowJar)
             dependsOn(copyBi2pAppVersionToDesktop)
 
-            val desktopProject = project.parent?.childProjects?.filter { e -> e.key == "desktop" }?.map { e -> e.value.project }?.first()
-            desktopProject?.tasks?.let {
+            val desktopProject = project.rootProject.findProject(":apps:desktop")
+                ?: project.rootProject.subprojects.find { it.name == "desktop" }
+            requireNotNull(desktopProject) { "Desktop project not found (expected ':apps:desktop')." }
+            desktopProject.tasks.let {
                 from(project.layout.buildDirectory.dir("generated"))
                 exclude("sources")
                 into(desktopProject.layout.buildDirectory.dir("generated/src/main/resources/bi2p"))

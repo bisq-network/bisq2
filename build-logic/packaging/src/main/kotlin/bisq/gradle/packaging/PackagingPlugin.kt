@@ -44,9 +44,13 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             group = "distribution"
             description = "Generate the installer or the platform the project is running"
 
-            val webcamProject = project.parent?.childProjects?.filter { e -> e.key == "webcam-app" }?.map { e -> e.value.project }?.first()
+            val webcamProject =
+                project.parent?.childProjects?.filter { e -> e.key == "webcam-app" }?.map { e -> e.value.project }
+                    ?.first()
             webcamProject?.let { webcam ->
-                val desktopProject = project.parent?.childProjects?.filter { e -> e.key == "desktop" }?.map { e -> e.value.project }?.first()
+                val desktopProject =
+                    project.parent?.childProjects?.filter { e -> e.key == "desktop" }?.map { e -> e.value.project }
+                        ?.first()
                 desktopProject?.let { desktop ->
                     val processResourcesInDesktop = desktop.tasks.named("processResources")
                     val processWebcamForDesktopProvider = webcam.tasks.named("processWebcamForDesktop")
@@ -55,15 +59,16 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
                 }
             }
 
-            val bi2pProject = project.parent?.childProjects?.filter { e -> e.key == "bi2p" }?.map { e -> e.value.project }?.first()
+            val bi2pProject = project.rootProject.allprojects.find { it.path.endsWith(":bi2p") }
             bi2pProject?.let { bi2p ->
-                val desktopProject = project.parent?.childProjects?.filter { e -> e.key == "desktop" }?.map { e -> e.value.project }?.first()
-                desktopProject?.let { desktop ->
-                    val processResourcesInDesktop = desktop.tasks.named("processResources")
-                    val processBi2pForDesktopProvider = bi2p.tasks.named("processBi2pForDesktop")
-                    processResourcesInDesktop.get().dependsOn(processBi2pForDesktopProvider)
-                    dependsOn(processBi2pForDesktopProvider)
-                }
+                val desktopProject = project.rootProject.allprojects.find { it.path.endsWith(":desktop") }
+                desktopProject
+                    ?.tasks
+                    ?.named("processResources")
+                    ?.configure {
+                        dependsOn(bi2p.tasks.named("processBi2pForDesktop"))
+                    }
+                dependsOn(bi2p.tasks.named("processBi2pForDesktop"))
             }
 
             dependsOn(generateHashesTask)
@@ -90,7 +95,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             packageResourcesDir.set(packageResourcesDirFile)
 
             runtimeImageDirectory.set(
-                    getJPackageJdkDirectory(extension)
+                getJPackageJdkDirectory(extension)
             )
 
             outputDirectory.set(project.layout.buildDirectory.dir("packaging/jpackage/packages"))
