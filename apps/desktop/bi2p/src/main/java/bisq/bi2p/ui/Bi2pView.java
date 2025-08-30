@@ -36,8 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import static bisq.network.i2p.router.state.RouterState.RUNNING_OK;
-
 @Slf4j
 public class Bi2pView extends StackPane {
     private final Bi2pController controller;
@@ -139,34 +137,26 @@ public class Bi2pView extends StackPane {
         errorDetails.textProperty().bind(model.getErrorMessage());
 
         statePin = EasyBind.subscribe(model.getRouterState(), state -> {
-            if (state != null) {
-                boolean isStarting = state.ordinal() < RUNNING_OK.ordinal();
-                progressBar.setVisible(isStarting);
-                progressBar.setManaged(isStarting);
+            if (state == null) return;
 
-                switch (state) {
-                    case NEW, STARTING, RUNNING_TESTING -> {
-                        duration.getStyleClass().add("highlight");
-                    }
-                    case RUNNING_OK -> {
-                        routerState.getStyleClass().add("highlight");
-                        duration.getStyleClass().add("highlight");
-                    }
-                    case RUNNING_FIREWALLED -> {
-                        routerState.getStyleClass().remove("highlight");
-                        routerState.getStyleClass().add("warn");
-                    }
-                    case STOPPING -> {
-                        routerState.getStyleClass().remove("highlight");
-                        routerState.getStyleClass().add("warn");
-                        duration.getStyleClass().remove("highlight");
-                    }
-                    case RUNNING_DISCONNECTED, STOPPED, FAILED -> {
-                        routerState.getStyleClass().remove("highlight");
-                        routerState.getStyleClass().add("warn");
-                        duration.getStyleClass().remove("highlight");
-                    }
+            boolean isStarting = switch (state) {
+                case NEW, STARTING, RUNNING_TESTING -> true;
+                default -> false;
+            };
+            progressBar.setVisible(isStarting);
+            progressBar.setManaged(isStarting);
+
+            routerState.getStyleClass().removeAll("highlight", "warn");
+            duration.getStyleClass().removeAll("highlight", "warn");
+
+            switch (state) {
+                case NEW, STARTING, RUNNING_TESTING -> duration.getStyleClass().add("highlight");
+                case RUNNING_OK -> {
+                    routerState.getStyleClass().add("highlight");
+                    duration.getStyleClass().add("highlight");
                 }
+                case RUNNING_FIREWALLED, STOPPING, RUNNING_DISCONNECTED, STOPPED, FAILED ->
+                        routerState.getStyleClass().add("warn");
             }
         });
 
