@@ -89,7 +89,7 @@ public class CameraDeviceLookupDefault implements CameraDeviceLookup {
                     Thread.currentThread().interrupt(); // Restore interrupted state
                     throw new WebcamException(ErrorCode.INTERRUPTED_EXCEPTION, e);
                 }
-            } while (deviceNumber.get() < numDevices.get());
+            } while (deviceNumber.get() < numDevices.get() && !Thread.currentThread().isInterrupted());
             ErrorCode errorCode = ignoredException instanceof WebcamException
                     ? ((WebcamException) ignoredException).getErrorCode()
                     : ErrorCode.NO_DEVICE_FOUND;
@@ -123,7 +123,7 @@ public class CameraDeviceLookupDefault implements CameraDeviceLookup {
         return CompletableFuture.supplyAsync(() -> {
                     try (VideoCapture capture = new VideoCapture()) {
                         int numDevices = 0;
-                        while (numDevices < 10) {
+                        while (numDevices < 10 && !Thread.currentThread().isInterrupted()) {
                             boolean success = capture.open(numDevices++);
                             if (!success) {
                                 break;

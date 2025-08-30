@@ -1,5 +1,6 @@
 import bisq.gradle.common.VersionUtil
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.jvm.tasks.Jar
 
 plugins {
     id("bisq.java-library")
@@ -93,7 +94,6 @@ dependencies {
         exclude(module = "systems-platform")
     }
 }
-
 
 tasks {
     named<Jar>("jar") {

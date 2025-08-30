@@ -17,16 +17,19 @@
 
 package bisq.desktop.common.threading;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class UIClock {
-    private static final List<Runnable> onSecondTickListeners = new ArrayList<>();
-    private static final List<Runnable> onMinuteTickListeners = new ArrayList<>();
+    private static final List<Runnable> onSecondTickListeners = new CopyOnWriteArrayList<>();
+    private static final List<Runnable> onMinuteTickListeners = new CopyOnWriteArrayList<>();
     private static UIScheduler scheduler;
     private static int secondTicks;
 
     public static void initialize() {
+        if (scheduler != null) {
+            return;
+        }
         scheduler = UIScheduler.run(() -> {
             secondTicks++;
             if (secondTicks == 60) {
@@ -43,6 +46,7 @@ public class UIClock {
             scheduler = null;
         }
         onSecondTickListeners.clear();
+        onMinuteTickListeners.clear();
     }
 
     public static void addOnSecondTickListener(Runnable listener) {

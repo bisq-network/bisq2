@@ -32,7 +32,7 @@ import java.util.Set;
 @Slf4j
 public class LocaleRepository {
     @Getter
-    private static Locale defaultLocale;
+    private static Locale defaultLocale = Locale.US;
 
     static {
         String propertyFileName = "bisq.properties";
