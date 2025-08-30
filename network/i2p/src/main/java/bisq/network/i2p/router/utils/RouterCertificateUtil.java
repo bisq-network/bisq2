@@ -28,8 +28,8 @@ public class RouterCertificateUtil {
         File certDir = createDirectory(i2pDir, "certificates");
         File seedDir = createDirectory(certDir, "reseed");
         File sslDir = createDirectory(certDir, "ssl");
-        FileUtils.copyResourceDirectory("certificates/reseed/", i2pDir.toPath());
-        FileUtils.copyResourceDirectory("certificates/ssl/", i2pDir.toPath());
+        FileUtils.copyResourceDirectory("certificates/reseed/", seedDir.toPath());
+        FileUtils.copyResourceDirectory("certificates/ssl/", sslDir.toPath());
     }
 
     private static File createDirectory(File parent, String child) throws IOException {
