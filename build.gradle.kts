@@ -21,6 +21,7 @@ tasks.register("buildAll") {
             ":apps:desktop:desktop-app:build",
             ":apps:desktop:desktop-app-launcher:build",
             ":apps:desktop:webcam-app:build",
+            ":apps:desktop:bi2p:build",
         ).forEach {
             exec {
                 println("Executing Build: $it")
@@ -48,6 +49,7 @@ tasks.register("cleanAll") {
             ":apps:desktop:desktop-app:clean",
             ":apps:desktop:desktop-app-launcher:clean",
             ":apps:desktop:webcam-app:clean",
+            ":apps:desktop:bi2p:clean",
         ).forEach {
             exec {
                 println("Executing Clean: $it")

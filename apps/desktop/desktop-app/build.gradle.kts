@@ -86,6 +86,7 @@ tasks {
     named<ShadowJar>("shadowJar") {
         val platformName = getPlatform().platformName
         archiveClassifier.set("$platformName-all")
+        mergeServiceFiles()
     }
 
     distZip {

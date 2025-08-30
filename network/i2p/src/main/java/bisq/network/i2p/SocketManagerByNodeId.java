@@ -82,6 +82,7 @@ public class SocketManagerByNodeId {
     }
 
     synchronized I2PSocketManager createNewSocketManager(I2PKeyPair i2PKeyPair, String nodeId) {
+        log.info("createNewSocketManager {}", nodeId);
         checkArgument(!socketManagerByNodeId.containsKey(nodeId),
                 "createNewSocketManager for nodeID %s must be called only once. ", nodeId);
 
@@ -102,8 +103,9 @@ public class SocketManagerByNodeId {
     }
 
     I2PSocketManager getSocketManager(String nodeId) {
+        log.info("getSocketManager {}", nodeId);
         return checkNotNull(socketManagerByNodeId.get(nodeId),
-                "socketManager must not be null as the client socket cannot be called before we have created the server socket.");
+                "socketManager must not be null as the client socket cannot be called before we have created the server socket. nodeId=" + nodeId);
     }
 
     synchronized void disposeSocketManager(String nodeId) {

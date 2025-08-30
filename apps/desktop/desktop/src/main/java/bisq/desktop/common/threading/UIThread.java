@@ -25,7 +25,14 @@ public class UIThread {
             if (Platform.isFxApplicationThread()) {
                 task.run();
             } else {
-                Platform.runLater(task);
+                Platform.runLater(() -> {
+                    try {
+                        task.run();
+                    } catch (Exception e) {
+                        log.error("Exception at UIThread.run (Platform.runLater branch)", e);
+                        throw e;
+                    }
+                });
             }
         } catch (Exception e) {
             log.error("Exception at UIThread.run", e);
