@@ -68,7 +68,6 @@ public class I2PTransportService implements TransportService {
                     config.getString("i2cpHost"),
                     config.getInt("i2cpPort"),
                     config.getBoolean("embeddedRouter"),
-                    config.getBoolean("extendedI2pLogging"),
                     config.getInt("sendMessageThrottleTime"),
                     config.getInt("receiveMessageThrottleTime"),
                     config.getConfigList("proxyList").stream()
@@ -90,7 +89,6 @@ public class I2PTransportService implements TransportService {
         private final String i2cpHost;
         private final boolean embeddedRouter;
         private final Path dataDir;
-        private final boolean extendedI2pLogging;
         private final int sendMessageThrottleTime;
         private final int receiveMessageThrottleTime;
         private final List<Address> proxyList;
@@ -108,7 +106,6 @@ public class I2PTransportService implements TransportService {
                       String i2cpHost,
                       int i2cpPort,
                       boolean embeddedRouter,
-                      boolean extendedI2pLogging,
                       int sendMessageThrottleTime,
                       int receiveMessageThrottleTime,
                       List<Address> proxyList,
@@ -125,7 +122,6 @@ public class I2PTransportService implements TransportService {
             this.i2cpHost = i2cpHost;
             this.i2cpPort = i2cpPort;
             this.embeddedRouter = embeddedRouter;
-            this.extendedI2pLogging = extendedI2pLogging;
             this.sendMessageThrottleTime = sendMessageThrottleTime;
             this.receiveMessageThrottleTime = receiveMessageThrottleTime;
             this.proxyList = proxyList;
