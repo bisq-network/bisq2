@@ -132,9 +132,7 @@ public class Bi2pGrpcClientService implements RouterObserver, Service {
     }
 
     private void subscribeProcessState(bisq.bi2p.protobuf.SubscribeRequest subscribeRequest) {
-        client.getStub()
-                .withDeadlineAfter(10, TimeUnit.SECONDS)
-                .subscribeProcessState(subscribeRequest, new StreamObserver<>() {
+        client.getStub().subscribeProcessState(subscribeRequest, new StreamObserver<>() {
                     @Override
                     public void onNext(bisq.bi2p.protobuf.ProcessStateUpdate proto) {
                         ProcessStateUpdate update = ProcessStateUpdate.fromProto(proto);
@@ -154,9 +152,7 @@ public class Bi2pGrpcClientService implements RouterObserver, Service {
     }
 
     private void subscribeNetworkState(bisq.bi2p.protobuf.SubscribeRequest subscribeRequest) {
-        client.getStub()
-                .withDeadlineAfter(10, TimeUnit.SECONDS)
-                .subscribeNetworkState(subscribeRequest, new StreamObserver<>() {
+        client.getStub().subscribeNetworkState(subscribeRequest, new StreamObserver<>() {
             @Override
             public void onNext(bisq.bi2p.protobuf.NetworkStateUpdate proto) {
                 NetworkStateUpdate update = NetworkStateUpdate.fromProto(proto);
@@ -176,9 +172,7 @@ public class Bi2pGrpcClientService implements RouterObserver, Service {
     }
 
     private void subscribeRouterState(bisq.bi2p.protobuf.SubscribeRequest subscribeRequest) {
-        client.getStub()
-                .withDeadlineAfter(10, TimeUnit.SECONDS)
-                .subscribeRouterState(subscribeRequest, new StreamObserver<>() {
+        client.getStub().subscribeRouterState(subscribeRequest, new StreamObserver<>() {
             @Override
             public void onNext(bisq.bi2p.protobuf.RouterStateUpdate proto) {
                 RouterStateUpdate update = RouterStateUpdate.fromProto(proto);
@@ -198,9 +192,7 @@ public class Bi2pGrpcClientService implements RouterObserver, Service {
     }
 
     private void subscribeTunnelInfo(bisq.bi2p.protobuf.SubscribeRequest subscribeRequest) {
-        client.getStub()
-                .withDeadlineAfter(10, TimeUnit.SECONDS)
-                .subscribeTunnelInfo(subscribeRequest, new StreamObserver<>() {
+        client.getStub().subscribeTunnelInfo(subscribeRequest, new StreamObserver<>() {
             @Override
             public void onNext(bisq.bi2p.protobuf.TunnelInfoUpdate proto) {
                 TunnelInfoUpdate update = TunnelInfoUpdate.fromProto(proto);
