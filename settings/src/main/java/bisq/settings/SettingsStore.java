@@ -23,7 +23,6 @@ import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.platform.PlatformUtils;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -83,7 +82,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Integer> numDaysAfterRedactingTradeData = new Observable<>();
     final Observable<Boolean> muSigActivated = new Observable<>();
     final Observable<Boolean> doNotAutoAddToContactList = new Observable<>();
-    final ObservableHashMap<String, Market> muSigLastSelectedMarketByBaseCurrencyMap = new ObservableHashMap<>();
+    final Map<String, Market> muSigLastSelectedMarketByBaseCurrencyMap = new ConcurrentHashMap<>();
 
     SettingsStore() {
         this(new Cookie(),

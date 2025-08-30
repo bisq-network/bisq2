@@ -555,7 +555,7 @@ public class MuSigOfferbookController implements Controller {
     private void saveMuSigMarketPreferences(Market market) {
         if (market != null) {
             model.getSelectedMarket().set(market);
-            settingsService.getMuSigLastSelectedMarketByBaseCurrencyMap().put(market.getBaseCurrencyCode(), market);
+            settingsService.setMuSigLastSelectedMarketByBaseCurrencyMap(market);
         }
     }
 

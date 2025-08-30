@@ -29,7 +29,6 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.i18n.Res;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.persistence.DbSubDirectory;
@@ -41,6 +40,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
@@ -275,8 +275,8 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return !getDoNotAutoAddToContactList().get();
     }
 
-    public ReadOnlyObservableMap<String, Market> getMuSigLastSelectedMarketByBaseCurrencyMap() {
-        return persistableStore.muSigLastSelectedMarketByBaseCurrencyMap;
+    public Map<String, Market> getMuSigLastSelectedMarketByBaseCurrencyMap() {
+        return Collections.unmodifiableMap(persistableStore.muSigLastSelectedMarketByBaseCurrencyMap);
     }
 
 
