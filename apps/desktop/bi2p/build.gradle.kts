@@ -57,6 +57,7 @@ tasks {
     named<ShadowJar>("shadowJar") {
         val version = VersionUtil.getVersionFromFile(project)
         archiveClassifier.set("$version-all")
+        mergeServiceFiles()
     }
 
     distZip {
