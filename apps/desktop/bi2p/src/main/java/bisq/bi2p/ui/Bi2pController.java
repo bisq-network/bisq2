@@ -17,13 +17,13 @@
 
 package bisq.bi2p.ui;
 
+import bisq.bi2p.common.threading.UIClock;
+import bisq.bi2p.common.threading.UIThread;
+import bisq.bi2p.service.I2PRouterService;
 import bisq.common.file.FileUtils;
 import bisq.common.observable.Pin;
 import bisq.common.util.MathUtils;
 import bisq.i18n.Res;
-import bisq.bi2p.common.threading.UIClock;
-import bisq.bi2p.common.threading.UIThread;
-import bisq.bi2p.service.I2PRouterService;
 import bisq.network.i2p.router.state.NetworkState;
 import bisq.network.i2p.router.state.ProcessState;
 import bisq.network.i2p.router.state.RouterState;
@@ -173,7 +173,12 @@ public class Bi2pController {
     }
 
     void onButtonClicked() {
-        if (service.getState().get().ordinal() <= RUNNING_OK.ordinal()) {
+        RouterState routerState = service.getState().get();
+        if (routerState == null) {
+            log.warn("RouterState is expected to be not null");
+            return;
+        }
+        if (routerState.ordinal() <= RUNNING_OK.ordinal()) {
             service.shutdown();
         } else {
             shutdownHandler.run();
