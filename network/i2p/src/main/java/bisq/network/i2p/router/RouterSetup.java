@@ -41,7 +41,7 @@ import java.util.Properties;
 @Slf4j
 public class RouterSetup {
     public static final int DEFAULT_I2CP_PORT = 7654;
-    public static final int DEFAULT_BI2P_I2CP_PORT = 6159;
+    public static final int DEFAULT_BI2P_GRPC_PORT = 6159;
 
     private final String i2cpHost;
     private final int i2cpPort;
