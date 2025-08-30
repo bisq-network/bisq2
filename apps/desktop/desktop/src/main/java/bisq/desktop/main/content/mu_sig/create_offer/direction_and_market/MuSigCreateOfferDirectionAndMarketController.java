@@ -130,6 +130,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         }
         model.getSelectedMarketListItem().set(item);
         model.getSelectedMarket().set(item.getMarket());
+        // TODO: Persist selected market in muSigMarket and in map (UI still missing)
 //        settingsService.setSelectedMuSigMarket(item.getMarket());
     }
 
