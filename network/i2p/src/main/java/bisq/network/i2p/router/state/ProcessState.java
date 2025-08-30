@@ -38,4 +38,4 @@ public enum ProcessState implements ProtoEnum {
     public static ProcessState fromProto(bisq.bi2p.protobuf.ProcessState proto) {
         return ProtobufUtils.enumFromProto(ProcessState.class, proto.name(), NEW);
     }
-    }
+}

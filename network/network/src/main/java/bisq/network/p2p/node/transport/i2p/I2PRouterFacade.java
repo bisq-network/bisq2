@@ -234,9 +234,9 @@ public class I2PRouterFacade {
     private CompletableFuture<Boolean> awaitRouterRunning(RouterObserver routerObserver) throws TimeoutException {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         processStatePin = routerObserver.getProcessState().addObserver(processState -> {
-            log.error("processState {}", processState);
+            log.info("processState {}", processState);
             if (processState == ProcessState.RUNNING) {
-                log.error("Router in RUNNING state");
+                log.info("Router in RUNNING state");
                 future.complete(true);
             } else if (processState == ProcessState.STOPPING
                     || processState == ProcessState.STOPPED

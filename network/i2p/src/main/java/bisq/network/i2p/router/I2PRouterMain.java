@@ -33,10 +33,10 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Getter
 public class I2PRouterMain {
-    private static I2PRouter i2pRouter;
-    private static Bi2pGrpcService i2pBridgeService;
-    private static Bi2pGrpcServer i2pGrpcServer;
-    private static ExecutorService executor;
+    private static volatile I2PRouter i2pRouter;
+    private static volatile Bi2pGrpcService i2pBridgeService;
+    private static volatile Bi2pGrpcServer i2pGrpcServer;
+    private static volatile ExecutorService executor;
 
     public static void main(String[] args) {
         executor = ExecutorFactory.newSingleThreadExecutor("I2pRouter.start");
