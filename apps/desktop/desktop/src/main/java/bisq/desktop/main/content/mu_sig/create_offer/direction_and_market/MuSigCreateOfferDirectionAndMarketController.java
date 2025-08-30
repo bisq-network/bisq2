@@ -130,7 +130,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         }
         model.getSelectedMarketListItem().set(item);
         model.getSelectedMarket().set(item.getMarket());
-        settingsService.setSelectedMuSigMarket(item.getMarket());
+//        settingsService.setSelectedMuSigMarket(item.getMarket());
     }
 
     private void setDirection(Direction direction) {

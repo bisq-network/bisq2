@@ -32,7 +32,7 @@ import org.jetbrains.annotations.NotNull;
 @Getter
 @EqualsAndHashCode
 public final class Market implements NetworkProto, PersistableProto, Comparable<Market> {
-    public final static int MAX_NAME_LENGTH = 50;
+    public static final int MAX_NAME_LENGTH = 50;
     private static final String QUOTE_SEPARATOR = "/";
 
     private final String baseCurrencyCode;

@@ -154,7 +154,7 @@ public class MuSigOfferbookController implements Controller {
             }
         });
 
-        selectedMarketPin = settingsService.getSelectedMuSigMarket().addObserver(this::updateSelectedMuSigMarket);
+//        selectedMarketPin = settingsService.getSelectedMuSigMarket().addObserver(this::updateSelectedMuSigMarket);
 
         favouriteMarketsPin = settingsService.getFavouriteMarkets().addObserver(new CollectionObserver<>() {
             @Override
@@ -212,7 +212,7 @@ public class MuSigOfferbookController implements Controller {
                     updateFilteredMuSigOfferListItems();
                     updateMarketData(selectedMarketItem);
                     updateMarketPrice(selectedMarketItem);
-                    settingsService.setSelectedMuSigMarket(selectedMarketItem.getMarket());
+//                    settingsService.setSelectedMuSigMarket(selectedMarketItem.getMarket());
                     updateAvailablePaymentMethods();
                 });
             }
@@ -312,7 +312,7 @@ public class MuSigOfferbookController implements Controller {
         model.getMuSigOfferIds().clear();
 
         offersPin.unbind();
-        selectedMarketPin.unbind();
+//        selectedMarketPin.unbind();
         favouriteMarketsPin.unbind();
         marketPriceByCurrencyMapPin.unbind();
 

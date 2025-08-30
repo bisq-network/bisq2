@@ -29,6 +29,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.i18n.Res;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.persistence.DbSubDirectory;
@@ -274,6 +275,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return !getDoNotAutoAddToContactList().get();
     }
 
+    public ReadOnlyObservableMap<String, Market> getMuSigLastSelectedMarketByBaseCurrencyMap() {
+        return persistableStore.muSigLastSelectedMarketByBaseCurrencyMap;
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Setters
@@ -375,6 +380,13 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public void setDoNotAutoAddToContactList(boolean value) {
         persistableStore.doNotAutoAddToContactList.set(value);
+    }
+
+    public void setMuSigLastSelectedMarketByBaseCurrencyMap(Market market) {
+        if (market != null) {
+            persistableStore.muSigLastSelectedMarketByBaseCurrencyMap.put(market.getBaseCurrencyCode(), market);
+            persist();
+        }
     }
 
 

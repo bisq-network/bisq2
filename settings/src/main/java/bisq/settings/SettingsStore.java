@@ -23,6 +23,7 @@ import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.platform.PlatformUtils;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -82,6 +83,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Integer> numDaysAfterRedactingTradeData = new Observable<>();
     final Observable<Boolean> muSigActivated = new Observable<>();
     final Observable<Boolean> doNotAutoAddToContactList = new Observable<>();
+    final ObservableHashMap<String, Market> muSigLastSelectedMarketByBaseCurrencyMap = new ObservableHashMap<>();
 
     SettingsStore() {
         this(new Cookie(),
@@ -112,7 +114,8 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 ChatMessageType.ALL,
                 DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA,
                 DevMode.isDevMode(),
-                false);
+                false,
+                new HashMap<>());
     }
 
     SettingsStore(Cookie cookie,
@@ -143,7 +146,8 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                   ChatMessageType bisqEasyOfferbookMessageTypeFilter,
                   int numDaysAfterRedactingTradeData,
                   boolean muSigActivated,
-                  boolean doNotAutoAddToContactList) {
+                  boolean doNotAutoAddToContactList,
+                  Map<String, Market> muSigLastSelectedMarketByBaseCurrencyMap) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -173,6 +177,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
         this.numDaysAfterRedactingTradeData.set(numDaysAfterRedactingTradeData);
         this.muSigActivated.set(muSigActivated);
         this.doNotAutoAddToContactList.set(doNotAutoAddToContactList);
+        this.muSigLastSelectedMarketByBaseCurrencyMap.putAll(muSigLastSelectedMarketByBaseCurrencyMap);
     }
 
     @Override
@@ -206,7 +211,9 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setBisqEasyOfferbookMessageTypeFilter(bisqEasyOfferbookMessageTypeFilter.get().toProtoEnum())
                 .setNumDaysAfterRedactingTradeData(numDaysAfterRedactingTradeData.get())
                 .setMuSigActivated(muSigActivated.get())
-                .setDoNotAutoAddToContactList(doNotAutoAddToContactList.get());
+                .setDoNotAutoAddToContactList(doNotAutoAddToContactList.get())
+                .putAllMuSigLastSelectedMarketByBaseCurrencyMap(muSigLastSelectedMarketByBaseCurrencyMap.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProto(serializeForHash))));
     }
 
     @Override
@@ -262,7 +269,9 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 ChatMessageType.fromProto(proto.getBisqEasyOfferbookMessageTypeFilter()),
                 numDaysAfterRedactingTradeData,
                 proto.getMuSigActivated(),
-                proto.getDoNotAutoAddToContactList());
+                proto.getDoNotAutoAddToContactList(),
+                proto.getMuSigLastSelectedMarketByBaseCurrencyMapMap().entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> Market.fromProto(entry.getValue()))));
     }
 
     @Override
@@ -306,7 +315,8 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 bisqEasyOfferbookMessageTypeFilter.get(),
                 numDaysAfterRedactingTradeData.get(),
                 muSigActivated.get(),
-                doNotAutoAddToContactList.get());
+                doNotAutoAddToContactList.get(),
+                new HashMap<>(muSigLastSelectedMarketByBaseCurrencyMap));
     }
 
     @Override
@@ -341,6 +351,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
             numDaysAfterRedactingTradeData.set(persisted.numDaysAfterRedactingTradeData.get());
             muSigActivated.set(persisted.muSigActivated.get());
             doNotAutoAddToContactList.set(persisted.doNotAutoAddToContactList.get());
+            muSigLastSelectedMarketByBaseCurrencyMap.putAll(persisted.muSigLastSelectedMarketByBaseCurrencyMap);
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }

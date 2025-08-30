@@ -80,7 +80,7 @@ public class MuSigMyOffersController implements Controller {
     public void onActivate() {
         model.setMyUserProfileIds(userIdentityService.getMyUserProfileIds());
         model.setShouldShowMyProfileColumn(model.getMyUserProfileIds().size() > 1);
-        model.setMuSigMarket(settingsService.getSelectedMuSigMarket().get());
+//        model.setMuSigMarket(settingsService.getSelectedMuSigMarket().get());
 
         offersPin = muSigService.getObservableOffers().addObserver(new CollectionObserver<>() {
             @Override
