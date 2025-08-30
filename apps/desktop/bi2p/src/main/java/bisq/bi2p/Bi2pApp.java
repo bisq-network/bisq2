@@ -18,14 +18,16 @@
 package bisq.bi2p;
 
 
+import bisq.bi2p.common.standby.PreventStandbyModeService;
+import bisq.bi2p.common.utils.ImageUtil;
+import bisq.bi2p.common.utils.KeyHandlerUtil;
+import bisq.bi2p.service.I2PRouterService;
+import bisq.bi2p.ui.Bi2pController;
+import bisq.bi2p.ui.Bi2pView;
+import bisq.common.observable.Observable;
 import bisq.common.platform.OS;
 import bisq.common.platform.PlatformUtils;
 import bisq.i18n.Res;
-import bisq.bi2p.common.utils.ImageUtil;
-import bisq.bi2p.common.utils.KeyHandlerUtil;
-import bisq.bi2p.ui.Bi2pController;
-import bisq.bi2p.ui.Bi2pView;
-import bisq.bi2p.service.I2PRouterService;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
@@ -54,6 +56,10 @@ public class Bi2pApp extends Application {
     private I2PRouterService i2pRouterService;
     private Bi2pController controller;
     private String i2pRouterDir;
+    private PreventStandbyModeService preventStandbyModeService;
+    // For now, we have it turned on always, but maybe we allow to turn off in UI or by options, thus we leave it
+    // as Observable.
+    private final Observable<Boolean> preventStandbyMode = new Observable<>(true);
 
     public Bi2pApp() {
         // Taskbar is only supported on mac
@@ -69,6 +75,9 @@ public class Bi2pApp extends Application {
         i2pRouterDir = Optional.ofNullable(parameters.getNamed().get("i2pRouterDir"))
                 .orElse(PlatformUtils.getUserDataDir().resolve("Bisq2_I2P_router").toString());
         setupRes(parameters);
+
+        preventStandbyModeService = new PreventStandbyModeService(i2pRouterDir, preventStandbyMode);
+        preventStandbyModeService.initialize();
 
         i2pRouterService = new I2PRouterService(parameters, i2pRouterDir);
 
@@ -104,6 +113,7 @@ public class Bi2pApp extends Application {
 
     private void doShutdown() {
         log.error("doShutdown");
+        preventStandbyModeService.shutdown();
         if (controller != null) {
             controller.onDeactivate();
         }
