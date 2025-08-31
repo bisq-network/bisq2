@@ -40,6 +40,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
@@ -274,6 +275,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return !getDoNotAutoAddToContactList().get();
     }
 
+    public Map<String, Market> getMuSigLastSelectedMarketByBaseCurrencyMap() {
+        return Collections.unmodifiableMap(persistableStore.muSigLastSelectedMarketByBaseCurrencyMap);
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Setters
@@ -375,6 +380,13 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public void setDoNotAutoAddToContactList(boolean value) {
         persistableStore.doNotAutoAddToContactList.set(value);
+    }
+
+    public void setMuSigLastSelectedMarketByBaseCurrencyMap(Market market) {
+        if (market != null) {
+            persistableStore.muSigLastSelectedMarketByBaseCurrencyMap.put(market.getBaseCurrencyCode(), market);
+            persist();
+        }
     }
 
 
