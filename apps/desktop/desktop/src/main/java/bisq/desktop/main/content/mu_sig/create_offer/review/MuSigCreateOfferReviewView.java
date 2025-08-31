@@ -48,10 +48,8 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
     public static final String VALUE_STYLE = "trade-wizard-review-value";
     public static final String DETAILS_STYLE = "trade-wizard-review-details";
 
-    private final Label headline, detailsHeadline,
-            priceDetails, priceDescription,
-            paymentMethodDescription, paymentMethod, paymentMethodDetails,
-            fee, feeDetails;
+    private final Label headline, detailsHeadline, priceDetails, priceDescription,
+            paymentMethodDescription, paymentMethod, paymentMethodDetails, fee, feeDetails;
     private final VBox createOfferSuccess;
     private final Button createOfferSuccessButton;
     private final GridPane gridPane;

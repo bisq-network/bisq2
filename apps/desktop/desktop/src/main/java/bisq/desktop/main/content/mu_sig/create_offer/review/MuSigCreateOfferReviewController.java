@@ -212,7 +212,6 @@ public class MuSigCreateOfferReviewController implements Controller {
                            PriceSpec priceSpec) {
         String marketCodes = market.getMarketCodes();
 
-
         model.setPriceSpec(priceSpec);
         priceInput.setMarket(market);
         priceInput.setDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.taker", marketCodes));
