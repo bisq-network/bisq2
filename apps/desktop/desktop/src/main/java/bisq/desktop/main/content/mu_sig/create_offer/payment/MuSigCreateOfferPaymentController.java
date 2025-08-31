@@ -114,7 +114,6 @@ public class MuSigCreateOfferPaymentController implements Controller {
     @Override
     public void onActivate() {
         model.getSortedPaymentMethods().setComparator(Comparator.comparing(PaymentMethod::getShortDisplayString));
-        model.getSelectedPaymentMethods().clear();
         model.getPaymentMethods().setAll(PaymentMethodUtil.getPaymentMethods(model.getPaymentMethodCurrencyCode()));
         model.getAccountsByPaymentMethod().putAll(accountService.getAccounts().stream()
                 .filter(account -> !(account instanceof UserDefinedFiatAccount))

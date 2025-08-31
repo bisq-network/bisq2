@@ -277,7 +277,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
 
     private void setMainButtonsVisibleState(boolean value) {
         model.getBackButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET);
-        model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.MU_SIG_CREATE_OFFER_REVIEW_OFFER);
+        model.getNextButtonVisible().set(value);
         model.getCloseButtonVisible().set(value);
     }
 
