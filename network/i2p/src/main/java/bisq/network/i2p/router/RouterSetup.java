@@ -144,8 +144,6 @@ public class RouterSetup {
             // When embedded, I2P uses in-process communication instead of TCP
             properties.put(I2PClient.PROP_TCP_HOST, "internal");
             properties.put(I2PClient.PROP_TCP_PORT, "internal");
-            properties.put("i2cp.host", "internal");
-            properties.put("i2cp.port", "internal");
 
             // We can disable the interface
             properties.put("i2cp.disableInterface", "true");
@@ -153,8 +151,6 @@ public class RouterSetup {
             // When started as separate process
             properties.put(I2PClient.PROP_TCP_HOST, i2cpHost);
             properties.put(I2PClient.PROP_TCP_PORT, String.valueOf(i2cpPort));
-            properties.put("i2cp.host", i2cpHost);
-            properties.put("i2cp.port", String.valueOf(i2cpPort));
 
             // We need to have the interface enabled
             properties.put("i2cp.disableInterface", "false");
