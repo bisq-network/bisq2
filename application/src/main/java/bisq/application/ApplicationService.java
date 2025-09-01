@@ -20,7 +20,6 @@ package bisq.application;
 import bisq.application.migration.MigrationService;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.DevMode;
-import bisq.common.application.OptionUtils;
 import bisq.common.application.Service;
 import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.file.FileUtils;
@@ -30,7 +29,6 @@ import bisq.common.locale.LocaleRepository;
 import bisq.common.logging.AsciiLogo;
 import bisq.common.logging.LogSetup;
 import bisq.common.observable.Observable;
-import bisq.common.util.ExceptionUtil;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
 import com.typesafe.config.ConfigFactory;
@@ -39,49 +37,29 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.channels.FileLock;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public abstract class ApplicationService implements Service {
-    private static String resolveAppName(String[] args, com.typesafe.config.Config config) {
-        return OptionUtils.findOptionValue(args, "--app-name")
-                .or(() -> {
-                    Optional<String> value = OptionUtils.findOptionValue(args, "--appName");
-                    if (value.isPresent()) {
-                        System.out.println("Warning: Use `--app-name` instead of deprecated `--appName`");
-                    }
-                    return value;
-                })
-                .orElseGet(() -> {
-                    if (config.hasPath("appName")) {
-                        return config.getString("appName");
-                    } else {
-                        return "Bisq2";
-                    }
-                });
-    }
+    public static final String CUSTOM_CONFIG_FILE_NAME = "bisq.conf";
 
     @Getter
     @ToString
     @EqualsAndHashCode
     public static final class Config {
-        private static Config from(com.typesafe.config.Config config, String[] args, Path userDataDir) {
-            String appName = resolveAppName(args, config);
-            Path appDataDir = OptionUtils.findOptionValue(args, "--data-dir")
-                    .map(Path::of)
-                    .orElse(userDataDir.resolve(appName));
-            return new Config(appDataDir,
-                    appName,
+        private static Config from(com.typesafe.config.Config rootConfig,
+                                   com.typesafe.config.Config config,
+                                   Path baseDir) {
+            return new Config(rootConfig,
+                    baseDir,
+                    config.getString("appName"),
                     config.getBoolean("devMode"),
                     config.getLong("devModeReputationScore"),
                     config.getBoolean("devModeWalletSetup"),
@@ -93,6 +71,7 @@ public abstract class ApplicationService implements Service {
                     config.getBoolean("checkInstanceLock"));
         }
 
+        private final com.typesafe.config.Config rootConfig;
         private final Path baseDir;
         private final String appName;
         private final boolean devMode;
@@ -105,7 +84,8 @@ public abstract class ApplicationService implements Service {
         private final boolean includeThreadListInMemoryReport;
         private final boolean checkInstanceLock;
 
-        public Config(Path baseDir,
+        public Config(com.typesafe.config.Config rootConfig,
+                      Path baseDir,
                       String appName,
                       boolean devMode,
                       long devModeReputationScore,
@@ -116,6 +96,7 @@ public abstract class ApplicationService implements Service {
                       int memoryReportIntervalSec,
                       boolean includeThreadListInMemoryReport,
                       boolean checkInstanceLock) {
+            this.rootConfig = rootConfig;
             this.baseDir = baseDir;
             this.appName = appName;
             this.devMode = devMode;
@@ -124,7 +105,10 @@ public abstract class ApplicationService implements Service {
             // We want to use the keyIds at the DesktopApplicationLauncher as a simple format. 
             // Using the typesafe format with indexes would require a more complicate parsing as we do not use 
             // typesafe at the DesktopApplicationLauncher class. Thus, we use a simple comma separated list instead and treat it as sting in typesafe.
-            this.keyIds = List.of(keyIds.split(","));
+            this.keyIds = Arrays.stream(keyIds.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .toList();
             this.ignoreSigningKeyInResourcesCheck = ignoreSigningKeyInResourcesCheck;
             this.ignoreSignatureVerification = ignoreSignatureVerification;
             this.memoryReportIntervalSec = memoryReportIntervalSec;
@@ -133,59 +117,58 @@ public abstract class ApplicationService implements Service {
         }
     }
 
-    private final com.typesafe.config.Config typesafeAppConfig;
+    protected final com.typesafe.config.Config jvmConfig;
+    protected final com.typesafe.config.Config programArgConfig;
+    protected final com.typesafe.config.Config resourceConfig;
+    protected final com.typesafe.config.Config customConfig;
+    protected com.typesafe.config.Config rootConfig;
+
+    protected final com.typesafe.config.Config applicationConfig;
+
     @Getter
     protected final Config config;
     @Getter
     protected final PersistenceService persistenceService;
-    private Optional<MigrationService> migrationService;
-    private FileLock instanceLock;
+    private final MigrationService migrationService;
+    private InstanceLockManager instanceLockManager;
     @Getter
     protected final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
-    private InstanceLockManager instanceLockManager;
 
     public ApplicationService(String configFileName, String[] args, Path userDataDir) {
-        com.typesafe.config.Config defaultTypesafeConfig = ConfigFactory.load(configFileName);
-        defaultTypesafeConfig.checkValid(ConfigFactory.defaultReference(), configFileName);
+        programArgConfig = TypesafeConfigUtils.parseArgsToConfig(args);
+        jvmConfig = TypesafeConfigUtils.resolveFilteredJvmOptions();
+        resourceConfig = ConfigFactory.parseResources(configFileName + ".conf").resolve();
+        resourceConfig.checkValid(ConfigFactory.defaultReference(), "application");
 
-        String appName = resolveAppName(args, defaultTypesafeConfig.getConfig("application"));
-        Path appDataDir = OptionUtils.findOptionValue(args, "--data-dir")
-                .map(Path::of)
-                .orElse(userDataDir.resolve(appName));
-        // J8 compatible to avoid issues on mobile Samsung devices
-        File customConfigFile = Paths.get(appDataDir.toString(), "bisq.conf").toFile();
-        com.typesafe.config.Config typesafeConfig;
-        boolean customConfigProvided = customConfigFile.exists();
-        if (customConfigProvided) {
-            try {
-                typesafeConfig = ConfigFactory.parseFile(customConfigFile).withFallback(defaultTypesafeConfig);
-            } catch (Exception e) {
-                System.err.println("Error when reading custom config file " + ExceptionUtil.getRootCauseMessage(e));
-                throw new RuntimeException(e);
-            }
-        } else {
-            typesafeConfig = defaultTypesafeConfig;
-        }
+        // Precedence Order: Program Arguments > JVM options > Resource config
+        rootConfig = programArgConfig
+                .withFallback(jvmConfig)
+                .withFallback(resourceConfig)
+                .resolve();
 
-        typesafeAppConfig = typesafeConfig.getConfig("application");
-        config = Config.from(typesafeAppConfig, args, userDataDir);
-
-        Path dataDir = config.getBaseDir();
+        String appName = rootConfig.getString("application.appName");
+        Path baseDir = rootConfig.hasPath("application.baseDir")
+                ? Path.of(rootConfig.getString("application.baseDir"))
+                : userDataDir.resolve(appName);
         try {
-            FileUtils.makeDirs(dataDir.toFile());
+            FileUtils.makeDirs(baseDir.toFile());
         } catch (IOException e) {
+            log.error("Could not create data directory {}", baseDir, e);
             throw new RuntimeException(e);
         }
+        setupLogging(baseDir);
 
-        LogSetup.setup(dataDir.resolve("bisq").toString());
-        log.info(AsciiLogo.getAsciiLogo());
-        log.info("Data directory: {}", config.getBaseDir());
-        log.info("Version: v{} / Commit hash: {}", ApplicationVersion.getVersion().getVersionAsString(), ApplicationVersion.getBuildCommitShortHash());
-        log.info("Tor Version: v{}", ApplicationVersion.getTorVersionString());
+        customConfig = TypesafeConfigUtils.resolveCustomConfig(baseDir).orElse(ConfigFactory.empty());
 
-        if (customConfigProvided) {
-            log.info("Using custom config file");
-        }
+        // Precedence Order: Program Arguments > JVM options > Custom config > Resource config
+        rootConfig = programArgConfig
+                .withFallback(jvmConfig)
+                .withFallback(customConfig)
+                .withFallback(resourceConfig)
+                .resolve();
+
+        applicationConfig = rootConfig.getConfig("application");
+        config = Config.from(rootConfig, applicationConfig, baseDir);
 
         DevMode.setDevMode(config.isDevMode());
         if (config.isDevMode()) {
@@ -204,9 +187,40 @@ public abstract class ApplicationService implements Service {
         Res.setAndApplyLanguage(LanguageRepository.getDefaultLanguage());
         ResolverConfig.config();
 
-        String absoluteDataDirPath = dataDir.toAbsolutePath().toString();
+        String absoluteDataDirPath = baseDir.toAbsolutePath().toString();
         persistenceService = new PersistenceService(absoluteDataDirPath);
-        migrationService = Optional.of(new MigrationService(dataDir));
+        migrationService = new MigrationService(baseDir);
+    }
+
+    public CompletableFuture<Void> pruneAllBackups() {
+        return persistenceService.pruneAllBackups();
+    }
+
+    public CompletableFuture<Boolean> readAllPersisted() {
+        return persistenceService.readAllPersisted();
+    }
+
+    @Override
+    public CompletableFuture<Boolean> initialize() {
+        return migrationService.initialize();
+    }
+
+    @Override
+    public abstract CompletableFuture<Boolean> shutdown();
+
+    protected com.typesafe.config.Config getConfig(String path) {
+        return applicationConfig.getConfig(path);
+    }
+
+    protected boolean hasConfig(String path) {
+        return applicationConfig.hasPath(path);
+    }
+
+    protected void setState(State newState) {
+        checkArgument(state.get().ordinal() < newState.ordinal(),
+                "New state %s must have a higher ordinal as the current state %s", newState, state.get());
+        state.set(newState);
+        log.info("New state {}", newState);
     }
 
     private void checkInstanceLock() {
@@ -229,34 +243,13 @@ public abstract class ApplicationService implements Service {
         }));
     }
 
-    public CompletableFuture<Void> pruneAllBackups() {
-        return persistenceService.pruneAllBackups();
-    }
-
-    public CompletableFuture<Boolean> readAllPersisted() {
-        return persistenceService.readAllPersisted();
-    }
-
-    public CompletableFuture<Boolean> initialize() {
-        CompletableFuture<Boolean> completableFuture = migrationService.orElseThrow().initialize();
-        migrationService = Optional.empty();
-        return completableFuture;
-    }
-
-    public abstract CompletableFuture<Boolean> shutdown();
-
-    protected com.typesafe.config.Config getConfig(String path) {
-        return typesafeAppConfig.getConfig(path);
-    }
-
-    protected boolean hasConfig(String path) {
-        return typesafeAppConfig.hasPath(path);
-    }
-
-    protected void setState(State newState) {
-        checkArgument(state.get().ordinal() < newState.ordinal(),
-                "New state %s must have a higher ordinal as the current state %s", newState, state.get());
-        state.set(newState);
-        log.info("New state {}", newState);
+    private static void setupLogging(Path baseDir) {
+        LogSetup.setup(baseDir.resolve("bisq").toString());
+        log.info(AsciiLogo.getAsciiLogo());
+        log.info("Data directory: {}", baseDir);
+        log.info("Version: v{} / Commit hash: {}",
+                ApplicationVersion.getVersion().getVersionAsString(),
+                ApplicationVersion.getBuildCommitShortHash());
+        log.info("Tor Version: v{}", ApplicationVersion.getTorVersionString());
     }
 }
