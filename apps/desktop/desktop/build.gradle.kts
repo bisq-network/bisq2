@@ -49,6 +49,7 @@ dependencies {
 
     implementation("network:network")
     implementation("network:network-identity")
+    implementation("network:i2p")
 
     implementation(libs.google.gson)
     implementation(libs.bundles.fontawesomefx)

@@ -1,0 +1,140 @@
+@font-face {
+    font-family: "IBM Plex Sans";
+    src: url("/fonts/IBMPlexSans-Regular.ttf");
+}
+
+@font-face {
+    font-family: "IBM Plex Sans Bold";
+    src: url("/fonts/IBMPlexSans-Bold.ttf");
+}
+
+@font-face {
+    font-family: "IBM Plex Sans SemiBold";
+    src: url("/fonts/IBMPlexSans-SemiBold.ttf");
+}
+
+@font-face {
+    font-family: "IBM Plex Sans Medium";
+    src: url("/fonts/IBMPlexSans-Medium.ttf");
+}
+
+@font-face {
+    font-family: "IBM Plex Sans Light";
+    src: url("/fonts/IBMPlexSans-Light.ttf");
+}
+
+@font-face {
+    font-family: "IBM Plex Sans Thin";
+    src: url("/fonts/IBMPlexSans-Thin.ttf");
+}
+
+@font-face {
+    font-family: "IBM Plex Mono";
+    src: url("/fonts/IBMPlexMono-Regular.ttf");
+}
+
+.root {
+    -fx-font-family: "IBM Plex Sans";
+    -fx-font-size: 13;
+
+    /* External Colors */
+    -bisq-green-logo: #25b135;
+    -you-tube-red: #fc0d1b;
+
+    /* Bisq2 App Colors */
+    -bisq2-green-lit-20: #77be6c;
+    -bisq2-green-lit-10: #66b65a;
+    -bisq2-green: #56ae48; /* rgb(86, 174, 72) */
+    -bisq2-green-dim-10: #4d9c40;
+    -bisq2-green-dim-20: #448b39;
+    -bisq2-green-dim-30: #3c7932;
+    -bisq2-green-dim-40: #33682b;
+    -bisq2-green-dim-50: #2b5724;
+    -bisq2-green-dim-60: #22451c;
+    -bisq2-green-dim-70: #193415;
+    -bisq2-green-dim-80: #11220e;
+    -bisq2-green-dim-90: #081107;
+
+    -bisq2-yellow: #d0831f;
+    -bisq2-yellow-dim-10: #bb751b;
+    -bisq2-yellow-dim-20: #a66818;
+    -bisq2-yellow-dim-30: #915b15;
+    -bisq2-yellow-dim-40: #7c4e12;
+    -bisq2-yellow-dim-50: #68410f;
+
+    -bisq2-red-lit-50: #e898a2;
+    -bisq2-red-lit-40: #e48490;
+    -bisq2-red-lit-30: #df6f7d;
+    -bisq2-red-lit-20: #db5b6b;
+    -bisq2-red-lit-10: #d64658;
+    -bisq2-red: #d23246;
+    -bisq2-red-dim-10: #bd2d3f;
+    -bisq2-red-dim-20: #a82838;
+    -bisq2-red-dim-30: #932331;
+    -bisq2-red-dim-40: #7e1e2a;
+    -bisq2-red-dim-50: #691923;
+
+    /* Bisq Grey Palette */
+    -bisq-black: #050505;
+    -bisq-black-lit: #0d0d0d;
+
+    -bisq-dark-grey-10: #151515;
+    -bisq-dark-grey-20: #1c1c1c;
+    -bisq-dark-grey-30: #242424;
+    -bisq-dark-grey-40: #2b2b2b;
+    -bisq-dark-grey-50: #383838;
+    -bisq-mid-grey-10: #4d4d4d;
+    -bisq-mid-grey-20: #808080;
+    -bisq-mid-grey-30: #b2b2b2;
+    -bisq-light-grey-10: #c7c7c7;
+    -bisq-light-grey-20: #d4d4d4;
+    -bisq-light-grey-30: #dbdbdb;
+    -bisq-light-grey-40: #e3e3e3;
+    -bisq-light-grey-50: #eaeaea;
+
+    -bisq-white-dim: #f2f2f2;
+    -bisq-white: #fafafa;
+
+    /* Background colors */
+    -bisq-darker-grey: -bisq-dark-grey-20;
+    -bisq-dark-grey: -bisq-dark-grey-20;
+    -bisq-content-bg-grey: -bisq-dark-grey-40;
+    -bisq-popup-bg-grey: -bisq-dark-grey-40;
+
+    /* Border colors */
+    -bisq-border-color-grey: -bisq-mid-grey-10;
+    -bisq-border-color-grey-hover: -bisq-light-grey-10;
+
+
+    -fx-base: -bisq-content-bg-grey;
+    -fx-accent: -bisq2-green;
+    -fx-background: -bisq-content-bg-grey;
+
+    -fx-color: -bisq-dark-grey-40;
+    -fx-body-color: -fx-color;
+
+    -fx-box-border: transparent;
+    -fx-focus-color: -bisq2-green;
+    -fx-faint-focus-color: -bisq2-green;
+    -fx-default-button: -bisq2-green-dim-20;
+    -bisq-green-hover: -bisq2-green-dim-10;
+    -bisq-green-pressed: -bisq2-green-dim-30;
+
+    -fx-dark-text-color: -bisq-black;
+    -fx-mid-text-color: -bisq-mid-grey-20;
+    -fx-light-text-color: -bisq-white;
+
+    -bisq-error: -bisq2-red;
+
+    -fx-text-background-color: ladder(
+            -fx-background,
+            -fx-light-text-color,
+            -fx-mid-text-color,
+            -fx-dark-text-color
+    );
+}
+
+/* Avoid color artefacts at antialias */
+.text {
+    -fx-font-smoothing-type: gray;
+}
