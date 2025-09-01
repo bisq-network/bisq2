@@ -67,25 +67,38 @@ public class Bi2pGrpcClientService implements RouterObserver, Service {
     }
 
     public void requestRouterState() {
-        RouterInfoRequest request = RouterInfoRequest.newBuilder().build();
-        var proto = client.getBlockingStub()
-                .withDeadlineAfter(10, TimeUnit.SECONDS)
-                .requestRouterInfo(request);
-        RouterInfoResponse response = RouterInfoResponse.fromProto(proto);
-        processState.set(response.getProcessState());
-        networkState.set(response.getNetworkState());
-        routerState.set(response.getRouterState());
-        tunnelInfo.set(response.getTunnelInfo());
+        try {
+            RouterInfoRequest request = RouterInfoRequest.newBuilder().build();
+            var proto = client.getBlockingStub()
+                    .withDeadlineAfter(10, TimeUnit.SECONDS)
+                    .requestRouterInfo(request);
+            RouterInfoResponse response = RouterInfoResponse.fromProto(proto);
+            processState.set(response.getProcessState());
+            networkState.set(response.getNetworkState());
+            routerState.set(response.getRouterState());
+            tunnelInfo.set(response.getTunnelInfo());
+        } catch (io.grpc.StatusRuntimeException e) {
+            log.warn("requestRouterState failed: {}", e.getStatus(), e);
+            processState.set(ProcessState.FAILED);
+        } catch (RuntimeException e) {
+            log.error("requestRouterState unexpected error", e);
+            processState.set(ProcessState.FAILED);
+        }
     }
 
     public PeerAvailabilityResponse requestPeerAvailability(Destination peersDestination) {
-        PeerAvailabilityRequest request = PeerAvailabilityRequest.newBuilder()
-                .setDestinationHash(ByteString.copyFrom(peersDestination.getHash().toByteArray()))
-                .build();
-        var proto = client.getBlockingStub()
-                .withDeadlineAfter(10, TimeUnit.SECONDS)
-                .requestPeerAvailability(request);
-        return PeerAvailabilityResponse.fromProto(proto);
+        try {
+            PeerAvailabilityRequest request = PeerAvailabilityRequest.newBuilder()
+                    .setDestinationHash(ByteString.copyFrom(peersDestination.getHash().getData()))
+                    .build();
+            var proto = client.getBlockingStub()
+                    .withDeadlineAfter(10, TimeUnit.SECONDS)
+                    .requestPeerAvailability(request);
+            return PeerAvailabilityResponse.fromProto(proto);
+        } catch (io.grpc.StatusRuntimeException e) {
+            log.warn("requestPeerAvailability failed for {}: {}", peersDestination, e.getStatus(), e);
+            throw e;
+        }
     }
 
     public void subscribeAll() {
@@ -133,22 +146,22 @@ public class Bi2pGrpcClientService implements RouterObserver, Service {
 
     private void subscribeProcessState(bisq.bi2p.protobuf.SubscribeRequest subscribeRequest) {
         client.getStub().subscribeProcessState(subscribeRequest, new StreamObserver<>() {
-                    @Override
-                    public void onNext(bisq.bi2p.protobuf.ProcessStateUpdate proto) {
-                        ProcessStateUpdate update = ProcessStateUpdate.fromProto(proto);
-                        log.info("ProcessState {} ", update.getValue());
-                        processState.set(update.getValue());
-                    }
+            @Override
+            public void onNext(bisq.bi2p.protobuf.ProcessStateUpdate proto) {
+                ProcessStateUpdate update = ProcessStateUpdate.fromProto(proto);
+                log.info("ProcessState {} ", update.getValue());
+                processState.set(update.getValue());
+            }
 
-                    @Override
-                    public void onError(Throwable throwable) {
-                        log.error("Error at subscribeProcessState", throwable);
-                    }
+            @Override
+            public void onError(Throwable throwable) {
+                log.error("Error at subscribeProcessState", throwable);
+            }
 
-                    @Override
-                    public void onCompleted() {
-                    }
-                });
+            @Override
+            public void onCompleted() {
+            }
+        });
     }
 
     private void subscribeNetworkState(bisq.bi2p.protobuf.SubscribeRequest subscribeRequest) {
