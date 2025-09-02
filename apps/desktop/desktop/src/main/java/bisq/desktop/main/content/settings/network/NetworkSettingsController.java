@@ -168,8 +168,8 @@ public class NetworkSettingsController implements Controller {
     }
 
     void onApplyAndShutdown() {
-        shutDownHandler.shutdown();
         writeCustomConfig();
+        shutDownHandler.shutdown();
     }
 
     private void onDataChanged() {
