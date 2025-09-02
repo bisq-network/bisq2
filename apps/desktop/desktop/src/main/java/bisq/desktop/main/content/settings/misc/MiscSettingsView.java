@@ -17,17 +17,21 @@
 
 package bisq.desktop.main.content.settings.misc;
 
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.Switch;
 import bisq.desktop.main.content.settings.SettingsViewUtils;
 import bisq.i18n.Res;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -55,19 +59,22 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
         VBox displayVBox = new VBox(10, useAnimations, preventStandbyMode, resetDontShowAgain);
 
 
-        Label backupHeadline = new Label(Res.get("settings.backup.headline"));
-        backupHeadline.getStyleClass().add("large-thin-headline");
+        // Backup
+        Label backupHeadline = SettingsViewUtils.getHeadline(Res.get("settings.backup.headline"));
+        ImageView infoIcon = ImageUtil.getImageViewById("info");
+        infoIcon.setOpacity(0.6);
+        Tooltip.install(infoIcon, new BisqTooltip(Res.get("settings.backup.totalMaxBackupSizeInMB.info.tooltip")));
+        HBox.setMargin(infoIcon, new Insets(5, 0, 0, 0));
+        HBox backupHeadlineHBox = new HBox(10, backupHeadline, infoIcon);
 
         totalMaxBackupSizeInMB = new MaterialTextField(Res.get("settings.backup.totalMaxBackupSizeInMB.description"));
         totalMaxBackupSizeInMB.setMaxWidth(TEXT_FIELD_WIDTH);
         totalMaxBackupSizeInMB.setValidators(model.getTotalMaxBackupSizeValidator());
-        totalMaxBackupSizeInMB.setIcon(AwesomeIcon.INFO_SIGN);
-        totalMaxBackupSizeInMB.setIconTooltip(Res.get("settings.backup.totalMaxBackupSizeInMB.info.tooltip"));
 
         VBox.setMargin(displayVBox, new Insets(0, 5, 0, 5));
         VBox contentBox = new VBox(50,
                 displayHeadline, separator(), displayVBox,
-                backupHeadline, separator(), totalMaxBackupSizeInMB);
+                backupHeadlineHBox, separator(), totalMaxBackupSizeInMB);
         contentBox.getStyleClass().add("bisq-common-bg");
         root.getChildren().add(contentBox);
         root.setPadding(new Insets(0, 40, 20, 40));
