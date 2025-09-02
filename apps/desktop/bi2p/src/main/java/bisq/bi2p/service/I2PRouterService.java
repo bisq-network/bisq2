@@ -21,15 +21,17 @@ import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.platform.PlatformUtils;
+import bisq.common.util.StringUtils;
+import bisq.common.validation.NetworkPortValidation;
 import bisq.network.i2p.grpc.server.Bi2pGrpcServer;
 import bisq.network.i2p.grpc.server.Bi2pGrpcService;
 import bisq.network.i2p.router.I2PRouter;
 import bisq.network.i2p.router.RouterSetup;
-import bisq.network.i2p.router.utils.I2PLogLevel;
 import bisq.network.i2p.router.state.NetworkState;
 import bisq.network.i2p.router.state.ProcessState;
 import bisq.network.i2p.router.state.RouterState;
 import bisq.network.i2p.router.state.TunnelInfo;
+import bisq.network.i2p.router.utils.I2PLogLevel;
 import javafx.application.Application;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -42,11 +44,6 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class I2PRouterService implements Service {
-
-    private final String i2cpHost;
-    private final int i2cpPort;
-    private final String bi2pGrpcHost;
-    private final Integer bi2pGrpcPort;
     @Getter
     private final Path i2pDirPath;
     @Getter
@@ -57,10 +54,17 @@ public class I2PRouterService implements Service {
     private volatile boolean shutdownInProgress;
 
     public I2PRouterService(Application.Parameters parameters, String bi2pDir) {
-        i2cpHost = Optional.ofNullable(parameters.getNamed().get("i2cpHost")).orElse(RouterSetup.DEFAULT_I2CP_HOST);
-        i2cpPort = Optional.ofNullable(parameters.getNamed().get("i2cpPort")).map(Integer::parseInt).orElse(RouterSetup.DEFAULT_I2CP_PORT);
-        bi2pGrpcHost = Optional.ofNullable(parameters.getNamed().get("bi2pGrpcHost")).orElse(RouterSetup.DEFAULT_BI2P_GRPC_HOST);
-        bi2pGrpcPort = Optional.ofNullable(parameters.getNamed().get("bi2pGrpcPort")).map(Integer::parseInt).orElse(RouterSetup.DEFAULT_BI2P_GRPC_PORT);
+        String i2cpHost = Optional.ofNullable(parameters.getNamed().get("i2cpHost"))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .orElse(RouterSetup.DEFAULT_I2CP_HOST);
+        int i2cpPort = parsePort(parameters.getNamed().get("i2cpPort"), RouterSetup.DEFAULT_I2CP_PORT);
+        String bi2pGrpcHost = Optional.ofNullable(parameters.getNamed().get("bi2pGrpcHost"))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .orElse(RouterSetup.DEFAULT_BI2P_GRPC_HOST);
+        int bi2pGrpcPort = parsePort(parameters.getNamed().get("bi2pGrpcPort"), RouterSetup.DEFAULT_BI2P_GRPC_PORT);
+
         i2pDirPath = PlatformUtils.getUserDataDir().resolve(bi2pDir);
         log.info("I2CP {}:{}; Grpc server listening at: {}:{}", i2cpHost, i2cpPort, bi2pGrpcHost, bi2pGrpcPort);
 
@@ -134,5 +138,15 @@ public class I2PRouterService implements Service {
 
     public ReadOnlyObservable<TunnelInfo> getTunnelInfo() {
         return router.getRouterMonitor().getTunnelInfo();
+    }
+
+    private static int parsePort(String raw, int defaultPort) {
+        if (StringUtils.isEmpty(raw)) return defaultPort;
+        try {
+            int port = Integer.parseInt(raw.trim());
+            return NetworkPortValidation.isValid(port) ? port : defaultPort;
+        } catch (NumberFormatException e) {
+            return defaultPort;
+        }
     }
 }
