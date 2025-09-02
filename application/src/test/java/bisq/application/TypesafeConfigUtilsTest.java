@@ -90,7 +90,6 @@ class TypesafeConfigUtilsTest {
     }
 
 
-
     @Test
     void testCoerceBooleanTrue() {
         assertEquals(Boolean.TRUE, coerce("true"));
@@ -114,10 +113,12 @@ class TypesafeConfigUtilsTest {
 
     @Test
     void testCoerceLong() {
-        long big = (long) Integer.MAX_VALUE + 1;
-        assertEquals(big, coerce(String.valueOf(big)));
-        int small = (int) Integer.MIN_VALUE - 1;
-        assertEquals(small, coerce(String.valueOf(small)));
+        long longValue1 = (long) Integer.MAX_VALUE + 1;
+        assertEquals(longValue1, coerce(String.valueOf(longValue1)));
+        long longValue2 = (long) Integer.MIN_VALUE - 1; // overflow
+        assertEquals(longValue2, coerce(String.valueOf(longValue2)));
+        int intValue = Integer.MIN_VALUE + 1;
+        assertEquals(intValue, coerce(String.valueOf(intValue)));
     }
 
     @Test
