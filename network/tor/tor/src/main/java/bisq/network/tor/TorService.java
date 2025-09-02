@@ -144,6 +144,11 @@ public class TorService implements Service {
         Path controlDirPath = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME);
         Path controlPortFilePath = controlDirPath.resolve("control");
         try {
+            FileUtils.makeDirs(controlDirPath.toAbsolutePath());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to create control file dir for tor", e);
+        }
+        try {
             FileUtils.deleteFileAndWait(controlPortFilePath.toFile(), 5000);
         } catch (Exception e) {
             throw new RuntimeException("Failed to delete tor control port file", e);

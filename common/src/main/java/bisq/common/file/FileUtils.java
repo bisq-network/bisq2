@@ -46,7 +46,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Objects;
@@ -71,6 +74,12 @@ public class FileUtils {
     public static void write(String fileName, byte[] data) throws IOException {
         try (FileOutputStream outputStream = new FileOutputStream(fileName)) {
             outputStream.write(data);
+        }
+        try {
+            Files.setPosixFilePermissions(Paths.get(fileName),
+                    EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE));
+        } catch (UnsupportedOperationException e) {
+            // For non-posix file systems, ignore this exception
         }
     }
 
@@ -251,8 +260,23 @@ public class FileUtils {
     }
 
     public static void makeDirs(File dir) throws IOException {
-        if (!dir.exists() && !dir.mkdirs()) {
-            throw new IOException("Could not make dir " + dir);
+        Set<PosixFilePermission> permissions = EnumSet.of(
+                PosixFilePermission.OWNER_READ,
+                PosixFilePermission.OWNER_WRITE,
+                PosixFilePermission.OWNER_EXECUTE
+        );
+
+        try {
+            if (!dir.exists()) {
+                Files.createDirectories(dir.toPath(),
+                        PosixFilePermissions.asFileAttribute(permissions));
+            } else {
+                Files.setPosixFilePermissions(dir.toPath(), permissions);
+            }
+        } catch (UnsupportedOperationException e) {
+            if (!dir.exists() && !dir.mkdirs()) {
+                throw new IOException("Cannot create directory " + dir.getAbsolutePath());
+            }
         }
     }
 
@@ -262,12 +286,34 @@ public class FileUtils {
         }
     }
 
+    public static FileOutputStream newFileOutputStreamWithPermissions(String name) throws IOException {
+        Path path = Paths.get(name);
+        try {
+            Set<PosixFilePermission> perms = EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE);
+            if (!Files.exists(path)) {
+                Files.createFile(path, PosixFilePermissions.asFileAttribute(perms));
+            } else {
+                Files.setPosixFilePermissions(path, perms);
+            }
+            return new FileOutputStream(path.toFile());
+        } catch (UnsupportedOperationException e) {
+            // For non-posix file systems, use default permissions
+            return new FileOutputStream(name);
+        }
+    }
+
     public static void writeToFile(String string, File file) throws IOException {
         try (FileWriter fileWriter = new FileWriter(file.getAbsolutePath())) {
             fileWriter.write(string);
         } catch (IOException e) {
             log.warn("Could not write {} to file {}", string, file);
             throw e;
+        }
+        try {
+            Files.setPosixFilePermissions(file.toPath(),
+                    EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE));
+        } catch (UnsupportedOperationException e) {
+            // For non-posix file systems, ignore this exception
         }
     }
 
