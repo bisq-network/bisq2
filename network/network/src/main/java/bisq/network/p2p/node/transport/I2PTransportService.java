@@ -160,6 +160,7 @@ public class I2PTransportService implements TransportService {
         }
         setTransportState(TransportState.INITIALIZE);
         initializeCalled = true;
+        log.info("Initialize I2P");
 
         try {
             i2pRouterFacade.initialize(routerMode)
@@ -188,6 +189,7 @@ public class I2PTransportService implements TransportService {
         if (!initializeCalled || isShutdownInProgress) {
             return CompletableFuture.completedFuture(true);
         }
+        log.info("Shutdown I2P");
         isShutdownInProgress = true;
         initializeCalled = false;
         setTransportState(TransportState.STOPPING);

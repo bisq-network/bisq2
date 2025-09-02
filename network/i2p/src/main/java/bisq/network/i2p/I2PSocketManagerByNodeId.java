@@ -37,7 +37,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class SocketManagerByNodeId {
+public class I2PSocketManagerByNodeId {
 
     // Self-managing listener. Does remove itself at sessionDisconnected and call dispose.
     private static class DisconnectListener implements I2PSocketManager.DisconnectListener {
@@ -68,9 +68,9 @@ public class SocketManagerByNodeId {
     private final int connectTimeout;
     private final Map<String, I2PSocketManager> socketManagerByNodeId = new ConcurrentHashMap<>();
 
-    public SocketManagerByNodeId(String i2cpHost,
-                                 int i2cpPort,
-                                 int connectTimeout) {
+    public I2PSocketManagerByNodeId(String i2cpHost,
+                                    int i2cpPort,
+                                    int connectTimeout) {
         this.i2cpHost = i2cpHost;
         this.i2cpPort = i2cpPort;
         this.connectTimeout = connectTimeout;
