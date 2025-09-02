@@ -26,6 +26,7 @@ import bisq.desktop.components.controls.Switch;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.settings.SettingsViewUtils;
 import bisq.i18n.Res;
+import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -48,6 +49,10 @@ public class NetworkSettingsView extends View<VBox, NetworkSettingsModel, Networ
     private final Switch useEmbedded;
     private final MaterialTextField i2cpAddress, bi2pGrpcAddress;
     private final Button resetToDefaultsButton, shutdownButton;
+    private final Switch ignoreDiffAdjustFromSecManagerSwitch;
+    private final MaterialTextField difficultyAdjustmentFactor;
+    private Subscription ignoreDiffAdjustFromSecManagerSwitchPin;
+
     private Subscription selectedTransportOptionPin;
 
     NetworkSettingsView(NetworkSettingsModel model, NetworkSettingsController controller) {
@@ -114,16 +119,26 @@ public class NetworkSettingsView extends View<VBox, NetworkSettingsModel, Networ
 
         HBox buttons = new HBox(10, resetToDefaultsButton, shutdownButton);
 
+        // Difficulty adjustment
+        Label difficultyAdjustmentHeadline = new Label(Res.get("settings.network.difficultyAdjustmentFactor.headline"));
+        difficultyAdjustmentHeadline.getStyleClass().add("large-thin-headline");
+
+        difficultyAdjustmentFactor = new MaterialTextField();
+        difficultyAdjustmentFactor.setMaxWidth(SettingsViewUtils.TEXT_FIELD_WIDTH);
+        difficultyAdjustmentFactor.setValidators(model.getDifficultyAdjustmentFactorValidator());
+        ignoreDiffAdjustFromSecManagerSwitch = new Switch(Res.get("settings.network.difficultyAdjustmentFactor.ignoreValueFromSecManager"));
+
+        VBox difficultyAdjustmentVBox = new VBox(10, difficultyAdjustmentFactor, ignoreDiffAdjustFromSecManagerSwitch);
+
         VBox.setMargin(useEmbedded, new Insets(10, 0, 0, 0));
         VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
         VBox.setMargin(transportOptionsVBox, new Insets(0, 5, 0, 5));
         VBox.setMargin(i2pOptionsVBox, new Insets(0, 5, 0, 5));
-        VBox contentBox = new VBox(50);
-
-        contentBox.getChildren().addAll(
-                transportOptionsHeadlineHBox, separator(contentBox), transportOptionsVBox,
-                i2pOptionsHeadline, separator(contentBox), i2pOptionsVBox,
-                buttons
+        VBox contentBox = new VBox(50,
+                transportOptionsHeadlineHBox, separator(), transportOptionsVBox,
+                i2pOptionsHeadline, separator(), i2pOptionsVBox,
+                buttons,
+                difficultyAdjustmentHeadline, separator(), difficultyAdjustmentVBox
         );
 
         contentBox.getStyleClass().add("bisq-common-bg");
@@ -188,6 +203,18 @@ public class NetworkSettingsView extends View<VBox, NetworkSettingsModel, Networ
 
         i2cpAddress.validate();
         bi2pGrpcAddress.validate();
+
+
+        ignoreDiffAdjustFromSecManagerSwitch.selectedProperty().bindBidirectional(model.getIgnoreDiffAdjustmentFromSecManager());
+
+        Bindings.bindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor(),
+                model.getDifficultyAdjustmentFactorConverter());
+        difficultyAdjustmentFactor.validate();
+        difficultyAdjustmentFactor.getTextInputControl().editableProperty().bind(model.getDifficultyAdjustmentFactorEditable());
+        difficultyAdjustmentFactor.descriptionProperty().bind(model.getDifficultyAdjustmentFactorDescriptionText());
+
+        ignoreDiffAdjustFromSecManagerSwitchPin = EasyBind.subscribe(
+                ignoreDiffAdjustFromSecManagerSwitch.selectedProperty(), s -> difficultyAdjustmentFactor.validate());
     }
 
     @Override
@@ -212,6 +239,16 @@ public class NetworkSettingsView extends View<VBox, NetworkSettingsModel, Networ
 
         i2cpAddress.resetValidation();
         bi2pGrpcAddress.resetValidation();
+
+
+        ignoreDiffAdjustFromSecManagerSwitch.selectedProperty().unbindBidirectional(model.getIgnoreDiffAdjustmentFromSecManager());
+
+        Bindings.unbindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor());
+        difficultyAdjustmentFactor.resetValidation();
+        difficultyAdjustmentFactor.getTextInputControl().editableProperty().unbind();
+        difficultyAdjustmentFactor.descriptionProperty().unbind();
+
+        ignoreDiffAdjustFromSecManagerSwitchPin.unsubscribe();
     }
 
     private void applyTransportOption() {
@@ -235,7 +272,7 @@ public class NetworkSettingsView extends View<VBox, NetworkSettingsModel, Networ
         }
     }
 
-    private static Region separator(VBox contentBox) {
-        return SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing());
+    private static Region separator() {
+        return SettingsViewUtils.getLineAfterHeadline(50);
     }
 }

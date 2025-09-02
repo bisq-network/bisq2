@@ -19,13 +19,21 @@ package bisq.desktop.main.content.settings.network;
 
 import bisq.common.network.Address;
 import bisq.desktop.common.converters.AddressStringConverter;
+import bisq.desktop.common.converters.DoubleStringConverter;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.components.controls.validator.NetworkAddressValidator;
+import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.desktop.components.controls.validator.ValidatorBase;
+import bisq.i18n.Res;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,6 +60,17 @@ class NetworkSettingsModel implements Model {
 
     private final ValidatorBase i2cpAddressValidator = new NetworkAddressValidator();
     private final ValidatorBase bi2pGrpcAddressValidator = new NetworkAddressValidator();
+
+    private final DoubleProperty difficultyAdjustmentFactor = new SimpleDoubleProperty();
+    private final BooleanProperty difficultyAdjustmentFactorEditable = new SimpleBooleanProperty();
+    private final StringProperty difficultyAdjustmentFactorDescriptionText = new SimpleStringProperty();
+    private final BooleanProperty ignoreDiffAdjustmentFromSecManager = new SimpleBooleanProperty();
+    private final DoubleProperty totalMaxBackupSizeInMB = new SimpleDoubleProperty();
+
+    private final DoubleStringConverter difficultyAdjustmentFactorConverter = new DoubleStringConverter(NetworkLoad.DEFAULT_DIFFICULTY_ADJUSTMENT);
+    private final ValidatorBase difficultyAdjustmentFactorValidator =
+            new NumberValidator(Res.get("settings.network.difficultyAdjustmentFactor.invalid", NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT),
+                    NetworkLoad.MIN_DIFFICULTY_ADJUSTMENT, NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT);
 
     NetworkSettingsModel() {
     }

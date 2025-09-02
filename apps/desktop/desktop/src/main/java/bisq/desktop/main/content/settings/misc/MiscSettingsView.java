@@ -26,34 +26,34 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettingsController> {
     private static final double TEXT_FIELD_WIDTH = 500;
+    private final Button resetDontShowAgain;
+    private final Switch useAnimations, preventStandbyMode;
 
-    private final Switch ignoreDiffAdjustFromSecManagerSwitch;
-    private final MaterialTextField difficultyAdjustmentFactor, totalMaxBackupSizeInMB;
-    private Subscription ignoreDiffAdjustFromSecManagerSwitchPin;
+    private final MaterialTextField totalMaxBackupSizeInMB;
 
     public MiscSettingsView(MiscSettingsModel model, MiscSettingsController controller) {
         super(new VBox(), model, controller);
 
         root.setAlignment(Pos.TOP_LEFT);
+        Label displayHeadline = SettingsViewUtils.getHeadline(Res.get("settings.display.headline"));
 
-        Label networkHeadline = new Label(Res.get("settings.network.headline"));
-        networkHeadline.getStyleClass().add("large-thin-headline");
+        useAnimations = new Switch(Res.get("settings.display.useAnimations"));
+        preventStandbyMode = new Switch(Res.get("settings.display.preventStandbyMode"));
+        resetDontShowAgain = new Button(Res.get("settings.display.resetDontShowAgain"));
+        resetDontShowAgain.getStyleClass().add("grey-transparent-outlined-button");
 
-        difficultyAdjustmentFactor = new MaterialTextField();
-        difficultyAdjustmentFactor.setMaxWidth(TEXT_FIELD_WIDTH);
-        difficultyAdjustmentFactor.setValidators(model.getDifficultyAdjustmentFactorValidator());
-        ignoreDiffAdjustFromSecManagerSwitch = new Switch(Res.get("settings.network.difficultyAdjustmentFactor.ignoreValueFromSecManager"));
+        VBox.setMargin(resetDontShowAgain, new Insets(10, 0, 0, 0));
+        VBox displayVBox = new VBox(10, useAnimations, preventStandbyMode, resetDontShowAgain);
 
-        VBox networkVBox = new VBox(10, difficultyAdjustmentFactor, ignoreDiffAdjustFromSecManagerSwitch);
 
         Label backupHeadline = new Label(Res.get("settings.backup.headline"));
         backupHeadline.getStyleClass().add("large-thin-headline");
@@ -64,9 +64,10 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
         totalMaxBackupSizeInMB.setIcon(AwesomeIcon.INFO_SIGN);
         totalMaxBackupSizeInMB.setIconTooltip(Res.get("settings.backup.totalMaxBackupSizeInMB.info.tooltip"));
 
-        VBox contentBox = new VBox(50);
-        contentBox.getChildren().addAll(networkHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), networkVBox,
-                backupHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), totalMaxBackupSizeInMB);
+        VBox.setMargin(displayVBox, new Insets(0, 5, 0, 5));
+        VBox contentBox = new VBox(50,
+                displayHeadline, separator(), displayVBox,
+                backupHeadline, separator(), totalMaxBackupSizeInMB);
         contentBox.getStyleClass().add("bisq-common-bg");
         root.getChildren().add(contentBox);
         root.setPadding(new Insets(0, 40, 20, 40));
@@ -74,34 +75,26 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
 
     @Override
     protected void onViewAttached() {
-        ignoreDiffAdjustFromSecManagerSwitch.selectedProperty().bindBidirectional(model.getIgnoreDiffAdjustmentFromSecManager());
-
-        Bindings.bindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor(),
-                model.getDifficultyAdjustmentFactorConverter());
-        difficultyAdjustmentFactor.validate();
-        difficultyAdjustmentFactor.getTextInputControl().editableProperty().bind(model.getDifficultyAdjustmentFactorEditable());
-        difficultyAdjustmentFactor.descriptionProperty().bind(model.getDifficultyAdjustmentFactorDescriptionText());
+        useAnimations.selectedProperty().bindBidirectional(model.getUseAnimations());
+        preventStandbyMode.selectedProperty().bindBidirectional(model.getPreventStandbyMode());
+        resetDontShowAgain.setOnAction(e -> controller.onResetDontShowAgain());
 
         Bindings.bindBidirectional(totalMaxBackupSizeInMB.textProperty(), model.getTotalMaxBackupSizeInMB(),
                 model.getTotalMaxBackupSizeConverter());
         totalMaxBackupSizeInMB.validate();
-
-        ignoreDiffAdjustFromSecManagerSwitchPin = EasyBind.subscribe(
-                ignoreDiffAdjustFromSecManagerSwitch.selectedProperty(), s -> difficultyAdjustmentFactor.validate());
     }
 
     @Override
     protected void onViewDetached() {
-        ignoreDiffAdjustFromSecManagerSwitch.selectedProperty().unbindBidirectional(model.getIgnoreDiffAdjustmentFromSecManager());
-
-        Bindings.unbindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor());
-        difficultyAdjustmentFactor.resetValidation();
-        difficultyAdjustmentFactor.getTextInputControl().editableProperty().unbind();
-        difficultyAdjustmentFactor.descriptionProperty().unbind();
+        useAnimations.selectedProperty().unbindBidirectional(model.getUseAnimations());
+        preventStandbyMode.selectedProperty().unbindBidirectional(model.getPreventStandbyMode());
+        resetDontShowAgain.setOnAction(null);
 
         Bindings.unbindBidirectional(totalMaxBackupSizeInMB.textProperty(), model.getTotalMaxBackupSizeInMB());
         totalMaxBackupSizeInMB.resetValidation();
+    }
 
-        ignoreDiffAdjustFromSecManagerSwitchPin.unsubscribe();
+    private static Region separator() {
+        return SettingsViewUtils.getLineAfterHeadline(50);
     }
 }

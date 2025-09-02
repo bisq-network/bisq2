@@ -20,11 +20,17 @@ package bisq.desktop.main.content.settings.network;
 import bisq.application.ApplicationService;
 import bisq.application.ShutDownHandler;
 import bisq.application.TypesafeConfigUtils;
+import bisq.bonded_roles.security_manager.difficulty_adjustment.DifficultyAdjustmentService;
 import bisq.common.application.DevMode;
 import bisq.common.network.Address;
 import bisq.common.network.TransportType;
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.i18n.Res;
+import bisq.settings.SettingsService;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
@@ -47,15 +53,22 @@ public class NetworkSettingsController implements Controller {
     @Getter
     private final NetworkSettingsView view;
     private final NetworkSettingsModel model;
-    private final ShutDownHandler shutDownHandler;
-    private final Path baseDir;
+    private final SettingsService settingsService;
+    private final DifficultyAdjustmentService difficultyAdjustmentService;
     private final ApplicationService.Config appConfig;
-    private final Set<Subscription> pins = new HashSet<>();
+    private final Path baseDir;
+    private final ShutDownHandler shutDownHandler;
+    private final Set<Subscription> subscriptions = new HashSet<>();
+    private Pin ignoreDiffAdjustmentFromSecManagerPin,
+            mostRecentDifficultyAdjustmentFactorOrDefaultPin, difficultyAdjustmentFactorPin;
 
     public NetworkSettingsController(ServiceProvider serviceProvider) {
+        settingsService = serviceProvider.getSettingsService();
+        difficultyAdjustmentService = serviceProvider.getBondedRolesService().getDifficultyAdjustmentService();
         appConfig = serviceProvider.getConfig();
         baseDir = appConfig.getBaseDir();
         shutDownHandler = serviceProvider.getShutDownHandler();
+
         model = new NetworkSettingsModel();
         view = new NetworkSettingsView(model, this);
     }
@@ -93,18 +106,50 @@ public class NetworkSettingsController implements Controller {
         model.getI2cpAddress().set(new Address(i2pConfig.getString("i2cpHost"), i2pConfig.getInt("i2cpPort")));
         model.getBi2pGrpcAddress().set(new Address(i2pConfig.getString("bi2pGrpcHost"), i2pConfig.getInt("bi2pGrpcPort")));
 
-        pins.add(EasyBind.subscribe(model.getI2cpAddress(), e -> onDataChanged()));
-        pins.add(EasyBind.subscribe(model.getBi2pGrpcAddress(), e -> onDataChanged()));
+        subscriptions.add(EasyBind.subscribe(model.getI2cpAddress(), e -> onDataChanged()));
+        subscriptions.add(EasyBind.subscribe(model.getBi2pGrpcAddress(), e -> onDataChanged()));
 
         model.getShutdownButtonVisible().set(false);
         model.getClearOnlyVisible().set(DevMode.isDevMode());
+
+
+        ignoreDiffAdjustmentFromSecManagerPin = FxBindings.bindBiDir(model.getIgnoreDiffAdjustmentFromSecManager())
+                .to(settingsService.getIgnoreDiffAdjustmentFromSecManager(), settingsService::setIgnoreDiffAdjustmentFromSecManager);
+        model.getDifficultyAdjustmentFactorEditable().bind(model.getIgnoreDiffAdjustmentFromSecManager());
+        subscriptions.add(EasyBind.subscribe(model.getIgnoreDiffAdjustmentFromSecManager(),
+                value -> {
+                    if (value) {
+                        model.getDifficultyAdjustmentFactorDescriptionText().set(Res.get("settings.network.difficultyAdjustmentFactor.description.self"));
+                        if (mostRecentDifficultyAdjustmentFactorOrDefaultPin != null) {
+                            mostRecentDifficultyAdjustmentFactorOrDefaultPin.unbind();
+                        }
+                        difficultyAdjustmentFactorPin = FxBindings.bindBiDir(model.getDifficultyAdjustmentFactor())
+                                .to(settingsService.getDifficultyAdjustmentFactor(), settingsService::setDifficultyAdjustmentFactor);
+                    } else {
+                        model.getDifficultyAdjustmentFactorDescriptionText().set(Res.get("settings.network.difficultyAdjustmentFactor.description.fromSecManager"));
+                        if (difficultyAdjustmentFactorPin != null) {
+                            difficultyAdjustmentFactorPin.unbind();
+                        }
+                        mostRecentDifficultyAdjustmentFactorOrDefaultPin = difficultyAdjustmentService.getMostRecentValueOrDefault()
+                                .addObserver(mostRecentValueOrDefault ->
+                                        UIThread.run(() -> model.getDifficultyAdjustmentFactor().set(mostRecentValueOrDefault)));
+                    }
+                }));
     }
 
 
     @Override
     public void onDeactivate() {
-        pins.forEach(Subscription::unsubscribe);
-        pins.clear();
+        subscriptions.forEach(Subscription::unsubscribe);
+        subscriptions.clear();
+        ignoreDiffAdjustmentFromSecManagerPin.unbind();
+        model.getDifficultyAdjustmentFactorEditable().unbind();
+        if (difficultyAdjustmentFactorPin != null) {
+            difficultyAdjustmentFactorPin.unbind();
+        }
+        if (mostRecentDifficultyAdjustmentFactorOrDefaultPin != null) {
+            mostRecentDifficultyAdjustmentFactorOrDefaultPin.unbind();
+        }
     }
 
     void onResetToDefaults() {
