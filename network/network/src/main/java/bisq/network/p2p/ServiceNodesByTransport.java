@@ -199,16 +199,26 @@ public class ServiceNodesByTransport {
                                               NetworkId senderNetworkId) {
         SendMessageResult sendMessageResult = new SendMessageResult();
         receiverNetworkId.getAddressByTransportTypeMap().forEach((transportType, address) -> {
+            ServiceNode serviceNode;
+            // We try to use the transport of the receivers address
             if (map.containsKey(transportType)) {
-                ServiceNode serviceNode = map.get(transportType);
-                SendConfidentialMessageResult result = serviceNode.confidentialSend(envelopePayloadMessage,
-                        receiverNetworkId,
-                        address,
-                        receiverNetworkId.getPubKey(),
-                        senderKeyPair,
-                        senderNetworkId);
-                sendMessageResult.put(transportType, result);
+                serviceNode = map.get(transportType);
+            } else if (!map.isEmpty()) {
+                // In case we do not have the transport of the receivers address we use our first transport.
+                // This would be the case when we use Tor only and the peer use I2P only. As we do not have a
+                // serviceNode for I2P we would fall back to Tor. In ConfidentialMessageService we will not find the node, and send it as mailbox message.
+                // That way any node the p2p network supporting both networks act as a relay.
+                serviceNode = map.values().stream().findFirst().get();
+            } else {
+                throw new RuntimeException("confidentialSend called but we do not have any serviceNode available. This should never happen.");
             }
+            SendConfidentialMessageResult result = serviceNode.confidentialSend(envelopePayloadMessage,
+                    receiverNetworkId,
+                    address,
+                    receiverNetworkId.getPubKey(),
+                    senderKeyPair,
+                    senderNetworkId);
+            sendMessageResult.put(transportType, result);
         });
         return sendMessageResult;
     }
