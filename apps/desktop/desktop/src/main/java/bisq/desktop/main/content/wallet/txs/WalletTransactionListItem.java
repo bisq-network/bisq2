@@ -34,10 +34,8 @@ public class WalletTransactionListItem implements DateTableItem {
     private final Transaction transaction;
 
     private final long date;
-    private final String dateTimeString, dateString, timeString;
-    private final String txId;
-    private final String amountAsString;
-    private final String numConfirmationsAsString;
+    private final String dateTimeString, dateString, timeString, txId, amountAsString, numConfirmationsAsString,
+            trade, type, destinationAddress;
     private final Coin amount;
     private final int numConfirmations;
 
@@ -53,5 +51,10 @@ public class WalletTransactionListItem implements DateTableItem {
         amountAsString = AmountFormatter.formatBaseAmount(amount);
         numConfirmations = transaction.getNumConfirmations();
         numConfirmationsAsString = String.valueOf(numConfirmations);
+
+        // TODO: Dummy for now
+        trade = "TUBDU32TH";
+        type = "Multisig payout";
+        destinationAddress = transaction.getOutputs().isEmpty() ? "" : transaction.getOutputs().get(0).getAddress();
     }
 }
