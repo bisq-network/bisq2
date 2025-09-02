@@ -18,6 +18,7 @@
 package bisq.network.i2p.grpc.client;
 
 import bisq.network.i2p.grpc.messages.Topic;
+import bisq.network.i2p.router.RouterSetup;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -25,7 +26,7 @@ import java.io.IOException;
 @Slf4j
 public class Bi2pGrpcClientServiceMain {
     public static void main(String[] args) throws IOException, InterruptedException {
-        Bi2pGrpcClientService service = new Bi2pGrpcClientService("127.0.0.1", 7777);
+        Bi2pGrpcClientService service = new Bi2pGrpcClientService(RouterSetup.DEFAULT_BI2P_GRPC_HOST, 7777);
         service.initialize().join();
         service.subscribe(Topic.NETWORK_STATE); // Other methods not impl in server mock
 

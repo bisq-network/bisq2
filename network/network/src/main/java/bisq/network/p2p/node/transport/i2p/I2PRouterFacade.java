@@ -253,7 +253,7 @@ public class I2PRouterFacade {
     }
 
     private static boolean isDefaultI2pDetected() {
-        return NetworkUtils.isPortInUse("127.0.0.1", RouterSetup.DEFAULT_I2CP_PORT);
+        return NetworkUtils.isPortInUse(RouterSetup.DEFAULT_I2CP_HOST, RouterSetup.DEFAULT_I2CP_PORT);
     }
 
     private boolean isBi2pRouterDetected() {

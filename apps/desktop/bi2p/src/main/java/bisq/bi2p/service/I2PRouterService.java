@@ -57,9 +57,9 @@ public class I2PRouterService implements Service {
     private volatile boolean shutdownInProgress;
 
     public I2PRouterService(Application.Parameters parameters, String bi2pDir) {
-        i2cpHost = Optional.ofNullable(parameters.getNamed().get("i2cpHost")).orElse("127.0.0.1");
+        i2cpHost = Optional.ofNullable(parameters.getNamed().get("i2cpHost")).orElse(RouterSetup.DEFAULT_I2CP_HOST);
         i2cpPort = Optional.ofNullable(parameters.getNamed().get("i2cpPort")).map(Integer::parseInt).orElse(RouterSetup.DEFAULT_I2CP_PORT);
-        bi2pGrpcHost = Optional.ofNullable(parameters.getNamed().get("bi2pGrpcHost")).orElse("127.0.0.1");
+        bi2pGrpcHost = Optional.ofNullable(parameters.getNamed().get("bi2pGrpcHost")).orElse(RouterSetup.DEFAULT_BI2P_GRPC_HOST);
         bi2pGrpcPort = Optional.ofNullable(parameters.getNamed().get("bi2pGrpcPort")).map(Integer::parseInt).orElse(RouterSetup.DEFAULT_BI2P_GRPC_PORT);
         i2pDirPath = PlatformUtils.getUserDataDir().resolve(bi2pDir);
         log.info("I2CP {}:{}; Grpc server listening at: {}:{}", i2cpHost, i2cpPort, bi2pGrpcHost, bi2pGrpcPort);

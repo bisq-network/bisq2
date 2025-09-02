@@ -20,6 +20,7 @@ package bisq.network.i2p.grpc.server;
 import bisq.bi2p.protobuf.Bi2pGrpc;
 import bisq.bi2p.protobuf.NetworkState;
 import bisq.bi2p.protobuf.NetworkStateUpdate;
+import bisq.network.i2p.router.RouterSetup;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,7 +53,7 @@ public final class Bi2pGrpcServerMain {
                 });
             }
         };
-        Bi2pGrpcServer i2pGrpcServer = new Bi2pGrpcServer("127.0.0.1", 7777, mockService);
+        Bi2pGrpcServer i2pGrpcServer = new Bi2pGrpcServer(RouterSetup.DEFAULT_BI2P_GRPC_HOST, RouterSetup.DEFAULT_BI2P_GRPC_PORT, mockService);
         i2pGrpcServer.initialize();
         keepRunning();
     }
