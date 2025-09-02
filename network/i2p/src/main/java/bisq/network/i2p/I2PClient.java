@@ -35,7 +35,7 @@ import java.util.concurrent.ExecutorService;
 @Slf4j
 public class I2PClient {
     private final int socketTimeout;
-    private final SocketManagerByNodeId socketManagerByNodeId;
+    private final I2PSocketManagerByNodeId socketManagerByNodeId;
     private volatile boolean isShutdownInProgress;
 
     public I2PClient(Path clientDir,
@@ -44,7 +44,7 @@ public class I2PClient {
                      int socketTimeout,
                      int connectTimeout) {
         this.socketTimeout = socketTimeout;
-        socketManagerByNodeId = new SocketManagerByNodeId(i2cpHost, i2cpPort, connectTimeout);
+        socketManagerByNodeId = new I2PSocketManagerByNodeId(i2cpHost, i2cpPort, connectTimeout);
 
         I2PAppContext.getGlobalContext().logManager().setBaseLogfilename(clientDir+ "/log-@.log");
         log.info("I2P client created with i2cpHost={}, i2cpPort={}", i2cpHost, i2cpPort);
