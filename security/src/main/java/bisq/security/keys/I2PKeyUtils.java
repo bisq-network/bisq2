@@ -19,10 +19,11 @@ package bisq.security.keys;
 
 import bisq.common.file.FileUtils;
 import lombok.extern.slf4j.Slf4j;
-import net.i2p.client.streaming.I2PSocketManager;
-import net.i2p.client.streaming.I2PSocketManagerFactory;
+import net.i2p.client.I2PSessionException;
 import net.i2p.data.Base64;
+import net.i2p.data.DataFormatException;
 import net.i2p.data.Destination;
+import net.i2p.data.PrivateKeyFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -54,10 +55,11 @@ public class I2PKeyUtils {
 
     public static Destination destinationFromIdentityBytes(byte[] identityBytes) {
         try (ByteArrayInputStream identityBytesStream = new ByteArrayInputStream(identityBytes)) {
-            I2PSocketManager manager = I2PSocketManagerFactory.createManager(identityBytesStream);
-            return manager.getSession().getMyDestination();
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to generate new I2P Destination", e);
+            PrivateKeyFile keyFile = new PrivateKeyFile(identityBytesStream);
+            return keyFile.getDestination();
+        } catch (IOException | I2PSessionException | DataFormatException e) {
+            log.error("Could not resolve destination.", e);
+            throw new RuntimeException(e);
         }
     }
 }
