@@ -17,6 +17,7 @@
 
 package bisq.application;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -33,44 +34,23 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TypesafeConfigUtils {
     public static Config resolveFilteredJvmOptions() {
-        Map<String, String> filteredJvmProps = new HashMap<>();
+        Map<String, Object> filteredJvmProps = new HashMap<>();
         System.getProperties().forEach((key, value) -> {
             if (key instanceof String keyAsString && keyAsString.startsWith("application.")) {
-                filteredJvmProps.put(keyAsString, String.valueOf(value));
+                filteredJvmProps.put(keyAsString, coerce(String.valueOf(value)));
             }
         });
         return ConfigFactory.parseMap(filteredJvmProps);
     }
 
+
     public static Config parseArgsToConfig(String[] args) {
         Map<String, Object> map = Arrays.stream(args)
                 .filter(arg -> arg.startsWith("--application.") && arg.contains("="))
                 .map(arg -> arg.substring(2).split("=", 2))
-                .collect(Collectors.toMap(arr -> arr[0], arr -> arr[1], (a, b) -> b)); // last one wins if duplicates
+                .collect(Collectors.toMap(arr -> arr[0], arr -> coerce(arr[1]), (a, b) -> b)); // last one wins if duplicates
         map.putAll(mapCustomArgsToTypesafeEntries(args));
         return ConfigFactory.parseMap(map);
-    }
-
-    private static Map<String, Object> mapCustomArgsToTypesafeEntries(String[] args) {
-        Map<String, Object> map = new HashMap<>();
-        for (int i = 0; i < args.length; i++) {
-            int valueIndex = i + 1;
-            switch (args[i]) {
-                case "--app-name":
-                    if (valueIndex < args.length) {
-                        map.put("application.appName", args[valueIndex]);
-                        i++; // skip the value
-                    }
-                    break;
-                case "--data-dir":
-                    if (valueIndex < args.length) {
-                        map.put("application.dataDir", args[valueIndex]);
-                        i++;
-                    }
-                    break;
-            }
-        }
-        return map;
     }
 
     public static Optional<Config> resolveCustomConfig(Path appDataDir) {
@@ -88,5 +68,73 @@ public class TypesafeConfigUtils {
             }
         }
         return Optional.empty();
+    }
+
+    // Accept both formats: "--app-name=bisq" and "--app-name bisq"
+    @VisibleForTesting
+    static Map<String, Object> mapCustomArgsToTypesafeEntries(String[] args) {
+        Map<String, Object> map = new HashMap<>();
+        for (int i = 0; i < args.length; i++) {
+            int valueIndex = i + 1;
+            String arg = args[i];
+            if (arg.startsWith("--app-name=")) {
+                map.put("application.appName", arg.substring("--app-name=".length()));
+                continue;
+            }
+            if (arg.startsWith("--data-dir=")) {
+                map.put("application.baseDir", arg.substring("--data-dir=".length()));
+                continue;
+            }
+            if (arg.startsWith("--base-dir=")) {
+                map.put("application.baseDir", arg.substring("--base-dir=".length()));
+                continue;
+            }
+            switch (arg) {
+                case "--app-name":
+                    if (valueIndex < args.length && !args[valueIndex].startsWith("--")) {
+                        map.put("application.appName", args[valueIndex]);
+                        i++;
+                    }
+                    break;
+                case "--data-dir":
+                    if (valueIndex < args.length && !args[valueIndex].startsWith("--")) {
+                        map.put("application.baseDir", args[valueIndex]);
+                        i++;
+                    }
+                    break;
+                case "--base-dir":
+                    if (valueIndex < args.length && !args[valueIndex].startsWith("--")) {
+                        map.put("application.baseDir", args[valueIndex]);
+                        i++;
+                    }
+                    break;
+            }
+        }
+        return map;
+    }
+
+    @VisibleForTesting
+    static Object coerce(String raw) {
+        String stringValue = raw.trim();
+        if ("true".equalsIgnoreCase(stringValue) || "false".equalsIgnoreCase(stringValue)) {
+            return Boolean.parseBoolean(stringValue);
+        }
+        try {
+            if (stringValue.matches("[-+]?\\d+")) {
+                long longValue = Long.parseLong(stringValue);
+                if (longValue >= Integer.MIN_VALUE && longValue <= Integer.MAX_VALUE) {
+                    return (int) longValue;
+                }
+                return longValue;
+            }
+        } catch (NumberFormatException ignore) {
+        }
+        try {
+            if (stringValue.matches("[-+]?\\d*\\.\\d+([eE][-+]?\\d+)?")) {
+                return Double.parseDouble(stringValue);
+            }
+        } catch (NumberFormatException ignore) {
+        }
+        return raw;
     }
 }
