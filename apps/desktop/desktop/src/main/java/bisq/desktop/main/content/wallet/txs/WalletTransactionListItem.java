@@ -34,7 +34,7 @@ public class WalletTransactionListItem implements DateTableItem {
     private final Transaction transaction;
 
     private final long date;
-    private final String dateString, timeString;
+    private final String dateTimeString, dateString, timeString;
     private final String txId;
     private final String amountAsString;
     private final String numConfirmationsAsString;
@@ -45,6 +45,7 @@ public class WalletTransactionListItem implements DateTableItem {
         this.transaction = transaction;
 
         date = transaction.getDate().getTime();
+        dateTimeString = DateFormatter.formatDateTimeNoSeconds(date);
         dateString = DateFormatter.formatDate(date);
         timeString = DateFormatter.formatTime(date);
         txId = transaction.getTxId();
