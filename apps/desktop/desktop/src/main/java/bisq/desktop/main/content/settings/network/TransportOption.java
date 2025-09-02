@@ -15,26 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.settings;
+package bisq.desktop.main.content.settings.network;
 
-import bisq.desktop.common.Layout;
-import javafx.geometry.Insets;
-import javafx.scene.control.Label;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import bisq.common.network.TransportType;
+import lombok.Getter;
 
-public class SettingsViewUtils {
-    public static final double TEXT_FIELD_WIDTH = 500;
+import java.util.Set;
 
-    public static Label getHeadline(String text) {
-        Label headline = new Label(text);
-        headline.getStyleClass().add("large-thin-headline");
-        return headline;
-    }
+public enum TransportOption {
+    TOR_AND_I2P(Set.of(TransportType.TOR, TransportType.I2P)),
+    TOR(Set.of(TransportType.TOR)),
+    I2P(Set.of(TransportType.I2P)),
+    CLEAR(Set.of(TransportType.CLEAR));
 
-    public static Region getLineAfterHeadline(double spacing) {
-        Region line = Layout.hLine();
-        VBox.setMargin(line, new Insets(7.5 - spacing, 0, 20 - spacing, 0));
-        return line;
+    @Getter
+    private final Set<TransportType> transportTypes;
+
+    TransportOption(Set<TransportType> transportTypes) {
+        this.transportTypes = transportTypes;
     }
 }
