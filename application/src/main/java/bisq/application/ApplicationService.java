@@ -138,7 +138,8 @@ public abstract class ApplicationService implements Service {
         programArgConfig = TypesafeConfigUtils.parseArgsToConfig(args);
         jvmConfig = TypesafeConfigUtils.resolveFilteredJvmOptions();
         resourceConfig = ConfigFactory.parseResources(configFileName + ".conf").resolve();
-        resourceConfig.checkValid(ConfigFactory.defaultReference(), "application");
+        // We do not check validity yet, as we do not have a reference config. Typesafe use then the existing config
+        // which is the preliminary config from program args and jvm args but that is not a useful reference.
 
         // Precedence Order: Program Arguments > JVM options > Resource config
         rootConfig = programArgConfig
