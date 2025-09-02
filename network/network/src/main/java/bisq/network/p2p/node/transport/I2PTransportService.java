@@ -56,10 +56,11 @@ public class I2PTransportService implements TransportService {
     @EqualsAndHashCode
     public static final class Config implements TransportConfig {
         public static Config from(Path dataDir, com.typesafe.config.Config config) {
-            com.typesafe.config.Config grpcMonitorConfig = config.getConfig("grpcMonitor");
             return new Config(dataDir,
                     config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
+                    config.getInt("sendMessageThrottleTime"),
+                    config.getInt("receiveMessageThrottleTime"),
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("connectTimeout")),
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("routerStartupTimeout")),
                     config.getInt("inboundKBytesPerSecond"),
@@ -67,14 +68,12 @@ public class I2PTransportService implements TransportService {
                     config.getInt("bandwidthSharePercentage"),
                     config.getString("i2cpHost"),
                     config.getInt("i2cpPort"),
+                    config.getString("bi2pGrpcHost"),
+                    config.getInt("bi2pGrpcPort"),
                     config.getBoolean("embeddedRouter"),
-                    config.getInt("sendMessageThrottleTime"),
-                    config.getInt("receiveMessageThrottleTime"),
                     config.getConfigList("proxyList").stream()
                             .map(c -> new Address(c.getString("host"), c.getInt("port")))
-                            .collect(Collectors.toList()),
-                    grpcMonitorConfig.getString("host"),
-                    grpcMonitorConfig.getInt("port"));
+                            .collect(Collectors.toList()));
         }
 
         private final int defaultNodePort;
@@ -87,17 +86,19 @@ public class I2PTransportService implements TransportService {
         private final int bandwidthSharePercentage;
         private final int i2cpPort;
         private final String i2cpHost;
+        private final String bi2pGrpcHost;
+        private final int bi2pGrpcPort;
         private final boolean embeddedRouter;
         private final Path dataDir;
         private final int sendMessageThrottleTime;
         private final int receiveMessageThrottleTime;
         private final List<Address> proxyList;
-        private final String bi2pGrpcHost;
-        private final int bi2pGrpcPort;
 
         public Config(Path dataDir,
                       int defaultNodePort,
                       int socketTimeout,
+                      int sendMessageThrottleTime,
+                      int receiveMessageThrottleTime,
                       int connectTimeout,
                       int routerStartupTimeout,
                       int inboundKBytesPerSecond,
@@ -105,15 +106,15 @@ public class I2PTransportService implements TransportService {
                       int bandwidthSharePercentage,
                       String i2cpHost,
                       int i2cpPort,
-                      boolean embeddedRouter,
-                      int sendMessageThrottleTime,
-                      int receiveMessageThrottleTime,
-                      List<Address> proxyList,
                       String bi2pGrpcHost,
-                      int bi2pGrpcPort) {
+                      int bi2pGrpcPort,
+                      boolean embeddedRouter,
+                      List<Address> proxyList) {
             this.dataDir = dataDir;
             this.defaultNodePort = defaultNodePort;
             this.socketTimeout = socketTimeout;
+            this.sendMessageThrottleTime = sendMessageThrottleTime;
+            this.receiveMessageThrottleTime = receiveMessageThrottleTime;
             this.connectTimeout = connectTimeout;
             this.routerStartupTimeout = routerStartupTimeout;
             this.inboundKBytesPerSecond = inboundKBytesPerSecond;
@@ -121,12 +122,10 @@ public class I2PTransportService implements TransportService {
             this.bandwidthSharePercentage = bandwidthSharePercentage;
             this.i2cpHost = i2cpHost;
             this.i2cpPort = i2cpPort;
-            this.embeddedRouter = embeddedRouter;
-            this.sendMessageThrottleTime = sendMessageThrottleTime;
-            this.receiveMessageThrottleTime = receiveMessageThrottleTime;
-            this.proxyList = proxyList;
             this.bi2pGrpcHost = bi2pGrpcHost;
             this.bi2pGrpcPort = bi2pGrpcPort;
+            this.embeddedRouter = embeddedRouter;
+            this.proxyList = proxyList;
         }
     }
 

@@ -43,8 +43,8 @@ public class I2PRouterMain {
         CompletableFuture.runAsync(() -> {
             Path i2pDirPath = PlatformUtils.getUserDataDir().resolve("Bisq2_I2P_router");
             i2pRouter = new I2PRouter(i2pDirPath,
-                    "127.0.0.1",
-                    8888,
+                    RouterSetup.DEFAULT_I2CP_HOST,
+                    RouterSetup.DEFAULT_I2CP_PORT,
                     I2PLogLevel.DEBUG,
                     false,
                     (int) TimeUnit.SECONDS.toMillis(300),
@@ -53,7 +53,7 @@ public class I2PRouterMain {
                     50);
 
             i2pBridgeService = new Bi2pGrpcService(i2pRouter);
-            i2pGrpcServer = new Bi2pGrpcServer("127.0.0.1", 7777, i2pBridgeService);
+            i2pGrpcServer = new Bi2pGrpcServer(RouterSetup.DEFAULT_BI2P_GRPC_HOST, RouterSetup.DEFAULT_BI2P_GRPC_PORT, i2pBridgeService);
             i2pGrpcServer.initialize();
             i2pBridgeService.initialize();
 

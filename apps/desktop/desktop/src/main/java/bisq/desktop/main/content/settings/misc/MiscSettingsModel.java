@@ -30,7 +30,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class MiscSettingsModel implements Model {
+public class MiscSettingsModel implements Model { private final BooleanProperty useAnimations = new SimpleBooleanProperty();
+    private final BooleanProperty preventStandbyMode = new SimpleBooleanProperty();
+
     private final DoubleProperty difficultyAdjustmentFactor = new SimpleDoubleProperty();
     private final BooleanProperty difficultyAdjustmentFactorEditable = new SimpleBooleanProperty();
     private final StringProperty difficultyAdjustmentFactorDescriptionText = new SimpleStringProperty();

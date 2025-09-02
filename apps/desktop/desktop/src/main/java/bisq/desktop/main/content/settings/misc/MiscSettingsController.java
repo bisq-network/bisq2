@@ -18,12 +18,14 @@
 package bisq.desktop.main.content.settings.misc;
 
 import bisq.bonded_roles.security_manager.difficulty_adjustment.DifficultyAdjustmentService;
+import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.i18n.Res;
+import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +39,8 @@ public class MiscSettingsController implements Controller {
     private final MiscSettingsModel model;
     private final SettingsService settingsService;
     private final DifficultyAdjustmentService difficultyAdjustmentService;
+    private final DontShowAgainService dontShowAgainService;
+    private Pin useAnimationsPin, preventStandbyModePin;
 
     private Pin ignoreDiffAdjustmentFromSecManagerPin,
             mostRecentDifficultyAdjustmentFactorOrDefaultPin, difficultyAdjustmentFactorPin, totalMaxBackupSizeInMBPin;
@@ -44,6 +48,7 @@ public class MiscSettingsController implements Controller {
 
     public MiscSettingsController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
+        dontShowAgainService = serviceProvider.getDontShowAgainService();
         difficultyAdjustmentService = serviceProvider.getBondedRolesService().getDifficultyAdjustmentService();
         model = new MiscSettingsModel();
         view = new MiscSettingsView(model, this);
@@ -51,6 +56,11 @@ public class MiscSettingsController implements Controller {
 
     @Override
     public void onActivate() {
+        useAnimationsPin = FxBindings.bindBiDir(model.getUseAnimations())
+                .to(settingsService.getUseAnimations(), settingsService::setUseAnimations);
+        preventStandbyModePin = FxBindings.bindBiDir(model.getPreventStandbyMode())
+                .to(settingsService.getPreventStandbyMode(), settingsService::setPreventStandbyMode);
+
         ignoreDiffAdjustmentFromSecManagerPin = FxBindings.bindBiDir(model.getIgnoreDiffAdjustmentFromSecManager())
                 .to(settingsService.getIgnoreDiffAdjustmentFromSecManager(), settingsService::setIgnoreDiffAdjustmentFromSecManager);
         model.getDifficultyAdjustmentFactorEditable().bind(model.getIgnoreDiffAdjustmentFromSecManager());
@@ -80,6 +90,9 @@ public class MiscSettingsController implements Controller {
 
     @Override
     public void onDeactivate() {
+        useAnimationsPin.unbind();
+        preventStandbyModePin.unbind();
+
         ignoreDiffAdjustmentFromSecManagerPin.unbind();
         model.getDifficultyAdjustmentFactorEditable().unbind();
         difficultyAdjustmentFactorDescriptionTextPin.unsubscribe();
@@ -90,5 +103,13 @@ public class MiscSettingsController implements Controller {
         if (mostRecentDifficultyAdjustmentFactorOrDefaultPin != null) {
             mostRecentDifficultyAdjustmentFactorOrDefaultPin.unbind();
         }
+    }
+
+    void onResetDontShowAgain() {
+        dontShowAgainService.resetDontShowAgain();
+    }
+
+    String getDisplayLanguage(String languageCode) {
+        return LanguageRepository.getDisplayString(languageCode);
     }
 }

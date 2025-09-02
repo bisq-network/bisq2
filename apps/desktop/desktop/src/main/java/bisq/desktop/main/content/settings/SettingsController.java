@@ -17,15 +17,15 @@
 
 package bisq.desktop.main.content.settings;
 
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
-import bisq.desktop.main.content.settings.display.DisplaySettingsController;
 import bisq.desktop.main.content.settings.language.LanguageSettingsController;
 import bisq.desktop.main.content.settings.misc.MiscSettingsController;
+import bisq.desktop.main.content.settings.network.NetworkSettingsController;
 import bisq.desktop.main.content.settings.notifications.NotificationsSettingsController;
 import bisq.desktop.main.content.settings.trade.TradeSettingsController;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,8 +46,8 @@ public class SettingsController extends ContentTabController<SettingsModel> {
         return switch (navigationTarget) {
             case LANGUAGE_SETTINGS -> Optional.of(new LanguageSettingsController(serviceProvider));
             case NOTIFICATION_SETTINGS -> Optional.of(new NotificationsSettingsController(serviceProvider));
-            case DISPLAY_SETTINGS -> Optional.of(new DisplaySettingsController(serviceProvider));
             case TRADE_SETTINGS -> Optional.of(new TradeSettingsController(serviceProvider));
+            case NETWORK_SETTINGS -> Optional.of(new NetworkSettingsController(serviceProvider));
             case MISC_SETTINGS -> Optional.of(new MiscSettingsController(serviceProvider));
             default -> Optional.empty();
         };

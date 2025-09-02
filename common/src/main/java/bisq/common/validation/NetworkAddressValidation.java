@@ -15,20 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.settings.display;
+package bisq.common.validation;
 
-import bisq.desktop.common.view.Model;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import bisq.common.network.Address;
+import com.google.common.net.InetAddresses;
 
-@Slf4j
-@Getter
-public class DisplaySettingsModel implements Model {
-    private final BooleanProperty useAnimations = new SimpleBooleanProperty();
-    private final BooleanProperty preventStandbyMode = new SimpleBooleanProperty();
-
-    public DisplaySettingsModel() {
+public class NetworkAddressValidation {
+    public static boolean isValid(Address address) {
+        return InetAddresses.isInetAddress(address.getHost()) &&
+                address.getPort() >= 0 &&
+                address.getPort() <= 65535;
     }
 }

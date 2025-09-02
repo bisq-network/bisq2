@@ -73,7 +73,7 @@ public class MaterialTextField extends Pane {
     protected final BisqIconButton iconButton = new BisqIconButton();
     protected final ValidationControl validationControl;
     private final BooleanProperty isValid = new SimpleBooleanProperty(false);
-    private Optional<StringConverter<Number>> stringConverter = Optional.empty();
+    private Optional<StringConverter<?>> stringConverter = Optional.empty();
     private ChangeListener<Number> iconButtonHeightListener;
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> onWidthChanged(newValue.doubleValue());
@@ -306,7 +306,7 @@ public class MaterialTextField extends Pane {
         update();
     }
 
-    public void setStringConverter(StringConverter<Number> stringConverter) {
+    public void setStringConverter(StringConverter<?> stringConverter) {
         this.stringConverter = Optional.of(stringConverter);
     }
 
@@ -461,7 +461,9 @@ public class MaterialTextField extends Pane {
                 Transitions.fadeOut(selectionLine, 200);
                 stringConverter.ifPresent(stringConverter -> {
                     try {
-                        setText(stringConverter.toString(stringConverter.fromString(getText())));
+                        Object o = stringConverter.fromString(getText());
+                        //noinspection unchecked
+                        setText(((StringConverter<Object>) stringConverter).toString(o));
                     } catch (Exception ignore) {
                     }
                 });
