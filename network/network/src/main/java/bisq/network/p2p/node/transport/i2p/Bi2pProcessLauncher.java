@@ -81,10 +81,13 @@ public class Bi2pProcessLauncher implements Service {
 
                 if (OS.isUnix()) {
                     // Ignores the SIGHUP signal that is normally sent to child processes when the host process closes.
-                    command.add("nohup");
-                    // Creates a new session and process group, which detaches the process from the controlling process.
-                    // Main purpose: the process won’t receive SIGHUP when the parent terminal or app exits
-                    command.add("setsid");
+                    command.add("nohup"); // OSX and Linux
+
+                    if (OS.isLinux()) {
+                        // Creates a new session and process group, which detaches the process from the controlling process.
+                        // Main purpose: the process won’t receive SIGHUP when the parent terminal or app exits
+                        command.add("setsid"); // Linux only
+                    }
                 }
 
                 command.add(getJavaExePath());
@@ -109,10 +112,11 @@ public class Bi2pProcessLauncher implements Service {
                 ProcessBuilder processBuilder = new ProcessBuilder(command);
                 processBuilder.directory(i2pRouterDir.toFile());
 
-                Path stdoutLog = i2pRouterDir.resolve("bi2p_out.log");
                 Path stderrLog = i2pRouterDir.resolve("bi2p_err.log");
-                processBuilder.redirectOutput(stdoutLog.toFile());
                 processBuilder.redirectError(stderrLog.toFile());
+                // We have any the log file from the Bi2p router, so we discard.
+                processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
+                // processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
 
                 log.info("Launching I2P router with command: {}", processBuilder.command());
                 Process process = processBuilder.start();
