@@ -17,11 +17,8 @@
 
 package bisq.common.validation;
 
-import bisq.common.network.Address;
-import com.google.common.net.InetAddresses;
-
-public class NetworkAddressValidation {
-    public static boolean isValid(Address address) {
-        return InetAddresses.isInetAddress(address.getHost()) && NetworkPortValidation.isValid(address.getPort());
+public class NetworkPortValidation {
+    public static boolean isValid(int port) {
+        return port >= 0 && port <= 65535;
     }
 }
