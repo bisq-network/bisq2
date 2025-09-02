@@ -113,7 +113,7 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
     }
 
     private void writeStoreToFile(T persistableStore, File file) {
-        try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
+        try (FileOutputStream fileOutputStream = FileUtils.newFileOutputStreamWithPermissions(file.getAbsolutePath())) {
             // We use an Any container (byte blob) as we do not have the dependencies to the
             // external PersistableStore implementations (at deserialization we would have an issue otherwise as
             // it requires static access).

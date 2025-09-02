@@ -17,6 +17,7 @@
 
 package bisq.persistence;
 
+import bisq.common.file.FileUtils;
 import bisq.persistence.backup.BackupService;
 import bisq.persistence.backup.MaxBackupSize;
 import lombok.Getter;
@@ -53,8 +54,9 @@ public class PersistableStoreFileManager {
     public void createParentDirectoriesIfNotExisting() {
         File parentDir = parentDirectoryPath.toFile();
         if (!parentDir.exists()) {
-            boolean isSuccess = parentDir.mkdirs();
-            if (!isSuccess) {
+            try {
+                FileUtils.makeDirs(parentDir);
+            } catch (IOException e) {
                 throw new CouldNotCreateParentDirs("Couldn't create " + parentDir);
             }
         }

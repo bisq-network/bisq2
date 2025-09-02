@@ -80,7 +80,7 @@ public class ZipFileExtractor implements AutoCloseable {
 
     private void writeStreamToFile(byte[] buffer, InputStream inputStream, String fileName) {
         File destFile = new File(destDir, fileName);
-        try (FileOutputStream outputStream = new FileOutputStream(destFile)) {
+        try (FileOutputStream outputStream = FileUtils.newFileOutputStreamWithPermissions(destFile.getAbsolutePath())) {
             int length;
             while ((length = inputStream.read(buffer)) > 0) {
                 outputStream.write(buffer, 0, length);
