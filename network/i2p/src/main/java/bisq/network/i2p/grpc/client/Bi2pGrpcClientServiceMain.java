@@ -26,7 +26,7 @@ import java.io.IOException;
 @Slf4j
 public class Bi2pGrpcClientServiceMain {
     public static void main(String[] args) throws IOException, InterruptedException {
-        Bi2pGrpcClientService service = new Bi2pGrpcClientService(RouterSetup.DEFAULT_BI2P_GRPC_HOST, 7777);
+        Bi2pGrpcClientService service = new Bi2pGrpcClientService(RouterSetup.DEFAULT_BI2P_GRPC_HOST, RouterSetup.DEFAULT_BI2P_GRPC_PORT);
         service.initialize().join();
         service.subscribe(Topic.NETWORK_STATE); // Other methods not impl in server mock
 

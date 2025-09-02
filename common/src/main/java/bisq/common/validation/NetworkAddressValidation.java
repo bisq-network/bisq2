@@ -22,6 +22,7 @@ import com.google.common.net.InetAddresses;
 
 public class NetworkAddressValidation {
     public static boolean isValid(Address address) {
+        if (address == null || address.getHost() == null) return false;
         return InetAddresses.isInetAddress(address.getHost()) && NetworkPortValidation.isValid(address.getPort());
     }
 }

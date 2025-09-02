@@ -19,6 +19,6 @@ package bisq.common.validation;
 
 public class NetworkPortValidation {
     public static boolean isValid(int port) {
-        return port >= 0 && port <= 65535;
+        return port > 0 && port <= 65535;
     }
 }
