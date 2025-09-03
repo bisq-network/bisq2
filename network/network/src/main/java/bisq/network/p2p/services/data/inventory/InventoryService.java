@@ -169,7 +169,6 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
     @Override
     protected InventoryResponse createResponse(Connection connection, InventoryRequest request) {
         Inventory inventory = inventoryFilterFactory.createInventoryForResponse(request);
-        // The requestersVersion param can be removed once there are no old nodes expected in the network anymore.
         return new InventoryResponse(request.getVersion(), inventory, request.getNonce());
     }
 
