@@ -554,7 +554,7 @@ public class Node implements Connection.Handler {
             }
             return result;
         } catch (Exception exception) {
-            log.error("Starting outbound handshake failed. {}", exception.getMessage());
+            log.error("Starting outbound handshake to {} failed. {}", address, exception.getMessage());
             try {
                 socket.close();
             } catch (IOException ignore) {
