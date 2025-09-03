@@ -153,6 +153,7 @@ public class MuSigOfferbookController implements Controller {
             }
         });
 
+        // TODO: listen for changes
         selectedMarketPin = FxBindings.bindBiDir(model.getSelectedMarket())
                 .to(settingsService.getSelectedMuSigMarket(), settingsService::setSelectedMuSigMarket);
 

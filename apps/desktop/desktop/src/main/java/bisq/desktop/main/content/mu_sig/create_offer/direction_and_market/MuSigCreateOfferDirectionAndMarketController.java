@@ -18,6 +18,8 @@
 package bisq.desktop.main.content.mu_sig.create_offer.direction_and_market;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.asset.CryptoAsset;
+import bisq.common.asset.CryptoAssetRepository;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.desktop.ServiceProvider;
@@ -31,10 +33,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class MuSigCreateOfferDirectionAndMarketController implements Controller {
+    private final static List<CryptoAsset> baseCryptoAssets = List.of(CryptoAssetRepository.BITCOIN, CryptoAssetRepository.XMR);
+
     private final MuSigCreateOfferDirectionAndMarketModel model;
     @Getter
     private final MuSigCreateOfferDirectionAndMarketView view;
@@ -42,7 +47,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
     private final MarketPriceService marketPriceService;
     private final MuSigService muSigService;
     private final SettingsService settingsService;
-    private Subscription searchTextPin;
+    private Subscription searchTextPin, selectedBaseCryptoAssetPin;
 
     public MuSigCreateOfferDirectionAndMarketController(ServiceProvider serviceProvider,
                                                         Runnable onNextHandler) {
@@ -78,44 +83,66 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
 
         model.getSearchText().set("");
 
-        model.getListItems().setAll(MarketRepository.getAllFiatMarkets().stream()
-                .filter(market -> marketPriceService.getMarketPriceByCurrencyMap().containsKey(market))
-                .map(market -> {
-                    long numOffersInMarket = muSigService.getOffers().stream()
-                            .filter(offer -> {
-                                Market offerMarket = offer.getMarket();
+        selectedBaseCryptoAssetPin = EasyBind.subscribe(model.getSelectedBaseCryptoAsset(), cryptoAsset -> {
+            if (cryptoAsset == null) {
+                return;
+            }
 
-                                // TODO: Needs to be dynamic according to base market
-                                // for now we just assume Btc.
-                                boolean isBaseMarket = offerMarket.isBtcFiatMarket() && offerMarket.getBaseCurrencyCode().equals("BTC");
-                                boolean isQuoteMarket = offerMarket.getQuoteCurrencyCode().equals(market.getQuoteCurrencyCode());
-                                return isBaseMarket && isQuoteMarket;
-                            })
-                            .count();
-                    MuSigCreateOfferDirectionAndMarketView.ListItem item = new MuSigCreateOfferDirectionAndMarketView.ListItem(market, numOffersInMarket);
-                    if (market.equals(model.getSelectedMarket().get())) {
-                        model.getSelectedMarketListItem().set(item);
-                    }
-                    return item;
-                })
-                .collect(Collectors.toList()));
+            List<Market> markets = switch (cryptoAsset) {
+                case CryptoAsset x when x.equals(CryptoAssetRepository.XMR) -> MarketRepository.getXmrCryptoMarkets();
+                case CryptoAsset b when b.equals(CryptoAssetRepository.BITCOIN) -> MarketRepository.getAllFiatMarkets();
+                default -> {
+                    log.warn("Unsupported base crypto asset selected: {}", cryptoAsset);
+                    yield List.of();
+                }
+            };
+            model.getMarketListItems().setAll(markets.stream().filter(market ->
+                    marketPriceService.getMarketPriceByCurrencyMap().containsKey(market)).map(market -> {
+                long numOffersInMarket = muSigService.getOffers().stream().filter(offer -> {
+                    Market offerMarket = offer.getMarket();
+                    boolean isBaseMarket = offerMarket.getBaseCurrencyCode().equals(model.getSelectedBaseCryptoAsset().get().getCode());
+                    boolean isQuoteMarket = offerMarket.getQuoteCurrencyCode().equals(market.getQuoteCurrencyCode());
+                    return isBaseMarket && isQuoteMarket;
+                }).count();
+                MuSigCreateOfferDirectionAndMarketView.MarketListItem item =
+                        new MuSigCreateOfferDirectionAndMarketView.MarketListItem(market, numOffersInMarket);
+                if (market.equals(model.getSelectedMarket().get())) {
+                    model.getSelectedMarketListItem().set(item);
+                }
+                return item;
+            }).collect(Collectors.toList()));
+        });
+
+        model.getBaseCryptoAssetListItems().setAll(baseCryptoAssets.stream().map(cryptoAsset -> {
+            long numOffersInCryptoAsset = muSigService.getOffers().stream()
+                    .filter(offer -> offer.getMarket().getBaseCurrencyCode().equals(cryptoAsset.getCode())).count();
+            MuSigCreateOfferDirectionAndMarketView.BaseCryptoAssetListItem item =
+                    new MuSigCreateOfferDirectionAndMarketView.BaseCryptoAssetListItem(cryptoAsset, numOffersInCryptoAsset);
+            if (cryptoAsset.equals(model.getSelectedBaseCryptoAsset().get())) {
+                model.getSelectedBaseCryptoAssetListItem().set(item);
+            }
+            return item;
+        }).collect(Collectors.toList()));
 
         searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
             if (searchText == null || searchText.isEmpty()) {
-                model.getFilteredList().setPredicate(item -> true);
+                model.getFilteredMarketListItems().setPredicate(item -> true);
             } else {
                 String search = searchText.toLowerCase();
-                model.getFilteredList().setPredicate(item ->
+                model.getFilteredMarketListItems().setPredicate(item ->
                         item != null &&
                                 (item.getQuoteCurrencyDisplayName().toLowerCase().contains(search) ||
                                         item.getMarket().getQuoteCurrencyDisplayName().toLowerCase().contains(search))
                 );
             }
         });
+
+        initializeSelections();
     }
 
     @Override
     public void onDeactivate() {
+        selectedBaseCryptoAssetPin.unsubscribe();
         searchTextPin.unsubscribe();
     }
 
@@ -124,14 +151,71 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         onNextHandler.run();
     }
 
-    void onMarketListItemClicked(MuSigCreateOfferDirectionAndMarketView.ListItem item) {
+    void onMarketListItemClicked(MuSigCreateOfferDirectionAndMarketView.MarketListItem item) {
         if (item == null || item.equals(model.getSelectedMarketListItem().get())) {
             return;
         }
+        setSelectedMarketAndListItem(item.getMarket());
+    }
+
+    void onBaseCryptoAssetListItemClicked(MuSigCreateOfferDirectionAndMarketView.BaseCryptoAssetListItem item) {
+        if (item == null || item.equals(model.getSelectedBaseCryptoAssetListItem().get())) {
+            return;
+        }
+        model.getSelectedBaseCryptoAssetListItem().set(item);
+        model.getSelectedBaseCryptoAsset().set(item.getCryptoAsset());
+
+        updateWithLastSelectedOrDefaultMarket(item.getCryptoAsset().getCode());
+    }
+
+    private void updateWithLastSelectedOrDefaultMarket(String code) {
+        if (settingsService.getMuSigLastSelectedMarketByBaseCurrencyMap().containsKey(code)) {
+            setSelectedMarketAndListItem(settingsService.getMuSigLastSelectedMarketByBaseCurrencyMap().get(code));
+        } else {
+            setDefaultMarketForBaseCryptoAsset(code);
+        }
+    }
+
+    private void setDefaultMarketForBaseCryptoAsset(String baseCurrencyCode) {
+        if (baseCurrencyCode.equals(CryptoAssetRepository.XMR.getCode())) {
+            Market defaultXmrMarket = MarketRepository.getXmrCryptoMarkets().get(0);
+            setSelectedMarketAndListItem(defaultXmrMarket);
+        } else if (baseCurrencyCode.equals(CryptoAssetRepository.BITCOIN.getCode())) {
+            Market defaultBtcMarket = MarketRepository.getDefaultBtcFiatMarket();
+            setSelectedMarketAndListItem(defaultBtcMarket);
+        }
+    }
+
+    private void setSelectedMarketAndListItem(Market market) {
+        MuSigCreateOfferDirectionAndMarketView.MarketListItem item = model.getMarketListItems().stream()
+                .filter(m -> m.getMarket().equals(market))
+                .findAny().orElse(null);
         model.getSelectedMarketListItem().set(item);
-        model.getSelectedMarket().set(item.getMarket());
-        // TODO: Persist selected market in muSigMarket and in map (UI still missing)
-//        settingsService.setSelectedMuSigMarket(item.getMarket());
+        model.getSelectedMarket().set(market);
+        settingsService.setSelectedMuSigMarket(market);
+    }
+
+    private void initializeSelections() {
+        if (settingsService.getSelectedMuSigMarket() != null) {
+            Market market = settingsService.getSelectedMuSigMarket().get();
+            model.getSelectedMarket().set(market);
+            MuSigCreateOfferDirectionAndMarketView.MarketListItem item = model.getMarketListItems().stream()
+                    .filter(m -> m.getMarket().equals(market))
+                    .findAny().orElse(null);
+            model.getSelectedMarketListItem().set(item);
+            model.getSelectedBaseCryptoAsset().set(
+                    baseCryptoAssets.stream()
+                            .filter(cryptoAsset -> cryptoAsset.getCode().equals(market.getBaseCurrencyCode()))
+                            .findAny().orElse(CryptoAssetRepository.BITCOIN)
+            );
+            model.getSelectedBaseCryptoAssetListItem().set(
+                    model.getBaseCryptoAssetListItems().stream()
+                            .filter(i -> i.getCryptoAsset().equals(model.getSelectedBaseCryptoAsset().get()))
+                            .findAny().orElse(null)
+            );
+        } else {
+            updateWithLastSelectedOrDefaultMarket(CryptoAssetRepository.BITCOIN.getCode());
+        }
     }
 
     private void setDirection(Direction direction) {
