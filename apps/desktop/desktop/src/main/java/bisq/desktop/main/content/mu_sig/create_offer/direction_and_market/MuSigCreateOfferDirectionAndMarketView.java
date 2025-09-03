@@ -59,7 +59,7 @@ import java.util.Comparator;
 public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSigCreateOfferDirectionAndMarketModel,
         MuSigCreateOfferDirectionAndMarketController> {
     private final Button buyButton, sellButton;
-    private final BisqTableView<ListItem> tableView;
+    private final BisqTableView<ListItem> marketsTableView;
     private final SearchBox searchBox;
     private final Label currencyLabel;
     private final BisqPopup marketSelectionPopup;
@@ -76,15 +76,15 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         searchBox.setMaxWidth(170);
         searchBox.getStyleClass().add("bisq-easy-trade-wizard-market-search");
 
-        tableView = new BisqTableView<>(model.getSortedList());
+        marketsTableView = new BisqTableView<>(model.getSortedList());
         double tableHeight = 307;
         double tableWidth = 500;
-        tableView.setPrefSize(tableWidth, tableHeight);
-        tableView.setFixedCellSize(50);
+        marketsTableView.setPrefSize(tableWidth, tableHeight);
+        marketsTableView.setFixedCellSize(50);
         configTableView();
 
         StackPane.setMargin(searchBox, new Insets(3, 0, 0, 15));
-        StackPane tableViewWithSearchBox = new StackPane(tableView, searchBox);
+        StackPane tableViewWithSearchBox = new StackPane(marketsTableView, searchBox);
         tableViewWithSearchBox.setAlignment(Pos.TOP_LEFT);
         tableViewWithSearchBox.setPrefSize(tableWidth, tableHeight);
         tableViewWithSearchBox.setMaxWidth(tableWidth);
@@ -125,12 +125,12 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
 
     @Override
     protected void onViewAttached() {
-        tableView.initialize();
-        tableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
+        marketsTableView.initialize();
+        marketsTableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
         // We use setOnMouseClicked handler not a listener on
         // tableView.getSelectionModel().getSelectedItem() to get triggered the handler only at user action and
         // not when we set the selected item by code.
-        tableView.setOnMouseClicked(e -> controller.onMarketListItemClicked(tableView.getSelectionModel().getSelectedItem()));
+        marketsTableView.setOnMouseClicked(e -> controller.onMarketListItemClicked(marketsTableView.getSelectionModel().getSelectedItem()));
         currencyLabel.setOnMouseClicked(e -> {
             if (!marketSelectionPopup.isShowing()) {
                 Bounds rootBounds = root.localToScreen(root.getBoundsInLocal());
@@ -171,9 +171,9 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
 
     @Override
     protected void onViewDetached() {
-        tableView.dispose();
+        marketsTableView.dispose();
         searchBox.textProperty().unbindBidirectional(model.getSearchText());
-        tableView.setOnMouseClicked(null);
+        marketsTableView.setOnMouseClicked(null);
         currencyLabel.setOnMouseClicked(null);
 
         buyButton.disableProperty().unbind();
@@ -197,13 +197,13 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
     }
 
     private void configTableView() {
-        tableView.getColumns().add(tableView.getSelectionMarkerColumn());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        marketsTableView.getColumns().add(marketsTableView.getSelectionMarkerColumn());
+        marketsTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .left()
                 .comparator(Comparator.comparing(ListItem::getQuoteCurrencyDisplayName))
                 .setCellFactory(getNameCellFactory())
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        marketsTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.tradeWizard.market.columns.numOffers"))
                 .minWidth(120)
                 .valueSupplier(ListItem::getNumOffers)
