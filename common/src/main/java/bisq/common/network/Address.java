@@ -37,6 +37,8 @@ public abstract class Address implements NetworkProto, Comparable<Address> {
             return new TorAddress(host, port);
         } else if (I2PAddress.isBase64Destination(host)) {
             return new I2PAddress(host, port);
+        } else if (I2PAddress.isBase32Destination(host)) {
+            throw new IllegalArgumentException("Base32 I2P destination is not permitted as host: " + host);
         } else {
             return new ClearnetAddress(host, port);
         }
@@ -82,7 +84,7 @@ public abstract class Address implements NetworkProto, Comparable<Address> {
         try {
             checkArgument(StringUtils.isNotEmpty(host), "Host must not be null/blank");
             host = host.trim();
-            checkArgument(NetworkPortValidation.isValid(port), "Invalid port: "+port);
+            checkArgument(NetworkPortValidation.isValid(port), "Invalid port: " + port);
             this.host = host;
             this.port = port;
             verify();

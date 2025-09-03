@@ -32,6 +32,8 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 public class StringUtils {
     public static final String ELLIPSIS = "...";
@@ -54,12 +56,11 @@ public class StringUtils {
     }
 
     public static String truncate(String value, int maxLength, String ellipsis) {
-        if (value == null) {
-            log.warn("value at truncate is null");
-            return "";
-        }
-        if (maxLength > 3 && value.length() > maxLength) {
-            return value.substring(0, maxLength - 3) + ellipsis;
+        checkNotNull(value, "value at truncate must not be null");
+        checkNotNull(ellipsis, "ellipsis at truncate must not be null");
+        int ellipsisLength = ellipsis.length();
+        if (maxLength > ellipsisLength && value.length() > maxLength) {
+            return value.substring(0, maxLength - ellipsisLength) + ellipsis;
         } else {
             return value;
         }
