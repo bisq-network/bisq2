@@ -29,9 +29,7 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class CryptoAsset extends DigitalAsset {
-    //todo for dev
-    // private static final Set<String> SUPPORT_AUTO_CONF_CODES = Set.of("XMR");
-    private static final Set<String> SUPPORT_AUTO_CONF_CODES = Set.of("XMR", "ETH");
+    private static final Set<String> SUPPORT_AUTO_CONF_CODES = Set.of("XMR");
 
     @Getter
     private transient final Validation addressValidation;
