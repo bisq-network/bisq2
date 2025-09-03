@@ -36,7 +36,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class StringUtils {
-    public static final String ELLIPSIS = "...";
+    public static final String DOT_ELLIPSIS = "...";
     public static final String UNICODE_ELLIPSIS = "…";
 
     public static String truncate(Object value) {
@@ -52,7 +52,7 @@ public class StringUtils {
     }
 
     public static String truncate(String value, int maxLength) {
-        return truncate(value, maxLength, ELLIPSIS);
+        return truncate(value, maxLength, UNICODE_ELLIPSIS);
     }
 
     public static String truncate(String value, int maxLength, String ellipsis) {

@@ -571,13 +571,14 @@ public class Node implements Connection.Handler {
 
     private Optional<OutboundConnection> findOutboundConnectionAndCloseSocketIfPresent(Address address, Socket socket) {
         if (outboundConnectionsByAddress.containsKey(address)) {
-            log.warn("Has already an OutboundConnection to {}. This can happen while we " +
+            log.warn("Has have already an OutboundConnection to {}. This can happen while we " +
                     "we waited for the socket creation at the createOutboundConnection method. " +
                     "We will close the socket and use the existing connection instead.", address);
             try {
                 socket.close();
             } catch (IOException ignore) {
             }
+            // ofNullable in case the connection have been removed in the meantime.
             return Optional.ofNullable(outboundConnectionsByAddress.get(address));
         }
         return Optional.empty();
@@ -942,7 +943,7 @@ public class Node implements Connection.Handler {
     }
 
     private String printAddresses() {
-        String address = getNetworkId().getAddressByTransportTypeMap().get(transportType).getFullAddress();
-        return StringUtils.truncate(transportType.name(), 3, "") + "-" + StringUtils.truncate(address, 8);
+        String address = getNetworkId().getAddressByTransportTypeMap().get(transportType).toString();
+        return transportType.name() + "-" + StringUtils.truncate(address, 20, StringUtils.UNICODE_ELLIPSIS);
     }
 }

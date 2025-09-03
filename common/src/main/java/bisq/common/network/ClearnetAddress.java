@@ -17,7 +17,6 @@
 
 package bisq.common.network;
 
-import bisq.common.application.DevMode;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.NetworkPortValidation;
 import com.google.common.net.InetAddresses;
@@ -37,7 +36,7 @@ public class ClearnetAddress extends Address {
 
     @Override
     public void verify() {
-        checkArgument(NetworkPortValidation.isValid(port), "Invalid port: "+port);
+        checkArgument(NetworkPortValidation.isValid(port), "Invalid port: " + port);
         NetworkDataValidation.validateText(host, MIN_HOST_LENGTH, MAX_HOST_LENGTH);
         checkArgument(InetAddresses.isInetAddress(host), "Invalid inetAddress");
     }
@@ -49,7 +48,7 @@ public class ClearnetAddress extends Address {
 
     @Override
     public String toString() {
-        return DevMode.isDevMode() && isLocalhost() ? "[" + port + "]" : host + ":" + port;
+        return host + ":" + port;
     }
 
     public boolean isLocalhost() {
