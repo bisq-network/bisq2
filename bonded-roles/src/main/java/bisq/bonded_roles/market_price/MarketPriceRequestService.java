@@ -20,9 +20,11 @@ package bisq.bonded_roles.market_price;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.asset.Asset;
 import bisq.common.data.Pair;
+import bisq.common.file.FileUtils;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.monetary.PriceQuote;
+import bisq.common.network.Address;
 import bisq.common.network.TransportType;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
@@ -40,6 +42,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -126,6 +129,11 @@ public class MarketPriceRequestService {
             this.operator = operator;
             this.transportType = transportType;
         }
+
+        public boolean isClearnetProvider() {
+            String fullAddress = baseUrl.replaceFirst("^https?://", "");
+            return Address.fromFullAddress(fullAddress).isClearNetAddress();
+        }
     }
 
     private final Config conf;
@@ -194,6 +202,25 @@ public class MarketPriceRequestService {
         return httpClient.map(BaseHttpClient::shutdown)
                 .orElse(CompletableFuture.completedFuture(true));
     }
+
+    Map<Market, MarketPrice> loadStaticDevMarketPrice() {
+        String resourceName = "dev_market_price.json";
+        try {
+            String json = FileUtils.readStringFromResource(resourceName);
+            Map<Market, MarketPrice> map = parseResponse(json);
+            log.warn("We applied developer market price data from resources. " +
+                    "This data is outdated and serves only for the case that the clearnet provider is offline.");
+            return map.entrySet().stream()
+                    .filter(e -> e.getValue().isValidDate())
+                    .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey().getMarketCodes()).isPresent())
+                    .collect(Collectors.toMap(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey().getMarketCodes()).orElseThrow(),
+                            Map.Entry::getValue));
+        } catch (IOException e) {
+            log.error("Could not read string from resources: {}", resourceName, e);
+            return new HashMap<>();
+        }
+    }
+
 
     private void startRequesting() {
         if (scheduler != null) {

@@ -21,10 +21,11 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.bonded_role.BondedRole;
+import bisq.common.application.DevMode;
 import bisq.common.application.Service;
+import bisq.common.encoding.Hex;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
-import bisq.common.encoding.Hex;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
@@ -91,6 +92,11 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
                     marketPriceByCurrencyMapPin = service.getMarketPriceByCurrencyMap()
                             .addObserver(() -> applyNewMap(service.getMarketPriceByCurrencyMap()));
 
+                    // Ensure we have at least some outdated price data in case the clearnet provider is offline and
+                    // no persisted data are present
+                    if (DevMode.isDevMode() && getMarketPriceByCurrencyMap().isEmpty()) {
+                        applyNewMap(service.loadStaticDevMarketPrice());
+                    }
                     return service.initialize();
                 })
                 .orElseGet(() -> CompletableFuture.completedFuture(true));
