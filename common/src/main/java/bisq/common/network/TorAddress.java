@@ -17,11 +17,15 @@
 
 package bisq.common.network;
 
-import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.common.validation.NetworkPortValidation;
+import lombok.EqualsAndHashCode;
 
 import java.util.regex.Pattern;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+@EqualsAndHashCode(callSuper = true)
 public class TorAddress extends Address {
     private static final Pattern ONION_V3 = Pattern.compile("^[a-z2-7]{56}\\.onion$", Pattern.CASE_INSENSITIVE);
 
@@ -36,7 +40,9 @@ public class TorAddress extends Address {
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateText(host, 62);
+        checkArgument(NetworkPortValidation.isValid(port), "Invalid port: "+port);
+        NetworkDataValidation.validateText(host, 62, 62);
+        checkArgument(isTorAddress(host), "Host must be a v3 onion address");
     }
 
     @Override
@@ -46,6 +52,6 @@ public class TorAddress extends Address {
 
     @Override
     public String toString() {
-        return StringUtils.truncate(host, 1000) + ":" + port;
+        return host + ":" + port;
     }
 }

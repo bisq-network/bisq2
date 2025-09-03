@@ -18,11 +18,12 @@
 package bisq.common.network;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.util.StringUtils;
+import bisq.common.validation.NetworkPortValidation;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.StringTokenizer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -30,27 +31,44 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @EqualsAndHashCode
 public abstract class Address implements NetworkProto, Comparable<Address> {
+
     public static Address from(String host, int port) {
         if (TorAddress.isTorAddress(host)) {
             return new TorAddress(host, port);
-        } else if (I2PAddress.isI2pAddress(host)) {
+        } else if (I2PAddress.isBase64Destination(host)) {
             return new I2PAddress(host, port);
         } else {
             return new ClearnetAddress(host, port);
         }
     }
 
-    public static Address fromFullAddress(String fullAddress) {
+    public static Address fromFullAddress(String socketAddress) {
+        String original = socketAddress;
+        checkArgument(StringUtils.isNotEmpty(socketAddress), "SocketAddress must not be null or empty");
         try {
-            fullAddress = removeProtocolPrefix(fullAddress);
-            StringTokenizer tokenizer = new StringTokenizer(fullAddress, ":");
-            String hostToken = tokenizer.nextToken();
-            checkArgument(tokenizer.hasMoreTokens(), "Full address need to contain the port after the ':'.");
-            String portToken = tokenizer.nextToken();
+            socketAddress = removeProtocolPrefix(socketAddress.trim());
+            checkArgument(!socketAddress.isEmpty(), "SocketAddress must not be empty");
+            // IPv6 bracketed form: [host]:port
+            if (socketAddress.startsWith("[")) {
+                int end = socketAddress.indexOf(']');
+                checkArgument(end > 0 && end + 1 < socketAddress.length() && socketAddress.charAt(end + 1) == ':',
+                        "Invalid IPv6 socket address, expected [host]:port");
+                String hostToken = socketAddress.substring(1, end);
+                String portToken = socketAddress.substring(end + 2).trim();
+                int port = Integer.parseInt(portToken);
+                return Address.from(hostToken, port);
+            }
+
+            // IPv4/hostname: split at last colon
+            checkArgument(socketAddress.split(":").length == 2, "Socket address must be of form host:port");
+            int sep = socketAddress.lastIndexOf(':');
+            checkArgument(sep > 0 && sep < socketAddress.length() - 1, "Socket address must be of form host:port");
+            String hostToken = socketAddress.substring(0, sep).trim();
+            String portToken = socketAddress.substring(sep + 1).trim();
             int port = Integer.parseInt(portToken);
             return Address.from(hostToken, port);
         } catch (Exception e) {
-            log.error("Could not resolve address from {}", fullAddress, e);
+            log.error("Could not resolve address from {}", original, e);
             throw e;
         }
     }
@@ -62,9 +80,11 @@ public abstract class Address implements NetworkProto, Comparable<Address> {
 
     protected Address(String host, int port) {
         try {
+            checkArgument(StringUtils.isNotEmpty(host), "Host must not be null/blank");
+            host = host.trim();
+            checkArgument(NetworkPortValidation.isValid(port), "Invalid port: "+port);
             this.host = host;
             this.port = port;
-
             verify();
         } catch (Exception e) {
             log.error("Could not resolve address from {}:{}", host, port, e);
@@ -116,8 +136,25 @@ public abstract class Address implements NetworkProto, Comparable<Address> {
         return getFullAddress().compareTo(o.getFullAddress());
     }
 
-    private static String removeProtocolPrefix(String fullAddress) {
-        return fullAddress.replaceFirst("^https?://", "");
+    @VisibleForTesting
+    static String removeProtocolPrefix(String fullAddress) {
+        // Match leading scheme
+        // RFC 3986 scheme: ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+        String schemePattern = "^[a-zA-Z][a-zA-Z0-9+.-]*://";
+        if (fullAddress.matches("(?i)^://.*")) {
+            throw new IllegalArgumentException("Address has missing scheme before ://: " + fullAddress);
+        }
+
+        String withoutScheme = fullAddress.replaceFirst("(?i)" + schemePattern, "");
+        // After removing scheme, ensure the remaining string is not another scheme
+        if (withoutScheme.matches("(?i)^[a-zA-Z][a-zA-Z0-9+.-]*://.*")) {
+            throw new IllegalArgumentException("Address has repeated scheme: " + fullAddress);
+        }
+
+        if (withoutScheme.isEmpty()) {
+            throw new IllegalArgumentException("Address is empty after removing scheme: " + fullAddress);
+        }
+        return withoutScheme;
     }
 }
 

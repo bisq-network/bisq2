@@ -17,16 +17,29 @@
 
 package bisq.common.network;
 
+import bisq.common.application.DevMode;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.common.validation.NetworkPortValidation;
+import com.google.common.net.InetAddresses;
+import lombok.EqualsAndHashCode;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+@EqualsAndHashCode(callSuper = true)
 public class ClearnetAddress extends Address {
+    private static final int MIN_HOST_LENGTH = 2;
+    // IPv4: 7-15 characters, IPv6: 2-39 characters, FQDNs can be up to 253
+    private static final int MAX_HOST_LENGTH = 253;
+
     public ClearnetAddress(String host, int port) {
         super(maybeConvertLocalHost(host), port);
     }
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateText(host, 45);
+        checkArgument(NetworkPortValidation.isValid(port), "Invalid port: "+port);
+        NetworkDataValidation.validateText(host, MIN_HOST_LENGTH, MAX_HOST_LENGTH);
+        checkArgument(InetAddresses.isInetAddress(host), "Invalid inetAddress");
     }
 
     @Override
@@ -36,7 +49,7 @@ public class ClearnetAddress extends Address {
 
     @Override
     public String toString() {
-        return "[" + port + "]";
+        return DevMode.isDevMode() && isLocalhost() ? "[" + port + "]" : host + ":" + port;
     }
 
     public boolean isLocalhost() {
