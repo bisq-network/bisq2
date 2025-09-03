@@ -35,21 +35,34 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 public final class Address implements NetworkProto, Comparable<Address> {
     public static Address fromFullAddress(String fullAddress) {
-        StringTokenizer st = new StringTokenizer(fullAddress, ":");
-        String host = maybeConvertLocalHost(st.nextToken());
-        checkArgument(st.hasMoreTokens(), "Full address need to contain the port after the ':'. fullAddress=" + fullAddress);
-        int port = Integer.parseInt(st.nextToken());
-        return new Address(host, port);
+        try {
+            fullAddress = fullAddress.replaceFirst("^https?://", "");
+            StringTokenizer st = new StringTokenizer(fullAddress, ":");
+            String hostToken = st.nextToken();
+            String host = maybeConvertLocalHost(hostToken);
+            checkArgument(st.hasMoreTokens(), "Full address need to contain the port after the ':'. fullAddress=" + fullAddress);
+            String portToken = st.nextToken();
+            int port = Integer.parseInt(portToken);
+            return new Address(host, port);
+        } catch (Exception e) {
+            log.error("Could not resolve address from {}", fullAddress, e);
+            throw e;
+        }
     }
 
     private final String host;
     private final int port;
 
     public Address(String host, int port) {
-        this.host = maybeConvertLocalHost(host);
-        this.port = port;
+        try {
+            this.host = maybeConvertLocalHost(host);
+            this.port = port;
 
-        verify();
+            verify();
+        } catch (Exception e) {
+            log.error("Could not resolve address from {}:{}", host, port, e);
+            throw e;
+        }
     }
 
 
