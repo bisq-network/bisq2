@@ -17,16 +17,15 @@
 
 package bisq.common.network.clear_net_address_types;
 
-import bisq.common.network.Address;
 import bisq.common.network.ClearnetAddress;
 
 public class LocalHostAddressTypeFacade implements ClearNetAddressTypeFacade {
-    public static Address toLocalHostAddress(int port) {
+    public static ClearnetAddress toLocalHostAddress(int port) {
         return new ClearnetAddress("127.0.0.1", port);
     }
 
     @Override
-    public Address toMyLocalAddress(int port) {
+    public ClearnetAddress toMyLocalAddress(int port) {
         return toLocalHostAddress(port);
     }
 }

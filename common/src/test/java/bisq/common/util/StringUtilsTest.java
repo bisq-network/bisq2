@@ -65,8 +65,9 @@ public class StringUtilsTest {
         assertEquals("1", StringUtils.truncate("1", 4));
         assertEquals("123", StringUtils.truncate("123", 4));
         assertEquals("1234", StringUtils.truncate("1234", 4));
-        assertEquals("1...", StringUtils.truncate("12345", 4));
-        assertEquals("12345...", StringUtils.truncate("1234567890", 8));
+        assertEquals("1...", StringUtils.truncate("12345", 4, StringUtils.DOT_ELLIPSIS));
+        assertEquals("123…", StringUtils.truncate("12345", 4));
+        assertEquals("12345...", StringUtils.truncate("1234567890", 8, StringUtils.DOT_ELLIPSIS));
     }
 
     @Test

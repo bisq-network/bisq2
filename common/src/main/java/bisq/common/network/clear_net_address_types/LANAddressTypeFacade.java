@@ -1,6 +1,5 @@
 package bisq.common.network.clear_net_address_types;
 
-import bisq.common.network.Address;
 import bisq.common.network.ClearnetAddress;
 import bisq.common.util.NetworkUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +24,7 @@ public class LANAddressTypeFacade implements ClearNetAddressTypeFacade {
      * If no preferredNetworkInterface is set, we return the IPv4 LAN address of the first network interface.
      */
     @Override
-    public synchronized Address toMyLocalAddress(int port) {
+    public synchronized ClearnetAddress toMyLocalAddress(int port) {
         Optional<String> optionalHost = NetworkUtils.findLANHostAddress(preferredNetworkInterface);
         if (optionalHost.isEmpty()) {
             log.warn("We did not find any LAN IP address. We use 127.0.0.1 as fallback.");

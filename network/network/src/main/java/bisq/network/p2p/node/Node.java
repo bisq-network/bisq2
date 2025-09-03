@@ -66,7 +66,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
@@ -572,13 +571,14 @@ public class Node implements Connection.Handler {
 
     private Optional<OutboundConnection> findOutboundConnectionAndCloseSocketIfPresent(Address address, Socket socket) {
         if (outboundConnectionsByAddress.containsKey(address)) {
-            log.warn("Has already an OutboundConnection to {}. This can happen while we " +
+            log.warn("Has have already an OutboundConnection to {}. This can happen while we " +
                     "we waited for the socket creation at the createOutboundConnection method. " +
                     "We will close the socket and use the existing connection instead.", address);
             try {
                 socket.close();
             } catch (IOException ignore) {
             }
+            // ofNullable in case the connection have been removed in the meantime.
             return Optional.ofNullable(outboundConnectionsByAddress.get(address));
         }
         return Optional.empty();
@@ -927,7 +927,7 @@ public class Node implements Connection.Handler {
                 5,
                 TimeUnit.SECONDS,
                 queue,
-                ExecutorFactory.getThreadFactoryWithCounter("Node-" + printAddresses(8)),
+                ExecutorFactory.getThreadFactoryWithCounter("Node-" + printAddresses()),
                 new AbortPolicyWithLogging());
         queue.setExecutor(executor);
         return executor;
@@ -942,9 +942,8 @@ public class Node implements Connection.Handler {
         return executor;
     }
 
-    private String printAddresses(int maxLength) {
-        return getNetworkId().getAddressByTransportTypeMap().entrySet().stream()
-                .map(e -> e.getKey().name() + ": " + StringUtils.truncate(e.getValue(), maxLength))
-                .collect(Collectors.joining(", "));
+    private String printAddresses() {
+        String address = getNetworkId().getAddressByTransportTypeMap().get(transportType).toString();
+        return transportType.name() + "-" + StringUtils.truncate(address, 20, StringUtils.UNICODE_ELLIPSIS);
     }
 }
