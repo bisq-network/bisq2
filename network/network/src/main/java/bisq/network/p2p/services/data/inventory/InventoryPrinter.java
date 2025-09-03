@@ -92,6 +92,6 @@ public class InventoryPrinter {
                         "Received {} of inventory data from: {} after {}; \n{}" +
                         "\n##########################################################################################\n{}" +
                         "\n##########################################################################################",
-                size, connection.getPeerAddress().getFullAddress(), passed, maxSizeReached, report);
+                size, connection.getPeerAddress(), passed, maxSizeReached, report);
     }
 }

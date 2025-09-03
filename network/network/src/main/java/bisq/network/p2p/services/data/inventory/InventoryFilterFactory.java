@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -85,11 +84,7 @@ class InventoryFilterFactory {
         FilterService<? extends InventoryFilter> filterService = mySupportedFilterServices.get(inventoryFilterType);
         int requestersVersion = request.getVersion();
 
-        // We filter out version 1 objects in Add/Remove DataRequest objects which would break the hash when requested from old nodes (pre v.2.1.0)
-        // This code can be removed once there are no old nodes expected in the network anymore.
-        Predicate<Integer> predicate = distributedDataVersion -> requestersVersion > 0 || distributedDataVersion == 0;
-
-        return filterService.createInventory(inventoryFilter, predicate);
+        return filterService.createInventory(inventoryFilter);
     }
 
     // Get first match with peers feature based on order of myPreferredFilterTypes

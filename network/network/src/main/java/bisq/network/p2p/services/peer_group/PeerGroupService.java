@@ -316,7 +316,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
         log.info("\n##########################################################################################\n{} peers\n##########################################################################################\nNumber of peers: {}\nNumber of peers with age < 10 min: {}\nNumber of peers with age >= 10 min {}\nAge range from {}\n##########################################################################################", info, numPeers, numLivePeers, numNonLivePeers, range);
 
         String peerAddressesByAge = Joiner.on("\n").join(sortedList.stream()
-                .map(peer -> "Age: " + StringUtils.formatTime(peer.getAge()) + "; Address: " + peer.getAddress().getFullAddress())
+                .map(peer -> "Age: " + StringUtils.formatTime(peer.getAge()) + "; Address: " + peer.getAddress())
                 .collect(Collectors.toList()));
         log.debug("\n##########################################################################################\n{} peers\n##########################################################################################\nNumber of peers: {}\nNumber of peers with age < 10 min: {}\nNumber of peers with age >= 10 min {}\nAge range from {}\nPeer addressesByAge:\n{}\n##########################################################################################", info, numPeers, numLivePeers, numNonLivePeers, range, peerAddressesByAge);
     }

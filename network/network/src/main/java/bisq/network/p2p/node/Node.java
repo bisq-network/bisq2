@@ -69,7 +69,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
-import static bisq.network.p2p.node.ConnectionException.Reason.HANDSHAKE_FAILED;
 import static bisq.network.p2p.node.Node.State.STARTING;
 import static bisq.network.p2p.node.Node.State.STOPPING;
 import static bisq.network.p2p.node.Node.State.TERMINATED;
@@ -90,8 +89,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @Slf4j
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Node implements Connection.Handler {
-    public static final int PREFERRED_VERSION = 1;
-
     public enum State {
         NEW,
         STARTING,
@@ -423,27 +420,12 @@ public class Node implements Connection.Handler {
 
     private CompletableFuture<Connection> createOutboundConnectionAsync(Address address, Capability myCapability) {
         return CompletableFuture.supplyAsync(() -> {
-            // This code can be removed once no old versions are expected anymore.
-            Capability candidate = Capability.withVersion(myCapability, PREFERRED_VERSION);
-            log.info("Create outbound connection to {} with capability version 1", address);
-            try {
-                return doCreateOutboundConnection(address, candidate);
-            } catch (ConnectionException e) {
-                if (e.getCause() != null && e.getReason() != null && e.getReason() == HANDSHAKE_FAILED) {
-                    log.warn("Handshake at creating outbound connection to {} failed. We try again with capability version 0. Error: {}",
-                            address, ExceptionUtil.getRootCauseMessage(e));
-                    int version = PREFERRED_VERSION == 0 ? 1 : 0;
-                    candidate = Capability.withVersion(myCapability, version);
-                    return doCreateOutboundConnection(address, candidate);
-                } else {
-                    // In case of other ConnectExceptions we don't try again as peer is offline
-                    throw e;
-                }
-            }
+            log.info("Create outbound connection to {}", address);
+            return createOutboundConnection(address, myCapability);
         }, getExecutor());
     }
 
-    private Connection doCreateOutboundConnection(Address address, Capability myCapability) {
+    private Connection createOutboundConnection(Address address, Capability myCapability) {
         if (banList.isBanned(address)) {
             throw new ConnectionException(ADDRESS_BANNED, "PeerAddress is banned. address=" + address);
         }
@@ -554,7 +536,7 @@ public class Node implements Connection.Handler {
             }
             return result;
         } catch (Exception exception) {
-            log.error("Starting outbound handshake failed. {}", exception.getMessage());
+            log.error("Starting outbound handshake to {} failed. {}", address, exception.getMessage());
             try {
                 socket.close();
             } catch (IOException ignore) {
@@ -768,7 +750,7 @@ public class Node implements Connection.Handler {
 
     @Override
     public String toString() {
-        return findMyAddress().map(address -> "Node with address " + address.getFullAddress())
+        return findMyAddress().map(address -> "Node with address " + address)
                 .orElse("Node with networkId " + networkId.getInfo());
     }
 

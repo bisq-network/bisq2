@@ -29,7 +29,6 @@ public class UserModel extends ContentTabModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.CRYPTO_CURRENCY_ACCOUNTS; //todo just for dev
-        //return NavigationTarget.USER_PROFILE;
+       return NavigationTarget.USER_PROFILE;
     }
 }
