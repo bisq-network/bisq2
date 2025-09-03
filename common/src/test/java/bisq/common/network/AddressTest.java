@@ -40,7 +40,7 @@ public class AddressTest {
     @Test
     void testValidI2PBase64AndBas32Address() {
         String b64 = "OazWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpTm81gObqFuwTCNJZLeu5DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpTm81gObqFuwTCNJZLeu5DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpTm81gObqFuwTCNJZLeu5DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpa03btjnuHsU5Gsx61g7CqT2YA8J6EHOiS~-XZpiNt01BQAEAAcAAA==";
-        String b32 = "abcdefghijklmnopqrstuvwxyz234567abcdefghijklmnopqrstuvwxyz23.b32.i2p";
+        String b32 = "wgglodqww5sifflx4ptugbn2yjey3x3xlkstozs7dmzw22wo6qfa.b32.i2p";
         int port = 1234;
         I2PAddress address = new I2PAddress(b64, b32, port);
         assertEquals(b64, address.getHost());
