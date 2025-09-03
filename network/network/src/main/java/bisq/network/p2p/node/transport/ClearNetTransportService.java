@@ -2,6 +2,7 @@ package bisq.network.p2p.node.transport;
 
 import bisq.common.facades.FacadeProvider;
 import bisq.common.network.Address;
+import bisq.common.network.ClearnetAddress;
 import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
 import bisq.common.network.clear_net_address_types.AndroidEmulatorAddressTypeFacade;
@@ -135,7 +136,7 @@ public class ClearNetTransportService implements TransportService {
 
         try {
             ServerSocket serverSocket = new ServerSocket(port);
-            Address address = getClearNetAddressTypeFacade().toMyLocalAddress(port);
+            ClearnetAddress address = getClearNetAddressTypeFacade().toMyLocalAddress(port);
             log.debug("ServerSocket created at port {}", port);
             initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
             return new ServerSocketResult(serverSocket, address);
@@ -147,22 +148,30 @@ public class ClearNetTransportService implements TransportService {
 
     @Override
     public Socket getSocket(Address address, String nodeId) throws IOException {
-        address = getClearNetAddressTypeFacade().toPeersLocalAddress(address);
-        log.debug("Create new Socket to {}", address);
-        Socket socket = new Socket();
-        socket.setSoTimeout(socketTimeout);
-        socket.connect(new InetSocketAddress(address.getHost(), address.getPort()), connectTimeoutMs);
-        return socket;
+        if (address instanceof ClearnetAddress clearnetAddress) {
+            clearnetAddress = getClearNetAddressTypeFacade().toPeersLocalAddress(clearnetAddress);
+            log.debug("Create new Socket to {}", clearnetAddress);
+            Socket socket = new Socket();
+            socket.setSoTimeout(socketTimeout);
+            socket.connect(new InetSocketAddress(clearnetAddress.getHost(), clearnetAddress.getPort()), connectTimeoutMs);
+            return socket;
+        } else {
+            throw new IllegalArgumentException("Address is not a ClearnetAddress");
+        }
     }
 
     @Override
     public CompletableFuture<Boolean> isPeerOnlineAsync(Address address, String nodeId) {
-        return CompletableFuture.supplyAsync(() -> {
-            try (Socket ignored = getSocket(address, nodeId)) {
-                return true;
-            } catch (IOException e) {
-                return false;
-            }
-        });
+        if (address instanceof ClearnetAddress clearnetAddress) {
+            return CompletableFuture.supplyAsync(() -> {
+                try (Socket ignored = getSocket(clearnetAddress, nodeId)) {
+                    return true;
+                } catch (IOException e) {
+                    return false;
+                }
+            });
+        } else {
+            throw new IllegalArgumentException("Address is not a ClearnetAddress");
+        }
     }
 }

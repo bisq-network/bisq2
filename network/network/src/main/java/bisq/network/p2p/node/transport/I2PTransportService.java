@@ -233,14 +233,17 @@ public class I2PTransportService implements TransportService {
 
     @Override
     public Socket getSocket(Address address, String nodeId) throws IOException {
+        if (!(address instanceof I2PAddress i2PAddress)) {
+            throw new IllegalArgumentException("Address is not an I2PAddress");
+        }
         try {
             long ts = System.currentTimeMillis();
             // We use base64 in the address host field
-            String peersDestinationBase64 = address.getHost();
+            String peersDestinationBase64 = i2PAddress.getDestinationBase64();
             Destination peersDestination = new Destination(peersDestinationBase64);
             Socket socket = i2pClient.getSocket(peersDestination, nodeId);
             socket.setSoTimeout(i2pConfig.getSocketTimeout());
-            log.info("I2P socket to {} created. Took {} ms", address, System.currentTimeMillis() - ts);
+            log.info("I2P socket to {} created. Took {} ms", i2PAddress, System.currentTimeMillis() - ts);
             return socket;
         } catch (NoRouteToHostException exception) {
             if (!isShutdownInProgress) {
@@ -262,7 +265,10 @@ public class I2PTransportService implements TransportService {
 
     @Override
     public CompletableFuture<Boolean> isPeerOnlineAsync(Address address, String nodeId) {
-        String peersDestinationBase64 = address.getHost();
+        if (!(address instanceof I2PAddress i2PAddress)) {
+            throw new IllegalArgumentException("Address is not an I2PAddress");
+        }
+        String peersDestinationBase64 = i2PAddress.getHost();
         try {
             Destination peersDestination = new Destination(peersDestinationBase64);
             return CompletableFuture.supplyAsync(() -> {

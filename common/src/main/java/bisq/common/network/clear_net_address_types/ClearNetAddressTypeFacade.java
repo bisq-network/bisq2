@@ -17,16 +17,16 @@
 
 package bisq.common.network.clear_net_address_types;
 
-import bisq.common.network.Address;
+import bisq.common.network.ClearnetAddress;
 
 /**
  * For Android running in emulator we need to convert the localhost addresses to the IP addresses used by the emulator.
  * To support that we use a facade which by default use the loop-back address 127.0.0.1.
  */
 public interface ClearNetAddressTypeFacade {
-    Address toMyLocalAddress(int port);
+    ClearnetAddress toMyLocalAddress(int port);
 
-    default Address toPeersLocalAddress(Address address) {
+    default ClearnetAddress toPeersLocalAddress(ClearnetAddress address) {
         return address;
     }
 }

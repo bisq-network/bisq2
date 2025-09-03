@@ -88,24 +88,32 @@ public class TorTransportService implements TransportService {
 
     @Override
     public Socket getSocket(Address address, String nodeId) throws IOException {
-        long ts = System.currentTimeMillis();
-        log.info("Start creating tor socket to {}", address);
-        Socket socket = torService.getSocket(null); // Blocking call. Takes 5-15 sec usually.
-        socket.setSoTimeout(socketTimeout);
-        InetSocketAddress inetSocketAddress = InetSocketAddress.createUnresolved(address.getHost(), address.getPort());
-        try {
-            socket.connect(inetSocketAddress);
-        } catch (IOException e) {
-            socket.close();
-            throw e;
+        if (address instanceof TorAddress torAddress) {
+            long ts = System.currentTimeMillis();
+            log.info("Start creating tor socket to {}", torAddress);
+            Socket socket = torService.getSocket(null); // Blocking call. Takes 5-15 sec usually.
+            socket.setSoTimeout(socketTimeout);
+            InetSocketAddress inetSocketAddress = InetSocketAddress.createUnresolved(torAddress.getHost(), torAddress.getPort());
+            try {
+                socket.connect(inetSocketAddress);
+            } catch (IOException e) {
+                socket.close();
+                throw e;
+            }
+            log.info("Tor socket creation to {} took {} ms", torAddress, System.currentTimeMillis() - ts);
+            return socket;
+        } else {
+            throw new IllegalArgumentException("Address is not a TorAddress");
         }
-        log.info("Tor socket creation to {} took {} ms", address, System.currentTimeMillis() - ts);
-        return socket;
     }
 
     @Override
     public CompletableFuture<Boolean> isPeerOnlineAsync(Address address, String nodeId) {
-        return torService.isOnionServiceOnlineAsync(address.getHost());
+        if (address instanceof TorAddress torAddress) {
+            return torService.isOnionServiceOnlineAsync(torAddress.getHost());
+        } else {
+            throw new IllegalArgumentException("Address is not a TorAddress");
+        }
     }
 
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {

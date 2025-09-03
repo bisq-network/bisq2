@@ -18,11 +18,15 @@
 package bisq.common.validation;
 
 import bisq.common.network.Address;
-import com.google.common.net.InetAddresses;
 
 public class NetworkAddressValidation {
     public static boolean isValid(Address address) {
         if (address == null || address.getHost() == null) return false;
-        return InetAddresses.isInetAddress(address.getHost()) && NetworkPortValidation.isValid(address.getPort());
+        try {
+            address.verify();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
