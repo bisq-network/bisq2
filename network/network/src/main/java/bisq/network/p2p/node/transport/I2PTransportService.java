@@ -218,7 +218,8 @@ public class I2PTransportService implements TransportService {
             I2PKeyPair i2PKeyPair = keyBundle.getI2PKeyPair();
             ServerSocket serverSocket = i2pClient.getServerSocket(i2PKeyPair, nodeId);
             String destinationBase64 = i2PKeyPair.getDestinationBase64();
-            I2PAddress address = new I2PAddress(destinationBase64, port);
+            String destinationBase32 = i2PKeyPair.getDestinationBase32();
+            I2PAddress address = new I2PAddress(destinationBase64, destinationBase32, port);
             initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
             log.info("ServerSocket created. destinationBase32={}, destinationBase64={}", i2PKeyPair.getDestinationBase32(), destinationBase64);
             return new ServerSocketResult(serverSocket, address);
