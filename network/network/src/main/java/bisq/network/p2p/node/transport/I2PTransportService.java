@@ -18,6 +18,7 @@
 package bisq.network.p2p.node.transport;
 
 import bisq.common.network.Address;
+import bisq.common.network.I2PAddress;
 import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
@@ -72,7 +73,7 @@ public class I2PTransportService implements TransportService {
                     config.getInt("bi2pGrpcPort"),
                     config.getBoolean("embeddedRouter"),
                     config.getConfigList("proxyList").stream()
-                            .map(c -> new Address(c.getString("host"), c.getInt("port")))
+                            .map(conf -> Address.from(conf.getString("host"), conf.getInt("port")))
                             .collect(Collectors.toList()));
         }
 
@@ -217,7 +218,7 @@ public class I2PTransportService implements TransportService {
             I2PKeyPair i2PKeyPair = keyBundle.getI2PKeyPair();
             ServerSocket serverSocket = i2pClient.getServerSocket(i2PKeyPair, nodeId);
             String destinationBase64 = i2PKeyPair.getDestinationBase64();
-            Address address = new Address(destinationBase64, port);
+            I2PAddress address = new I2PAddress(destinationBase64, port);
             initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
             log.info("ServerSocket created. destinationBase32={}, destinationBase64={}", i2PKeyPair.getDestinationBase32(), destinationBase64);
             return new ServerSocketResult(serverSocket, address);

@@ -18,6 +18,7 @@
 package bisq.common.network.clear_net_address_types;
 
 import bisq.common.network.Address;
+import bisq.common.network.ClearnetAddress;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -26,15 +27,15 @@ public class AndroidEmulatorAddressTypeFacade implements ClearNetAddressTypeFaca
     public Address toMyLocalAddress(int port) {
         log.info("The android app is running in the emulator. We convert our localhost " +
                 "address to `10.0.2.15`");
-        return new Address("10.0.2.15", port);
+        return new ClearnetAddress("10.0.2.15", port);
     }
 
     @Override
     public Address toPeersLocalAddress(Address address) {
-        if (address.isLocalhost()) {
+        if (address instanceof  ClearnetAddress clearnetAddress && clearnetAddress.isLocalhost()) {
             log.info("The android app is running in the emulator. We convert the target localhost " +
                     "address `127.0.0.1` to `10.0.2.2`");
-            return new Address("10.0.2.2", address.getPort());
+            return new ClearnetAddress("10.0.2.2", address.getPort());
         } else {
             return address;
         }

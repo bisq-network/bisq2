@@ -23,6 +23,7 @@ import bisq.application.TypesafeConfigUtils;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.DifficultyAdjustmentService;
 import bisq.common.application.DevMode;
 import bisq.common.network.Address;
+import bisq.common.network.ClearnetAddress;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -103,8 +104,8 @@ public class NetworkSettingsController implements Controller {
 
         Config i2pConfig = networkConfig.getConfig("configByTransportType.i2p");
         model.getUseEmbeddedI2PRouter().set(i2pConfig.getBoolean("embeddedRouter"));
-        model.getI2cpAddress().set(new Address(i2pConfig.getString("i2cpHost"), i2pConfig.getInt("i2cpPort")));
-        model.getBi2pGrpcAddress().set(new Address(i2pConfig.getString("bi2pGrpcHost"), i2pConfig.getInt("bi2pGrpcPort")));
+        model.getI2cpAddress().set(new ClearnetAddress(i2pConfig.getString("i2cpHost"), i2pConfig.getInt("i2cpPort")));
+        model.getBi2pGrpcAddress().set(new ClearnetAddress(i2pConfig.getString("bi2pGrpcHost"), i2pConfig.getInt("bi2pGrpcPort")));
 
         subscriptions.add(EasyBind.subscribe(model.getI2cpAddress(), e -> onDataChanged()));
         subscriptions.add(EasyBind.subscribe(model.getBi2pGrpcAddress(), e -> onDataChanged()));

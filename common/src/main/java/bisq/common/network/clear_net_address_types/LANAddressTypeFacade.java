@@ -1,6 +1,7 @@
 package bisq.common.network.clear_net_address_types;
 
 import bisq.common.network.Address;
+import bisq.common.network.ClearnetAddress;
 import bisq.common.util.NetworkUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,7 +29,7 @@ public class LANAddressTypeFacade implements ClearNetAddressTypeFacade {
         Optional<String> optionalHost = NetworkUtils.findLANHostAddress(preferredNetworkInterface);
         if (optionalHost.isEmpty()) {
             log.warn("We did not find any LAN IP address. We use 127.0.0.1 as fallback.");
-            return new Address("127.0.0.1", port);
+            return new ClearnetAddress("127.0.0.1", port);
         }
         String host = optionalHost.get();
         if (preferredNetworkInterface.isPresent()) {
@@ -36,7 +37,7 @@ public class LANAddressTypeFacade implements ClearNetAddressTypeFacade {
         } else {
             log.info("The LAN IP address from my first network interface is: {}", host);
         }
-        return new Address(host, port);
+        return new ClearnetAddress(host, port);
     }
 
     public synchronized void setPreferredNetworkInterface(Optional<NetworkInterface> preferredNetworkInterface) {

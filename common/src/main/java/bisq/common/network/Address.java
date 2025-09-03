@@ -18,44 +18,51 @@
 package bisq.common.network;
 
 import bisq.common.proto.NetworkProto;
-import bisq.common.util.StringUtils;
-import bisq.common.validation.NetworkDataValidation;
-import com.google.common.net.InetAddresses;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Locale;
 import java.util.StringTokenizer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+// We do not change the proto with subclasses to avoid breaking old clients.
 @Slf4j
 @EqualsAndHashCode
-@Getter
-public final class Address implements NetworkProto, Comparable<Address> {
+public abstract class Address implements NetworkProto, Comparable<Address> {
+    public static Address from(String host, int port) {
+        if (TorAddress.isTorAddress(host)) {
+            return new TorAddress(host, port);
+        } else if (I2PAddress.isI2pAddress(host)) {
+            return new I2PAddress(host, port);
+        } else {
+            return new ClearnetAddress(host, port);
+        }
+    }
+
     public static Address fromFullAddress(String fullAddress) {
         try {
-            fullAddress = fullAddress.replaceFirst("^https?://", "");
-            StringTokenizer st = new StringTokenizer(fullAddress, ":");
-            String hostToken = st.nextToken();
-            String host = maybeConvertLocalHost(hostToken);
-            checkArgument(st.hasMoreTokens(), "Full address need to contain the port after the ':'. fullAddress=" + fullAddress);
-            String portToken = st.nextToken();
+            fullAddress = removeProtocolPrefix(fullAddress);
+            StringTokenizer tokenizer = new StringTokenizer(fullAddress, ":");
+            String hostToken = tokenizer.nextToken();
+            checkArgument(tokenizer.hasMoreTokens(), "Full address need to contain the port after the ':'.");
+            String portToken = tokenizer.nextToken();
             int port = Integer.parseInt(portToken);
-            return new Address(host, port);
+            return Address.from(hostToken, port);
         } catch (Exception e) {
             log.error("Could not resolve address from {}", fullAddress, e);
             throw e;
         }
     }
 
-    private final String host;
-    private final int port;
+    @Getter
+    protected final String host;
+    @Getter
+    protected final int port;
 
-    public Address(String host, int port) {
+    protected Address(String host, int port) {
         try {
-            this.host = maybeConvertLocalHost(host);
+            this.host = host;
             this.port = port;
 
             verify();
@@ -71,18 +78,6 @@ public final class Address implements NetworkProto, Comparable<Address> {
     /* --------------------------------------------------------------------- */
 
     @Override
-    public void verify() {
-        if (isTorAddress()) {
-            NetworkDataValidation.validateText(host, 62);
-        } else if (isClearNetAddress()) {
-            NetworkDataValidation.validateText(host, 45);
-        } else {
-            // I2P
-            NetworkDataValidation.validateText(host, 600);
-        }
-    }
-
-    @Override
     public bisq.common.protobuf.Address toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
@@ -94,41 +89,22 @@ public final class Address implements NetworkProto, Comparable<Address> {
                 .setPort(port);
     }
 
+    abstract public TransportType getTransportType();
+
     public static Address fromProto(bisq.common.protobuf.Address proto) {
-        return new Address(proto.getHost(), proto.getPort());
+        return Address.from(proto.getHost(), proto.getPort());
     }
 
     public boolean isClearNetAddress() {
-        return InetAddresses.isInetAddress(host);
+        return this instanceof ClearnetAddress;
     }
 
     public boolean isTorAddress() {
-        return host.endsWith(".onion");
+        return this instanceof TorAddress;
     }
 
     public boolean isI2pAddress() {
-        String lowerHost = host.toLowerCase(Locale.ROOT);
-        // Base32: always 60 characters
-        // Base64: ~512–528 characters
-        return lowerHost.matches("^[a-z2-7]{52}\\.b32\\.i2p$")
-                || lowerHost.endsWith(".i2p")
-                || lowerHost.matches("^[a-z0-9~\\-=]{500,600}(:\\d{1,5})?$");
-    }
-
-    public boolean isLocalhost() {
-        return host.equals("127.0.0.1");
-    }
-
-    public TransportType getTransportType() {
-        if (isClearNetAddress()) {
-            return TransportType.CLEAR;
-        } else if (isTorAddress()) {
-            return TransportType.TOR;
-        } else if (isI2pAddress()) {
-            return TransportType.I2P;
-        } else {
-            throw new IllegalArgumentException("Could not derive TransportType from address: " + getFullAddress());
-        }
+        return this instanceof I2PAddress;
     }
 
     public String getFullAddress() {
@@ -136,21 +112,12 @@ public final class Address implements NetworkProto, Comparable<Address> {
     }
 
     @Override
-    public String toString() {
-        if (isLocalhost()) {
-            return "[" + port + "]";
-        } else {
-            return StringUtils.truncate(host, 1000) + ":" + port;
-        }
-    }
-
-    private static String maybeConvertLocalHost(String host) {
-        return host.equals("localhost") ? "127.0.0.1" : host;
-    }
-
-    @Override
     public int compareTo(Address o) {
         return getFullAddress().compareTo(o.getFullAddress());
+    }
+
+    private static String removeProtocolPrefix(String fullAddress) {
+        return fullAddress.replaceFirst("^https?://", "");
     }
 }
 

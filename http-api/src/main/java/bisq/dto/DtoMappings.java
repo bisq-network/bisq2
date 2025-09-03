@@ -568,7 +568,7 @@ public class DtoMappings {
 
     public static class AddressMapping {
         public static Address toBisq2Model(AddressDto value) {
-            return new Address(value.host(), value.port());
+            return Address.from(value.host(), value.port());
         }
 
         public static AddressDto fromBisq2Model(Address value) {

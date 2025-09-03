@@ -18,12 +18,11 @@
 package bisq.common.network.clear_net_address_types;
 
 import bisq.common.network.Address;
-import com.google.common.annotations.VisibleForTesting;
+import bisq.common.network.ClearnetAddress;
 
 public class LocalHostAddressTypeFacade implements ClearNetAddressTypeFacade {
-    @VisibleForTesting
     public static Address toLocalHostAddress(int port) {
-        return new Address("127.0.0.1", port);
+        return new ClearnetAddress("127.0.0.1", port);
     }
 
     @Override

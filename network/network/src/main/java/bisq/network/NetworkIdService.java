@@ -21,10 +21,12 @@ package bisq.network;
 import bisq.common.application.Service;
 import bisq.common.facades.FacadeProvider;
 import bisq.common.file.FileUtils;
-import bisq.common.util.NetworkUtils;
 import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.network.I2PAddress;
+import bisq.common.network.TorAddress;
 import bisq.common.network.TransportType;
+import bisq.common.util.NetworkUtils;
 import bisq.network.identity.NetworkId;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -150,8 +152,8 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
 
     private Address getAddressByTransport(KeyBundle keyBundle, int port, TransportType transportType) {
         return switch (transportType) {
-            case TOR -> new Address(keyBundle.getTorKeyPair().getOnionAddress(), port);
-            case I2P -> new Address(keyBundle.getI2PKeyPair().getDestinationBase64(), port);
+            case TOR -> new TorAddress(keyBundle.getTorKeyPair().getOnionAddress(), port);
+            case I2P -> new I2PAddress(keyBundle.getI2PKeyPair().getDestinationBase64(), port);
             case CLEAR -> FacadeProvider.getClearNetAddressTypeFacade().toMyLocalAddress(port);
         };
     }
