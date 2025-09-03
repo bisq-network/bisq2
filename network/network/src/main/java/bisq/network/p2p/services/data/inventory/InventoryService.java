@@ -228,7 +228,7 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
                     }
                     if (throwable != null) {
                         log.info("Exception at inventory request to peer {}: {}",
-                                connection.getPeerAddress().getFullAddress(), ExceptionUtil.getRootCauseMessage(throwable));
+                                connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
                     }
 
                     InventoryRequestPolicy.NextTaskAfterRequestCompleted nextTask = policy.onRequestCompleted(connection, inventory, throwable);
