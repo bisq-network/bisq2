@@ -53,4 +53,8 @@ public class WalletTxsController implements Controller {
     public void onDeactivate() {
         transactionsPin.unbind();
     }
+
+    void applySearchPredicate(String searchText) {
+        // TODO
+    }
 }

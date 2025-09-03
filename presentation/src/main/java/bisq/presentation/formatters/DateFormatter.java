@@ -46,6 +46,15 @@ public class DateFormatter {
         return formattedDate + delimiter + formattedTime;
     }
 
+    public static String formatDateTimeNoSeconds(long date) {
+        return formatDateTimeNoSeconds(new Date(date));
+    }
+
+    public static String formatDateTimeNoSeconds(Date date) {
+        // Use SHORT for time to omit seconds
+        return formatDateTime(date, DateFormat.DEFAULT, DateFormat.SHORT, true, ", ");
+    }
+
     public static String formatDate(long date) {
         return formatDate(new Date(date));
     }
