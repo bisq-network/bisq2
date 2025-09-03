@@ -66,7 +66,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
@@ -927,7 +926,7 @@ public class Node implements Connection.Handler {
                 5,
                 TimeUnit.SECONDS,
                 queue,
-                ExecutorFactory.getThreadFactoryWithCounter("Node-" + printAddresses(8)),
+                ExecutorFactory.getThreadFactoryWithCounter("Node-" + printAddresses()),
                 new AbortPolicyWithLogging());
         queue.setExecutor(executor);
         return executor;
@@ -942,9 +941,8 @@ public class Node implements Connection.Handler {
         return executor;
     }
 
-    private String printAddresses(int maxLength) {
-        return getNetworkId().getAddressByTransportTypeMap().entrySet().stream()
-                .map(e -> e.getKey().name() + ": " + StringUtils.truncate(e.getValue(), maxLength))
-                .collect(Collectors.joining(", "));
+    private String printAddresses() {
+        String address = getNetworkId().getAddressByTransportTypeMap().get(transportType).getFullAddress();
+        return StringUtils.truncate(transportType.name(), 3, "") + "-" + StringUtils.truncate(address, 8);
     }
 }

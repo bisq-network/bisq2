@@ -25,7 +25,7 @@ public class NetworkAddressValidation {
         try {
             address.verify();
             return true;
-        } catch (Exception e) {
+        } catch (Exception ignore) {
             return false;
         }
     }

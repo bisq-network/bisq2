@@ -34,6 +34,9 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public class StringUtils {
+    public static final String ELLIPSIS = "...";
+    public static final String UNICODE_ELLIPSIS = "…";
+
     public static String truncate(Object value) {
         return truncate(value.toString());
     }
@@ -47,12 +50,16 @@ public class StringUtils {
     }
 
     public static String truncate(String value, int maxLength) {
+        return truncate(value, maxLength, ELLIPSIS);
+    }
+
+    public static String truncate(String value, int maxLength, String ellipsis) {
         if (value == null) {
             log.warn("value at truncate is null");
             return "";
         }
         if (maxLength > 3 && value.length() > maxLength) {
-            return value.substring(0, maxLength - 3) + "...";
+            return value.substring(0, maxLength - 3) + ellipsis;
         } else {
             return value;
         }
