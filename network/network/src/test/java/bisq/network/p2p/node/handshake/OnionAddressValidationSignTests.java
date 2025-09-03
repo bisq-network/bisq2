@@ -43,14 +43,14 @@ public class OnionAddressValidationSignTests {
     @Test
     void testSignMyNonOnionAddress() {
         Address myAddress = LocalHostAddressTypeFacade.toLocalHostAddress(1234);
-        Address peerAddress = new Address(peerTorKeyPair.getOnionAddress(), 8888);
+        Address peerAddress = Address.from(peerTorKeyPair.getOnionAddress(), 8888);
         Optional<byte[]> signature = OnionAddressValidation.sign(myAddress, peerAddress, signatureDate, myTorKeyPair.getPrivateKey());
         assertThat(signature).isEmpty();
     }
 
     @Test
     void testSignPeerNonOnionAddress() {
-        Address myAddress = new Address(myTorKeyPair.getOnionAddress(), 8888);
+        Address myAddress = Address.from(myTorKeyPair.getOnionAddress(), 8888);
         Address peerAddress = LocalHostAddressTypeFacade.toLocalHostAddress(4321);
         Optional<byte[]> signature = OnionAddressValidation.sign(myAddress, peerAddress, signatureDate, myTorKeyPair.getPrivateKey());
         assertThat(signature).isEmpty();
@@ -58,8 +58,8 @@ public class OnionAddressValidationSignTests {
 
     @Test
     void testSignOnionAddress() {
-        Address myAddress = new Address(myTorKeyPair.getOnionAddress(), 8888);
-        Address peerAddress = new Address(peerTorKeyPair.getOnionAddress(), 8888);
+        Address myAddress = Address.from(myTorKeyPair.getOnionAddress(), 8888);
+        Address peerAddress = Address.from(peerTorKeyPair.getOnionAddress(), 8888);
         Optional<byte[]> signature = OnionAddressValidation.sign(myAddress, peerAddress, signatureDate, myTorKeyPair.getPrivateKey());
         assertThat(signature).isNotEmpty();
     }

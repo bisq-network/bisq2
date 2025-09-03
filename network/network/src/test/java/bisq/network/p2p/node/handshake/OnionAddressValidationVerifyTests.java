@@ -43,14 +43,14 @@ public class OnionAddressValidationVerifyTests {
     @Test
     void testVerifyMyNonOnionAddress() {
         Address myAddress = LocalHostAddressTypeFacade.toLocalHostAddress(1234);
-        Address peerAddress = new Address(peerTorKeyPair.getOnionAddress(), 8888);
+        Address peerAddress = Address.from(peerTorKeyPair.getOnionAddress(), 8888);
         boolean isValid = OnionAddressValidation.verify(myAddress, peerAddress, signatureDate, Optional.empty());
         assertThat(isValid).isTrue();
     }
 
     @Test
     void testVerifyPeerNonOnionAddress() {
-        Address myAddress = new Address(myTorKeyPair.getOnionAddress(), 8888);
+        Address myAddress = Address.from(myTorKeyPair.getOnionAddress(), 8888);
         Address peerAddress = LocalHostAddressTypeFacade.toLocalHostAddress(4321);
         boolean isValid = OnionAddressValidation.verify(myAddress, peerAddress, signatureDate, Optional.empty());
         assertThat(isValid).isTrue();
@@ -58,16 +58,16 @@ public class OnionAddressValidationVerifyTests {
 
     @Test
     void testVerifyWithoutPeerProof() {
-        Address myAddress = new Address(myTorKeyPair.getOnionAddress(), 8888);
-        Address peerAddress = new Address(peerTorKeyPair.getOnionAddress(), 8888);
+        Address myAddress = Address.from(myTorKeyPair.getOnionAddress(), 8888);
+        Address peerAddress = Address.from(peerTorKeyPair.getOnionAddress(), 8888);
         boolean isValid = OnionAddressValidation.verify(myAddress, peerAddress, signatureDate, Optional.empty());
         assertThat(isValid).isFalse();
     }
 
     @Test
     void testVerifyTooOldProof() {
-        Address myAddress = new Address(myTorKeyPair.getOnionAddress(), 8888);
-        Address peerAddress = new Address(peerTorKeyPair.getOnionAddress(), 8888);
+        Address myAddress = Address.from(myTorKeyPair.getOnionAddress(), 8888);
+        Address peerAddress = Address.from(peerTorKeyPair.getOnionAddress(), 8888);
 
         long signatureDate = System.currentTimeMillis() - OnionAddressValidation.MAX_SIG_AGE - 100;
         Optional<byte[]> signature = OnionAddressValidation.sign(myAddress, peerAddress, signatureDate, myTorKeyPair.getPrivateKey());
@@ -78,8 +78,8 @@ public class OnionAddressValidationVerifyTests {
 
     @Test
     void testVerifyTooNewProof() {
-        Address myAddress = new Address(myTorKeyPair.getOnionAddress(), 8888);
-        Address peerAddress = new Address(peerTorKeyPair.getOnionAddress(), 8888);
+        Address myAddress = Address.from(myTorKeyPair.getOnionAddress(), 8888);
+        Address peerAddress = Address.from(peerTorKeyPair.getOnionAddress(), 8888);
 
         long signatureDate = System.currentTimeMillis() + OnionAddressValidation.MAX_SIG_AGE + 100;
         Optional<byte[]> signature = OnionAddressValidation.sign(myAddress, peerAddress, signatureDate, myTorKeyPair.getPrivateKey());
@@ -90,8 +90,8 @@ public class OnionAddressValidationVerifyTests {
 
     @Test
     void testVerifyValidProof() {
-        Address myAddress = new Address(myTorKeyPair.getOnionAddress(), 8888);
-        Address peerAddress = new Address(peerTorKeyPair.getOnionAddress(), 8888);
+        Address myAddress = Address.from(myTorKeyPair.getOnionAddress(), 8888);
+        Address peerAddress = Address.from(peerTorKeyPair.getOnionAddress(), 8888);
 
         long signatureDate = System.currentTimeMillis();
         Optional<byte[]> signature = OnionAddressValidation.sign(myAddress, peerAddress, signatureDate, myTorKeyPair.getPrivateKey());

@@ -579,7 +579,7 @@ public class Node implements Connection.Handler {
                 socket.close();
             } catch (IOException ignore) {
             }
-            return Optional.of(outboundConnectionsByAddress.get(address));
+            return Optional.ofNullable(outboundConnectionsByAddress.get(address));
         }
         return Optional.empty();
     }

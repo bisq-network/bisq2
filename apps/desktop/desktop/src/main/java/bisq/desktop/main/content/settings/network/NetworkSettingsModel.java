@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.settings.network;
 
 import bisq.common.network.Address;
+import bisq.common.network.ClearnetAddress;
 import bisq.desktop.common.converters.AddressStringConverter;
 import bisq.desktop.common.converters.DoubleStringConverter;
 import bisq.desktop.common.view.Model;
@@ -45,8 +46,8 @@ import static bisq.network.i2p.router.RouterSetup.DEFAULT_I2CP_PORT;
 @Slf4j
 @Getter
 class NetworkSettingsModel implements Model {
-    final static Address DEFAULT_I2CP_ADDRESS = new Address(DEFAULT_I2CP_HOST, DEFAULT_I2CP_PORT);
-    final static Address DEFAULT_BI2P_GRPC_ADDRESS = new Address(DEFAULT_BI2P_GRPC_HOST, DEFAULT_BI2P_GRPC_PORT);
+    final static Address DEFAULT_I2CP_ADDRESS = new ClearnetAddress(DEFAULT_I2CP_HOST, DEFAULT_I2CP_PORT);
+    final static Address DEFAULT_BI2P_GRPC_ADDRESS = new ClearnetAddress(DEFAULT_BI2P_GRPC_HOST, DEFAULT_BI2P_GRPC_PORT);
 
     private final ObjectProperty<TransportOption> selectedTransportOption = new SimpleObjectProperty<>();
     private final BooleanProperty useEmbeddedI2PRouter = new SimpleBooleanProperty();

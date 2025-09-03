@@ -1,6 +1,7 @@
 package bisq.network.p2p.node.transport;
 
 import bisq.common.network.Address;
+import bisq.common.network.TorAddress;
 import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
@@ -72,7 +73,7 @@ public class TorTransportService implements TransportService {
 
             TorKeyPair torKeyPair = keyBundle.getTorKeyPair();
             String onionAddress = torKeyPair.getOnionAddress();
-            Address address = new Address(onionAddress, port);
+            TorAddress address = new TorAddress(onionAddress, port);
             ServerSocket serverSocket = torService.publishOnionService(port, torKeyPair).get();
             initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
             return new ServerSocketResult(serverSocket, address);
