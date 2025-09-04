@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @Slf4j
@@ -70,25 +69,43 @@ class ResponseHandlerDelegate<T extends Request, R extends Response> implements 
 
 
     // If we get called on a connection we have already assigned a request for, we ignore the new request and return
-    // the future from the pending request.
+    // the future from the pending request. Client code should avoid that this case can happen
     public CompletableFuture<R> request(Connection connection, T request) {
-        return requestFuturesByConnectionId.compute(connection.getId(), (k, existing) -> {
+        String connectionId = connection.getId();
+        return requestFuturesByConnectionId.compute(connectionId, (k, existing) -> {
             if (existing != null && !existing.isDone()) {
                 log.warn("[{}] Reusing pending request future for {}", request.getClass().getSimpleName(), connection.getPeerAddress());
                 return existing;
             }
-            RequestFuture<T, R> requestFuture = new RequestFuture<>(node, connection, request);
-            requestFuture.orTimeout(timeout, TimeUnit.MILLISECONDS)
-                    .whenComplete((response, throwable) -> {
-                        requestFuturesByConnectionId.remove(k, requestFuture);
-                        if (throwable instanceof TimeoutException) {
-                            log.warn("[{}] Request to {} timed out after {} ms", request.getClass().getSimpleName(), connection.getPeerAddress(), timeout);
-                        } else if (throwable != null) {
-                            log.warn("[{}] Request to {} failed: {}", request.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
-                        } else {
-                            log.debug("[{}] Request to {} completed", request.getClass().getSimpleName(), connection.getPeerAddress());
-                        }
-                    });
+            RequestFuture<T, R> requestFuture = new RequestFuture<>(node, connection, request, timeout);
+
+            Runnable removeFromMapTask = () -> {
+                try {
+                    requestFuturesByConnectionId.remove(connectionId, requestFuture);
+                } catch (Exception e) {
+                    log.error("requestFuturesByConnectionId.remove failed. This might be a rare case that we get called synchronously. " +
+                            "Mutating the map from the constructing code is not permitted. " +
+                            "We wrap the remove code into a async call to try again to remove the entry.", e);
+                    CompletableFuture.runAsync(() -> requestFuturesByConnectionId.remove(connectionId, requestFuture));
+                }
+            };
+            // We get returned a priority future which gets completed before the actual requestFuture gets completed.
+            // This ensures that cleanup code is executed before any client code is called on completion of the requestFuture.
+            // The timout is not strictly needed here but adds guarantees to clean up the map.
+            CompletableFuture<Void> priorityFuture = requestFuture.sendRequest();
+            priorityFuture.whenComplete((nil, throwable) -> removeFromMapTask.run());
+
+            requestFuture.whenComplete((response, throwable) -> {
+                if (throwable != null) {
+                    if (throwable instanceof TimeoutException) {
+                        log.warn("[{}] Request to {} timed out after {} ms", request.getClass().getSimpleName(), connection.getPeerAddress(), timeout);
+                    } else {
+                        log.warn("[{}] Request to {} failed: {}", request.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
+                    }
+                } else {
+                    log.debug("[{}] Request to {} completed", request.getClass().getSimpleName(), connection.getPeerAddress());
+                }
+            });
             return requestFuture;
         });
     }
