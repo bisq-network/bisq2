@@ -86,7 +86,7 @@ public class NetworkInfo {
         private final View view;
         private final Consumer<NavigationTarget> onNavigationTargetSelectedHandler;
         private final NetworkService networkService;
-        private Pin numPendingRequestsPin, allDataReceivedPin;
+        private Pin numPendingInventoryRequestsPin, initialInventoryRequestsCompletedPin;
         private UIScheduler inventoryRequestAnimation;
         private Optional<Pin> useExternalTorPin = Optional.empty();
 
@@ -123,11 +123,11 @@ public class NetworkInfo {
 
         @Override
         public void onDeactivate() {
-            if (numPendingRequestsPin != null) {
-                numPendingRequestsPin.unbind();
+            if (numPendingInventoryRequestsPin != null) {
+                numPendingInventoryRequestsPin.unbind();
             }
-            if (allDataReceivedPin != null) {
-                allDataReceivedPin.unbind();
+            if (initialInventoryRequestsCompletedPin != null) {
+                initialInventoryRequestsCompletedPin.unbind();
             }
             if (inventoryRequestAnimation != null) {
                 inventoryRequestAnimation.stop();
@@ -160,7 +160,7 @@ public class NetworkInfo {
                                 for (long l = 0; l < numDots; l++) {
                                     dots.append(".");
                                 }
-                                if (!inventoryService.getAllDataReceived().get()) {
+                                if (!inventoryService.getInitialInventoryRequestsCompleted().get()) {
                                     model.setInventoryRequestsInfo(Res.get("navigation.network.info.inventoryRequest.requesting") + dots);
                                     updateInventoryDataChangeFlag();
                                 }
@@ -168,21 +168,21 @@ public class NetworkInfo {
                     )
                     .periodically(250);
 
-            numPendingRequestsPin = inventoryService.getNumPendingRequests().addObserver(numPendingRequests -> {
-                        if (numPendingRequests != null) {
+            numPendingInventoryRequestsPin = inventoryService.getNumPendingInventoryRequests().addObserver(numPendingInventoryRequests -> {
+                        if (numPendingInventoryRequests != null) {
                             UIThread.run(() -> {
-                                model.setPendingInventoryRequests(String.valueOf(numPendingRequests));
+                                model.setPendingInventoryRequests(String.valueOf(numPendingInventoryRequests));
                                 updateInventoryDataChangeFlag();
                             });
                         }
                     }
             );
-            allDataReceivedPin = inventoryService.getAllDataReceived().addObserver(allDataReceived -> {
-                if (allDataReceived != null) {
+            initialInventoryRequestsCompletedPin = inventoryService.getInitialInventoryRequestsCompleted().addObserver(initialInventoryRequestsCompleted -> {
+                if (initialInventoryRequestsCompleted != null) {
                     UIThread.run(() -> {
-                        model.getAllInventoryDataReceived().set(allDataReceived);
+                        model.getInitialInventoryRequestsCompleted().set(initialInventoryRequestsCompleted);
 
-                        if (allDataReceived) {
+                        if (initialInventoryRequestsCompleted) {
                             if (inventoryRequestAnimation != null) {
                                 inventoryRequestAnimation.stop();
                             }
@@ -271,7 +271,7 @@ public class NetworkInfo {
         private final StringProperty torNumConnections = new SimpleStringProperty("0");
         private final StringProperty i2pNumConnections = new SimpleStringProperty("0");
         private final BooleanProperty inventoryDataChangeFlag = new SimpleBooleanProperty();
-        private final BooleanProperty allInventoryDataReceived = new SimpleBooleanProperty();
+        private final BooleanProperty initialInventoryRequestsCompleted = new SimpleBooleanProperty();
         private final BooleanProperty useExternalTor = new SimpleBooleanProperty();
     }
 
@@ -281,7 +281,7 @@ public class NetworkInfo {
         private final Pair<Label, ImageView> inventoryRequestsPair;
         private final BisqTooltip clearNetTooltip, torTooltip, i2pTooltip, inventoryRequestsTooltip;
         private Subscription clearNetNumConnectionsPin, torNumConnectionsPin, useExternalTorPin,
-                i2pNumConnectionsPin, allInventoryDataReceivedPin, inventoryDataChangeFlagPin;
+                i2pNumConnectionsPin, initialInventoryRequestsCompletedPin, inventoryDataChangeFlagPin;
 
         public View(Model model, Controller controller) {
             super(new VBox(8), model, controller);
@@ -369,7 +369,7 @@ public class NetworkInfo {
                 }
             });
 
-            allInventoryDataReceivedPin = EasyBind.subscribe(model.getAllInventoryDataReceived(), allInventoryDataReceived -> {
+            initialInventoryRequestsCompletedPin = EasyBind.subscribe(model.getInitialInventoryRequestsCompleted(), allInventoryDataReceived -> {
                 if (allInventoryDataReceived) {
                     inventoryRequestsLabel.getStyleClass().remove("bisq-text-yellow-dim");
                     inventoryRequestsLabel.getStyleClass().add("bisq-text-green");
@@ -386,16 +386,16 @@ public class NetworkInfo {
             });
             inventoryDataChangeFlagPin = EasyBind.subscribe(model.getInventoryDataChangeFlag(), inventoryDataChangeFlag -> {
                 inventoryRequestsLabel.setText(model.getInventoryRequestsInfo());
-                boolean allInventoryDataReceived = model.getAllInventoryDataReceived().get();
-                String allReceived = allInventoryDataReceived ? Res.get("confirmation.yes") : Res.get("confirmation.no");
+                boolean initialInventoryRequestsCompleted = model.getInitialInventoryRequestsCompleted().get();
+                String allReceived = initialInventoryRequestsCompleted ? Res.get("confirmation.yes") : Res.get("confirmation.no");
                 inventoryRequestsTooltip.setText(
                         Res.get("navigation.network.info.inventoryRequests.tooltip",
                                 model.getPendingInventoryRequests(),
                                 model.getMaxInventoryRequests(),
                                 allReceived));
                 ImageView inventoryRequestsIcon = inventoryRequestsPair.getSecond();
-                inventoryRequestsIcon.setVisible(allInventoryDataReceived);
-                inventoryRequestsIcon.setManaged(allInventoryDataReceived);
+                inventoryRequestsIcon.setVisible(initialInventoryRequestsCompleted);
+                inventoryRequestsIcon.setManaged(initialInventoryRequestsCompleted);
             });
 
             root.setOnMouseClicked(e -> controller.onNavigateToNetworkInfo());
@@ -408,7 +408,7 @@ public class NetworkInfo {
             useExternalTorPin.unsubscribe();
             i2pNumConnectionsPin.unsubscribe();
             inventoryDataChangeFlagPin.unsubscribe();
-            allInventoryDataReceivedPin.unsubscribe();
+            initialInventoryRequestsCompletedPin.unsubscribe();
 
             root.setOnMouseClicked(null);
         }

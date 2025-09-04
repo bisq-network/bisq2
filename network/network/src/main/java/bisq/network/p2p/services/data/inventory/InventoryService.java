@@ -63,10 +63,11 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
     public static final class Config {
         private final int maxSizeInKb;  // Default config value is 2000 (about 2MB)
         private final long repeatRequestInterval; // Default 10 min
-        private final int maxSeedsForRequest;
-        private final int maxPeersForRequest;
+        private final int maxSeedsForRequest; // Default 2
+        private final int maxPeersForRequest; // Default 4
         private final int maxPendingRequests; // Default 5
         private final int maxPendingRequestsAtPeriodicRequests; // Default 2
+        private final int minCompletedRequests; // Default 2
         private final List<InventoryFilterType> myPreferredFilterTypes; // Lower list index means higher preference
 
         public static Config from(com.typesafe.config.Config config) {
@@ -76,6 +77,7 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
                     config.getInt("maxPeersForRequest"),
                     config.getInt("maxPendingRequests"),
                     config.getInt("maxPendingRequestsAtPeriodicRequests"),
+                    config.getInt("minCompletedRequests"),
                     new ArrayList<>(config.getEnumList(InventoryFilterType.class, "myPreferredFilterTypes")));
         }
 
@@ -85,6 +87,7 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
                       int maxPeersForRequest,
                       int maxPendingRequests,
                       int maxPendingRequestsAtPeriodicRequests,
+                      int minCompletedRequests,
                       List<InventoryFilterType> myPreferredFilterTypes) {
             this.maxSizeInKb = maxSizeInKb;
             this.repeatRequestInterval = repeatRequestInterval;
@@ -92,6 +95,7 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
             this.maxPeersForRequest = maxPeersForRequest;
             this.maxPendingRequests = maxPendingRequests;
             this.maxPendingRequestsAtPeriodicRequests = maxPendingRequestsAtPeriodicRequests;
+            this.minCompletedRequests = minCompletedRequests;
             this.myPreferredFilterTypes = myPreferredFilterTypes;
         }
     }
@@ -117,7 +121,7 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
         this.config = config;
 
         inventoryFilterFactory = new InventoryFilterFactory(myFeatures, dataService, config);
-        model = new InventoryRequestModel(getRequestFuturesByConnectionId());
+        model = new InventoryRequestModel(this);
         policy = new InventoryRequestPolicy(config, model, inventoryFilterFactory, node, peerGroupManager.getPeerGroupService());
         initialize();
     }
@@ -197,9 +201,12 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
 
     @Override
     protected void processResponse(Connection connection, InventoryResponse response) {
-        super.processResponse(connection, response);
+        // We want to print and remove our entry from the map before we call the handler, which might trigger
+        // new requests. So we do that before the super call.
         InventoryPrinter.print(response, connection, model.getRequestTimestampByConnectionId());
         model.getRequestTimestampByConnectionId().remove(connection.getId());
+
+        super.processResponse(connection, response);
     }
 
 
@@ -207,12 +214,12 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
     // Delegate
     /* --------------------------------------------------------------------- */
 
-    public ReadOnlyObservable<Boolean> getAllDataReceived() {
-        return model.getAllDataReceived();
+    public ReadOnlyObservable<Boolean> getInitialInventoryRequestsCompleted() {
+        return model.getInitialInventoryRequestsCompleted();
     }
 
-    public ReadOnlyObservable<Integer> getNumPendingRequests() {
-        return model.getNumPendingRequests();
+    public ReadOnlyObservable<Integer> getNumPendingInventoryRequests() {
+        return model.getNumPendingRequestsObservable();
     }
 
 
@@ -289,12 +296,12 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
                     if (shutdownInProgress) {
                         return;
                     }
-                    long delay = policy.getDelayForPeriodicRequests(results, throwable, candidates);
+                    long delay = policy.getDelayForNextPeriodicRequests(results, throwable, candidates);
                     startPeriodicRequests(delay);
                 });
     }
 
     private void updateNumPendingRequests() {
-        model.getNumPendingRequests().set(getRequestFuturesByConnectionId().size());
+        model.getNumPendingRequestsObservable().set(getNumPendingRequests());
     }
 }

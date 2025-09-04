@@ -50,9 +50,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 public abstract class PublicChatChannelService<M extends PublicChatMessage, C extends PublicChatChannel<M>,
         S extends PersistableStore<S>, R extends ChatMessageReaction> extends ChatChannelService<M, C, S> implements DataService.Listener {
 
-    private boolean initialized = false;
-    private boolean allInventoryDataReceived = false;
-    private final Set<Pin> allInventoryDataReceivedPins = new HashSet<>();
+    private final Set<Pin> initialInventoryRequestsCompletedPins = new HashSet<>();
+    private volatile boolean initialized = false;
+    private volatile boolean initialInventoryRequestsCompleted = false;
 
     public PublicChatChannelService(NetworkService networkService,
                                     UserService userService,
@@ -81,12 +81,12 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                 networkService.getServiceNodesByTransport().findServiceNode(type)
                         .flatMap(ServiceNode::getInventoryService)
                         .ifPresent(inventoryService -> {
-                            Pin pin = inventoryService.getAllDataReceived().addObserver(allDataReceived -> {
-                                if (allDataReceived) {
-                                    allInventoryDataReceived = true;
+                            Pin pin = inventoryService.getInitialInventoryRequestsCompleted().addObserver(initialInventoryRequestsCompleted -> {
+                                if (initialInventoryRequestsCompleted) {
+                                    this.initialInventoryRequestsCompleted = true;
                                 }
                             });
-                            allInventoryDataReceivedPins.add(pin);
+                            initialInventoryRequestsCompletedPins.add(pin);
                         }));
         initialized = true;
         return CompletableFuture.completedFuture(true);
@@ -98,9 +98,9 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
             return CompletableFuture.completedFuture(true);
         }
         initialized = false;
-        allInventoryDataReceived = false;
-        allInventoryDataReceivedPins.forEach(Pin::unbind);
-        allInventoryDataReceivedPins.clear();
+        initialInventoryRequestsCompleted = false;
+        initialInventoryRequestsCompletedPins.forEach(Pin::unbind);
+        initialInventoryRequestsCompletedPins.clear();
         networkService.removeDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }
@@ -237,7 +237,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         // If we receive the message from the network after inventory requests are completed, we use our local receive time.
         // Otherwise, at batch processing inventory data we use the senders date.
         // Using the senders date for all cases would add risk for abuse by manipulating the date.
-        long timestamp = allInventoryDataReceived && initialized ? System.currentTimeMillis() : messageDate;
+        long timestamp = initialInventoryRequestsCompleted && initialized ? System.currentTimeMillis() : messageDate;
         bannedUserService.checkRateLimit(authorUserProfileId, timestamp);
     }
 }

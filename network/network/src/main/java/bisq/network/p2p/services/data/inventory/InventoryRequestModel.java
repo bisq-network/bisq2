@@ -18,20 +18,23 @@
 package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.observable.Observable;
-import bisq.network.p2p.common.RequestFuture;
+import bisq.network.p2p.common.RequestResponseHandler;
 import lombok.Getter;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Getter
 public class InventoryRequestModel {
-    private final Observable<Integer> numPendingRequests = new Observable<>(0);
-    private final Observable<Boolean> allDataReceived = new Observable<>(false);
+    private final Observable<Integer> numPendingRequestsObservable = new Observable<>(0);
+    private final Observable<Boolean> initialInventoryRequestsCompleted = new Observable<>(false);
+    private final Observable<Integer> numInventoryRequestsCompletedObservable = new Observable<>(0);
+    private final AtomicInteger numInventoryRequestsCompleted = new AtomicInteger(0);
     private final Map<String, Long> requestTimestampByConnectionId = new ConcurrentHashMap<>();
-    private final Map<String, RequestFuture<InventoryRequest, InventoryResponse>> requestFuturesByConnectionId;
+    private final RequestResponseHandler<InventoryRequest, InventoryResponse> requestResponseHandler;
 
-    public InventoryRequestModel(Map<String, RequestFuture<InventoryRequest, InventoryResponse>> requestFuturesByConnectionId) {
-        this.requestFuturesByConnectionId = requestFuturesByConnectionId;
+    public InventoryRequestModel(RequestResponseHandler<InventoryRequest, InventoryResponse> requestResponseHandler) {
+        this.requestResponseHandler = requestResponseHandler;
     }
 }

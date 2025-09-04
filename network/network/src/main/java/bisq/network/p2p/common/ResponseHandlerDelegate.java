@@ -24,7 +24,6 @@ import bisq.network.p2p.message.Response;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -38,7 +37,6 @@ class ResponseHandlerDelegate<T extends Request, R extends Response> implements 
     private final Node node;
     private final long timeout;
     private final Class<R> responseClass;
-    @Getter
     private final Map<String, RequestFuture<T, R>> requestFuturesByConnectionId = new ConcurrentHashMap<>();
 
     ResponseHandlerDelegate(Node node, long timeout, Class<R> responseClass) {
@@ -67,9 +65,16 @@ class ResponseHandlerDelegate<T extends Request, R extends Response> implements 
                 : Optional.empty();
     }
 
+    public boolean hasPendingRequest(String connectionId) {
+        return requestFuturesByConnectionId.containsKey(connectionId);
+    }
+
+    public int getNumPendingRequests() {
+        return requestFuturesByConnectionId.size();
+    }
 
     // If we get called on a connection we have already assigned a request for, we ignore the new request and return
-    // the future from the pending request. Client code should avoid that this case can happen
+    // the future from the pending request. Client code should avoid this case from happening
     public CompletableFuture<R> request(Connection connection, T request) {
         String connectionId = connection.getId();
         return requestFuturesByConnectionId.compute(connectionId, (k, existing) -> {
@@ -91,7 +96,7 @@ class ResponseHandlerDelegate<T extends Request, R extends Response> implements 
             };
             // We get returned a priority future which gets completed before the actual requestFuture gets completed.
             // This ensures that cleanup code is executed before any client code is called on completion of the requestFuture.
-            // The timout is not strictly needed here but adds guarantees to clean up the map.
+            // The timeout is not strictly needed here but adds guarantees to clean up the map.
             CompletableFuture<Void> priorityFuture = requestFuture.sendRequest();
             priorityFuture.whenComplete((nil, throwable) -> removeFromMapTask.run());
 

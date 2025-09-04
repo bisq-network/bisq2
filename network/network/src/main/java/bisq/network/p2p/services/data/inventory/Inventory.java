@@ -26,7 +26,11 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -48,7 +52,9 @@ public final class Inventory implements NetworkProto {
         this(entries, maxSizeReached, Optional.empty());
     }
 
-    private Inventory(Collection<? extends DataRequest> entries, boolean maxSizeReached, Optional<Integer> cachedSerializedSize) {
+    private Inventory(Collection<? extends DataRequest> entries,
+                      boolean maxSizeReached,
+                      Optional<Integer> cachedSerializedSize) {
         this.entries = new ArrayList<>(entries);
         this.maxSizeReached = maxSizeReached;
         this.cachedSerializedSize = cachedSerializedSize;
@@ -91,7 +97,9 @@ public final class Inventory implements NetworkProto {
         return new Inventory(entries, proto.getMaxSizeReached(), Optional.of(proto.getSerializedSize()));
     }
 
-    public boolean allDataReceived() {
-        return !maxSizeReached;
+    // It can be a node has not sent any data but maxSizeReached is false.
+    // finalDataDelivered provides the state that some data was delivered and the peer signalled to not have more data
+    public boolean finalDataDelivered() {
+        return !maxSizeReached && !entries.isEmpty();
     }
 }
