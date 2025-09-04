@@ -26,7 +26,6 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -72,8 +71,12 @@ public abstract class RequestResponseHandler<T extends Request, R extends Respon
     // ResponseHandler implementation
     /* --------------------------------------------------------------------- */
 
-    protected Map<String, RequestFuture<T, R>> getRequestFuturesByConnectionId() {
-        return responseHandlerDelegate.getRequestFuturesByConnectionId();
+    public boolean hasPendingRequest(String connectionId) {
+        return responseHandlerDelegate.hasPendingRequest(connectionId);
+    }
+
+    public int getNumPendingRequests() {
+        return responseHandlerDelegate.getNumPendingRequests();
     }
 
     protected CompletableFuture<R> request(Connection connection, T request) {
