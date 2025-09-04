@@ -1,6 +1,6 @@
 ### Setup for musig trade protocol
 
-Clone the Bisq Musig project from https://github.com/bisq-network/bisq-musig, follow the instructions in rpc readme
+Clone the Bisq MuSig project from https://github.com/bisq-network/bisq-musig, follow the instructions in rpc readme
 file.
 
 As long branch https://github.com/stejbac/bisq-musig/tree/add-more-rpc-integration-tests is not merged, use that as that
