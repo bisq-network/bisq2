@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.direction_and_market;
 
+import bisq.common.asset.CryptoAsset;
 import bisq.common.asset.FiatCurrency;
 import bisq.common.market.Market;
 import bisq.desktop.common.utils.ImageUtil;
@@ -58,13 +59,18 @@ import java.util.Comparator;
 @Slf4j
 public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSigCreateOfferDirectionAndMarketModel,
         MuSigCreateOfferDirectionAndMarketController> {
+    private static final double TABLE_HEIGHT = 307;
+    private static final double TABLE_WIDTH = 300;
+
     private final Button buyButton, sellButton;
-    private final BisqTableView<ListItem> tableView;
+    private final BisqTableView<MarketListItem> marketsTableView;
+    private final BisqTableView<BaseCryptoAssetListItem> baseCryptoAssetsTableView;
     private final SearchBox searchBox;
     private final Label currencyLabel;
     private final BisqPopup marketSelectionPopup;
     private final HBox currencyLabelBox;
-    private Subscription directionSubscription, marketPin, marketSelectionPin;
+    private Subscription directionPin, marketPin, marketSelectionPin, selectedMarketListItemPin,
+            selectedBaseCryptoAssetListItemPin;
 
     public MuSigCreateOfferDirectionAndMarketView(MuSigCreateOfferDirectionAndMarketModel model,
                                                   MuSigCreateOfferDirectionAndMarketController controller) {
@@ -76,19 +82,24 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         searchBox.setMaxWidth(170);
         searchBox.getStyleClass().add("bisq-easy-trade-wizard-market-search");
 
-        tableView = new BisqTableView<>(model.getSortedList());
-        double tableHeight = 307;
-        double tableWidth = 500;
-        tableView.setPrefSize(tableWidth, tableHeight);
-        tableView.setFixedCellSize(50);
-        configTableView();
+        // Markets table view
+        marketsTableView = new BisqTableView<>(model.getSortedMarketListItems());
+        marketsTableView.setPrefSize(TABLE_WIDTH, TABLE_HEIGHT);
+        marketsTableView.setFixedCellSize(50);
+        configMarketTableView();
 
         StackPane.setMargin(searchBox, new Insets(3, 0, 0, 15));
-        StackPane tableViewWithSearchBox = new StackPane(tableView, searchBox);
+        StackPane tableViewWithSearchBox = new StackPane(marketsTableView, searchBox);
         tableViewWithSearchBox.setAlignment(Pos.TOP_LEFT);
-        tableViewWithSearchBox.setPrefSize(tableWidth, tableHeight);
-        tableViewWithSearchBox.setMaxWidth(tableWidth);
-        tableViewWithSearchBox.setMaxHeight(tableHeight);
+        tableViewWithSearchBox.setPrefSize(TABLE_WIDTH, TABLE_HEIGHT);
+        tableViewWithSearchBox.setMaxWidth(TABLE_WIDTH);
+        tableViewWithSearchBox.setMaxHeight(TABLE_HEIGHT);
+
+        // Base crypto assets table view
+        baseCryptoAssetsTableView = new BisqTableView<>(model.getSortedBaseCryptoAssetListItems());
+        baseCryptoAssetsTableView.setPrefSize(TABLE_WIDTH, TABLE_HEIGHT);
+        baseCryptoAssetsTableView.setFixedCellSize(50);
+        configBaseCryptoAssetsTableView();
 
         currencyLabel = new Label();
         currencyLabel.setGraphic(ImageUtil.getImageViewById("chevron-drop-menu-green"));
@@ -98,7 +109,7 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         currencyLabelBox.getStyleClass().add("currency-label-box");
 
         marketSelectionPopup = new BisqPopup();
-        marketSelectionPopup.setContentNode(tableViewWithSearchBox);
+        marketSelectionPopup.setContentNode(new HBox(baseCryptoAssetsTableView, tableViewWithSearchBox));
         marketSelectionPopup.setAnchorLocation(PopupWindow.AnchorLocation.WINDOW_TOP_RIGHT);
 
         Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.headline"));
@@ -125,21 +136,26 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
 
     @Override
     protected void onViewAttached() {
-        tableView.initialize();
-        tableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
+        marketsTableView.initialize();
+        marketsTableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
         // We use setOnMouseClicked handler not a listener on
         // tableView.getSelectionModel().getSelectedItem() to get triggered the handler only at user action and
         // not when we set the selected item by code.
-        tableView.setOnMouseClicked(e -> controller.onMarketListItemClicked(tableView.getSelectionModel().getSelectedItem()));
+        marketsTableView.setOnMouseClicked(e ->
+                controller.onMarketListItemClicked(marketsTableView.getSelectionModel().getSelectedItem()));
         currencyLabel.setOnMouseClicked(e -> {
             if (!marketSelectionPopup.isShowing()) {
                 Bounds rootBounds = root.localToScreen(root.getBoundsInLocal());
                 Bounds labelBounds = currencyLabel.localToScreen(currencyLabel.getBoundsInLocal());
-                marketSelectionPopup.show(currencyLabel, rootBounds.getMaxX() - 168, labelBounds.getMaxY() + 15);
+                marketSelectionPopup.show(currencyLabel, rootBounds.getMaxX() - 118, labelBounds.getMaxY() + 15);
             } else {
                 marketSelectionPopup.hide();
             }
         });
+
+        baseCryptoAssetsTableView.initialize();
+        baseCryptoAssetsTableView.setOnMouseClicked(e ->
+                controller.onBaseCryptoAssetListItemClicked(baseCryptoAssetsTableView.getSelectionModel().getSelectedItem()));
 
         searchBox.textProperty().bindBidirectional(model.getSearchText());
 
@@ -147,7 +163,13 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         buyButton.setOnAction(evt -> controller.onSelectDirection(Direction.BUY));
         sellButton.setOnAction(evt -> controller.onSelectDirection(Direction.SELL));
 
-        directionSubscription = EasyBind.subscribe(model.getDirection(), direction -> {
+        selectedMarketListItemPin = EasyBind.subscribe(model.getSelectedMarketListItem(),
+                selected -> marketsTableView.getSelectionModel().select(selected));
+
+        selectedBaseCryptoAssetListItemPin = EasyBind.subscribe(model.getSelectedBaseCryptoAssetListItem(),
+                selected -> baseCryptoAssetsTableView.getSelectionModel().select(selected));
+
+        directionPin = EasyBind.subscribe(model.getDirection(), direction -> {
             if (direction != null) {
                 buyButton.setDefaultButton(direction == Direction.BUY);
                 sellButton.setDefaultButton(direction == Direction.SELL);
@@ -171,9 +193,10 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
 
     @Override
     protected void onViewDetached() {
-        tableView.dispose();
+        marketsTableView.dispose();
+        baseCryptoAssetsTableView.dispose();
         searchBox.textProperty().unbindBidirectional(model.getSearchText());
-        tableView.setOnMouseClicked(null);
+        marketsTableView.setOnMouseClicked(null);
         currencyLabel.setOnMouseClicked(null);
 
         buyButton.disableProperty().unbind();
@@ -181,7 +204,9 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         buyButton.setOnAction(null);
         sellButton.setOnAction(null);
 
-        directionSubscription.unsubscribe();
+        selectedMarketListItemPin.unsubscribe();
+        selectedBaseCryptoAssetListItemPin.unsubscribe();
+        directionPin.unsubscribe();
         marketPin.unsubscribe();
         marketSelectionPin.unsubscribe();
     }
@@ -196,23 +221,38 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         return button;
     }
 
-    private void configTableView() {
-        tableView.getColumns().add(tableView.getSelectionMarkerColumn());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+    private void configMarketTableView() {
+        marketsTableView.getColumns().add(marketsTableView.getSelectionMarkerColumn());
+        marketsTableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
                 .left()
-                .comparator(Comparator.comparing(ListItem::getQuoteCurrencyDisplayName))
-                .setCellFactory(getNameCellFactory())
+                .comparator(Comparator.comparing(MarketListItem::getQuoteCurrencyDisplayName))
+                .setCellFactory(getMarketNameCellFactory())
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        marketsTableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
                 .title(Res.get("bisqEasy.tradeWizard.market.columns.numOffers"))
-                .minWidth(120)
-                .valueSupplier(ListItem::getNumOffers)
-                .comparator(Comparator.comparing(ListItem::getNumOffersAsInteger))
+                .fixWidth(70)
+                .valueSupplier(MarketListItem::getNumOffers)
+                .comparator(Comparator.comparing(MarketListItem::getNumOffersAsInteger))
                 .build());
     }
 
-    private Callback<TableColumn<ListItem, ListItem>,
-            TableCell<ListItem, ListItem>> getNameCellFactory() {
+    private void configBaseCryptoAssetsTableView() {
+        baseCryptoAssetsTableView.getColumns().add(baseCryptoAssetsTableView.getSelectionMarkerColumn());
+        baseCryptoAssetsTableView.getColumns().add(new BisqTableColumn.Builder<BaseCryptoAssetListItem>()
+                .left()
+                .comparator(Comparator.comparing(BaseCryptoAssetListItem::getDisplayName))
+                .setCellFactory(getBaseCryptoAssetNameCellFactory())
+                .build());
+        baseCryptoAssetsTableView.getColumns().add(new BisqTableColumn.Builder<BaseCryptoAssetListItem>()
+                .title(Res.get("bisqEasy.tradeWizard.market.columns.numOffers"))
+                .fixWidth(70)
+                .valueSupplier(BaseCryptoAssetListItem::getNumOffers)
+                .comparator(Comparator.comparing(BaseCryptoAssetListItem::getNumOffersAsInteger))
+                .build());
+    }
+
+    private Callback<TableColumn<MarketListItem, MarketListItem>,
+            TableCell<MarketListItem, MarketListItem>> getMarketNameCellFactory() {
         return column -> new TableCell<>() {
             private final Label label = new Label();
             private final Tooltip tooltip = new BisqTooltip();
@@ -225,7 +265,7 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
             }
 
             @Override
-            protected void updateItem(ListItem item, boolean empty) {
+            protected void updateItem(MarketListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -247,26 +287,60 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         };
     }
 
+    private Callback<TableColumn<BaseCryptoAssetListItem, BaseCryptoAssetListItem>,
+            TableCell<BaseCryptoAssetListItem, BaseCryptoAssetListItem>> getBaseCryptoAssetNameCellFactory() {
+        return column -> new TableCell<>() {
+            private final Label label = new Label();
+            private final Tooltip tooltip = new BisqTooltip();
+
+            {
+                label.setPadding(new Insets(0, 0, 0, 10));
+                label.setGraphicTextGap(8);
+                label.getStyleClass().add("market-name");
+                tooltip.getStyleClass().add("market-name-tooltip");
+            }
+
+            @Override
+            protected void updateItem(BaseCryptoAssetListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    label.setGraphic(item.getCryptoAssetLogo());
+                    String quoteCurrencyName = item.getDisplayName();
+                    label.setText(quoteCurrencyName);
+                    if (quoteCurrencyName.length() > 30) {
+                        tooltip.setText(quoteCurrencyName);
+                        label.setTooltip(tooltip);
+                    }
+
+                    setGraphic(label);
+                } else {
+                    label.setTooltip(null);
+                    label.setGraphic(null);
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
-    static class ListItem {
+    static class MarketListItem {
         @EqualsAndHashCode.Include
         private final Market market;
         @EqualsAndHashCode.Include
         private final long numOffersAsInteger;
-
         private final String quoteCurrencyDisplayName;
         private final String numOffers;
-
-        // TODO: move to cell
         private final Node marketLogo;
 
-        ListItem(Market market, long numOffersAsInteger) {
+        MarketListItem(Market market, long numOffersAsInteger) {
             this.market = market;
             this.numOffersAsInteger = numOffersAsInteger;
-
-            this.numOffers = String.valueOf(numOffersAsInteger);
-            quoteCurrencyDisplayName = new FiatCurrency(market.getQuoteCurrencyCode()).getCodeAndDisplayName();
+            numOffers = String.valueOf(numOffersAsInteger);
+            quoteCurrencyDisplayName = market.isCrypto()
+                    ? new CryptoAsset(market.getQuoteCurrencyCode()).getCodeAndDisplayName()
+                    : new FiatCurrency(market.getQuoteCurrencyCode()).getCodeAndDisplayName();
             marketLogo = MarketImageComposition.createMarketLogo(market.getQuoteCurrencyCode());
             marketLogo.setCache(true);
             marketLogo.setCacheHint(CacheHint.SPEED);
@@ -278,6 +352,38 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         @Override
         public String toString() {
             return market.toString();
+        }
+    }
+
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+    @Getter
+    static class BaseCryptoAssetListItem {
+        @EqualsAndHashCode.Include
+        private final CryptoAsset cryptoAsset;
+        @EqualsAndHashCode.Include
+        private final long numOffersAsInteger;
+        private final String displayName;
+        private final String numOffers;
+        private final Label cryptoAssetLogo;
+
+        BaseCryptoAssetListItem(CryptoAsset cryptoAsset, long numOffersAsInteger) {
+            this.cryptoAsset = cryptoAsset;
+            this.numOffersAsInteger = numOffersAsInteger;
+            numOffers = String.valueOf(numOffersAsInteger);
+            displayName = cryptoAsset.getCodeAndDisplayName();
+            cryptoAssetLogo = new Label();
+            String imageId = String.format("market-%s", cryptoAsset.getCode().toLowerCase());
+            cryptoAssetLogo.setGraphic(ImageUtil.getImageViewById(imageId));
+            cryptoAssetLogo.setCache(true);
+            cryptoAssetLogo.setCacheHint(CacheHint.SPEED);
+            ColorAdjust colorAdjust = new ColorAdjust();
+            colorAdjust.setBrightness(-0.1);
+            cryptoAssetLogo.setEffect(colorAdjust);
+        }
+
+        @Override
+        public String toString() {
+            return cryptoAsset.toString();
         }
     }
 }

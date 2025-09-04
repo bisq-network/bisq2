@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.direction_and_market;
 
+import bisq.common.asset.CryptoAsset;
 import bisq.common.market.Market;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
@@ -36,12 +37,19 @@ import lombok.Getter;
 public class MuSigCreateOfferDirectionAndMarketModel implements Model {
     private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>(Direction.BUY);
     private final BooleanProperty buyButtonDisabled = new SimpleBooleanProperty();
-    private final ObjectProperty<MuSigCreateOfferDirectionAndMarketView.ListItem> selectedMarketListItem = new SimpleObjectProperty<>();
+
+    private final ObjectProperty<MuSigCreateOfferDirectionAndMarketView.MarketListItem> selectedMarketListItem = new SimpleObjectProperty<>();
     private final StringProperty searchText = new SimpleStringProperty();
     private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
-    private final ObservableList<MuSigCreateOfferDirectionAndMarketView.ListItem> listItems = FXCollections.observableArrayList();
-    private final FilteredList<MuSigCreateOfferDirectionAndMarketView.ListItem> filteredList = new FilteredList<>(listItems);
-    private final SortedList<MuSigCreateOfferDirectionAndMarketView.ListItem> sortedList = new SortedList<>(filteredList);
+    private final ObservableList<MuSigCreateOfferDirectionAndMarketView.MarketListItem> marketListItems = FXCollections.observableArrayList();
+    private final FilteredList<MuSigCreateOfferDirectionAndMarketView.MarketListItem> filteredMarketListItems = new FilteredList<>(marketListItems);
+    private final SortedList<MuSigCreateOfferDirectionAndMarketView.MarketListItem> sortedMarketListItems = new SortedList<>(filteredMarketListItems);
+
+    private final ObjectProperty<MuSigCreateOfferDirectionAndMarketView.BaseCryptoAssetListItem> selectedBaseCryptoAssetListItem = new SimpleObjectProperty<>();
+    private final ObjectProperty<CryptoAsset> selectedBaseCryptoAsset = new SimpleObjectProperty<>();
+    private final ObservableList<MuSigCreateOfferDirectionAndMarketView.BaseCryptoAssetListItem> baseCryptoAssetListItems = FXCollections.observableArrayList();
+    private final FilteredList<MuSigCreateOfferDirectionAndMarketView.BaseCryptoAssetListItem> filteredBaseCryptoAssetListItems = new FilteredList<>(baseCryptoAssetListItems);
+    private final SortedList<MuSigCreateOfferDirectionAndMarketView.BaseCryptoAssetListItem> sortedBaseCryptoAssetListItems = new SortedList<>(filteredBaseCryptoAssetListItems);
 
     void reset() {
         direction.set(Direction.BUY);
@@ -49,6 +57,9 @@ public class MuSigCreateOfferDirectionAndMarketModel implements Model {
         selectedMarketListItem.set(null);
         searchText.set(null);
         selectedMarket.set(null);
-        listItems.clear();
+        marketListItems.clear();
+        selectedBaseCryptoAssetListItem.set(null);
+        selectedBaseCryptoAsset.set(null);
+        baseCryptoAssetListItems.clear();
     }
 }
