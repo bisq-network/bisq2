@@ -194,6 +194,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         model.getSelectedMarketListItem().set(item);
         model.getSelectedMarket().set(market);
         settingsService.setSelectedMuSigMarket(market);
+        settingsService.setMuSigLastSelectedMarketByBaseCurrencyMap(market);
     }
 
     private void initializeMarketSelection() {
