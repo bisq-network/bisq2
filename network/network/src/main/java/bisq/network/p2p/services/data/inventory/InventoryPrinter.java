@@ -83,9 +83,10 @@ public class InventoryPrinter {
         if (report.isEmpty()) {
             report = "No items received";
         }
+        int numEntries = inventory.getEntries().size();
         String maxSizeReached = inventory.isMaxSizeReached()
                 ? "Still missing data. Response got truncated because max size was reached"
-                : "All data received from peer";
+                : numEntries == 0 ? "No data received from peer." : "All data received from peer. Num entries: " + numEntries;
         String size = ByteUnit.BYTE.toKB((double) inventory.getCachedSerializedSize().orElse(0)) + " KB";
         String passed = MathUtils.roundDouble((System.currentTimeMillis() - requestTs) / 1000d, 2) + " sec.";
         log.info("\n##########################################################################################\n" +

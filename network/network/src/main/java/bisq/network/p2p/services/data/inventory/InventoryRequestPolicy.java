@@ -17,16 +17,19 @@
 
 package bisq.network.p2p.services.data.inventory;
 
+import bisq.common.network.Address;
 import bisq.common.util.CollectionUtil;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static bisq.network.p2p.services.data.inventory.InventoryRequestPolicy.NextTaskAfterRequestCompleted.DO_NOTHING;
 import static bisq.network.p2p.services.data.inventory.InventoryRequestPolicy.NextTaskAfterRequestCompleted.RETRY_REQUEST_WITH_NEW_CONNECTION;
@@ -72,7 +75,7 @@ import static bisq.network.p2p.services.data.inventory.InventoryRequestPolicy.Ne
  *   <li>{@link #getCandidatesForPeriodicRequests()} - Retrieves a filtered and shuffled list of connections suitable for periodic requests.</li>
  *   <li>{@link #getFreshCandidate(Connection)} - Finds a candidate connection excluding a given connection.</li>
  *   <li>{@link #onRequestCompleted(Connection, Inventory, Throwable)} - Determines next action after a request completes based on outcome.</li>
- *   <li>{@link #getDelayForPeriodicRequests(List, Throwable, List)} - Computes delay before next periodic request based on completion status.</li>
+ *   <li>{@link #getDelayForNextPeriodicRequests(List, Throwable, List)} - Computes delay before next periodic request based on completion status.</li>
  * </ul>
  */
 @Slf4j
@@ -89,6 +92,7 @@ class InventoryRequestPolicy {
     private final InventoryFilterFactory inventoryFilterFactory;
     private final Node node;
     private final PeerGroupService peerGroupService;
+    private final Set<Address> ignoredAddresses = new CopyOnWriteArraySet<>();
 
     InventoryRequestPolicy(InventoryService.Config config,
                            InventoryRequestModel inventoryRequestModel,
@@ -103,20 +107,32 @@ class InventoryRequestPolicy {
     }
 
     boolean shouldRequestOnNewConnection(Connection connection) {
-        return !inventoryRequestModel.getAllDataReceived().get() &&
+        return !inventoryRequestModel.getInitialInventoryRequestsCompleted().get() &&
                 canUseCandidate(connection) &&
                 isBelowMaxPendingRequests();
     }
 
 
     List<Connection> getCandidatesForPeriodicRequests() {
-        Stream<Connection> seeds = peerGroupService.getShuffledSeedConnections(node)
-                .limit(config.getMaxSeedsForRequest());
-        Stream<Connection> peers = peerGroupService.getShuffledNonSeedConnections(node)
-                .limit(config.getMaxPeersForRequest());
-        int limit = config.getMaxPendingRequestsAtPeriodicRequests();
-        return CollectionUtil.toShuffledList(Stream.concat(seeds, peers)).stream()
+        List<Connection> candidates = peerGroupService.getShuffledNonSeedConnections(node)
                 .filter(this::canUseCandidate)
+                .limit(config.getMaxPeersForRequest())
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        List<Connection> seeds = peerGroupService.getShuffledSeedConnections(node)
+                .filter(this::canUseCandidate)
+                .limit(config.getMaxSeedsForRequest())
+                .collect(Collectors.toCollection(ArrayList::new));
+        if (!seeds.isEmpty()) {
+            Connection selectedSeed = seeds.removeFirst();
+            candidates.addAll(seeds);
+
+            candidates = CollectionUtil.toShuffledList(candidates);
+            candidates.addFirst(selectedSeed); // ensure seed at front
+        }
+
+        int limit = config.getMaxPendingRequestsAtPeriodicRequests();
+        return candidates.stream()
                 .limit(limit)
                 .collect(Collectors.toList());
     }
@@ -128,41 +144,61 @@ class InventoryRequestPolicy {
     }
 
     NextTaskAfterRequestCompleted onRequestCompleted(Connection connection, Inventory inventory, Throwable throwable) {
-        if (inventoryRequestModel.getAllDataReceived().get()) {
+        boolean initialInventoryRequestsCompleted = inventoryRequestModel.getInitialInventoryRequestsCompleted().get();
+        if (initialInventoryRequestsCompleted) {
             return DO_NOTHING;
         }
 
+        boolean belowMaxPendingRequests = isBelowMaxPendingRequests();
         if (throwable != null) {
-            return isBelowMaxPendingRequests()
-                    ? RETRY_REQUEST_WITH_NEW_CONNECTION
-                    : DO_NOTHING;
+            return belowMaxPendingRequests ? RETRY_REQUEST_WITH_NEW_CONNECTION : DO_NOTHING;
         }
 
-        if (inventory.allDataReceived()) {
-            inventoryRequestModel.getAllDataReceived().set(true);
-            return START_PERIODIC_REQUESTS;
-        }
-
-        if (isBelowMaxPendingRequests()) {
-            if (canUseCandidate(connection)) {
-                return RETRY_REQUEST_WITH_SAME_CONNECTION;
-            } else {
-                return RETRY_REQUEST_WITH_NEW_CONNECTION;
+        boolean finalDataDelivered = inventory.finalDataDelivered();
+        if (finalDataDelivered) {
+            int numInventoryRequestsCompleted = inventoryRequestModel.getNumInventoryRequestsCompleted().incrementAndGet();
+            inventoryRequestModel.getNumInventoryRequestsCompletedObservable().set(numInventoryRequestsCompleted);
+            if (numInventoryRequestsCompleted >= config.getMinCompletedRequests()) {
+                inventoryRequestModel.getInitialInventoryRequestsCompleted().set(true);
+                // We consider initial inventory request completed.
+                // There is no guarantee though that we really got all data. In case our peers had incomplete data
+                // themselves, we are also left in an incomplete state, though with a healthy network that is rather
+                // unlikely. Also with periodic requests we have good chances to pick up missing data at a bit later.
+                return START_PERIODIC_REQUESTS;
             }
-        } else {
+        }
+
+        if (!belowMaxPendingRequests) {
+            // Too many open requests...
             return DO_NOTHING;
+        }
+
+        if (inventory.getEntries().isEmpty() || !inventory.isMaxSizeReached()) {
+            // Peers which deliver no entries might be bootstrapping, or the peer has no data which we have already.
+            // Peers which have isMaxSizeReached=false have sent all data.
+            // In all those cases we ignore them.
+            ignoredAddresses.add(connection.getPeerAddress());
+        }
+
+        boolean canUseCandidate = canUseCandidate(connection);
+        if (canUseCandidate && inventory.isMaxSizeReached() && !inventory.getEntries().isEmpty()) {
+            // Peer has more data, we stick to that
+            return RETRY_REQUEST_WITH_SAME_CONNECTION;
+        } else {
+            // Try new peer
+            return RETRY_REQUEST_WITH_NEW_CONNECTION;
         }
     }
 
-    long getDelayForPeriodicRequests(List<Inventory> results,
-                                     Throwable throwable,
-                                     List<Connection> candidates) {
+    long getDelayForNextPeriodicRequests(List<Inventory> results,
+                                         Throwable throwable,
+                                         List<Connection> candidates) {
         if (throwable != null || results == null) {
             log.info("Periodic batch request failed – retrying in 1 second");
             return 1000;
         }
-        boolean allDataReceived = results.stream().anyMatch(Inventory::allDataReceived);
-        if (allDataReceived) {
+        boolean finalDataDelivered = results.stream().anyMatch(Inventory::finalDataDelivered);
+        if (finalDataDelivered) {
             long delay = config.getRepeatRequestInterval();
             log.info("We got {} requests completed and have all data received. " +
                             "We repeat requests in {} seconds",
@@ -176,12 +212,14 @@ class InventoryRequestPolicy {
     }
 
     private boolean canUseCandidate(Connection connection) {
-        return !inventoryRequestModel.getRequestFuturesByConnectionId().containsKey(connection.getId()) &&
+        return !ignoredAddresses.contains(connection.getPeerAddress()) &&
+                !inventoryRequestModel.getRequestResponseHandler().hasPendingRequest(connection.getId()) &&
                 inventoryFilterFactory.getPreferredFilterType(connection.getPeersCapability().getFeatures()).isPresent();
     }
 
     private boolean isBelowMaxPendingRequests() {
-        inventoryRequestModel.getNumPendingRequests().set(inventoryRequestModel.getRequestFuturesByConnectionId().size());
-        return inventoryRequestModel.getNumPendingRequests().get() < config.getMaxPendingRequests();
+        int numPendingRequests = inventoryRequestModel.getRequestResponseHandler().getNumPendingRequests();
+        inventoryRequestModel.getNumPendingRequestsObservable().set(numPendingRequests);
+        return numPendingRequests < config.getMaxPendingRequests();
     }
 }
