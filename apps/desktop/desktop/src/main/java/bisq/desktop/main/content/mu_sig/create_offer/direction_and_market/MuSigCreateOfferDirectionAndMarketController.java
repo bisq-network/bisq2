@@ -24,6 +24,7 @@ import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
+import bisq.i18n.Res;
 import bisq.mu_sig.MuSigService;
 import bisq.offer.Direction;
 import bisq.settings.SettingsService;
@@ -188,11 +189,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
     }
 
     private void setSelectedMarketAndListItem(Market market) {
-        MuSigCreateOfferDirectionAndMarketView.MarketListItem item = model.getMarketListItems().stream()
-                .filter(m -> m.getMarket().equals(market))
-                .findAny().orElse(null);
-        model.getSelectedMarketListItem().set(item);
-        model.getSelectedMarket().set(market);
+        updateSelectedMarket(market);
         settingsService.setSelectedMuSigMarket(market);
         settingsService.setMuSigLastSelectedMarketByBaseCurrencyMap(market);
     }
@@ -200,11 +197,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
     private void initializeMarketSelection() {
         Market market = settingsService.getSelectedMuSigMarket().get();
         if (market != null) {
-            model.getSelectedMarket().set(market);
-            MuSigCreateOfferDirectionAndMarketView.MarketListItem item = model.getMarketListItems().stream()
-                    .filter(m -> m.getMarket().equals(market))
-                    .findAny().orElse(null);
-            model.getSelectedMarketListItem().set(item);
+            updateSelectedMarket(market);
             model.getSelectedBaseCryptoAsset().set(
                     baseCryptoAssets.stream()
                             .filter(cryptoAsset -> cryptoAsset.getCode().equals(market.getBaseCurrencyCode()))
@@ -218,6 +211,16 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         } else {
             updateWithLastSelectedOrDefaultMarket(CryptoAssetRepository.BITCOIN.getCode());
         }
+    }
+
+    private void updateSelectedMarket(Market market) {
+        MuSigCreateOfferDirectionAndMarketView.MarketListItem item = model.getMarketListItems().stream()
+                .filter(m -> m.getMarket().equals(market))
+                .findAny().orElse(null);
+        model.getSelectedMarketListItem().set(item);
+        model.getSelectedMarket().set(market);
+        model.getHeadlineText().set(Res.get("muSig.createOffer.directionAndMarket.headline",
+                market.getBaseCurrencyName(), market.getQuoteCurrencyName()));
     }
 
     private void setDirection(Direction direction) {
