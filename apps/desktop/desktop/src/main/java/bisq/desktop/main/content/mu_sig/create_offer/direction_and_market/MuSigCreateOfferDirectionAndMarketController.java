@@ -88,14 +88,15 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
                 return;
             }
 
-            List<Market> markets = switch (cryptoAsset) {
-                case CryptoAsset x when x.equals(CryptoAssetRepository.XMR) -> MarketRepository.getXmrCryptoMarkets();
-                case CryptoAsset b when b.equals(CryptoAssetRepository.BITCOIN) -> MarketRepository.getAllFiatMarkets();
-                default -> {
-                    log.warn("Unsupported base crypto asset selected: {}", cryptoAsset);
-                    yield List.of();
-                }
-            };
+            List<Market> markets;
+            if (cryptoAsset.equals(CryptoAssetRepository.XMR)) {
+                markets = MarketRepository.getXmrCryptoMarkets();
+            } else if (cryptoAsset.equals(CryptoAssetRepository.BITCOIN)) {
+                markets = MarketRepository.getAllFiatMarkets();
+            } else {
+                log.warn("Unsupported base crypto asset selected: {}", cryptoAsset);
+                markets = List.of();
+            }
             model.getMarketListItems().setAll(markets.stream().filter(market ->
                     marketPriceService.getMarketPriceByCurrencyMap().containsKey(market)).map(market -> {
                 long numOffersInMarket = muSigService.getOffers().stream().filter(offer -> {
@@ -137,7 +138,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
             }
         });
 
-        initializeSelections();
+        initializeMarketSelection();
     }
 
     @Override
@@ -195,9 +196,9 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         settingsService.setSelectedMuSigMarket(market);
     }
 
-    private void initializeSelections() {
-        if (settingsService.getSelectedMuSigMarket() != null) {
-            Market market = settingsService.getSelectedMuSigMarket().get();
+    private void initializeMarketSelection() {
+        Market market = settingsService.getSelectedMuSigMarket().get();
+        if (market != null) {
             model.getSelectedMarket().set(market);
             MuSigCreateOfferDirectionAndMarketView.MarketListItem item = model.getMarketListItems().stream()
                     .filter(m -> m.getMarket().equals(market))

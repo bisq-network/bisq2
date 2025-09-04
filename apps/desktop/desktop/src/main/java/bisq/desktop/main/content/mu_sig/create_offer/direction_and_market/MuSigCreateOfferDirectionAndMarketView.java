@@ -99,7 +99,7 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         baseCryptoAssetsTableView = new BisqTableView<>(model.getSortedBaseCryptoAssetListItems());
         baseCryptoAssetsTableView.setPrefSize(TABLE_WIDTH, TABLE_HEIGHT);
         baseCryptoAssetsTableView.setFixedCellSize(50);
-        configBaseCurrencyAssetsTableView();
+        configBaseCryptoAssetsTableView();
 
         currencyLabel = new Label();
         currencyLabel.setGraphic(ImageUtil.getImageViewById("chevron-drop-menu-green"));
@@ -236,7 +236,7 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
                 .build());
     }
 
-    private void configBaseCurrencyAssetsTableView() {
+    private void configBaseCryptoAssetsTableView() {
         baseCryptoAssetsTableView.getColumns().add(baseCryptoAssetsTableView.getSelectionMarkerColumn());
         baseCryptoAssetsTableView.getColumns().add(new BisqTableColumn.Builder<BaseCryptoAssetListItem>()
                 .left()
