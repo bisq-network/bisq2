@@ -116,6 +116,7 @@ public class TorTransportService implements TransportService {
         }
     }
 
+    @Override
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {
         return Optional.of(torService.getSocks5Proxy(null));
     }

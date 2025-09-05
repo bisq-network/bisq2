@@ -49,28 +49,41 @@ public class I2PRouterService implements Service {
     @Getter
     private final Observable<Throwable> throwable = new Observable<>();
     private final I2PRouter router;
-    private final Bi2pGrpcServer monitorServer;
-    private final Bi2pGrpcService monitorService;
+    private final Bi2pGrpcServer bi2pGrpcServer;
+    private final Bi2pGrpcService bi2pGrpcService;
     private volatile boolean shutdownInProgress;
 
     public I2PRouterService(Application.Parameters parameters, String bi2pDir) {
+        i2pDirPath = PlatformUtils.getUserDataDir().resolve(bi2pDir);
+
         String i2cpHost = Optional.ofNullable(parameters.getNamed().get("i2cpHost"))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .orElse(RouterSetup.DEFAULT_I2CP_HOST);
         int i2cpPort = parsePort(parameters.getNamed().get("i2cpPort"), RouterSetup.DEFAULT_I2CP_PORT);
+
         String bi2pGrpcHost = Optional.ofNullable(parameters.getNamed().get("bi2pGrpcHost"))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .orElse(RouterSetup.DEFAULT_BI2P_GRPC_HOST);
         int bi2pGrpcPort = parsePort(parameters.getNamed().get("bi2pGrpcPort"), RouterSetup.DEFAULT_BI2P_GRPC_PORT);
 
-        i2pDirPath = PlatformUtils.getUserDataDir().resolve(bi2pDir);
-        log.info("I2CP {}:{}; Grpc server listening at: {}:{}", i2cpHost, i2cpPort, bi2pGrpcHost, bi2pGrpcPort);
+        String httpProxyHost = Optional.ofNullable(parameters.getNamed().get("httpProxyHost"))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .orElse(RouterSetup.DEFAULT_HTTP_PROXY_HOST);
+        int httpProxyPort = parsePort(parameters.getNamed().get("httpProxyPort"), RouterSetup.DEFAULT_HTTP_PROXY_PORT);
+        boolean httpProxyEnabled = Optional.ofNullable(parameters.getNamed().get("httpProxyEnabled"))
+                .map(String::trim)
+                .map(e -> e.equalsIgnoreCase("true"))
+                .orElse(true);
 
         router = new I2PRouter(i2pDirPath,
                 i2cpHost,
                 i2cpPort,
+                httpProxyHost,
+                httpProxyPort,
+                httpProxyEnabled,
                 I2PLogLevel.INFO,
                 false,
                 (int) TimeUnit.MINUTES.toMillis(10),
@@ -78,14 +91,15 @@ public class I2PRouterService implements Service {
                 512,
                 80);
 
-        monitorService = new Bi2pGrpcService(router);
-        monitorServer = new Bi2pGrpcServer(bi2pGrpcHost, bi2pGrpcPort, monitorService);
+        log.info("I2CP {}:{}; Grpc server listening at: {}:{}", i2cpHost, i2cpPort, bi2pGrpcHost, bi2pGrpcPort);
+        bi2pGrpcService = new Bi2pGrpcService(router);
+        bi2pGrpcServer = new Bi2pGrpcServer(bi2pGrpcHost, bi2pGrpcPort, bi2pGrpcService);
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return monitorServer.initialize()
-                .thenCompose(result -> monitorService.initialize())
+        return bi2pGrpcServer.initialize()
+                .thenCompose(result -> bi2pGrpcService.initialize())
                 .thenCompose(result -> router.startRouter())
                 .whenComplete((result, throwable) -> {
                     if (throwable != null) {
@@ -103,12 +117,12 @@ public class I2PRouterService implements Service {
         }
         shutdownInProgress = true;
 
-        return Optional.ofNullable(monitorServer)
+        return Optional.ofNullable(bi2pGrpcServer)
                 .map(Bi2pGrpcServer::shutdown)
                 .orElse(CompletableFuture.completedFuture(true))
                 .handle((r, t) -> t == null)
                 .thenCompose(result ->
-                        Optional.ofNullable(monitorService)
+                        Optional.ofNullable(bi2pGrpcService)
                                 .map(Bi2pGrpcService::shutdown)
                                 .orElse(CompletableFuture.completedFuture(true))
                                 .handle((r, t) -> t == null))

@@ -18,9 +18,9 @@
 package bisq.network.i2p.router;
 
 import bisq.common.threading.ExecutorFactory;
+import bisq.network.i2p.router.state.RouterMonitor;
 import bisq.network.i2p.router.utils.I2PLogLevel;
 import bisq.network.i2p.router.utils.LogRedirector;
-import bisq.network.i2p.router.state.RouterMonitor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.data.Destination;
@@ -36,16 +36,21 @@ import java.util.concurrent.TimeUnit;
 public class I2PRouter {
     private final String i2cpHost;
     private final int i2cpPort;
+    private final boolean httpProxyEnabled;
     private final long routerStartupTimeout;
     private final RouterSetup routerSetup;
     @Getter
     private final RouterMonitor routerMonitor;
     private final Router router;
+    private final I2PHttpProxy httpProxy;
     private volatile boolean isShutdownInProgress;
 
     public I2PRouter(Path i2pDirPath,
                      String i2cpHost,
                      int i2cpPort,
+                     String httpProxyHost,
+                     int httpProxyPort,
+                     boolean httpProxyEnabled,
                      I2PLogLevel i2pLogLevel,
                      boolean isEmbedded,
                      long routerStartupTimeout,
@@ -54,6 +59,7 @@ public class I2PRouter {
                      int bandwidthSharePercentage) {
         this.i2cpHost = i2cpHost;
         this.i2cpPort = i2cpPort;
+        this.httpProxyEnabled = httpProxyEnabled;
         this.routerStartupTimeout = routerStartupTimeout;
 
         LogRedirector.redirectSystemStreams();
@@ -75,6 +81,7 @@ public class I2PRouter {
 
         routerSetup.setI2pLogLevel(router);
         routerMonitor = new RouterMonitor(router);
+        httpProxy = new I2PHttpProxy(router, routerMonitor, httpProxyHost, httpProxyPort);
     }
 
     public CompletableFuture<Boolean> startRouter() {
@@ -82,6 +89,9 @@ public class I2PRouter {
         return CompletableFuture.supplyAsync(() -> {
                     try {
                         long ts = System.currentTimeMillis();
+                        if (httpProxyEnabled) {
+                            httpProxy.initialize();
+                        }
                         routerMonitor.startPolling();
                         router.runRouter();
                         log.info("Starting router took {} ms", System.currentTimeMillis() - ts);
@@ -104,6 +114,7 @@ public class I2PRouter {
         ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("I2pRouter.shutdown");
         return CompletableFuture.supplyAsync(() -> {
                     long ts = System.currentTimeMillis();
+                    httpProxy.shutdown();
                     routerMonitor.startShutdown();
                     router.shutdown(1);
                     log.info("I2P router shutdown completed. Took {} ms.", System.currentTimeMillis() - ts);

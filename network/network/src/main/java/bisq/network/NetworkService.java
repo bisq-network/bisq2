@@ -21,6 +21,7 @@ package bisq.network;
 import bisq.common.application.Service;
 import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
@@ -36,7 +37,6 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
-import bisq.network.p2p.node.transport.I2PTransportService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
@@ -61,7 +61,6 @@ import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyBundleService;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
-import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -73,6 +72,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -82,7 +82,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static bisq.common.network.TransportType.TOR;
 import static bisq.network.p2p.services.data.DataService.Listener;
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -131,11 +130,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         this.config = config;
         NetworkEnvelope.setNetworkVersion(config.getVersion());
 
-        I2PTransportService.Config i2pCfg =
-                (I2PTransportService.Config) Optional
-                        .ofNullable(config.getConfigByTransportType().get(TransportType.I2P)).orElse(null);
         networkIdService = new NetworkIdService(persistenceService, keyBundleService, supportedTransportTypes, defaultPortByTransportType);
-        httpClientsByTransport = new HttpClientsByTransport(i2pCfg);
+        Map<TransportType, TransportConfig> configByTransportType = config.getConfigByTransportType();
+        httpClientsByTransport = new HttpClientsByTransport(configByTransportType);
 
         Set<ServiceNode.SupportedService> supportedServices = config.getServiceNodeConfig().getSupportedServices();
 
@@ -155,7 +152,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
 
         seedAddressesByTransportFromConfig = config.getSeedAddressesByTransport();
-        serviceNodesByTransport = new ServiceNodesByTransport(config.getConfigByTransportType(),
+        serviceNodesByTransport = new ServiceNodesByTransport(configByTransportType,
                 config.getServiceNodeConfig(),
                 config.getPeerGroupServiceConfigByTransport(),
                 seedAddressesByTransportFromConfig,
@@ -425,9 +422,10 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     /* --------------------------------------------------------------------- */
 
     public BaseHttpClient getHttpClient(String url, String userAgent, TransportType transportType) {
-        // socksProxy only supported for TOR
-        Optional<Socks5Proxy> socksProxy = transportType == TOR ? serviceNodesByTransport.getSocksProxy() : Optional.empty();
-        return httpClientsByTransport.getHttpClient(url, userAgent, transportType, socksProxy, socks5ProxyAddress);
+        if (Objects.requireNonNull(transportType) == TransportType.TOR) {
+            return httpClientsByTransport.getHttpClient(url, userAgent, transportType, serviceNodesByTransport.getSocksProxy(transportType), socks5ProxyAddress);
+        }
+        return httpClientsByTransport.getHttpClient(url, userAgent, transportType);
     }
 
     public Map<TransportType, Observable<Node.State>> getDefaultNodeStateByTransportType() {

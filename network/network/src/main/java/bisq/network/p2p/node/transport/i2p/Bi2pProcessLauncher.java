@@ -44,18 +44,27 @@ public class Bi2pProcessLauncher implements Service {
     private final String bi2pGrpcHost;
     private final int bi2pGrpcPort;
     private final Path i2pRouterDir;
+    private final String httpProxyHost;
+    private final int httpProxyPort;
+    private final boolean httpProxyEnabled;
     private ScheduledExecutorService executor;
 
     public Bi2pProcessLauncher(String i2cpHost,
                                int i2cpPort,
                                String bi2pGrpcHost,
                                int bi2pGrpcPort,
-                               Path i2pRouterDir) {
+                               Path i2pRouterDir,
+                               String httpProxyHost,
+                               int httpProxyPort,
+                               boolean httpProxyEnabled) {
         this.i2cpHost = i2cpHost;
         this.i2cpPort = i2cpPort;
         this.bi2pGrpcHost = bi2pGrpcHost;
         this.bi2pGrpcPort = bi2pGrpcPort;
         this.i2pRouterDir = i2pRouterDir;
+        this.httpProxyHost = httpProxyHost;
+        this.httpProxyPort = httpProxyPort;
+        this.httpProxyEnabled = httpProxyEnabled;
     }
 
     @Override
@@ -107,6 +116,9 @@ public class Bi2pProcessLauncher implements Service {
                 command.add("--i2cpPort=" + i2cpPort);
                 command.add("--bi2pGrpcHost=" + bi2pGrpcHost);
                 command.add("--bi2pGrpcPort=" + bi2pGrpcPort);
+                command.add("--httpProxyHost=" + httpProxyHost);
+                command.add("--httpProxyPort=" + httpProxyPort);
+                command.add("--httpProxyEnabled=" + httpProxyEnabled);
                 command.add("--language=" + LanguageRepository.getDefaultLanguage());
 
                 ProcessBuilder processBuilder = new ProcessBuilder(command);
