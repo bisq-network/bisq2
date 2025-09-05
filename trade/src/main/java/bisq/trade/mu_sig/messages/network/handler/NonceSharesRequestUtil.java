@@ -20,6 +20,7 @@ package bisq.trade.mu_sig.messages.network.handler;
 import bisq.common.market.Market;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MusSigFeeRateProvider;
+import bisq.trade.protobuf.ReceiverAddressAndAmount;
 
 public class NonceSharesRequestUtil {
     public static long getTradeAmount(MuSigTrade trade) {
@@ -49,5 +50,22 @@ public class NonceSharesRequestUtil {
     public static long getSellersSecurityDeposit() {
         // TODO get from CollateralOptions
         return 30_000;
+    }
+
+    public static ReceiverAddressAndAmount getTradeFeeReceiver() {
+        // NOTE: As implemented right now on the Rust side, the seller pays the entire trade fee (including the small
+        //  amount needed to cover the increase in the mining fee from the optional trade fee output). In order to split
+        //  the trade fee differently, the specified _buyer_ security deposit (but not the specified seller security
+        //  deposit, which may be different) can be adjusted upwards by X sats, and the trade amount can be adjusted
+        //  downwards by X sats. This has the effect of transferring an extra X sats from the buyer to the seller at the
+        //  start of the trade. Thus, the Rust server would be using adjusted trade params (amount + security deposits)
+        //  that are slightly different to those presented to the user on the Java side.
+
+        // TODO: Determine the correct amount and pick address non-uniformly at random from oracle-provided BM list.
+        //noinspection SpellCheckingInspection
+        return ReceiverAddressAndAmount.newBuilder()
+                .setAddress("bcrt1qwk6p86mzqmstcsg99qlu2mhsp3766u68jktv6k")
+                .setAmount(5_000)
+                .build();
     }
 }

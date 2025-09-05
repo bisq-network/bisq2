@@ -71,6 +71,7 @@ public abstract class BaseSetupTradeMessage_B_Handler extends MuSigTradeMessageH
                 .setTradeAmount(NonceSharesRequestUtil.getTradeAmount(trade))
                 .setBuyersSecurityDeposit(NonceSharesRequestUtil.getBuyerSecurityDeposit())
                 .setSellersSecurityDeposit(NonceSharesRequestUtil.getSellersSecurityDeposit())
+                .setTradeFeeReceiver(NonceSharesRequestUtil.getTradeFeeReceiver())
                 .build();
         myNonceSharesMessage = NonceSharesMessage.fromProto(blockingStub.getNonceShares(nonceSharesRequest));
         long redirectionAmountMsat = myNonceSharesMessage.getRedirectionAmountMsat();
