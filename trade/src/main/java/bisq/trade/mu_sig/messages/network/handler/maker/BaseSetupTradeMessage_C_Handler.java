@@ -53,13 +53,15 @@ public abstract class BaseSetupTradeMessage_C_Handler extends MuSigTradeMessageH
     protected void process(SetupTradeMessage_C message) {
         peersNonceShares = message.getNonceShares();
         peersPartialSignatures = message.getPartialSignatures();
+        long redirectionAmountMsat = trade.getMyself().getMyNonceSharesMessage()
+                .orElseThrow().getRedirectionAmountMsat();
 
         NonceSharesMessage peersNonceSharesMessage = NonceSharesMessage.from(peersNonceShares);
 
         PartialSignaturesRequest partialSignaturesRequest = PartialSignaturesRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setPeersNonceShares(peersNonceSharesMessage.toProto(true))
-                .addAllRedirectionReceivers(PartialSignaturesRequestUtil.getBurningMenDPTReceivers())
+                .addAllRedirectionReceivers(PartialSignaturesRequestUtil.getBurningMenDPTReceivers(redirectionAmountMsat))
                 .build();
         myPartialSignaturesMessage = PartialSignaturesMessage.fromProto(blockingStub.getPartialSignatures(partialSignaturesRequest));
 

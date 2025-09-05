@@ -33,6 +33,7 @@ public final class NonceSharesMessage implements Proto {
                 nonceShares.getRedirectTxFeeBumpAddress(),
                 nonceShares.getClaimTxPayoutAddress(),
                 nonceShares.getHalfDepositPsbt(),
+                0, // only received from the server, not exchanged between peers, so set to default
                 nonceShares.getSwapTxInputNonceShare(),
                 nonceShares.getBuyersWarningTxBuyerInputNonceShare(),
                 nonceShares.getBuyersWarningTxSellerInputNonceShare(),
@@ -49,6 +50,7 @@ public final class NonceSharesMessage implements Proto {
     private final String redirectTxFeeBumpAddress;
     private final String claimTxPayoutAddress;
     private final byte[] halfDepositPsbt;
+    private final long redirectionAmountMsat;
     private final byte[] swapTxInputNonceShare;
     private final byte[] buyersWarningTxBuyerInputNonceShare;
     private final byte[] buyersWarningTxSellerInputNonceShare;
@@ -63,6 +65,7 @@ public final class NonceSharesMessage implements Proto {
                                String redirectTxFeeBumpAddress,
                                String claimTxPayoutAddress,
                                byte[] halfDepositPsbt,
+                               long redirectionAmountMsat,
                                byte[] swapTxInputNonceShare,
                                byte[] buyersWarningTxBuyerInputNonceShare,
                                byte[] buyersWarningTxSellerInputNonceShare,
@@ -76,6 +79,7 @@ public final class NonceSharesMessage implements Proto {
         this.redirectTxFeeBumpAddress = redirectTxFeeBumpAddress;
         this.claimTxPayoutAddress = claimTxPayoutAddress;
         this.halfDepositPsbt = halfDepositPsbt;
+        this.redirectionAmountMsat = redirectionAmountMsat;
         this.swapTxInputNonceShare = swapTxInputNonceShare;
         this.buyersWarningTxBuyerInputNonceShare = buyersWarningTxBuyerInputNonceShare;
         this.buyersWarningTxSellerInputNonceShare = buyersWarningTxSellerInputNonceShare;
@@ -93,6 +97,7 @@ public final class NonceSharesMessage implements Proto {
                 .setWarningTxFeeBumpAddress(warningTxFeeBumpAddress)
                 .setRedirectTxFeeBumpAddress(redirectTxFeeBumpAddress)
                 .setClaimTxPayoutAddress(claimTxPayoutAddress)
+                .setRedirectionAmountMsat(redirectionAmountMsat)
                 .setHalfDepositPsbt(ByteString.copyFrom(halfDepositPsbt))
                 .setSwapTxInputNonceShare(ByteString.copyFrom(swapTxInputNonceShare))
                 .setBuyersWarningTxBuyerInputNonceShare(ByteString.copyFrom(buyersWarningTxBuyerInputNonceShare))
@@ -115,6 +120,7 @@ public final class NonceSharesMessage implements Proto {
                 proto.getRedirectTxFeeBumpAddress(),
                 proto.getClaimTxPayoutAddress(),
                 proto.getHalfDepositPsbt().toByteArray(),
+                proto.getRedirectionAmountMsat(),
                 proto.getSwapTxInputNonceShare().toByteArray(),
                 proto.getBuyersWarningTxBuyerInputNonceShare().toByteArray(),
                 proto.getBuyersWarningTxSellerInputNonceShare().toByteArray(),
@@ -134,6 +140,7 @@ public final class NonceSharesMessage implements Proto {
                 Objects.equals(redirectTxFeeBumpAddress, that.redirectTxFeeBumpAddress) &&
                 Objects.equals(claimTxPayoutAddress, that.claimTxPayoutAddress) &&
                 Arrays.equals(halfDepositPsbt, that.halfDepositPsbt) &&
+                redirectionAmountMsat == that.redirectionAmountMsat &&
                 Arrays.equals(swapTxInputNonceShare, that.swapTxInputNonceShare) &&
                 Arrays.equals(buyersWarningTxBuyerInputNonceShare, that.buyersWarningTxBuyerInputNonceShare) &&
                 Arrays.equals(buyersWarningTxSellerInputNonceShare, that.buyersWarningTxSellerInputNonceShare) &&
@@ -151,6 +158,7 @@ public final class NonceSharesMessage implements Proto {
         result = 31 * result + Objects.hashCode(redirectTxFeeBumpAddress);
         result = 31 * result + Objects.hashCode(claimTxPayoutAddress);
         result = 31 * result + Arrays.hashCode(halfDepositPsbt);
+        result = 31 * result + Long.hashCode(redirectionAmountMsat);
         result = 31 * result + Arrays.hashCode(swapTxInputNonceShare);
         result = 31 * result + Arrays.hashCode(buyersWarningTxBuyerInputNonceShare);
         result = 31 * result + Arrays.hashCode(buyersWarningTxSellerInputNonceShare);

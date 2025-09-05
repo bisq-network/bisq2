@@ -19,18 +19,24 @@ package bisq.trade.mu_sig.messages.network.handler;
 
 import bisq.trade.protobuf.ReceiverAddressAndAmount;
 import com.google.common.collect.ImmutableMap;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.stream.Collectors;
 
+@Slf4j
 public class PartialSignaturesRequestUtil {
     // TODO We need to publish from the oracle data from bisq 1 to bisq 2 network so that the BM
     // addresses and receiver shares are accessible.
     // As this data is p2p network data we need some tolerance handling in case the traders have a different view of the
     // p2p network data.
-    public static Iterable<ReceiverAddressAndAmount> getBurningMenDPTReceivers() {
+    public static Iterable<ReceiverAddressAndAmount> getBurningMenDPTReceivers(long redirectionAmountMsat) {
+        // TODO: To prevent server-side errors/warnings, the receiver costs (amount + tx fee cost of each output) should
+        //  sum exactly to the redirectionAmountMsat quantity computed by the server.
+        log.warn("Ignoring redirectionAmountMsat {} received from the MuSig server.", redirectionAmountMsat);
+        //noinspection SpellCheckingInspection
         return ImmutableMap.of(
-                        "tb1pwxlp4v9v7v03nx0e7vunlc87d4936wnyqegw0fuahudypan64wys5stxh7", 200_000,
-                        "tb1qpg889v22f3gefuvwpe3963t5a00nvfmkhlgqw5", 80_000,
+                        "bcrt1phc8m8vansnl4utths947mjquprw20puwrrdfrwx8akeeu2tqwklsnxsvf0", 200_000,
+                        "bcrt1qwk6p86mzqmstcsg99qlu2mhsp3766u68jktv6k", 80_000,
                         "2N2x2bA28AsLZZEHss4SjFoyToQV5YYZsJM", 12_345
                 )
                 .entrySet().stream()

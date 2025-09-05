@@ -73,12 +73,13 @@ public abstract class BaseSetupTradeMessage_B_Handler extends MuSigTradeMessageH
                 .setSellersSecurityDeposit(NonceSharesRequestUtil.getSellersSecurityDeposit())
                 .build();
         myNonceSharesMessage = NonceSharesMessage.fromProto(blockingStub.getNonceShares(nonceSharesRequest));
+        long redirectionAmountMsat = myNonceSharesMessage.getRedirectionAmountMsat();
 
         NonceSharesMessage peersNonceSharesMessage = NonceSharesMessage.from(peersNonceShares);
         PartialSignaturesRequest partialSignaturesRequest = PartialSignaturesRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setPeersNonceShares(peersNonceSharesMessage.toProto(true))
-                .addAllRedirectionReceivers(PartialSignaturesRequestUtil.getBurningMenDPTReceivers())
+                .addAllRedirectionReceivers(PartialSignaturesRequestUtil.getBurningMenDPTReceivers(redirectionAmountMsat))
                 .build();
         myPartialSignaturesMessage = PartialSignaturesMessage.fromProto(blockingStub.getPartialSignatures(partialSignaturesRequest));
     }
