@@ -32,8 +32,6 @@ import bisq.network.p2p.node.transport.I2PTransportService;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.data.Destination;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Optional;
@@ -153,7 +151,7 @@ public class I2PRouterFacade {
             log.info("No external router detected. We start our Bisq I2P router in a new process. I2CP address: {}:{}, Grpc router monitor: {}:{}",
                     i2cpHost, i2cpPort, bi2pGrpcHost, bi2pGrpcPort);
             i2pRouterProcessLauncher = new Bi2pProcessLauncher(i2cpHost, i2cpPort, bi2pGrpcHost, bi2pGrpcPort, i2pRouterDir, httpProxyHost, httpProxyPort, httpProxyEnabled);
-            i2pRouterProcessLauncher.initialize().get();
+            i2pRouterProcessLauncher.initialize().get(config.getRouterStartupTimeout(), TimeUnit.MILLISECONDS);
             log.info("Bisq I2P router launched. Awaiting running state.");
             awaitGrpcMonitorServerAvailable();
             awaitRouterRunningUsingGrpcMonitor();
@@ -187,7 +185,7 @@ public class I2PRouterFacade {
         log.info("Default I2P router is used as external router");
     }
 
-    private void startEmbeddedRouter() throws TimeoutException, ExecutionException, InterruptedException, IOException, URISyntaxException {
+    private void startEmbeddedRouter() throws TimeoutException, ExecutionException, InterruptedException {
         log.info("Embedded I2P router is used. No external router detected.");
 
         i2pRouter = new I2PRouter(i2pRouterDir,
@@ -206,6 +204,7 @@ public class I2PRouterFacade {
         log.info("Embedded I2P router started.");
 
         awaitRouterRunning(i2pRouter.getRouterMonitor()).get();
+        log.info("Embedded I2P router running.");
     }
 
     private void awaitGrpcMonitorServerAvailable() throws ExecutionException, InterruptedException {

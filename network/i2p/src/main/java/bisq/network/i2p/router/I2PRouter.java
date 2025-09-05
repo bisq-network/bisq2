@@ -42,6 +42,7 @@ public class I2PRouter {
     @Getter
     private final RouterMonitor routerMonitor;
     private final Router router;
+    private final I2PHttpProxy httpProxy;
     private volatile boolean isShutdownInProgress;
 
     public I2PRouter(Path i2pDirPath,
@@ -80,6 +81,7 @@ public class I2PRouter {
 
         routerSetup.setI2pLogLevel(router);
         routerMonitor = new RouterMonitor(router);
+        httpProxy = new I2PHttpProxy(router, routerMonitor, httpProxyHost, httpProxyPort);
     }
 
     public CompletableFuture<Boolean> startRouter() {
@@ -87,6 +89,9 @@ public class I2PRouter {
         return CompletableFuture.supplyAsync(() -> {
                     try {
                         long ts = System.currentTimeMillis();
+                        if (httpProxyEnabled) {
+                            httpProxy.initialize();
+                        }
                         routerMonitor.startPolling();
                         router.runRouter();
                         log.info("Starting router took {} ms", System.currentTimeMillis() - ts);
@@ -109,6 +114,7 @@ public class I2PRouter {
         ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("I2pRouter.shutdown");
         return CompletableFuture.supplyAsync(() -> {
                     long ts = System.currentTimeMillis();
+                    httpProxy.shutdown();
                     routerMonitor.startShutdown();
                     router.shutdown(1);
                     log.info("I2P router shutdown completed. Took {} ms.", System.currentTimeMillis() - ts);
