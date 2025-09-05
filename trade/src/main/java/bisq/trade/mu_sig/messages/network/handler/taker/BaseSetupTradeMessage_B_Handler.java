@@ -78,7 +78,7 @@ public abstract class BaseSetupTradeMessage_B_Handler extends MuSigTradeMessageH
         PartialSignaturesRequest partialSignaturesRequest = PartialSignaturesRequest.newBuilder()
                 .setTradeId(trade.getId())
                 .setPeersNonceShares(peersNonceSharesMessage.toProto(true))
-                .addAllReceivers(PartialSignaturesRequestUtil.getBurningMenDPTReceivers())
+                .addAllRedirectionReceivers(PartialSignaturesRequestUtil.getBurningMenDPTReceivers())
                 .build();
         myPartialSignaturesMessage = PartialSignaturesMessage.fromProto(blockingStub.getPartialSignatures(partialSignaturesRequest));
     }

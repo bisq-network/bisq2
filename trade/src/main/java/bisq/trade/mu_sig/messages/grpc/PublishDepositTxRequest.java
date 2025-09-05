@@ -25,19 +25,19 @@ import lombok.Getter;
 @EqualsAndHashCode
 public final class PublishDepositTxRequest implements Proto {
     private final String tradeId;
-    private final DepositPsbt depositPsbt;
+    private final DepositPsbt peersDepositPsbt;
 
     public PublishDepositTxRequest(String tradeId,
-                                   DepositPsbt depositPsbt) {
+                                   DepositPsbt peersDepositPsbt) {
         this.tradeId = tradeId;
-        this.depositPsbt = depositPsbt;
+        this.peersDepositPsbt = peersDepositPsbt;
     }
 
     @Override
     public bisq.trade.protobuf.PublishDepositTxRequest.Builder getBuilder(boolean serializeForHash) {
         return bisq.trade.protobuf.PublishDepositTxRequest.newBuilder()
                 .setTradeId(tradeId)
-                .setDepositPsbt(depositPsbt.toProto(serializeForHash));
+                .setPeersDepositPsbt(peersDepositPsbt.toProto(serializeForHash));
     }
 
     @Override
@@ -47,6 +47,6 @@ public final class PublishDepositTxRequest implements Proto {
 
     public static PublishDepositTxRequest fromProto(bisq.trade.protobuf.PublishDepositTxRequest proto) {
         return new PublishDepositTxRequest(proto.getTradeId(),
-                DepositPsbt.fromProto(proto.getDepositPsbt()));
+                DepositPsbt.fromProto(proto.getPeersDepositPsbt()));
     }
 }
