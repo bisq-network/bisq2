@@ -31,6 +31,7 @@ import bisq.network.p2p.node.transport.i2p.I2PRouterFacade;
 import bisq.network.p2p.node.transport.i2p.RouterMode;
 import bisq.security.keys.I2PKeyPair;
 import bisq.security.keys.KeyBundle;
+import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -44,11 +45,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class I2PTransportService implements TransportService {
@@ -71,10 +71,10 @@ public class I2PTransportService implements TransportService {
                     config.getInt("i2cpPort"),
                     config.getString("bi2pGrpcHost"),
                     config.getInt("bi2pGrpcPort"),
-                    config.getBoolean("embeddedRouter"),
-                    config.getConfigList("proxyList").stream()
-                            .map(conf -> Address.from(conf.getString("host"), conf.getInt("port")))
-                            .collect(Collectors.toList()));
+                    config.getString("httpProxyHost"),
+                    config.getInt("httpProxyPort"),
+                    config.getBoolean("httpProxyEnabled"),
+                    config.getBoolean("embeddedRouter"));
         }
 
         private final int defaultNodePort;
@@ -89,11 +89,13 @@ public class I2PTransportService implements TransportService {
         private final String i2cpHost;
         private final String bi2pGrpcHost;
         private final int bi2pGrpcPort;
+        private final String httpProxyHost;
+        private final int httpProxyPort;
+        private final boolean httpProxyEnabled;
         private final boolean embeddedRouter;
         private final Path dataDir;
         private final int sendMessageThrottleTime;
         private final int receiveMessageThrottleTime;
-        private final List<Address> proxyList;
 
         public Config(Path dataDir,
                       int defaultNodePort,
@@ -109,8 +111,10 @@ public class I2PTransportService implements TransportService {
                       int i2cpPort,
                       String bi2pGrpcHost,
                       int bi2pGrpcPort,
-                      boolean embeddedRouter,
-                      List<Address> proxyList) {
+                      String httpProxyHost,
+                      int httpProxyPort,
+                      boolean httpProxyEnabled,
+                      boolean embeddedRouter) {
             this.dataDir = dataDir;
             this.defaultNodePort = defaultNodePort;
             this.socketTimeout = socketTimeout;
@@ -125,8 +129,10 @@ public class I2PTransportService implements TransportService {
             this.i2cpPort = i2cpPort;
             this.bi2pGrpcHost = bi2pGrpcHost;
             this.bi2pGrpcPort = bi2pGrpcPort;
+            this.httpProxyHost = httpProxyHost;
+            this.httpProxyPort = httpProxyPort;
+            this.httpProxyEnabled = httpProxyEnabled;
             this.embeddedRouter = embeddedRouter;
-            this.proxyList = proxyList;
         }
     }
 
@@ -261,6 +267,12 @@ public class I2PTransportService implements TransportService {
             }
             throw new IOException(exception);
         }
+    }
+
+    @Override
+    public Optional<Socks5Proxy> getSocksProxy() {
+        // We use HttpProxy
+        return Optional.empty();
     }
 
     @Override
