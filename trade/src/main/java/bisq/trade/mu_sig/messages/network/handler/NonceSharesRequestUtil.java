@@ -18,8 +18,8 @@
 package bisq.trade.mu_sig.messages.network.handler;
 
 import bisq.common.market.Market;
+import bisq.trade.mu_sig.MuSigFeeRateProvider;
 import bisq.trade.mu_sig.MuSigTrade;
-import bisq.trade.mu_sig.MusSigFeeRateProvider;
 import bisq.trade.protobuf.ReceiverAddressAndAmount;
 
 public class NonceSharesRequestUtil {
@@ -35,11 +35,11 @@ public class NonceSharesRequestUtil {
     }
 
     public static long getDepositTxFeeRate() {
-        return MusSigFeeRateProvider.getDepositTxFeeRate();
+        return MuSigFeeRateProvider.getDepositTxFeeRate();
     }
 
     public static long getPreparedTxFeeRate() {
-        return MusSigFeeRateProvider.getPreparedTxFeeRate();
+        return MuSigFeeRateProvider.getPreparedTxFeeRate();
     }
 
     public static long getBuyerSecurityDeposit() {
