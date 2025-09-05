@@ -18,9 +18,9 @@
 package bisq.network.i2p.router;
 
 import bisq.common.threading.ExecutorFactory;
+import bisq.network.i2p.router.state.RouterMonitor;
 import bisq.network.i2p.router.utils.I2PLogLevel;
 import bisq.network.i2p.router.utils.LogRedirector;
-import bisq.network.i2p.router.state.RouterMonitor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.data.Destination;
@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 public class I2PRouter {
     private final String i2cpHost;
     private final int i2cpPort;
+    private final boolean httpProxyEnabled;
     private final long routerStartupTimeout;
     private final RouterSetup routerSetup;
     @Getter
@@ -46,6 +47,9 @@ public class I2PRouter {
     public I2PRouter(Path i2pDirPath,
                      String i2cpHost,
                      int i2cpPort,
+                     String httpProxyHost,
+                     int httpProxyPort,
+                     boolean httpProxyEnabled,
                      I2PLogLevel i2pLogLevel,
                      boolean isEmbedded,
                      long routerStartupTimeout,
@@ -54,6 +58,7 @@ public class I2PRouter {
                      int bandwidthSharePercentage) {
         this.i2cpHost = i2cpHost;
         this.i2cpPort = i2cpPort;
+        this.httpProxyEnabled = httpProxyEnabled;
         this.routerStartupTimeout = routerStartupTimeout;
 
         LogRedirector.redirectSystemStreams();

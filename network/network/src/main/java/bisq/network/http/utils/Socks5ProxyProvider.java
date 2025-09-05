@@ -45,8 +45,7 @@ public class Socks5ProxyProvider {
                 try {
                     return new Socks5Proxy(tokens[0], Integer.parseInt(tokens[1]));
                 } catch (UnknownHostException e) {
-                    log.error(e.getMessage());
-                    e.printStackTrace();
+                    log.error("Could not create Socks5Proxy for {}", socks5ProxyAddress, e);
                 }
             } else {
                 log.error("Incorrect format for socks5ProxyAddress. Should be: host:port.\n" +

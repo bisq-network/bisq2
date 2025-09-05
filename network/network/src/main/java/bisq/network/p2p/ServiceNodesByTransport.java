@@ -239,16 +239,19 @@ public class ServiceNodesByTransport {
         map.values().forEach(serviceNode -> serviceNode.getDefaultNode().removeListener(nodeListener));
     }
 
-    public Optional<Socks5Proxy> getSocksProxy() {
-        return findServiceNode(TransportType.TOR)
-                .flatMap(serviceNode -> {
-                    try {
-                        return serviceNode.getSocksProxy();
-                    } catch (IOException e) {
-                        log.warn("Could not get socks proxy", e);
-                        return Optional.empty();
-                    }
-                });
+    public Optional<Socks5Proxy> getSocksProxy(TransportType transportType) {
+        if (transportType == TransportType.TOR) {
+            return findServiceNode(TransportType.TOR)
+                    .flatMap(serviceNode -> {
+                        try {
+                            return serviceNode.getSocksProxy();
+                        } catch (IOException e) {
+                            log.warn("Could not get socks proxy", e);
+                            return Optional.empty();
+                        }
+                    });
+        }
+        return Optional.empty();
     }
 
     public Map<TransportType, Observable<Node.State>> getDefaultNodeStateByTransportType() {

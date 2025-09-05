@@ -44,6 +44,8 @@ public class RouterSetup {
     public static final int DEFAULT_I2CP_PORT = 7654;
     public static final String DEFAULT_BI2P_GRPC_HOST = "127.0.0.1";
     public static final int DEFAULT_BI2P_GRPC_PORT = 6159;
+    public static final String DEFAULT_HTTP_PROXY_HOST = "127.0.0.1";
+    public static final int DEFAULT_HTTP_PROXY_PORT = 4444;
 
     private final String i2cpHost;
     private final int i2cpPort;

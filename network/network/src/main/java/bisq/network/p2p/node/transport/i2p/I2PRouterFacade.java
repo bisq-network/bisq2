@@ -51,6 +51,9 @@ public class I2PRouterFacade {
     private final int i2cpPort;
     private final String bi2pGrpcHost;
     private final int bi2pGrpcPort;
+    private final String httpProxyHost;
+    private final int httpProxyPort;
+    private final boolean httpProxyEnabled;
     private final Path i2pRouterDir;
 
     private volatile Bi2pGrpcClientService grpcRouterMonitorService;
@@ -61,10 +64,13 @@ public class I2PRouterFacade {
 
     public I2PRouterFacade(I2PTransportService.Config config) {
         this.config = config;
-        i2cpHost = this.config.getI2cpHost();
-        i2cpPort = this.config.getI2cpPort();
-        bi2pGrpcHost = this.config.getBi2pGrpcHost();
-        bi2pGrpcPort = this.config.getBi2pGrpcPort();
+        i2cpHost = config.getI2cpHost();
+        i2cpPort = config.getI2cpPort();
+        bi2pGrpcHost = config.getBi2pGrpcHost();
+        bi2pGrpcPort = config.getBi2pGrpcPort();
+        httpProxyHost = config.getHttpProxyHost();
+        httpProxyPort = config.getHttpProxyPort();
+        httpProxyEnabled = config.isHttpProxyEnabled();
         Path i2pDirPath = config.getDataDir();
         i2pRouterDir = i2pDirPath.resolve("router").toAbsolutePath();
     }
@@ -146,7 +152,7 @@ public class I2PRouterFacade {
         try {
             log.info("No external router detected. We start our Bisq I2P router in a new process. I2CP address: {}:{}, Grpc router monitor: {}:{}",
                     i2cpHost, i2cpPort, bi2pGrpcHost, bi2pGrpcPort);
-            i2pRouterProcessLauncher = new Bi2pProcessLauncher(i2cpHost, i2cpPort, bi2pGrpcHost, bi2pGrpcPort, i2pRouterDir);
+            i2pRouterProcessLauncher = new Bi2pProcessLauncher(i2cpHost, i2cpPort, bi2pGrpcHost, bi2pGrpcPort, i2pRouterDir, httpProxyHost, httpProxyPort, httpProxyEnabled);
             i2pRouterProcessLauncher.initialize().get();
             log.info("Bisq I2P router launched. Awaiting running state.");
             awaitGrpcMonitorServerAvailable();
@@ -187,6 +193,9 @@ public class I2PRouterFacade {
         i2pRouter = new I2PRouter(i2pRouterDir,
                 i2cpHost,
                 i2cpPort,
+                httpProxyHost,
+                httpProxyPort,
+                httpProxyEnabled,
                 I2PLogLevel.INFO,
                 true,
                 config.getRouterStartupTimeout(),
