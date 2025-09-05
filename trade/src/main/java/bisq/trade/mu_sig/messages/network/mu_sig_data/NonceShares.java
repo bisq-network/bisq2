@@ -31,6 +31,7 @@ public final class NonceShares implements NetworkProto {
         return new NonceShares(
                 nonceSharesMessage.getWarningTxFeeBumpAddress(),
                 nonceSharesMessage.getRedirectTxFeeBumpAddress(),
+                nonceSharesMessage.getClaimTxPayoutAddress(),
                 nonceSharesMessage.getHalfDepositPsbt().clone(),
                 nonceSharesMessage.getSwapTxInputNonceShare().clone(),
                 nonceSharesMessage.getBuyersWarningTxBuyerInputNonceShare().clone(),
@@ -38,12 +39,15 @@ public final class NonceShares implements NetworkProto {
                 nonceSharesMessage.getSellersWarningTxBuyerInputNonceShare().clone(),
                 nonceSharesMessage.getSellersWarningTxSellerInputNonceShare().clone(),
                 nonceSharesMessage.getBuyersRedirectTxInputNonceShare().clone(),
-                nonceSharesMessage.getSellersRedirectTxInputNonceShare().clone()
+                nonceSharesMessage.getSellersRedirectTxInputNonceShare().clone(),
+                nonceSharesMessage.getBuyersClaimTxInputNonceShare().clone(),
+                nonceSharesMessage.getSellersClaimTxInputNonceShare().clone()
         );
     }
 
     private final String warningTxFeeBumpAddress;
     private final String redirectTxFeeBumpAddress;
+    private final String claimTxPayoutAddress;
     private final byte[] halfDepositPsbt;
     private final byte[] swapTxInputNonceShare;
     private final byte[] buyersWarningTxBuyerInputNonceShare;
@@ -52,19 +56,25 @@ public final class NonceShares implements NetworkProto {
     private final byte[] sellersWarningTxSellerInputNonceShare;
     private final byte[] buyersRedirectTxInputNonceShare;
     private final byte[] sellersRedirectTxInputNonceShare;
+    private final byte[] buyersClaimTxInputNonceShare;
+    private final byte[] sellersClaimTxInputNonceShare;
 
     private NonceShares(String warningTxFeeBumpAddress,
-                       String redirectTxFeeBumpAddress,
-                       byte[] halfDepositPsbt,
-                       byte[] swapTxInputNonceShare,
-                       byte[] buyersWarningTxBuyerInputNonceShare,
-                       byte[] buyersWarningTxSellerInputNonceShare,
-                       byte[] sellersWarningTxBuyerInputNonceShare,
-                       byte[] sellersWarningTxSellerInputNonceShare,
-                       byte[] buyersRedirectTxInputNonceShare,
-                       byte[] sellersRedirectTxInputNonceShare) {
+                        String redirectTxFeeBumpAddress,
+                        String claimTxPayoutAddress,
+                        byte[] halfDepositPsbt,
+                        byte[] swapTxInputNonceShare,
+                        byte[] buyersWarningTxBuyerInputNonceShare,
+                        byte[] buyersWarningTxSellerInputNonceShare,
+                        byte[] sellersWarningTxBuyerInputNonceShare,
+                        byte[] sellersWarningTxSellerInputNonceShare,
+                        byte[] buyersRedirectTxInputNonceShare,
+                        byte[] sellersRedirectTxInputNonceShare,
+                        byte[] buyersClaimTxInputNonceShare,
+                        byte[] sellersClaimTxInputNonceShare) {
         this.warningTxFeeBumpAddress = warningTxFeeBumpAddress;
         this.redirectTxFeeBumpAddress = redirectTxFeeBumpAddress;
+        this.claimTxPayoutAddress = claimTxPayoutAddress;
         this.halfDepositPsbt = halfDepositPsbt;
         this.swapTxInputNonceShare = swapTxInputNonceShare;
         this.buyersWarningTxBuyerInputNonceShare = buyersWarningTxBuyerInputNonceShare;
@@ -73,6 +83,8 @@ public final class NonceShares implements NetworkProto {
         this.sellersWarningTxSellerInputNonceShare = sellersWarningTxSellerInputNonceShare;
         this.buyersRedirectTxInputNonceShare = buyersRedirectTxInputNonceShare;
         this.sellersRedirectTxInputNonceShare = sellersRedirectTxInputNonceShare;
+        this.buyersClaimTxInputNonceShare = buyersClaimTxInputNonceShare;
+        this.sellersClaimTxInputNonceShare = sellersClaimTxInputNonceShare;
 
         verify();
     }
@@ -87,6 +99,7 @@ public final class NonceShares implements NetworkProto {
         return bisq.trade.protobuf.NonceShares.newBuilder()
                 .setWarningTxFeeBumpAddress(warningTxFeeBumpAddress)
                 .setRedirectTxFeeBumpAddress(redirectTxFeeBumpAddress)
+                .setClaimTxPayoutAddress(claimTxPayoutAddress)
                 .setHalfDepositPsbt(ByteString.copyFrom(halfDepositPsbt))
                 .setSwapTxInputNonceShare(ByteString.copyFrom(swapTxInputNonceShare))
                 .setBuyersWarningTxBuyerInputNonceShare(ByteString.copyFrom(buyersWarningTxBuyerInputNonceShare))
@@ -94,7 +107,9 @@ public final class NonceShares implements NetworkProto {
                 .setSellersWarningTxBuyerInputNonceShare(ByteString.copyFrom(sellersWarningTxBuyerInputNonceShare))
                 .setSellersWarningTxSellerInputNonceShare(ByteString.copyFrom(sellersWarningTxSellerInputNonceShare))
                 .setBuyersRedirectTxInputNonceShare(ByteString.copyFrom(buyersRedirectTxInputNonceShare))
-                .setSellersRedirectTxInputNonceShare(ByteString.copyFrom(sellersRedirectTxInputNonceShare));
+                .setSellersRedirectTxInputNonceShare(ByteString.copyFrom(sellersRedirectTxInputNonceShare))
+                .setBuyersClaimTxInputNonceShare(ByteString.copyFrom(buyersClaimTxInputNonceShare))
+                .setSellersClaimTxInputNonceShare(ByteString.copyFrom(sellersClaimTxInputNonceShare));
     }
 
     @Override
@@ -105,6 +120,7 @@ public final class NonceShares implements NetworkProto {
     public static NonceShares fromProto(bisq.trade.protobuf.NonceShares proto) {
         return new NonceShares(proto.getWarningTxFeeBumpAddress(),
                 proto.getRedirectTxFeeBumpAddress(),
+                proto.getClaimTxPayoutAddress(),
                 proto.getHalfDepositPsbt().toByteArray(),
                 proto.getSwapTxInputNonceShare().toByteArray(),
                 proto.getBuyersWarningTxBuyerInputNonceShare().toByteArray(),
@@ -112,7 +128,9 @@ public final class NonceShares implements NetworkProto {
                 proto.getSellersWarningTxBuyerInputNonceShare().toByteArray(),
                 proto.getSellersWarningTxSellerInputNonceShare().toByteArray(),
                 proto.getBuyersRedirectTxInputNonceShare().toByteArray(),
-                proto.getSellersRedirectTxInputNonceShare().toByteArray());
+                proto.getSellersRedirectTxInputNonceShare().toByteArray(),
+                proto.getBuyersClaimTxInputNonceShare().toByteArray(),
+                proto.getSellersClaimTxInputNonceShare().toByteArray());
     }
 
     @Override
@@ -121,6 +139,7 @@ public final class NonceShares implements NetworkProto {
 
         return Objects.equals(warningTxFeeBumpAddress, that.warningTxFeeBumpAddress) &&
                 Objects.equals(redirectTxFeeBumpAddress, that.redirectTxFeeBumpAddress) &&
+                Objects.equals(claimTxPayoutAddress, that.claimTxPayoutAddress) &&
                 Arrays.equals(halfDepositPsbt, that.halfDepositPsbt) &&
                 Arrays.equals(swapTxInputNonceShare, that.swapTxInputNonceShare) &&
                 Arrays.equals(buyersWarningTxBuyerInputNonceShare, that.buyersWarningTxBuyerInputNonceShare) &&
@@ -128,13 +147,16 @@ public final class NonceShares implements NetworkProto {
                 Arrays.equals(sellersWarningTxBuyerInputNonceShare, that.sellersWarningTxBuyerInputNonceShare) &&
                 Arrays.equals(sellersWarningTxSellerInputNonceShare, that.sellersWarningTxSellerInputNonceShare) &&
                 Arrays.equals(buyersRedirectTxInputNonceShare, that.buyersRedirectTxInputNonceShare) &&
-                Arrays.equals(sellersRedirectTxInputNonceShare, that.sellersRedirectTxInputNonceShare);
+                Arrays.equals(sellersRedirectTxInputNonceShare, that.sellersRedirectTxInputNonceShare) &&
+                Arrays.equals(buyersClaimTxInputNonceShare, that.buyersClaimTxInputNonceShare) &&
+                Arrays.equals(sellersClaimTxInputNonceShare, that.sellersClaimTxInputNonceShare);
     }
 
     @Override
     public int hashCode() {
         int result = Objects.hashCode(warningTxFeeBumpAddress);
         result = 31 * result + Objects.hashCode(redirectTxFeeBumpAddress);
+        result = 31 * result + Objects.hashCode(claimTxPayoutAddress);
         result = 31 * result + Arrays.hashCode(halfDepositPsbt);
         result = 31 * result + Arrays.hashCode(swapTxInputNonceShare);
         result = 31 * result + Arrays.hashCode(buyersWarningTxBuyerInputNonceShare);
@@ -143,6 +165,8 @@ public final class NonceShares implements NetworkProto {
         result = 31 * result + Arrays.hashCode(sellersWarningTxSellerInputNonceShare);
         result = 31 * result + Arrays.hashCode(buyersRedirectTxInputNonceShare);
         result = 31 * result + Arrays.hashCode(sellersRedirectTxInputNonceShare);
+        result = 31 * result + Arrays.hashCode(buyersClaimTxInputNonceShare);
+        result = 31 * result + Arrays.hashCode(sellersClaimTxInputNonceShare);
         return result;
     }
 }
