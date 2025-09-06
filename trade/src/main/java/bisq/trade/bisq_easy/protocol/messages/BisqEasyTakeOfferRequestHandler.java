@@ -20,6 +20,7 @@ package bisq.trade.bisq_easy.protocol.messages;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
+import bisq.common.fsm.TradeAmountValidationException;
 import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
@@ -230,7 +231,7 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
                 "takersContract=" + takersContract;
         if (throwException) {
             log.error("message={}, details={}", message, details);
-            throw new IllegalArgumentException(message);
+            throw new TradeAmountValidationException(message);
         } else if (showWaring) {
             log.warn("message={}, details={}", message, details);
         } else if (myAmount != takersAmount) {

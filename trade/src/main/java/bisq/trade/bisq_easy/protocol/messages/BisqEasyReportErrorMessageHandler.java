@@ -17,15 +17,19 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.common.fsm.ErrorCode;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
+import static java.util.Objects.requireNonNullElse;
+
 @Slf4j
 public class BisqEasyReportErrorMessageHandler extends BisqEasyTradeMessageHandler<BisqEasyTrade, BisqEasyReportErrorMessage> {
     private String stackTrace;
     private String errorMessage;
+    private ErrorCode errorCode;
 
     public BisqEasyReportErrorMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
@@ -42,11 +46,14 @@ public class BisqEasyReportErrorMessageHandler extends BisqEasyTradeMessageHandl
                 message.getErrorMessage(), message.getStackTrace(), trade.getId());
         stackTrace = message.getStackTrace();
         errorMessage = message.getErrorMessage();
+        errorCode = requireNonNullElse(message.getErrorCode(), ErrorCode.UNSPECIFIED);
     }
 
     @Override
     protected void commit() {
+        // Set errorStackTrace first as we use errorMessage observable in the handler code accessing both fields
         trade.setPeersErrorStackTrace(stackTrace);
+        trade.setPeersErrorCode(errorCode);
         trade.setPeersErrorMessage(errorMessage);
     }
 }

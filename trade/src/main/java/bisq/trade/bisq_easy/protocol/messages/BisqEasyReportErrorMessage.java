@@ -17,12 +17,15 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.common.fsm.ErrorCode;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import static java.util.Objects.requireNonNullElse;
 
 @Slf4j
 @ToString(callSuper = true)
@@ -34,6 +37,7 @@ public final class BisqEasyReportErrorMessage extends BisqEasyTradeMessage {
 
     private final String errorMessage;
     private final String stackTrace;
+    private final ErrorCode errorCode;
 
     public BisqEasyReportErrorMessage(String id,
                                       String tradeId,
@@ -42,10 +46,22 @@ public final class BisqEasyReportErrorMessage extends BisqEasyTradeMessage {
                                       NetworkId receiver,
                                       String errorMessage,
                                       String stackTrace) {
+        this(id, tradeId, protocolVersion, sender, receiver, errorMessage, stackTrace, ErrorCode.UNSPECIFIED);
+
+    }
+
+    public BisqEasyReportErrorMessage(String id,
+                                      String tradeId,
+                                      String protocolVersion,
+                                      NetworkId sender,
+                                      NetworkId receiver,
+                                      String errorMessage,
+                                      String stackTrace,
+                                      ErrorCode errorCode) {
         super(id, tradeId, protocolVersion, sender, receiver);
         this.errorMessage = errorMessage;
         this.stackTrace = stackTrace;
-
+        this.errorCode = requireNonNullElse(errorCode, ErrorCode.UNSPECIFIED);
         verify();
     }
 
@@ -71,7 +87,8 @@ public final class BisqEasyReportErrorMessage extends BisqEasyTradeMessage {
     private bisq.trade.protobuf.BisqEasyReportErrorMessage.Builder getBisqEasyReportErrorMessageBuilder(boolean serializeForHash) {
         return bisq.trade.protobuf.BisqEasyReportErrorMessage.newBuilder()
                 .setErrorMessage(errorMessage)
-                .setStackTrace(stackTrace);
+                .setStackTrace(stackTrace)
+                .setErrorCode(errorCode.toProtoEnum());
     }
 
     public static BisqEasyReportErrorMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
@@ -83,7 +100,8 @@ public final class BisqEasyReportErrorMessage extends BisqEasyTradeMessage {
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
                 bisqEasyReportErrorMessage.getErrorMessage(),
-                bisqEasyReportErrorMessage.getStackTrace());
+                bisqEasyReportErrorMessage.getStackTrace(),
+                ErrorCode.fromProto(bisqEasyReportErrorMessage.getErrorCode()));
     }
 
     @Override

@@ -17,20 +17,24 @@
 
 package bisq.common.fsm;
 
+import bisq.common.proto.ProtoEnum;
+import bisq.common.proto.ProtobufUtils;
 import lombok.Getter;
 
 @Getter
-public class FsmException extends RuntimeException {
-    private final Event event;
-    private final ErrorCode errorCode;
+public enum ErrorCode implements ProtoEnum {
+    UNSPECIFIED,
+    TRADE_AMOUNT_VALIDATION_FAILED;
 
-    public FsmException(Throwable cause, Event event) {
-        this(cause, ErrorCode.UNSPECIFIED, event);
+    @Override
+    public bisq.common.protobuf.ErrorCode toProtoEnum() {
+        return bisq.common.protobuf.ErrorCode.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public FsmException(Throwable cause, ErrorCode errorCode, Event event) {
-        super(cause);
-        this.event = event;
-        this.errorCode = errorCode;
+
+    public static ErrorCode fromProto(bisq.common.protobuf.ErrorCode proto) {
+        return ProtobufUtils.enumFromProto(ErrorCode.class, proto.name(), UNSPECIFIED);
     }
+
+
 }
