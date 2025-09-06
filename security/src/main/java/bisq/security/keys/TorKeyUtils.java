@@ -22,7 +22,6 @@ public class TorKeyUtils {
         Path targetPath = Paths.get(storageDir.toString(), tag);
         File torPrivateKeyDir = targetPath.toFile();
         try {
-            log.info("Store the torPrivateKey into {}", torPrivateKeyDir);
             FileUtils.makeDirs(torPrivateKeyDir);
             String dir = torPrivateKeyDir.getAbsolutePath();
 
