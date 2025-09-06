@@ -37,7 +37,6 @@ import javafx.geometry.Pos;
 import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -66,9 +65,9 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
     private final BisqTableView<MarketListItem> marketsTableView;
     private final BisqTableView<BaseCryptoAssetListItem> baseCryptoAssetsTableView;
     private final SearchBox searchBox;
-    private final Label currencyLabel;
+    private final Label headlineLabel, tradePairIconLabel;
     private final BisqPopup marketSelectionPopup;
-    private final HBox currencyLabelBox;
+    private final HBox tradePairBox;
     private Subscription directionPin, marketPin, marketSelectionPin, selectedMarketListItemPin,
             selectedBaseCryptoAssetListItemPin;
 
@@ -101,22 +100,23 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         baseCryptoAssetsTableView.setFixedCellSize(50);
         configBaseCryptoAssetsTableView();
 
-        currencyLabel = new Label();
-        currencyLabel.setGraphic(ImageUtil.getImageViewById("chevron-drop-menu-green"));
-        currencyLabel.setContentDisplay(ContentDisplay.RIGHT);
-        currencyLabel.getStyleClass().add("bisq-easy-trade-wizard-quote-currency");
-        currencyLabelBox = new HBox(currencyLabel);
-        currencyLabelBox.getStyleClass().add("currency-label-box");
+        tradePairIconLabel = new Label();
+        Label chevronIconLabel = new Label();
+        chevronIconLabel.setGraphic(ImageUtil.getImageViewById("chevron-drop-menu-white"));
+        chevronIconLabel.setPadding(new Insets(5, 0, -5, 0));
+        tradePairBox = new HBox(5, tradePairIconLabel, chevronIconLabel);
+        tradePairBox.getStyleClass().add("trade-pair-box");
 
         marketSelectionPopup = new BisqPopup();
         marketSelectionPopup.setContentNode(new HBox(baseCryptoAssetsTableView, tableViewWithSearchBox));
         marketSelectionPopup.setAnchorLocation(PopupWindow.AnchorLocation.WINDOW_TOP_RIGHT);
 
-        Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.headline"));
+        headlineLabel = new Label();
         headlineLabel.setPadding(new Insets(0, 5, 0, 0));
         Label questionMark = new Label("?");
+        questionMark.getStyleClass().add("-fx-light-text-color");
         questionMark.setPadding(new Insets(0, 0, 0, 5));
-        HBox headlineHBox = new HBox(headlineLabel, currencyLabelBox, questionMark);
+        HBox headlineHBox = new HBox(headlineLabel, tradePairBox, questionMark);
         headlineHBox.setAlignment(Pos.CENTER);
         headlineHBox.getStyleClass().add("bisq-text-headline-2");
 
@@ -136,6 +136,8 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
 
     @Override
     protected void onViewAttached() {
+        headlineLabel.textProperty().bind(model.getHeadlineText());
+
         marketsTableView.initialize();
         marketsTableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
         // We use setOnMouseClicked handler not a listener on
@@ -143,11 +145,11 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         // not when we set the selected item by code.
         marketsTableView.setOnMouseClicked(e ->
                 controller.onMarketListItemClicked(marketsTableView.getSelectionModel().getSelectedItem()));
-        currencyLabel.setOnMouseClicked(e -> {
+        tradePairBox.setOnMouseClicked(e -> {
             if (!marketSelectionPopup.isShowing()) {
                 Bounds rootBounds = root.localToScreen(root.getBoundsInLocal());
-                Bounds labelBounds = currencyLabel.localToScreen(currencyLabel.getBoundsInLocal());
-                marketSelectionPopup.show(currencyLabel, rootBounds.getMaxX() - 118, labelBounds.getMaxY() + 15);
+                Bounds labelBounds = tradePairIconLabel.localToScreen(tradePairIconLabel.getBoundsInLocal());
+                marketSelectionPopup.show(tradePairIconLabel, rootBounds.getMaxX() - 118, labelBounds.getMaxY() + 15);
             } else {
                 marketSelectionPopup.hide();
             }
@@ -178,26 +180,29 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
 
         marketPin = EasyBind.subscribe(model.getSelectedMarket(), selectedMarket -> {
             if (selectedMarket != null) {
-                currencyLabel.setText(selectedMarket.getQuoteCurrencyDisplayName());
+                StackPane tradePairImage = MarketImageComposition.getMarketIcons(selectedMarket);
+                tradePairIconLabel.setGraphic(tradePairImage);
             }
         });
 
         marketSelectionPin = EasyBind.subscribe(marketSelectionPopup.showingProperty(), isShowing -> {
-            String activePopupStyleClass = "active-popup";
-            currencyLabelBox.getStyleClass().remove(activePopupStyleClass);
+            String activePopupStyleClass = "active-market-selection-popup";
+            tradePairBox.getStyleClass().remove(activePopupStyleClass);
             if (isShowing) {
-                currencyLabelBox.getStyleClass().add(activePopupStyleClass);
+                tradePairBox.getStyleClass().add(activePopupStyleClass);
             }
         });
     }
 
     @Override
     protected void onViewDetached() {
+        headlineLabel.textProperty().unbind();
+
         marketsTableView.dispose();
         baseCryptoAssetsTableView.dispose();
         searchBox.textProperty().unbindBidirectional(model.getSearchText());
         marketsTableView.setOnMouseClicked(null);
-        currencyLabel.setOnMouseClicked(null);
+        tradePairBox.setOnMouseClicked(null);
 
         buyButton.disableProperty().unbind();
 

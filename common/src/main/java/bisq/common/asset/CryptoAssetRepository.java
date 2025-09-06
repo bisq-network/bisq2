@@ -39,6 +39,7 @@ public class CryptoAssetRepository {
     public static final CryptoAsset DOGE = new CryptoAsset("DOGE", "Dogecoin");
 
     private static final List<CryptoAsset> CRYPTO_ASSETS = List.of(
+            BITCOIN,
             XMR,
             BSQ,
             LTC,

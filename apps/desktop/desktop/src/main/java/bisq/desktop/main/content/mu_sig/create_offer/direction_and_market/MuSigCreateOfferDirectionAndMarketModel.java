@@ -37,6 +37,7 @@ import lombok.Getter;
 public class MuSigCreateOfferDirectionAndMarketModel implements Model {
     private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>(Direction.BUY);
     private final BooleanProperty buyButtonDisabled = new SimpleBooleanProperty();
+    private final StringProperty headlineText = new SimpleStringProperty();
 
     private final ObjectProperty<MuSigCreateOfferDirectionAndMarketView.MarketListItem> selectedMarketListItem = new SimpleObjectProperty<>();
     private final StringProperty searchText = new SimpleStringProperty();
@@ -54,6 +55,7 @@ public class MuSigCreateOfferDirectionAndMarketModel implements Model {
     void reset() {
         direction.set(Direction.BUY);
         buyButtonDisabled.set(false);
+        headlineText.set("");
         selectedMarketListItem.set(null);
         searchText.set(null);
         selectedMarket.set(null);

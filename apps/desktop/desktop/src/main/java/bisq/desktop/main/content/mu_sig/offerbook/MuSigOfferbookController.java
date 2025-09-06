@@ -86,7 +86,8 @@ public class MuSigOfferbookController implements Controller {
     private final AccountService accountService;
     private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin;
     private Subscription selectedMarketItemPin, marketsSearchBoxTextPin, selectedMarketFilterPin, selectedMarketSortTypePin,
-            selectedOffersFilterPin, activeMarketPaymentsCountPin, selectedMarketPricePin, selectedBaseCryptoAssetPin;
+            selectedOffersFilterPin, activeMarketPaymentsCountPin, selectedMarketPricePin, selectedBaseCryptoAssetPin,
+            selectedMarketFromModelPin;
 
     public MuSigOfferbookController(ServiceProvider serviceProvider) {
         muSigService = serviceProvider.getMuSigService();
@@ -153,7 +154,6 @@ public class MuSigOfferbookController implements Controller {
             }
         });
 
-        // TODO: listen for changes
         selectedMarketPin = FxBindings.bindBiDir(model.getSelectedMarket())
                 .to(settingsService.getSelectedMuSigMarket(), settingsService::setSelectedMuSigMarket);
 
@@ -299,6 +299,13 @@ public class MuSigOfferbookController implements Controller {
             }
         });
 
+        selectedMarketFromModelPin = EasyBind.subscribe(model.getSelectedMarket(), market -> {
+            if (market != null) {
+                CryptoAssetRepository.find(market.getBaseCurrencyCode()).ifPresent(this::updateSelectedBaseCryptoAsset);
+                findMarketItem(market).ifPresent(item -> model.getSelectedMarketItem().set(item));
+            }
+        });
+
         updateFilteredMarketItems();
         updateFavouriteMarketItems();
         updateFilteredMuSigOfferListItems();
@@ -326,6 +333,7 @@ public class MuSigOfferbookController implements Controller {
         if (selectedMarketPricePin != null) {
             selectedMarketPricePin.unsubscribe();
         }
+        selectedMarketFromModelPin.unsubscribe();
     }
 
     void onSelectMarketItem(MarketItem marketItem) {
