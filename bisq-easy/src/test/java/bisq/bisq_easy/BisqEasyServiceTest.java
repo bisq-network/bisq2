@@ -22,7 +22,8 @@ import org.junit.jupiter.api.Test;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class BisqEasyServiceTest {
@@ -31,44 +32,72 @@ public class BisqEasyServiceTest {
         Set<String> bannedAccountDataSet = new HashSet<>();
         String sellersAccountData;
 
-        sellersAccountData="";
+        sellersAccountData = "";
         assertFalse(BisqEasyService.isAccountDataBanned(bannedAccountDataSet, sellersAccountData));
 
         bannedAccountDataSet = Set.of(" | , ");
-        sellersAccountData="Name: Peter Tosh\nIBAN:123456789";
+        sellersAccountData = "Name: Peter Tosh\nIBAN:123456789";
         assertFalse(BisqEasyService.isAccountDataBanned(bannedAccountDataSet, sellersAccountData));
 
-        sellersAccountData="abc";
+        sellersAccountData = "abc";
         assertFalse(BisqEasyService.isAccountDataBanned(bannedAccountDataSet, sellersAccountData));
 
-        sellersAccountData="Name: Peter Tosh\nIBAN:123456789, BIC:3333";
+        sellersAccountData = "Name: Peter Tosh\nIBAN:123456789, BIC:3333";
         assertFalse(BisqEasyService.isAccountDataBanned(bannedAccountDataSet, sellersAccountData));
 
-        sellersAccountData="Name: Peter Tosh, Paula Jam\nIBAN:123456789 | BIC:3333";
+        sellersAccountData = "Name: Peter Tosh, Paula Jam\nIBAN:123456789 | BIC:3333";
         assertFalse(BisqEasyService.isAccountDataBanned(bannedAccountDataSet, sellersAccountData));
 
         bannedAccountDataSet = Set.of("Peter Tosh,123456789");
-        sellersAccountData="Name: Peter Tosh\nIBAN:123456789, BIC:3333";
+        sellersAccountData = "Name: Peter Tosh\nIBAN:123456789, BIC:3333";
         assertTrue(BisqEasyService.isAccountDataBanned(bannedAccountDataSet, sellersAccountData));
 
         bannedAccountDataSet = Set.of("Peter Tosh,123456789");
-        sellersAccountData="Name: Peter Tosh, Paula Jam\nIBAN:123456789 | BIC:3333";
+        sellersAccountData = "Name: Peter Tosh, Paula Jam\nIBAN:123456789 | BIC:3333";
         assertTrue(BisqEasyService.isAccountDataBanned(bannedAccountDataSet, sellersAccountData));
 
         bannedAccountDataSet = Set.of("Paula Jam, 3333");
-        sellersAccountData="Name: Peter Tosh, Paula Jam\nIBAN:123456789 | BIC:3333";
+        sellersAccountData = "Name: Peter Tosh, Paula Jam\nIBAN:123456789 | BIC:3333";
         assertTrue(BisqEasyService.isAccountDataBanned(bannedAccountDataSet, sellersAccountData));
 
         bannedAccountDataSet = Set.of("Paula Jam  ,  3333");
-        sellersAccountData="Name: Peter Tosh, Paula Jam\nIBAN:123456789 | BIC:3333";
+        sellersAccountData = "Name: Peter Tosh, Paula Jam\nIBAN:123456789 | BIC:3333";
         assertTrue(BisqEasyService.isAccountDataBanned(bannedAccountDataSet, sellersAccountData));
 
         bannedAccountDataSet = Set.of("Tim Burns,98989|123456789|");
-        sellersAccountData="Name: Peter Tosh, Paula Jam\nIBAN:123456789 | BIC:3333";
+        sellersAccountData = "Name: Peter Tosh, Paula Jam\nIBAN:123456789 | BIC:3333";
         assertTrue(BisqEasyService.isAccountDataBanned(bannedAccountDataSet, sellersAccountData));
 
         bannedAccountDataSet = Set.of("Tim Burns,98989| Tosh |");
-        sellersAccountData="Name: Peter Tosh, Paula Jam\nIBAN:123456789 | BIC:3333";
+        sellersAccountData = "Name: Peter Tosh, Paula Jam\nIBAN:123456789 | BIC:3333";
         assertTrue(BisqEasyService.isAccountDataBanned(bannedAccountDataSet, sellersAccountData));
+
+        bannedAccountDataSet = Set.of("Tim Burns,070.5981.333-22");
+        sellersAccountData = "Peter Tosh; 070.5981.333-22";
+        assertTrue(BisqEasyService.isAccountDataBanned(bannedAccountDataSet, sellersAccountData));
+
+        bannedAccountDataSet = Set.of("Tim Burns,070.5981,333-22");
+        sellersAccountData = "Peter Tosh; 070.5981,333-22";
+        assertTrue(BisqEasyService.isAccountDataBanned(bannedAccountDataSet, sellersAccountData));
+
+        bannedAccountDataSet = Set.of("Tim Burns,070.5981.333-21");
+        sellersAccountData = "Peter Tosh; 070.5981.333-22";
+        assertFalse(BisqEasyService.isAccountDataBanned(bannedAccountDataSet, sellersAccountData));
+
+        bannedAccountDataSet = Set.of("Tim Burns,070.5981.333-22");
+        sellersAccountData = "Peter Tosh; 070.5981,333-22";
+        assertFalse(BisqEasyService.isAccountDataBanned(bannedAccountDataSet, sellersAccountData));
+
+        bannedAccountDataSet = Set.of("Tim Burns,070.5981,333-22"); // 070.5981,333-22 are 2 tokens
+        sellersAccountData = "Peter Tosh; 070.5981.333-22";
+        assertTrue(BisqEasyService.isAccountDataBanned(bannedAccountDataSet, sellersAccountData));
+
+        bannedAccountDataSet = Set.of("Tim Bo");
+        sellersAccountData = "Tim Bon"; // Tim Bon contains Tim Bo, thus interpreted as banned
+        assertTrue(BisqEasyService.isAccountDataBanned(bannedAccountDataSet, sellersAccountData));
+
+        bannedAccountDataSet = Set.of("Tim Bon");
+        sellersAccountData = "Tim Bo";
+        assertFalse(BisqEasyService.isAccountDataBanned(bannedAccountDataSet, sellersAccountData));
     }
 }

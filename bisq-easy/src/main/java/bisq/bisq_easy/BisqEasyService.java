@@ -51,6 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -268,13 +269,13 @@ public class BisqEasyService implements Service {
 
     @VisibleForTesting
     static boolean isAccountDataBanned(Set<String> bannedAccountDataSet, String sellersAccountData) {
+        String sellersLowerCaseAccountData = sellersAccountData.toLowerCase(Locale.ROOT);
         // Format is account data of a user separated with |, and then comma separated attributes like name and account number
         return bannedAccountDataSet.stream()
                 .flatMap(data -> Stream.of(data.split("\\|")))
                 .flatMap(account -> Stream.of(account.split(",")))
-                .anyMatch(attribute -> {
-                    String trimmed = attribute.trim();
-                    return !trimmed.isEmpty() && sellersAccountData.contains(trimmed);
-                });
+                .map(attribute -> attribute.trim().toLowerCase(Locale.ROOT))
+                .filter(attribute -> !attribute.isEmpty())
+                .anyMatch(sellersLowerCaseAccountData::contains);
     }
 }
