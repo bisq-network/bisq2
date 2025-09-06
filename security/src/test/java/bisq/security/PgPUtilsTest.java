@@ -26,12 +26,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.SignatureException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @Slf4j
 public class PgPUtilsTest {
@@ -88,8 +93,8 @@ public class PgPUtilsTest {
     private PGPPublicKeyRing getPGPPublicKeyRing(String fileName) throws IOException, PGPException {
         File file = Paths.get("temp", fileName).toFile();
         try {
-            try (InputStream resource = FileUtils.getResourceAsStream(fileName)) {
-                OutputStream out = new FileOutputStream(file);
+            try (InputStream resource = FileUtils.getResourceAsStream(fileName);
+                 OutputStream out = FileUtils.newFileOutputStreamWithPermissions(file.getAbsolutePath())) {
                 FileUtils.copy(resource, out);
             }
             return PgPUtils.readPgpPublicKeyRing(file);
@@ -101,8 +106,9 @@ public class PgPUtilsTest {
     private PGPSignature getPGPSignature(String fileName) throws IOException, SignatureException {
         File file = Paths.get("temp", fileName).toFile();
         try {
-            try (InputStream resource = FileUtils.getResourceAsStream(fileName)) {
-                OutputStream out = new FileOutputStream(file);
+            try (InputStream resource = FileUtils.getResourceAsStream(fileName);
+                 OutputStream out = FileUtils.newFileOutputStreamWithPermissions(file.getAbsolutePath())
+            ) {
                 FileUtils.copy(resource, out);
             }
             return PgPUtils.readPgpSignature(file);
@@ -114,8 +120,9 @@ public class PgPUtilsTest {
     private File getDataAsFile(String fileName) throws IOException {
         File file = Paths.get("temp", fileName).toFile();
         try {
-            try (InputStream resource = FileUtils.getResourceAsStream(fileName)) {
-                OutputStream out = new FileOutputStream(file);
+            try (InputStream resource = FileUtils.getResourceAsStream(fileName);
+                 OutputStream out = FileUtils.newFileOutputStreamWithPermissions(file.getAbsolutePath());
+            ) {
                 FileUtils.copy(resource, out);
             }
             return file;
