@@ -114,7 +114,6 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         headlineLabel = new Label();
         headlineLabel.setPadding(new Insets(0, 5, 0, 0));
         Label questionMark = new Label("?");
-        questionMark.getStyleClass().add("-fx-light-text-color");
         questionMark.setPadding(new Insets(0, 0, 0, 5));
         HBox headlineHBox = new HBox(headlineLabel, tradePairBox, questionMark);
         headlineHBox.setAlignment(Pos.CENTER);

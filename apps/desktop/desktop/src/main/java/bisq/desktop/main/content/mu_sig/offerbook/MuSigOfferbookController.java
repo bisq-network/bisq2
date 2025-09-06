@@ -301,8 +301,10 @@ public class MuSigOfferbookController implements Controller {
 
         selectedMarketFromModelPin = EasyBind.subscribe(model.getSelectedMarket(), market -> {
             if (market != null) {
-                CryptoAssetRepository.find(market.getBaseCurrencyCode()).ifPresent(this::updateSelectedBaseCryptoAsset);
-                findMarketItem(market).ifPresent(item -> model.getSelectedMarketItem().set(item));
+                UIThread.run(() -> {
+                    CryptoAssetRepository.find(market.getBaseCurrencyCode()).ifPresent(this::updateSelectedBaseCryptoAsset);
+                    findMarketItem(market).ifPresent(item -> model.getSelectedMarketItem().set(item));
+                });
             }
         });
 
@@ -396,7 +398,7 @@ public class MuSigOfferbookController implements Controller {
     }
 
     void updateSelectedBaseCryptoAsset(CryptoAsset baseCrypto) {
-        UIThread.run(() -> model.getSelectedBaseCryptoAsset().set(baseCrypto));
+        model.getSelectedBaseCryptoAsset().set(baseCrypto);
     }
 
     private void updateSelectedMuSigMarketWithBaseCurrency(String baseCurrencyCode) {
