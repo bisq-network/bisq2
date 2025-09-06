@@ -132,6 +132,24 @@
  *                                                                             *
  ******************************************************************************/
 
+.trade-pair-box {
+    -fx-cursor: hand;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-padding: 2 7 2 7;
+}
+
+.trade-pair-box:hover,
+.trade-pair-box.active-market-selection-popup,
+.trade-pair-box:hover .quote-currency-market-logo,
+.trade-pair-box.active-market-selection-popup .quote-currency-market-logo {
+    -fx-background-color: -bisq-dark-grey-30 !important;
+}
+
+.trade-pair-box .quote-currency-market-logo {
+    -fx-fill: -bisq-dark-grey-40 !important;
+}
+
 .slider.price-slider .thumb {
     -fx-background-color: -bisq-white;
     -fx-background-insets: 2.5;
