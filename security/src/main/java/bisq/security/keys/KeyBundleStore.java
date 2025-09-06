@@ -25,6 +25,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -39,13 +40,17 @@ public final class KeyBundleStore implements PersistableStore<KeyBundleStore> {
     // Secret uid used for deriving keyIds
     // As the keyID is public in the mailbox message we do not want to leak any information of the user identity
     // to the network.
-    // Once we have persisted the stores we use the secretUid from the persisted data
+    // Once we have persisted the stores we use the secretUid from the persisted data if not overridden by jvm data
     @Getter(AccessLevel.PACKAGE)
-    private String secretUid = StringUtils.createUid();
+    @Setter(AccessLevel.PACKAGE)
+    private String secretUid;
     private final Map<String, KeyBundle> keyBundleById = new ConcurrentHashMap<>();
 
-    private KeyBundleStore(String secretUid,
-                           Map<String, KeyBundle> keyBundleById) {
+    KeyBundleStore(Optional<String> keyStoreSecretUid) {
+        this(keyStoreSecretUid.orElseGet(StringUtils::createUid), new HashMap<>());
+    }
+
+    private KeyBundleStore(String secretUid, Map<String, KeyBundle> keyBundleById) {
         this.secretUid = secretUid;
         this.keyBundleById.putAll(keyBundleById);
     }

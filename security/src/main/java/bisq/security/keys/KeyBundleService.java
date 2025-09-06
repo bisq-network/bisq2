@@ -19,6 +19,7 @@ package bisq.security.keys;
 
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
+import bisq.common.file.FileUtils;
 import bisq.common.timer.Scheduler;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -29,6 +30,8 @@ import com.google.common.base.Strings;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -45,25 +48,41 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore>, Serv
 
     @Getter
     public static class Config {
+        private final Optional<String> keyStoreSecretUid; // Used to recreate the same keyId which is based on a secret UID and the identity tag
+        private final Optional<String> defaultPrivateKey;
         private final Optional<String> defaultTorPrivateKey;
         private final Optional<String> defaultI2pIdentityBase64;
+        private final boolean writeKeyStoreSecretUidToFile;
+        private final boolean writeDefaultPrivateKeyToFile;
         private final boolean writeDefaultTorPrivateKeyToFile;
         private final boolean writeDefaultI2pIdentityBase64ToFile;
 
-        public Config(String defaultTorPrivateKey,
+        public Config(String keyStoreSecretUid,
+                      String defaultPrivateKey,
+                      String defaultTorPrivateKey,
                       String defaultI2pIdentityBase64,
+                      boolean writeKeyStoreSecretUidToFile,
+                      boolean writeDefaultPrivateKeyToFile,
                       boolean writeDefaultTorPrivateKeyToFile,
                       boolean writeDefaultI2pIdentityBase64ToFile) {
+            this.keyStoreSecretUid = Optional.ofNullable(Strings.emptyToNull(keyStoreSecretUid));
+            this.defaultPrivateKey = Optional.ofNullable(Strings.emptyToNull(defaultPrivateKey));
             this.defaultTorPrivateKey = Optional.ofNullable(Strings.emptyToNull(defaultTorPrivateKey));
             this.defaultI2pIdentityBase64 = Optional.ofNullable(Strings.emptyToNull(defaultI2pIdentityBase64));
+            this.writeKeyStoreSecretUidToFile = writeKeyStoreSecretUidToFile;
+            this.writeDefaultPrivateKeyToFile = writeDefaultPrivateKeyToFile;
             this.writeDefaultTorPrivateKeyToFile = writeDefaultTorPrivateKeyToFile;
             this.writeDefaultI2pIdentityBase64ToFile = writeDefaultI2pIdentityBase64ToFile;
         }
 
         public static Config from(com.typesafe.config.Config config) {
             return new Config(
+                    config.getString("keyStoreSecretUid"),
+                    config.getString("defaultPrivateKey"),
                     config.getString("defaultTorPrivateKey"),
                     config.getString("defaultI2pIdentityBase64"),
+                    config.getBoolean("writeKeyStoreSecretUidToFile"),
+                    config.getBoolean("writeDefaultPrivateKeyToFile"),
                     config.getBoolean("writeDefaultTorPrivateKeyToFile"),
                     config.getBoolean("writeDefaultI2pIdentityBase64ToFile")
             );
@@ -74,30 +93,48 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore>, Serv
     private final KeyBundleStore persistableStore;
     @Getter
     private final Persistence<KeyBundleStore> persistence;
+    private final Optional<String> keyStoreSecretUid;
+    private final Optional<String> defaultPrivateKey;
     private final Optional<String> defaultTorPrivateKey;
     private final Optional<String> defaultI2pIdentityBase64; // <-- Store I2P from config
+    private final boolean writeKeyStoreSecretUidToFile;
+    private final boolean writeDefaultPrivateKeyToFile;
     private final boolean writeDefaultTorPrivateKeyToFile;
     private final boolean writeDefaultI2pIdentityBase64ToFile;
-    private final Path torStoragePath, i2pStoragePath;
+    private final Path defaultKeyStoragePath, torStoragePath, i2pStoragePath;
 
     public KeyBundleService(PersistenceService persistenceService, Config config) {
-        persistableStore = new KeyBundleStore();
+        keyStoreSecretUid = config.getKeyStoreSecretUid();
+        defaultPrivateKey = config.getDefaultPrivateKey();
         defaultTorPrivateKey = config.getDefaultTorPrivateKey();
         defaultI2pIdentityBase64 = config.getDefaultI2pIdentityBase64();
+        writeKeyStoreSecretUidToFile = config.isWriteKeyStoreSecretUidToFile();
+        writeDefaultPrivateKeyToFile = config.isWriteDefaultPrivateKeyToFile();
         writeDefaultTorPrivateKeyToFile = config.isWriteDefaultTorPrivateKeyToFile();
         writeDefaultI2pIdentityBase64ToFile = config.isWriteDefaultI2pIdentityBase64ToFile();
 
+        persistableStore = new KeyBundleStore(keyStoreSecretUid);
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         String baseDir = persistenceService.getBaseDir();
+        defaultKeyStoragePath = Paths.get(baseDir, "db", "private", "key");
         torStoragePath = Paths.get(baseDir, "db", "private", "tor");
         i2pStoragePath = Paths.get(baseDir, "db", "private", "i2p");
 
+        if (defaultPrivateKey.isPresent()) {
+            log.warn("defaultPrivateKey is provided via the config and will replace the persisted key");
+        }
         if (defaultTorPrivateKey.isPresent()) {
             log.warn("defaultTorPrivateKey is provided via the config and will replace the persisted key");
         }
         if (defaultI2pIdentityBase64.isPresent()) {
             log.warn("defaultI2pIdentityBase64 is provided via the config and will replace the persisted key");
         }
+    }
+
+    @Override
+    public void onPersistedApplied(KeyBundleStore persisted) {
+        // If we have passed the value as jvm argument we override the persisted data.
+        keyStoreSecretUid.ifPresent(persistableStore::setSecretUid);
     }
 
     @Override
@@ -170,8 +207,26 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore>, Serv
     private CompletableFuture<KeyBundle> createOrUpdateDefaultBundle(Optional<KeyBundle> existingBundle,
                                                                      String defaultKeyId) {
         return CompletableFuture.supplyAsync(() -> {
-            KeyPair keyPair = existingBundle.map(KeyBundle::getKeyPair)
-                    .orElseGet(KeyGeneration::generateKeyPair);
+            KeyPair defaultKeyPair = defaultPrivateKey.map(KeyPairUtils::fromPrivateKey)
+                    .orElseGet(() -> existingBundle.map(KeyBundle::getKeyPair)
+                            .orElseGet(KeyGeneration::generateKeyPair));
+            if (writeDefaultPrivateKeyToFile) {
+                KeyPairUtils.writePrivateKey(defaultKeyPair, defaultKeyStoragePath, DEFAULT_TAG);
+            }
+            if (writeKeyStoreSecretUidToFile) {
+                try {
+                    FileUtils.makeDirs(defaultKeyStoragePath);
+                } catch (IOException e) {
+                    log.error("Could not create {}", defaultKeyStoragePath);
+                    throw new RuntimeException(e);
+                }
+                File file = defaultKeyStoragePath.resolve("keyStoreSecretUid").toFile();
+                try {
+                    FileUtils.writeToFile(persistableStore.getSecretUid(), file);
+                } catch (IOException e) {
+                    log.error("Could not write keyStoreSecretUid to {}", file);
+                }
+            }
 
             TorKeyPair defaultTorKeyPair = defaultTorPrivateKey.map(TorKeyUtils::fromPrivateKey)
                     .orElseGet(() -> existingBundle.map(KeyBundle::getTorKeyPair)
@@ -187,7 +242,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore>, Serv
                 I2PKeyUtils.writeDestination(defaultI2pKeyPair, i2pStoragePath, DEFAULT_TAG);
             }
 
-            KeyBundle keyBundle = new KeyBundle(defaultKeyId, keyPair, defaultTorKeyPair, defaultI2pKeyPair);
+            KeyBundle keyBundle = new KeyBundle(defaultKeyId, defaultKeyPair, defaultTorKeyPair, defaultI2pKeyPair);
             persistKeyBundle(defaultKeyId, keyBundle);
             return keyBundle;
         });
