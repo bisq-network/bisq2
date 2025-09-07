@@ -64,7 +64,7 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
     private final Button buyButton, sellButton;
     private final BisqTableView<MarketListItem> marketsTableView;
     private final BisqTableView<BaseCryptoAssetListItem> baseCryptoAssetsTableView;
-    private final SearchBox searchBox;
+    private final SearchBox paymentCurrencySearchBox, cryptoCurrencySearchBox;
     private final Label headlineLabel, tradePairIconLabel;
     private final BisqPopup marketSelectionPopup;
     private final HBox tradePairBox;
@@ -75,30 +75,24 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
                                                   MuSigCreateOfferDirectionAndMarketController controller) {
         super(new StackPane(), model, controller);
 
-        searchBox = new SearchBox();
-        searchBox.setPromptText(Res.get("bisqEasy.tradeWizard.market.columns.name").toUpperCase());
-        searchBox.setMinWidth(170);
-        searchBox.setMaxWidth(170);
-        searchBox.getStyleClass().add("bisq-easy-trade-wizard-market-search");
-
-        // Markets table view
         marketsTableView = new BisqTableView<>(model.getSortedMarketListItems());
         marketsTableView.setPrefSize(TABLE_WIDTH, TABLE_HEIGHT);
         marketsTableView.setFixedCellSize(50);
         configMarketTableView();
+        paymentCurrencySearchBox = createAndGetSearchBox("muSig.createOffer.directionAndMarket.marketsPopup.search.payment");
+        StackPane marketsTableViewWithSearchBox = createAndGetTableViewWithSearchBox(marketsTableView, paymentCurrencySearchBox);
+        marketsTableViewWithSearchBox.getStyleClass().add("markets-table-view-box");
 
-        StackPane.setMargin(searchBox, new Insets(3, 0, 0, 15));
-        StackPane tableViewWithSearchBox = new StackPane(marketsTableView, searchBox);
-        tableViewWithSearchBox.setAlignment(Pos.TOP_LEFT);
-        tableViewWithSearchBox.setPrefSize(TABLE_WIDTH, TABLE_HEIGHT);
-        tableViewWithSearchBox.setMaxWidth(TABLE_WIDTH);
-        tableViewWithSearchBox.setMaxHeight(TABLE_HEIGHT);
-
-        // Base crypto assets table view
         baseCryptoAssetsTableView = new BisqTableView<>(model.getSortedBaseCryptoAssetListItems());
         baseCryptoAssetsTableView.setPrefSize(TABLE_WIDTH, TABLE_HEIGHT);
         baseCryptoAssetsTableView.setFixedCellSize(50);
         configBaseCryptoAssetsTableView();
+        cryptoCurrencySearchBox = createAndGetSearchBox("muSig.createOffer.directionAndMarket.marketsPopup.search.crypto");
+        StackPane baseCryptoAssetsTableViewWithSearchBox = createAndGetTableViewWithSearchBox(baseCryptoAssetsTableView, cryptoCurrencySearchBox);
+
+        marketSelectionPopup = new BisqPopup();
+        marketSelectionPopup.setContentNode(new HBox(baseCryptoAssetsTableViewWithSearchBox, marketsTableViewWithSearchBox));
+        marketSelectionPopup.setAnchorLocation(PopupWindow.AnchorLocation.WINDOW_TOP_RIGHT);
 
         tradePairIconLabel = new Label();
         Label chevronIconLabel = new Label();
@@ -106,10 +100,6 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         chevronIconLabel.setPadding(new Insets(5, 0, -5, 0));
         tradePairBox = new HBox(5, tradePairIconLabel, chevronIconLabel);
         tradePairBox.getStyleClass().add("trade-pair-box");
-
-        marketSelectionPopup = new BisqPopup();
-        marketSelectionPopup.setContentNode(new HBox(baseCryptoAssetsTableView, tableViewWithSearchBox));
-        marketSelectionPopup.setAnchorLocation(PopupWindow.AnchorLocation.WINDOW_TOP_RIGHT);
 
         headlineLabel = new Label();
         headlineLabel.setPadding(new Insets(0, 5, 0, 0));
@@ -119,8 +109,8 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         headlineHBox.setAlignment(Pos.CENTER);
         headlineHBox.getStyleClass().add("bisq-text-headline-2");
 
-        buyButton = createAndGetDirectionButton(Res.get("bisqEasy.tradeWizard.directionAndMarket.buy"));
-        sellButton = createAndGetDirectionButton(Res.get("bisqEasy.tradeWizard.directionAndMarket.sell"));
+        buyButton = createAndGetDirectionButton();
+        sellButton = createAndGetDirectionButton();
         HBox directionBox = new HBox(25, buyButton, sellButton);
         directionBox.setAlignment(Pos.BASELINE_CENTER);
 
@@ -136,6 +126,8 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
     @Override
     protected void onViewAttached() {
         headlineLabel.textProperty().bind(model.getHeadlineText());
+        buyButton.textProperty().bind(model.getBuyButtonText());
+        sellButton.textProperty().bind(model.getSellButtonText());
 
         marketsTableView.initialize();
         marketsTableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
@@ -158,7 +150,8 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         baseCryptoAssetsTableView.setOnMouseClicked(e ->
                 controller.onBaseCryptoAssetListItemClicked(baseCryptoAssetsTableView.getSelectionModel().getSelectedItem()));
 
-        searchBox.textProperty().bindBidirectional(model.getSearchText());
+        paymentCurrencySearchBox.textProperty().bindBidirectional(model.getPaymentCurrencySearchText());
+        cryptoCurrencySearchBox.textProperty().bindBidirectional(model.getCryptoCurrencySearchText());
 
         buyButton.disableProperty().bind(model.getBuyButtonDisabled());
         buyButton.setOnAction(evt -> controller.onSelectDirection(Direction.BUY));
@@ -196,10 +189,14 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
     @Override
     protected void onViewDetached() {
         headlineLabel.textProperty().unbind();
+        buyButton.textProperty().unbind();
+        sellButton.textProperty().unbind();
 
         marketsTableView.dispose();
         baseCryptoAssetsTableView.dispose();
-        searchBox.textProperty().unbindBidirectional(model.getSearchText());
+        paymentCurrencySearchBox.textProperty().unbindBidirectional(model.getPaymentCurrencySearchText());
+        cryptoCurrencySearchBox.textProperty().unbindBidirectional(model.getCryptoCurrencySearchText());
+
         marketsTableView.setOnMouseClicked(null);
         tradePairBox.setOnMouseClicked(null);
 
@@ -215,8 +212,8 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         marketSelectionPin.unsubscribe();
     }
 
-    private Button createAndGetDirectionButton(String title) {
-        Button button = new Button(title);
+    private Button createAndGetDirectionButton() {
+        Button button = new Button();
         button.getStyleClass().add("card-button");
         button.setAlignment(Pos.CENTER);
         int width = 235;
@@ -233,7 +230,7 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
                 .setCellFactory(getMarketNameCellFactory())
                 .build());
         marketsTableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
-                .title(Res.get("bisqEasy.tradeWizard.market.columns.numOffers"))
+                .title(Res.get("muSig.createOffer.directionAndMarket.marketsPopup.numOffers"))
                 .fixWidth(70)
                 .valueSupplier(MarketListItem::getNumOffers)
                 .comparator(Comparator.comparing(MarketListItem::getNumOffersAsInteger))
@@ -248,7 +245,7 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
                 .setCellFactory(getBaseCryptoAssetNameCellFactory())
                 .build());
         baseCryptoAssetsTableView.getColumns().add(new BisqTableColumn.Builder<BaseCryptoAssetListItem>()
-                .title(Res.get("bisqEasy.tradeWizard.market.columns.numOffers"))
+                .title(Res.get("muSig.createOffer.directionAndMarket.marketsPopup.numOffers"))
                 .fixWidth(70)
                 .valueSupplier(BaseCryptoAssetListItem::getNumOffers)
                 .comparator(Comparator.comparing(BaseCryptoAssetListItem::getNumOffersAsInteger))
@@ -325,6 +322,25 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
                 }
             }
         };
+    }
+
+    private SearchBox createAndGetSearchBox(String promptText) {
+        SearchBox searchBox = new SearchBox();
+        searchBox.setPromptText(Res.get(promptText).toUpperCase());
+        searchBox.setMinWidth(170);
+        searchBox.setMaxWidth(170);
+        searchBox.getStyleClass().add("bisq-easy-trade-wizard-market-search");
+        return searchBox;
+    }
+
+    private StackPane createAndGetTableViewWithSearchBox(BisqTableView<?> tableView, SearchBox searchBox) {
+        StackPane.setMargin(searchBox, new Insets(3, 0, 0, 15));
+        StackPane stackPane = new StackPane(tableView, searchBox);
+        stackPane.setAlignment(Pos.TOP_LEFT);
+        stackPane.setPrefSize(TABLE_WIDTH, TABLE_HEIGHT);
+        stackPane.setMaxWidth(TABLE_WIDTH);
+        stackPane.setMaxHeight(TABLE_HEIGHT);
+        return stackPane;
     }
 
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)

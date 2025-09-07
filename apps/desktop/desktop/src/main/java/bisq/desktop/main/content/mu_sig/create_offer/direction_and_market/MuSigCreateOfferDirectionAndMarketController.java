@@ -48,7 +48,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
     private final MarketPriceService marketPriceService;
     private final MuSigService muSigService;
     private final SettingsService settingsService;
-    private Subscription searchTextPin, selectedBaseCryptoAssetPin;
+    private Subscription paymentCurrencySearchTextPin, cryptoCurrencySearchTextPin, selectedBaseCryptoAssetPin;
 
     public MuSigCreateOfferDirectionAndMarketController(ServiceProvider serviceProvider,
                                                         Runnable onNextHandler) {
@@ -82,7 +82,8 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
     public void onActivate() {
         setDirection(Direction.BUY);
 
-        model.getSearchText().set("");
+        model.getPaymentCurrencySearchText().set("");
+        model.getCryptoCurrencySearchText().set("");
 
         selectedBaseCryptoAssetPin = EasyBind.subscribe(model.getSelectedBaseCryptoAsset(), cryptoAsset -> {
             if (cryptoAsset == null) {
@@ -126,7 +127,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
             return item;
         }).collect(Collectors.toList()));
 
-        searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
+        paymentCurrencySearchTextPin = EasyBind.subscribe(model.getPaymentCurrencySearchText(), searchText -> {
             if (searchText == null || searchText.isEmpty()) {
                 model.getFilteredMarketListItems().setPredicate(item -> true);
             } else {
@@ -139,13 +140,25 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
             }
         });
 
+        cryptoCurrencySearchTextPin = EasyBind.subscribe(model.getCryptoCurrencySearchText(), searchText -> {
+            if (searchText == null || searchText.isEmpty()) {
+                model.getFilteredBaseCryptoAssetListItems().setPredicate(item -> true);
+            } else {
+                String search = searchText.toLowerCase();
+                model.getFilteredBaseCryptoAssetListItems().setPredicate(item ->
+                        item != null && item.getDisplayName().toLowerCase().contains(search)
+                );
+            }
+        });
+
         initializeMarketSelection();
     }
 
     @Override
     public void onDeactivate() {
+        paymentCurrencySearchTextPin.unsubscribe();
+        cryptoCurrencySearchTextPin.unsubscribe();
         selectedBaseCryptoAssetPin.unsubscribe();
-        searchTextPin.unsubscribe();
     }
 
     void onSelectDirection(Direction direction) {
@@ -221,6 +234,8 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         model.getSelectedMarket().set(market);
         model.getHeadlineText().set(Res.get("muSig.createOffer.directionAndMarket.headline",
                 market.getBaseCurrencyName(), market.getQuoteCurrencyName()));
+        model.getBuyButtonText().set(Res.get("muSig.createOffer.directionAndMarket.buyButton", market.getBaseCurrencyName()));
+        model.getSellButtonText().set(Res.get("muSig.createOffer.directionAndMarket.sellButton", market.getBaseCurrencyName()));
     }
 
     private void setDirection(Direction direction) {
