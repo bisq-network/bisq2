@@ -83,6 +83,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         setDirection(Direction.BUY);
 
         model.getPaymentCurrencySearchText().set("");
+        model.getCryptoCurrencySearchText().set("");
 
         selectedBaseCryptoAssetPin = EasyBind.subscribe(model.getSelectedBaseCryptoAsset(), cryptoAsset -> {
             if (cryptoAsset == null) {
