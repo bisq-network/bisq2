@@ -88,11 +88,12 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         configMarketTableView();
 
         StackPane.setMargin(searchBox, new Insets(3, 0, 0, 15));
-        StackPane tableViewWithSearchBox = new StackPane(marketsTableView, searchBox);
-        tableViewWithSearchBox.setAlignment(Pos.TOP_LEFT);
-        tableViewWithSearchBox.setPrefSize(TABLE_WIDTH, TABLE_HEIGHT);
-        tableViewWithSearchBox.setMaxWidth(TABLE_WIDTH);
-        tableViewWithSearchBox.setMaxHeight(TABLE_HEIGHT);
+        StackPane marketsTableViewWithSearchBox = new StackPane(marketsTableView, searchBox);
+        marketsTableViewWithSearchBox.setAlignment(Pos.TOP_LEFT);
+        marketsTableViewWithSearchBox.setPrefSize(TABLE_WIDTH, TABLE_HEIGHT);
+        marketsTableViewWithSearchBox.setMaxWidth(TABLE_WIDTH);
+        marketsTableViewWithSearchBox.setMaxHeight(TABLE_HEIGHT);
+        marketsTableViewWithSearchBox.getStyleClass().add("markets-table-view-box");
 
         // Base crypto assets table view
         baseCryptoAssetsTableView = new BisqTableView<>(model.getSortedBaseCryptoAssetListItems());
@@ -108,7 +109,7 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         tradePairBox.getStyleClass().add("trade-pair-box");
 
         marketSelectionPopup = new BisqPopup();
-        marketSelectionPopup.setContentNode(new HBox(baseCryptoAssetsTableView, tableViewWithSearchBox));
+        marketSelectionPopup.setContentNode(new HBox(baseCryptoAssetsTableView, marketsTableViewWithSearchBox));
         marketSelectionPopup.setAnchorLocation(PopupWindow.AnchorLocation.WINDOW_TOP_RIGHT);
 
         headlineLabel = new Label();
