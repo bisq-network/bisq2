@@ -75,44 +75,20 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
                                                   MuSigCreateOfferDirectionAndMarketController controller) {
         super(new StackPane(), model, controller);
 
-        paymentCurrencySearchBox = new SearchBox();
-        paymentCurrencySearchBox.setPromptText(Res.get("muSig.createOffer.directionAndMarket.marketsPopup.search.payment").toUpperCase());
-        paymentCurrencySearchBox.setMinWidth(170);
-        paymentCurrencySearchBox.setMaxWidth(170);
-        paymentCurrencySearchBox.getStyleClass().add("bisq-easy-trade-wizard-market-search");
-
-        // Markets table view
         marketsTableView = new BisqTableView<>(model.getSortedMarketListItems());
         marketsTableView.setPrefSize(TABLE_WIDTH, TABLE_HEIGHT);
         marketsTableView.setFixedCellSize(50);
         configMarketTableView();
-
-        StackPane.setMargin(paymentCurrencySearchBox, new Insets(3, 0, 0, 15));
-        StackPane marketsTableViewWithSearchBox = new StackPane(marketsTableView, paymentCurrencySearchBox);
-        marketsTableViewWithSearchBox.setAlignment(Pos.TOP_LEFT);
-        marketsTableViewWithSearchBox.setPrefSize(TABLE_WIDTH, TABLE_HEIGHT);
-        marketsTableViewWithSearchBox.setMaxWidth(TABLE_WIDTH);
-        marketsTableViewWithSearchBox.setMaxHeight(TABLE_HEIGHT);
+        paymentCurrencySearchBox = createAndGetSearchBox("muSig.createOffer.directionAndMarket.marketsPopup.search.payment");
+        StackPane marketsTableViewWithSearchBox = createAndGetTableViewWithSearchBox(marketsTableView, paymentCurrencySearchBox);
         marketsTableViewWithSearchBox.getStyleClass().add("markets-table-view-box");
 
-        // Base crypto assets table view
         baseCryptoAssetsTableView = new BisqTableView<>(model.getSortedBaseCryptoAssetListItems());
         baseCryptoAssetsTableView.setPrefSize(TABLE_WIDTH, TABLE_HEIGHT);
         baseCryptoAssetsTableView.setFixedCellSize(50);
         configBaseCryptoAssetsTableView();
-
-        cryptoCurrencySearchBox = new SearchBox();
-        cryptoCurrencySearchBox.setPromptText(Res.get("muSig.createOffer.directionAndMarket.marketsPopup.search.crypto").toUpperCase());
-        cryptoCurrencySearchBox.setMinWidth(170);
-        cryptoCurrencySearchBox.setMaxWidth(170);
-        cryptoCurrencySearchBox.getStyleClass().add("bisq-easy-trade-wizard-market-search");
-
-        StackPane.setMargin(cryptoCurrencySearchBox, new Insets(3, 0, 0, 15));
-        StackPane baseCryptoAssetsTableViewWithSearchBox = new StackPane(baseCryptoAssetsTableView, cryptoCurrencySearchBox);
-        baseCryptoAssetsTableViewWithSearchBox.setAlignment(Pos.TOP_LEFT);
-        baseCryptoAssetsTableViewWithSearchBox.setPrefSize(TABLE_WIDTH, TABLE_HEIGHT);
-        baseCryptoAssetsTableViewWithSearchBox.setMaxWidth(TABLE_WIDTH);
-        baseCryptoAssetsTableViewWithSearchBox.setMaxHeight(TABLE_HEIGHT);
+        cryptoCurrencySearchBox = createAndGetSearchBox("muSig.createOffer.directionAndMarket.marketsPopup.search.crypto");
+        StackPane baseCryptoAssetsTableViewWithSearchBox = createAndGetTableViewWithSearchBox(baseCryptoAssetsTableView, cryptoCurrencySearchBox);
 
         marketSelectionPopup = new BisqPopup();
         marketSelectionPopup.setContentNode(new HBox(baseCryptoAssetsTableViewWithSearchBox, marketsTableViewWithSearchBox));
@@ -346,6 +322,25 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
                 }
             }
         };
+    }
+
+    private SearchBox createAndGetSearchBox(String promptText) {
+        SearchBox searchBox = new SearchBox();
+        searchBox.setPromptText(Res.get(promptText).toUpperCase());
+        searchBox.setMinWidth(170);
+        searchBox.setMaxWidth(170);
+        searchBox.getStyleClass().add("bisq-easy-trade-wizard-market-search");
+        return searchBox;
+    }
+
+    private StackPane createAndGetTableViewWithSearchBox(BisqTableView<?> tableView, SearchBox searchBox) {
+        StackPane.setMargin(searchBox, new Insets(3, 0, 0, 15));
+        StackPane stackPane = new StackPane(tableView, searchBox);
+        stackPane.setAlignment(Pos.TOP_LEFT);
+        stackPane.setPrefSize(TABLE_WIDTH, TABLE_HEIGHT);
+        stackPane.setMaxWidth(TABLE_WIDTH);
+        stackPane.setMaxHeight(TABLE_HEIGHT);
+        return stackPane;
     }
 
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
