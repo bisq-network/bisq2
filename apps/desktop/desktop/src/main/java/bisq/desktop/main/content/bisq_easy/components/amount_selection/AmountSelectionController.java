@@ -210,6 +210,12 @@ public class AmountSelectionController implements Controller {
         minQuoteSideAmountInput.setSelectedMarket(market);
         invertedMinQuoteSideAmountDisplay.setSelectedMarket(market);
         price.setMarket(market);
+
+        // Reset all amounts to avoid currency mismatch when market changes
+        model.getMaxOrFixedQuoteSideAmount().set(null);
+        model.getMinQuoteSideAmount().set(null);
+        model.getMaxOrFixedBaseSideAmount().set(null);
+        model.getMinBaseSideAmount().set(null);
     }
 
     public void setDescription(String description) {
