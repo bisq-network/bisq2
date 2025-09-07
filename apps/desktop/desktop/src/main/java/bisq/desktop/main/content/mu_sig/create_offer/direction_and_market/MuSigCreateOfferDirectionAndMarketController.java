@@ -221,6 +221,8 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         model.getSelectedMarket().set(market);
         model.getHeadlineText().set(Res.get("muSig.createOffer.directionAndMarket.headline",
                 market.getBaseCurrencyName(), market.getQuoteCurrencyName()));
+        model.getBuyButtonText().set(Res.get("muSig.createOffer.directionAndMarket.buyButton", market.getBaseCurrencyName()));
+        model.getSellButtonText().set(Res.get("muSig.createOffer.directionAndMarket.sellButton", market.getBaseCurrencyName()));
     }
 
     private void setDirection(Direction direction) {

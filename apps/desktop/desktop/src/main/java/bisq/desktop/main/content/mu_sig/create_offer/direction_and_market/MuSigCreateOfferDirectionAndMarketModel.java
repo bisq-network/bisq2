@@ -38,6 +38,8 @@ public class MuSigCreateOfferDirectionAndMarketModel implements Model {
     private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>(Direction.BUY);
     private final BooleanProperty buyButtonDisabled = new SimpleBooleanProperty();
     private final StringProperty headlineText = new SimpleStringProperty();
+    private final StringProperty buyButtonText = new SimpleStringProperty();
+    private final StringProperty sellButtonText = new SimpleStringProperty();
 
     private final ObjectProperty<MuSigCreateOfferDirectionAndMarketView.MarketListItem> selectedMarketListItem = new SimpleObjectProperty<>();
     private final StringProperty searchText = new SimpleStringProperty();

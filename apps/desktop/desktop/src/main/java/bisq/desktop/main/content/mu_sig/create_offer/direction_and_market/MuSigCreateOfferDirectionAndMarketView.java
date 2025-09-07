@@ -119,8 +119,8 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         headlineHBox.setAlignment(Pos.CENTER);
         headlineHBox.getStyleClass().add("bisq-text-headline-2");
 
-        buyButton = createAndGetDirectionButton(Res.get("bisqEasy.tradeWizard.directionAndMarket.buy"));
-        sellButton = createAndGetDirectionButton(Res.get("bisqEasy.tradeWizard.directionAndMarket.sell"));
+        buyButton = createAndGetDirectionButton();
+        sellButton = createAndGetDirectionButton();
         HBox directionBox = new HBox(25, buyButton, sellButton);
         directionBox.setAlignment(Pos.BASELINE_CENTER);
 
@@ -136,6 +136,8 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
     @Override
     protected void onViewAttached() {
         headlineLabel.textProperty().bind(model.getHeadlineText());
+        buyButton.textProperty().bind(model.getBuyButtonText());
+        sellButton.textProperty().bind(model.getSellButtonText());
 
         marketsTableView.initialize();
         marketsTableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
@@ -196,6 +198,8 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
     @Override
     protected void onViewDetached() {
         headlineLabel.textProperty().unbind();
+        buyButton.textProperty().unbind();
+        sellButton.textProperty().unbind();
 
         marketsTableView.dispose();
         baseCryptoAssetsTableView.dispose();
@@ -215,8 +219,8 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         marketSelectionPin.unsubscribe();
     }
 
-    private Button createAndGetDirectionButton(String title) {
-        Button button = new Button(title);
+    private Button createAndGetDirectionButton() {
+        Button button = new Button();
         button.getStyleClass().add("card-button");
         button.setAlignment(Pos.CENTER);
         int width = 235;
