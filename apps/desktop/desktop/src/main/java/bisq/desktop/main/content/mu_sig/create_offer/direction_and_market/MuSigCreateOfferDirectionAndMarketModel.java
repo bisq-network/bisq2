@@ -42,13 +42,14 @@ public class MuSigCreateOfferDirectionAndMarketModel implements Model {
     private final StringProperty sellButtonText = new SimpleStringProperty();
 
     private final ObjectProperty<MuSigCreateOfferDirectionAndMarketView.MarketListItem> selectedMarketListItem = new SimpleObjectProperty<>();
-    private final StringProperty searchText = new SimpleStringProperty();
+    private final StringProperty paymentCurrencySearchText = new SimpleStringProperty();
     private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
     private final ObservableList<MuSigCreateOfferDirectionAndMarketView.MarketListItem> marketListItems = FXCollections.observableArrayList();
     private final FilteredList<MuSigCreateOfferDirectionAndMarketView.MarketListItem> filteredMarketListItems = new FilteredList<>(marketListItems);
     private final SortedList<MuSigCreateOfferDirectionAndMarketView.MarketListItem> sortedMarketListItems = new SortedList<>(filteredMarketListItems);
 
     private final ObjectProperty<MuSigCreateOfferDirectionAndMarketView.BaseCryptoAssetListItem> selectedBaseCryptoAssetListItem = new SimpleObjectProperty<>();
+    private final StringProperty cryptoCurrencySearchText = new SimpleStringProperty();
     private final ObjectProperty<CryptoAsset> selectedBaseCryptoAsset = new SimpleObjectProperty<>();
     private final ObservableList<MuSigCreateOfferDirectionAndMarketView.BaseCryptoAssetListItem> baseCryptoAssetListItems = FXCollections.observableArrayList();
     private final FilteredList<MuSigCreateOfferDirectionAndMarketView.BaseCryptoAssetListItem> filteredBaseCryptoAssetListItems = new FilteredList<>(baseCryptoAssetListItems);
@@ -59,10 +60,11 @@ public class MuSigCreateOfferDirectionAndMarketModel implements Model {
         buyButtonDisabled.set(false);
         headlineText.set("");
         selectedMarketListItem.set(null);
-        searchText.set(null);
+        paymentCurrencySearchText.set(null);
         selectedMarket.set(null);
         marketListItems.clear();
         selectedBaseCryptoAssetListItem.set(null);
+        cryptoCurrencySearchText.set(null);
         selectedBaseCryptoAsset.set(null);
         baseCryptoAssetListItems.clear();
     }
