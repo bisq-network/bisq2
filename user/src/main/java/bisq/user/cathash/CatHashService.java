@@ -32,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -183,7 +184,7 @@ public abstract class CatHashService<T> {
                             .map(profiles -> profiles.stream()
                                     .map(userProfile -> userProfile.getId() + ".raw")
                                     .collect(Collectors.toSet()))
-                            .orElse(new HashSet<>());
+                            .orElseGet(Collections::emptySet);
                     Set<String> toRemove = new HashSet<>(fromDisk);
                     toRemove.removeAll(fromData);
 

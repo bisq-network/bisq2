@@ -88,11 +88,11 @@ public class SystemLoad {
             model.setNetworkLoad(networkLoadService.map(NetworkLoadService::updateNetworkLoad)
                     .map(NetworkLoad::getLoad)
                     .map(PercentageFormatter::formatToPercentWithSymbol)
-                    .orElse(Res.get("data.na")));
+                    .orElseGet(() -> Res.get("data.na")));
 
             model.setDbSize(storageService.map(StorageService::getNetworkDatabaseSize)
                     .map(DataSizeFormatter::formatMB)
-                    .orElse(Res.get("data.na")));
+                    .orElseGet(() -> Res.get("data.na")));
 
             metrics.ifPresent(metrics -> {
                 model.setAccumulatedPoWDuration(TimeFormatter.formatDuration(metrics.getAccumulatedPoWDuration()));

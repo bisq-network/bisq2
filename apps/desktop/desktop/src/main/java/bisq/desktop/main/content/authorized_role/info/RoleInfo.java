@@ -97,7 +97,7 @@ public class RoleInfo {
                         model.setBondedRoleType(authorizedBondedRole.getBondedRoleType().getDisplayString());
                         model.setBondUserName(authorizedBondedRole.getBondUserName());
                         model.setSignature(authorizedBondedRole.getSignatureBase64());
-                        model.setAuthorizingOracleNodeProfileId(authorizedBondedRole.getAuthorizingOracleNode().map(AuthorizedOracleNode::getProfileId).orElse(Res.get("data.na")));
+                        model.setAuthorizingOracleNodeProfileId(authorizedBondedRole.getAuthorizingOracleNode().map(AuthorizedOracleNode::getProfileId).orElseGet(() -> Res.get("data.na")));
                         model.setStaticPublicKeysProvided(BooleanFormatter.toYesNo(authorizedBondedRole.isStaticPublicKeysProvided()));
                         model.setAuthorizedPublicKeys(Joiner.on(", ").join(authorizedBondedRole.getAuthorizedPublicKeys()));
                     });

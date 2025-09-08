@@ -40,7 +40,7 @@ public class CountryRepository {
     }
 
     public static void applyDefaultLocale(Locale defaultLocale) {
-        CountryRepository.defaultCountry = findCountry(defaultLocale).orElse(findCountry(Locale.US).orElseThrow());
+        CountryRepository.defaultCountry = findCountry(defaultLocale).orElseGet(() -> findCountry(Locale.US).orElseThrow());
     }
 
     public static Optional<Country> findCountry(Locale locale) {

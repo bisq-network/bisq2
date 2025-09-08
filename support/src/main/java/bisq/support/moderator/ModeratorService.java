@@ -204,7 +204,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
                         return CompletableFuture.completedFuture(new SendMessageResult());
                     }
                 })
-                .orElse(CompletableFuture.failedFuture(new RuntimeException("No channel found")));
+                .orElseGet(() -> CompletableFuture.failedFuture(new RuntimeException("No channel found")));
     }
 
     public ObservableSet<ReportToModeratorMessage> getReportToModeratorMessages() {

@@ -76,8 +76,8 @@ public class FileChooserUtil {
     private static Optional<File> chooseDirectory(Scene scene, Optional<String> initialDirectory, String title) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         String directory = initialDirectory
-                .orElse(SettingsService.getInstance().getCookie().asString(CookieKey.FILE_CHOOSER_DIR)
-                        .orElse(PlatformUtils.getDownloadOfHomeDir()));
+                .orElseGet(() -> SettingsService.getInstance().getCookie().asString(CookieKey.FILE_CHOOSER_DIR)
+                        .orElseGet(PlatformUtils::getDownloadOfHomeDir));
         File initDir = new File(directory);
         if (initDir.isDirectory()) {
             directoryChooser.setInitialDirectory(initDir);
@@ -92,7 +92,7 @@ public class FileChooserUtil {
         FileChooser fileChooser = new FileChooser();
         initialFileName.ifPresent(fileChooser::setInitialFileName);
         String initialDirectory = SettingsService.getInstance().getCookie().asString(CookieKey.FILE_CHOOSER_DIR)
-                .orElse(PlatformUtils.getDownloadOfHomeDir());
+                .orElseGet(PlatformUtils::getDownloadOfHomeDir);
         File initDir = new File(initialDirectory);
         if (initDir.isDirectory()) {
             fileChooser.setInitialDirectory(initDir);

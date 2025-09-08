@@ -153,7 +153,7 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
     /* --------------------------------------------------------------------- */
 
     public String getTextOrNA() {
-        return text.orElse(Res.get("data.na"));
+        return text.orElseGet(() -> Res.get("data.na"));
     }
 
     public boolean wasMentioned(UserIdentity userIdentity) {

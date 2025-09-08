@@ -163,7 +163,7 @@ public class MuSigOfferListItem {
 
         maker = userProfileService.findUserProfile(offer.getMakersUserProfileId())
                 .map(UserProfile::getUserName)
-                .orElse(Res.get("data.na"));
+                .orElseGet(() -> Res.get("data.na"));
 
         //  Monetary quoteSideMinAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, offer).orElseThrow();
         // String formattedRangeQuoteAmount = OfferAmountFormatter.formatQuoteAmount(marketPriceService, offer, false);

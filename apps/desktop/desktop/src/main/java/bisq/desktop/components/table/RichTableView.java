@@ -154,7 +154,7 @@ public class RichTableView<T> extends VBox {
         this.filterItems = filterItems;
         this.toggleGroup = toggleGroup;
         this.searchTextHandler = searchTextHandler;
-        this.entriesUnit = entriesUnit.orElse(Res.get("component.standardTable.entriesUnit.generic"));
+        this.entriesUnit = entriesUnit.orElseGet(() -> Res.get("component.standardTable.entriesUnit.generic"));
         if (filterItems.isPresent()) {
             checkArgument(toggleGroup.isPresent(), "filterItems and toggleGroup must be both present or empty");
         }
@@ -227,8 +227,8 @@ public class RichTableView<T> extends VBox {
         filterItems.ifPresent(filterItems -> filterItems.forEach(RichTableView.FilterMenuItem::initialize));
         searchTextHandler.ifPresent(stringConsumer -> searchTextPin = EasyBind.subscribe(searchBox.textProperty(), stringConsumer));
         exportButton.setOnAction(ev -> {
-            List<String> headers = csvHeaders.orElse(buildCsvHeaders());
-            List<List<String>> data = csvData.orElse(buildCsvData());
+            List<String> headers = csvHeaders.orElseGet(() -> buildCsvHeaders());
+            List<List<String>> data = csvData.orElseGet(() -> buildCsvData());
             String csv = Csv.toCsv(headers, data);
             String initialFileName = headline.orElse("Bisq-table-data") + ".csv";
             FileChooserUtil.saveFile(tableView.getScene(), initialFileName)

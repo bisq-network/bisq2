@@ -275,7 +275,7 @@ public class BannedUserProfileTable {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
-                        String banReasonText = StringUtils.toOptional(item.getBanReason()).orElse(Res.get("data.na"));
+                        String banReasonText = StringUtils.toOptional(item.getBanReason()).orElseGet(() -> Res.get("data.na"));
                         banReason.setText(StringUtils.truncate(banReasonText, 30));
                         banReason.setMaxHeight(30);
                         tooltip.setText(banReasonText);
@@ -372,7 +372,7 @@ public class BannedUserProfileTable {
                 banReason = moderatorDataOpt
                         .map(BannedUserModeratorData::getBanReason)
                         .flatMap(StringUtils::toOptional)
-                        .orElse(Res.get("data.na"));
+                        .orElseGet(() -> Res.get("data.na"));
 
                 reporterUserProfileId = moderatorDataOpt
                         .map(BannedUserModeratorData::getReporterUserProfileId)
@@ -384,7 +384,7 @@ public class BannedUserProfileTable {
 
                 reporterUserName = reporterUserProfile
                         .map(UserProfile::getUserName)
-                        .orElse(Res.get("data.na"));
+                        .orElseGet(() -> Res.get("data.na"));
             }
         }
     }

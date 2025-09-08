@@ -220,7 +220,7 @@ public class MuSigTakeOfferReviewController implements Controller {
                 if (muSigOffer.getMakersUserProfileId().equals(e.getUserProfileId())) {
                     new Popup().warning(Res.get("muSig.takeOffer.rateLimitsExceeded.maker.warning")).show();
                 } else {
-                    String exceedsLimitInfo = bannedUserService.getExceedsLimitInfo(e.getUserProfileId()).orElse(Res.get("data.na"));
+                    String exceedsLimitInfo = bannedUserService.getExceedsLimitInfo(e.getUserProfileId()).orElseGet(() -> Res.get("data.na"));
                     new Popup().warning(Res.get("muSig.takeOffer.rateLimitsExceeded.taker.warning", exceedsLimitInfo)).show();
                 }
                 onCancelHandler.run();
@@ -317,7 +317,7 @@ public class MuSigTakeOfferReviewController implements Controller {
         Optional<MarketPrice> marketPrice = marketPriceService.findMarketPrice(market);
         marketPrice.ifPresent(price -> model.setMarketPrice(price.getPriceQuote().getValue()));
         Optional<PriceQuote> marketPriceQuote = marketPrice.map(MarketPrice::getPriceQuote);
-        String marketPriceAsString = marketPriceQuote.map(PriceFormatter::formatWithCode).orElse(Res.get("data.na"));
+        String marketPriceAsString = marketPriceQuote.map(PriceFormatter::formatWithCode).orElseGet(() -> Res.get("data.na"));
         Optional<Double> percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, priceSpec, market);
         double percent = percentFromMarketPrice.orElse(0d);
         if ((priceSpec instanceof FloatPriceSpec || priceSpec instanceof MarketPriceSpec) && percent == 0) {
@@ -325,7 +325,7 @@ public class MuSigTakeOfferReviewController implements Controller {
         } else {
             String aboveOrBelow = percent > 0 ? Res.get("offer.price.above") : Res.get("offer.price.below");
             String percentAsString = percentFromMarketPrice.map(Math::abs).map(PercentageFormatter::formatToPercentWithSymbol)
-                    .orElse(Res.get("data.na"));
+                    .orElseGet(() -> Res.get("data.na"));
             if (priceSpec instanceof FloatPriceSpec) {
                 model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.float",
                         percentAsString, aboveOrBelow, marketPriceAsString));

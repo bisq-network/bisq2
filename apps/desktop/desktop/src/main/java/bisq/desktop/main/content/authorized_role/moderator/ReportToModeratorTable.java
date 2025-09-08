@@ -415,7 +415,7 @@ public class ReportToModeratorTable {
                 UserProfileService userProfileService = serviceProvider.getUserService().getUserProfileService();
                 String reporterUserProfileId = reportToModeratorMessage.getReporterUserProfileId();
                 reporterUserProfile = userProfileService.findUserProfile(reporterUserProfileId);
-                reporterUserName = reporterUserProfile.map(UserProfile::getUserName).orElse(Res.get("data.na"));
+                reporterUserName = reporterUserProfile.map(UserProfile::getUserName).orElseGet(() -> Res.get("data.na"));
 
                 accusedUserProfile = reportToModeratorMessage.getAccusedUserProfile();
                 accusedUserName = accusedUserProfile.getUserName();

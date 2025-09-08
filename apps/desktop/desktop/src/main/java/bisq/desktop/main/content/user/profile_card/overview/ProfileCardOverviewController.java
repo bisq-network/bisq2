@@ -79,7 +79,7 @@ public class ProfileCardOverviewController implements Controller {
 
         model.setProfileAge(reputationService.getProfileAgeService().getProfileAge(userProfile)
                 .map(TimeFormatter::formatAgeInDaysAndYears)
-                .orElse(Res.get("data.na")));
+                .orElseGet(() -> Res.get("data.na")));
     }
 
     @Override
