@@ -399,6 +399,7 @@ public class TradeDataHeader {
             amountPane.setMinHeight(18);
             amountPane.setPrefHeight(18);
             amountPane.setMaxHeight(18);
+            amountPane.setMinWidth(StackPane.USE_PREF_SIZE);
 
             Text code = new Text();
             code.getStyleClass().add("bisq-easy-open-trades-header-code");
