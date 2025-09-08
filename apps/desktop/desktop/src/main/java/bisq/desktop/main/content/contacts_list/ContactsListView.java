@@ -306,15 +306,15 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
 
             userName = userProfile.getUserName();
             contactReasonString = contactListEntry.getContactReason().getDisplayString();
-            tag = contactListEntry.getTag().orElse(Res.get("data.na"));
+            tag = contactListEntry.getTag().orElseGet(() -> Res.get("data.na"));
             //todo use custom trust display
-            trustScore = contactListEntry.getTrustScore().map(String::valueOf).orElse(Res.get("data.na"));
-            notes = contactListEntry.getNotes().orElse(Res.get("data.na"));
+            trustScore = contactListEntry.getTrustScore().map(String::valueOf).orElseGet(() -> Res.get("data.na"));
+            notes = contactListEntry.getNotes().orElseGet(() -> Res.get("data.na"));
             Optional<Long> optionalProfileAge = reputationService.getProfileAgeService().getProfileAge(userProfile);
             profileAge = optionalProfileAge.orElse(0L);
             profileAgeString = optionalProfileAge
                     .map(TimeFormatter::formatAgeInDaysAndYears)
-                    .orElse(Res.get("data.na"));
+                    .orElseGet(() -> Res.get("data.na"));
 
             applyReputationScore(userProfile.getId());
         }

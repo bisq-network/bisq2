@@ -155,7 +155,7 @@ public class BootstrapElement {
                                 model.getIconId().set("rocket");
                                 pins.add(transportService.getInitializeServerSocketTimestampByNetworkId().addObserver((networkId, timestamp) -> {
                                     UIThread.run(() -> {
-                                        String tag = identityService.findAnyIdentityByNetworkId(networkId).map(Identity::getTag).orElse(Res.get("data.na"));
+                                        String tag = identityService.findAnyIdentityByNetworkId(networkId).map(Identity::getTag).orElseGet(() -> Res.get("data.na"));
                                         if (identityTag.isPresent() && identityTag.get().equals(tag)) {
                                             model.getVisible().set(true);
                                             model.getInfo().set(Res.get(transportSpecificInitializingKey, resolveUsername(tag)));
@@ -168,7 +168,7 @@ public class BootstrapElement {
                                 }));
                                 pins.add(transportService.getInitializedServerSocketTimestampByNetworkId().addObserver((networkId, timestamp) -> {
                                     UIThread.run(() -> {
-                                        String tag = identityService.findAnyIdentityByNetworkId(networkId).map(Identity::getTag).orElse(Res.get("data.na"));
+                                        String tag = identityService.findAnyIdentityByNetworkId(networkId).map(Identity::getTag).orElseGet(() -> Res.get("data.na"));
                                         if (identityTag.isPresent() && identityTag.get().equals(tag)) {
                                             model.getInitialized().set(true);
                                             model.getInfo().set(Res.get(transportSpecificInitializedKey, resolveUsername(tag)));

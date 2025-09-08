@@ -175,7 +175,7 @@ public class MediationCaseListItem implements ActivatableTableItem, DateTableIte
             profileAge = optionalProfileAge.orElse(0L);
             profileAgeString = optionalProfileAge
                     .map(TimeFormatter::formatAgeInDaysAndYears)
-                    .orElse(Res.get("data.na"));
+                    .orElseGet(() -> Res.get("data.na"));
         }
     }
 }

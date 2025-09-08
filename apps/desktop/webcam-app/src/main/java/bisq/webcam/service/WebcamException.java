@@ -51,7 +51,7 @@ public class WebcamException extends RuntimeException {
         while (cause instanceof WebcamException && cause.getCause() != null) {
             cause = cause.getCause();
         }
-        String details = Optional.ofNullable(cause).map(Throwable::getMessage).orElse(getMessage());
+        String details = Optional.ofNullable(cause).map(Throwable::getMessage).orElseGet(() -> getMessage());
         return Res.get("webcam.errorCode." + errorCode.name(), details);
     }
 }

@@ -267,7 +267,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                     .map(RemoveMailboxRequest::getClassName)
                     .toList();
             var className = Stream.concat(added.stream(), removed.stream())
-                    .findAny().orElse(persistence.getFileName().replace("Store", ""));
+                    .findAny().orElseGet(() -> persistence.getFileName().replace("Store", ""));
             log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}, data size: {}",
                     methodName, className, added.size(), removed.size(), dataStore.getMap().size(), DataSizeFormatter.format(dataSize));
         }

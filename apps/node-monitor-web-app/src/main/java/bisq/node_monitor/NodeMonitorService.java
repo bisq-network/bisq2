@@ -89,7 +89,7 @@ public class NodeMonitorService implements Service {
                                 userService.getUserProfileService()
                                         .findUserProfile(bondedRole.getAuthorizedBondedRole().getProfileId())
                                         .map(UserProfile::getNickName)
-                                        .orElse(bondedRole.getAuthorizedBondedRole().getBondUserName())
+                                        .orElseGet(() -> bondedRole.getAuthorizedBondedRole().getBondUserName())
                         ))))
                 .collect(Collectors.toList());
     }

@@ -225,7 +225,7 @@ public class SecurityManagerController implements Controller {
         String profileId = authorizedBondedRole.getProfileId();
         String nickNameOrBondName = userProfileService.findUserProfile(profileId)
                 .map(UserProfile::getNickName)
-                .orElse(authorizedBondedRole.getBondUserName());
+                .orElseGet(() -> authorizedBondedRole.getBondUserName());
         Optional<String> addresses = authorizedBondedRole.getAddressByTransportTypeMap()
                 .map(e -> e.values().stream()
                         .map(Address::getFullAddress)
@@ -239,7 +239,7 @@ public class SecurityManagerController implements Controller {
         String profileId = authorizedBondedRole.getProfileId();
         String nickNameOrBondName = userProfileService.findUserProfile(profileId)
                 .map(UserProfile::getNickName)
-                .orElse(authorizedBondedRole.getBondUserName());
+                .orElseGet(() -> authorizedBondedRole.getBondUserName());
         return Res.get("authorizedRole.securityManager.alert.table.bannedRole.value", roleType, nickNameOrBondName, profileId);
     }
 

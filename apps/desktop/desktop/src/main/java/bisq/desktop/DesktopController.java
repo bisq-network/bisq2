@@ -150,13 +150,13 @@ public class DesktopController extends NavigationController {
         Cookie cookie = serviceProvider.getSettingsService().getCookie();
         Rectangle2D screenBounds = Screen.getPrimary().getBounds();
         model.setStageWidth(cookie.asDouble(CookieKey.STAGE_W)
-                .orElse(Math.max(DesktopModel.MIN_WIDTH, Math.min(DesktopModel.PREF_WIDTH, screenBounds.getWidth()))));
+                .orElseGet(() -> Math.max(DesktopModel.MIN_WIDTH, Math.min(DesktopModel.PREF_WIDTH, screenBounds.getWidth()))));
         model.setStageHeight(cookie.asDouble(CookieKey.STAGE_H)
-                .orElse(Math.max(DesktopModel.MIN_HEIGHT, Math.min(DesktopModel.PREF_HEIGHT, screenBounds.getHeight()))));
+                .orElseGet(() -> Math.max(DesktopModel.MIN_HEIGHT, Math.min(DesktopModel.PREF_HEIGHT, screenBounds.getHeight()))));
         model.setStageX(cookie.asDouble(CookieKey.STAGE_X)
-                .orElse((screenBounds.getWidth() - model.getStageWidth()) / 2));
+                .orElseGet(() -> (screenBounds.getWidth() - model.getStageWidth()) / 2));
         model.setStageY(cookie.asDouble(CookieKey.STAGE_Y)
-                .orElse((screenBounds.getHeight() - model.getStageHeight()) / 2));
+                .orElseGet(() -> (screenBounds.getHeight() - model.getStageHeight()) / 2));
     }
 
     @Override

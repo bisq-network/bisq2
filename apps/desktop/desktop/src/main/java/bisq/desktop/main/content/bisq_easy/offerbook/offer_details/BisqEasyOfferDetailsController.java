@@ -111,7 +111,7 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
                             .orElse("");
                     return Res.get("bisqEasy.offerDetails.priceValue", price, percentFromMarketPrice);
                 })
-                .orElse(Res.get("data.na")));
+                .orElseGet(() -> Res.get("data.na")));
         model.getPriceDescription().set(Res.get("bisqEasy.offerDetails.price", bisqEasyOffer.getMarket().getMarketCodes()));
         model.getPaymentMethods().set(PaymentMethodSpecFormatter.fromPaymentMethodSpecs(bisqEasyOffer.getQuoteSidePaymentMethodSpecs()));
 

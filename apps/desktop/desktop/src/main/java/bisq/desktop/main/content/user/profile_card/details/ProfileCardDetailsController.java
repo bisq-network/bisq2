@@ -51,7 +51,7 @@ public class ProfileCardDetailsController implements Controller {
         model.setTransportAddress(userProfile.getAddressByTransportDisplayString());
         model.setProfileAge(reputationService.getProfileAgeService().getProfileAge(userProfile)
                 .map(TimeFormatter::formatAgeInDaysAndYears)
-                .orElse(Res.get("data.na")));
+                .orElseGet(() -> Res.get("data.na")));
         model.setStatement(StringUtils.toOptional(userProfile.getStatement()));
         String version = userProfile.getApplicationVersion();
         model.setVersion(version.isEmpty() ? Res.get("data.na") : version);

@@ -69,7 +69,7 @@ public class CryptoAssetRepository {
     }
 
     public static CryptoAsset findOrCreateCustom(String code) {
-        return find(code).orElse(new CryptoAsset(code));
+        return find(code).orElseGet(() -> new CryptoAsset(code));
     }
 
     public static List<CryptoAsset> getCryptoAssets() {

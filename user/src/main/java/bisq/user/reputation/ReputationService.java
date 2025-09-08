@@ -122,11 +122,11 @@ public class ReputationService implements Service {
     /* --------------------------------------------------------------------- */
 
     public ReputationScore getReputationScore(String userProfileId) {
-        return findReputationScore(userProfileId).orElse(new ReputationScore(0, 0, scoreByUserProfileId.size()));
+        return findReputationScore(userProfileId).orElseGet(() -> new ReputationScore(0, 0, scoreByUserProfileId.size()));
     }
 
     public ReputationScore getReputationScore(UserProfile userProfile) {
-        return findReputationScore(userProfile).orElse(new ReputationScore(0, 0, scoreByUserProfileId.size()));
+        return findReputationScore(userProfile).orElseGet(() -> new ReputationScore(0, 0, scoreByUserProfileId.size()));
     }
 
     public Optional<ReputationScore> findReputationScore(UserProfile userProfile) {

@@ -345,7 +345,7 @@ public class AllNetworkPeersView extends View<VBox, AllNetworkPeersModel, AllNet
             profileAge = optionalProfileAge.orElse(0L);
             profileAgeString = optionalProfileAge
                     .map(TimeFormatter::formatAgeInDaysAndYears)
-                    .orElse(Res.get("data.na"));
+                    .orElseGet(() -> Res.get("data.na"));
 
             // applyReputationScore gets called from selectedToggleChanged
             selectedTogglePin = EasyBind.subscribe(toggleGroup.selectedToggleProperty(), this::selectedToggleChanged);

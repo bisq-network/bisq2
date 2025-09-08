@@ -595,7 +595,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         long numChanges = getTrades().stream()
                 .filter(trade -> {
                     boolean doRedaction = trade.getTradeCompletedDate().map(date -> date < redactDate)
-                            .orElse(trade.getContract().getTakeOfferDate() < redactDateForNotCompletedTrades);
+                            .orElseGet(() -> trade.getContract().getTakeOfferDate() < redactDateForNotCompletedTrades);
                     //todo
                     return doRedaction;
                 })
