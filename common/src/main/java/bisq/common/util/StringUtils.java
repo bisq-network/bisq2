@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -93,7 +94,7 @@ public class StringUtils {
         if (string == null || searchString == null) {
             return false;
         }
-        return string.toLowerCase().contains(searchString.toLowerCase());
+        return string.toLowerCase(Locale.ROOT).contains(searchString.toLowerCase(Locale.ROOT));
     }
 
     /*
@@ -174,7 +175,7 @@ public class StringUtils {
     }
 
     public static String kebapCaseToCamelCase(String value) {
-        return CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, value.toLowerCase());
+        return CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, value.toLowerCase(Locale.ROOT));
     }
 
     public static String camelCaseToSnakeCase(String value) {
@@ -186,7 +187,7 @@ public class StringUtils {
     }
 
     public static String snakeCaseToKebapCase(String value) {
-        return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, value.toLowerCase());
+        return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, value.toLowerCase(Locale.ROOT));
     }
 
     public static List<Pair<String, List<String>>> getTextStylePairs(String input) {
