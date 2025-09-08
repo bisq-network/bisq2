@@ -172,7 +172,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
                 Res.get("user.profileCard.userActions.undoIgnore"));
         report = new BisqMenuItem("report-grey", "report-white",
                 Res.get("user.profileCard.userActions.report"));
-        addToContacts = new BisqMenuItem("report-grey", "report-white",
+        addToContacts = new BisqMenuItem("contacts-grey", "contacts-white",
                 Res.get("user.profileCard.userActions.addToContacts"));
 
         HBox userNameBox = new HBox(10, bondedRoleBadge, userNickNameLabel, userNymLabel);
