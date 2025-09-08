@@ -301,22 +301,19 @@ public class SellerState3a extends BaseState {
             fiatReceiptConfirmed = confirmPair.getFirst();
             HBox fiatReceiptConfirmedHBox = confirmPair.getSecond();
 
-            WrappingText sendBtcPrefix =
-                    FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.seller.phase3a.sendBtc.prefix") + " ");
+            WrappingText sendBtcPrefix = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.seller.phase3a.sendBtc.prefix") + " ");
 
             sendBtcAmount = new BitcoinAmountDisplay();
             configureBitcoinAmountDisplay(sendBtcAmount, BitcoinAmountDisplayStyleType.HEADLINE);
 
-            WrappingText sendBtcSuffix =
-                    FormUtils.getHeadline(" " + Res.get("bisqEasy.tradeState.info.seller.phase3a.sendBtc.suffix"));
+            WrappingText sendBtcSuffix = FormUtils.getHeadline(" " + Res.get("bisqEasy.tradeState.info.seller.phase3a.sendBtc.suffix"));
 
             HBox sendBtcHeadline = new HBox(2, sendBtcPrefix, sendBtcAmount, sendBtcSuffix);
             sendBtcHeadline.setAlignment(Pos.BASELINE_LEFT);
 
             HBox.setMargin(sendBtcAmount, new Insets(8, 0, 0, 0));
 
-            baseAmount =
-                    FormUtils.getMaterialBitcoinAmountDisplay(Res.get("bisqEasy.tradeState.info.seller.phase3a.baseAmount"), "0", false);
+            baseAmount = FormUtils.getMaterialBitcoinAmountDisplay(Res.get("bisqEasy.tradeState.info.seller.phase3a.baseAmount"), "0", false);
             configureBitcoinAmountDisplay(baseAmount.getBitcoinAmountDisplay(), BitcoinAmountDisplayStyleType.BASE_AMOUNT);
             bitcoinPayment = FormUtils.getTextField("", "", false);
             paymentProof = FormUtils.getTextField("", "", true);
