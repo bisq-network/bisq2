@@ -48,6 +48,7 @@ public class ProfileCardModel extends TabModel {
     private String messagesTabButtonText;
 
     private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
+    private final BooleanProperty isUserInMyContactList = new SimpleBooleanProperty();
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {

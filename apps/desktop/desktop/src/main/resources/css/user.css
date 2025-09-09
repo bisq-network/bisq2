@@ -246,6 +246,12 @@
     -fx-padding: 130 0 0 0;
 }
 
+.profile-card .bisq-menu-item.in-my-contact-list-menu-item,
+.profile-card .bisq-menu-item.in-my-contact-list-menu-item:hover {
+    -fx-text-fill: -bisq2-green;
+}
+
+
 /*******************************************************************************
  * Create Account Summary View                                                 *
  ******************************************************************************/

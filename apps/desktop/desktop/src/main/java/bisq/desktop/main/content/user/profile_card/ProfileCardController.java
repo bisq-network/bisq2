@@ -152,6 +152,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
                 .map(AuthorizedBondedRole::getBondedRoleType)
                 .collect(Collectors.toSet());
         model.setUserProfileBondedRoleTypes(bondedRoleTypes);
+        model.getIsUserInMyContactList().set(contactListService.isUserInContactList(userProfile));
     }
 
     @Override
@@ -191,12 +192,17 @@ public class ProfileCardController extends TabController<ProfileCardModel>
 
     void onAddToContacts() {
         // todo add overlay for entering tag, notes, trust score
-        contactListService.addContactListEntry(new ContactListEntry(model.getUserProfile(),
+        boolean wasAdded = contactListService.addContactListEntry(new ContactListEntry(model.getUserProfile(),
                 System.currentTimeMillis(),
                 ContactReason.MANUALLY_ADDED,
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty()));
+        model.getIsUserInMyContactList().set(wasAdded);
+    }
+
+    void onGoToMyContactList() {
+        OverlayController.hide(() -> Navigation.navigateTo(NavigationTarget.NETWORK_PEERS));
     }
 
     void onClose() {
