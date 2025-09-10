@@ -94,7 +94,9 @@ public class TradeWizardController extends NavigationController implements InitW
                 view.getRoot(),
                 this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo);
-        tradeWizardPaymentMethodsController = new TradeWizardPaymentMethodsController(serviceProvider, view.getRoot(), this::onNext);
+        tradeWizardPaymentMethodsController = new TradeWizardPaymentMethodsController(serviceProvider,
+                this::setMainButtonsVisibleState,
+                this::onNext);
         tradeWizardSelectOfferController = new TradeWizardSelectOfferController(serviceProvider,
                 this::onBack,
                 this::onNext,

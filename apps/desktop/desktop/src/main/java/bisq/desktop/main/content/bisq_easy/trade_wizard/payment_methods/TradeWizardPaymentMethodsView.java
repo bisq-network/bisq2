@@ -24,6 +24,7 @@ import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.containers.WizardOverlay;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.ChipButton;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
@@ -31,6 +32,7 @@ import bisq.i18n.Res;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
@@ -39,23 +41,31 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPaymentMethodsModel, TradeWizardPaymentMethodsController> {
+public class TradeWizardPaymentMethodsView extends View<StackPane, TradeWizardPaymentMethodsModel, TradeWizardPaymentMethodsController> {
     private static final double TWO_COLUMN_WIDTH = 20.75;
 
     private final ListChangeListener<FiatPaymentMethod> fiatPaymentMethodListener;
-    private final Label fiatSubtitleLabel, bitcoinSubtitleLabel, nonFoundLabel;
+    private final Label fiatSubtitleLabel, bitcoinSubtitleLabel, nonFoundLabel, overlayLabel;
     private final AddCustomPaymentMethodBox addCustomPaymentMethodBox;
     private final GridPane fiatMethodsGridPane, bitcoinMethodsGridPane;
+    private final WizardOverlay overlay;
+    private final Button closeOverlayButton;
+    private final VBox content;
+    private Subscription isOverlayVisiblePin;
 
     public TradeWizardPaymentMethodsView(TradeWizardPaymentMethodsModel model, TradeWizardPaymentMethodsController controller) {
-        super(new VBox(), model, controller);
+        super(new StackPane(), model, controller);
 
         root.setAlignment(Pos.CENTER);
         root.getStyleClass().add("bisq-easy-trade-wizard-payment-methods-step");
+        content = new VBox(10);
+        content.setAlignment(Pos.TOP_CENTER);
 
         Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethods.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
@@ -92,10 +102,21 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         VBox btcVBox = new VBox(20, bitcoinSubtitleLabel, bitcoinMethodsGridPane);
         btcVBox.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(headlineLabel, new Insets(0, 0, -5, 0));
+        overlayLabel = new Label();
+        overlayLabel.setMinWidth(WizardOverlay.OVERLAY_WIDTH - 100);
+        overlayLabel.setMaxWidth(overlayLabel.getMinWidth());
+        overlayLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
+        closeOverlayButton = new Button(Res.get("action.close"));
+        overlay = new WizardOverlay(root,
+                "bisqEasy.tradeWizard.paymentMethods.wizardOverlay.Title",
+                new VBox(overlayLabel),
+                closeOverlayButton);
+
+        VBox.setMargin(headlineLabel, new Insets(0, 0, -10, 0));
         VBox.setMargin(fiatMethodsGridPane, new Insets(0, 60, 0, 60));
-        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, Spacer.fillVBox(), fiatVBox, Spacer.fillVBox(),
+        content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, Spacer.fillVBox(), fiatVBox, Spacer.fillVBox(),
                 btcVBox, Spacer.fillVBox());
+        root.getChildren().addAll(content, overlay);
 
         fiatPaymentMethodListener = c -> {
             c.next();
@@ -112,9 +133,14 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         nonFoundLabel.managedProperty().bind(model.getIsPaymentMethodsEmpty());
         fiatMethodsGridPane.visibleProperty().bind(model.getIsPaymentMethodsEmpty().not());
         fiatMethodsGridPane.managedProperty().bind(model.getIsPaymentMethodsEmpty().not());
+        overlayLabel.textProperty().bind(model.getOverlayText());
+
+        isOverlayVisiblePin = EasyBind.subscribe(model.getShouldShowOverlay(), shouldShow ->
+                overlay.updateOverlayVisibility(content, shouldShow, controller::onKeyPressedWhileShowingOverlay));
 
         model.getFiatPaymentMethods().addListener(fiatPaymentMethodListener);
 
+        closeOverlayButton.setOnAction(e -> controller.onCloseOverlay());
         addCustomPaymentMethodBox.getAddIconButton().setOnAction(e -> controller.onAddCustomFiatMethod());
         addCustomPaymentMethodBox.initialize();
         root.setOnMousePressed(e -> root.requestFocus());
@@ -130,6 +156,9 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         nonFoundLabel.managedProperty().unbind();
         fiatMethodsGridPane.visibleProperty().unbind();
         fiatMethodsGridPane.managedProperty().unbind();
+        overlayLabel.textProperty().unbind();
+
+        isOverlayVisiblePin.unsubscribe();
 
         fiatMethodsGridPane.getChildren().stream()
                 .filter(e -> e instanceof ChipButton)
@@ -142,6 +171,7 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
 
         model.getFiatPaymentMethods().removeListener(fiatPaymentMethodListener);
 
+        closeOverlayButton.setOnAction(null);
         addCustomPaymentMethodBox.getAddIconButton().setOnAction(null);
         addCustomPaymentMethodBox.dispose();
         root.setOnMousePressed(null);
