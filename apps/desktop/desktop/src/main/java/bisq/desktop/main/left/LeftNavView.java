@@ -34,6 +34,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.ImageView;
@@ -98,6 +99,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         contactsList = createNavigationButton(Res.get("navigation.contacts"),
                 "nav-contacts",
                 NavigationTarget.CONTACTS_LIST, false);
+        Label contactsListLabel = contactsList.getButtonLabel();
+        contactsListLabel.setGraphic(ImageUtil.getImageViewById("new-badge"));
+        contactsListLabel.setContentDisplay(ContentDisplay.RIGHT);
 
         LeftNavButton protocols = createNavigationButton(Res.get("navigation.tradeApps"),
                 "nav-trade",
