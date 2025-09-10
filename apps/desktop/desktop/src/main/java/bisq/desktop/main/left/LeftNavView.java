@@ -62,7 +62,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final Region selectionMarker;
     private final VBox mainMenuItems, networkInfoRoot;
     private final int menuTop;
-    private final LeftNavButton authorizedRole, muSigLeftNavButton, wallet, contactsList;
+    private final LeftNavButton authorizedRole, muSigLeftNavButton, wallet;
     private final Label version;
     private Subscription navigationTargetSubscription, menuExpandedSubscription,
             selectedNavigationButtonPin, newVersionAvailablePin, isMuSigActivatedPin;
@@ -96,7 +96,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 "nav-reputation",
                 NavigationTarget.REPUTATION, false);
 
-        contactsList = createNavigationButton(Res.get("navigation.contacts"),
+        LeftNavButton contactsList = createNavigationButton(Res.get("navigation.contacts"),
                 "nav-contacts",
                 NavigationTarget.CONTACTS_LIST, false);
         Label contactsListLabel = contactsList.getButtonLabel();
