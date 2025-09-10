@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.network.peers.contacts;
+package bisq.desktop.main.content.contacts_list;
 
 import bisq.common.data.Pair;
 import bisq.common.observable.Pin;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.network.peers.contacts;
+package bisq.desktop.main.content.contacts_list;
 
 import bisq.common.data.Pair;
 import bisq.common.monetary.Coin;
@@ -42,6 +42,7 @@ import bisq.user.reputation.data.AuthorizedSignedWitnessData;
 import bisq.user.reputation.data.AuthorizedTimestampData;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
@@ -86,6 +87,7 @@ public class ContactListView extends View<VBox, ContactListModel, ContactListCon
         configTableView();
 
         root.getChildren().addAll(richTableView);
+        root.setPadding(new Insets(SIDE_PADDING, SIDE_PADDING, 0 , SIDE_PADDING));
     }
 
     @Override

@@ -61,10 +61,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final Region selectionMarker;
     private final VBox mainMenuItems, networkInfoRoot;
     private final int menuTop;
-    private final LeftNavButton authorizedRole;
+    private final LeftNavButton authorizedRole, muSigLeftNavButton, wallet, contactsList;
     private final Label version;
-    private final LeftNavButton muSigLeftNavButton;
-    private final LeftNavButton wallet;
     private Subscription navigationTargetSubscription, menuExpandedSubscription,
             selectedNavigationButtonPin, newVersionAvailablePin, isMuSigActivatedPin;
 
@@ -96,6 +94,10 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         LeftNavButton reputation = createNavigationButton(Res.get("navigation.reputation"),
                 "nav-reputation",
                 NavigationTarget.REPUTATION, false);
+
+        contactsList = createNavigationButton(Res.get("navigation.contacts"),
+                "nav-contacts",
+                NavigationTarget.CONTACTS_LIST, false);
 
         LeftNavButton protocols = createNavigationButton(Res.get("navigation.tradeApps"),
                 "nav-trade",
@@ -165,8 +167,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
-        mainMenuItems.getChildren().addAll(dashBoard, bisqEasy, muSigLeftNavButton, reputation, protocols,
-                learn, chat, support, user, network, settings, authorizedRole);
+        mainMenuItems.getChildren().addAll(dashBoard, bisqEasy, muSigLeftNavButton, reputation,
+                contactsList, protocols, learn, chat, support, user, network, settings, authorizedRole);
         mainMenuItems.getChildren().add(3, wallet);
 
         mainMenuItems.setLayoutY(menuTop);

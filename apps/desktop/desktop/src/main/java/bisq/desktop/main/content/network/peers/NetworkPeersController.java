@@ -20,7 +20,6 @@ package bisq.desktop.main.content.network.peers;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.network.peers.all_peers.AllNetworkPeersController;
-import bisq.desktop.main.content.network.peers.contacts.ContactListController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,17 +29,14 @@ public class NetworkPeersController implements Controller {
     private final NetworkPeersView view;
     private final NetworkPeersModel model;
     private final AllNetworkPeersController allNetworkPeersController;
-    private final ContactListController contactListController;
 
     public NetworkPeersController(ServiceProvider serviceProvider) {
         allNetworkPeersController = new AllNetworkPeersController(serviceProvider);
-        contactListController= new ContactListController(serviceProvider);
 
         model = new NetworkPeersModel();
 
         view = new NetworkPeersView(model,
                 this,
-                contactListController.getView().getRoot(),
                 allNetworkPeersController.getView().getRoot());
     }
 
