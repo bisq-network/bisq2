@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content;
 
+import bisq.desktop.main.content.contacts_list.ContactsListController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.ServiceProvider;
@@ -74,6 +75,7 @@ public class ContentController extends NavigationController {
             case BISQ_EASY -> Optional.of(new BisqEasyController(serviceProvider));
             case MU_SIG -> Optional.of(new MuSigController(serviceProvider));
             case REPUTATION -> Optional.of(new ReputationController(serviceProvider));
+            case CONTACTS_LIST -> Optional.of(new ContactsListController(serviceProvider));
             case TRADE_PROTOCOLS -> Optional.of(new TradeAppsController(serviceProvider));
             case ACADEMY -> Optional.of(new AcademyController(serviceProvider));
             case CHAT ->

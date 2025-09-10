@@ -28,12 +28,11 @@ public class NetworkPeersView extends View<VBox, NetworkPeersModel, NetworkPeers
 
     public NetworkPeersView(NetworkPeersModel model,
                             NetworkPeersController controller,
-                            VBox contactList,
                             VBox allPeers) {
         super(new VBox(40), model, controller);
 
         this.root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
-        this.root.getChildren().addAll(contactList, allPeers);
+        this.root.getChildren().addAll(allPeers);
     }
 
     @Override

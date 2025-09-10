@@ -408,6 +408,18 @@
     -fx-image: url("/images/navigation/nav-reputation-hover.png");
 }
 
+#nav-contacts {
+    -fx-image: url("/images/navigation/nav-contacts.png");
+}
+
+#nav-contacts-active {
+    -fx-image: url("/images/navigation/nav-contacts-active.png");
+}
+
+#nav-contacts-hover {
+    -fx-image: url("/images/navigation/nav-contacts-hover.png");
+}
+
 #nav-community {
     -fx-image: url("/images/navigation/nav-community.png");
 }

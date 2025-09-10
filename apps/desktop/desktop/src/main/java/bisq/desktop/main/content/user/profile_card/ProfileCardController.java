@@ -202,7 +202,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     }
 
     void onGoToMyContactList() {
-        OverlayController.hide(() -> Navigation.navigateTo(NavigationTarget.NETWORK_PEERS));
+        OverlayController.hide(() -> Navigation.navigateTo(NavigationTarget.CONTACTS_LIST));
     }
 
     void onClose() {
