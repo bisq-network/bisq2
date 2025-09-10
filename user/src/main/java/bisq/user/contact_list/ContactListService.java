@@ -82,4 +82,9 @@ public class ContactListService implements PersistenceClient<ContactListStore>, 
         }
         return wasRemoved;
     }
+
+    public boolean isUserInContactList(UserProfile userProfile) {
+        return persistableStore.getContactListEntries().stream()
+                .anyMatch(contactListEntry -> contactListEntry.getUserProfile().equals(userProfile));
+    }
 }
