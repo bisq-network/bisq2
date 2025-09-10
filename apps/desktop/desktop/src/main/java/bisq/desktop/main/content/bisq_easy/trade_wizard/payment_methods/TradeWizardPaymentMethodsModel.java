@@ -49,6 +49,8 @@ public class TradeWizardPaymentMethodsModel implements Model {
     private final BooleanProperty isPaymentMethodsEmpty = new SimpleBooleanProperty();
     private final BooleanProperty canAddCustomFiatPaymentMethod = new SimpleBooleanProperty();
     private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
+    private final BooleanProperty shouldShowOverlay = new SimpleBooleanProperty();
+    private final StringProperty overlayText = new SimpleStringProperty("");
 
     void reset() {
         direction = null;
@@ -63,5 +65,7 @@ public class TradeWizardPaymentMethodsModel implements Model {
         isPaymentMethodsEmpty.set(false);
         canAddCustomFiatPaymentMethod.set(false);
         market.set(null);
+        shouldShowOverlay.set(false);
+        overlayText.set("");
     }
 }
