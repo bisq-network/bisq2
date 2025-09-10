@@ -38,36 +38,36 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class ContactListController implements Controller {
+public class ContactsListController implements Controller {
     @Getter
-    private final ContactListView view;
-    private final ContactListModel model;
+    private final ContactsListView view;
+    private final ContactsListModel model;
     private final ReputationService reputationService;
     private final UserProfileService userProfileService;
     private final ContactListService contactListService;
-    private Pin  proofOfBurnScoreChangedFlagPin,
+    private Pin proofOfBurnScoreChangedFlagPin,
             bondedReputationScoreChangedFlagPin, signedWitnessScoreChangedFlagPin,
-            accountAgeScoreChangedFlagPin, contactListEntriesPin;
+            accountAgeScoreChangedFlagPin, contactsListEntriesPin;
 
-    public ContactListController(ServiceProvider serviceProvider) {
+    public ContactsListController(ServiceProvider serviceProvider) {
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         reputationService = serviceProvider.getUserService().getReputationService();
         contactListService = serviceProvider.getUserService().getContactListService();
 
-        model = new ContactListModel();
+        model = new ContactsListModel();
 
-        view = new ContactListView(model, this);
+        view = new ContactsListView(model, this);
     }
 
     @Override
     public void onActivate() {
-        contactListEntriesPin = contactListService.getContactListEntries().addObserver(new CollectionObserver<>() {
+        contactsListEntriesPin = contactListService.getContactListEntries().addObserver(new CollectionObserver<>() {
             @Override
             public void add(ContactListEntry contactListEntry) {
                 UIThread.run(() -> {
-                    ContactListView.ListItem listItem = new ContactListView.ListItem(contactListEntry,
+                    ContactsListView.ListItem listItem = new ContactsListView.ListItem(contactListEntry,
                             reputationService,
-                            ContactListController.this,
+                            ContactsListController.this,
                             userProfileService);
                     if (!model.getListItems().contains(listItem)) {
                         model.getListItems().add(listItem);
@@ -79,7 +79,7 @@ public class ContactListController implements Controller {
             public void remove(Object element) {
                 if (element instanceof ContactListEntry contactListEntry) {
                     UIThread.run(() -> {
-                        Optional<ContactListView.ListItem> toRemove = model.getListItems().stream()
+                        Optional<ContactsListView.ListItem> toRemove = model.getListItems().stream()
                                 .filter(e -> e.getUserProfile().getId().equals(contactListEntry.getUserProfile().getId()))
                                 .findAny();
                         toRemove.ifPresent(item -> model.getListItems().remove(item));
@@ -105,13 +105,13 @@ public class ContactListController implements Controller {
 
     @Override
     public void onDeactivate() {
-        contactListEntriesPin.unbind();
+        contactsListEntriesPin.unbind();
         proofOfBurnScoreChangedFlagPin.unbind();
         bondedReputationScoreChangedFlagPin.unbind();
         accountAgeScoreChangedFlagPin.unbind();
         signedWitnessScoreChangedFlagPin.unbind();
 
-        model.getListItems().forEach(ContactListView.ListItem::dispose);
+        model.getListItems().forEach(ContactsListView.ListItem::dispose);
         model.getListItems().clear();
     }
 

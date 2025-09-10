@@ -37,16 +37,16 @@ import java.util.function.Predicate;
 
 @Slf4j
 @Getter
-public class ContactListModel implements Model {
-    private final ObservableList<ContactListView.ListItem> listItems = FXCollections.observableArrayList();
-    private final FilteredList<ContactListView.ListItem> filteredList = new FilteredList<>(listItems);
-    private final SortedList<ContactListView.ListItem> sortedList = new SortedList<>(filteredList);
+public class ContactsListModel implements Model {
+    private final ObservableList<ContactsListView.ListItem> listItems = FXCollections.observableArrayList();
+    private final FilteredList<ContactsListView.ListItem> filteredList = new FilteredList<>(listItems);
+    private final SortedList<ContactsListView.ListItem> sortedList = new SortedList<>(filteredList);
     private final BooleanProperty scoreChangeTrigger = new SimpleBooleanProperty();
     private final StringProperty filteredValueTitle = new SimpleStringProperty();
     private final BooleanProperty valueColumnVisible = new SimpleBooleanProperty();
     private final ObjectProperty<ReputationSource> selectedReputationSource = new SimpleObjectProperty<>();
     @Setter
-    private Predicate<ContactListView.ListItem> filterItemPredicate = e -> true;
+    private Predicate<ContactsListView.ListItem> filterItemPredicate = e -> true;
     @Setter
-    private Predicate<ContactListView.ListItem> searchStringPredicate = e -> true;
+    private Predicate<ContactsListView.ListItem> searchStringPredicate = e -> true;
 }

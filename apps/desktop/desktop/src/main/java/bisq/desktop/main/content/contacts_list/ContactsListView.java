@@ -67,15 +67,15 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class ContactListView extends View<VBox, ContactListModel, ContactListController> {
+public class ContactsListView extends View<VBox, ContactsListModel, ContactsListController> {
     private static final double SIDE_PADDING = 40;
 
     private final RichTableView<ListItem> richTableView;
     private BisqTableColumn<ListItem> scoreColumn, valueColumn;
     private Subscription userProfileIdOfScoreUpdatePin, selectedReputationSourcePin;
 
-    public ContactListView(ContactListModel model,
-                           ContactListController controller) {
+    public ContactsListView(ContactsListModel model,
+                            ContactsListController controller) {
         super(new VBox(), model, controller);
 
         richTableView = new RichTableView<>(model.getSortedList(),
@@ -292,7 +292,7 @@ public class ContactListView extends View<VBox, ContactListModel, ContactListCon
         private final UserProfile userProfile;
         private final ReputationService reputationService;
         private final UserProfileService userProfileService;
-        private final ContactListController controller;
+        private final ContactsListController controller;
 
         private final String userName, profileAgeString, trustScore, tag, notes, contactReasonString;
         private ReputationScore reputationScore;
@@ -306,7 +306,7 @@ public class ContactListView extends View<VBox, ContactListModel, ContactListCon
 
         ListItem(ContactListEntry contactListEntry,
                  ReputationService reputationService,
-                 ContactListController controller,
+                 ContactsListController controller,
                  UserProfileService userProfileService) {
             this.contactListEntry = contactListEntry;
             this.userProfile = contactListEntry.getUserProfile();
