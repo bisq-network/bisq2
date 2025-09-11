@@ -23,7 +23,7 @@ option java_package = "bisq.trade.protobuf";
 option java_multiple_files = true;
 
 /**
- * Same as teh rpc.proto from https://github.com/bisq-network/bisq-musig/blob/main/rpc/src/main/proto/rpc.proto
+ * Same as the rpc.proto from https://github.com/bisq-network/bisq-musig/blob/main/rpc/src/main/proto/rpc.proto
  */
 service Musig {
   rpc InitTrade (PubKeySharesRequest) returns (PubKeySharesResponse);
@@ -59,24 +59,27 @@ message PubKeySharesRequest {
 message PubKeySharesResponse {
   bytes buyerOutputPubKeyShare = 1;
   bytes sellerOutputPubKeyShare = 2;
-  sint32 currentBlockHeight = 3;
+  uint32 currentBlockHeight = 3;
 }
 
 message NonceSharesRequest {
   string tradeId = 1;
   bytes buyerOutputPeersPubKeyShare = 2;
   bytes sellerOutputPeersPubKeyShare = 3;
-  sint64 depositTxFeeRate = 4;       // sats per kwu
-  sint64 preparedTxFeeRate = 5;      // sats per kwu
-  sint64 tradeAmount = 6;            // sats
-  sint64 buyersSecurityDeposit = 7;  // sats
-  sint64 sellersSecurityDeposit = 8; // sats
+  uint64 depositTxFeeRate = 4;       // sats per kwu
+  uint64 preparedTxFeeRate = 5;      // sats per kwu
+  uint64 tradeAmount = 6;            // sats
+  uint64 buyersSecurityDeposit = 7;  // sats
+  uint64 sellersSecurityDeposit = 8; // sats
+  ReceiverAddressAndAmount tradeFeeReceiver = 9;
 }
 
 message NonceSharesMessage {
   string warningTxFeeBumpAddress = 1;
   string redirectTxFeeBumpAddress = 2;
+  string claimTxPayoutAddress = 11;
   bytes halfDepositPsbt = 3;
+  uint64 redirectionAmountMsat = 14; // (millisatoshis)
   bytes swapTxInputNonceShare = 4;
   bytes buyersWarningTxBuyerInputNonceShare = 5;
   bytes buyersWarningTxSellerInputNonceShare = 6;
@@ -84,17 +87,19 @@ message NonceSharesMessage {
   bytes sellersWarningTxSellerInputNonceShare = 8;
   bytes buyersRedirectTxInputNonceShare = 9;
   bytes sellersRedirectTxInputNonceShare = 10;
+  bytes buyersClaimTxInputNonceShare = 12;
+  bytes sellersClaimTxInputNonceShare = 13;
 }
 
 message ReceiverAddressAndAmount {
   string address = 1;
-  sint64 amount = 2; // sats
+  uint64 amount = 2; // sats
 }
 
 message PartialSignaturesRequest {
   string tradeId = 1;
   NonceSharesMessage peersNonceShares = 2;
-  repeated ReceiverAddressAndAmount receivers = 3;
+  repeated ReceiverAddressAndAmount redirectionReceivers = 3;
   bool buyerReadyToRelease = 4;
 }
 
@@ -102,6 +107,7 @@ message PartialSignaturesMessage {
   bytes peersWarningTxBuyerInputPartialSignature = 1;
   bytes peersWarningTxSellerInputPartialSignature = 2;
   bytes peersRedirectTxInputPartialSignature = 3;
+  bytes peersClaimTxInputPartialSignature = 6;
   optional bytes swapTxInputPartialSignature = 4;
   optional bytes swapTxInputSighash = 5;
 }
@@ -117,18 +123,17 @@ message DepositPsbt {
 
 message PublishDepositTxRequest {
   string tradeId = 1;
-  DepositPsbt depositPsbt = 2;
+  DepositPsbt peersDepositPsbt = 2;
 }
 
 message SubscribeTxConfirmationStatusRequest {
   string tradeId = 1;
-  DepositPsbt depositPsbt = 2;
 }
 
 message TxConfirmationStatus {
   bytes tx = 1;
-  sint32 currentBlockHeight = 2;
-  sint32 numConfirmations = 3;
+  uint32 currentBlockHeight = 2;
+  uint32 numConfirmations = 3;
 }
 
 message SwapTxSignatureRequest {

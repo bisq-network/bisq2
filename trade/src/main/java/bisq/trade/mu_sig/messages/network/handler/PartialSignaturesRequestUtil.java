@@ -17,24 +17,27 @@
 
 package bisq.trade.mu_sig.messages.network.handler;
 
+import bisq.burningman.BurningmanData;
+import bisq.trade.mu_sig.DelayedPayoutTxReceiverService;
 import bisq.trade.protobuf.ReceiverAddressAndAmount;
 import com.google.common.collect.ImmutableMap;
-
-import java.util.stream.Collectors;
 
 public class PartialSignaturesRequestUtil {
     // TODO We need to publish from the oracle data from bisq 1 to bisq 2 network so that the BM
     // addresses and receiver shares are accessible.
     // As this data is p2p network data we need some tolerance handling in case the traders have a different view of the
     // p2p network data.
-    public static Iterable<ReceiverAddressAndAmount> getBurningMenDPTReceivers() {
-        return ImmutableMap.of(
-                        "tb1pwxlp4v9v7v03nx0e7vunlc87d4936wnyqegw0fuahudypan64wys5stxh7", 200_000,
-                        "tb1qpg889v22f3gefuvwpe3963t5a00nvfmkhlgqw5", 80_000,
-                        "2N2x2bA28AsLZZEHss4SjFoyToQV5YYZsJM", 12_345
+    public static Iterable<ReceiverAddressAndAmount> getBurningMenDPTReceivers(long redirectionAmountMsat) {
+        //noinspection SpellCheckingInspection
+        var burningmanShares = ImmutableMap.of(
+                        "bcrt1phc8m8vansnl4utths947mjquprw20puwrrdfrwx8akeeu2tqwklsnxsvf0", 0.6,
+                        "bcrt1qwk6p86mzqmstcsg99qlu2mhsp3766u68jktv6k", 0.3,
+                        "2N2x2bA28AsLZZEHss4SjFoyToQV5YYZsJM", 0.1
                 )
                 .entrySet().stream()
-                .map(e -> ReceiverAddressAndAmount.newBuilder().setAddress(e.getKey()).setAmount(e.getValue()).build())
-                .collect(Collectors.toList());
+                .map(e -> new BurningmanData(e.getKey(), e.getValue()))
+                .toList();
+        long feeRate = NonceSharesRequestUtil.getPreparedTxFeeRate();
+        return DelayedPayoutTxReceiverService.computeReceivers(burningmanShares, redirectionAmountMsat, feeRate);
     }
 }

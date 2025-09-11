@@ -29,16 +29,16 @@ import java.util.stream.Collectors;
 public final class PartialSignaturesRequest implements Proto {
     private final String tradeId;
     private final NonceSharesMessage peersNonceShares;
-    private final List<ReceiverAddressAndAmount> receivers;
+    private final List<ReceiverAddressAndAmount> redirectionReceivers;
     private final boolean buyerReadyToRelease;
 
     public PartialSignaturesRequest(String tradeId,
                                     NonceSharesMessage peersNonceShares,
-                                    List<ReceiverAddressAndAmount> receivers,
+                                    List<ReceiverAddressAndAmount> redirectionReceivers,
                                     boolean buyerReadyToRelease) {
         this.tradeId = tradeId;
         this.peersNonceShares = peersNonceShares;
-        this.receivers = receivers;
+        this.redirectionReceivers = redirectionReceivers;
         this.buyerReadyToRelease = buyerReadyToRelease;
     }
 
@@ -47,7 +47,7 @@ public final class PartialSignaturesRequest implements Proto {
         return bisq.trade.protobuf.PartialSignaturesRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setPeersNonceShares(peersNonceShares.toProto(serializeForHash))
-                .addAllReceivers(receivers.stream()
+                .addAllRedirectionReceivers(redirectionReceivers.stream()
                         .map(e -> e.toProto(serializeForHash))
                         .collect(Collectors.toList()))
                 .setBuyerReadyToRelease(buyerReadyToRelease);
@@ -61,7 +61,7 @@ public final class PartialSignaturesRequest implements Proto {
     public static PartialSignaturesRequest fromProto(bisq.trade.protobuf.PartialSignaturesRequest proto) {
         return new PartialSignaturesRequest(proto.getTradeId(),
                 NonceSharesMessage.fromProto(proto.getPeersNonceShares()),
-                proto.getReceiversList().stream()
+                proto.getRedirectionReceiversList().stream()
                         .map(ReceiverAddressAndAmount::fromProto)
                         .collect(Collectors.toList()),
                 proto.getBuyerReadyToRelease());

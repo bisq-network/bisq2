@@ -59,7 +59,7 @@ public abstract class BaseSetupTradeMessage_D_Handler extends MuSigTradeMessageH
 
         PublishDepositTxRequest publishDepositTxRequest = PublishDepositTxRequest.newBuilder()
                 .setTradeId(trade.getId())
-                .setDepositPsbt(myDepositPsbt.toProto(true))
+                .setPeersDepositPsbt(myDepositPsbt.toProto(true))
                 .build();
         blockingStub.publishDepositTx(publishDepositTxRequest);
     }

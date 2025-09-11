@@ -160,6 +160,7 @@ message PubKeyShares {
 message NonceShares {
   string warningTxFeeBumpAddress = 1;
   string redirectTxFeeBumpAddress = 2;
+  string claimTxPayoutAddress = 11;
   bytes halfDepositPsbt = 3;
   bytes swapTxInputNonceShare = 4;
   bytes buyersWarningTxBuyerInputNonceShare = 5;
@@ -168,12 +169,15 @@ message NonceShares {
   bytes sellersWarningTxSellerInputNonceShare = 8;
   bytes buyersRedirectTxInputNonceShare = 9;
   bytes sellersRedirectTxInputNonceShare = 10;
+  bytes buyersClaimTxInputNonceShare = 12;
+  bytes sellersClaimTxInputNonceShare = 13;
 }
 
 message PartialSignatures {
   bytes peersWarningTxBuyerInputPartialSignature = 1;
   bytes peersWarningTxSellerInputPartialSignature = 2;
   bytes peersRedirectTxInputPartialSignature = 3;
+  bytes peersClaimTxInputPartialSignature = 6;
   optional bytes swapTxInputPartialSignature = 4;
   optional bytes swapTxInputSighash = 5;
 }

@@ -20,7 +20,7 @@ package bisq.trade.mu_sig;
 import static com.google.common.base.Preconditions.checkArgument;
 
 // TODO Add fee estimation input to determine fee rate
-public class MusSigFeeRateProvider {
+public class MuSigFeeRateProvider {
     public static final long DEFAULT_OPTIMAL_SAT_PER_V_BYTE = 10;
 
     private static long optimalSatPerVByte = DEFAULT_OPTIMAL_SAT_PER_V_BYTE;
@@ -28,14 +28,14 @@ public class MusSigFeeRateProvider {
     public static void setOptimalSatPerVByte(long optimalSatPerVByte) {
         checkArgument(optimalSatPerVByte >= 1);
         checkArgument(optimalSatPerVByte <= 1000); // Just some sanity check. Maybe we let user set max fee rate in settings.
-        MusSigFeeRateProvider.optimalSatPerVByte = optimalSatPerVByte;
+        MuSigFeeRateProvider.optimalSatPerVByte = optimalSatPerVByte;
     }
 
     public static long getDepositTxFeeRate() {
-        return 5000 * optimalSatPerVByte;
+        return 300 * optimalSatPerVByte; // convert to sat per kwu, plus 20% extra
     }
 
     public static long getPreparedTxFeeRate() {
-        return 4000 * optimalSatPerVByte;
+        return 250 * optimalSatPerVByte; // convert to sat per kwu
     }
 }

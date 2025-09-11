@@ -100,6 +100,7 @@ public final class SetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerA
                 .setTradeAmount(NonceSharesRequestUtil.getTradeAmount(trade))
                 .setBuyersSecurityDeposit(NonceSharesRequestUtil.getBuyerSecurityDeposit())
                 .setSellersSecurityDeposit(NonceSharesRequestUtil.getSellersSecurityDeposit())
+                .setTradeFeeReceiver(NonceSharesRequestUtil.getTradeFeeReceiver())
                 .build();
         myNonceSharesMessage = NonceSharesMessage.fromProto(blockingStub.getNonceShares(nonceSharesRequest));
     }
