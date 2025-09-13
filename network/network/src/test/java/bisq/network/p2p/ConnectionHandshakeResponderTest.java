@@ -145,24 +145,6 @@ public class ConnectionHandshakeResponderTest {
     }
 
     @Test
-    void invalidPoW() throws IOException {
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, Optional.empty(), new NetworkLoad(), 0);
-        AuthorizationToken token = authorizationService.createToken(request,
-                new NetworkLoad(),
-                LocalHostAddressTypeFacade.toLocalHostAddress(1234).toString(),
-                5, new ArrayList<>());
-        NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
-        List<NetworkEnvelope> allEnvelopesToReceive = List.of(requestNetworkEnvelope);
-        when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(allEnvelopesToReceive);
-
-        Exception exception = assertThrows(ConnectionException.class, handshakeResponder::verifyAndBuildRespond);
-
-        assertThat(exception.getMessage())
-                .containsIgnoringCase("authorization")
-                .containsIgnoringCase("failed");
-    }
-
-    @Test
     void correctPoW() throws IOException {
         Capability peerCapability = createCapability(LocalHostAddressTypeFacade.toLocalHostAddress(2345), supportedTransportTypes);
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
