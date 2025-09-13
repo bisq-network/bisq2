@@ -39,7 +39,7 @@ public class PreventStandbyModeService {
 
     public PreventStandbyModeService(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
-        preventStandbyMode = OS.isLinux() ? Inhibitor.findExecutableInhibitor().orElse(new SoundPlayer(serviceProvider)) : new SoundPlayer(serviceProvider);
+        preventStandbyMode = OS.isLinux() ? Inhibitor.findExecutableInhibitor().orElseGet(() -> new SoundPlayer(serviceProvider)) : new SoundPlayer(serviceProvider);
     }
 
     public void initialize() {

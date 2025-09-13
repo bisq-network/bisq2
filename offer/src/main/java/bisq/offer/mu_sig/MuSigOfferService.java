@@ -78,7 +78,7 @@ public class MuSigOfferService implements Service {
     public CompletableFuture<BroadcastResult> publishAndAddOffer(String offerId) {
         return findOffer(offerId)
                 .map(this::publishAndAddOffer)
-                .orElse(CompletableFuture.failedFuture(new RuntimeException("Offer with not found. OfferID=" + offerId)));
+                .orElseGet(() -> CompletableFuture.failedFuture(new RuntimeException("Offer not found. OfferID=" + offerId)));
     }
 
     public CompletableFuture<BroadcastResult> publishAndAddOffer(MuSigOffer offer) {
@@ -101,7 +101,7 @@ public class MuSigOfferService implements Service {
     public CompletableFuture<BroadcastResult> removeOffer(String offerId) {
         return findOffer(offerId)
                 .map(this::removeOffer)
-                .orElse(CompletableFuture.failedFuture(new RuntimeException("Offer with not found. OfferID=" + offerId)));
+                .orElseGet(() -> CompletableFuture.failedFuture(new RuntimeException("Offer not found. OfferID=" + offerId)));
     }
 
     public CompletableFuture<BroadcastResult> removeOffer(MuSigOffer offer) {

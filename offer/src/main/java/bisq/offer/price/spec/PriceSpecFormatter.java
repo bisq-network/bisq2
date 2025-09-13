@@ -82,7 +82,7 @@ public class PriceSpecFormatter {
             String currentPrice = marketPrice.map(MarketPrice::getPriceQuote)
                     .map(priceQuote -> PriceUtil.fromMarketPriceMarkup(priceQuote, percentage))
                     .map(priceQuote -> PriceFormatter.format(priceQuote, true))
-                    .orElse(Res.get("data.na"));
+                    .orElseGet(() -> Res.get("data.na"));
 
             String percent = PercentageFormatter.formatToPercentWithSymbol(Math.abs(percentage));
             return currentPrice + " (" + Res.get(percentage >= 0

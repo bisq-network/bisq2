@@ -339,7 +339,7 @@ public class MarketPriceComponent {
             return marketPriceService.getMarketPriceRequestService()
                     .flatMap(MarketPriceRequestService::getMostRecentProvider)
                     .map(MarketPriceRequestService.Provider::getBaseUrl)
-                    .orElse(Res.get("data.na"));
+                    .orElseGet(() -> Res.get("data.na"));
         }
 
         public String getMarketPriceProvidingOracle() {
@@ -348,7 +348,7 @@ public class MarketPriceComponent {
                     .map(NetworkId::getAddressByTransportTypeMap)
                     .flatMap(map -> map.values().stream().findAny())
                     .map(Address::getFullAddress)
-                    .orElse(Res.get("data.na"));
+                    .orElseGet(() -> Res.get("data.na"));
         }
 
         public String getSource() {

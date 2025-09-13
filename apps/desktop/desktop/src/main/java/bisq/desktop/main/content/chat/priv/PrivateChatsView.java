@@ -297,7 +297,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
             profileAge = optionalProfileAge.orElse(0L);
             profileAgeString = optionalProfileAge
                     .map(TimeFormatter::formatAgeInDaysAndYears)
-                    .orElse(Res.get("data.na"));
+                    .orElseGet(() -> Res.get("data.na"));
         }
 
         public void setNumNotifications(long numNotifications) {

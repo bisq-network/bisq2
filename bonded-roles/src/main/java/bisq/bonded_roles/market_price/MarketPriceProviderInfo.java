@@ -31,7 +31,7 @@ public class MarketPriceProviderInfo {
 
 
     public MarketPriceProviderInfo(MarketPriceProvider marketPriceProvider) {
-        this(marketPriceProvider, marketPriceProvider.getDisplayName().orElse(Res.get("data.na")));
+        this(marketPriceProvider, marketPriceProvider.getDisplayName().orElseGet(() -> Res.get("data.na")));
     }
 
     public MarketPriceProviderInfo(MarketPriceProvider marketPriceProvider, String displayName) {

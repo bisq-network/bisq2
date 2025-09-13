@@ -95,14 +95,14 @@ public class MuSigOfferbookService implements Service, DataService.Listener {
         return identityService.findActiveIdentity(muSigOffer.getMakerNetworkId())
                 .map(identity -> networkService.publishAuthenticatedData(new MuSigOfferMessage(muSigOffer),
                         identity.getNetworkIdWithKeyPair().getKeyPair()))
-                .orElse(CompletableFuture.failedFuture(new RuntimeException("No identity found for networkNodeId used in the muSigOffer")));
+                .orElseGet(() -> CompletableFuture.failedFuture(new RuntimeException("No identity found for networkNodeId used in the muSigOffer")));
     }
 
     public CompletableFuture<BroadcastResult> removeFromNetwork(MuSigOffer muSigOffer) {
         return findIdentity(muSigOffer)
                 .map(identity -> networkService.removeAuthenticatedData(new MuSigOfferMessage(muSigOffer),
                         identity.getNetworkIdWithKeyPair().getKeyPair()))
-                .orElse(CompletableFuture.failedFuture(new RuntimeException("No identity found for networkNodeId used in the muSigOffer")));
+                .orElseGet(() -> CompletableFuture.failedFuture(new RuntimeException("No identity found for networkNodeId used in the muSigOffer")));
     }
 
     public CompletableFuture<List<BroadcastResult>> refreshMyOffers() {
@@ -111,7 +111,7 @@ public class MuSigOfferbookService implements Service, DataService.Listener {
                 identityService.findActiveIdentity(muSigOffer.getMakerNetworkId())
                         .map(identity -> networkService.refreshAuthenticatedData(new MuSigOfferMessage(muSigOffer),
                                 identity.getNetworkIdWithKeyPair().getKeyPair()))
-                        .orElse(CompletableFuture.failedFuture(new RuntimeException("No identity found for networkNodeId used in the muSigOffer")))));
+                        .orElseGet(() -> CompletableFuture.failedFuture(new RuntimeException("No identity found for networkNodeId used in the muSigOffer")))));
     }
 
     public synchronized Optional<MuSigOffer> findOffer(String offerId) {

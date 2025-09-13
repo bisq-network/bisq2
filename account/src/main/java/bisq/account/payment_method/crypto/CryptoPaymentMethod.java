@@ -48,7 +48,7 @@ public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> 
         this.code = code;
         Optional<CryptoAsset> optionalCryptoAsset = CryptoAssetRepository.find(code);
         isFeatured = optionalCryptoAsset.isPresent();
-        cryptoAsset = optionalCryptoAsset.orElse(new CryptoAsset(code));
+        cryptoAsset = optionalCryptoAsset.orElseGet(() -> new CryptoAsset(code));
 
         verify();
     }
@@ -58,7 +58,7 @@ public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> 
         this.code = code;
         Optional<CryptoAsset> optionalCryptoAsset = CryptoAssetRepository.find(code);
         isFeatured = optionalCryptoAsset.isPresent();
-        cryptoAsset = optionalCryptoAsset.orElse(new CryptoAsset(code));
+        cryptoAsset = optionalCryptoAsset.orElseGet(() -> new CryptoAsset(code));
 
         verify();
     }
@@ -68,7 +68,7 @@ public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> 
         this.code = code;
         Optional<CryptoAsset> optionalCryptoAsset = CryptoAssetRepository.find(code);
         isFeatured = optionalCryptoAsset.isPresent();
-        cryptoAsset = optionalCryptoAsset.orElse(new CryptoAsset(code));
+        cryptoAsset = optionalCryptoAsset.orElseGet(() -> new CryptoAsset(code));
 
         verify();
     }

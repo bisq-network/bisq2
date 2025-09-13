@@ -39,7 +39,7 @@ public class PreventStandbyModeService {
     public PreventStandbyModeService(String baseDir, ReadOnlyObservable<Boolean> prevent) {
         this.prevent = prevent;
         this.preventStandbyMode = OS.isLinux()
-                ? Inhibitor.findExecutableInhibitor().orElse(new SoundPlayer(baseDir))
+                ? Inhibitor.findExecutableInhibitor().orElseGet(() -> new SoundPlayer(baseDir))
                 : new SoundPlayer(baseDir);
     }
 

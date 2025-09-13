@@ -66,7 +66,7 @@ public class NodeListItem implements ActivatableTableItem {
         nodeTagTooltip = Res.get("network.header.nodeTag.tooltip", identityTag);
         nodeTag = identityTag.contains("-") ? identityTag.split("-")[0] : identityTag;
 
-        address = node.findMyAddress().map(Address::getFullAddress).orElse(Res.get("data.na"));
+        address = node.findMyAddress().map(Address::getFullAddress).orElseGet(() -> Res.get("data.na"));
 
         numConnections.set(String.valueOf(node.getAllConnections().count()));
         listener = new Node.Listener() {

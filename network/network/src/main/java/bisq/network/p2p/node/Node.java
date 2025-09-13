@@ -751,7 +751,7 @@ public class Node implements Connection.Handler {
     @Override
     public String toString() {
         return findMyAddress().map(address -> "Node with address " + address)
-                .orElse("Node with networkId " + networkId.getInfo());
+                .orElseGet(() -> "Node with networkId " + networkId.getInfo());
     }
 
     public String getNodeInfo() {
