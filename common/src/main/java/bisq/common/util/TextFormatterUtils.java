@@ -17,6 +17,7 @@
 
 package bisq.common.util;
 
+import java.util.Locale;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -60,7 +61,7 @@ public class TextFormatterUtils {
         return StringUtils.toOptional(iban)
                 .filter(StringUtils::isNotEmpty)
                 .map(value -> {
-                    String cleanIban = value.replaceAll("\\s", "").toUpperCase();
+                    String cleanIban = value.replaceAll("\\s", "").toUpperCase(Locale.ROOT);
                     StringBuilder formatted = new StringBuilder();
                     for (int i = 0; i < cleanIban.length(); i++) {
                         if (i > 0 && i % 4 == 0) {
