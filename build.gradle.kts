@@ -1,6 +1,12 @@
+import java.util.Locale.getDefault
+
 plugins {
     java
     id("bisq.gradle.maven_publisher.LocalMavenPublishPlugin")
+}
+
+fun getGradleCommand(): String {
+    return if (System.getProperty("os.name").lowercase(getDefault()).contains("win")) "gradlew.bat" else "./gradlew"
 }
 
 tasks.register("buildAll") {
@@ -25,7 +31,7 @@ tasks.register("buildAll") {
         ).forEach {
             exec {
                 println("Executing Build: $it")
-                commandLine("./gradlew", it)
+                commandLine(getGradleCommand(), it)
             }
         }
     }
@@ -56,7 +62,7 @@ tasks.register("cleanAll") {
         ).forEach {
             exec {
                 println("Executing Clean: $it")
-                commandLine("./gradlew", it)
+                commandLine(getGradleCommand(), it)
             }
         }
     }
@@ -91,7 +97,7 @@ tasks.register("publishAll") {
         ).forEach {
             exec {
                 println("Executing Publish To Maven Local: $it")
-                commandLine("./gradlew", it)
+                commandLine(getGradleCommand(), it)
             }
         }
     }
