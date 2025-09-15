@@ -64,9 +64,14 @@ class LocalMavenPublishPlugin : Plugin<Project> {
         project.afterEvaluate {
             val javaComponent = project.components.findByName("java")
             if (javaComponent != null) {
+                val generateProtoTask = project.tasks.findByName("generateProto")
                 val protoSourcesJar = project.tasks.findByName("protoSourcesJar") ?: project.tasks.register("protoSourcesJar", Jar::class.java) {
                     archiveClassifier.set("proto-sources")
-                    from(project.fileTree("${project.layout.buildDirectory}/generated/source/proto/main"))  // Adjust path if needed
+                    val protoDir = project.layout.buildDirectory.dir("generated/source/proto/main").get().asFile
+                    from(project.fileTree(protoDir))
+                    if (generateProtoTask != null) {
+                        dependsOn(generateProtoTask)
+                    }
                 }
 
                 if (rootVersion == "unspecified") {
