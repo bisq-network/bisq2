@@ -5,12 +5,15 @@ plugins {
     id("bisq.gradle.maven_publisher.LocalMavenPublishPlugin")
 }
 
+fun getGradleCommand(): String {
+    return if (System.getProperty("os.name").lowercase(getDefault()).contains("win")) "gradlew.bat" else "./gradlew"
+}
+
 tasks.register("buildAll") {
     group = "build"
     description = "Build the entire project leaving it ready to work with."
 
     doLast {
-        val gradleCmd = if (System.getProperty("os.name").lowercase(getDefault()).contains("win")) "gradlew.bat" else "./gradlew"
         listOf(
             ":build-logic:build",
             "build",
@@ -28,7 +31,7 @@ tasks.register("buildAll") {
         ).forEach {
             exec {
                 println("Executing Build: $it")
-                commandLine(gradleCmd, it)
+                commandLine(getGradleCommand(), it)
             }
         }
     }
@@ -39,7 +42,6 @@ tasks.register("cleanAll") {
     description = "Cleans the entire project."
 
     doLast {
-        val gradleCmd = if (System.getProperty("os.name").lowercase(getDefault()).contains("win")) "gradlew.bat" else "./gradlew"
         listOf(
             ":build-logic:clean",
             "clean",
@@ -57,7 +59,7 @@ tasks.register("cleanAll") {
         ).forEach {
             exec {
                 println("Executing Clean: $it")
-                commandLine(gradleCmd, it)
+                commandLine(getGradleCommand(), it)
             }
         }
     }
@@ -68,7 +70,6 @@ tasks.register("publishAll") {
     description = "Publish all the jars in the following modules to local maven repository"
 
     doLast {
-        val gradleCmd = if (System.getProperty("os.name").lowercase(getDefault()).contains("win")) "gradlew.bat" else "./gradlew"
         listOf(
             ":account:publishToMavenLocal",
             ":application:publishToMavenLocal",
@@ -93,7 +94,7 @@ tasks.register("publishAll") {
         ).forEach {
             exec {
                 println("Executing Publish To Maven Local: $it")
-                commandLine(gradleCmd, it)
+                commandLine(getGradleCommand(), it)
             }
         }
     }
