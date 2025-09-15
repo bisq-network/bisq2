@@ -33,6 +33,7 @@ import bisq.common.observable.Observable;
 import bisq.common.util.ExceptionUtil;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
+import ch.qos.logback.classic.Level;
 import com.typesafe.config.ConfigFactory;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -170,7 +171,7 @@ public abstract class ApplicationService implements Service {
         }
         checkInstanceLock();
 
-        LogSetup.setup(dataDir.resolve("bisq").toString());
+        setupLogging(dataDir);
         log.info(AsciiLogo.getAsciiLogo());
         log.info("Data directory: {}", config.getBaseDir());
         log.info("Version: v{} / Commit hash: {}", ApplicationVersion.getVersion().getVersionAsString(), ApplicationVersion.getBuildCommitShortHash());
@@ -195,6 +196,14 @@ public abstract class ApplicationService implements Service {
         String absoluteDataDirPath = dataDir.toAbsolutePath().toString();
         persistenceService = new PersistenceService(absoluteDataDirPath);
         migrationService = Optional.of(new MigrationService(dataDir));
+    }
+
+    protected void setupLogging(Path dataDir) {
+        com.typesafe.config.Config loggingConfig = getConfig("logging");
+        int rollingPolicyMaxIndex = loggingConfig.getInt("rollingPolicyMaxIndex");
+        String maxFileSize = loggingConfig.getString("maxFileSize");
+        Level logLevel = Level.toLevel(loggingConfig.getString("logLevel"));
+        LogSetup.setup(dataDir.resolve("bisq").toString(), rollingPolicyMaxIndex, maxFileSize, logLevel);
     }
 
     private void checkInstanceLock() {

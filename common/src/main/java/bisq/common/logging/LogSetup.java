@@ -38,9 +38,13 @@ public class LogSetup {
     }
 
     public static void setup(String fileName) {
+        setup(fileName, 20, "10MB", DEFAULT_LOG_LEVEL);
+    }
+
+    public static void setup(String fileName, int rollingPolicyMaxIndex, String maxFileSize, Level logLevel) {
         // We return in case we get called multiple times if app is used from shell apps (e.g. DesktopAppLauncher)
-        if (logbackLogger != null) {
-            return;
+        if (logbackLogger != null && LoggerFactory.getILoggerFactory() instanceof LoggerContext loggerContext) {
+            loggerContext.reset();
         }
 
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -54,11 +58,11 @@ public class LogSetup {
         rollingPolicy.setParent(appender);
         rollingPolicy.setFileNamePattern(fileName + "_%i.log");
         rollingPolicy.setMinIndex(1);
-        rollingPolicy.setMaxIndex(20);
+        rollingPolicy.setMaxIndex(rollingPolicyMaxIndex);
         rollingPolicy.start();
 
         SizeBasedTriggeringPolicy<ILoggingEvent> triggeringPolicy = new SizeBasedTriggeringPolicy<>();
-        triggeringPolicy.setMaxFileSize(FileSize.valueOf("10MB"));
+        triggeringPolicy.setMaxFileSize(FileSize.valueOf(maxFileSize));
         triggeringPolicy.start();
 
         PatternLayoutEncoder encoder = new PatternLayoutEncoder();
@@ -74,7 +78,7 @@ public class LogSetup {
 
         logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         logbackLogger.addAppender(appender);
-        logbackLogger.setLevel(DEFAULT_LOG_LEVEL);
+        logbackLogger.setLevel(logLevel);
     }
 
     public static void setCustomLogLevel(String pattern, Level logLevel) {
