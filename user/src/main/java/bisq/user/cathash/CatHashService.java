@@ -74,13 +74,17 @@ public abstract class CatHashService<T> {
         File iconsDir = Paths.get(getCatHashIconsDirectory().toString(), "v" + avatarVersion).toFile();
         File iconFile = Paths.get(iconsDir.getAbsolutePath(), userProfileId + ".raw").toFile();
 
-        boolean useCache = size <= SIZE_OF_CACHED_ICONS;
+        if (size > 300) {
+            log.warn("Size for cat hash image is {}. We limit size to max. 300 px as the png files for the image composition " +
+                    "are of that size.", size);
+            size = 300;
+        }
+        boolean useCache = size <= getSizeOfCachedIcons();
         if (useCache) {
             // First approach is to look up the cache
             if (cache.containsKey(catHashInput)) {
                 return cache.get(catHashInput);
             }
-
 
             if (!iconsDir.exists()) {
                 try {
@@ -94,7 +98,7 @@ public abstract class CatHashService<T> {
             if (iconFile.exists()) {
                 try {
                     T image = readRawImage(iconFile);
-                    if (cache.size() < MAX_CACHE_SIZE) {
+                    if (cache.size() < getMaxCacheSize()) {
                         cache.put(catHashInput, image);
                     }
                     return image;
@@ -111,13 +115,11 @@ public abstract class CatHashService<T> {
         BucketConfig bucketConfig = getBucketConfig(avatarVersion);
         int[] buckets = BucketEncoder.encode(catHashInput, bucketConfig.getBucketSizes());
         String[] paths = BucketEncoder.toPaths(buckets, bucketConfig.getPathTemplates());
-        // For retina support we scale by 2
-        T image = composeImage(paths, 2 * SIZE_OF_CACHED_ICONS);
+        T image = composeImage(paths, size);
         //log.info("Creating user profile icon for {} took {} ms.", userProfileId, System.currentTimeMillis() - ts);
-        if (useCache && cache.size() < MAX_CACHE_SIZE) {
+        // We use the MAX_CACHE_SIZE as limit for files on disk
+        if (useCache && cache.size() < getMaxCacheSize()) {
             cache.put(catHashInput, image);
-
-            // We use the MAX_CACHE_SIZE also as limit for files on disk
             try {
                 writeRawImage(image, iconFile);
             } catch (IOException e) {
@@ -179,6 +181,14 @@ public abstract class CatHashService<T> {
 
     public int currentAvatarsVersion() {
         return BucketConfig.CURRENT_VERSION;
+    }
+
+    protected double getSizeOfCachedIcons() {
+        return SIZE_OF_CACHED_ICONS;
+    }
+
+    protected int getMaxCacheSize() {
+        return MAX_CACHE_SIZE;
     }
 
     private Path getCatHashIconsDirectory() {
