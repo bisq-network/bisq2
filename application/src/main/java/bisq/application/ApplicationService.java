@@ -206,7 +206,7 @@ public abstract class ApplicationService implements Service {
         LogSetup.setup(dataDir.resolve("bisq").toString(), rollingPolicyMaxIndex, maxFileSize, logLevel);
     }
 
-    private void checkInstanceLock() {
+    protected void checkInstanceLock() {
         // Acquire exclusive lock on file basedir/lock, throw if locks fails
         // to avoid running multiple instances using the same basedir
         File lockFilePath = config.getBaseDir()
