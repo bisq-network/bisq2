@@ -17,34 +17,20 @@
 
 package bisq.desktop.main.content.contacts_list;
 
-import bisq.common.data.Pair;
-import bisq.common.monetary.Coin;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.IndexColumnUtil;
 import bisq.desktop.components.table.RichTableView;
-import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
-import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.contact_list.ContactListEntry;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
-import bisq.user.reputation.ReputationSource;
-import bisq.user.reputation.data.AuthorizedAccountAgeData;
-import bisq.user.reputation.data.AuthorizedBondedReputationData;
-import bisq.user.reputation.data.AuthorizedProofOfBurnData;
-import bisq.user.reputation.data.AuthorizedSignedWitnessData;
-import bisq.user.reputation.data.AuthorizedTimestampData;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -59,20 +45,14 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class ContactsListView extends View<VBox, ContactsListModel, ContactsListController> {
     private static final double SIDE_PADDING = 40;
 
     private final RichTableView<ListItem> richTableView;
-    private BisqTableColumn<ListItem> scoreColumn, valueColumn;
-    private Subscription userProfileIdOfScoreUpdatePin, selectedReputationSourcePin;
+    private Subscription userProfileIdOfScoreUpdatePin;
 
     public ContactsListView(ContactsListModel model,
                             ContactsListController controller) {
@@ -94,42 +74,18 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
     protected void onViewAttached() {
         richTableView.initialize();
         richTableView.resetSearch();
-        valueColumn.visibleProperty().bind(model.getValueColumnVisible());
         userProfileIdOfScoreUpdatePin = EasyBind.subscribe(model.getScoreChangeTrigger(), trigger -> {
             if (trigger != null) {
                 richTableView.refresh();
                 richTableView.sort();
             }
         });
-
-        selectedReputationSourcePin = EasyBind.subscribe(model.getSelectedReputationSource(), selectedReputationSource -> UIThread.runOnNextRenderFrame(() -> {
-            richTableView.getSortOrder().clear();
-            if (selectedReputationSource == null) {
-                richTableView.getSortOrder().add(scoreColumn);
-            } else {
-
-                switch (selectedReputationSource) {
-                    case BURNED_BSQ:
-                    case BSQ_BOND:
-                        valueColumn.setSortType(TableColumn.SortType.DESCENDING);
-                        break;
-                    case PROFILE_AGE:
-                    case BISQ1_ACCOUNT_AGE:
-                    case BISQ1_SIGNED_ACCOUNT_AGE_WITNESS:
-                        valueColumn.setSortType(TableColumn.SortType.ASCENDING);
-                        break;
-                }
-                richTableView.getSortOrder().add(valueColumn);
-            }
-        }));
     }
 
     @Override
     protected void onViewDetached() {
         richTableView.dispose();
-        valueColumn.visibleProperty().unbind();
         userProfileIdOfScoreUpdatePin.unsubscribe();
-        selectedReputationSourcePin.unsubscribe();
     }
 
     private void configTableView() {
@@ -144,11 +100,6 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                 .valueSupplier(ListItem::getUserName)
                 .build());
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("network.contactList.table.columns.contactReason"))
-                .comparator(Comparator.comparing(ListItem::getContactReasonString))
-                .valueSupplier(ListItem::getContactReasonString)
-                .build());
-        richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("network.contactList.table.columns.tag"))
                 .comparator(Comparator.comparing(ListItem::getTag))
                 .valueSupplier(ListItem::getTag)
@@ -159,11 +110,6 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                 .valueSupplier(ListItem::getTrustScore)
                 .build());
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("network.contactList.table.columns.notes"))
-                .comparator(Comparator.comparing(ListItem::getNotes))
-                .valueSupplier(ListItem::getNotes)
-                .build());
-        richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("reputation.table.columns.profileAge"))
                 .comparator(Comparator.comparing(ListItem::getProfileAge).reversed())
                 .valueSupplier(ListItem::getProfileAgeString)
@@ -171,39 +117,21 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                 .build());
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("reputation.table.columns.livenessState"))
-                .right()
                 .comparator(Comparator.comparing(ListItem::getPublishDate).reversed())
                 .valueSupplier(ListItem::getLastUserActivity)
                 .build());
-        scoreColumn = new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("reputation.table.columns.reputationScore"))
+        BisqTableColumn<ListItem> reputationScoreColumn = new BisqTableColumn.Builder<ListItem>()
+                .title(Res.get("network.contactList.table.columns.reputation"))
                 .comparator(Comparator.comparing(ListItem::getTotalScore))
                 .sortType(TableColumn.SortType.DESCENDING)
                 .valueSupplier(ListItem::getTotalScoreString)
                 .build();
-        richTableView.getColumns().add(scoreColumn);
-
-        valueColumn = new BisqTableColumn.Builder<ListItem>()
-                .minWidth(150)
-                .titleProperty(model.getFilteredValueTitle())
-                .comparator(Comparator.comparing(ListItem::getValue))
-                .valuePropertySupplier(ListItem::getValueAsStringProperty)
-                .includeForCsv(false)
-                .build();
-        richTableView.getColumns().add(valueColumn);
+        richTableView.getColumns().add(reputationScoreColumn);
 
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("reputation.table.columns.reputation"))
-                .comparator(Comparator.comparing(ListItem::getTotalScore))
-                .sortType(TableColumn.SortType.DESCENDING)
-                .setCellFactory(getStarsCellFactory())
-                .includeForCsv(false)
-                .build());
-        richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .isSortable(false)
-                .title(Res.get("reputation.table.columns.details"))
-                .setCellFactory(getDetailsCellFactory())
-                .includeForCsv(false)
+                .title(Res.get("network.contactList.table.columns.added"))
+                .comparator(Comparator.comparing(ListItem::getContactReasonString))
+                .valueSupplier(ListItem::getContactReasonString)
                 .build());
     }
 
@@ -242,47 +170,6 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
         };
     }
 
-    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getStarsCellFactory() {
-        return column -> new TableCell<>() {
-            private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
-
-            {
-                reputationScoreDisplay.setAlignment(Pos.CENTER);
-            }
-
-            @Override
-            protected void updateItem(ListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty) {
-                    reputationScoreDisplay.setReputationScore(item.getReputationScore());
-                    setGraphic(reputationScoreDisplay);
-                } else {
-                    setGraphic(null);
-                }
-            }
-        };
-    }
-
-    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getDetailsCellFactory() {
-        return column -> new TableCell<>() {
-            private final Hyperlink info = new Hyperlink(Res.get("reputation.table.columns.details.button"));
-
-            @Override
-            protected void updateItem(ListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty) {
-                    info.setOnAction(e -> controller.onOpenProfileCard(item.getUserProfile()));
-                    setGraphic(info);
-                } else {
-                    info.setOnAction(null);
-                    setGraphic(null);
-                }
-            }
-        };
-    }
-
     @Getter
     @ToString
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -299,10 +186,6 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
         private final long profileAge;
         private long totalScore;
         private String totalScoreString;
-        private final Map<ReputationSource, Pair<Long, String>> valuePairBySource = new HashMap<>();
-        private long value;
-        private final StringProperty valueAsStringProperty = new SimpleStringProperty();
-        private final Set<ReputationSource> reputationSources = new HashSet<>();
 
         ListItem(ContactListEntry contactListEntry,
                  ReputationService reputationService,
@@ -340,57 +223,6 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
             reputationScore = reputationService.getReputationScore(userProfileId);
             totalScore = reputationScore.getTotalScore();
             totalScoreString = String.valueOf(totalScore);
-            value = totalScore;
-            valueAsStringProperty.set(String.valueOf(totalScore));
-
-            updateAmountBySource();
-        }
-
-        private void updateAmountBySource() {
-            applyReputationSourceValue(ReputationSource.BURNED_BSQ,
-                    Optional.ofNullable(reputationService.getProofOfBurnService().getDataSetByHash().get(userProfile.getProofOfBurnKey()))
-                            .map(dataSet -> dataSet.stream().mapToLong(AuthorizedProofOfBurnData::getAmount).sum())
-                            .orElse(0L));
-
-            applyReputationSourceValue(ReputationSource.BSQ_BOND,
-                    Optional.ofNullable(reputationService.getBondedReputationService().getDataSetByHash().get(userProfile.getBondedReputationKey()))
-                            .map(dataSet -> dataSet.stream().mapToLong(AuthorizedBondedReputationData::getAmount).sum())
-                            .orElse(0L));
-
-            applyReputationSourceValue(ReputationSource.BISQ1_ACCOUNT_AGE,
-                    Optional.ofNullable(reputationService.getAccountAgeService().getDataSetByHash().get(userProfile.getAccountAgeKey()))
-                            .map(dataSet -> dataSet.stream().mapToLong(AuthorizedAccountAgeData::getDate).sum())
-                            .orElse(0L));
-
-            applyReputationSourceValue(ReputationSource.BISQ1_SIGNED_ACCOUNT_AGE_WITNESS,
-                    Optional.ofNullable(reputationService.getSignedWitnessService().getDataSetByHash().get(userProfile.getSignedWitnessKey()))
-                            .map(dataSet -> dataSet.stream().mapToLong(AuthorizedSignedWitnessData::getWitnessSignDate).sum())
-                            .orElse(0L));
-
-            applyReputationSourceValue(ReputationSource.PROFILE_AGE,
-                    Optional.ofNullable(reputationService.getProfileAgeService().getDataSetByHash().get(userProfile.getProfileAgeKey()))
-                            .map(dataSet -> dataSet.stream().mapToLong(AuthorizedTimestampData::getDate).sum())
-                            .orElse(0L));
-        }
-
-        private void applyReputationSourceValue(ReputationSource reputationSource, long value) {
-            valuePairBySource.put(reputationSource, new Pair<>(value, formatReputationSourceValue(reputationSource, value)));
-        }
-
-        private String formatReputationSourceValue(ReputationSource reputationSource, long value) {
-            return switch (reputationSource) {
-                case BURNED_BSQ, BSQ_BOND -> AmountFormatter.formatAmount(Coin.asBsqFromValue(value), false);
-                case PROFILE_AGE, BISQ1_ACCOUNT_AGE, BISQ1_SIGNED_ACCOUNT_AGE_WITNESS ->
-                        value > 0 ? TimeFormatter.formatAgeInDaysAndYears(value) : "";
-            };
-        }
-
-        private Set<ReputationSource> getFilteredReputationSources(Optional<ReputationSource> selectedReputationSource) {
-            return valuePairBySource.entrySet().stream()
-                    .filter(e -> e.getValue().getFirst() > 0)
-                    .filter(e -> selectedReputationSource.isEmpty() || e.getKey().equals(selectedReputationSource.get()))
-                    .map(Map.Entry::getKey)
-                    .collect(Collectors.toSet());
         }
 
         public String getLastUserActivity() {

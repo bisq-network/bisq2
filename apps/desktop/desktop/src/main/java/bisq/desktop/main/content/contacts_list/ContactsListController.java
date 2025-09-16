@@ -125,10 +125,11 @@ public class ContactsListController implements Controller {
         model.setSearchStringPredicate(item ->
                 StringUtils.isEmpty(string) ||
                         item.getUserName().toLowerCase().contains(string) ||
+                        item.getTag().toLowerCase().contains(string) ||
+                        item.getTrustScore().toLowerCase().contains(string) ||
                         item.getUserProfile().getNym().toLowerCase().contains(string) ||
                         item.getTotalScoreString().contains(string) ||
-                        item.getProfileAgeString().contains(string) ||
-                        item.getValueAsStringProperty().get().toLowerCase().contains(string));
+                        item.getProfileAgeString().contains(string));
         applyPredicates();
     }
 
