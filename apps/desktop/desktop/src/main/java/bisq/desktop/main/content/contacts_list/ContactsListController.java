@@ -25,8 +25,10 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.desktop.navigation.NavigationTarget;
+import bisq.i18n.Res;
 import bisq.user.contact_list.ContactListEntry;
 import bisq.user.contact_list.ContactListService;
 import bisq.user.profile.UserProfile;
@@ -115,9 +117,12 @@ public class ContactsListController implements Controller {
         model.getListItems().clear();
     }
 
-    void onOpenProfileCard(UserProfile userProfile) {
-        Navigation.navigateTo(NavigationTarget.PROFILE_CARD_REPUTATION,
-                new ProfileCardController.InitData(userProfile));
+    void onRemoveContact(ContactListEntry contactListEntry) {
+        new Popup().warning(Res.get("network.contactList.table.columns.actionsMenu.removeContact"))
+                .actionButtonText(Res.get("confirmation.yes"))
+                .onAction(() -> doRemoveContact(contactListEntry))
+                .closeButtonText(Res.get("confirmation.no"))
+                .show();
     }
 
     void applySearchPredicate(String searchText) {
@@ -136,6 +141,10 @@ public class ContactsListController implements Controller {
     void openProfileCard(UserProfile userProfile) {
         Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
                 new ProfileCardController.InitData(userProfile));
+    }
+
+    private void doRemoveContact(ContactListEntry contactListEntry) {
+        contactListService.removeContactListEntry(contactListEntry);
     }
 
     private void updateScore(Pair<String, Long> userProfileIdScorePair) {

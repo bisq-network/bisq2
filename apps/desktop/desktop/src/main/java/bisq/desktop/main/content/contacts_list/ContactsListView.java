@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.contacts_list;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.IndexColumnUtil;
 import bisq.desktop.components.table.RichTableView;
@@ -29,11 +30,13 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
@@ -95,33 +98,39 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("reputation.table.columns.userProfile"))
                 .left()
+                .minWidth(140)
                 .comparator(Comparator.comparing(ListItem::getUserName))
                 .setCellFactory(getUserProfileCellFactory())
                 .valueSupplier(ListItem::getUserName)
                 .build());
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("network.contactList.table.columns.tag"))
+                .minWidth(140)
                 .comparator(Comparator.comparing(ListItem::getTag))
                 .valueSupplier(ListItem::getTag)
                 .build());
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("network.contactList.table.columns.trustScore"))
+                .minWidth(80)
                 .comparator(Comparator.comparing(ListItem::getTrustScore))
                 .valueSupplier(ListItem::getTrustScore)
                 .build());
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("reputation.table.columns.profileAge"))
+                .minWidth(120)
                 .comparator(Comparator.comparing(ListItem::getProfileAge).reversed())
                 .valueSupplier(ListItem::getProfileAgeString)
                 .includeForCsv(false)
                 .build());
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("reputation.table.columns.livenessState"))
+                .minWidth(140)
                 .comparator(Comparator.comparing(ListItem::getPublishDate).reversed())
                 .valueSupplier(ListItem::getLastUserActivity)
                 .build());
         BisqTableColumn<ListItem> reputationScoreColumn = new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("network.contactList.table.columns.reputation"))
+                .minWidth(100)
                 .comparator(Comparator.comparing(ListItem::getTotalScore))
                 .sortType(TableColumn.SortType.DESCENDING)
                 .valueSupplier(ListItem::getTotalScoreString)
@@ -130,8 +139,15 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
 
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("network.contactList.table.columns.added"))
+                .minWidth(140)
                 .comparator(Comparator.comparing(ListItem::getContactReasonString))
                 .valueSupplier(ListItem::getContactReasonString)
+                .build());
+
+        richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+                .setCellFactory(getActionButtonsCellFactory())
+                .minWidth(150)
+                .includeForCsv(false)
                 .build());
     }
 
@@ -166,6 +182,102 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                     userName.setOnMouseClicked(null);
                     setGraphic(null);
                 }
+            }
+        };
+    }
+
+    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getActionButtonsCellFactory() {
+        return column -> new TableCell<>() {
+            private static final double PREF_WIDTH = 120;
+            private static final double PREF_HEIGHT = 26;
+
+            private final HBox mainBox = new HBox();
+            private final HBox actionsMenuBox = new HBox(5);
+            private final BisqMenuItem openPrivateChatMenuItem = new BisqMenuItem("private-chat-grey", "private-chat-white");
+            private final BisqMenuItem showMoreInfoMenuItem = new BisqMenuItem("icon-info-grey", "icon-info-white");
+            private final BisqMenuItem removeContactMenuItem = new BisqMenuItem("delete-t-grey", "delete-t-red");
+            private final ChangeListener<Boolean> selectedListener = (observable, oldValue, newValue) -> {
+                boolean shouldShow = newValue || getTableRow().isHover();
+                actionsMenuBox.setVisible(shouldShow);
+                actionsMenuBox.setManaged(shouldShow);
+            };
+
+            {
+                mainBox.setMinWidth(PREF_WIDTH);
+                mainBox.setPrefWidth(PREF_WIDTH);
+                mainBox.setMaxWidth(PREF_WIDTH);
+                mainBox.setMinHeight(PREF_HEIGHT);
+                mainBox.setPrefHeight(PREF_HEIGHT);
+                mainBox.setMaxHeight(PREF_HEIGHT);
+                mainBox.getChildren().addAll(actionsMenuBox);
+
+                actionsMenuBox.setMinWidth(PREF_WIDTH);
+                actionsMenuBox.setPrefWidth(PREF_WIDTH);
+                actionsMenuBox.setMaxWidth(PREF_WIDTH);
+                actionsMenuBox.setMinHeight(PREF_HEIGHT);
+                actionsMenuBox.setPrefHeight(PREF_HEIGHT);
+                actionsMenuBox.setMaxHeight(PREF_HEIGHT);
+                actionsMenuBox.getChildren().addAll(openPrivateChatMenuItem, showMoreInfoMenuItem, removeContactMenuItem);
+                actionsMenuBox.setAlignment(Pos.CENTER);
+
+                openPrivateChatMenuItem.useIconOnly();
+                openPrivateChatMenuItem.setTooltip(Res.get("network.contactList.table.columns.actionsMenu.openPrivateChat.tooltip"));
+
+                showMoreInfoMenuItem.useIconOnly();
+                showMoreInfoMenuItem.setTooltip(Res.get("network.contactList.table.columns.actionsMenu.showMoreInfo.tooltip"));
+
+                removeContactMenuItem.useIconOnly();
+                removeContactMenuItem.setTooltip(Res.get("network.contactList.table.columns.actionsMenu.removeContact.tooltip"));
+            }
+
+            @Override
+            protected void updateItem(ListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                resetRowEventHandlersAndListeners();
+                resetVisibilities();
+
+                if (item != null && !empty) {
+                    setUpRowEventHandlersAndListeners();
+                    setGraphic(mainBox);
+                    removeContactMenuItem.setOnAction(e -> controller.onRemoveContact(item.getContactListEntry()));
+                } else {
+                    resetRowEventHandlersAndListeners();
+                    resetVisibilities();
+                    removeContactMenuItem.setOnAction(null);
+                    setGraphic(null);
+                }
+            }
+
+            private void setUpRowEventHandlersAndListeners() {
+                TableRow<?> row = getTableRow();
+                if (row != null) {
+                    row.setOnMouseEntered(e -> {
+                        boolean shouldShow = row.isSelected() || row.isHover();
+                        actionsMenuBox.setVisible(shouldShow);
+                        actionsMenuBox.setManaged(shouldShow);
+                    });
+                    row.setOnMouseExited(e -> {
+                        boolean shouldShow = row.isSelected();
+                        actionsMenuBox.setVisible(shouldShow);
+                        actionsMenuBox.setManaged(shouldShow);
+                    });
+                    row.selectedProperty().addListener(selectedListener);
+                }
+            }
+
+            private void resetRowEventHandlersAndListeners() {
+                TableRow<?> row = getTableRow();
+                if (row != null) {
+                    row.setOnMouseEntered(null);
+                    row.setOnMouseExited(null);
+                    row.selectedProperty().removeListener(selectedListener);
+                }
+            }
+
+            private void resetVisibilities() {
+                actionsMenuBox.setVisible(false);
+                actionsMenuBox.setManaged(false);
             }
         };
     }
