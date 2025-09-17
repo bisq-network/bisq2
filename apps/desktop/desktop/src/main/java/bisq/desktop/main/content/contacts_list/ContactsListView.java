@@ -61,7 +61,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
         super(new VBox(), model, controller);
 
         richTableView = new RichTableView<>(model.getSortedList(),
-                Res.get("network.contactList.table.headline"),
+                Res.get("contactsList.table.headline"),
                 controller::applySearchPredicate);
         richTableView.getExportButton().setVisible(false);
         richTableView.getExportButton().setManaged(false);
@@ -103,13 +103,13 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                 .valueSupplier(ListItem::getUserName)
                 .build());
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("network.contactList.table.columns.tag"))
+                .title(Res.get("contactsList.table.columns.tag"))
                 .minWidth(140)
                 .comparator(Comparator.comparing(ListItem::getTag))
                 .valueSupplier(ListItem::getTag)
                 .build());
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("network.contactList.table.columns.trustScore"))
+                .title(Res.get("contactsList.table.columns.trustScore"))
                 .minWidth(80)
                 .comparator(Comparator.comparing(ListItem::getTrustScore))
                 .valueSupplier(ListItem::getTrustScore)
@@ -128,7 +128,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                 .valueSupplier(ListItem::getLastUserActivity)
                 .build());
         BisqTableColumn<ListItem> reputationScoreColumn = new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("network.contactList.table.columns.reputation"))
+                .title(Res.get("contactsList.table.columns.reputation"))
                 .minWidth(100)
                 .comparator(Comparator.comparing(ListItem::getTotalScore))
                 .sortType(TableColumn.SortType.DESCENDING)
@@ -137,7 +137,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
         richTableView.getColumns().add(reputationScoreColumn);
 
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("network.contactList.table.columns.added"))
+                .title(Res.get("contactsList.table.columns.added"))
                 .minWidth(140)
                 .comparator(Comparator.comparing(ListItem::getContactReasonString))
                 .valueSupplier(ListItem::getContactReasonString)
@@ -209,13 +209,13 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
 
                 openPrivateChatMenuItem.useIconOnly();
                 openPrivateChatMenuItem.setTooltip(
-                        Res.get("network.contactList.table.columns.actionsMenu.openPrivateChat.tooltip"));
+                        Res.get("contactsList.table.columns.actionsMenu.openPrivateChat.tooltip"));
                 showMoreInfoMenuItem.useIconOnly();
                 showMoreInfoMenuItem.setTooltip(
-                        Res.get("network.contactList.table.columns.actionsMenu.showMoreInfo.tooltip"));
+                        Res.get("contactsList.table.columns.actionsMenu.showMoreInfo.tooltip"));
                 removeContactMenuItem.useIconOnly();
                 removeContactMenuItem.setTooltip(
-                        Res.get("network.contactList.table.columns.actionsMenu.removeContact.tooltip"));
+                        Res.get("contactsList.table.columns.actionsMenu.removeContact.tooltip"));
             }
 
             @Override

@@ -132,7 +132,7 @@ public class ContactsListController implements Controller {
     }
 
     void onRemoveContact(ContactListEntry contactListEntry) {
-        new Popup().warning(Res.get("network.contactList.table.columns.actionsMenu.removeContact"))
+        new Popup().warning(Res.get("contactsList.table.columns.actionsMenu.removeContact"))
                 .actionButtonText(Res.get("confirmation.yes"))
                 .onAction(() -> doRemoveContact(contactListEntry))
                 .closeButtonText(Res.get("confirmation.no"))
