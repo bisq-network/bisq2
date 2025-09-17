@@ -22,7 +22,7 @@ import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.IndexColumnUtil;
 import bisq.desktop.components.table.RichTableView;
-import bisq.desktop.main.content.components.UserProfileIcon;
+import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.contact_list.ContactListEntry;
@@ -33,7 +33,6 @@ import bisq.user.reputation.ReputationService;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
@@ -62,7 +61,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
         super(new VBox(), model, controller);
 
         richTableView = new RichTableView<>(model.getSortedList(),
-                Res.get("network.contactList.table.headline"),
+                Res.get("contactsList.table.headline"),
                 controller::applySearchPredicate);
         richTableView.getExportButton().setVisible(false);
         richTableView.getExportButton().setManaged(false);
@@ -104,13 +103,13 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                 .valueSupplier(ListItem::getUserName)
                 .build());
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("network.contactList.table.columns.tag"))
+                .title(Res.get("contactsList.table.columns.tag"))
                 .minWidth(140)
                 .comparator(Comparator.comparing(ListItem::getTag))
                 .valueSupplier(ListItem::getTag)
                 .build());
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("network.contactList.table.columns.trustScore"))
+                .title(Res.get("contactsList.table.columns.trustScore"))
                 .minWidth(80)
                 .comparator(Comparator.comparing(ListItem::getTrustScore))
                 .valueSupplier(ListItem::getTrustScore)
@@ -129,7 +128,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                 .valueSupplier(ListItem::getLastUserActivity)
                 .build());
         BisqTableColumn<ListItem> reputationScoreColumn = new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("network.contactList.table.columns.reputation"))
+                .title(Res.get("contactsList.table.columns.reputation"))
                 .minWidth(100)
                 .comparator(Comparator.comparing(ListItem::getTotalScore))
                 .sortType(TableColumn.SortType.DESCENDING)
@@ -138,7 +137,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
         richTableView.getColumns().add(reputationScoreColumn);
 
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("network.contactList.table.columns.added"))
+                .title(Res.get("contactsList.table.columns.added"))
                 .minWidth(140)
                 .comparator(Comparator.comparing(ListItem::getContactReasonString))
                 .valueSupplier(ListItem::getContactReasonString)
@@ -153,33 +152,21 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getUserProfileCellFactory() {
         return column -> new TableCell<>() {
-            private final Label userName = new Label();
-            private final UserProfileIcon userProfileIcon = new UserProfileIcon(40);
-            private final HBox hBox = new HBox(10, userProfileIcon, userName);
-
-            {
-                userName.setId("chat-user-name");
-                hBox.setAlignment(Pos.CENTER_LEFT);
-            }
+            private UserProfileDisplay userProfileDisplay;
 
             @Override
             protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    userName.setText(item.getUserName());
-                    // The update at the second tick would trigger a updateItem on all items not only on the visible
-                    // ones, which cause a performance peak as creating lots of user profile icons is expensive
-                    // (about 13ms on a fast machine) and need to be done on the UI thread.
-                    // Therefor we deactivate the update of the last activity.
-                    userProfileIcon.setUseSecondTick(false);
-                    userProfileIcon.setUserProfile(item.getUserProfile());
-                    userProfileIcon.getStyleClass().add("hand-cursor");
-                    userName.setOnMouseClicked(e -> controller.openProfileCard(item.getUserProfile()));
-                    setGraphic(hBox);
+                    userProfileDisplay = new UserProfileDisplay(item.getUserProfile(), false, true);
+                    userProfileDisplay.setReputationScore(item.getReputationScore());
+                    setGraphic(userProfileDisplay);
                 } else {
-                    userProfileIcon.dispose();
-                    userName.setOnMouseClicked(null);
+                    if (userProfileDisplay != null) {
+                        userProfileDisplay.dispose();
+                        userProfileDisplay = null;
+                    }
                     setGraphic(null);
                 }
             }
@@ -221,13 +208,14 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                 actionsMenuBox.setAlignment(Pos.CENTER);
 
                 openPrivateChatMenuItem.useIconOnly();
-                openPrivateChatMenuItem.setTooltip(Res.get("network.contactList.table.columns.actionsMenu.openPrivateChat.tooltip"));
-
+                openPrivateChatMenuItem.setTooltip(
+                        Res.get("contactsList.table.columns.actionsMenu.openPrivateChat.tooltip"));
                 showMoreInfoMenuItem.useIconOnly();
-                showMoreInfoMenuItem.setTooltip(Res.get("network.contactList.table.columns.actionsMenu.showMoreInfo.tooltip"));
-
+                showMoreInfoMenuItem.setTooltip(
+                        Res.get("contactsList.table.columns.actionsMenu.showMoreInfo.tooltip"));
                 removeContactMenuItem.useIconOnly();
-                removeContactMenuItem.setTooltip(Res.get("network.contactList.table.columns.actionsMenu.removeContact.tooltip"));
+                removeContactMenuItem.setTooltip(
+                        Res.get("contactsList.table.columns.actionsMenu.removeContact.tooltip"));
             }
 
             @Override
@@ -240,10 +228,17 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                 if (item != null && !empty) {
                     setUpRowEventHandlersAndListeners();
                     setGraphic(mainBox);
-                    removeContactMenuItem.setOnAction(e -> controller.onRemoveContact(item.getContactListEntry()));
+                    openPrivateChatMenuItem.setOnAction(
+                            e -> controller.onOpenPrivateChat(item.getUserProfile().getId()));
+                    showMoreInfoMenuItem.setOnAction(
+                            e -> controller.onShowMoreInfo(item.getUserProfile()));
+                    removeContactMenuItem.setOnAction(
+                            e -> controller.onRemoveContact(item.getContactListEntry()));
                 } else {
                     resetRowEventHandlersAndListeners();
                     resetVisibilities();
+                    openPrivateChatMenuItem.setOnAction(null);
+                    showMoreInfoMenuItem.setOnAction(null);
                     removeContactMenuItem.setOnAction(null);
                     setGraphic(null);
                 }
@@ -294,8 +289,8 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
         private final ContactsListController controller;
 
         private final String userName, profileAgeString, trustScore, tag, notes, contactReasonString;
-        private ReputationScore reputationScore;
         private final long profileAge;
+        private ReputationScore reputationScore;
         private long totalScore;
         private String totalScoreString;
 

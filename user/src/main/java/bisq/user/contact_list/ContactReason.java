@@ -37,6 +37,6 @@ public enum ContactReason implements ProtoEnum {
     }
 
     public String getDisplayString() {
-        return Res.get("network.contactList.contactReason." + name());
+        return Res.get("contactsList.contactReason." + name());
     }
 }
