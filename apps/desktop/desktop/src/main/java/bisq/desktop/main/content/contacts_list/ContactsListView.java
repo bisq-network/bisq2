@@ -22,7 +22,7 @@ import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.IndexColumnUtil;
 import bisq.desktop.components.table.RichTableView;
-import bisq.desktop.main.content.components.UserProfileIcon;
+import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.contact_list.ContactListEntry;
@@ -33,7 +33,6 @@ import bisq.user.reputation.ReputationService;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
@@ -153,33 +152,21 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getUserProfileCellFactory() {
         return column -> new TableCell<>() {
-            private final Label userName = new Label();
-            private final UserProfileIcon userProfileIcon = new UserProfileIcon(40);
-            private final HBox hBox = new HBox(10, userProfileIcon, userName);
-
-            {
-                userName.setId("chat-user-name");
-                hBox.setAlignment(Pos.CENTER_LEFT);
-            }
+            private UserProfileDisplay userProfileDisplay;
 
             @Override
             protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    userName.setText(item.getUserName());
-                    // The update at the second tick would trigger a updateItem on all items not only on the visible
-                    // ones, which cause a performance peak as creating lots of user profile icons is expensive
-                    // (about 13ms on a fast machine) and need to be done on the UI thread.
-                    // Therefor we deactivate the update of the last activity.
-                    userProfileIcon.setUseSecondTick(false);
-                    userProfileIcon.setUserProfile(item.getUserProfile());
-                    userProfileIcon.getStyleClass().add("hand-cursor");
-//                    userName.setOnMouseClicked(e -> controller.openProfileCard(item.getUserProfile()));
-                    setGraphic(hBox);
+                    userProfileDisplay = new UserProfileDisplay(item.getUserProfile(), false, true);
+                    userProfileDisplay.setReputationScore(item.getReputationScore());
+                    setGraphic(userProfileDisplay);
                 } else {
-                    userProfileIcon.dispose();
-//                    userName.setOnMouseClicked(null);
+                    if (userProfileDisplay != null) {
+                        userProfileDisplay.dispose();
+                        userProfileDisplay = null;
+                    }
                     setGraphic(null);
                 }
             }
