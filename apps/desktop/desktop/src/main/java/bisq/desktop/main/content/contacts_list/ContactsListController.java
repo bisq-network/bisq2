@@ -133,8 +133,8 @@ public class ContactsListController implements Controller {
                         item.getTag().toLowerCase().contains(string) ||
                         item.getTrustScore().toLowerCase().contains(string) ||
                         item.getUserProfile().getNym().toLowerCase().contains(string) ||
-                        item.getTotalScoreString().contains(string) ||
-                        item.getProfileAgeString().contains(string));
+                        item.getTotalScoreString().toLowerCase().contains(string) ||
+                        item.getProfileAgeString().toLowerCase().contains(string));
         applyPredicates();
     }
 
