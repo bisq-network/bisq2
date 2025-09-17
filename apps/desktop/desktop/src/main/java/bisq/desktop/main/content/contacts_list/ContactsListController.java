@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.content.contacts_list;
 
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatService;
 import bisq.common.data.Pair;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
@@ -47,6 +49,7 @@ public class ContactsListController implements Controller {
     private final ReputationService reputationService;
     private final UserProfileService userProfileService;
     private final ContactListService contactListService;
+    private final ChatService chatService;
     private Pin proofOfBurnScoreChangedFlagPin,
             bondedReputationScoreChangedFlagPin, signedWitnessScoreChangedFlagPin,
             accountAgeScoreChangedFlagPin, contactsListEntriesPin;
@@ -55,9 +58,9 @@ public class ContactsListController implements Controller {
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         reputationService = serviceProvider.getUserService().getReputationService();
         contactListService = serviceProvider.getUserService().getContactListService();
+        chatService = serviceProvider.getChatService();
 
         model = new ContactsListModel();
-
         view = new ContactsListView(model, this);
     }
 
@@ -117,6 +120,17 @@ public class ContactsListController implements Controller {
         model.getListItems().clear();
     }
 
+    void onOpenPrivateChat(String userProfileId) {
+        userProfileService.findUserProfile(userProfileId)
+                .ifPresent(this::createAndSelectTwoPartyPrivateChatChannel);
+    }
+
+    void onShowMoreInfo(UserProfile userProfile) {
+        // TODO: change to new page in ProfileCard
+        Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
+                new ProfileCardController.InitData(userProfile));
+    }
+
     void onRemoveContact(ContactListEntry contactListEntry) {
         new Popup().warning(Res.get("network.contactList.table.columns.actionsMenu.removeContact"))
                 .actionButtonText(Res.get("confirmation.yes"))
@@ -136,11 +150,6 @@ public class ContactsListController implements Controller {
                         item.getTotalScoreString().toLowerCase().contains(string) ||
                         item.getProfileAgeString().toLowerCase().contains(string));
         applyPredicates();
-    }
-
-    void openProfileCard(UserProfile userProfile) {
-        Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
-                new ProfileCardController.InitData(userProfile));
     }
 
     private void doRemoveContact(ContactListEntry contactListEntry) {
@@ -164,5 +173,11 @@ public class ContactsListController implements Controller {
                 model.getFilterItemPredicate().test(item) &&
                         model.getSearchStringPredicate().test(item)
         );
+    }
+
+    private void createAndSelectTwoPartyPrivateChatChannel(UserProfile peer) {
+        // Private chats are all using the DISCUSSION ChatChannelDomain
+        chatService.createAndSelectTwoPartyPrivateChatChannel(ChatChannelDomain.DISCUSSION, peer)
+                .ifPresent(channel -> Navigation.navigateTo(NavigationTarget.CHAT_PRIVATE));
     }
 }

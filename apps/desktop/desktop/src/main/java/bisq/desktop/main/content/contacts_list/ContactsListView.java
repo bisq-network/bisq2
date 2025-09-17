@@ -175,11 +175,11 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                     userProfileIcon.setUseSecondTick(false);
                     userProfileIcon.setUserProfile(item.getUserProfile());
                     userProfileIcon.getStyleClass().add("hand-cursor");
-                    userName.setOnMouseClicked(e -> controller.openProfileCard(item.getUserProfile()));
+//                    userName.setOnMouseClicked(e -> controller.openProfileCard(item.getUserProfile()));
                     setGraphic(hBox);
                 } else {
                     userProfileIcon.dispose();
-                    userName.setOnMouseClicked(null);
+//                    userName.setOnMouseClicked(null);
                     setGraphic(null);
                 }
             }
@@ -221,13 +221,14 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                 actionsMenuBox.setAlignment(Pos.CENTER);
 
                 openPrivateChatMenuItem.useIconOnly();
-                openPrivateChatMenuItem.setTooltip(Res.get("network.contactList.table.columns.actionsMenu.openPrivateChat.tooltip"));
-
+                openPrivateChatMenuItem.setTooltip(
+                        Res.get("network.contactList.table.columns.actionsMenu.openPrivateChat.tooltip"));
                 showMoreInfoMenuItem.useIconOnly();
-                showMoreInfoMenuItem.setTooltip(Res.get("network.contactList.table.columns.actionsMenu.showMoreInfo.tooltip"));
-
+                showMoreInfoMenuItem.setTooltip(
+                        Res.get("network.contactList.table.columns.actionsMenu.showMoreInfo.tooltip"));
                 removeContactMenuItem.useIconOnly();
-                removeContactMenuItem.setTooltip(Res.get("network.contactList.table.columns.actionsMenu.removeContact.tooltip"));
+                removeContactMenuItem.setTooltip(
+                        Res.get("network.contactList.table.columns.actionsMenu.removeContact.tooltip"));
             }
 
             @Override
@@ -240,10 +241,17 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                 if (item != null && !empty) {
                     setUpRowEventHandlersAndListeners();
                     setGraphic(mainBox);
-                    removeContactMenuItem.setOnAction(e -> controller.onRemoveContact(item.getContactListEntry()));
+                    openPrivateChatMenuItem.setOnAction(
+                            e -> controller.onOpenPrivateChat(item.getUserProfile().getId()));
+                    showMoreInfoMenuItem.setOnAction(
+                            e -> controller.onShowMoreInfo(item.getUserProfile()));
+                    removeContactMenuItem.setOnAction(
+                            e -> controller.onRemoveContact(item.getContactListEntry()));
                 } else {
                     resetRowEventHandlersAndListeners();
                     resetVisibilities();
+                    openPrivateChatMenuItem.setOnAction(null);
+                    showMoreInfoMenuItem.setOnAction(null);
                     removeContactMenuItem.setOnAction(null);
                     setGraphic(null);
                 }
@@ -294,8 +302,8 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
         private final ContactsListController controller;
 
         private final String userName, profileAgeString, trustScore, tag, notes, contactReasonString;
-        private ReputationScore reputationScore;
         private final long profileAge;
+        private ReputationScore reputationScore;
         private long totalScore;
         private String totalScoreString;
 
