@@ -624,7 +624,7 @@ public class TradeWizardAmountController implements Controller {
                     .max()
                     .orElse(0L);
             Monetary highestPossibleAmountFromSellers = BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, market, highestScore)
-                    .orElse(Fiat.from(0, market.getQuoteCurrencyCode()));
+                    .orElseGet(() -> Fiat.from(0, market.getQuoteCurrencyCode()));
             if (isCreateOfferMode) {
                 amountSelectionController.setRightMarkerQuoteSideValue(highestPossibleAmountFromSellers);
             }
@@ -656,7 +656,7 @@ public class TradeWizardAmountController implements Controller {
         long myReputationScore = reputationService.getReputationScore(myProfileId).getTotalScore();
         model.setMyReputationScore(myReputationScore);
         model.setReputationBasedMaxAmount(BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, model.getMarket(), myReputationScore)
-                .orElse(Fiat.fromValue(0, model.getMarket().getQuoteCurrencyCode()))
+                .orElseGet(() -> Fiat.fromValue(0, model.getMarket().getQuoteCurrencyCode()))
         );
     }
 

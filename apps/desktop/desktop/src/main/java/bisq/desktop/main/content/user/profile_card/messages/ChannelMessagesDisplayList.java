@@ -188,7 +188,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
         private String getUserName(String userProfileId) {
             return userProfileService.findUserProfile(userProfileId)
                     .map(UserProfile::getUserName)
-                    .orElse(Res.get("data.na"));
+                    .orElseGet(() -> Res.get("data.na"));
         }
 
         private void onGoToMessage(PublicChatMessage publicChatMessage) {

@@ -159,7 +159,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                     addMessage(takeOfferMessage, channel);
                     return networkService.confidentialSend(takeOfferMessage, maker.getNetworkId(), myUserIdentity.getNetworkIdWithKeyPair());
                 })
-                .orElse(CompletableFuture.failedFuture(new RuntimeException("makerUserProfile not found from message.authorUserProfileId")));
+                .orElseGet(() -> CompletableFuture.failedFuture(new RuntimeException("makerUserProfile not found from message.authorUserProfileId")));
     }
 
     public CompletableFuture<SendMessageResult> sendTradeLogMessage(String text,

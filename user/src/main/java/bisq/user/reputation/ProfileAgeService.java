@@ -246,6 +246,6 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
                         .map(authorizedData -> (AuthorizedTimestampData) authorizedData.getAuthorizedDistributedData())
                         .map(AuthorizedTimestampData::getProfileId)
                         .collect(Collectors.toSet()))
-                .orElse(Collections.emptySet());
+                .orElseGet(Collections::emptySet);
     }
 }

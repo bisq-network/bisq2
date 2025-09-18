@@ -138,7 +138,7 @@ public class AuthorizationService {
         return myPreferredAuthorizationTokenTypes.stream()
                 .filter(peersAuthorizationTokenTypes::contains)
                 .findFirst()
-                .orElse(peersAuthorizationTokenTypes.get(0));
+                .orElseGet(peersAuthorizationTokenTypes::getFirst);
     }
 
     private static List<AuthorizationTokenType> toAuthorizationTypes(Collection<Feature> features) {

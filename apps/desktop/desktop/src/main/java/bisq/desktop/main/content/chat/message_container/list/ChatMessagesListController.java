@@ -588,7 +588,7 @@ public class ChatMessagesListController implements Controller {
     public String getUserName(String userProfileId) {
         return userProfileService.findUserProfile(userProfileId)
                 .map(UserProfile::getUserName)
-                .orElse(Res.get("data.na"));
+                .orElseGet(() -> Res.get("data.na"));
     }
 
     public void onResendMessage(String messageId) {

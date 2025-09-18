@@ -470,7 +470,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                         return false;
                     }
                     boolean doRedaction = trade.getTradeCompletedDate().map(date -> date < redactDate)
-                            .orElse(trade.getContract().getTakeOfferDate() < redactDateForNotCompletedTrades);
+                            .orElseGet(() -> trade.getContract().getTakeOfferDate() < redactDateForNotCompletedTrades);
                     if (doRedaction) {
                         trade.getPaymentAccountData().set(Res.get("data.redacted"));
                     }

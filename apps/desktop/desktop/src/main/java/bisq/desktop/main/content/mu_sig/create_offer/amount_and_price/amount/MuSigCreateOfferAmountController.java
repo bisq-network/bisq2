@@ -528,7 +528,7 @@ public class MuSigCreateOfferAmountController implements Controller {
                     .max()
                     .orElse(0L);
             Monetary highestPossibleAmountFromSellers = MuSigTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, market, highestScore)
-                    .orElse(Monetary.from(0, market.getQuoteCurrencyCode()));
+                    .orElseGet(() -> Monetary.from(0, market.getQuoteCurrencyCode()));
             amountSelectionController.setRightMarkerQuoteSideValue(highestPossibleAmountFromSellers);
             if (amountSelectionController.getMaxOrFixedQuoteSideAmount().get() == null) {
                 amountSelectionController.setMaxOrFixedQuoteSideAmount(defaultAmount);
@@ -552,7 +552,7 @@ public class MuSigCreateOfferAmountController implements Controller {
         long myReputationScore = reputationService.getReputationScore(myProfileId).getTotalScore();
         model.setMyReputationScore(myReputationScore);
         model.setReputationBasedMaxAmount(MuSigTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, model.getMarket(), myReputationScore)
-                .orElse(Fiat.fromValue(0, model.getMarket().getQuoteCurrencyCode()))
+                .orElseGet(() -> Fiat.fromValue(0, model.getMarket().getQuoteCurrencyCode()))
         );
     }
 

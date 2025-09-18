@@ -438,7 +438,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     public ObservableHashMap<String, Observable<MessageDeliveryStatus>> getMessageDeliveryStatusByMessageId() {
         return messageDeliveryStatusService.map(MessageDeliveryStatusService::getMessageDeliveryStatusByMessageId)
-                .orElse(new ObservableHashMap<>());
+                .orElseGet(ObservableHashMap::new);
     }
 
     public Set<NetworkLoadService> getNetworkLoadServices() {
@@ -501,7 +501,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     /* --------------------------------------------------------------------- */
 
     public Set<ResendMessageData> getPendingResendMessageDataSet() {
-        return resendMessageService.map(ResendMessageService::getPendingResendMessageDataSet).orElse(new HashSet<>());
+        return resendMessageService.map(ResendMessageService::getPendingResendMessageDataSet).orElseGet(HashSet::new);
     }
 
     public Set<ConfidentialMessageService> getConfidentialMessageServices() {

@@ -69,8 +69,8 @@ public class BondedRolesListItem {
         isBanned = bondedRole.isBanned() ? Res.get("confirmation.yes") : "";
         UserProfileService userProfileService = userService.getUserProfileService();
         userProfile = userProfileService.findUserProfile(authorizedBondedRoleData.getProfileId());
-        userProfileId = userProfile.map(UserProfile::getId).orElse(Res.get("data.na"));
-        userName = userProfile.map(UserProfile::getUserName).orElse(Res.get("data.na"));
+        userProfileId = userProfile.map(UserProfile::getId).orElseGet(() -> Res.get("data.na"));
+        userName = userProfile.map(UserProfile::getUserName).orElseGet(() -> Res.get("data.na"));
         bondUserName = authorizedBondedRoleData.getBondUserName();
         signature = authorizedBondedRoleData.getSignatureBase64();
         bondedRoleType = authorizedBondedRoleData.getBondedRoleType();
