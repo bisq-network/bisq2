@@ -126,8 +126,7 @@ public class ContactsListController implements Controller {
     }
 
     void onShowMoreInfo(UserProfile userProfile) {
-        // TODO: change to new page in ProfileCard
-        Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
+        Navigation.navigateTo(NavigationTarget.PROFILE_CARD_MY_NOTES,
                 new ProfileCardController.InitData(userProfile));
     }
 
