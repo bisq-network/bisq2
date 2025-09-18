@@ -21,6 +21,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.main.content.user.profile_card.ProfileCardView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -52,9 +53,9 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
         VBox contentBox = new VBox(10, myNotesDataHBox, Spacer.fillVBox(), disclaimerLabel);
         contentBox.getStyleClass().add("bisq-common-bg");
         contentBox.setAlignment(Pos.TOP_LEFT);
-        contentBox.setMinHeight(307);
-        contentBox.setPrefHeight(307);
-        contentBox.setMaxHeight(307);
+        contentBox.setMinHeight(ProfileCardView.SUB_VIEWS_CONTENT_HEIGHT);
+        contentBox.setPrefHeight(ProfileCardView.SUB_VIEWS_CONTENT_HEIGHT);
+        contentBox.setMaxHeight(ProfileCardView.SUB_VIEWS_CONTENT_HEIGHT);
 
         root.getChildren().add(contentBox);
         root.setPadding(new Insets(20, 0, 20, 0));
