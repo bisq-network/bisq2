@@ -41,7 +41,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
     public final static double SUB_VIEWS_CONTENT_HEIGHT = 307;
 
     private final ProfileCardController controller;
-    private final TabButton offersTabButton, messagesTabButton;
+    private final TabButton offersTabButton, messagesTabButton, myNotesTabButton;
     private UserProfileIcon userProfileIcon;
     private ReputationScoreDisplay reputationScoreDisplay;
     private Label userNickNameLabel, userNymLabel, totalRepScoreLabel, rankingLabel;
@@ -65,6 +65,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         messagesTabButton = addTab("", NavigationTarget.PROFILE_CARD_MESSAGES);
         addTab(Res.get("user.profileCard.tab.reputation"), NavigationTarget.PROFILE_CARD_REPUTATION);
         addTab(Res.get("user.profileCard.tab.details"), NavigationTarget.PROFILE_CARD_DETAILS);
+        myNotesTabButton = addTab(Res.get("user.profileCard.tab.myNotes"), NavigationTarget.PROFILE_CARD_MY_NOTES);
     }
 
     @Override
