@@ -108,6 +108,8 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         addToContacts.managedProperty().bind(model.getIsUserInMyContactList().not());
         inMyContactList.visibleProperty().bind(model.getIsUserInMyContactList());
         inMyContactList.managedProperty().bind(model.getIsUserInMyContactList());
+        myNotesTabButton.visibleProperty().bind(model.getIsUserInMyContactList());
+        myNotesTabButton.managedProperty().bind(model.getIsUserInMyContactList());
 
         sendPrivateMsg.setOnAction(e -> controller.onSendPrivateMessage());
         ignore.setOnAction(e -> controller.onToggleIgnoreUser());
@@ -128,6 +130,8 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         addToContacts.managedProperty().unbind();
         inMyContactList.visibleProperty().unbind();
         inMyContactList.managedProperty().unbind();
+        myNotesTabButton.visibleProperty().unbind();
+        myNotesTabButton.managedProperty().unbind();
 
         sendPrivateMsg.setOnAction(null);
         ignore.setOnAction(null);
