@@ -17,18 +17,54 @@
 
 package bisq.desktop.main.content.user.profile_card.my_notes;
 
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.MaterialTextField;
+import bisq.i18n.Res;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+import java.util.Locale;
+
 public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, ProfileCardMyNotesController> {
+    private final Label disclaimerLabel;
+    private final MaterialTextField contactReason;
 
     public ProfileCardMyNotesView(ProfileCardMyNotesModel model,
                                   ProfileCardMyNotesController controller) {
         super(new VBox(), model, controller);
+
+        contactReason = new MaterialTextField(Res.get("user.profileCard.myNotes.contactReason").toUpperCase(Locale.ROOT));
+        contactReason.setEditable(false);
+        VBox vBox = new VBox(contactReason);
+
+        HBox myNotesDataHBox = new HBox(10, vBox);
+
+        disclaimerLabel = new Label();
+        disclaimerLabel.setGraphicTextGap(7);
+        disclaimerLabel.setGraphic(ImageUtil.getImageViewById("icon-info-grey"));
+        disclaimerLabel.getStyleClass().addAll("text-fill-grey-dimmed", "compact-text");
+
+        VBox contentBox = new VBox(10, myNotesDataHBox, Spacer.fillVBox(), disclaimerLabel);
+        contentBox.getStyleClass().add("bisq-common-bg");
+        contentBox.setAlignment(Pos.TOP_LEFT);
+        contentBox.setMinHeight(307);
+        contentBox.setPrefHeight(307);
+        contentBox.setMaxHeight(307);
+
+        root.getChildren().add(contentBox);
+        root.setPadding(new Insets(20, 0, 20, 0));
+        root.getStyleClass().add("my-notes");
     }
 
     @Override
     protected void onViewAttached() {
+        contactReason.setText(model.getContactReason());
+        disclaimerLabel.setText(model.getDisclaimerText());
     }
 
     @Override

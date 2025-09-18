@@ -19,6 +19,8 @@ package bisq.desktop.main.content.user.profile_card.my_notes;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
+import bisq.user.contact_list.ContactListEntry;
+import bisq.user.contact_list.ContactListService;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
 
@@ -26,8 +28,11 @@ public class ProfileCardMyNotesController implements Controller {
     @Getter
     private final ProfileCardMyNotesView view;
     private final ProfileCardMyNotesModel model;
+    private final ContactListService contactListService;
 
     public ProfileCardMyNotesController(ServiceProvider serviceProvider) {
+        contactListService = serviceProvider.getUserService().getContactListService();
+
         model = new ProfileCardMyNotesModel();
         view = new ProfileCardMyNotesView(model, this);
     }
@@ -41,5 +46,9 @@ public class ProfileCardMyNotesController implements Controller {
     }
 
     public void setUserProfile(UserProfile userProfile) {
+        model.setUserProfile(userProfile);
+        ContactListEntry contactListEntry = contactListService.findContactListEntry(userProfile).orElseThrow();
+        model.setContactListEntry(contactListEntry);
+        model.setContactReason(contactListEntry.getContactReason().getDisplayString());
     }
 }
