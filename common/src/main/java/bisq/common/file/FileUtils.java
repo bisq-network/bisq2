@@ -40,13 +40,17 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Objects;
@@ -63,6 +67,11 @@ import java.util.stream.Stream;
 @Slf4j
 public class FileUtils {
     public static final String FILE_SEP = File.separator;
+    private static final boolean IS_POSIX = FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
+    private static final Set<PosixFilePermission> OWNER_READ_WRITE_PERMISSIONS =
+            EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE);
+    private static final Set<PosixFilePermission> OWNER_READ_WRITE_EXECUTE_PERMISSIONS =
+            EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE, PosixFilePermission.OWNER_EXECUTE);
 
     public static void write(String fileName, String data) throws IOException {
         write(fileName, data.getBytes(Charsets.UTF_8));
@@ -71,6 +80,9 @@ public class FileUtils {
     public static void write(String fileName, byte[] data) throws IOException {
         try (FileOutputStream outputStream = new FileOutputStream(fileName)) {
             outputStream.write(data);
+        }
+        if (IS_POSIX) {
+            Files.setPosixFilePermissions(Paths.get(fileName), OWNER_READ_WRITE_PERMISSIONS);
         }
     }
 
@@ -251,8 +263,17 @@ public class FileUtils {
     }
 
     public static void makeDirs(File dir) throws IOException {
-        if (!dir.exists() && !dir.mkdirs()) {
-            throw new IOException("Could not make dir " + dir);
+        if (IS_POSIX) {
+            if (!dir.exists()) {
+                Files.createDirectories(dir.toPath(),
+                        PosixFilePermissions.asFileAttribute(OWNER_READ_WRITE_EXECUTE_PERMISSIONS));
+            } else {
+                Files.setPosixFilePermissions(dir.toPath(), OWNER_READ_WRITE_EXECUTE_PERMISSIONS);
+            }
+        } else {
+            if (!dir.exists() && !dir.mkdirs()) {
+                throw new IOException("Cannot create directory " + dir.getAbsolutePath());
+            }
         }
     }
 
@@ -262,12 +283,27 @@ public class FileUtils {
         }
     }
 
+    public static FileOutputStream newFileOutputStreamWithPermissions(String name) throws IOException {
+        Path path = Paths.get(name);
+        if (IS_POSIX) {
+            if (!Files.exists(path)) {
+                Files.createFile(path, PosixFilePermissions.asFileAttribute(OWNER_READ_WRITE_PERMISSIONS));
+            } else {
+                Files.setPosixFilePermissions(path, OWNER_READ_WRITE_PERMISSIONS);
+            }
+        }
+        return new FileOutputStream(path.toFile());
+    }
+
     public static void writeToFile(String string, File file) throws IOException {
         try (FileWriter fileWriter = new FileWriter(file.getAbsolutePath())) {
             fileWriter.write(string);
         } catch (IOException e) {
             log.warn("Could not write {} to file {}", string, file);
             throw e;
+        }
+        if (IS_POSIX) {
+            Files.setPosixFilePermissions(file.toPath(), OWNER_READ_WRITE_PERMISSIONS);
         }
     }
 
