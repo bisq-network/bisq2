@@ -87,4 +87,10 @@ public class ContactListService implements PersistenceClient<ContactListStore>, 
         return persistableStore.getContactListEntries().stream()
                 .anyMatch(contactListEntry -> contactListEntry.getUserProfile().equals(userProfile));
     }
+
+    public Optional<ContactListEntry> findContactListEntry(UserProfile userProfile) {
+        return persistableStore.getContactListEntries().stream()
+                .filter(contactListEntry -> contactListEntry.getUserProfile().equals(userProfile))
+                .findAny();
+    }
 }

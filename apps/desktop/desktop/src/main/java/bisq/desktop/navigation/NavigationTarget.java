@@ -139,6 +139,7 @@ public enum NavigationTarget {
     PROFILE_CARD_REPUTATION(PROFILE_CARD, false),
     PROFILE_CARD_OFFERS(PROFILE_CARD, false),
     PROFILE_CARD_MESSAGES(PROFILE_CARD, false),
+    PROFILE_CARD_MY_NOTES(PROFILE_CARD, false),
 
 
     /* --------------------------------------------------------------------- */
