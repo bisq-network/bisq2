@@ -748,7 +748,7 @@
 
 /*******************************************************************************
  *                                                                             *
- * SelectableLabel                                                      *
+ * SelectableLabel                                                             *
  *                                                                             *
  ******************************************************************************/
 
@@ -773,4 +773,24 @@
     -fx-background-color: transparent;
     -fx-background-insets: 0;
     -fx-background-radius: 0;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * TransparentTextField                                                        *
+ *                                                                             *
+ ******************************************************************************/
+
+.transparent-text-field .material-text-field-bg,
+.transparent-text-field .material-text-field-bg-hover {
+    -fx-background-color: -bisq-dark-grey-20;
+}
+
+.transparent-text-field .material-text-field-description-small {
+    -fx-font-size: 0.9em;
+}
+
+.transparent-text-field .material-text-field {
+    -fx-font-size: 1.1em;
 }

@@ -251,19 +251,6 @@
     -fx-text-fill: -bisq2-green;
 }
 
-.profile-card .my-notes .material-text-field-bg,
-.profile-card .my-notes .material-text-field-bg-hover {
-    -fx-background-color: -bisq-dark-grey-20;
-}
-
-.profile-card .my-notes .material-text-field-description-small {
-    -fx-font-size: 0.9em;
-}
-
-.profile-card .my-notes .material-text-field {
-    -fx-font-size: 1.1em;
-}
-
 
 /*******************************************************************************
  * Create Account Summary View                                                 *
