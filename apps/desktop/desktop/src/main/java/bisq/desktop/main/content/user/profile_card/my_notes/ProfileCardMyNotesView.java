@@ -20,7 +20,7 @@ package bisq.desktop.main.content.user.profile_card.my_notes;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.TransparentTextField;
 import bisq.desktop.main.content.user.profile_card.ProfileCardView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -29,18 +29,17 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-import java.util.Locale;
-
 public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, ProfileCardMyNotesController> {
     private final Label disclaimerLabel;
-    private final MaterialTextField contactReason;
+    private final TransparentTextField contactReason;
 
     public ProfileCardMyNotesView(ProfileCardMyNotesModel model,
                                   ProfileCardMyNotesController controller) {
         super(new VBox(), model, controller);
 
-        contactReason = new MaterialTextField(Res.get("user.profileCard.myNotes.contactReason").toUpperCase(Locale.ROOT));
+        contactReason = new TransparentTextField(Res.get("user.profileCard.myNotes.contactReason"));
         contactReason.setEditable(false);
+        contactReason.setPrefWidth(250);
         VBox vBox = new VBox(contactReason);
 
         HBox myNotesDataHBox = new HBox(10, vBox);
