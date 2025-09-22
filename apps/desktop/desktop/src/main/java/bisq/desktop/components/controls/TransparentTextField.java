@@ -31,6 +31,7 @@ public class TransparentTextField extends MaterialTextField {
     private static final double TEXT_FIELD_WIDTH = 250;
     private static final double ICON_LAYOUT_Y = 4;
 
+    private final boolean isEditable;
     private final Button editButton, cancelButton, saveButton;
     private final ImageView editGreyIcon, editWhiteIcon, cancelGreyIcon, cancelWhiteIcon,
             saveGreyIcon, saveWhiteIcon, saveGreenIcon;
@@ -38,6 +39,8 @@ public class TransparentTextField extends MaterialTextField {
 
     public TransparentTextField(String description, boolean isEditable) {
         super(description.toUpperCase(Locale.ROOT));
+
+        this.isEditable = isEditable;
 
         getStyleClass().add("transparent-text-field");
         setPrefWidth(TEXT_FIELD_WIDTH);
@@ -62,14 +65,21 @@ public class TransparentTextField extends MaterialTextField {
                 Res.get("user.profileCard.myNotes.transparentTextField.buttonTooltip.cancel"),
                 TEXT_FIELD_WIDTH - 30);
         getChildren().addAll(editButton, saveButton, cancelButton);
+    }
 
+    public void initialize() {
         if (isEditable) {
             attachListeners();
             updateButtons(false);
+        } else {
+            hideButtons();
         }
     }
 
     public void dispose() {
+        setToNonEditingMode();
+        selectionLine.setOpacity(0);
+
         if (saveOrCancelScheduler != null) {
             saveOrCancelScheduler.stop();
             saveOrCancelScheduler = null;
@@ -94,11 +104,6 @@ public class TransparentTextField extends MaterialTextField {
         cancelButton.setOnMouseExited(null);
         cancelButton.setOnMouseClicked(null);
         cancelButton.setOnAction(null);
-    }
-
-    @Override
-    protected double getBgHeight() {
-        return 56;
     }
 
     @Override
@@ -213,5 +218,14 @@ public class TransparentTextField extends MaterialTextField {
         button.setManaged(false);
         button.setTooltip(new BisqTooltip(tooltip));
         return button;
+    }
+
+    private void hideButtons() {
+        editButton.setVisible(false);
+        editButton.setManaged(false);
+        cancelButton.setVisible(false);
+        cancelButton.setManaged(false);
+        saveButton.setVisible(false);
+        saveButton.setManaged(false);
     }
 }

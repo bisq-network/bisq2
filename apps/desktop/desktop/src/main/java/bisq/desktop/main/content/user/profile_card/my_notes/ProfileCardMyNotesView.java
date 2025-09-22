@@ -65,9 +65,14 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
         contactReasonTextField.setText(model.getContactReason());
         tagTextField.setText(model.getTag().get());
         disclaimerLabel.setText(model.getDisclaimerText());
+
+        contactReasonTextField.initialize();
+        tagTextField.initialize();
     }
 
     @Override
     protected void onViewDetached() {
+        contactReasonTextField.dispose();
+        tagTextField.dispose();
     }
 }
