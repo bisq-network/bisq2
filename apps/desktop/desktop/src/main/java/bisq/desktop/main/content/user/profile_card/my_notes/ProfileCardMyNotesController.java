@@ -49,10 +49,12 @@ public class ProfileCardMyNotesController implements Controller {
         contactListService.findContactListEntry(userProfile).ifPresentOrElse(contactListEntry -> {
                 model.setContactListEntry(contactListEntry);
                 model.setContactReason(contactListEntry.getContactReason().getDisplayString());
+                model.getTag().set(contactListEntry.getTag().orElse(""));
             },
             () -> {
                 model.setContactListEntry(null);
                 model.setContactReason(null);
+                model.getTag().set("");
             });
     }
 }

@@ -804,3 +804,10 @@
     -fx-background-color: rgba(255, 255, 255, 0.1);
     -fx-background-radius: 8 8 0 0;
 }
+
+.transparent-text-field .button.icon-buttons {
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+    -fx-focus-traversable: false;
+    -fx-cursor: hand;
+}

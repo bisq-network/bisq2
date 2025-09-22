@@ -1127,6 +1127,26 @@
     -fx-image: url("/images/icons/flip-fields-arrows-green.png");
 }
 
+#close-mid-grey {
+    -fx-image: url("/images/icons/close-mid-icon-grey.png");
+}
+
+#close-mid-white {
+    -fx-image: url("/images/icons/close-mid-icon-white.png");
+}
+
+#save-grey {
+    -fx-image: url("/images/icons/save-icon-grey.png");
+}
+
+#save-white {
+    -fx-image: url("/images/icons/save-icon-white.png");
+}
+
+#save-green {
+    -fx-image: url("/images/icons/save-icon-green.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat */

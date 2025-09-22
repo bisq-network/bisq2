@@ -30,20 +30,15 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, ProfileCardMyNotesController> {
-    private static final double TEXT_FIELD_WIDTH = 250;
-
-    private final Label disclaimerLabel;
     private final TransparentTextField contactReasonTextField, tagTextField;
+    private final Label disclaimerLabel;
 
     public ProfileCardMyNotesView(ProfileCardMyNotesModel model,
                                   ProfileCardMyNotesController controller) {
         super(new VBox(), model, controller);
 
         tagTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.tag"), true);
-        tagTextField.setPrefWidth(TEXT_FIELD_WIDTH);
-
         contactReasonTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.contactReason"), false);
-        contactReasonTextField.setPrefWidth(TEXT_FIELD_WIDTH);
         VBox vBox = new VBox(20, tagTextField, contactReasonTextField);
 
         HBox myNotesDataHBox = new HBox(10, vBox);
@@ -68,6 +63,7 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
     @Override
     protected void onViewAttached() {
         contactReasonTextField.setText(model.getContactReason());
+        tagTextField.setText(model.getTag().get());
         disclaimerLabel.setText(model.getDisclaimerText());
     }
 
