@@ -31,16 +31,16 @@ import javafx.scene.layout.VBox;
 
 public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, ProfileCardMyNotesController> {
     private final Label disclaimerLabel;
-    private final TransparentTextField contactReason;
+    private final TransparentTextField contactReasonTextField;
 
     public ProfileCardMyNotesView(ProfileCardMyNotesModel model,
                                   ProfileCardMyNotesController controller) {
         super(new VBox(), model, controller);
 
-        contactReason = new TransparentTextField(Res.get("user.profileCard.myNotes.contactReason"));
-        contactReason.setEditable(false);
-        contactReason.setPrefWidth(250);
-        VBox vBox = new VBox(contactReason);
+        contactReasonTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.contactReason"));
+        contactReasonTextField.setEditable(false);
+        contactReasonTextField.setPrefWidth(250);
+        VBox vBox = new VBox(contactReasonTextField);
 
         HBox myNotesDataHBox = new HBox(10, vBox);
 
@@ -63,7 +63,7 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
 
     @Override
     protected void onViewAttached() {
-        contactReason.setText(model.getContactReason());
+        contactReasonTextField.setText(model.getContactReason());
         disclaimerLabel.setText(model.getDisclaimerText());
     }
 
