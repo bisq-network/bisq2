@@ -85,12 +85,12 @@ public class ContactListService implements PersistenceClient<ContactListStore>, 
 
     public boolean isUserInContactList(UserProfile userProfile) {
         return persistableStore.getContactListEntries().stream()
-                .anyMatch(contactListEntry -> contactListEntry.getUserProfile().equals(userProfile));
+                .anyMatch(contactListEntry -> contactListEntry.getUserProfile().getId().equals(userProfile.getId()));
     }
 
     public Optional<ContactListEntry> findContactListEntry(UserProfile userProfile) {
         return persistableStore.getContactListEntries().stream()
-                .filter(contactListEntry -> contactListEntry.getUserProfile().equals(userProfile))
+                .filter(contactListEntry -> contactListEntry.getUserProfile().getId().equals(userProfile.getId()))
                 .findAny();
     }
 }
