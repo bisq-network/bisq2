@@ -35,7 +35,7 @@ public class TransparentTextField extends MaterialTextField {
     private final Button editButton, cancelButton, saveButton;
     private final ImageView editGreyIcon, editWhiteIcon, cancelGreyIcon, cancelWhiteIcon,
             saveGreyIcon, saveWhiteIcon, saveGreenIcon;
-    private static UIScheduler saveOrCancelScheduler, editScheduler;
+    private UIScheduler saveOrCancelScheduler, editScheduler;
 
     public TransparentTextField(String description, boolean isEditable) {
         super(description.toUpperCase(Locale.ROOT));
