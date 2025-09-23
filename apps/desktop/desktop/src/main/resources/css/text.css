@@ -787,10 +787,27 @@
     -fx-background-color: -bisq-dark-grey-20;
 }
 
-.transparent-text-field .material-text-field-description-small {
+.transparent-text-field .material-text-field-description-small,
+.transparent-text-field .material-text-field-description-big {
     -fx-font-size: 0.9em;
 }
 
 .transparent-text-field .material-text-field {
     -fx-font-size: 1.1em;
+}
+
+.transparent-text-field .material-text-field-line {
+    -fx-opacity: 0.25;
+}
+
+.transparent-text-field .active-bg {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 8 8 0 0;
+}
+
+.transparent-text-field .button.icon-buttons {
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+    -fx-focus-traversable: false;
+    -fx-cursor: hand;
 }

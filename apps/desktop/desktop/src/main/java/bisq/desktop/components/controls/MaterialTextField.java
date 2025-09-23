@@ -73,7 +73,7 @@ public class MaterialTextField extends Pane {
     protected final BisqIconButton iconButton = new BisqIconButton();
     protected final ValidationControl validationControl;
     private final BooleanProperty isValid = new SimpleBooleanProperty(false);
-    private Optional<StringConverter<?>> stringConverter = Optional.empty();
+    protected Optional<StringConverter<?>> stringConverter = Optional.empty();
     private ChangeListener<Number> iconButtonHeightListener;
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> onWidthChanged(newValue.doubleValue());
@@ -125,6 +125,7 @@ public class MaterialTextField extends Pane {
         line.setPrefHeight(1);
         line.setStyle("-fx-background-color: -bisq-mid-grey-20");
         line.setMouseTransparent(true);
+        line.getStyleClass().add("material-text-field-line");
 
         selectionLine.setPrefWidth(0);
         selectionLine.setPrefHeight(2);
@@ -533,13 +534,7 @@ public class MaterialTextField extends Pane {
     }
 
     void update() {
-        if (StringUtils.isNotEmpty(descriptionLabel.getText())) {
-            if (showInputTextField()) {
-                Transitions.animateLayoutY(descriptionLabel, 6.5, ManagedDuration.getOneSixthOfDefaultDurationMillis(), null);
-            } else {
-                Transitions.animateLayoutY(descriptionLabel, 16.5, ManagedDuration.getOneSixthOfDefaultDurationMillis(), null);
-            }
-        }
+        animateDescriptionLabel();
 
         helpLabel.setVisible(StringUtils.isNotEmpty(getHelpText()) && StringUtils.isEmpty(errorLabel.getText()));
         helpLabel.setManaged(helpLabel.isVisible());
@@ -581,6 +576,16 @@ public class MaterialTextField extends Pane {
         setOpacity(textInputControl.isDisabled() ? 0.35 : 1);
         UIThread.runOnNextRenderFrame(this::layoutIconButton);
         layout();
+    }
+
+    protected void animateDescriptionLabel() {
+        if (StringUtils.isNotEmpty(descriptionLabel.getText())) {
+            if (showInputTextField()) {
+                Transitions.animateLayoutY(descriptionLabel, 6.5, ManagedDuration.getOneSixthOfDefaultDurationMillis(), null);
+            } else {
+                Transitions.animateLayoutY(descriptionLabel, 16.5, ManagedDuration.getOneSixthOfDefaultDurationMillis(), null);
+            }
+        }
     }
 
     protected void removeBgStyles() {

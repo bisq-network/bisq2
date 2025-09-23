@@ -30,17 +30,16 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, ProfileCardMyNotesController> {
+    private final TransparentTextField contactReasonTextField, tagTextField;
     private final Label disclaimerLabel;
-    private final TransparentTextField contactReason;
 
     public ProfileCardMyNotesView(ProfileCardMyNotesModel model,
                                   ProfileCardMyNotesController controller) {
         super(new VBox(), model, controller);
 
-        contactReason = new TransparentTextField(Res.get("user.profileCard.myNotes.contactReason"));
-        contactReason.setEditable(false);
-        contactReason.setPrefWidth(250);
-        VBox vBox = new VBox(contactReason);
+        tagTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.tag"), true);
+        contactReasonTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.contactReason"), false);
+        VBox vBox = new VBox(20, tagTextField, contactReasonTextField);
 
         HBox myNotesDataHBox = new HBox(10, vBox);
 
@@ -63,11 +62,17 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
 
     @Override
     protected void onViewAttached() {
-        contactReason.setText(model.getContactReason());
+        contactReasonTextField.setText(model.getContactReason());
+        tagTextField.setText(model.getTag().get());
         disclaimerLabel.setText(model.getDisclaimerText());
+
+        contactReasonTextField.initialize();
+        tagTextField.initialize();
     }
 
     @Override
     protected void onViewDetached() {
+        contactReasonTextField.dispose();
+        tagTextField.dispose();
     }
 }
