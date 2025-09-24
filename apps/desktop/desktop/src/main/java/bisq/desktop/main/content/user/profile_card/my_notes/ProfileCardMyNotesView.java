@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.profile_card.my_notes;
 
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -37,7 +38,8 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
                                   ProfileCardMyNotesController controller) {
         super(new VBox(), model, controller);
 
-        tagTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.tag"), true, controller::onSaveTag);
+        tagTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.tag"), true,
+                controller::onSaveTag, this::cancelEditingTag);
         contactReasonTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.contactReason"), false);
         VBox vBox = new VBox(20, tagTextField, contactReasonTextField);
 
@@ -74,5 +76,9 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
     protected void onViewDetached() {
         contactReasonTextField.dispose();
         tagTextField.dispose();
+    }
+
+    private void cancelEditingTag() {
+        UIThread.run(() -> tagTextField.setText(model.getTag().get()));
     }
 }
