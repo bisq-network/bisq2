@@ -33,9 +33,9 @@ public final class ContactListEntry implements PersistableProto {
     private final UserProfile userProfile;
     private final long date; // Data when the entry was added
     private final ContactReason contactReason; // What was the reason of the contact
-    private final Optional<Double> trustScore; // 0-1, 1 = 100% - highest trust score
-    private final Optional<String> tag; // Short tag for quick identification
-    private final Optional<String> notes;
+    private Optional<Double> trustScore; // 0-1, 1 = 100% - highest trust score
+    private Optional<String> tag; // Short tag for quick identification
+    private Optional<String> notes;
 
     public ContactListEntry(UserProfile userProfile, ContactReason contactReason) {
         this(userProfile, System.currentTimeMillis(),
@@ -83,5 +83,17 @@ public final class ContactListEntry implements PersistableProto {
                 OptionalUtils.optionalIf(proto.hasTrustScore(), proto::getTrustScore),
                 OptionalUtils.optionalIf(proto.hasTag(), proto::getTag),
                 OptionalUtils.optionalIf(proto.hasNotes(), proto::getNotes));
+    }
+
+    void setTrustScore(Double newTrustScore) {
+        trustScore = Optional.of(newTrustScore);
+    }
+
+    void setTag(String newTag) {
+        tag = newTag != null ? Optional.of(newTag) : Optional.empty();
+    }
+
+    void setNotes(String newNotes) {
+        notes = newNotes != null ? Optional.of(newNotes) : Optional.empty();
     }
 }

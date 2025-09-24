@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.profile_card.my_notes;
 
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.user.contact_list.ContactListService;
 import bisq.user.profile.UserProfile;
@@ -56,5 +57,12 @@ public class ProfileCardMyNotesController implements Controller {
                 model.setContactReason(null);
                 model.getTag().set("");
             });
+    }
+
+    void onSaveTag(String newTag) {
+        UIThread.run(() -> {
+            contactListService.setTag(model.getContactListEntry(), newTag.trim());
+            model.getTag().set(newTag);
+        });
     }
 }

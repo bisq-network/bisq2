@@ -37,7 +37,7 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
                                   ProfileCardMyNotesController controller) {
         super(new VBox(), model, controller);
 
-        tagTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.tag"), true);
+        tagTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.tag"), true, controller::onSaveTag);
         contactReasonTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.contactReason"), false);
         VBox vBox = new VBox(20, tagTextField, contactReasonTextField);
 

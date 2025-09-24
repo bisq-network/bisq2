@@ -26,6 +26,7 @@ import javafx.scene.image.ImageView;
 import javafx.util.StringConverter;
 
 import java.util.Locale;
+import java.util.function.Consumer;
 
 public class TransparentTextField extends MaterialTextField {
     private static final double TEXT_FIELD_WIDTH = 250;
@@ -35,17 +36,23 @@ public class TransparentTextField extends MaterialTextField {
     private final Button editButton, cancelButton, saveButton;
     private final ImageView editGreyIcon, editWhiteIcon, cancelGreyIcon, cancelWhiteIcon,
             saveGreyIcon, saveWhiteIcon, saveGreenIcon;
+    private final Consumer<String> onSaveClicked;
     private UIScheduler saveOrCancelScheduler, editScheduler;
 
     public TransparentTextField(String description, boolean isEditable) {
+        this(description, isEditable, null);
+    }
+
+    public TransparentTextField(String description, boolean isEditable, Consumer<String> onSaveClicked) {
         super(description.toUpperCase(Locale.ROOT));
 
         this.isEditable = isEditable;
+        this.onSaveClicked = onSaveClicked;
 
         getStyleClass().add("transparent-text-field");
         setPrefWidth(TEXT_FIELD_WIDTH);
-        descriptionLabel.setLayoutY(6.5);
         setEditable(false);
+        descriptionLabel.setLayoutY(6.5);
 
         editGreyIcon = ImageUtil.getImageViewById("edit-grey");
         editWhiteIcon = ImageUtil.getImageViewById("edit-white");
@@ -165,7 +172,9 @@ public class TransparentTextField extends MaterialTextField {
                 } catch (Exception ignore) {
                 }
             });
-            validate();
+            if (validate() && onSaveClicked != null) {
+                onSaveClicked.accept(getText());
+            }
             transitionToNonEditingMode();
         });
     }
