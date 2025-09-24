@@ -22,8 +22,10 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.TransparentTextField;
+import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
 import bisq.desktop.main.content.user.profile_card.ProfileCardView;
 import bisq.i18n.Res;
+import bisq.user.contact_list.ContactListService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -31,6 +33,11 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, ProfileCardMyNotesController> {
+    private static final TextMaxLengthValidator TAG_MAX_LENGTH_VALIDATOR =
+            new TextMaxLengthValidator(Res.get("user.profileCard.myNotes.transparentTextField.tag.maxLength",
+                    ContactListService.CONTACT_LIST_ENTRY_MAX_TAG_LENGTH),
+                    ContactListService.CONTACT_LIST_ENTRY_MAX_TAG_LENGTH);
+
     private final TransparentTextField contactReasonTextField, tagTextField;
     private final Label disclaimerLabel;
 
@@ -40,6 +47,7 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
 
         tagTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.tag"), true,
                 controller::onSaveTag, this::cancelEditingTag);
+        tagTextField.setValidator(TAG_MAX_LENGTH_VALIDATOR);
         contactReasonTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.contactReason"), false);
         VBox vBox = new VBox(20, tagTextField, contactReasonTextField);
 

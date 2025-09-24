@@ -91,6 +91,7 @@ public class TransparentTextField extends MaterialTextField {
     public void dispose() {
         setToNonEditingMode();
         selectionLine.setOpacity(0);
+        resetValidation();
 
         if (saveOrCancelScheduler != null) {
             saveOrCancelScheduler.stop();
@@ -166,12 +167,12 @@ public class TransparentTextField extends MaterialTextField {
         cancelButton.setOnAction(e -> {
             Transitions.fadeOut(selectionLine, 200);
             transitionToNonEditingMode();
+            resetValidation();
             if (onCancelClicked != null) {
                 onCancelClicked.run();
             }
         });
         saveButton.setOnAction(e -> {
-            Transitions.fadeOut(selectionLine, 200);
             stringConverter.ifPresent(stringConverter -> {
                 try {
                     Object o = stringConverter.fromString(getText());
@@ -180,9 +181,14 @@ public class TransparentTextField extends MaterialTextField {
                 } catch (Exception ignore) {
                 }
             });
-            transitionToNonEditingMode();
-            if (validate() && onSaveClicked != null) {
-                onSaveClicked.accept(getText());
+            if (validate()) {
+                Transitions.fadeOut(selectionLine, 200);
+                transitionToNonEditingMode();
+                resetValidation();
+                if (onSaveClicked != null) {
+                    onSaveClicked.accept(getText());
+
+                }
             }
         });
     }
