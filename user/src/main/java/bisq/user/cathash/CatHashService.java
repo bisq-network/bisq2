@@ -78,8 +78,8 @@ public abstract class CatHashService<T> {
         File iconFile = Paths.get(iconsDir.getAbsolutePath(), userProfileId + ".raw").toFile();
 
         if (size > MAX_ICON_SIZE) {
-            log.warn("Size for cat hash image is {}. We limit size to max. {}px as the png files for the image composition " +
-                    "are of that size.", MAX_ICON_SIZE, size);
+            log.warn("Size for cat hash image is {} px. We limit size to max. {} px as the png files for the image composition " +
+                    "are of that size.", size, MAX_ICON_SIZE);
             size = MAX_ICON_SIZE;
         }
         boolean useCache = size <= getSizeOfCachedIcons();

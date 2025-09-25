@@ -107,6 +107,22 @@ public class InventoryRequestService implements Node.Listener {
         }
     }
 
+    @Override
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
+        String key = getKey(connection);
+        if (requestHandlerMap.containsKey(key)) {
+            requestHandlerMap.get(key).dispose();
+            requestHandlerMap.remove(key);
+            numPendingRequests.set(requestHandlerMap.size());
+        }
+
+        if (node.getNumConnections() == 0) {
+            // After reconnected we start a new inventory request by setting the allDataReceived to false
+            log.warn("We have lost all connections. We reset allDataReceived to false so that we trigger a new inventory request once we are reconnected.");
+            allDataReceived.set(false);
+        }
+    }
+
     private void requestInventoryFromFreshConnection(Connection connection) {
         requestInventory(connection)
                 .whenComplete((inventory, throwable) -> {
@@ -119,7 +135,6 @@ public class InventoryRequestService implements Node.Listener {
                         if (!allDataReceived.get()) {
                             if (inventory.allDataReceived()) {
                                 allDataReceived.set(true);
-                                node.removeListener(this);
                                 startPeriodicRequests(config.getRepeatRequestInterval());
                             } else {
                                 // We use same connection for repeated request until we have all data
@@ -137,16 +152,6 @@ public class InventoryRequestService implements Node.Listener {
                         getCandidatesForPeriodicRequests().stream().limit(3).forEach(this::requestInventory);
                     }
                 });
-    }
-
-    @Override
-    public void onDisconnect(Connection connection, CloseReason closeReason) {
-        String key = getKey(connection);
-        if (requestHandlerMap.containsKey(key)) {
-            requestHandlerMap.get(key).dispose();
-            requestHandlerMap.remove(key);
-            numPendingRequests.set(requestHandlerMap.size());
-        }
     }
 
 
