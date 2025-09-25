@@ -42,6 +42,9 @@ public abstract class CatHashService<T> {
     // Larger images are used only rarely and are not cached.
     public static final double SIZE_OF_CACHED_ICONS = 60;
 
+    // We limit size to max. 300 px as the png files for the image composition are of that size.
+    public static final double MAX_ICON_SIZE = 300;
+
     // This is a 120*120 image meaning 14400 pixels. At 4 bytes each, that takes 57.6 KB in memory (and on disk as we use raw format).
     // With 5000 images we would get about 288 MB.
     private static final int MAX_CACHE_SIZE = 5000;
@@ -74,10 +77,10 @@ public abstract class CatHashService<T> {
         File iconsDir = Paths.get(getCatHashIconsDirectory().toString(), "v" + avatarVersion).toFile();
         File iconFile = Paths.get(iconsDir.getAbsolutePath(), userProfileId + ".raw").toFile();
 
-        if (size > 300) {
-            log.warn("Size for cat hash image is {}. We limit size to max. 300 px as the png files for the image composition " +
-                    "are of that size.", size);
-            size = 300;
+        if (size > MAX_ICON_SIZE) {
+            log.warn("Size for cat hash image is {} px. We limit size to max. {} px as the png files for the image composition " +
+                    "are of that size.", size, MAX_ICON_SIZE);
+            size = MAX_ICON_SIZE;
         }
         boolean useCache = size <= getSizeOfCachedIcons();
         if (useCache) {
