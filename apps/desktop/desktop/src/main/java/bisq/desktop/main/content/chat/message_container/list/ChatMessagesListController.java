@@ -604,17 +604,12 @@ public class ChatMessagesListController implements Controller {
     }
 
     public void onDismissChatRulesWarning() {
-        dontShowAgainService.putDontShowAgain(DONT_SHOW_CHAT_RULES_WARNING_KEY, true);
-
-        model.getSortedChatMessages().stream()
-                .filter(item -> item.getChatMessage().getChatMessageType() == ChatMessageType.CHAT_RULES_WARNING)
-                .findFirst()
-                .ifPresent(itemToRemove -> {
-                    UIThread.run(() -> {
-                        itemToRemove.dispose();
-                        model.getChatMessages().remove(itemToRemove);
-                    });
-                });
+        new Popup().information(Res.get("chat.private.chatRulesWarningMessage.onDismissChatRulesPopup.info"))
+                .closeButtonText(Res.get("chat.private.chatRulesWarningMessage.onDismissChatRulesPopup.closeButtonText"))
+                .onClose(this::permanentlyDismissChatRulesWarning)
+                .actionButtonText(Res.get("chat.private.chatRulesWarningMessage.onDismissChatRulesPopup.actionButtonText"))
+                .onAction(this::dismissChatRulesWarningJustOnce)
+                .show();
     }
 
     public void onClickQuoteMessage(Optional<String> chatMessageId) {
@@ -916,7 +911,6 @@ public class ChatMessagesListController implements Controller {
                 authorizedBondedRolesService);
     }
 
-
     private Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> getPredicate() {
         return item -> {
             Optional<UserProfile> senderUserProfile = item.getSenderUserProfile();
@@ -945,5 +939,26 @@ public class ChatMessagesListController implements Controller {
 
             return isCorrectMessageType;
         };
+    }
+
+    private void dismissChatRulesWarningJustOnce() {
+        deleteChatRulesWarning();
+    }
+
+    private void permanentlyDismissChatRulesWarning() {
+        dontShowAgainService.putDontShowAgain(DONT_SHOW_CHAT_RULES_WARNING_KEY, true);
+        deleteChatRulesWarning();
+    }
+
+    private void deleteChatRulesWarning() {
+        model.getSortedChatMessages().stream()
+            .filter(item -> item.getChatMessage().getChatMessageType() == ChatMessageType.CHAT_RULES_WARNING)
+            .findFirst()
+            .ifPresent(itemToRemove -> {
+                UIThread.run(() -> {
+                    itemToRemove.dispose();
+                    model.getChatMessages().remove(itemToRemove);
+                });
+            });
     }
 }
