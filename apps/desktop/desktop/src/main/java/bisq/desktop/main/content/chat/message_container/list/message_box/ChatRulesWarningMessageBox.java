@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 public final class ChatRulesWarningMessageBox extends MessageBox {
     private final Hyperlink learnMoreLink;
     private final BisqMenuItem closeIcon;
-    private final Tooltip closeTooltip = new BisqTooltip(Res.get("action.dontShowAgain"));
+    private final Tooltip closeTooltip = new BisqTooltip(Res.get("action.close"));
 
     public ChatRulesWarningMessageBox(
             ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
