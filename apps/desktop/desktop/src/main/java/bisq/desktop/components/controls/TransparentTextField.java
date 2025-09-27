@@ -26,6 +26,7 @@ import javafx.scene.image.ImageView;
 import javafx.util.StringConverter;
 
 import java.util.Locale;
+import java.util.function.Consumer;
 
 public class TransparentTextField extends MaterialTextField {
     private static final double TEXT_FIELD_WIDTH = 250;
@@ -35,17 +36,28 @@ public class TransparentTextField extends MaterialTextField {
     private final Button editButton, cancelButton, saveButton;
     private final ImageView editGreyIcon, editWhiteIcon, cancelGreyIcon, cancelWhiteIcon,
             saveGreyIcon, saveWhiteIcon, saveGreenIcon;
+    private final Consumer<String> onSaveClicked;
+    private final Runnable onCancelClicked;
     private UIScheduler saveOrCancelScheduler, editScheduler;
 
     public TransparentTextField(String description, boolean isEditable) {
+        this(description, isEditable, null, null);
+    }
+
+    public TransparentTextField(String description,
+                                boolean isEditable,
+                                Consumer<String> onSaveClicked,
+                                Runnable onCancelClicked) {
         super(description.toUpperCase(Locale.ROOT));
 
         this.isEditable = isEditable;
+        this.onSaveClicked = onSaveClicked;
+        this.onCancelClicked = onCancelClicked;
 
         getStyleClass().add("transparent-text-field");
         setPrefWidth(TEXT_FIELD_WIDTH);
-        descriptionLabel.setLayoutY(6.5);
         setEditable(false);
+        descriptionLabel.setLayoutY(6.5);
 
         editGreyIcon = ImageUtil.getImageViewById("edit-grey");
         editWhiteIcon = ImageUtil.getImageViewById("edit-white");
@@ -79,6 +91,7 @@ public class TransparentTextField extends MaterialTextField {
     public void dispose() {
         setToNonEditingMode();
         selectionLine.setOpacity(0);
+        resetValidation();
 
         if (saveOrCancelScheduler != null) {
             saveOrCancelScheduler.stop();
@@ -154,9 +167,12 @@ public class TransparentTextField extends MaterialTextField {
         cancelButton.setOnAction(e -> {
             Transitions.fadeOut(selectionLine, 200);
             transitionToNonEditingMode();
+            resetValidation();
+            if (onCancelClicked != null) {
+                onCancelClicked.run();
+            }
         });
         saveButton.setOnAction(e -> {
-            Transitions.fadeOut(selectionLine, 200);
             stringConverter.ifPresent(stringConverter -> {
                 try {
                     Object o = stringConverter.fromString(getText());
@@ -165,8 +181,15 @@ public class TransparentTextField extends MaterialTextField {
                 } catch (Exception ignore) {
                 }
             });
-            validate();
-            transitionToNonEditingMode();
+            if (validate()) {
+                Transitions.fadeOut(selectionLine, 200);
+                transitionToNonEditingMode();
+                resetValidation();
+                if (onSaveClicked != null) {
+                    onSaveClicked.accept(getText());
+
+                }
+            }
         });
     }
 

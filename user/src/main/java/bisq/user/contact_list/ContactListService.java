@@ -36,6 +36,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class ContactListService implements PersistenceClient<ContactListStore>, DataService.Listener, Service {
+    public final static int CONTACT_LIST_ENTRY_MAX_TAG_LENGTH = 30;
+    public final static int CONTACT_LIST_ENTRY_MAX_NOTES_LENGTH = 1000;
+    public final static double CONTACT_LIST_ENTRY_MIN_TRUST_SCORE = 0;
+    public final static double CONTACT_LIST_ENTRY_MAX_TRUST_SCORE = 1;
+
     @Getter
     private final ContactListStore persistableStore = new ContactListStore();
     @Getter
@@ -92,5 +97,42 @@ public class ContactListService implements PersistenceClient<ContactListStore>, 
         return persistableStore.getContactListEntries().stream()
                 .filter(contactListEntry -> contactListEntry.getUserProfile().getId().equals(userProfile.getId()))
                 .findAny();
+    }
+
+    public void setTag(ContactListEntry contactListEntry, String newTag) {
+        if (newTag == null || newTag.length() > CONTACT_LIST_ENTRY_MAX_TAG_LENGTH) {
+            return;
+        }
+
+        persistableStore.getContactListEntries().stream()
+                .filter(cle -> cle.equals(contactListEntry))
+                .findFirst()
+                .ifPresent(cle -> cle.setTag(newTag));
+        persist();
+    }
+
+    public void setNotes(ContactListEntry contactListEntry, String newNotes) {
+        if (newNotes == null || newNotes.length() > CONTACT_LIST_ENTRY_MAX_NOTES_LENGTH) {
+            return;
+        }
+
+        persistableStore.getContactListEntries().stream()
+                .filter(cle -> cle.equals(contactListEntry))
+                .findFirst()
+                .ifPresent(cle -> cle.setNotes(newNotes));
+        persist();
+    }
+
+    public void setTrustScore(ContactListEntry contactListEntry, Double newTrustScore) {
+        if (newTrustScore < CONTACT_LIST_ENTRY_MIN_TRUST_SCORE
+                || newTrustScore > CONTACT_LIST_ENTRY_MAX_TRUST_SCORE) {
+            return;
+        }
+
+        persistableStore.getContactListEntries().stream()
+                .filter(cle -> cle.equals(contactListEntry))
+                .findFirst()
+                .ifPresent(cle -> cle.setTrustScore(newTrustScore));
+        persist();
     }
 }
