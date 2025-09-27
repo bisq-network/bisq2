@@ -97,7 +97,7 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
     protected void onViewAttached() {
         tagTextField.setText(model.getTag().get());
         trustScoreTextField.setText(model.getTrustScore().get());
-        contactReasonTextField.setText(model.getContactReason());
+        contactReasonTextField.setText(model.getContactReasonAndDate());
         notesTextArea.setText(model.getNotes().get());
         disclaimerLabel.setText(model.getDisclaimerText());
 

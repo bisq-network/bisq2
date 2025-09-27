@@ -36,7 +36,7 @@ public class ProfileCardMyNotesModel implements Model {
     @Setter
     private ContactListEntry contactListEntry;
     @Setter
-    private String contactReason = "";
+    private String contactReasonAndDate = "";
     private final StringProperty tag = new SimpleStringProperty("");
     private final StringProperty trustScore = new SimpleStringProperty("");
     private final StringProperty notes = new SimpleStringProperty("");

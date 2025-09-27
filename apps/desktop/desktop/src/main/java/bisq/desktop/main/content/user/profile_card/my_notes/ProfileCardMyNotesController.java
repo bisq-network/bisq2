@@ -20,6 +20,8 @@ package bisq.desktop.main.content.user.profile_card.my_notes;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.i18n.Res;
+import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.user.contact_list.ContactListEntry;
 import bisq.user.contact_list.ContactListService;
@@ -53,15 +55,15 @@ public class ProfileCardMyNotesController implements Controller {
                 model.setContactListEntry(contactListEntry);
                 model.getTag().set(contactListEntry.getTag().orElse(""));
                 model.getTrustScore().set(getPercentageTrustScore(contactListEntry));
-                model.setContactReason(contactListEntry.getContactReason().getDisplayString());
                 model.getNotes().set(contactListEntry.getNotes().orElse(""));
+                model.setContactReasonAndDate(getContactReasonAndDate(contactListEntry));
             },
             () -> {
                 model.setContactListEntry(null);
                 model.getTag().set("");
                 model.getTrustScore().set("");
-                model.setContactReason("");
                 model.getNotes().set("");
+                model.setContactReasonAndDate("");
             });
     }
 
@@ -105,5 +107,11 @@ public class ProfileCardMyNotesController implements Controller {
         return contactListEntry.getTrustScore()
                 .map(PercentageFormatter::formatToPercentWithSymbol)
                 .orElse("");
+    }
+
+    private String getContactReasonAndDate(ContactListEntry contactListEntry) {
+        String contactReason = contactListEntry.getContactReason().getDisplayString();
+        String date = DateFormatter.formatDayMonthOrDayMonthYear(contactListEntry.getDate());
+        return Res.get("user.profileCard.myNotes.transparentTextField.contactReason", contactReason, date);
     }
 }
