@@ -605,10 +605,11 @@ public class ChatMessagesListController implements Controller {
 
     public void onDismissChatRulesWarning() {
         new Popup().information(Res.get("chat.private.chatRulesWarningMessage.onDismissChatRulesPopup.info"))
-                .closeButtonText(Res.get("chat.private.chatRulesWarningMessage.onDismissChatRulesPopup.closeButtonText"))
-                .onClose(this::permanentlyDismissChatRulesWarning)
+                .hideCloseButton()
+                .secondaryActionButtonText(Res.get("chat.private.chatRulesWarningMessage.onDismissChatRulesPopup.secondaryActionButtonText"))
+                .onSecondaryAction(this::dismissChatRulesWarningJustOnce)
                 .actionButtonText(Res.get("chat.private.chatRulesWarningMessage.onDismissChatRulesPopup.actionButtonText"))
-                .onAction(this::dismissChatRulesWarningJustOnce)
+                .onAction(this::permanentlyDismissChatRulesWarning)
                 .show();
     }
 
