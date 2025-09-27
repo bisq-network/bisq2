@@ -54,12 +54,14 @@ public class ProfileCardMyNotesController implements Controller {
                 model.getTag().set(contactListEntry.getTag().orElse(""));
                 model.getTrustScore().set(getPercentageTrustScore(contactListEntry));
                 model.setContactReason(contactListEntry.getContactReason().getDisplayString());
+                model.getNotes().set(contactListEntry.getNotes().orElse(""));
             },
             () -> {
                 model.setContactListEntry(null);
                 model.getTag().set("");
                 model.getTrustScore().set("");
-                model.setContactReason(null);
+                model.setContactReason("");
+                model.getNotes().set("");
             });
     }
 
@@ -88,6 +90,15 @@ public class ProfileCardMyNotesController implements Controller {
             }
         }
         return false;
+    }
+
+    void onSaveNotes(String newNotes) {
+        UIThread.run(() -> {
+            if (model.getContactListEntry() != null) {
+                contactListService.setNotes(model.getContactListEntry(), newNotes);
+                model.getNotes().set(newNotes);
+            }
+        });
     }
 
     private String getPercentageTrustScore(ContactListEntry contactListEntry) {

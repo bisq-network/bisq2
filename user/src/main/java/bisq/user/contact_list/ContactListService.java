@@ -37,7 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class ContactListService implements PersistenceClient<ContactListStore>, DataService.Listener, Service {
     public final static int CONTACT_LIST_ENTRY_MAX_TAG_LENGTH = 30;
-    public final static int CONTACT_LIST_ENTRY_MAX_NOTES_LENGTH = 1000;
+    public final static int CONTACT_LIST_ENTRY_MAX_NOTES_LENGTH = 600;
     public final static double CONTACT_LIST_ENTRY_MIN_TRUST_SCORE = 0;
     public final static double CONTACT_LIST_ENTRY_MAX_TRUST_SCORE = 1;
 

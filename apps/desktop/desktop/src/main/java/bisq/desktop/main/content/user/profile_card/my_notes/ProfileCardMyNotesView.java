@@ -21,6 +21,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.TransparentTextArea;
 import bisq.desktop.components.controls.TransparentTextField;
 import bisq.desktop.components.controls.validator.PercentageValidator;
 import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
@@ -44,27 +45,36 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
                     ContactListService.CONTACT_LIST_ENTRY_MAX_TRUST_SCORE * 100),
                     ContactListService.CONTACT_LIST_ENTRY_MIN_TRUST_SCORE,
                     ContactListService.CONTACT_LIST_ENTRY_MAX_TRUST_SCORE);
+    private static final TextMaxLengthValidator NOTES_MAX_LENGTH_VALIDATOR =
+            new TextMaxLengthValidator(Res.get("user.profileCard.myNotes.transparentTextField.notes.maxLength",
+                    ContactListService.CONTACT_LIST_ENTRY_MAX_NOTES_LENGTH),
+                    ContactListService.CONTACT_LIST_ENTRY_MAX_NOTES_LENGTH);
 
     private final TransparentTextField contactReasonTextField, tagTextField, trustScoreTextField;
+    private final TransparentTextArea notesTextArea;
     private final Label disclaimerLabel;
 
     public ProfileCardMyNotesView(ProfileCardMyNotesModel model,
                                   ProfileCardMyNotesController controller) {
         super(new VBox(), model, controller);
 
-        tagTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.tag"), true,
+        tagTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.tag"),
                 controller::onSaveTag, this::cancelEditingTag);
         tagTextField.setValidator(TAG_MAX_LENGTH_VALIDATOR);
 
-        trustScoreTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.trustScore"), true,
+        trustScoreTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.trustScore"),
                 this::saveTrustScore, this::cancelEditingTrustScore);
         trustScoreTextField.setValidator(TRUST_SCORE_RANGE_VALIDATOR);
 
-        contactReasonTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.contactReason"), false);
+        contactReasonTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.contactReason"));
 
         VBox vBox = new VBox(20, tagTextField, trustScoreTextField, contactReasonTextField);
 
-        HBox myNotesDataHBox = new HBox(10, vBox);
+        notesTextArea = new TransparentTextArea(Res.get("user.profileCard.myNotes.notes"),
+                controller::onSaveNotes, this::cancelEditingNotes);
+        notesTextArea.setValidator(NOTES_MAX_LENGTH_VALIDATOR);
+
+        HBox myNotesDataHBox = new HBox(50, vBox, notesTextArea);
 
         disclaimerLabel = new Label();
         disclaimerLabel.setGraphicTextGap(7);
@@ -88,11 +98,13 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
         tagTextField.setText(model.getTag().get());
         trustScoreTextField.setText(model.getTrustScore().get());
         contactReasonTextField.setText(model.getContactReason());
+        notesTextArea.setText(model.getNotes().get());
         disclaimerLabel.setText(model.getDisclaimerText());
 
         tagTextField.initialize();
         trustScoreTextField.initialize();
         contactReasonTextField.initialize();
+        notesTextArea.initialize();
     }
 
     @Override
@@ -100,6 +112,7 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
         trustScoreTextField.dispose();
         tagTextField.dispose();
         contactReasonTextField.dispose();
+        notesTextArea.dispose();
     }
 
     private void cancelEditingTag() {
@@ -117,5 +130,9 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
 
     private void cancelEditingTrustScore() {
         trustScoreTextField.setText(model.getTrustScore().get());
+    }
+
+    private void cancelEditingNotes() {
+        notesTextArea.setText(model.getNotes().get());
     }
 }
