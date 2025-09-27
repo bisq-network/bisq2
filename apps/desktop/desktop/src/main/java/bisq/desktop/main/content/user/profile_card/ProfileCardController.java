@@ -168,6 +168,17 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     public void onDeactivate() {
     }
 
+    @Override
+    public void onActivateInternal() {
+        super.onActivateInternal();
+
+        if (model.getSelectedTabButton().get() != null
+                && model.getSelectedTabButton().get().getNavigationTarget() == NavigationTarget.PROFILE_CARD_MY_NOTES
+                && !model.getIsUserInMyContactList().get()) {
+            Navigation.navigateTo(NavigationTarget.PROFILE_CARD_OVERVIEW);
+        }
+    }
+
     boolean isUserProfileBanned() {
         return bannedUserService.isUserProfileBanned(model.getUserProfile());
     }

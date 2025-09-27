@@ -124,7 +124,8 @@ public class ContactListService implements PersistenceClient<ContactListStore>, 
     }
 
     public void setTrustScore(ContactListEntry contactListEntry, Double newTrustScore) {
-        if (newTrustScore < CONTACT_LIST_ENTRY_MIN_TRUST_SCORE
+        if (newTrustScore == null
+                || newTrustScore < CONTACT_LIST_ENTRY_MIN_TRUST_SCORE
                 || newTrustScore > CONTACT_LIST_ENTRY_MAX_TRUST_SCORE) {
             return;
         }

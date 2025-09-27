@@ -61,8 +61,11 @@ public class ProfileCardMyNotesController implements Controller {
 
     void onSaveTag(String newTag) {
         UIThread.run(() -> {
-            contactListService.setTag(model.getContactListEntry(), newTag.trim());
-            model.getTag().set(newTag);
+            if (model.getContactListEntry() != null) {
+                String trimmedNewTag = newTag.trim();
+                contactListService.setTag(model.getContactListEntry(), trimmedNewTag);
+                model.getTag().set(trimmedNewTag);
+            }
         });
     }
 }
