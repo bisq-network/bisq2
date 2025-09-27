@@ -20,6 +20,8 @@ package bisq.desktop.main.content.user.profile_card.my_notes;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.presentation.formatters.PercentageFormatter;
+import bisq.user.contact_list.ContactListEntry;
 import bisq.user.contact_list.ContactListService;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
@@ -49,13 +51,15 @@ public class ProfileCardMyNotesController implements Controller {
         model.setUserProfile(userProfile);
         contactListService.findContactListEntry(userProfile).ifPresentOrElse(contactListEntry -> {
                 model.setContactListEntry(contactListEntry);
-                model.setContactReason(contactListEntry.getContactReason().getDisplayString());
                 model.getTag().set(contactListEntry.getTag().orElse(""));
+                model.getTrustScore().set(getPercentageTrustScore(contactListEntry));
+                model.setContactReason(contactListEntry.getContactReason().getDisplayString());
             },
             () -> {
                 model.setContactListEntry(null);
-                model.setContactReason(null);
                 model.getTag().set("");
+                model.getTrustScore().set("");
+                model.setContactReason(null);
             });
     }
 
@@ -67,5 +71,28 @@ public class ProfileCardMyNotesController implements Controller {
                 model.getTag().set(trimmedNewTag);
             }
         });
+    }
+
+    boolean onSaveTrustScore(String newTrustScore) {
+        if (model.getContactListEntry() != null) {
+            String trimmed = newTrustScore.trim().replace("%", "");
+            try {
+                double percent = Double.parseDouble(trimmed);
+                double trustScore = percent / 100.0;
+                ContactListEntry contactListEntry = model.getContactListEntry();
+                contactListService.setTrustScore(contactListEntry, trustScore);
+                model.getTrustScore().set(getPercentageTrustScore(contactListEntry));
+                return true;
+            } catch (NumberFormatException e) {
+                model.getTrustScore().set(model.getTrustScore().get());
+            }
+        }
+        return false;
+    }
+
+    private String getPercentageTrustScore(ContactListEntry contactListEntry) {
+        return contactListEntry.getTrustScore()
+                .map(PercentageFormatter::formatToPercentWithSymbol)
+                .orElse("");
     }
 }

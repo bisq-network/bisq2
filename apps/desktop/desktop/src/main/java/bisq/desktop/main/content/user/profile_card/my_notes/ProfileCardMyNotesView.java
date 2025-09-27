@@ -22,6 +22,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.TransparentTextField;
+import bisq.desktop.components.controls.validator.PercentageValidator;
 import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
 import bisq.desktop.main.content.user.profile_card.ProfileCardView;
 import bisq.i18n.Res;
@@ -37,8 +38,14 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
             new TextMaxLengthValidator(Res.get("user.profileCard.myNotes.transparentTextField.tag.maxLength",
                     ContactListService.CONTACT_LIST_ENTRY_MAX_TAG_LENGTH),
                     ContactListService.CONTACT_LIST_ENTRY_MAX_TAG_LENGTH);
+    private static final PercentageValidator TRUST_SCORE_RANGE_VALIDATOR =
+            new PercentageValidator(Res.get("user.profileCard.myNotes.transparentTextField.trustScore.range",
+                    ContactListService.CONTACT_LIST_ENTRY_MIN_TRUST_SCORE * 100,
+                    ContactListService.CONTACT_LIST_ENTRY_MAX_TRUST_SCORE * 100),
+                    ContactListService.CONTACT_LIST_ENTRY_MIN_TRUST_SCORE,
+                    ContactListService.CONTACT_LIST_ENTRY_MAX_TRUST_SCORE);
 
-    private final TransparentTextField contactReasonTextField, tagTextField;
+    private final TransparentTextField contactReasonTextField, tagTextField, trustScoreTextField;
     private final Label disclaimerLabel;
 
     public ProfileCardMyNotesView(ProfileCardMyNotesModel model,
@@ -48,8 +55,14 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
         tagTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.tag"), true,
                 controller::onSaveTag, this::cancelEditingTag);
         tagTextField.setValidator(TAG_MAX_LENGTH_VALIDATOR);
+
+        trustScoreTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.trustScore"), true,
+                this::saveTrustScore, this::cancelEditingTrustScore);
+        trustScoreTextField.setValidator(TRUST_SCORE_RANGE_VALIDATOR);
+
         contactReasonTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.contactReason"), false);
-        VBox vBox = new VBox(20, tagTextField, contactReasonTextField);
+
+        VBox vBox = new VBox(20, tagTextField, trustScoreTextField, contactReasonTextField);
 
         HBox myNotesDataHBox = new HBox(10, vBox);
 
@@ -72,21 +85,37 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
 
     @Override
     protected void onViewAttached() {
-        contactReasonTextField.setText(model.getContactReason());
         tagTextField.setText(model.getTag().get());
+        trustScoreTextField.setText(model.getTrustScore().get());
+        contactReasonTextField.setText(model.getContactReason());
         disclaimerLabel.setText(model.getDisclaimerText());
 
-        contactReasonTextField.initialize();
         tagTextField.initialize();
+        trustScoreTextField.initialize();
+        contactReasonTextField.initialize();
     }
 
     @Override
     protected void onViewDetached() {
-        contactReasonTextField.dispose();
+        trustScoreTextField.dispose();
         tagTextField.dispose();
+        contactReasonTextField.dispose();
     }
 
     private void cancelEditingTag() {
-        UIThread.run(() -> tagTextField.setText(model.getTag().get()));
+        tagTextField.setText(model.getTag().get());
+    }
+
+    private void saveTrustScore(String newTrustScore) {
+        UIThread.run(() -> {
+            boolean wasSaved = controller.onSaveTrustScore(newTrustScore);
+            if (wasSaved) {
+                trustScoreTextField.setText(model.getTrustScore().get());
+            }
+        });
+    }
+
+    private void cancelEditingTrustScore() {
+        trustScoreTextField.setText(model.getTrustScore().get());
     }
 }
