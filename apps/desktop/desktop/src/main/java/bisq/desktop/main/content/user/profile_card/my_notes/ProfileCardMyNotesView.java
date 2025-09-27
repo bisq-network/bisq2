@@ -21,6 +21,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.TransparentTextArea;
 import bisq.desktop.components.controls.TransparentTextField;
 import bisq.desktop.components.controls.validator.PercentageValidator;
 import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
@@ -46,6 +47,7 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
                     ContactListService.CONTACT_LIST_ENTRY_MAX_TRUST_SCORE);
 
     private final TransparentTextField contactReasonTextField, tagTextField, trustScoreTextField;
+    private final TransparentTextArea notesTextArea;
     private final Label disclaimerLabel;
 
     public ProfileCardMyNotesView(ProfileCardMyNotesModel model,
@@ -64,7 +66,10 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
 
         VBox vBox = new VBox(20, tagTextField, trustScoreTextField, contactReasonTextField);
 
-        HBox myNotesDataHBox = new HBox(10, vBox);
+        notesTextArea = new TransparentTextArea(Res.get("user.profileCard.myNotes.notes"),
+                (test) -> {}, this::cancelEditingNotes);
+
+        HBox myNotesDataHBox = new HBox(50, vBox, notesTextArea);
 
         disclaimerLabel = new Label();
         disclaimerLabel.setGraphicTextGap(7);
@@ -88,11 +93,13 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
         tagTextField.setText(model.getTag().get());
         trustScoreTextField.setText(model.getTrustScore().get());
         contactReasonTextField.setText(model.getContactReason());
+        notesTextArea.setText(model.getNotes().get());
         disclaimerLabel.setText(model.getDisclaimerText());
 
         tagTextField.initialize();
         trustScoreTextField.initialize();
         contactReasonTextField.initialize();
+        notesTextArea.initialize();
     }
 
     @Override
@@ -100,6 +107,7 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
         trustScoreTextField.dispose();
         tagTextField.dispose();
         contactReasonTextField.dispose();
+        notesTextArea.dispose();
     }
 
     private void cancelEditingTag() {
@@ -117,5 +125,9 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
 
     private void cancelEditingTrustScore() {
         trustScoreTextField.setText(model.getTrustScore().get());
+    }
+
+    private void cancelEditingNotes() {
+        notesTextArea.setText(model.getNotes().get());
     }
 }

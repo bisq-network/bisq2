@@ -24,7 +24,7 @@ import javafx.scene.control.TextInputControl;
 import java.util.function.Consumer;
 
 public class TransparentTextArea extends TransparentTextField {
-    private static final double DEFAULT_HEIGHT = 128;
+    private static final double DEFAULT_HEIGHT = 208;
 
     private double height;
 
