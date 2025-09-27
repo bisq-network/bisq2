@@ -29,7 +29,7 @@ import java.util.Locale;
 import java.util.function.Consumer;
 
 public class TransparentTextField extends MaterialTextField {
-    private static final double TEXT_FIELD_WIDTH = 250;
+    private static final double DEFAULT_WIDTH = 250;
     private static final double ICON_LAYOUT_Y = 4;
 
     private final boolean isEditable;
@@ -55,7 +55,7 @@ public class TransparentTextField extends MaterialTextField {
         this.onCancelClicked = onCancelClicked;
 
         getStyleClass().add("transparent-text-field");
-        setPrefWidth(TEXT_FIELD_WIDTH);
+        setPrefWidth(DEFAULT_WIDTH);
         setEditable(false);
         descriptionLabel.setLayoutY(6.5);
 
@@ -69,13 +69,13 @@ public class TransparentTextField extends MaterialTextField {
 
         editButton = createAndGetIconButton(editGreyIcon,
                 Res.get("user.profileCard.myNotes.transparentTextField.buttonTooltip.edit"),
-                TEXT_FIELD_WIDTH - 30);
+                DEFAULT_WIDTH - 30);
         saveButton = createAndGetIconButton(saveGreyIcon,
                 Res.get("user.profileCard.myNotes.transparentTextField.buttonTooltip.save"),
-                TEXT_FIELD_WIDTH - 60);
+                DEFAULT_WIDTH - 60);
         cancelButton = createAndGetIconButton(cancelGreyIcon,
                 Res.get("user.profileCard.myNotes.transparentTextField.buttonTooltip.cancel"),
-                TEXT_FIELD_WIDTH - 30);
+                DEFAULT_WIDTH - 30);
         getChildren().addAll(editButton, saveButton, cancelButton);
     }
 
