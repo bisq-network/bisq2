@@ -54,20 +54,20 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
                                   ProfileCardMyNotesController controller) {
         super(new VBox(), model, controller);
 
-        tagTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.tag"), true,
+        tagTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.tag"),
                 controller::onSaveTag, this::cancelEditingTag);
         tagTextField.setValidator(TAG_MAX_LENGTH_VALIDATOR);
 
-        trustScoreTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.trustScore"), true,
+        trustScoreTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.trustScore"),
                 this::saveTrustScore, this::cancelEditingTrustScore);
         trustScoreTextField.setValidator(TRUST_SCORE_RANGE_VALIDATOR);
 
-        contactReasonTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.contactReason"), false);
+        contactReasonTextField = new TransparentTextField(Res.get("user.profileCard.myNotes.contactReason"));
 
         VBox vBox = new VBox(20, tagTextField, trustScoreTextField, contactReasonTextField);
 
         notesTextArea = new TransparentTextArea(Res.get("user.profileCard.myNotes.notes"),
-                (test) -> {}, this::cancelEditingNotes);
+                controller::onSaveNotes, this::cancelEditingNotes);
 
         HBox myNotesDataHBox = new HBox(50, vBox, notesTextArea);
 

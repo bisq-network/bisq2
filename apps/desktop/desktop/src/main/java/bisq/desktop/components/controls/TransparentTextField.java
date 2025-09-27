@@ -40,14 +40,28 @@ public class TransparentTextField extends MaterialTextField {
     private final Runnable onCancelClicked;
     private UIScheduler saveOrCancelScheduler, editScheduler;
 
-    public TransparentTextField(String description, boolean isEditable) {
-        this(description, isEditable, null, null);
+    public TransparentTextField(String description) {
+        this(description, false, null, null, DEFAULT_WIDTH);
     }
 
     public TransparentTextField(String description,
-                                boolean isEditable,
                                 Consumer<String> onSaveClicked,
                                 Runnable onCancelClicked) {
+        this(description, true, onSaveClicked, onCancelClicked, DEFAULT_WIDTH);
+    }
+
+    public TransparentTextField(String description,
+                                Consumer<String> onSaveClicked,
+                                Runnable onCancelClicked,
+                                double width) {
+        this(description, true, onSaveClicked, onCancelClicked, width);
+    }
+
+    private TransparentTextField(String description,
+                                boolean isEditable,
+                                Consumer<String> onSaveClicked,
+                                Runnable onCancelClicked,
+                                double width) {
         super(description.toUpperCase(Locale.ROOT));
 
         this.isEditable = isEditable;
@@ -55,7 +69,7 @@ public class TransparentTextField extends MaterialTextField {
         this.onCancelClicked = onCancelClicked;
 
         getStyleClass().add("transparent-text-field");
-        setPrefWidth(DEFAULT_WIDTH);
+        setPrefWidth(width);
         setEditable(false);
         descriptionLabel.setLayoutY(6.5);
 
@@ -69,13 +83,13 @@ public class TransparentTextField extends MaterialTextField {
 
         editButton = createAndGetIconButton(editGreyIcon,
                 Res.get("user.profileCard.myNotes.transparentTextField.buttonTooltip.edit"),
-                DEFAULT_WIDTH - 30);
+                width - 30);
         saveButton = createAndGetIconButton(saveGreyIcon,
                 Res.get("user.profileCard.myNotes.transparentTextField.buttonTooltip.save"),
-                DEFAULT_WIDTH - 60);
+                width - 60);
         cancelButton = createAndGetIconButton(cancelGreyIcon,
                 Res.get("user.profileCard.myNotes.transparentTextField.buttonTooltip.cancel"),
-                DEFAULT_WIDTH - 30);
+                width - 30);
         getChildren().addAll(editButton, saveButton, cancelButton);
     }
 

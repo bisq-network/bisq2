@@ -25,13 +25,14 @@ import java.util.function.Consumer;
 
 public class TransparentTextArea extends TransparentTextField {
     private static final double DEFAULT_HEIGHT = 208;
+    private static final double DEFAULT_WIDTH = 470;
 
     private double height;
 
     public TransparentTextArea(String description,
                                Consumer<String> onSaveClicked,
                                Runnable onCancelClicked) {
-        super(description, true, onSaveClicked, onCancelClicked);
+        super(description, onSaveClicked, onCancelClicked, DEFAULT_WIDTH);
 
         ((TextArea) textInputControl).setWrapText(true);
         textInputControl.setContextMenu(new ContextMenu());

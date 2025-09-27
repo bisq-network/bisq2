@@ -92,6 +92,15 @@ public class ProfileCardMyNotesController implements Controller {
         return false;
     }
 
+    void onSaveNotes(String newNotes) {
+        UIThread.run(() -> {
+            if (model.getContactListEntry() != null) {
+                contactListService.setNotes(model.getContactListEntry(), newNotes);
+                model.getNotes().set(newNotes);
+            }
+        });
+    }
+
     private String getPercentageTrustScore(ContactListEntry contactListEntry) {
         return contactListEntry.getTrustScore()
                 .map(PercentageFormatter::formatToPercentWithSymbol)
