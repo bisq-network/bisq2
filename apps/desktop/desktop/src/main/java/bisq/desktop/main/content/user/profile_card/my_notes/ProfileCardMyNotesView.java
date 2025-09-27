@@ -45,6 +45,10 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
                     ContactListService.CONTACT_LIST_ENTRY_MAX_TRUST_SCORE * 100),
                     ContactListService.CONTACT_LIST_ENTRY_MIN_TRUST_SCORE,
                     ContactListService.CONTACT_LIST_ENTRY_MAX_TRUST_SCORE);
+    private static final TextMaxLengthValidator NOTES_MAX_LENGTH_VALIDATOR =
+            new TextMaxLengthValidator(Res.get("user.profileCard.myNotes.transparentTextField.notes.maxLength",
+                    ContactListService.CONTACT_LIST_ENTRY_MAX_NOTES_LENGTH),
+                    ContactListService.CONTACT_LIST_ENTRY_MAX_NOTES_LENGTH);
 
     private final TransparentTextField contactReasonTextField, tagTextField, trustScoreTextField;
     private final TransparentTextArea notesTextArea;
@@ -68,6 +72,7 @@ public class ProfileCardMyNotesView extends View<VBox, ProfileCardMyNotesModel, 
 
         notesTextArea = new TransparentTextArea(Res.get("user.profileCard.myNotes.notes"),
                 controller::onSaveNotes, this::cancelEditingNotes);
+        notesTextArea.setValidator(NOTES_MAX_LENGTH_VALIDATOR);
 
         HBox myNotesDataHBox = new HBox(50, vBox, notesTextArea);
 
