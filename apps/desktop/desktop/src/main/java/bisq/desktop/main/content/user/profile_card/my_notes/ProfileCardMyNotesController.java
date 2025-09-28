@@ -105,7 +105,7 @@ public class ProfileCardMyNotesController implements Controller {
 
     private String getPercentageTrustScore(ContactListEntry contactListEntry) {
         return contactListEntry.getTrustScore()
-                .map(PercentageFormatter::formatToPercentWithSymbol)
+                .map(PercentageFormatter::formatToPercentNoDecimalsWithSymbol)
                 .orElse("");
     }
 
