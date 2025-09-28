@@ -25,13 +25,11 @@ import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.validator.PercentageValidator;
 import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
-import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
-import bisq.support.moderator.ReportToModeratorMessage;
 import bisq.user.contact_list.ContactListEntry;
 import bisq.user.contact_list.ContactListService;
 import bisq.user.contact_list.ContactReason;
@@ -105,20 +103,19 @@ public class AddToContactsListWindow {
         }
 
         void onAddToContacts() {
-            String notes = model.getNotes().get();
-            if (notes.length() > ReportToModeratorMessage.MAX_MESSAGE_LENGTH) {
-                new Popup().warning(Res.get("validation.tooLong", ReportToModeratorMessage.MAX_MESSAGE_LENGTH)).show();
-                return;
-            }
-            // todo check the rest of the properties
-
-            // trim and check for empty fields
+            Optional<String> tag = model.getTag().get().isBlank()
+                    ? Optional.empty()
+                    : Optional.of(model.getTag().get().trim());
+            Optional<String> notes = model.getNotes().get().isBlank()
+                    ? Optional.empty()
+                    : Optional.of(model.getNotes().get());
+            Optional<Double> trustScore = getTrustScore(model.getTrustScore().get());
             contactListService.addContactListEntry(new ContactListEntry(model.getUserProfile(),
                     System.currentTimeMillis(),
                     ContactReason.MANUALLY_ADDED,
-                    Optional.empty(),
-                    Optional.empty(),
-                    Optional.empty()));
+                    trustScore,
+                    tag,
+                    notes));
             OverlayController.hide(() ->
                     Navigation.navigateTo(NavigationTarget.PROFILE_CARD_MY_NOTES,
                             new ProfileCardController.InitData(model.getUserProfile())));
@@ -126,6 +123,17 @@ public class AddToContactsListWindow {
 
         void onCancel() {
             OverlayController.hide();
+        }
+
+        private Optional<Double> getTrustScore(String trustScoreText) {
+            String trimmed = trustScoreText.trim().replace("%", "");
+            try {
+                double percent = Double.parseDouble(trimmed);
+                double trustScore = percent / 100.0;
+                return Optional.of(trustScore);
+            } catch (NumberFormatException ignored) {
+            }
+            return Optional.empty();
         }
     }
 
@@ -171,12 +179,11 @@ public class AddToContactsListWindow {
             root.setPrefHeight(OverlayModel.HEIGHT + 50);
 
             Label headline = new Label(Res.get("user.addToContactsList.popup.title"));
-            headline.getStyleClass().addAll("bisq-text-headline-2");
+            headline.getStyleClass().add("bisq-text-headline-2");
             HBox headlineBox = new HBox(Spacer.fillHBox(), headline, Spacer.fillHBox());
 
             Label info = new Label(Res.get("user.addToContactsList.popup.info"));
-            info.setWrapText(true);
-            info.getStyleClass().addAll("bisq-text-3");
+            info.getStyleClass().addAll("bisq-text-3", "wrap-text");
             info.setMinHeight(45);
 
             tagTextField = new MaterialTextField(
@@ -249,7 +256,7 @@ public class AddToContactsListWindow {
             model.getIsAddToContactsButtonDisabled().set(disabled);
         }
 
-        public void resetValidations() {
+        private void resetValidations() {
             tagTextField.validate();
             trustScoreTextField.validate();
             notesTextArea.validate();
