@@ -141,6 +141,8 @@ public enum NavigationTarget {
     PROFILE_CARD_MESSAGES(PROFILE_CARD, false),
     PROFILE_CARD_MY_NOTES(PROFILE_CARD, false),
 
+    ADD_TO_CONTACTS_LIST(OVERLAY, false),
+
 
     /* --------------------------------------------------------------------- */
     // MAIN
