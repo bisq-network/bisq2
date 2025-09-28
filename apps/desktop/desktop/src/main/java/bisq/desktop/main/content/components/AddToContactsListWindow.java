@@ -23,6 +23,8 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.validator.PercentageValidator;
+import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.desktop.navigation.NavigationTarget;
@@ -34,8 +36,11 @@ import bisq.user.contact_list.ContactListEntry;
 import bisq.user.contact_list.ContactListService;
 import bisq.user.contact_list.ContactReason;
 import bisq.user.profile.UserProfile;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -94,6 +99,9 @@ public class AddToContactsListWindow {
 
         @Override
         public void onDeactivate() {
+            model.getTag().set("");
+            model.getTrustScore().set("");
+            model.getNotes().set("");
         }
 
         void onAddToContacts() {
@@ -127,15 +135,32 @@ public class AddToContactsListWindow {
         public final StringProperty tag = new SimpleStringProperty("");
         public final StringProperty trustScore = new SimpleStringProperty("");
         public final StringProperty notes = new SimpleStringProperty("");
+        public final BooleanProperty isAddToContactsButtonDisabled = new SimpleBooleanProperty();
         @Setter
         private UserProfile userProfile;
     }
 
     @Slf4j
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
+        private static final TextMaxLengthValidator TAG_MAX_LENGTH_VALIDATOR =
+                new TextMaxLengthValidator(Res.get("user.profileCard.myNotes.transparentTextField.tag.maxLength",
+                        ContactListService.CONTACT_LIST_ENTRY_MAX_TAG_LENGTH),
+                        ContactListService.CONTACT_LIST_ENTRY_MAX_TAG_LENGTH);
+        private static final PercentageValidator TRUST_SCORE_RANGE_VALIDATOR =
+                new PercentageValidator(Res.get("user.profileCard.myNotes.transparentTextField.trustScore.range",
+                        ContactListService.CONTACT_LIST_ENTRY_MIN_TRUST_SCORE * 100,
+                        ContactListService.CONTACT_LIST_ENTRY_MAX_TRUST_SCORE * 100),
+                        ContactListService.CONTACT_LIST_ENTRY_MIN_TRUST_SCORE,
+                        ContactListService.CONTACT_LIST_ENTRY_MAX_TRUST_SCORE);
+        private static final TextMaxLengthValidator NOTES_MAX_LENGTH_VALIDATOR =
+                new TextMaxLengthValidator(Res.get("user.profileCard.myNotes.transparentTextField.notes.maxLength",
+                        ContactListService.CONTACT_LIST_ENTRY_MAX_NOTES_LENGTH),
+                        ContactListService.CONTACT_LIST_ENTRY_MAX_NOTES_LENGTH);
+
         private final Button cancelButton, addToContactsButton;
-        private final MaterialTextField tag, trustScore;
-        private final MaterialTextArea notes;
+        private final MaterialTextField tagTextField, trustScoreTextField;
+        private final MaterialTextArea notesTextArea;
+        private final ChangeListener<Boolean> textFieldsValidityListener;
 
         private View(Model model, Controller controller) {
             super(new VBox(30), model, controller);
@@ -143,7 +168,7 @@ public class AddToContactsListWindow {
             root.setAlignment(Pos.TOP_LEFT);
             root.setPadding(new Insets(0, 50, 0, 50));
             root.setPrefWidth(OverlayModel.WIDTH);
-            root.setPrefHeight(OverlayModel.HEIGHT);
+            root.setPrefHeight(OverlayModel.HEIGHT + 50);
 
             Label headline = new Label(Res.get("user.addToContactsList.popup.title"));
             headline.getStyleClass().addAll("bisq-text-headline-2");
@@ -154,19 +179,22 @@ public class AddToContactsListWindow {
             info.getStyleClass().addAll("bisq-text-3");
             info.setMinHeight(45);
 
-            tag = new MaterialTextField(
+            tagTextField = new MaterialTextField(
                     Res.get("user.addToContactsList.popup.tag.description").toUpperCase(Locale.ROOT),
                     Res.get("user.addToContactsList.popup.tag.prompt"));
-            tag.showEditIcon();
-            trustScore = new MaterialTextField(
+            tagTextField.showEditIcon();
+            tagTextField.setValidator(TAG_MAX_LENGTH_VALIDATOR);
+            trustScoreTextField = new MaterialTextField(
                     Res.get("user.addToContactsList.popup.trustScore.description").toUpperCase(Locale.ROOT),
                     Res.get("user.addToContactsList.popup.trustScore.prompt"));
-            trustScore.showEditIcon();
-            notes = new MaterialTextArea(
+            trustScoreTextField.showEditIcon();
+            trustScoreTextField.setValidator(TRUST_SCORE_RANGE_VALIDATOR);
+            notesTextArea = new MaterialTextArea(
                     Res.get("user.addToContactsList.popup.notes.description").toUpperCase(Locale.ROOT),
                     Res.get("user.addToContactsList.popup.notes.prompt"));
-            notes.showEditIcon();
-            VBox inputFieldsBox = new VBox(15, tag, trustScore, notes);
+            notesTextArea.showEditIcon();
+            notesTextArea.setValidator(NOTES_MAX_LENGTH_VALIDATOR);
+            VBox inputFieldsBox = new VBox(15, tagTextField, trustScoreTextField, notesTextArea);
 
             cancelButton = new Button(Res.get("action.cancel"));
             addToContactsButton = new Button(Res.get("user.addToContactsList.popup.addToContactsButton"));
@@ -175,13 +203,23 @@ public class AddToContactsListWindow {
             buttons.setAlignment(Pos.CENTER);
 
             root.getChildren().setAll(Spacer.fillVBox(), headlineBox, info, inputFieldsBox, buttons, Spacer.fillVBox());
+
+            textFieldsValidityListener = (obs, oldVal, newVal) -> updateIsAddToContactsButtonDisabled();
         }
 
         @Override
         protected void onViewAttached() {
-            tag.textProperty().bindBidirectional(model.getTag());
-            trustScore.textProperty().bindBidirectional(model.getTrustScore());
-            notes.textProperty().bindBidirectional(model.getNotes());
+            resetValidations();
+
+            tagTextField.textProperty().bindBidirectional(model.getTag());
+            trustScoreTextField.textProperty().bindBidirectional(model.getTrustScore());
+            notesTextArea.textProperty().bindBidirectional(model.getNotes());
+            addToContactsButton.disableProperty().bind(model.getIsAddToContactsButtonDisabled());
+
+            tagTextField.isValidProperty().addListener(textFieldsValidityListener);
+            trustScoreTextField.isValidProperty().addListener(textFieldsValidityListener);
+            notesTextArea.isValidProperty().addListener(textFieldsValidityListener);
+            updateIsAddToContactsButtonDisabled();
 
             addToContactsButton.setOnAction(e -> controller.onAddToContacts());
             cancelButton.setOnAction(e -> controller.onCancel());
@@ -189,12 +227,32 @@ public class AddToContactsListWindow {
 
         @Override
         protected void onViewDetached() {
-            tag.textProperty().unbindBidirectional(model.getTag());
-            trustScore.textProperty().unbindBidirectional(model.getTrustScore());
-            notes.textProperty().unbindBidirectional(model.getNotes());
+            resetValidations();
+
+            tagTextField.textProperty().unbindBidirectional(model.getTag());
+            trustScoreTextField.textProperty().unbindBidirectional(model.getTrustScore());
+            notesTextArea.textProperty().unbindBidirectional(model.getNotes());
+            addToContactsButton.disableProperty().unbind();
+
+            tagTextField.isValidProperty().removeListener(textFieldsValidityListener);
+            trustScoreTextField.isValidProperty().removeListener(textFieldsValidityListener);
+            notesTextArea.isValidProperty().removeListener(textFieldsValidityListener);
 
             addToContactsButton.setOnAction(null);
             cancelButton.setOnAction(null);
+        }
+
+        private void updateIsAddToContactsButtonDisabled() {
+            boolean disabled = !(tagTextField.isValidProperty().get()
+                    && trustScoreTextField.isValidProperty().get()
+                    && notesTextArea.isValidProperty().get());
+            model.getIsAddToContactsButtonDisabled().set(disabled);
+        }
+
+        public void resetValidations() {
+            tagTextField.validate();
+            trustScoreTextField.validate();
+            notesTextArea.validate();
         }
     }
 }
