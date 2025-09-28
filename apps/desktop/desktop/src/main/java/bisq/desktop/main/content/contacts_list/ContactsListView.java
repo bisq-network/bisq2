@@ -24,6 +24,7 @@ import bisq.desktop.components.table.IndexColumnUtil;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.contact_list.ContactListEntry;
 import bisq.user.profile.UserProfile;
@@ -137,10 +138,17 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
         richTableView.getColumns().add(reputationScoreColumn);
 
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("contactsList.table.columns.added"))
+                .title(Res.get("contactsList.table.columns.reason"))
                 .minWidth(140)
                 .comparator(Comparator.comparing(ListItem::getContactReasonString))
                 .valueSupplier(ListItem::getContactReasonString)
+                .build());
+
+        richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+                .title(Res.get("contactsList.table.columns.addedOn"))
+                .minWidth(100)
+                .comparator(Comparator.comparing(ListItem::getAddedDate))
+                .valueSupplier(ListItem::getAddedDateString)
                 .build());
 
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
@@ -288,8 +296,10 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
         private final UserProfileService userProfileService;
         private final ContactsListController controller;
 
-        private final String userName, profileAgeString, trustScore, tag, notes, contactReasonString;
+        private final String userName, profileAgeString, trustScore, tag, notes,
+                contactReasonString, addedDateString;
         private final long profileAge;
+        private final long addedDate;
         private ReputationScore reputationScore;
         private long totalScore;
         private String totalScoreString;
@@ -315,6 +325,8 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
             profileAgeString = optionalProfileAge
                     .map(TimeFormatter::formatAgeInDaysAndYears)
                     .orElseGet(() -> Res.get("data.na"));
+            addedDate = contactListEntry.getDate();
+            addedDateString = DateFormatter.formatDate(contactListEntry.getDate());
 
             applyReputationScore(userProfile.getId());
         }
