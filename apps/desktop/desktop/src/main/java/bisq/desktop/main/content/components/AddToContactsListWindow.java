@@ -210,6 +210,7 @@ public class AddToContactsListWindow {
             buttons.setAlignment(Pos.CENTER);
 
             root.getChildren().setAll(Spacer.fillVBox(), headlineBox, info, inputFieldsBox, buttons, Spacer.fillVBox());
+            root.getStyleClass().add("add-to-contacts-list-window");
 
             textFieldsValidityListener = (obs, oldVal, newVal) -> updateIsAddToContactsButtonDisabled();
         }
