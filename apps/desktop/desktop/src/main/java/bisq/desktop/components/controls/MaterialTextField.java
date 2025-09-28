@@ -242,7 +242,12 @@ public class MaterialTextField extends Pane {
 
     public void resetValidation() {
         validationControl.resetValidation();
-        isValid.set(false);
+        boolean hasValidators = !validationControl.getValidators().isEmpty();
+        if (hasValidators) {
+            isValid.set(validationControl.validate());
+        } else {
+            isValid.set(true);
+        }
         selectionLine.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, false);
         descriptionLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, false);
         errorLabel.setText("");

@@ -30,6 +30,7 @@ import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
 import bisq.desktop.main.content.bisq_easy.trade_guide.BisqEasyGuideController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.main.content.bisq_easy.wallet_guide.WalletGuideController;
+import bisq.desktop.main.content.components.AddToContactsListWindow;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferController;
 import bisq.desktop.main.content.mu_sig.open_trades.trade_details.MuSigTradeDetailsController;
@@ -169,6 +170,7 @@ public class OverlayController extends NavigationController {
             case REPORT_TO_MODERATOR -> Optional.of(new ReportToModeratorWindow(serviceProvider).getController());
 
             case PROFILE_CARD -> Optional.of(new ProfileCardController(serviceProvider));
+            case ADD_TO_CONTACTS_LIST -> Optional.of(new AddToContactsListWindow(serviceProvider).getController());
             case MEDIATION_CASE_DETAILS -> Optional.of(new MediationCaseDetailsController(serviceProvider));
             default -> Optional.empty();
         };

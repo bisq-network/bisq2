@@ -368,7 +368,7 @@
 }
 
 /*******************************************************************************
- * SEPA Form Styles                                                  *
+ * SEPA Form Styles                                                            *
  ******************************************************************************/
 
 .sepa-form-section-header {
@@ -414,4 +414,15 @@
     -fx-border-color: rgba(255, 255, 255, 0.1);
     -fx-border-width: 1 0 0 0;
     -fx-border-radius: 0;
+}
+
+
+/*******************************************************************************
+ * Add to contacts list popup                                                  *
+ ******************************************************************************/
+
+.add-to-contacts-list-window .material-text-field-bg,
+.add-to-contacts-list-window .material-text-field-bg-hover,
+.add-to-contacts-list-window .material-text-field-bg-selected {
+    -fx-background-radius: 4 4 0 0;
 }

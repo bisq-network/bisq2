@@ -27,6 +27,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.TabController;
+import bisq.desktop.main.content.components.AddToContactsListWindow;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.user.profile_card.details.ProfileCardDetailsController;
 import bisq.desktop.main.content.user.profile_card.messages.ProfileCardMessagesController;
@@ -39,9 +40,7 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
-import bisq.user.contact_list.ContactListEntry;
 import bisq.user.contact_list.ContactListService;
-import bisq.user.contact_list.ContactReason;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -207,14 +206,9 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     }
 
     void onAddToContacts() {
-        // todo add overlay for entering tag, notes, trust score
-        boolean wasAdded = contactListService.addContactListEntry(new ContactListEntry(model.getUserProfile(),
-                System.currentTimeMillis(),
-                ContactReason.MANUALLY_ADDED,
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty()));
-        model.getIsUserInMyContactList().set(wasAdded);
+        OverlayController.hide(() ->
+                Navigation.navigateTo(NavigationTarget.ADD_TO_CONTACTS_LIST,
+                        new AddToContactsListWindow.InitData(model.getUserProfile())));
     }
 
     void onGoToMyContactList() {
