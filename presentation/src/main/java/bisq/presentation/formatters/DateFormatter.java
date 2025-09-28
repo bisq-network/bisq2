@@ -20,8 +20,9 @@ package bisq.presentation.formatters;
 import bisq.common.locale.LocaleRepository;
 
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -113,15 +114,14 @@ public class DateFormatter {
             return "";
         }
         Locale defaultLocale = LocaleRepository.getDefaultLocale();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        int year = calendar.get(Calendar.YEAR);
-        int currentYear = Calendar.getInstance().get(Calendar.YEAR);
-        SimpleDateFormat sdf = year == currentYear
-                ? new SimpleDateFormat("d MMM", defaultLocale)
-                : new SimpleDateFormat("d MMM yyyy", defaultLocale);
-        sdf.setTimeZone(TimeZone.getDefault());
-        return sdf.format(date);
+        ZoneId zoneId = ZoneId.systemDefault();
+        ZonedDateTime zonedDateTime = date.toInstant().atZone(zoneId);
+        int year = zonedDateTime.getYear();
+        int currentYear = ZonedDateTime.now(zoneId).getYear();
+        DateTimeFormatter formatter = year == currentYear
+                ? DateTimeFormatter.ofPattern("d MMM", defaultLocale)
+                : DateTimeFormatter.ofPattern("d MMM yyyy", defaultLocale);
+        return formatter.format(zonedDateTime);
     }
 
     public static String formatDayMonthOrDayMonthYear(long date) {
