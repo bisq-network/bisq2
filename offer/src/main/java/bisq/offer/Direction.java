@@ -21,6 +21,8 @@ import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
 import bisq.i18n.Res;
 
+import java.util.Locale;
+
 public enum Direction implements ProtoEnum {
     BUY,
     SELL;
@@ -47,7 +49,7 @@ public enum Direction implements ProtoEnum {
     }
 
     public String getDisplayString() {
-        return Res.get("offer." + name().toLowerCase());
+        return Res.get("offer." + name().toLowerCase(Locale.ROOT));
     }
 
     public String getDirectionalTitle() {

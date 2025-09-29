@@ -34,5 +34,5 @@ private fun isWindows(osName: String): Boolean {
 }
 
 fun getOSName(): String {
-    return System.getProperty("os.name").toLowerCase()
+    return System.getProperty("os.name").lowercase(Locale.US)
 }

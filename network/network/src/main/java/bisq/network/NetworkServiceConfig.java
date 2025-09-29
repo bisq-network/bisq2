@@ -38,6 +38,7 @@ import lombok.Getter;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -138,7 +139,7 @@ public final class NetworkServiceConfig {
     }
 
     private static TransportConfig createTransportConfig(TransportType transportType, Config config, Path baseDir) {
-        Config transportConfig = config.getConfig("configByTransportType." + transportType.name().toLowerCase());
+        Config transportConfig = config.getConfig("configByTransportType." + transportType.name().toLowerCase(Locale.ROOT));
         Path dataDir;
         return switch (transportType) {
             case TOR -> {

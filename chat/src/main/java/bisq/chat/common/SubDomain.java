@@ -23,6 +23,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Optional;
 
 @Slf4j
@@ -48,7 +49,8 @@ public enum SubDomain {
 
     public static SubDomain from(ChatChannelDomain chatChannelDomain, String channelTitle) {
         try {
-            String name = chatChannelDomain.name().toUpperCase() + "_" + StringUtils.camelCaseToSnakeCase(channelTitle).toUpperCase();
+            String name = chatChannelDomain.name().toUpperCase(Locale.ROOT) + "_" +
+                    StringUtils.camelCaseToSnakeCase(channelTitle).toUpperCase(Locale.ROOT);
             return valueOf(name);
         } catch (Exception e) {
             log.error("Cannot resolve ChatChannelSubDomain from chatChannelDomain {} and channelTitle={}.",
@@ -60,7 +62,7 @@ public enum SubDomain {
     public static SubDomain from(String channelId) {
         try {
             String[] tokens = channelId.split("\\.");
-            String name = tokens[0].toUpperCase();
+            String name = tokens[0].toUpperCase(Locale.ROOT);
             ChatChannelDomain chatChannelDomain = ChatChannelDomain.valueOf(name);
             String channelTitle = tokens[1];
             return from(chatChannelDomain, channelTitle);
@@ -83,7 +85,7 @@ public enum SubDomain {
         this.chatChannelDomain = chatChannelDomain;
         this.title = title;
         this.fallback = Optional.ofNullable(fallback);
-        this.channelId = chatChannelDomain.name().toLowerCase() + "." + title;
+        this.channelId = chatChannelDomain.name().toLowerCase(Locale.ROOT) + "." + title;
     }
 
     public SubDomain migrate() {

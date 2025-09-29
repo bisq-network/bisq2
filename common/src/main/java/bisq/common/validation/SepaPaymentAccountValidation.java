@@ -109,7 +109,7 @@ public class SepaPaymentAccountValidation {
         checkArgument(StringUtils.isNotEmpty(countryCode), "Country code must not be empty for IBAN consistency check");
         checkArgument(iban.length() >= 2, "IBAN too short for country code extraction.");
 
-        String cleanIban = iban.replaceAll("\\s", "").toUpperCase();
+        String cleanIban = iban.replaceAll("\\s", "").toUpperCase(Locale.ROOT);
         String ibanCountryCode = cleanIban.substring(0, 2);
 
         checkArgument(countryCode.equals(ibanCountryCode),

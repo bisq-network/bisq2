@@ -22,6 +22,8 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.common.view.Model;
 import lombok.Getter;
 
+import java.util.Locale;
+
 @Getter
 public class ProtocolRoadmapModel implements Model {
     private final TradeProtocolType tradeProtocolType;
@@ -31,6 +33,7 @@ public class ProtocolRoadmapModel implements Model {
     public ProtocolRoadmapModel(TradeProtocolType tradeProtocolType, String url) {
         this.tradeProtocolType = tradeProtocolType;
         this.url = url;
-        this.iconId = "protocol-" + StringUtils.snakeCaseToKebapCase(tradeProtocolType.name().toLowerCase());
+        this.iconId = "protocol-" + StringUtils.snakeCaseToKebapCase(
+                tradeProtocolType.name().toLowerCase(Locale.ROOT), Locale.ROOT);
     }
 }

@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -49,7 +50,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class MuSigOpenTradeChannel extends PrivateGroupChatChannel<MuSigOpenTradeMessage> {
     public static String createId(String tradeId) {
-        return ChatChannelDomain.MU_SIG_OPEN_TRADES.name().toLowerCase() + "." + tradeId;
+        return ChatChannelDomain.MU_SIG_OPEN_TRADES.name().toLowerCase(Locale.ROOT) + "." + tradeId;
     }
 
     public static MuSigOpenTradeChannel createByTrader(String tradeId,

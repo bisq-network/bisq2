@@ -27,6 +27,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -35,7 +36,7 @@ import java.util.stream.Stream;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class BisqEasyOfferbookChannel extends PublicChatChannel<BisqEasyOfferbookMessage> {
     static String createId(Market market) {
-        return ChatChannelDomain.BISQ_EASY_OFFERBOOK.name().toLowerCase() + "." +
+        return ChatChannelDomain.BISQ_EASY_OFFERBOOK.name().toLowerCase(Locale.ROOT) + "." +
                 market.getBaseCurrencyCode() + "-" +
                 market.getQuoteCurrencyCode();
     }

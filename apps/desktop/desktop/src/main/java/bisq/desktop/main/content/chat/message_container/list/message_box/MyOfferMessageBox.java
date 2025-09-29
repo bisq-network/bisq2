@@ -35,6 +35,8 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+import java.util.Locale;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 public final class MyOfferMessageBox extends BubbleMessageBox {
@@ -105,7 +107,7 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
                 "Bisq Easy Offerbook message must contain an offer");
 
         Direction direction = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getDirection();
-        String directionString = StringUtils.capitalize(Res.get("offer." + direction.name().toLowerCase()));
+        String directionString = StringUtils.capitalize(Res.get("offer." + direction.name().toLowerCase(Locale.ROOT)));
         String title = Res.get("bisqEasy.tradeWizard.review.chatMessage.myMessageTitle", directionString);
         Label label = new Label(title);
         label.getStyleClass().addAll("bisq-easy-offer-title", "normal-text", "font-default");

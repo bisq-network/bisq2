@@ -69,6 +69,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Locale;
+
 @Slf4j
 public class BuyerState1a extends BaseState {
     private final Controller controller;
@@ -189,7 +191,7 @@ public class BuyerState1a extends BaseState {
                         // QR code is more efficient with uppercase, thus many wallets provide it uppercase.
                         // As lower case is the common display style and bitcoin addresses and LN invoices are
                         // case-insensitive, we convert it to lowercase.
-                        String payload = qrCode.toLowerCase();
+                        String payload = qrCode.toLowerCase(Locale.ROOT);
                         if (BitcoinURIScheme.isBitcoinUriScheme(payload)) {
                             payload = BitcoinURIScheme.extractBitcoinAddress(payload);
                         }

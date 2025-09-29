@@ -19,9 +19,11 @@ package bisq.common.encoding;
 
 import com.google.common.io.BaseEncoding;
 
+import java.util.Locale;
+
 public class Hex {
     public static byte[] decode(String hex) {
-        return BaseEncoding.base16().lowerCase().decode(hex.toLowerCase());
+        return BaseEncoding.base16().lowerCase().decode(hex.toLowerCase(Locale.ROOT));
     }
 
     public static String encode(byte[] bytes) {

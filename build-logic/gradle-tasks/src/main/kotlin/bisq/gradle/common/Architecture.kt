@@ -31,6 +31,6 @@ fun is64Bit(archName: String): Boolean {
 }
 
 fun getArchitectureName(): String {
-    return System.getProperty("os.arch").toLowerCase()
+    return System.getProperty("os.arch").lowercase(Locale.US)
 }
 

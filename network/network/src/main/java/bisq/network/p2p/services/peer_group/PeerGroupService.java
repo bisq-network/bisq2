@@ -100,7 +100,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
 
         persistence = persistenceService.getOrCreatePersistence(this,
                 DbSubDirectory.SETTINGS,
-                transportType.name().toLowerCase() + persistableStore.getClass().getSimpleName(),
+                transportType.name().toLowerCase(Locale.ROOT) + persistableStore.getClass().getSimpleName(),
                 persistableStore);
     }
 

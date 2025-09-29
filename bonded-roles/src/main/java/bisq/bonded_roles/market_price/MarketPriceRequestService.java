@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -354,7 +355,7 @@ public class MarketPriceRequestService {
                 if (!currencyCode.startsWith("NON_EXISTING_SYMBOL")) {
                     String provider = (String) treeMap.get("provider"); // Bisq-Aggregate or name of exchange of price feed
                     // Convert Bisq-Aggregate to BISQAGGREGATE
-                    provider = provider.replace("-", "").toUpperCase();
+                    provider = provider.replace("-", "").toUpperCase(Locale.ROOT);
 
                     double price = (Double) treeMap.get("price");
                     // json uses double for our timestamp long value...

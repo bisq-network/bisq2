@@ -1,6 +1,7 @@
 package bisq.gradle.packaging.jpackage.package_formats
 
 import java.nio.file.Path
+import java.util.*
 
 class LinuxPackages(private val resourcesPath: Path, private val appName: String) : JPackagePackageFormatConfigs {
     override val packageFormats = setOf(PackageFormat.DEB, PackageFormat.RPM)
@@ -11,7 +12,7 @@ class LinuxPackages(private val resourcesPath: Path, private val appName: String
                 resourcesPath.resolve("icon.png")
                         .toAbsolutePath().toString(),
 
-                "--linux-package-name", appName.lowercase().replace(" ", ""),
+                "--linux-package-name", appName.lowercase(Locale.ROOT).replace(" ", ""),
                 "--linux-app-release", "1",
 
                 "--linux-package-deps", "tor",

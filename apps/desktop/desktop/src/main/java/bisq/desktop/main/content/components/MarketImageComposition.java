@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -68,8 +69,8 @@ public class MarketImageComposition {
     }
 
     private static StackPane getMarketIcons(Market market, Optional<Map<String, StackPane>> dedicatedCache) {
-        String baseCurrencyCode = market.getBaseCurrencyCode().toLowerCase();
-        String quoteCurrencyCode = market.getQuoteCurrencyCode().toLowerCase();
+        String baseCurrencyCode = market.getBaseCurrencyCode().toLowerCase(Locale.ROOT);
+        String quoteCurrencyCode = market.getQuoteCurrencyCode().toLowerCase(Locale.ROOT);
         String key = baseCurrencyCode + "." + quoteCurrencyCode;
 
         if (dedicatedCache.isPresent()) {
@@ -162,7 +163,7 @@ public class MarketImageComposition {
     }
 
     public static Node createMarketLogo(String marketCode) {
-        String market = marketCode.toLowerCase();
+        String market = marketCode.toLowerCase(Locale.ROOT);
         String iconId = String.format("market-%s", market);
         return FIAT_MARKETS_WITH_LOGO.contains(market) || CRYPTO_MARKETS_WITH_LOGO.contains(market)
                 ? ImageUtil.getImageViewById(iconId)

@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.TreeSet;
 
 @Slf4j
@@ -54,7 +55,7 @@ public class ReactionItem {
         this.selectedUserProfile = selectedUserProfile;
         this.isMyMessage = isMyMessage;
 
-        this.iconId = reaction.toString().replace("_", "").toLowerCase();
+        this.iconId = reaction.toString().replace("_", "").toLowerCase(Locale.ROOT);
     }
 
     public boolean hasActiveReactions() {

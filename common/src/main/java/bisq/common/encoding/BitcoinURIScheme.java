@@ -17,6 +17,8 @@
 
 package bisq.common.encoding;
 
+import java.util.Locale;
+
 // See: https://en.bitcoin.it/wiki/BIP_0021
 public class BitcoinURIScheme {
     public static String extractBitcoinAddress(String input) {
@@ -31,7 +33,7 @@ public class BitcoinURIScheme {
     }
 
     public static boolean isBitcoinUriScheme(String input) {
-        return input.toLowerCase().startsWith("bitcoin:");
+        return input.toLowerCase(Locale.ROOT).startsWith("bitcoin:");
     }
 
     public static String normalizePrefix(String input) {

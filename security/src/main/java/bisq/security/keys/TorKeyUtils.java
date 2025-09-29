@@ -9,12 +9,13 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Locale;
 
 @Slf4j
 public class TorKeyUtils {
     public static byte[] getPublicKeyFromOnionAddress(String onionAddress) {
         onionAddress = onionAddress.substring(0, onionAddress.length() - ".onion".length());
-        byte[] decodedOnionAddress = Base32.decode(onionAddress.toUpperCase());
+        byte[] decodedOnionAddress = Base32.decode(onionAddress.toUpperCase(Locale.ROOT));
         return Arrays.copyOfRange(decodedOnionAddress, 0, 32);
     }
 
