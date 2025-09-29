@@ -20,6 +20,8 @@ package bisq.common.proto;
 import bisq.common.util.StringUtils;
 import com.google.protobuf.ProtocolMessageEnum;
 
+import java.util.Locale;
+
 /**
  * Interface for any enum which gets serialized using protobuf
  */
@@ -31,6 +33,6 @@ public interface ProtoEnum {
     }
 
     static String getProtobufEnumPrefix(Class<?> clazz) {
-        return StringUtils.capitalizeAll(clazz.getSimpleName()) + "_";
+        return StringUtils.capitalizeAll(clazz.getSimpleName(), Locale.ROOT) + "_";
     }
 }

@@ -30,6 +30,7 @@ import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.SignatureException;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -49,7 +50,7 @@ public class PgPUtilsTest {
     public void testReadPgpPublicKeyRing() {
         try {
             PGPPublicKeyRing pgpPublicKeyRing = getPGPPublicKeyRing("387C8307.asc");
-            String keyId = Integer.toHexString((int) pgpPublicKeyRing.getPublicKey().getKeyID()).toUpperCase();
+            String keyId = Integer.toHexString((int) pgpPublicKeyRing.getPublicKey().getKeyID()).toUpperCase(Locale.ROOT);
             assertEquals("387C8307", keyId);
         } catch (Exception e) {
             log.error(e.toString());
@@ -63,7 +64,7 @@ public class PgPUtilsTest {
         // gpg --digest-algo SHA256 -u [KEY ID] --output testData.txt.asc --detach-sig --armor testData.txt
         try {
             PGPSignature signature = getPGPSignature("testData.txt.asc");
-            String keyId = Integer.toHexString((int) signature.getKeyID()).toUpperCase();
+            String keyId = Integer.toHexString((int) signature.getKeyID()).toUpperCase(Locale.ROOT);
             assertEquals("387C8307", keyId);
         } catch (Exception e) {
             log.error(e.toString());

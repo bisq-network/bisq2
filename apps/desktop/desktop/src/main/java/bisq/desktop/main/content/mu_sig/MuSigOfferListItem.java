@@ -54,6 +54,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -126,7 +127,7 @@ public class MuSigOfferListItem {
         offerIntentText = offer.getDirection().isBuy()
                 ? Res.get("muSig.myOffers.table.cell.offerType.buying")
                 : Res.get("muSig.myOffers.table.cell.offerType.selling");
-        offerId = offer.getShortId().toUpperCase();
+        offerId = offer.getShortId().toUpperCase(Locale.ROOT);
         offerDate = DateFormatter.formatDateTime(offer.getDate());
         deposit = "15%";
 

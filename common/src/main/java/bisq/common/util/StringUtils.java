@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -110,32 +111,44 @@ public class StringUtils {
         return null;
     }
 
-    public static String capitalize(String value) {
+    public static String capitalize(String value, Locale locale) {
         if (value == null || value.isEmpty()) {
             return value;
         } else if (value.length() == 1) {
-            return value.toUpperCase();
+            return value.toUpperCase(locale);
         } else {
-            return value.substring(0, 1).toUpperCase() + value.substring(1);
+            return value.substring(0, 1).toUpperCase(locale) + value.substring(1);
+        }
+    }
+
+    public static String capitalize(String value) {
+        return capitalize(value, Locale.getDefault());
+    }
+
+    public static String unCapitalize(String value, Locale locale) {
+        if (value == null || value.isEmpty()) {
+            return value;
+        } else if (value.length() == 1) {
+            return value.toLowerCase(locale);
+        } else {
+            return value.substring(0, 1).toLowerCase(locale) + value.substring(1);
         }
     }
 
     public static String unCapitalize(String value) {
+        return unCapitalize(value, Locale.getDefault());
+    }
+
+    public static String capitalizeAll(String value, Locale locale) {
         if (value == null || value.isEmpty()) {
             return value;
-        } else if (value.length() == 1) {
-            return value.toLowerCase();
         } else {
-            return value.substring(0, 1).toLowerCase() + value.substring(1);
+            return value.toUpperCase(locale);
         }
     }
 
     public static String capitalizeAll(String value) {
-        if (value == null || value.isEmpty()) {
-            return value;
-        } else {
-            return value.toUpperCase();
-        }
+        return capitalizeAll(value, Locale.getDefault());
     }
 
     // Replaces the content inside the brackets marked with HYPERLINK with the hyperlink and the number of the hyperlink
@@ -169,12 +182,20 @@ public class StringUtils {
         return Optional.ofNullable(toNullIfEmpty(value));
     }
 
+    public static String snakeCaseToCamelCase(String value, Locale locale) {
+        return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, value.toLowerCase(locale));
+    }
+
     public static String snakeCaseToCamelCase(String value) {
-        return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, value.toLowerCase());
+        return snakeCaseToCamelCase(value, Locale.getDefault());
+    }
+
+    public static String kebapCaseToCamelCase(String value, Locale locale) {
+        return CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, value.toLowerCase(locale));
     }
 
     public static String kebapCaseToCamelCase(String value) {
-        return CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, value.toLowerCase());
+        return kebapCaseToCamelCase(value, Locale.getDefault());
     }
 
     public static String camelCaseToSnakeCase(String value) {
@@ -185,8 +206,12 @@ public class StringUtils {
         return CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_HYPHEN, value);
     }
 
+    public static String snakeCaseToKebapCase(String value, Locale locale) {
+        return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, value.toLowerCase(locale));
+    }
+
     public static String snakeCaseToKebapCase(String value) {
-        return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, value.toLowerCase());
+        return snakeCaseToKebapCase(value, Locale.getDefault());
     }
 
     public static List<Pair<String, List<String>>> getTextStylePairs(String input) {

@@ -154,6 +154,6 @@ public class FiatCurrencyRepository {
 
 
     public static String getSymbol(String code) {
-        return Currency.getInstance(code.toUpperCase()).getSymbol();
+        return Currency.getInstance(code.toUpperCase(Locale.ROOT)).getSymbol();
     }
 }

@@ -27,6 +27,7 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Locale;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -38,7 +39,9 @@ public abstract class ChatChannelSelectionService implements PersistenceClient<C
 
     public ChatChannelSelectionService(PersistenceService persistenceService,
                                        ChatChannelDomain chatChannelDomain) {
-        String prefix = StringUtils.capitalize(StringUtils.snakeCaseToCamelCase(chatChannelDomain.name().toLowerCase()));
+        String prefix = StringUtils.capitalize(
+                StringUtils.snakeCaseToCamelCase(chatChannelDomain.name().toLowerCase(Locale.ROOT), Locale.ROOT),
+                Locale.ROOT);
         persistence = persistenceService.getOrCreatePersistence(this,
                 DbSubDirectory.SETTINGS,
                 prefix + "ChannelSelectionStore",

@@ -54,6 +54,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
+import java.util.Locale;
 
 @Slf4j
 public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSigCreateOfferDirectionAndMarketModel,
@@ -392,7 +393,7 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
             numOffers = String.valueOf(numOffersAsInteger);
             displayName = cryptoAsset.getCodeAndDisplayName();
             cryptoAssetLogo = new Label();
-            String imageId = String.format("market-%s", cryptoAsset.getCode().toLowerCase());
+            String imageId = String.format("market-%s", cryptoAsset.getCode().toLowerCase(Locale.ROOT));
             cryptoAssetLogo.setGraphic(ImageUtil.getImageViewById(imageId));
             cryptoAssetLogo.setCache(true);
             cryptoAssetLogo.setCacheHint(CacheHint.SPEED);

@@ -24,6 +24,7 @@ import org.bouncycastle.util.encoders.Base32;
 
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
+import java.util.Locale;
 
 @Slf4j
 public class TorKeyGeneration {
@@ -62,7 +63,7 @@ public class TorKeyGeneration {
         byte[] byteArray = byteBuffer.array();
         String base32String = Base32.toBase32String(byteArray);
 
-        return base32String.toLowerCase() + ".onion";
+        return base32String.toLowerCase(Locale.ROOT) + ".onion";
     }
 
     private static byte[] computeOnionAddressChecksum(byte[] publicKey) {

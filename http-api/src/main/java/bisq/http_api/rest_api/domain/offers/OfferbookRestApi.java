@@ -66,6 +66,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -304,7 +305,7 @@ public class OfferbookRestApi extends RestApiBase {
     @Path("markets/{currencyCode}/offers")
     public Response getOffers(@PathParam("currencyCode") String currencyCode) {
         try {
-            String marketCodes = "BTC/" + currencyCode.toUpperCase();
+            String marketCodes = "BTC/" + currencyCode.toUpperCase(Locale.ROOT);
             return findOffer(marketCodes)
                     .map(this::buildOkResponse)
                     .orElseGet(() -> {

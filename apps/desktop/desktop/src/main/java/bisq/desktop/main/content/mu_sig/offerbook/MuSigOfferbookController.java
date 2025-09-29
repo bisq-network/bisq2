@@ -63,6 +63,7 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -487,7 +488,7 @@ public class MuSigOfferbookController implements Controller {
     }
 
     private String getMarketListTitleString(CryptoAsset cryptoAsset) {
-        String key = "muSig.offerbook.marketListTitle." + cryptoAsset.getCode().toLowerCase();
+        String key = "muSig.offerbook.marketListTitle." + cryptoAsset.getCode().toLowerCase(Locale.ROOT);
         return Res.get(key);
     }
 

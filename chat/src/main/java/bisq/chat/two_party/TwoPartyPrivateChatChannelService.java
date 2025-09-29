@@ -42,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -64,7 +65,9 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
         contactListService = userService.getContactListService();
         this.settingsService = settingsService;
 
-        String name = StringUtils.capitalize(StringUtils.snakeCaseToCamelCase(chatChannelDomain.name().toLowerCase()));
+        String name = StringUtils.capitalize(
+                StringUtils.snakeCaseToCamelCase(chatChannelDomain.name().toLowerCase(Locale.ROOT), Locale.ROOT),
+                Locale.ROOT);
         persistence = persistenceService.getOrCreatePersistence(this,
                 DbSubDirectory.PRIVATE,
                 "Private" + name + "ChatChannelStore",
