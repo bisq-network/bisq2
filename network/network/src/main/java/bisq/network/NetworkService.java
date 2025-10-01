@@ -76,12 +76,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static bisq.network.p2p.services.data.DataService.Listener;
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -204,9 +204,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                         return false;
                     }
                 })
-                // We complete on a network thread and switch to ForkJoinPool.commonPool to prevent network threads
+                // We complete on a network thread and switch to ExecutorFactory.commonForkJoinPool() to prevent network threads
                 // from being tied up during subsequent service initialization steps.
-                .thenComposeAsync(CompletableFuture::completedFuture, ForkJoinPool.commonPool());
+                .thenComposeAsync(CompletableFuture::completedFuture, commonForkJoinPool());
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -217,7 +217,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                     // networkLoadService.ifPresent(NetworkLoadService::shutdown);
                     dataService.ifPresent(DataService::shutdown);
                     return true;
-                })
+                }, commonForkJoinPool())
                 .thenCompose(result -> serviceNodesByTransport.shutdown()
                         .thenApply(list -> list.stream().filter(e -> e).count() == supportedTransportTypes.size()))
                 .whenComplete((r, t) -> NetworkExecutors.shutdown());

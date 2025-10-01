@@ -52,6 +52,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
+
 /**
  * We do not apply a score for profile age as otherwise all users would have such a score after 1 day.
  * Consider to remove inheritance from the SourceReputationService and keep it outside the reputation framework.
@@ -201,10 +203,9 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
                 for (int i = 0; i < candidates.size(); i++) {
                     long delay = i * (10_000 + new Random().nextLong(110_000));
                     UserIdentity userIdentity = candidates.get(i);
-                    // We do not pass an Executor thus we the default ForkJoinPool.commonPool() is used.
                     // The requestTimestamp() is using the NetworkService.NETWORK_IO_POOL at network call level.
                     // At first iteration the delay is 0, thus no delay is used.
-                    CompletableFuture.delayedExecutor(delay, TimeUnit.MILLISECONDS).execute(() -> {
+                    CompletableFuture.delayedExecutor(delay, TimeUnit.MILLISECONDS, commonForkJoinPool()).execute(() -> {
                         boolean requestSuccess = requestTimestamp(userIdentity);
                         if (!requestSuccess) {
                             log.warn("Requesting timestamp for {} failed", userIdentity.getUserProfile().getUserName());

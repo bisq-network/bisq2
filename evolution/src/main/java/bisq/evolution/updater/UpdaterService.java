@@ -51,6 +51,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static bisq.evolution.updater.UpdaterUtils.UPDATES_DIR;
 import static bisq.evolution.updater.UpdaterUtils.VERSION_FILE_NAME;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -178,7 +179,7 @@ public class UpdaterService implements Service {
                 executorService = null;
             }
             return true;
-        });
+        }, commonForkJoinPool());
     }
 
 

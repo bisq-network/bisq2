@@ -39,6 +39,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
+
 @Slf4j
 public class WebcamService implements Service {
     public final FrameToImageConverter frameToImageConverter;
@@ -109,7 +111,7 @@ public class WebcamService implements Service {
                         }
                     }
                     return true;
-                }).orTimeout(1, TimeUnit.SECONDS)
+                }, commonForkJoinPool()).orTimeout(1, TimeUnit.SECONDS)
                 .whenComplete((result, throwable) -> {
                     qrCode.set(null);
                     capturedImage.set(null);

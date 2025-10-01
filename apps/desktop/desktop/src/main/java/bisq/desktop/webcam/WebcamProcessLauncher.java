@@ -33,6 +33,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
+
 @Slf4j
 public class WebcamProcessLauncher {
     private final String webcamDir;
@@ -105,6 +107,6 @@ public class WebcamProcessLauncher {
                 terminatedGraceFully = false;
             }
             return terminatedGraceFully;
-        }).orElse(true));
+        }).orElse(true), commonForkJoinPool());
     }
 }

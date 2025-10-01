@@ -64,6 +64,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
@@ -266,7 +267,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        // Move initialization work off the current thread and use a ForkJoinPool.commonPool instead.
+        // Move initialization work off the current thread and use ExecutorFactory.commonForkJoinPool() instead.
         return supplyAsync(() -> memoryReportService.initialize()
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> {
@@ -320,14 +321,14 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                     }
                     setState(State.FAILED);
                     return false;
-                }))
+                }), commonForkJoinPool())
                 .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        // Move shutdown work off the current thread and use a ForkJoinPool.commonPool instead.
+        // Move shutdown work off the current thread and use ExecutorFactory.commonForkJoinPool() instead.
         // We shut down services in opposite order as they are initialized
         // In case a shutdown method completes exceptionally we log the error and map the result to `false` to not
         // interrupt the shutdown sequence.
@@ -372,7 +373,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                         shutDownErrorMessage.set(ExceptionUtil.getRootCauseMessage(throwable));
                     }
                     return false;
-                }))
+                }), commonForkJoinPool())
                 .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 

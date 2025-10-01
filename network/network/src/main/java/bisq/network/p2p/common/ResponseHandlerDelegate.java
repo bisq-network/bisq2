@@ -32,6 +32,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
+
 @Slf4j
 class ResponseHandlerDelegate<T extends Request, R extends Response> implements HandlerLifecycle {
     private final Node node;
@@ -91,7 +93,7 @@ class ResponseHandlerDelegate<T extends Request, R extends Response> implements 
                     log.error("requestFuturesByConnectionId.remove failed. This might be a rare case that we get called synchronously. " +
                             "Mutating the map from the constructing code is not permitted. " +
                             "We wrap the remove code into a async call to try again to remove the entry.", e);
-                    CompletableFuture.runAsync(() -> requestFuturesByConnectionId.remove(connectionId, requestFuture));
+                    CompletableFuture.runAsync(() -> requestFuturesByConnectionId.remove(connectionId, requestFuture), commonForkJoinPool());
                 }
             };
             // We get returned a priority future which gets completed before the actual requestFuture gets completed.

@@ -86,6 +86,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -306,7 +307,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
                 log.info("We have pendingMessages. We try to re-process them now.");
                 pendingMessages.forEach(this::handleMuSigTradeMessage);
             }
-        });
+        }, commonForkJoinPool());
     }
 
 
@@ -347,7 +348,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         verifyMinVersionForTrading();
         String tradeId = trade.getId();
         findProtocol(tradeId).ifPresentOrElse(protocol -> {
-                    CompletableFuture.runAsync(() -> protocol.handle(event));
+                    CompletableFuture.runAsync(() -> protocol.handle(event), commonForkJoinPool());
                 },
                 () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
     }
@@ -432,7 +433,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
                 public void onCompleted() {
                 }
             });
-        });
+        }, commonForkJoinPool());
         observeDepositTxConfirmationStatusFutureByTradeId.put(tradeId, future);
     }
 
