@@ -61,6 +61,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
+import bisq.desktop.main.content.chat.ChatUtil;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
@@ -191,6 +192,17 @@ public class ChatMessagesListController implements Controller {
 
         layoutChildrenDonePin = EasyBind.subscribe(model.getLayoutChildrenDone(), layoutChildrenDone -> handleScrollValueChanged());
 
+        if (ChatUtil.isCommonChat(model.getChatChannelDomain()) && model.getIsPublicChannel().get()) {
+            model.getNoChatsPlaceholderTitle().set(Res.get("chat.messagebox.noChats.placeholder.title"));
+            model.getNoChatsPlaceholderDescription().set(Res.get("chat.messagebox.noChats.placeholder.description",
+                    model.getSelectedChannel().get().getDisplayString()));
+        } else if (model.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OFFERBOOK) {
+            model.getNoChatsPlaceholderDescription().set(Res.get("bisqEasy.offerbook.messagebox.noMessages.placeholder.description"));
+        } else {
+            model.getNoChatsPlaceholderTitle().set("");
+            model.getNoChatsPlaceholderDescription().set("");
+        }
+
         applyScrollValue(1);
     }
 
@@ -245,6 +257,8 @@ public class ChatMessagesListController implements Controller {
 
             if (channel instanceof BisqEasyOfferbookChannel bisqEasyOfferbookChannel) {
                 chatMessagesPin = bindChatMessages(bisqEasyOfferbookChannel);
+                model.getNoChatsPlaceholderTitle().set(Res.get("bisqEasy.offerbook.messagebox.noMessages.placeholder.title",
+                        bisqEasyOfferbookChannel.getMarket().getQuoteCurrencyDisplayName()));
             } else if (channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
                 chatMessagesPin = bindChatMessages(bisqEasyOpenTradeChannel);
             } else if (channel instanceof MuSigOpenTradeChannel muSigOpenTradeChannel) {
@@ -953,13 +967,13 @@ public class ChatMessagesListController implements Controller {
 
     private void deleteChatRulesWarning() {
         model.getSortedChatMessages().stream()
-            .filter(item -> item.getChatMessage().getChatMessageType() == ChatMessageType.CHAT_RULES_WARNING)
-            .findFirst()
-            .ifPresent(itemToRemove -> {
-                UIThread.run(() -> {
-                    itemToRemove.dispose();
-                    model.getChatMessages().remove(itemToRemove);
+                .filter(item -> item.getChatMessage().getChatMessageType() == ChatMessageType.CHAT_RULES_WARNING)
+                .findFirst()
+                .ifPresent(itemToRemove -> {
+                    UIThread.run(() -> {
+                        itemToRemove.dispose();
+                        model.getChatMessages().remove(itemToRemove);
+                    });
                 });
-            });
     }
 }
