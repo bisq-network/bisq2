@@ -40,6 +40,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -158,7 +159,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore>, Serv
                 && defaultI2pIdentityBase64.isEmpty()
                 && defaultBundle.isPresent()) {
             // Nothing to update, so we return
-            return CompletableFuture.supplyAsync(() -> true);
+            return CompletableFuture.supplyAsync(() -> true, commonForkJoinPool());
         } else {
             return createOrUpdateDefaultBundle(defaultBundle, defaultKeyId)
                     .thenApply(Objects::nonNull);
@@ -245,7 +246,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore>, Serv
             KeyBundle keyBundle = new KeyBundle(defaultKeyId, defaultKeyPair, defaultTorKeyPair, defaultI2pKeyPair);
             persistKeyBundle(defaultKeyId, keyBundle);
             return keyBundle;
-        });
+        }, commonForkJoinPool());
     }
 
     private KeyBundle createKeyBundle(String keyId) {

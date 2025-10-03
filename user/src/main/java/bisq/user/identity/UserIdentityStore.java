@@ -23,7 +23,11 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
-import bisq.security.*;
+import bisq.security.AesGcm;
+import bisq.security.AesSecretKey;
+import bisq.security.EncryptedData;
+import bisq.security.ScryptKeyDeriver;
+import bisq.security.ScryptParameters;
 import bisq.user.profile.UserProfile;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -37,6 +41,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -214,7 +219,7 @@ final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
             } catch (GeneralSecurityException e) {
                 throw new RuntimeException(e);
             }
-        });
+        }, commonForkJoinPool());
     }
 
     CompletableFuture<EncryptedData> encrypt() {
@@ -225,7 +230,7 @@ final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
             EncryptedData encryptedData = encryptPlainTextProto(getPlainTextBuilder().build());
             log.info("encrypt took {} ms", System.currentTimeMillis() - ts);
             return encryptedData;
-        }).whenComplete((encrypted, throwable) -> {
+        }, commonForkJoinPool()).whenComplete((encrypted, throwable) -> {
             if (throwable == null && encrypted != null) {
                 this.encryptedData = Optional.of(encrypted);
             }
@@ -248,7 +253,7 @@ final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
             } catch (GeneralSecurityException | IOException e) {
                 throw new RuntimeException(e);
             }
-        });
+        }, commonForkJoinPool());
     }
 
     CompletableFuture<Void> removeKey(CharSequence password) {
@@ -269,7 +274,7 @@ final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
             } catch (GeneralSecurityException e) {
                 throw new RuntimeException(e);
             }
-        });
+        }, commonForkJoinPool());
     }
 
     void clearEncryptedData() {

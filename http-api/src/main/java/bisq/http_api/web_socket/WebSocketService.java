@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -178,7 +179,7 @@ public class WebSocketService implements Service {
                         return false;
                     }
                     return true;
-                })
+                }, commonForkJoinPool())
                 .thenCompose(result -> {
                     if (result) {
                         return webSocketConnectionHandler.initialize()
@@ -199,6 +200,6 @@ public class WebSocketService implements Service {
                     httpServer.ifPresent(HttpServer::shutdown);
                     httpServer = Optional.empty();
                     return true;
-                }));
+                }, commonForkJoinPool()));
     }
 }

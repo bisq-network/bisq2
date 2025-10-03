@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledExecutorService;
@@ -36,6 +37,14 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ExecutorFactory {
     public static final int DEFAULT_PRIORITY = 5;
+
+    /* --------------------------------------------------------------------- */
+    // Common ThreadPool Executors
+    /* --------------------------------------------------------------------- */
+
+    public static ExecutorService commonForkJoinPool() {
+        return ForkJoinPool.commonPool();
+    }
 
     /* --------------------------------------------------------------------- */
     // Single Thread Executors

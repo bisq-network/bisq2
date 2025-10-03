@@ -27,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
+
 @Slf4j
 public final class Bi2pGrpcServerMain {
 
@@ -50,7 +52,7 @@ public final class Bi2pGrpcServerMain {
                         }
                     }
                     responseObserver.onCompleted();
-                });
+                }, commonForkJoinPool());
             }
         };
         Bi2pGrpcServer i2pGrpcServer = new Bi2pGrpcServer(RouterSetup.DEFAULT_BI2P_GRPC_HOST, RouterSetup.DEFAULT_BI2P_GRPC_PORT, mockService);

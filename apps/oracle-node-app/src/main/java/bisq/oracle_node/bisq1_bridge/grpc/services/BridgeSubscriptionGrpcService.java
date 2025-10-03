@@ -30,6 +30,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
+
 @Slf4j
 public abstract class BridgeSubscriptionGrpcService<T> implements Service {
     private static final int LAUNCH_BLOCK_HEIGHT = 832353; // block height on Feb 28 2024
@@ -111,7 +113,7 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
                 // We do not check for retryRequestAttempts as we prefer to keep retrying until blockchain
                 // parsing is completed.
                 // It can take considerable time until that happens.
-                CompletableFuture.delayedExecutor(10, TimeUnit.SECONDS).execute(this::request);
+                CompletableFuture.delayedExecutor(10, TimeUnit.SECONDS, commonForkJoinPool()).execute(this::request);
             } else if (status.getCode() == Status.Code.INTERNAL) {
                 log.warn("Request rejected because of grpc server error.", exception);
                 retryRequest();
@@ -130,7 +132,7 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
             log.warn("Retrying request (attempt #{}/{}), delay: {}s",
                     retryRequestAttempts.get(), MAX_RETRY_REQUEST_ATTEMPTS, retryRequestInterval.get());
             long delay = retryRequestInterval.updateAndGet(prev -> Math.min(20, prev * 2));
-            CompletableFuture.delayedExecutor(delay, TimeUnit.SECONDS).execute(this::request);
+            CompletableFuture.delayedExecutor(delay, TimeUnit.SECONDS, commonForkJoinPool()).execute(this::request);
         } else {
             log.error("We stop trying to request after {} unsuccessful attempts", retryRequestAttempts.get());
         }
@@ -142,9 +144,9 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
         }
 
         log.error("Error at StreamObserver. We call subscribe again after {} sec. Error message: {}", subscribeRetryInterval.get(), throwable.getMessage());
-        // delayedExecutor is lightweight executor using ForkJoinPool.commonPool based on a global executor,
+        // delayedExecutor is lightweight executor using ExecutorFactory.commonForkJoinPool() based on a global executor,
         // thus not expose an API for terminating it.
-        CompletableFuture.delayedExecutor(subscribeRetryInterval.get(), TimeUnit.SECONDS).execute(() -> {
+        CompletableFuture.delayedExecutor(subscribeRetryInterval.get(), TimeUnit.SECONDS, commonForkJoinPool()).execute(() -> {
             if (!shutdownCalled) {
                 subscribe();
             }

@@ -57,6 +57,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static bisq.network.tor.common.torrc.Torrc.Keys.CONTROL_PORT;
 import static bisq.network.tor.common.torrc.Torrc.Keys.COOKIE_AUTHENTICATION;
 import static bisq.network.tor.common.torrc.Torrc.Keys.COOKIE_AUTH_FILE;
@@ -212,7 +213,7 @@ public class TorService implements Service {
             publishedOnionServices.clear();
             externalTorConfigMap.clear();
             return true;
-        });
+        }, commonForkJoinPool());
     }
 
     public CompletableFuture<ServerSocket> publishOnionService(int port, TorKeyPair torKeyPair) {

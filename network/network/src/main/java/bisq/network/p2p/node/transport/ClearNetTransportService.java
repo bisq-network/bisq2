@@ -28,6 +28,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 
 import static bisq.common.facades.FacadeProvider.getClearNetAddressTypeFacade;
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 
 
 @Slf4j
@@ -125,7 +126,7 @@ public class ClearNetTransportService implements TransportService {
         return CompletableFuture.supplyAsync(() -> {
             setTransportState(TransportState.TERMINATED);
             return true;
-        });
+        }, commonForkJoinPool());
     }
 
     @Override
@@ -169,7 +170,7 @@ public class ClearNetTransportService implements TransportService {
                 } catch (IOException e) {
                     return false;
                 }
-            });
+            }, commonForkJoinPool());
         } else {
             throw new IllegalArgumentException("Address is not a ClearnetAddress");
         }

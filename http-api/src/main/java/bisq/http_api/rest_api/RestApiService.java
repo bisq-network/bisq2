@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -113,7 +114,7 @@ public class RestApiService implements Service {
                 addStaticFileHandler("/doc", new StaticFileHandler("/doc/v1/"));
                 log.info("Server started at {}.", config.getRestApiBaseUrl());
                 return true;
-            });
+            }, commonForkJoinPool());
         } else {
             return CompletableFuture.completedFuture(true);
         }
@@ -124,7 +125,7 @@ public class RestApiService implements Service {
         return CompletableFuture.supplyAsync(() -> {
             httpServer.ifPresent(httpServer -> httpServer.stop(1));
             return true;
-        });
+        }, commonForkJoinPool());
     }
 
     public void addStaticFileHandler(String path, StaticFileHandler handler) {

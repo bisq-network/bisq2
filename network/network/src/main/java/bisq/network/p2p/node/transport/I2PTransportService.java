@@ -50,6 +50,8 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
+
 @Slf4j
 public class I2PTransportService implements TransportService {
     @Getter
@@ -293,7 +295,7 @@ public class I2PTransportService implements TransportService {
                 // We return true in that case (it is used at sending a confidential message).
                 return i2pRouterFacade.isPeerOnline(peersDestination, nodeId)
                         .orElse(true);
-            });
+            }, commonForkJoinPool());
         } catch (DataFormatException e) {
             return CompletableFuture.failedFuture(new IOException("Invalid I2P destination", e));
         }

@@ -33,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
@@ -81,7 +82,7 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        // Move initialization work off the current thread and use a ForkJoinPool.commonPool instead.
+        // Move initialization work off the current thread and use ExecutorFactory.commonForkJoinPool() instead.
         return supplyAsync(() -> memoryReportService.initialize()
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> networkService.initialize())
@@ -99,7 +100,7 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
                     } else {
                         log.error("Initializing SeedNodeApplicationService failed", throwable);
                     }
-                }))
+                }), commonForkJoinPool())
                 .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 
@@ -111,7 +112,7 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
             difficultyAdjustmentServicePin.unbind();
             difficultyAdjustmentServicePin = null;
         }
-        // Move shutdown work off the current thread and use a ForkJoinPool.commonPool instead.
+        // Move shutdown work off the current thread and use ExecutorFactory.commonForkJoinPool() instead.
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> seedNodeService.shutdown()
                 .thenCompose(result -> bondedRolesService.shutdown())
@@ -129,7 +130,7 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
                         return false;
                     }
                     return true;
-                }))
+                }), commonForkJoinPool())
                 .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 }

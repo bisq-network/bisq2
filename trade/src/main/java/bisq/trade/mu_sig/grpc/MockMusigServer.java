@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static com.google.protobuf.ByteString.copyFrom;
 
 public final class MockMusigServer {
@@ -135,7 +136,7 @@ public final class MockMusigServer {
                     }
                 }
                 responseObserver.onCompleted();
-            });
+            }, commonForkJoinPool());
         }
 
         public void signSwapTx(bisq.trade.protobuf.SwapTxSignatureRequest request,

@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
+
 // Borrowed from: https://github.com/bisq-network/bisq
 @Slf4j
 public abstract class ProofOfWorkService {
@@ -35,7 +37,7 @@ public abstract class ProofOfWorkService {
     public CompletableFuture<ProofOfWork> mintAsync(byte[] payload,
                                                     byte[] challenge,
                                                     double difficulty) {
-        return CompletableFuture.supplyAsync(() -> mint(payload, challenge, difficulty));
+        return CompletableFuture.supplyAsync(() -> mint(payload, challenge, difficulty), commonForkJoinPool());
     }
 
     public abstract ProofOfWork mint(byte[] payload, byte[] challenge, double difficulty);
@@ -85,7 +87,7 @@ public abstract class ProofOfWorkService {
                 sb.append(", tsList=").append(tsList);
             }
             log.info(sb.toString());
-        });
+        }, commonForkJoinPool());
         
 /*
 Test results with a i9 13 gen laptop:
