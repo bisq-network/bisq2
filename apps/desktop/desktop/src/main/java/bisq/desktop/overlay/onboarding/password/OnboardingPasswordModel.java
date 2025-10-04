@@ -18,6 +18,10 @@
 package bisq.desktop.overlay.onboarding.password;
 
 import bisq.desktop.common.view.Model;
+import bisq.desktop.components.controls.validator.RequiredFieldValidator;
+import bisq.desktop.components.controls.validator.TextMinLengthValidator;
+import bisq.desktop.components.controls.validator.ValidatorBase;
+import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -34,4 +38,8 @@ public class OnboardingPasswordModel implements Model {
     private final BooleanProperty confirmedPasswordIsMasked = new SimpleBooleanProperty();
     private final BooleanProperty passwordIsValid = new SimpleBooleanProperty();
     private final BooleanProperty confirmedPasswordIsValid = new SimpleBooleanProperty();
+    private final ValidatorBase pwdRequiredFieldValidator = new RequiredFieldValidator(Res.get("validation.empty"));
+    private final ValidatorBase pwdMinLengthValidator = new TextMinLengthValidator(Res.get("validation.password.tooShort"));
+    private final ValidatorBase confirmedPwdRequiredFieldValidator = new RequiredFieldValidator(Res.get("validation.empty"));
+    private final ValidatorBase confirmedPwdMinLengthValidator = new TextMinLengthValidator(Res.get("validation.password.tooShort"));
 }

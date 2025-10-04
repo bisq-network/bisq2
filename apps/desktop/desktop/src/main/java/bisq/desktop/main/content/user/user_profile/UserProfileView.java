@@ -26,7 +26,6 @@ import bisq.desktop.components.controls.BisqHyperlink;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
@@ -48,20 +47,8 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 
-import static bisq.user.profile.UserProfile.MAX_LENGTH_STATEMENT;
-import static bisq.user.profile.UserProfile.MAX_LENGTH_TERMS;
-
 @Slf4j
 public class UserProfileView extends View<HBox, UserProfileModel, UserProfileController> {
-
-    private static final TextMaxLengthValidator TERMS_MAX_LENGTH_VALIDATOR =
-            new TextMaxLengthValidator(Res.get("user.userProfile.terms.tooLong", MAX_LENGTH_TERMS), MAX_LENGTH_TERMS);
-    private static final TextMaxLengthValidator STATEMENT_MAX_LENGTH_VALIDATOR =
-            new TextMaxLengthValidator(Res.get("user.userProfile.statement.tooLong", MAX_LENGTH_STATEMENT), MAX_LENGTH_STATEMENT);
-
-    private static final String STATEMENT_PROMPT = Res.get("user.userProfile.statement.prompt");
-    private static final String TERMS_PROMPT = Res.get("user.userProfile.terms.prompt");
-
     private final Button createNewProfileButton, deleteButton, saveButton;
     private final SplitPane deleteWrapper;
     private final MaterialTextField nymId, profileId, profileAge, livenessState, reputationScoreField, statement;
@@ -133,17 +120,17 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
 
         reputationScoreField = addField(Res.get("user.userProfile.reputation"));
 
-        statement = addField(Res.get("user.userProfile.statement"), STATEMENT_PROMPT);
+        statement = addField(Res.get("user.userProfile.statement"), model.getStatementPrompt());
         statement.setEditable(true);
         statement.showEditIcon();
         statement.getIconButton().setOpacity(0.3);
-        statement.setValidators(STATEMENT_MAX_LENGTH_VALIDATOR);
+        statement.setValidators(model.getStatementMaxLengthValidator());
 
-        terms = addTextArea(Res.get("user.userProfile.terms"), TERMS_PROMPT);
+        terms = addTextArea(Res.get("user.userProfile.terms"), model.getTermsPrompt());
         terms.setEditable(true);
         terms.showEditIcon();
         terms.getIconButton().setOpacity(0.3);
-        terms.setValidators(TERMS_MAX_LENGTH_VALIDATOR);
+        terms.setValidators(model.getTermsMaxLengthValidator());
 
         saveButton = new Button(Res.get("action.save"));
         saveButton.setDefaultButton(true);
@@ -244,9 +231,9 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
 
     private void enableEditableTextBoxes() {
         statement.setEditable(true);
-        statement.setPromptText(STATEMENT_PROMPT);
+        statement.setPromptText(model.getStatementPrompt());
         terms.setEditable(true);
-        terms.setPromptText(TERMS_PROMPT);
+        terms.setPromptText(model.getTermsPrompt());
     }
 
     private void onSaveButtonPressed() {

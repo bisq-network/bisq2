@@ -18,8 +18,11 @@
 package bisq.desktop.main.content.user.profile_card.my_notes;
 
 import bisq.desktop.common.view.Model;
+import bisq.desktop.components.controls.validator.PercentageValidator;
+import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
 import bisq.i18n.Res;
 import bisq.user.contact_list.ContactListEntry;
+import bisq.user.contact_list.ContactListService;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -40,4 +43,19 @@ public class ProfileCardMyNotesModel implements Model {
     private final StringProperty tag = new SimpleStringProperty("");
     private final StringProperty trustScore = new SimpleStringProperty("");
     private final StringProperty notes = new SimpleStringProperty("");
+
+    private final TextMaxLengthValidator tagMaxLengthValidator =
+            new TextMaxLengthValidator(Res.get("user.profileCard.myNotes.transparentTextField.tag.maxLength",
+                    ContactListService.CONTACT_LIST_ENTRY_MAX_TAG_LENGTH),
+                    ContactListService.CONTACT_LIST_ENTRY_MAX_TAG_LENGTH);
+    private final PercentageValidator trustScoreRangeValidator =
+            new PercentageValidator(Res.get("user.profileCard.myNotes.transparentTextField.trustScore.range",
+                    ContactListService.CONTACT_LIST_ENTRY_MIN_TRUST_SCORE * 100,
+                    ContactListService.CONTACT_LIST_ENTRY_MAX_TRUST_SCORE * 100),
+                    ContactListService.CONTACT_LIST_ENTRY_MIN_TRUST_SCORE,
+                    ContactListService.CONTACT_LIST_ENTRY_MAX_TRUST_SCORE);
+    private final TextMaxLengthValidator notesMaxLengthValidator =
+            new TextMaxLengthValidator(Res.get("user.profileCard.myNotes.transparentTextField.notes.maxLength",
+                    ContactListService.CONTACT_LIST_ENTRY_MAX_NOTES_LENGTH),
+                    ContactListService.CONTACT_LIST_ENTRY_MAX_NOTES_LENGTH);
 }
