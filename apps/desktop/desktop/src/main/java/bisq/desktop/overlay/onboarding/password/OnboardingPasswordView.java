@@ -20,9 +20,6 @@ package bisq.desktop.overlay.onboarding.password;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialPasswordField;
 import bisq.desktop.components.controls.validator.EqualTextsValidator;
-import bisq.desktop.components.controls.validator.RequiredFieldValidator;
-import bisq.desktop.components.controls.validator.TextMinLengthValidator;
-import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -36,10 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, OnboardingPasswordController> {
-
-    private static final ValidatorBase REQUIRED_FIELD_VALIDATOR = new RequiredFieldValidator(Res.get("validation.empty"));
-    private static final ValidatorBase MIN_LENGTH_VALIDATOR = new TextMinLengthValidator(Res.get("validation.password.tooShort"));
-
     private final MaterialPasswordField password, confirmedPassword;
     private final Button setPasswordButton, skipButton;
 
@@ -62,14 +55,14 @@ public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, 
 
         password = new MaterialPasswordField(Res.get("onboarding.password.enterPassword"));
         password.setValidators(
-                REQUIRED_FIELD_VALIDATOR,
-                MIN_LENGTH_VALIDATOR);
+                model.getPwdRequiredFieldValidator(),
+                model.getPwdMinLengthValidator());
         password.setMaxWidth(500);
 
         confirmedPassword = new MaterialPasswordField(Res.get("onboarding.password.confirmPassword"));
         confirmedPassword.setValidators(
-                REQUIRED_FIELD_VALIDATOR,
-                MIN_LENGTH_VALIDATOR,
+                model.getConfirmedPwdRequiredFieldValidator(),
+                model.getConfirmedPwdMinLengthValidator(),
                 new EqualTextsValidator(Res.get("validation.password.notMatching"), password.getTextInputControl()));
         confirmedPassword.setMaxWidth(password.getMaxWidth());
 
