@@ -18,6 +18,9 @@
 package bisq.desktop.main.content.support.resources;
 
 import bisq.desktop.common.view.Model;
+import bisq.desktop.components.controls.validator.DirectoryPathValidator;
+import bisq.desktop.components.controls.validator.ValidatorBase;
+import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -31,4 +34,7 @@ public class ResourcesModel implements Model {
     private final StringProperty backupLocation = new SimpleStringProperty();
     private final BooleanProperty backupButtonDefault = new SimpleBooleanProperty();
     private final BooleanProperty backupButtonDisabled = new SimpleBooleanProperty();
+
+    private final ValidatorBase directoryPathValidator = new DirectoryPathValidator(
+            Res.get("support.resources.backup.location.invalid"));
 }
