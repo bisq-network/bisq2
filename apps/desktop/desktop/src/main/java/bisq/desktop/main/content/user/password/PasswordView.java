@@ -45,13 +45,13 @@ public class PasswordView extends View<VBox, PasswordModel, PasswordController> 
 
         password = new MaterialPasswordField(Res.get("user.password.enterPassword"));
         password.setValidators(
-                model.getRequiredFieldValidator(),
-                model.getMinLengthValidator());
+                model.getPwdRequiredFieldValidator(),
+                model.getPwdMinLengthValidator());
 
         confirmedPassword = new MaterialPasswordField(Res.get("user.password.confirmPassword"));
         confirmedPassword.setValidators(
-                model.getRequiredFieldValidator(),
-                model.getMinLengthValidator(),
+                model.getConfirmedPwdRequiredFieldValidator(),
+                model.getConfirmedPwdMinLengthValidator(),
                 new EqualTextsValidator(Res.get("validation.password.notMatching"), password.getTextInputControl()));
 
         button = new Button();
