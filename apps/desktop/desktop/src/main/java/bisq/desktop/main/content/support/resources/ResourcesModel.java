@@ -34,7 +34,6 @@ public class ResourcesModel implements Model {
     private final StringProperty backupLocation = new SimpleStringProperty();
     private final BooleanProperty backupButtonDefault = new SimpleBooleanProperty();
     private final BooleanProperty backupButtonDisabled = new SimpleBooleanProperty();
-
     private final ValidatorBase directoryPathValidator = new DirectoryPathValidator(
             Res.get("support.resources.backup.location.invalid"));
 }

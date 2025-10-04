@@ -18,6 +18,10 @@
 package bisq.desktop.main.content.user.password;
 
 import bisq.desktop.common.view.Model;
+import bisq.desktop.components.controls.validator.RequiredFieldValidator;
+import bisq.desktop.components.controls.validator.TextMinLengthValidator;
+import bisq.desktop.components.controls.validator.ValidatorBase;
+import bisq.i18n.Res;
 import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,4 +38,6 @@ public class PasswordModel implements Model {
     private final BooleanProperty confirmedPasswordIsMasked = new SimpleBooleanProperty();
     private final BooleanProperty passwordIsValid = new SimpleBooleanProperty();
     private final BooleanProperty confirmedPasswordIsValid = new SimpleBooleanProperty();
+    private final ValidatorBase requiredFieldValidator = new RequiredFieldValidator(Res.get("validation.empty"));
+    private final ValidatorBase minLengthValidator = new TextMinLengthValidator(Res.get("validation.password.tooShort"));
 }
