@@ -19,6 +19,7 @@ package bisq.desktop.main.content.network.peers;
 
 import bisq.desktop.common.view.View;
 import javafx.geometry.Insets;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,8 +32,9 @@ public class NetworkPeersView extends View<VBox, NetworkPeersModel, NetworkPeers
                             VBox allPeers) {
         super(new VBox(40), model, controller);
 
-        this.root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
-        this.root.getChildren().addAll(allPeers);
+        VBox.setVgrow(allPeers, Priority.ALWAYS);
+        root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
+        root.getChildren().addAll(allPeers);
     }
 
     @Override
