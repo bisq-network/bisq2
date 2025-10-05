@@ -70,8 +70,6 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class AllNetworkPeersView extends View<VBox, AllNetworkPeersModel, AllNetworkPeersController> {
-    private static final double SIDE_PADDING = 40;
-
     private final RichTableView<ListItem> richTableView;
     private BisqTableColumn<ListItem> scoreColumn, valueColumn;
     private Subscription userProfileIdOfScoreUpdatePin, selectedReputationSourcePin;
