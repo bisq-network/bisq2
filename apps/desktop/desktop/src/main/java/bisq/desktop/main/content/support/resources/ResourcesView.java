@@ -21,8 +21,6 @@ import bisq.common.application.ApplicationVersion;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqHyperlink;
 import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.components.controls.validator.DirectoryPathValidator;
-import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.desktop.main.content.settings.SettingsViewUtils;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -36,9 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ResourcesView extends View<VBox, ResourcesModel, ResourcesController> {
-
-    private static final ValidatorBase DIRECTORY_PATH_VALIDATOR = new DirectoryPathValidator(Res.get("support.resources.backup.location.invalid"));
-
     private final Button setBackupLocationButton, backupButton;
     private final MaterialTextField backupLocation;
     private final Hyperlink webpage, dao, sourceCode, community, contribute,
@@ -59,7 +54,7 @@ public class ResourcesView extends View<VBox, ResourcesModel, ResourcesControlle
         backupLocation = new MaterialTextField(Res.get("support.resources.backup.location"),
                 Res.get("support.resources.backup.location.prompt"),
                 Res.get("support.resources.backup.location.help"));
-        backupLocation.setValidators(DIRECTORY_PATH_VALIDATOR);
+        backupLocation.setValidators(model.getDirectoryPathValidator());
         setBackupLocationButton = new Button(Res.get("support.resources.backup.setLocationButton"));
         backupButton = new Button(Res.get("support.resources.backup.backupButton"));
         HBox backupButtons = new HBox(10, setBackupLocationButton, backupButton);
