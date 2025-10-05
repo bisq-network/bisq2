@@ -109,7 +109,7 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
         requestRegistrationButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
 
         requestCancellationButton = new Button(Res.get("user.bondedRoles.cancellation.requestCancellation"));
-        requestCancellationButton.setPrefWidth(180);
+        requestCancellationButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
 
         learnMore = new BisqHyperlink(Res.get("action.learnMore"), "https://bisq.wiki/Bisq_2_Roles");
 
