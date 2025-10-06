@@ -25,6 +25,7 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -48,8 +49,10 @@ public class BisqEasyOfferbookSelectionService extends ChatChannelSelectionServi
     }
 
     @Override
-    public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
-        if (chatChannel instanceof BisqEasyOfferbookChannel) {
+    public void selectChannel(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
+        if (chatChannel == null) {
+            super.selectChannel(null);
+        } else if (chatChannel instanceof BisqEasyOfferbookChannel) {
             channelService.removeExpiredMessages(chatChannel);
             super.selectChannel(chatChannel);
         }
