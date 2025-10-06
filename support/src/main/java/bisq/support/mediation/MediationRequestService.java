@@ -58,7 +58,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public class MediationRequestService implements Service, ConfidentialMessageService.Listener {
-    public final static Date MEDIATION_SELECTION_V1_ACTIVATION_DATE = DateUtils.getUTCDate(2025, GregorianCalendar.JUNE, 1);
+    public final static Date MEDIATION_SELECTION_V1_ACTIVATION_DATE = DateUtils.getUTCDate(2026, GregorianCalendar.FEBRUARY, 1);
 
     private final NetworkService networkService;
     private final UserProfileService userProfileService;
