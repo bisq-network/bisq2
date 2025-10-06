@@ -33,7 +33,7 @@ import bisq.common.util.ExceptionUtil;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
@@ -56,7 +56,9 @@ import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -71,7 +73,18 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class MuSigOfferbookController implements Controller {
+public class MuSigOfferbookController implements InitWithDataController<MuSigOfferbookController.InitData> {
+    @Getter
+    @EqualsAndHashCode
+    @ToString
+    public static class InitData {
+        private final MuSigOffer offer;
+
+        public InitData(MuSigOffer offer) {
+            this.offer = offer;
+        }
+    }
+
     @Getter
     private final MuSigOfferbookView view;
     private final MuSigOfferbookModel model;
@@ -104,6 +117,11 @@ public class MuSigOfferbookController implements Controller {
 
         model = new MuSigOfferbookModel();
         view = new MuSigOfferbookView(model, this);
+    }
+
+    @Override
+    public void initWithData(MuSigOfferbookController.InitData initData) {
+        model.setSelectedMuSigOffer(initData.offer);
     }
 
     @Override
@@ -313,6 +331,7 @@ public class MuSigOfferbookController implements Controller {
         updateFavouriteMarketItems();
         updateFilteredMuSigOfferListItems();
         selectBaseCurrency();
+        maybeSelectOffer();
     }
 
     @Override
@@ -576,5 +595,16 @@ public class MuSigOfferbookController implements Controller {
                 .flatMap(market -> CryptoAssetRepository.find(market.getBaseCurrencyCode()))
                 .orElse(CryptoAssetRepository.BITCOIN);
         model.getSelectedBaseCryptoAsset().set(cryptoAsset);
+    }
+
+    private void maybeSelectOffer() {
+        MuSigOffer selectedOffer = model.getSelectedMuSigOffer();
+        if (selectedOffer != null) {
+            Optional<MuSigOfferListItem> toSelect = model.getMuSigOfferListItems().stream()
+                    .filter(item -> item.getOffer().getId().equals(selectedOffer.getId()))
+                    .findAny();
+            toSelect.ifPresent(item -> model.getSelectedMuSigOfferListItem().set(item));
+            model.setSelectedMuSigOffer(null);
+        }
     }
 }
