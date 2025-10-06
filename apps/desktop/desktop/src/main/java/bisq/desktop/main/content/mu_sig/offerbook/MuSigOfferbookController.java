@@ -604,6 +604,7 @@ public class MuSigOfferbookController implements InitWithDataController<MuSigOff
                     .filter(item -> item.getOffer().getId().equals(selectedOffer.getId()))
                     .findAny();
             toSelect.ifPresent(item -> model.getSelectedMuSigOfferListItem().set(item));
+            model.setSelectedMuSigOffer(null);
         }
     }
 }

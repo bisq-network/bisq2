@@ -989,8 +989,10 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
             if (isBuyOfferWithSellFilter || isSellOfferWithBuyFilter) {
                 model.getSelectedMuSigOffersFilter().set(MuSigFilters.MuSigOffersFilter.ALL);
             }
+            model.getSelectedMarket().set(muSigOfferListItem.getMarket());
             muSigOfferListView.getTableView().getSelectionModel().select(muSigOfferListItem);
             muSigOfferListView.getTableView().scrollTo(muSigOfferListItem);
+            model.getSelectedMuSigOfferListItem().set(null);
         }
     }
 
