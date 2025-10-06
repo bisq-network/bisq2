@@ -110,7 +110,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
             favouritesRemoveFilterDefaultIcon, favouritesRemoveFilterActiveIcon;
     private Subscription selectedMarketItemPin, marketListViewSelectionPin, favouritesListViewNeedsHeightUpdatePin,
             favouritesListViewSelectionPin, selectedMarketFilterPin, selectedMarketSortTypePin, shouldShowAppliedFiltersPin,
-            selectedOffersFilterPin, activeMarketPaymentsCountPin, selectedBaseCryptoAssetPin;
+            selectedOffersFilterPin, activeMarketPaymentsCountPin, selectedBaseCryptoAssetPin, selectedMuSigOfferPin;
     private Label paymentsFilterLabel;
 
     public MuSigOfferbookView(MuSigOfferbookModel model, MuSigOfferbookController controller) {
@@ -222,6 +222,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
             }
         });
 
+        selectedMuSigOfferPin = EasyBind.subscribe(model.getSelectedMuSigOfferListItem(), this::trySelectingMuSigOfferListItem);
+
         sortByMostOffers.setOnAction(e -> controller.onSortMarkets(MarketSortType.NUM_OFFERS));
         sortByNameAZ.setOnAction(e -> controller.onSortMarkets(MarketSortType.ASC));
         sortByNameZA.setOnAction(e -> controller.onSortMarkets(MarketSortType.DESC));
@@ -284,6 +286,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         selectedOffersFilterPin.unsubscribe();
         activeMarketPaymentsCountPin.unsubscribe();
         selectedBaseCryptoAssetPin.unsubscribe();
+        selectedMuSigOfferPin.unsubscribe();
 
         sortByMostOffers.setOnAction(null);
         sortByNameAZ.setOnAction(null);
@@ -975,6 +978,20 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 .map(item -> (SelectableMenuItem<FiatPaymentMethod>) item)
                 .forEach(SelectableMenuItem::dispose);
         paymentsFilterMenu.clearMenuItems();
+    }
+
+    private void trySelectingMuSigOfferListItem(MuSigOfferListItem muSigOfferListItem) {
+        if (muSigOfferListItem != null) {
+            boolean isBuyOfferWithSellFilter = muSigOfferListItem.getDirection().isBuy()
+                    && model.getSelectedMuSigOffersFilter().get() == MuSigFilters.MuSigOffersFilter.SELL;
+            boolean isSellOfferWithBuyFilter = muSigOfferListItem.getDirection().isSell()
+                    && model.getSelectedMuSigOffersFilter().get() == MuSigFilters.MuSigOffersFilter.BUY;
+            if (isBuyOfferWithSellFilter || isSellOfferWithBuyFilter) {
+                model.getSelectedMuSigOffersFilter().set(MuSigFilters.MuSigOffersFilter.ALL);
+            }
+            muSigOfferListView.getTableView().getSelectionModel().select(muSigOfferListItem);
+            muSigOfferListView.getTableView().scrollTo(muSigOfferListItem);
+        }
     }
 
     @Getter

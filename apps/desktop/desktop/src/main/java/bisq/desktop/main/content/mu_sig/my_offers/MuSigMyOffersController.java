@@ -31,6 +31,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
 import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferController;
+import bisq.desktop.main.content.mu_sig.offerbook.MuSigOfferbookController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
@@ -159,6 +160,10 @@ public class MuSigMyOffersController implements Controller {
                 .onAction(() -> doRemoveOffer(muSigOffer))
                 .closeButtonText(Res.get("confirmation.no"))
                 .show();
+    }
+
+    void onGoToOffer(MuSigOffer muSigOffer) {
+        Navigation.navigateTo(NavigationTarget.MU_SIG_OFFERBOOK, new MuSigOfferbookController.InitData(muSigOffer));
     }
 
     void applySearchPredicate(String searchText) {

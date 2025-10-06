@@ -230,6 +230,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
             private final BisqMenuItem removeOfferMenuItem = new BisqMenuItem("delete-t-grey", "delete-t-red");
             private final BisqMenuItem copyOfferMenuItem = new BisqMenuItem("copy-grey", "copy-white");
             private final BisqMenuItem editOfferMenuItem = new BisqMenuItem("edit-grey", "edit-white");
+            private final BisqMenuItem goToOfferButton = new BisqMenuItem(Res.get("muSig.myOffers.table.cell.actionButtons.goToOffer"));
             private final ChangeListener<Boolean> selectedListener = (observable, oldValue, newValue) -> {
                 boolean shouldShow = newValue || getTableRow().isHover();
                 myOfferActionsMenuBox.setVisible(shouldShow);
@@ -251,7 +252,8 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 myOfferActionsMenuBox.setMinHeight(PREF_HEIGHT);
                 myOfferActionsMenuBox.setPrefHeight(PREF_HEIGHT);
                 myOfferActionsMenuBox.setMaxHeight(PREF_HEIGHT);
-                myOfferActionsMenuBox.getChildren().addAll(editOfferMenuItem, copyOfferMenuItem, removeOfferMenuItem);
+                myOfferActionsMenuBox.getChildren().addAll(editOfferMenuItem, copyOfferMenuItem,
+                        removeOfferMenuItem, goToOfferButton);
                 myOfferActionsMenuBox.setAlignment(Pos.CENTER);
 
                 removeOfferMenuItem.useIconOnly();
@@ -262,6 +264,9 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
 
                 editOfferMenuItem.useIconOnly();
                 editOfferMenuItem.setTooltip(Res.get("offer.edit"));
+
+                goToOfferButton.setStyle("-fx-text-fill: -fx-mid-text-color;");
+                goToOfferButton.getStyleClass().add("text-underline");
             }
 
             @Override
@@ -275,10 +280,12 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                     setUpRowEventHandlersAndListeners();
                     setGraphic(myOfferMainBox);
                     removeOfferMenuItem.setOnAction(e -> controller.onRemoveOffer(item.getOffer()));
+                    goToOfferButton.setOnAction(e -> controller.onGoToOffer(item.getOffer()));
                 } else {
                     resetRowEventHandlersAndListeners();
                     resetVisibilities();
                     removeOfferMenuItem.setOnAction(null);
+                    goToOfferButton.setOnAction(null);
                     setGraphic(null);
                 }
             }
