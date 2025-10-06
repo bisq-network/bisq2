@@ -43,7 +43,7 @@ import java.util.UUID;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P extends TradeParty> extends FsmModel implements PersistableProto {
-    public final static Date TRADE_ID_V1_ACTIVATION_DATE = DateUtils.getUTCDate(2025, GregorianCalendar.JUNE, 1);
+    public final static Date TRADE_ID_V1_ACTIVATION_DATE = DateUtils.getUTCDate(2026, GregorianCalendar.FEBRUARY, 1);
 
     public static String createId(String offerId, String takerPubKeyHash) {
         return createId(offerId, takerPubKeyHash, Optional.empty());
