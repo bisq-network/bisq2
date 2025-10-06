@@ -111,7 +111,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
                 .filter(offer -> offer.equals(takersOffer))
                 .findAny();
         if (matchingOfferInChannel.isEmpty()) {
-            BisqEasyTradeService bisqEasyTradeService = (BisqEasyTradeService) serviceProvider;
+            BisqEasyTradeService bisqEasyTradeService = serviceProvider.getBisqEasyTradeService();
             // After TRADE_ID_V1_ACTIVATION_DATE we might have trades in the open trades list which have an id created
             // with the createId_V0 method, thus we need to check for both.
             String v0_tradeId = Trade.createId(takersOffer.getId(), takersContract.getTaker().getNetworkId().getId());
