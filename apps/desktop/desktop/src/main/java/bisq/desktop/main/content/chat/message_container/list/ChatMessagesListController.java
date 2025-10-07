@@ -979,7 +979,7 @@ public class ChatMessagesListController implements Controller {
     private void updatePlaceholderTitleAndDescription() {
         if (ChatUtil.isCommonChat(model.getChatChannelDomain()) && model.getIsPublicChannel().get()) {
             model.getPlaceholderTitle().set(Res.get("chat.messagebox.placeholder.title.noMessages"));
-            model.getPlaceholderDescription().set(Res.get("chat.messagebox.placeholder.description.NoMessages",
+            model.getPlaceholderDescription().set(Res.get("chat.messagebox.placeholder.description.noMessages",
                     model.getSelectedChannel().get().getDisplayString()));
         } else if (model.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OFFERBOOK
                 && model.getSelectedChannel().get() instanceof BisqEasyOfferbookChannel channel) {
