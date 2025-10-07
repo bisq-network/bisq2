@@ -20,10 +20,13 @@ package bisq.http_api.web_socket;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
+import bisq.http_api.ApiTorOnionService;
 import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.http_api.web_socket.rest_api_proxy.WebSocketRestApiService;
 import bisq.http_api.web_socket.subscription.SubscriptionService;
 import bisq.http_api.web_socket.util.GrizzlySwaggerHttpHandler;
+import bisq.network.NetworkService;
+import bisq.security.SecurityService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,6 +41,7 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -109,10 +113,14 @@ public class WebSocketService implements Service {
     private final SubscriptionService subscriptionService;
     private final WebSocketRestApiService webSocketRestApiService;
     private Optional<HttpServer> httpServer = Optional.empty();
+    private final ApiTorOnionService apiTorOnionService;
 
     public WebSocketService(Config config,
                             String restApiBaseAddress,
                             WebSocketRestApiResourceConfig restApiResourceConfig,
+                            Path baseDir,
+                            SecurityService securityService,
+                            NetworkService networkService,
                             BondedRolesService bondedRolesService,
                             ChatService chatService,
                             TradeService tradeService,
@@ -139,6 +147,9 @@ public class WebSocketService implements Service {
             checkArgument(host.equals("127.0.0.1") || host.equals("localhost"),
                     "The localhostOnly flag is set true but the server host is not localhost. host=" + host);
         }
+
+        apiTorOnionService = new ApiTorOnionService(baseDir, securityService, networkService, config.getPort(), "webSocketServer");
+
     }
 
     @Override
@@ -184,7 +195,8 @@ public class WebSocketService implements Service {
                     } else {
                         return CompletableFuture.completedFuture(false);
                     }
-                });
+                })
+                .thenCompose(result -> apiTorOnionService.initialize());
     }
 
     @Override

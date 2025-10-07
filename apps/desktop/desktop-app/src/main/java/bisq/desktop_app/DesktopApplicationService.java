@@ -237,8 +237,10 @@ public class DesktopApplicationService extends JavaSeApplicationService {
 
         var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
         var websocketConfig = WebSocketService.Config.from(getConfig("websocket"));
-        httpApiService = new HttpApiService(restApiConfig,
+        httpApiService = new HttpApiService(
+                restApiConfig,
                 websocketConfig,
+                config.getBaseDir(),
                 securityService,
                 networkService,
                 userService,
