@@ -76,7 +76,7 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
         BisqTableColumn<ProfileCardOfferListItem> marketColumn = new BisqTableColumn.Builder<ProfileCardOfferListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.market"))
                 .left()
-                .minWidth(90)
+                .minWidth(100)
                 .comparator(Comparator.comparing(ProfileCardOfferListItem::getMarketCurrencyCode)
                         .thenComparing(ProfileCardOfferListItem::getOfferAgeInDays))
                 .setCellFactory(getMarketCellFactory())

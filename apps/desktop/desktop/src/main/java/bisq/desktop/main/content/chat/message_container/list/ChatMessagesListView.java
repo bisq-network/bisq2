@@ -141,6 +141,9 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         scrollDownBadge.textProperty().bind(model.getNumUnReadMessages());
         hideScrollDownBadge();
 
+        placeholderTitle.textProperty().bind(model.getPlaceholderTitle());
+        placeholderDescription.textProperty().bind(model.getPlaceholderDescription());
+
         showScrolledDownButtonPin = EasyBind.subscribe(model.getShowScrolledDownButton(), showScrolledDownButton -> {
             if (showScrolledDownButton == null) {
                 return;
@@ -168,9 +171,6 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         model.getLayoutChildrenDone().bind(root.getLayoutChildrenDone());
 
         scrollDownBadge.setOnMouseClicked(e -> controller.onScrollToBottom());
-
-        placeholderTitle.textProperty().bind(model.getNoChatsPlaceholderTitle());
-        placeholderDescription.textProperty().bind(model.getNoChatsPlaceholderDescription());
     }
 
     @Override
