@@ -142,6 +142,7 @@ public class MuSigOfferbookController implements InitWithDataController<MuSigOff
                                 accountService));
                         model.getMuSigOfferIds().add(offerId);
                         updateFilteredMuSigOfferListItems();
+                        maybeSelectOffer();
                     }
                 });
             }
@@ -603,8 +604,10 @@ public class MuSigOfferbookController implements InitWithDataController<MuSigOff
             Optional<MuSigOfferListItem> toSelect = model.getMuSigOfferListItems().stream()
                     .filter(item -> item.getOffer().getId().equals(selectedOffer.getId()))
                     .findAny();
-            toSelect.ifPresent(item -> model.getSelectedMuSigOfferListItem().set(item));
-            model.setSelectedMuSigOffer(null);
+            if (toSelect.isPresent()) {
+                model.getSelectedMuSigOfferListItem().set(toSelect.get());
+                model.setSelectedMuSigOffer(null);
+            }
         }
     }
 }

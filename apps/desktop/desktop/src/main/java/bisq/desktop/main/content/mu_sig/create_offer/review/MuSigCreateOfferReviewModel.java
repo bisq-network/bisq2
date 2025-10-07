@@ -19,7 +19,6 @@ package bisq.desktop.main.content.mu_sig.create_offer.review;
 
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.market.Market;
-import bisq.common.market.MarketRepository;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
@@ -89,7 +88,6 @@ class MuSigCreateOfferReviewModel implements Model {
     void reset() {
         direction = null;
         market = null;
-        offer = null;
         takersSelectedPaymentMethod = null;
         minBaseSideAmount = null;
         maxBaseSideAmount = null;
