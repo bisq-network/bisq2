@@ -169,14 +169,8 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
 
         scrollDownBadge.setOnMouseClicked(e -> controller.onScrollToBottom());
 
-        if (ChatUtil.isCommonChat(model.getChatChannelDomain()) && model.getIsPublicChannel().get()) {
-            placeholderTitle.setText(Res.get("chat.messagebox.noChats.placeholder.title"));
-            placeholderDescription.setText(Res.get("chat.messagebox.noChats.placeholder.description",
-                    model.getSelectedChannel().get().getDisplayString()));
-        } else {
-            placeholderTitle.setText("");
-            placeholderDescription.setText("");
-        }
+        placeholderTitle.textProperty().bind(model.getNoChatsPlaceholderTitle());
+        placeholderDescription.textProperty().bind(model.getNoChatsPlaceholderDescription());
     }
 
     @Override
@@ -186,6 +180,8 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         scrollDownBackground.visibleProperty().unbind();
         scrollDownBackground.managedProperty().unbind();
         scrollDownBadge.textProperty().unbind();
+        placeholderTitle.textProperty().unbind();
+        placeholderDescription.textProperty().unbind();
         model.getLayoutChildrenDone().unbind();
         hasUnreadMessagesPin.unsubscribe();
         showScrolledDownButtonPin.unsubscribe();
