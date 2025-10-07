@@ -74,6 +74,10 @@ public final class BisqEasyOfferbookChannel extends PublicChatChannel<BisqEasyOf
         return market.getMarketCodes();
     }
 
+    public String getQuoteCurrencyDisplayString() {
+        return market.getQuoteCurrencyDisplayName();
+    }
+
     public String getDescription() {
         return Res.get("bisqEasy.offerBookChannel.description", market.toString());
     }

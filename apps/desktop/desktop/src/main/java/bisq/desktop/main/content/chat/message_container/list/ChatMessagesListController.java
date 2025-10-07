@@ -192,17 +192,7 @@ public class ChatMessagesListController implements Controller {
 
         layoutChildrenDonePin = EasyBind.subscribe(model.getLayoutChildrenDone(), layoutChildrenDone -> handleScrollValueChanged());
 
-        if (ChatUtil.isCommonChat(model.getChatChannelDomain()) && model.getIsPublicChannel().get()) {
-            model.getNoChatsPlaceholderTitle().set(Res.get("chat.messagebox.noChats.placeholder.title"));
-            model.getNoChatsPlaceholderDescription().set(Res.get("chat.messagebox.noChats.placeholder.description",
-                    model.getSelectedChannel().get().getDisplayString()));
-        } else if (model.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OFFERBOOK) {
-            model.getNoChatsPlaceholderDescription().set(Res.get("bisqEasy.offerbook.messagebox.noMessages.placeholder.description"));
-        } else {
-            model.getNoChatsPlaceholderTitle().set("");
-            model.getNoChatsPlaceholderDescription().set("");
-        }
-
+        updatePlaceholderTitleAndDescription();
         applyScrollValue(1);
     }
 
@@ -257,8 +247,6 @@ public class ChatMessagesListController implements Controller {
 
             if (channel instanceof BisqEasyOfferbookChannel bisqEasyOfferbookChannel) {
                 chatMessagesPin = bindChatMessages(bisqEasyOfferbookChannel);
-                model.getNoChatsPlaceholderTitle().set(Res.get("bisqEasy.offerbook.messagebox.noMessages.placeholder.title",
-                        bisqEasyOfferbookChannel.getMarket().getQuoteCurrencyDisplayName()));
             } else if (channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
                 chatMessagesPin = bindChatMessages(bisqEasyOpenTradeChannel);
             } else if (channel instanceof MuSigOpenTradeChannel muSigOpenTradeChannel) {
@@ -719,6 +707,7 @@ public class ChatMessagesListController implements Controller {
         model.getChatMessageIds().addAll(items.stream()
                 .map(e -> e.getChatMessage().getId())
                 .collect(Collectors.toSet()));
+        updateHasBisqEasyOfferMessages();
 
         boolean shouldShowWarningMessageForNoneMediator = dontShowAgainService.showAgain(DONT_SHOW_CHAT_RULES_WARNING_KEY)
                 && !(channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel
@@ -759,6 +748,7 @@ public class ChatMessagesListController implements Controller {
                     model.getChatMessages().add(item);
                     model.getChatMessageIds().add(chatMessage.getId());
                     maybeScrollDownOnNewItemAdded();
+                    updateHasBisqEasyOfferMessages();
                 });
             }
 
@@ -775,6 +765,7 @@ public class ChatMessagesListController implements Controller {
                             model.getChatMessages().remove(item);
                             model.getChatMessageIds().remove(item.getChatMessage().getId());
                         });
+                        updateHasBisqEasyOfferMessages();
                     }
                 });
             }
@@ -785,6 +776,7 @@ public class ChatMessagesListController implements Controller {
                     model.getChatMessages().forEach(ChatMessageListItem::dispose);
                     model.getChatMessages().clear();
                     model.getChatMessageIds().clear();
+                    updateHasBisqEasyOfferMessages();
                 });
             }
         });
@@ -975,5 +967,35 @@ public class ChatMessagesListController implements Controller {
                         model.getChatMessages().remove(itemToRemove);
                     });
                 });
+    }
+
+    private void updateHasBisqEasyOfferMessages() {
+        if (model.getSelectedChannel().get() instanceof BisqEasyOfferbookChannel channel) {
+            model.getHasBisqEasyOfferMessages().set(channel.getBisqEasyOffers().findAny().isPresent());
+            updatePlaceholderTitleAndDescription();
+        }
+    }
+
+    private void updatePlaceholderTitleAndDescription() {
+        if (ChatUtil.isCommonChat(model.getChatChannelDomain()) && model.getIsPublicChannel().get()) {
+            model.getPlaceholderTitle().set(Res.get("chat.messagebox.placeholder.title.noMessages"));
+            model.getPlaceholderDescription().set(Res.get("chat.messagebox.placeholder.description.NoMessages",
+                    model.getSelectedChannel().get().getDisplayString()));
+        } else if (model.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OFFERBOOK
+                && model.getSelectedChannel().get() instanceof BisqEasyOfferbookChannel channel) {
+            if (!model.getHasBisqEasyOfferMessages().get()) {
+                // Case 1: No offers
+                model.getPlaceholderTitle().set(Res.get("bisqEasy.offerbook.messagebox.placeholder.title.noOffers",
+                        channel.getQuoteCurrencyDisplayString()));
+                model.getPlaceholderDescription().set(Res.get("bisqEasy.offerbook.messagebox.placeholder.description.noOffers"));
+            } else {
+                // Case 2: No matching offers with the current search/applied filters
+                model.getPlaceholderTitle().set(Res.get("bisqEasy.offerbook.messagebox.placeholder.title.noMatchingOffers"));
+                model.getPlaceholderDescription().set(Res.get("bisqEasy.offerbook.messagebox.placeholder.description.noMatchingOffers"));
+            }
+        } else {
+            model.getPlaceholderTitle().set("");
+            model.getPlaceholderDescription().set("");
+        }
     }
 }
