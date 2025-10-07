@@ -33,6 +33,7 @@ import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.platform.Version;
+import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.identity.Identity;
@@ -84,9 +85,9 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -139,6 +140,8 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
     private final Map<String, Scheduler> closeTradeTimeoutSchedulerByTradeId = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<Void>> observeDepositTxConfirmationStatusFutureByTradeId = new ConcurrentHashMap<>();
 
+    private ExecutorService executor;
+
     public MuSigTradeService(Config config, ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
         networkService = serviceProvider.getNetworkService();
@@ -161,6 +164,10 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
+
+        executor = ExecutorFactory.boundedCachedPool("MuSigTradeService");
+
         return musigGrpcClient.initialize()
                 .thenApply(result -> {
                     persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
@@ -246,6 +253,9 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         tradeProtocolById.clear();
         pendingMessages.clear();
 
+        ExecutorFactory.shutdownAndAwaitTermination(executor, 100);
+        executor = null;
+
         return CompletableFuture.completedFuture(true);
     }
 
@@ -307,7 +317,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
                 log.info("We have pendingMessages. We try to re-process them now.");
                 pendingMessages.forEach(this::handleMuSigTradeMessage);
             }
-        }, commonForkJoinPool());
+        }, executor);
     }
 
 
@@ -348,7 +358,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         verifyMinVersionForTrading();
         String tradeId = trade.getId();
         findProtocol(tradeId).ifPresentOrElse(protocol -> {
-                    CompletableFuture.runAsync(() -> protocol.handle(event), commonForkJoinPool());
+                    CompletableFuture.runAsync(() -> protocol.handle(event), executor);
                 },
                 () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
     }
@@ -433,7 +443,7 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
                 public void onCompleted() {
                 }
             });
-        }, commonForkJoinPool());
+        }, executor);
         observeDepositTxConfirmationStatusFutureByTradeId.put(tradeId, future);
     }
 

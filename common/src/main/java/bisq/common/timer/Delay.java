@@ -78,6 +78,19 @@ public class Delay<T> {
     }
 
     /**
+     * Factory method to create a new delayed execution instance for a runnable task.
+     *
+     * @param runnable a {@code Runnable} task to execute after the delay
+     * @return a new {@code Delay<Void>} instance
+     */
+    public static Delay<Void> run(Runnable runnable) {
+        return new Delay<>(() -> {
+            runnable.run();
+            return CompletableFuture.completedFuture(null);
+        });
+    }
+
+    /**
      * Specifies the executor that will execute the task after the delay.
      * <p>
      * This executor is used for actual task execution, not for the delay mechanism itself.

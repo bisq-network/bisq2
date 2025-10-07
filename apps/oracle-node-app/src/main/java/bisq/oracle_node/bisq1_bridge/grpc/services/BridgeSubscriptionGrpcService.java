@@ -18,6 +18,7 @@
 package bisq.oracle_node.bisq1_bridge.grpc.services;
 
 import bisq.common.application.Service;
+import bisq.common.timer.Delay;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import io.grpc.Status;
@@ -113,7 +114,9 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
                 // We do not check for retryRequestAttempts as we prefer to keep retrying until blockchain
                 // parsing is completed.
                 // It can take considerable time until that happens.
-                CompletableFuture.delayedExecutor(10, TimeUnit.SECONDS, commonForkJoinPool()).execute(this::request);
+                Delay.run(this::request)
+                        .withExecutor(commonForkJoinPool())
+                        .after(10, TimeUnit.SECONDS);
             } else if (status.getCode() == Status.Code.INTERNAL) {
                 log.warn("Request rejected because of grpc server error.", exception);
                 retryRequest();
@@ -132,7 +135,9 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
             log.warn("Retrying request (attempt #{}/{}), delay: {}s",
                     retryRequestAttempts.get(), MAX_RETRY_REQUEST_ATTEMPTS, retryRequestInterval.get());
             long delay = retryRequestInterval.updateAndGet(prev -> Math.min(20, prev * 2));
-            CompletableFuture.delayedExecutor(delay, TimeUnit.SECONDS, commonForkJoinPool()).execute(this::request);
+            Delay.run(this::request)
+                    .withExecutor(commonForkJoinPool())
+                    .after(delay, TimeUnit.SECONDS);
         } else {
             log.error("We stop trying to request after {} unsuccessful attempts", retryRequestAttempts.get());
         }
@@ -144,13 +149,13 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
         }
 
         log.error("Error at StreamObserver. We call subscribe again after {} sec. Error message: {}", subscribeRetryInterval.get(), throwable.getMessage());
-        // delayedExecutor is lightweight executor using ExecutorFactory.commonForkJoinPool() based on a global executor,
-        // thus not expose an API for terminating it.
-        CompletableFuture.delayedExecutor(subscribeRetryInterval.get(), TimeUnit.SECONDS, commonForkJoinPool()).execute(() -> {
-            if (!shutdownCalled) {
-                subscribe();
-            }
-        });
+        Delay.run(() -> {
+                    if (!shutdownCalled) {
+                        subscribe();
+                    }
+                })
+                .withExecutor(commonForkJoinPool())
+                .after(subscribeRetryInterval.get(), TimeUnit.SECONDS);
         subscribeRetryInterval.set(Math.min(10, subscribeRetryInterval.incrementAndGet()));
     }
 }
