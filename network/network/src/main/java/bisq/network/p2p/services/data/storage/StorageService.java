@@ -61,7 +61,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static bisq.network.p2p.services.data.storage.StoreType.ALL;
 import static bisq.network.p2p.services.data.storage.StoreType.APPEND_ONLY_DATA_STORE;
 import static bisq.network.p2p.services.data.storage.StoreType.AUTHENTICATED_DATA_STORE;
@@ -443,7 +442,7 @@ public class StorageService {
             dataStore.addListener(listener);
             authenticatedDataStoresListeners.put(storeKey, listener);
             authenticatedDataStores.put(storeKey, dataStore);
-            return dataStore.readPersisted().thenApplyAsync(store -> dataStore, commonForkJoinPool());
+            return dataStore.readPersisted().thenApply(nil -> dataStore);
         } else {
             return CompletableFuture.completedFuture(authenticatedDataStores.get(storeKey));
         }

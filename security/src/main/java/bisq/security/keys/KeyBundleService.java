@@ -159,7 +159,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore>, Serv
                 && defaultI2pIdentityBase64.isEmpty()
                 && defaultBundle.isPresent()) {
             // Nothing to update, so we return
-            return CompletableFuture.supplyAsync(() -> true, commonForkJoinPool());
+            return CompletableFuture.completedFuture(true);
         } else {
             return createOrUpdateDefaultBundle(defaultBundle, defaultKeyId)
                     .thenApply(Objects::nonNull);

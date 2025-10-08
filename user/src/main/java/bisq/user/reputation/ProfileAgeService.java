@@ -21,6 +21,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
 import bisq.common.data.Pair;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.timer.Delay;
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -205,13 +206,16 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
                     UserIdentity userIdentity = candidates.get(i);
                     // The requestTimestamp() is using the NetworkService.NETWORK_IO_POOL at network call level.
                     // At first iteration the delay is 0, thus no delay is used.
-                    CompletableFuture.delayedExecutor(delay, TimeUnit.MILLISECONDS, commonForkJoinPool()).execute(() -> {
-                        boolean requestSuccess = requestTimestamp(userIdentity);
-                        if (!requestSuccess) {
-                            log.warn("Requesting timestamp for {} failed", userIdentity.getUserProfile().getUserName());
-                        }
-                        hasRequested.compareAndSet(false, requestSuccess);
-                    });
+                    Delay.run(() -> {
+                                        boolean requestSuccess = requestTimestamp(userIdentity);
+                                        if (!requestSuccess) {
+                                            log.warn("Requesting timestamp for {} failed", userIdentity.getUserProfile().getUserName());
+                                        }
+                                        hasRequested.compareAndSet(false, requestSuccess);
+                                    }
+                            )
+                            .withExecutor(commonForkJoinPool())
+                            .after(delay, TimeUnit.MILLISECONDS);
                 }
 
                 if (hasRequested.get()) {

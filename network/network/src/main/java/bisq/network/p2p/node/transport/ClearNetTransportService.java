@@ -123,10 +123,8 @@ public class ClearNetTransportService implements TransportService {
         initializeServerSocketTimestampByNetworkId.clear();
         initializedServerSocketTimestampByNetworkId.clear();
         timestampByTransportState.clear();
-        return CompletableFuture.supplyAsync(() -> {
-            setTransportState(TransportState.TERMINATED);
-            return true;
-        }, commonForkJoinPool());
+        setTransportState(TransportState.TERMINATED);
+        return CompletableFuture.completedFuture(true);
     }
 
     @Override

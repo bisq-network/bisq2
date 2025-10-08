@@ -176,6 +176,9 @@ public class MuSigService extends LifecycleService {
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         if (muSigActivatedPin != null) {
+            if (getState() == State.ACTIVATED || getState() == State.ACTIVATING_FAILED) {
+                deactivate();
+            }
             muSigActivatedPin.unbind();
             muSigActivatedPin = null;
         }

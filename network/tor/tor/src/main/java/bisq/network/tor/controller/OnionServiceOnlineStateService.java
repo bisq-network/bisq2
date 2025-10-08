@@ -83,7 +83,6 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
                 }, executor)
                 .whenComplete((isOnline, throwable) -> {
                     torControlProtocol.removeHsDescEventListener(this);
-
                 }));
         return future.get();
     }
