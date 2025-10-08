@@ -21,7 +21,6 @@ import bisq.account.AccountService;
 import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
-import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.platform.OS;
@@ -47,9 +46,6 @@ import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
-import bisq.user.banned.BannedUserService;
-import bisq.user.identity.UserIdentityService;
-import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 import bisq.wallets.core.BitcoinWalletSelection;
 import bisq.wallets.core.WalletService;
@@ -177,8 +173,10 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
 
         var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
         var websocketConfig = WebSocketService.Config.from(getConfig("websocket"));
-        httpApiService = new HttpApiService(restApiConfig,
+        httpApiService = new HttpApiService(
+                restApiConfig,
                 websocketConfig,
+                config.getBaseDir(),
                 securityService,
                 networkService,
                 userService,

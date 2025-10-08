@@ -46,6 +46,7 @@ import bisq.user.UserService;
 import bisq.user.reputation.ReputationService;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -61,6 +62,7 @@ public class HttpApiService implements Service {
 
     public HttpApiService(RestApiService.Config restApiConfig,
                           WebSocketService.Config webSocketConfig,
+                          Path baseDir,
                           SecurityService securityService,
                           NetworkService networkService,
                           UserService userService,
@@ -83,7 +85,7 @@ public class HttpApiService implements Service {
                     userService,
                     supportedService,
                     tradeService);
-            TradeChatRestApi tradeChatRestApi= new TradeChatRestApi(chatService, userService);
+            TradeChatRestApi tradeChatRestApi = new TradeChatRestApi(chatService, userService);
             UserIdentityRestApi userIdentityRestApi = new UserIdentityRestApi(securityService, userService.getUserIdentityService());
             MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
             SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
@@ -91,6 +93,7 @@ public class HttpApiService implements Service {
             UserProfileRestApi userProfileRestApi = new UserProfileRestApi(userService.getUserProfileService());
             ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
             ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
+
             if (restApiConfigEnabled) {
                 var restApiResourceConfig = new RestApiResourceConfig(restApiConfig.getRestApiBaseUrl(),
                         offerbookRestApi,
@@ -103,9 +106,9 @@ public class HttpApiService implements Service {
                         paymentAccountsRestApi,
                         reputationRestApi,
                         userProfileRestApi);
-                this.restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig));
+                restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig, baseDir, securityService, networkService));
             } else {
-                this.restApiService = Optional.empty();
+                restApiService = Optional.empty();
             }
 
             if (webSocketConfigEnabled) {
@@ -120,21 +123,24 @@ public class HttpApiService implements Service {
                         paymentAccountsRestApi,
                         reputationRestApi,
                         userProfileRestApi);
-                this.webSocketService = Optional.of(new WebSocketService(webSocketConfig,
+                webSocketService = Optional.of(new WebSocketService(webSocketConfig,
                         webSocketConfig.getRestApiBaseAddress(),
                         webSocketResourceConfig,
+                        baseDir,
+                        securityService,
+                        networkService,
                         bondedRolesService,
                         chatService,
                         tradeService,
                         userService,
                         openTradeItemsService));
             } else {
-                this.webSocketService = Optional.empty();
+                webSocketService = Optional.empty();
             }
 
         } else {
-            this.restApiService = Optional.empty();
-            this.webSocketService = Optional.empty();
+            restApiService = Optional.empty();
+            webSocketService = Optional.empty();
         }
     }
 

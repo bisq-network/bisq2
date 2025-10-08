@@ -186,7 +186,27 @@ public class TorService implements Service {
         });
     }
 
-    public CompletableFuture<ServerSocket> publishOnionService(int port, TorKeyPair torKeyPair) {
+    public CompletableFuture<String> publishOnionService(int localPort, int onionServicePort, TorKeyPair torKeyPair) {
+        long ts = System.currentTimeMillis();
+        try {
+            String onionAddress = torKeyPair.getOnionAddress();
+            log.info("Publish onion service for address {}:{} (localPort={})", onionAddress, onionServicePort, localPort);
+            if (!publishedOnionServices.contains(onionAddress)) {
+                torController.publish(torKeyPair, onionServicePort, localPort);
+                publishedOnionServices.add(onionAddress);
+            }
+
+            log.info("Tor onion service Ready. Took {} ms. Onion address={}:{} (localPort={})",
+                    System.currentTimeMillis() - ts, onionAddress, onionServicePort, localPort);
+
+            return CompletableFuture.completedFuture(onionAddress);
+        } catch (InterruptedException e) {
+            log.error("Can't create onion service", e);
+            return CompletableFuture.failedFuture(e);
+        }
+    }
+
+    public CompletableFuture<ServerSocket> publishOnionServiceAndCreateServerSocket(int port, TorKeyPair torKeyPair) {
         long ts = System.currentTimeMillis();
         try {
             InetAddress bindAddress = !LinuxDistribution.isWhonix() ? Inet4Address.getLoopbackAddress()

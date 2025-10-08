@@ -4,6 +4,7 @@ import bisq.common.network.Address;
 import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
+import bisq.common.observable.Pin;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
@@ -15,6 +16,7 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -36,6 +38,8 @@ public class TorTransportService implements TransportService {
     public final ObservableHashMap<NetworkId, Long> initializeServerSocketTimestampByNetworkId = new ObservableHashMap<>();
     @Getter
     public final ObservableHashMap<NetworkId, Long> initializedServerSocketTimestampByNetworkId = new ObservableHashMap<>();
+    @Nullable
+    private Pin transportStatePin;
 
     public TorTransportService(TransportConfig config) {
         if (torService == null) {
@@ -58,6 +62,10 @@ public class TorTransportService implements TransportService {
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         setTransportState(TransportState.STOPPING);
+        if (transportStatePin != null) {
+            transportStatePin.unbind();
+            transportStatePin = null;
+        }
         return torService.shutdown()
                 .whenComplete((result, throwable) -> setTransportState(TransportState.TERMINATED));
     }
@@ -71,7 +79,7 @@ public class TorTransportService implements TransportService {
             TorKeyPair torKeyPair = keyBundle.getTorKeyPair();
             String onionAddress = torKeyPair.getOnionAddress();
             Address address = new Address(onionAddress, port);
-            ServerSocket serverSocket = torService.publishOnionService(port, torKeyPair).get();
+            ServerSocket serverSocket = torService.publishOnionServiceAndCreateServerSocket(port, torKeyPair).get();
             initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
             return new ServerSocketResult(serverSocket, address);
         } catch (InterruptedException | ExecutionException e) {
@@ -107,5 +115,27 @@ public class TorTransportService implements TransportService {
 
     public Observable<Boolean> getUseExternalTor() {
         return torService.getUseExternalTor();
+    }
+
+    // We wait until tor is initialized and publish the onion address
+    public CompletableFuture<String> publishOnionService(int localPort, int onionServicePort, TorKeyPair torKeyPair) {
+        CompletableFuture<String> future = new CompletableFuture<>();
+        transportStatePin = getTransportState().addObserver(state -> {
+            if (TransportState.INITIALIZED == state) {
+                torService.publishOnionService(localPort, onionServicePort, torKeyPair)
+                        .whenComplete((onionAddress, throwable) -> {
+                            if (throwable == null) {
+                                future.complete(onionAddress);
+                            } else {
+                                future.completeExceptionally(throwable);
+                            }
+                        });
+                if (transportStatePin != null) {
+                    transportStatePin.unbind();
+                    transportStatePin = null;
+                }
+            }
+        });
+        return future;
     }
 }
