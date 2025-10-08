@@ -583,13 +583,13 @@ public class MuSigOfferbookController implements Controller {
 
     private void maybeSelectOffer(MuSigOffer selectedOffer) {
         if (selectedOffer != null) {
-            Optional<MuSigOfferListItem> toSelect = model.getMuSigOfferListItems().stream()
-                    .filter(item -> item.getOffer().getId().equals(selectedOffer.getId()))
-                    .findAny();
-            if (toSelect.isPresent()) {
-                model.getSelectedMuSigOfferListItem().set(toSelect.get());
+            UIThread.run(() -> {
+                model.getMuSigOfferListItems().stream()
+                        .filter(item -> item.getOffer().getId().equals(selectedOffer.getId()))
+                        .findAny()
+                        .ifPresent(offerListItem -> model.getSelectedMuSigOfferListItem().set(offerListItem));
                 muSigService.getSelectedMuSigOffer().set(null);
-            }
+            });
         }
     }
 }

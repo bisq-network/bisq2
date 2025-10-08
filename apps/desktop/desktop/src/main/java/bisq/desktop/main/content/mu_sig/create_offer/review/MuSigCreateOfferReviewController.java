@@ -184,12 +184,12 @@ public class MuSigCreateOfferReviewController implements Controller {
                     UIThread.run(() -> {
                         model.getShowCreateOfferSuccess().set(true);
                         mainButtonsVisibleHandler.accept(false);
+                        muSigService.getSelectedMuSigOffer().set(muSigOffer);
                     });
                     result.forEach(future -> {
                         future.whenComplete((res, t) -> {
                             if (t == null) {
                                 log.info("Offer published. result={}", res);
-                                muSigService.getSelectedMuSigOffer().set(muSigOffer);
                             } else {
                                 log.error("Offer publishing failed", t);
                             }
