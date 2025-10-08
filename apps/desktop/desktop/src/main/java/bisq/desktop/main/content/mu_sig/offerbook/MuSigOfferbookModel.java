@@ -22,7 +22,6 @@ import bisq.common.asset.CryptoAsset;
 import bisq.common.market.Market;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
-import bisq.offer.mu_sig.MuSigOffer;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -47,9 +46,6 @@ import java.util.function.Predicate;
 @Slf4j
 @Getter
 public class MuSigOfferbookModel implements Model {
-    @Setter
-    private MuSigOffer selectedMuSigOffer;
-
     private final StringProperty marketTitle = new SimpleStringProperty("");
     private final StringProperty marketDescription = new SimpleStringProperty("");
     private final StringProperty marketPrice = new SimpleStringProperty("");

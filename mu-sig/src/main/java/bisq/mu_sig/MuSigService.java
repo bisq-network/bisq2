@@ -106,6 +106,8 @@ public class MuSigService extends LifecycleService {
 
     @Getter
     private final Observable<Boolean> muSigActivated = new Observable<>(false);
+    @Getter
+    private final Observable<MuSigOffer> selectedMuSigOffer = new Observable<>();
     private final MediationRequestService mediationRequestService;
     private final MuSigTradeService muSigTradeService;
     private final MuSigOpenTradeChannelService muSigOpenTradeChannelService;

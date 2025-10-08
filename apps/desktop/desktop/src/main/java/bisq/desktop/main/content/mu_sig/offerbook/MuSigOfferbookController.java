@@ -33,7 +33,7 @@ import bisq.common.util.ExceptionUtil;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.view.InitWithDataController;
+import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
@@ -56,9 +56,7 @@ import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -73,18 +71,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class MuSigOfferbookController implements InitWithDataController<MuSigOfferbookController.InitData> {
-    @Getter
-    @EqualsAndHashCode
-    @ToString
-    public static class InitData {
-        private final MuSigOffer offer;
-
-        public InitData(MuSigOffer offer) {
-            this.offer = offer;
-        }
-    }
-
+public class MuSigOfferbookController implements Controller {
     @Getter
     private final MuSigOfferbookView view;
     private final MuSigOfferbookModel model;
@@ -98,7 +85,7 @@ public class MuSigOfferbookController implements InitWithDataController<MuSigOff
     private final UserIdentityService userIdentityService;
     private final ReputationService reputationService;
     private final AccountService accountService;
-    private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin;
+    private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin, selectedMuSigOfferPin;
     private Subscription selectedMarketItemPin, marketsSearchBoxTextPin, selectedMarketFilterPin, selectedMarketSortTypePin,
             selectedOffersFilterPin, activeMarketPaymentsCountPin, selectedMarketPricePin, selectedBaseCryptoAssetPin,
             selectedMarketFromModelPin;
@@ -120,11 +107,6 @@ public class MuSigOfferbookController implements InitWithDataController<MuSigOff
     }
 
     @Override
-    public void initWithData(MuSigOfferbookController.InitData initData) {
-        model.setSelectedMuSigOffer(initData.offer);
-    }
-
-    @Override
     public void onActivate() {
         model.getMarketsSearchBoxText().set("");
 
@@ -142,7 +124,6 @@ public class MuSigOfferbookController implements InitWithDataController<MuSigOff
                                 accountService));
                         model.getMuSigOfferIds().add(offerId);
                         updateFilteredMuSigOfferListItems();
-                        maybeSelectOffer();
                     }
                 });
             }
@@ -328,11 +309,12 @@ public class MuSigOfferbookController implements InitWithDataController<MuSigOff
             }
         });
 
+        selectedMuSigOfferPin = muSigService.getSelectedMuSigOffer().addObserver(this::maybeSelectOffer);
+
         updateFilteredMarketItems();
         updateFavouriteMarketItems();
         updateFilteredMuSigOfferListItems();
         selectBaseCurrency();
-        maybeSelectOffer();
     }
 
     @Override
@@ -357,6 +339,7 @@ public class MuSigOfferbookController implements InitWithDataController<MuSigOff
             selectedMarketPricePin.unsubscribe();
         }
         selectedMarketFromModelPin.unsubscribe();
+        selectedMuSigOfferPin.unbind();
     }
 
     void onSelectMarketItem(MarketItem marketItem) {
@@ -598,16 +581,15 @@ public class MuSigOfferbookController implements InitWithDataController<MuSigOff
         model.getSelectedBaseCryptoAsset().set(cryptoAsset);
     }
 
-    private void maybeSelectOffer() {
-        MuSigOffer selectedOffer = model.getSelectedMuSigOffer();
+    private void maybeSelectOffer(MuSigOffer selectedOffer) {
         if (selectedOffer != null) {
-            Optional<MuSigOfferListItem> toSelect = model.getMuSigOfferListItems().stream()
-                    .filter(item -> item.getOffer().getId().equals(selectedOffer.getId()))
-                    .findAny();
-            if (toSelect.isPresent()) {
-                model.getSelectedMuSigOfferListItem().set(toSelect.get());
-                model.setSelectedMuSigOffer(null);
-            }
+            UIThread.run(() -> {
+                model.getMuSigOfferListItems().stream()
+                        .filter(item -> item.getOffer().getId().equals(selectedOffer.getId()))
+                        .findAny()
+                        .ifPresent(offerListItem -> model.getSelectedMuSigOfferListItem().set(offerListItem));
+                muSigService.getSelectedMuSigOffer().set(null);
+            });
         }
     }
 }

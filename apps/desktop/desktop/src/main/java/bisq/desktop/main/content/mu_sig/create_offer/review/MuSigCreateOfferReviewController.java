@@ -35,13 +35,10 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
 import bisq.desktop.main.content.mu_sig.components.MuSigReviewDataDisplay;
-import bisq.desktop.main.content.mu_sig.offerbook.MuSigOfferbookController;
 import bisq.desktop.navigation.NavigationTarget;
-import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.mu_sig.MuSigService;
 import bisq.offer.Direction;
@@ -79,6 +76,7 @@ public class MuSigCreateOfferReviewController implements Controller {
     @Getter
     private final MuSigCreateOfferReviewView view;
     private final Consumer<Boolean> mainButtonsVisibleHandler;
+    private final Consumer<NavigationTarget> closeAndNavigateToHandler;
     private final PriceInput priceInput;
     private final MarketPriceService marketPriceService;
     private final MuSigReviewDataDisplay muSigReviewDataDisplay;
@@ -87,8 +85,10 @@ public class MuSigCreateOfferReviewController implements Controller {
     private UIScheduler timeoutScheduler;
 
     public MuSigCreateOfferReviewController(ServiceProvider serviceProvider,
-                                            Consumer<Boolean> mainButtonsVisibleHandler) {
+                                            Consumer<Boolean> mainButtonsVisibleHandler,
+                                            Consumer<NavigationTarget> closeAndNavigateToHandler) {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
+        this.closeAndNavigateToHandler = closeAndNavigateToHandler;
 
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         muSigService = serviceProvider.getMuSigService();
@@ -184,6 +184,7 @@ public class MuSigCreateOfferReviewController implements Controller {
                     UIThread.run(() -> {
                         model.getShowCreateOfferSuccess().set(true);
                         mainButtonsVisibleHandler.accept(false);
+                        muSigService.getSelectedMuSigOffer().set(muSigOffer);
                     });
                     result.forEach(future -> {
                         future.whenComplete((res, t) -> {
@@ -318,10 +319,6 @@ public class MuSigCreateOfferReviewController implements Controller {
         model.reset();
     }
 
-    public void resetOffer() {
-        model.setOffer(null);
-    }
-
     @Override
     public void onActivate() {
         model.getShowCreateOfferSuccess().set(false);
@@ -349,8 +346,7 @@ public class MuSigCreateOfferReviewController implements Controller {
     }
 
     void onShowOfferbook() {
-        OverlayController.hide(() -> Navigation.navigateTo(NavigationTarget.MU_SIG_OFFERBOOK,
-                new MuSigOfferbookController.InitData(model.getOffer())));
+        closeAndNavigateToHandler.accept(NavigationTarget.MU_SIG_OFFERBOOK);
     }
 
     private void resetSelectedPaymentMethod() {
