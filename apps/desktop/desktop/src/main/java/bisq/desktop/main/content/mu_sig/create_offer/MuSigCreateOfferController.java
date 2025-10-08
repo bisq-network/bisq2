@@ -94,7 +94,8 @@ public class MuSigCreateOfferController extends NavigationController implements 
                 view.getRoot(),
                 this::setMainButtonsVisibleState);
         muSigCreateOfferReviewController = new MuSigCreateOfferReviewController(serviceProvider,
-                this::setMainButtonsVisibleState);
+                this::setMainButtonsVisibleState,
+                this::closeAndNavigateTo);
     }
 
     @Override
@@ -105,10 +106,6 @@ public class MuSigCreateOfferController extends NavigationController implements 
 
     @Override
     public void onActivate() {
-        // We reset the offer in onActivate instead of onDeactivate because we need to pass
-        // this data to the offerbook controller
-        muSigCreateOfferReviewController.resetOffer();
-
         overlayController.setUseEscapeKeyHandler(false);
         overlayController.setEnterKeyHandler(null);
         overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);

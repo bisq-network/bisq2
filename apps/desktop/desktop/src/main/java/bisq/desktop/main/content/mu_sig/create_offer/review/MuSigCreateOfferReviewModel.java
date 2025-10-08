@@ -88,6 +88,7 @@ class MuSigCreateOfferReviewModel implements Model {
     void reset() {
         direction = null;
         market = null;
+        offer = null;
         takersSelectedPaymentMethod = null;
         minBaseSideAmount = null;
         maxBaseSideAmount = null;
