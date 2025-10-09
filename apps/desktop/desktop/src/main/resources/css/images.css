@@ -593,92 +593,56 @@
 /* Onboarding */
 /* ------------------------------------------------------------------------------------ */
 
-#crowd {
-    -fx-image: url("/images/onboarding/crowd.png");
-}
-
 #bisq-easy {
-    -fx-image: url("/images/onboarding/bisq-easy.png");
-}
-
-#chat {
-    -fx-image: url("/images/onboarding/chat.png");
-}
-
-#learn {
-    -fx-image: url("/images/onboarding/learn.png");
+    -fx-image: url("/images/onboarding/bisq-easy-green.png");
 }
 
 #reputation-ribbon {
-    -fx-image: url("/images/onboarding/reputation-ribbon.png");
+    -fx-image: url("/images/onboarding/reputation-ribbon-green.png");
 }
 
-#dollar-btc {
-    -fx-image: url("/images/onboarding/dollar-btc.png");
+#learn-discover-green {
+    -fx-image: url("/images/onboarding/btc-microscope-green.png");
 }
 
-#fiat-btc {
-    -fx-image: url("/images/onboarding/fiat-btc.png");
+#trade-green {
+    -fx-image: url("/images/onboarding/fiat-btc-green.png");
 }
 
-#fiat-btc-small {
-    -fx-image: url("/images/onboarding/fiat-btc-small.png");
+#trade-small-green {
+    -fx-image: url("/images/onboarding/fiat-btc-small-green.png");
 }
 
-#fiat-btc-small-white {
+#trade-small-white {
     -fx-image: url("/images/onboarding/fiat-btc-small-white.png");
 }
 
-#thumbs-up-white {
-    -fx-image: url("/images/onboarding/thumbs-up-white.png");
+#thumbs-up-in-circle-green {
+    -fx-image: url("/images/onboarding/thumbs-up-in-circle-green.png");
 }
 
-#thumbs-up {
-    -fx-image: url("/images/onboarding/thumbs-up.png");
+#thumbs-up-in-circle-white {
+    -fx-image: url("/images/onboarding/thumbs-up-in-circle-white.png");
 }
 
-#onboarding-1-fraction {
-    -fx-image: url("/images/onboarding/onboarding-1-fraction.png");
+#reputation-in-circle-green {
+    -fx-image: url("/images/onboarding/star-in-circle-green.png");
 }
 
-#reputation {
-    -fx-image: url("/images/onboarding/reputation.png");
+#chat-in-circle-green {
+    -fx-image: url("/images/onboarding/chat-in-circle-green.png");
 }
 
-#reputation-white {
-    -fx-image: url("/images/onboarding/reputation-white.png");
+#trading-in-circle-green {
+    -fx-image: url("/images/onboarding/dollar-btc-in-circle-green.png");
 }
 
-#onboarding-2-chat {
-    -fx-image: url("/images/onboarding/onboarding-2-chat.png");
+#learn-in-circle-green {
+    -fx-image: url("/images/onboarding/open-book-in-circle-green.png");
 }
 
-#onboarding-2-chat-white {
-    -fx-image: url("/images/onboarding/onboarding-2-chat-white.png");
-}
-
-#onboarding-2-offer {
-    -fx-image: url("/images/onboarding/onboarding-2-offer.png");
-}
-
-#onboarding-2-offer-white {
-    -fx-image: url("/images/onboarding/onboarding-2-offer-white.png");
-}
-
-#onboarding-2-payment {
-    -fx-image: url("/images/onboarding/onboarding-2-payment.png");
-}
-
-#onboarding-3-market {
-    -fx-image: url("/images/onboarding/onboarding-3-market.png");
-}
-
-#onboarding-3-method {
-    -fx-image: url("/images/onboarding/onboarding-3-method.png");
-}
-
-#onboarding-3-profile {
-    -fx-image: url("/images/onboarding/onboarding-3-profile.png");
+#market-in-circle-green {
+    -fx-image: url("/images/onboarding/graph-in-circle-green.png");
 }
 
 
