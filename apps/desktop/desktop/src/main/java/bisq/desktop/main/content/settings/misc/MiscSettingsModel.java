@@ -30,7 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class MiscSettingsModel implements Model { private final BooleanProperty useAnimations = new SimpleBooleanProperty();
+public class MiscSettingsModel implements Model {
+    private final BooleanProperty useAnimations = new SimpleBooleanProperty();
     private final BooleanProperty preventStandbyMode = new SimpleBooleanProperty();
 
     private final DoubleProperty difficultyAdjustmentFactor = new SimpleDoubleProperty();
@@ -49,6 +50,8 @@ public class MiscSettingsModel implements Model { private final BooleanProperty 
             new NumberValidator(Res.get("settings.backup.totalMaxBackupSizeInMB.invalid",
                     SettingsService.MIN_TOTAL_MAX_BACKUP_SIZE_IN_MB, SettingsService.MAX_TOTAL_MAX_BACKUP_SIZE_IN_MB),
                     SettingsService.MIN_TOTAL_MAX_BACKUP_SIZE_IN_MB, SettingsService.MAX_TOTAL_MAX_BACKUP_SIZE_IN_MB);
+
+    private final BooleanProperty addContactsAutomatically = new SimpleBooleanProperty();
 
     public MiscSettingsModel() {
     }

@@ -40,10 +40,9 @@ public class MiscSettingsController implements Controller {
     private final SettingsService settingsService;
     private final DifficultyAdjustmentService difficultyAdjustmentService;
     private final DontShowAgainService dontShowAgainService;
-    private Pin useAnimationsPin, preventStandbyModePin;
-
-    private Pin ignoreDiffAdjustmentFromSecManagerPin,
-            mostRecentDifficultyAdjustmentFactorOrDefaultPin, difficultyAdjustmentFactorPin, totalMaxBackupSizeInMBPin;
+    private Pin useAnimationsPin, preventStandbyModePin, ignoreDiffAdjustmentFromSecManagerPin,
+            mostRecentDifficultyAdjustmentFactorOrDefaultPin, difficultyAdjustmentFactorPin, totalMaxBackupSizeInMBPin,
+            addContactsAutomaticallyPin;
     private Subscription difficultyAdjustmentFactorDescriptionTextPin;
 
     public MiscSettingsController(ServiceProvider serviceProvider) {
@@ -86,6 +85,9 @@ public class MiscSettingsController implements Controller {
 
         totalMaxBackupSizeInMBPin = FxBindings.bindBiDir(model.getTotalMaxBackupSizeInMB())
                 .to(settingsService.getTotalMaxBackupSizeInMB(), settingsService::setTotalMaxBackupSizeInMB);
+
+        addContactsAutomaticallyPin = FxBindings.bindBiDir(model.getAddContactsAutomatically())
+                .to(settingsService.getAutoAddToContactsList(), settingsService::setAutoAddToContactsList);
     }
 
     @Override
@@ -103,6 +105,8 @@ public class MiscSettingsController implements Controller {
         if (mostRecentDifficultyAdjustmentFactorOrDefaultPin != null) {
             mostRecentDifficultyAdjustmentFactorOrDefaultPin.unbind();
         }
+
+        addContactsAutomaticallyPin.unbind();
     }
 
     void onResetDontShowAgain() {

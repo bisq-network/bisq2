@@ -39,15 +39,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettingsController> {
     private static final double TEXT_FIELD_WIDTH = 500;
-    private final Button resetDontShowAgain;
-    private final Switch useAnimations, preventStandbyMode;
 
+    private final Button resetDontShowAgain;
+    private final Switch useAnimations, preventStandbyMode, addContactsAutomatically;
     private final MaterialTextField totalMaxBackupSizeInMB;
 
     public MiscSettingsView(MiscSettingsModel model, MiscSettingsController controller) {
         super(new VBox(), model, controller);
 
-        root.setAlignment(Pos.TOP_LEFT);
+        // Display settings
         Label displayHeadline = SettingsViewUtils.getHeadline(Res.get("settings.display.headline"));
 
         useAnimations = new Switch(Res.get("settings.display.useAnimations"));
@@ -58,8 +58,7 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
         VBox.setMargin(resetDontShowAgain, new Insets(10, 0, 0, 0));
         VBox displayVBox = new VBox(10, useAnimations, preventStandbyMode, resetDontShowAgain);
 
-
-        // Backup
+        // Backup settings
         Label backupHeadline = SettingsViewUtils.getHeadline(Res.get("settings.backup.headline"));
         ImageView infoIcon = ImageUtil.getImageViewById("info");
         infoIcon.setOpacity(0.6);
@@ -71,11 +70,20 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
         totalMaxBackupSizeInMB.setMaxWidth(TEXT_FIELD_WIDTH);
         totalMaxBackupSizeInMB.setValidators(model.getTotalMaxBackupSizeValidator());
 
+        // Contacts settings
+        Label contactsHeadline = SettingsViewUtils.getHeadline(Res.get("settings.contacts.headline"));
+        Label contactsDescription = new Label(Res.get("settings.contacts.addContactsAutomatically.description"));
+        contactsDescription.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
+        addContactsAutomatically = new Switch(Res.get("settings.contacts.addContactsAutomatically.switch"));
+        VBox contactsVBox = new VBox(20, contactsDescription, addContactsAutomatically);
+
         VBox.setMargin(displayVBox, new Insets(0, 5, 0, 5));
         VBox contentBox = new VBox(50,
                 displayHeadline, separator(), displayVBox,
-                backupHeadlineHBox, separator(), totalMaxBackupSizeInMB);
+                backupHeadlineHBox, separator(), totalMaxBackupSizeInMB,
+                contactsHeadline, separator(), contactsVBox);
         contentBox.getStyleClass().add("bisq-common-bg");
+        root.setAlignment(Pos.TOP_LEFT);
         root.getChildren().add(contentBox);
         root.setPadding(new Insets(0, 40, 20, 40));
     }
@@ -89,6 +97,8 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
         Bindings.bindBidirectional(totalMaxBackupSizeInMB.textProperty(), model.getTotalMaxBackupSizeInMB(),
                 model.getTotalMaxBackupSizeConverter());
         totalMaxBackupSizeInMB.validate();
+
+        addContactsAutomatically.selectedProperty().bindBidirectional(model.getAddContactsAutomatically());
     }
 
     @Override
@@ -99,6 +109,8 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
 
         Bindings.unbindBidirectional(totalMaxBackupSizeInMB.textProperty(), model.getTotalMaxBackupSizeInMB());
         totalMaxBackupSizeInMB.resetValidation();
+
+        addContactsAutomatically.selectedProperty().unbindBidirectional(model.getAddContactsAutomatically());
     }
 
     private static Region separator() {

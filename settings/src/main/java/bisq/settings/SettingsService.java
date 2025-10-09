@@ -122,7 +122,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         pins.add(getBisqEasyOfferbookMessageTypeFilter().addObserver(value -> persist()));
         pins.add(getNumDaysAfterRedactingTradeData().addObserver(value -> persist()));
         pins.add(getMuSigActivated().addObserver(value -> persist()));
-        pins.add(getDoNotAutoAddToContactList().addObserver(value -> persist()));
+        pins.add(getAutoAddToContactsList().addObserver(value -> persist()));
 
         isInitialized = true;
 
@@ -267,12 +267,12 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.muSigActivated;
     }
 
-    public ReadOnlyObservable<Boolean> getDoNotAutoAddToContactList() {
-        return persistableStore.doNotAutoAddToContactList;
+    public ReadOnlyObservable<Boolean> getAutoAddToContactsList() {
+        return persistableStore.autoAddToContactsList;
     }
 
     public boolean getDoAutoAddToContactList() {
-        return !getDoNotAutoAddToContactList().get();
+        return getAutoAddToContactsList().get();
     }
 
     public Map<String, Market> getMuSigLastSelectedMarketByBaseCurrencyMap() {
@@ -378,8 +378,8 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         persistableStore.muSigActivated.set(DevMode.isDevMode() && muSigActivated);
     }
 
-    public void setDoNotAutoAddToContactList(boolean value) {
-        persistableStore.doNotAutoAddToContactList.set(value);
+    public void setAutoAddToContactsList(boolean value) {
+        persistableStore.autoAddToContactsList.set(value);
     }
 
     public void setMuSigLastSelectedMarketByBaseCurrencyMap(Market market) {

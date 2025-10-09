@@ -81,7 +81,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<ChatMessageType> bisqEasyOfferbookMessageTypeFilter = new Observable<>();
     final Observable<Integer> numDaysAfterRedactingTradeData = new Observable<>();
     final Observable<Boolean> muSigActivated = new Observable<>();
-    final Observable<Boolean> doNotAutoAddToContactList = new Observable<>();
+    final Observable<Boolean> autoAddToContactsList = new Observable<>();
     final Map<String, Market> muSigLastSelectedMarketByBaseCurrencyMap = new ConcurrentHashMap<>();
 
     SettingsStore() {
@@ -113,7 +113,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 ChatMessageType.ALL,
                 DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA,
                 DevMode.isDevMode(),
-                false,
+                true,
                 new HashMap<>());
     }
 
@@ -145,7 +145,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                   ChatMessageType bisqEasyOfferbookMessageTypeFilter,
                   int numDaysAfterRedactingTradeData,
                   boolean muSigActivated,
-                  boolean doNotAutoAddToContactList,
+                  boolean autoAddToContactsList,
                   Map<String, Market> muSigLastSelectedMarketByBaseCurrencyMap) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
@@ -175,7 +175,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
         this.bisqEasyOfferbookMessageTypeFilter.set(bisqEasyOfferbookMessageTypeFilter);
         this.numDaysAfterRedactingTradeData.set(numDaysAfterRedactingTradeData);
         this.muSigActivated.set(muSigActivated);
-        this.doNotAutoAddToContactList.set(doNotAutoAddToContactList);
+        this.autoAddToContactsList.set(autoAddToContactsList);
         this.muSigLastSelectedMarketByBaseCurrencyMap.putAll(muSigLastSelectedMarketByBaseCurrencyMap);
     }
 
@@ -210,7 +210,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setBisqEasyOfferbookMessageTypeFilter(bisqEasyOfferbookMessageTypeFilter.get().toProtoEnum())
                 .setNumDaysAfterRedactingTradeData(numDaysAfterRedactingTradeData.get())
                 .setMuSigActivated(muSigActivated.get())
-                .setDoNotAutoAddToContactList(doNotAutoAddToContactList.get())
+                .setAutoAddToContactsList(autoAddToContactsList.get())
                 .putAllMuSigLastSelectedMarketByBaseCurrencyMap(muSigLastSelectedMarketByBaseCurrencyMap.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProto(serializeForHash))));
     }
@@ -268,7 +268,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 ChatMessageType.fromProto(proto.getBisqEasyOfferbookMessageTypeFilter()),
                 numDaysAfterRedactingTradeData,
                 proto.getMuSigActivated(),
-                proto.getDoNotAutoAddToContactList(),
+                proto.getAutoAddToContactsList(),
                 proto.getMuSigLastSelectedMarketByBaseCurrencyMapMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, entry -> Market.fromProto(entry.getValue()))));
     }
@@ -314,7 +314,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 bisqEasyOfferbookMessageTypeFilter.get(),
                 numDaysAfterRedactingTradeData.get(),
                 muSigActivated.get(),
-                doNotAutoAddToContactList.get(),
+                autoAddToContactsList.get(),
                 new HashMap<>(muSigLastSelectedMarketByBaseCurrencyMap));
     }
 
@@ -349,7 +349,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
             bisqEasyOfferbookMessageTypeFilter.set(persisted.bisqEasyOfferbookMessageTypeFilter.get());
             numDaysAfterRedactingTradeData.set(persisted.numDaysAfterRedactingTradeData.get());
             muSigActivated.set(persisted.muSigActivated.get());
-            doNotAutoAddToContactList.set(persisted.doNotAutoAddToContactList.get());
+            autoAddToContactsList.set(persisted.autoAddToContactsList.get());
             muSigLastSelectedMarketByBaseCurrencyMap.putAll(persisted.muSigLastSelectedMarketByBaseCurrencyMap);
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
