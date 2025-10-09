@@ -54,10 +54,10 @@ public class WelcomeView extends View<VBox, WelcomeModel, WelcomeController> {
                 "bisq-easy"),
                 getWidgetBox(Res.get("onboarding.bisq2.teaserHeadline2"),
                         Res.get("onboarding.bisq2.line2"),
-                        "learn"),
+                        "learn-discover-green"),
                 getWidgetBox(Res.get("onboarding.bisq2.teaserHeadline3"),
                         Res.get("onboarding.bisq2.line3"),
-                        "fiat-btc"));
+                        "trade-green"));
         hBox.setAlignment(Pos.CENTER);
         hBox.setPadding(new Insets(20));
 

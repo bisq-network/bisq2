@@ -115,7 +115,7 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
                 buttonInsets,
                 Res.get("dashboard.second.headline"),
                 headlineLabelStyleClass,
-                "fiat-btc",
+                "trade-green",
                 16d,
                 headlineInsets,
                 Res.get("dashboard.second.content"),
@@ -248,13 +248,13 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
                 headlineLabel,
                 GridPaneUtil.getIconAndText(iconTxtStyle,
                         Res.get("dashboard.main.content1"),
-                        "onboarding-2-offer-white"),
+                        "trading-in-circle-green"),
                 GridPaneUtil.getIconAndText(iconTxtStyle,
                         Res.get("dashboard.main.content2"),
-                        "onboarding-2-chat-white"),
+                        "chat-in-circle-green"),
                 GridPaneUtil.getIconAndText(iconTxtStyle,
                         Res.get("dashboard.main.content3"),
-                        "reputation-white"),
+                        "reputation-in-circle-green"),
                 button);
         vBox.getStyleClass().add("bisq-box-2");
         vBox.setPadding(new Insets(30, 48, 44, 48));

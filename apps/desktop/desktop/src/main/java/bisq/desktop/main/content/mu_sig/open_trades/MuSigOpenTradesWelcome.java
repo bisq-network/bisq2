@@ -92,7 +92,7 @@ public class MuSigOpenTradesWelcome {
             infoHeadline.setMinHeight(80);
 
             HBox line1 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line1"), "reputation");
-            HBox line2 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line2"), "fiat-btc-small");
+            HBox line2 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line2"), "trade-small-green");
             HBox line3 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line3"), "thumbs-up");
 
             button = new Button(Res.get("bisqEasy.tradeGuide.open"));

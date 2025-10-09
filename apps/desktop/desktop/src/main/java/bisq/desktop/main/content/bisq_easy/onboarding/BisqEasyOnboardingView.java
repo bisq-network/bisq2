@@ -98,7 +98,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
                 buttonInsets,
                 Res.get("bisqEasy.onboarding.right.headline"),
                 headlineLabelStyleClass,
-                "fiat-btc",
+                "trade-green",
                 16d,
                 headlineInsets,
                 Res.get("bisqEasy.onboarding.right.info"),
@@ -151,13 +151,13 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         VBox vBox = new VBox(15, Spacer.fillVBox(),
                 GridPaneUtil.getIconAndText(lineStyleClass,
                         Res.get("bisqEasy.onboarding.top.content1"),
-                        "thumbs-up"),
+                        "thumbs-up-in-circle-green"),
                 GridPaneUtil.getIconAndText(lineStyleClass,
                         Res.get("bisqEasy.onboarding.top.content2"),
-                        "onboarding-2-payment"),
+                        "trading-in-circle-green"),
                 GridPaneUtil.getIconAndText(lineStyleClass,
                         Res.get("bisqEasy.onboarding.top.content3"),
-                        "onboarding-2-chat"),
+                        "learn-in-circle-green"),
                 Spacer.fillVBox());
         gridPane.add(vBox, 0, 1);
 
