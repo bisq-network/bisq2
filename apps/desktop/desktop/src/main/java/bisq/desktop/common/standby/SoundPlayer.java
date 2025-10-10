@@ -29,8 +29,8 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 
@@ -68,15 +68,15 @@ class SoundPlayer implements PreventStandbyMode {
     private void playSound() {
         try {
             String fileName = "prevent-app-nap-silent-sound.aiff";
-            File soundFile = Path.of(baseDir, fileName).toFile();
-            if (!soundFile.exists()) {
+            Path soundFile = Path.of(baseDir, fileName);
+            if (!Files.exists(soundFile)) {
                 FileUtils.resourceToFile(fileName, soundFile);
             }
             AudioInputStream audioInputStream = null;
             SourceDataLine sourceDataLine = null;
             while (isPlaying) {
                 try {
-                    audioInputStream = AudioSystem.getAudioInputStream(soundFile);
+                    audioInputStream = AudioSystem.getAudioInputStream(soundFile.toFile());
                     sourceDataLine = getSourceDataLine(audioInputStream.getFormat());
                     byte[] tempBuffer = new byte[8192];
                     sourceDataLine.open(audioInputStream.getFormat());

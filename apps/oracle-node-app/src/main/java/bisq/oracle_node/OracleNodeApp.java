@@ -47,7 +47,7 @@ public class OracleNodeApp extends Executable<OracleNodeApplicationService> {
         String json = new GsonBuilder().setPrettyPrinting().create().toJson(addressByTransportTypeMap);
         Path path = applicationService.getConfig().getBaseDir().resolve("default_node_address.json");
         try {
-            FileUtils.writeToFile(json, path.toFile());
+            FileUtils.writeToFile(json, path);
         } catch (IOException e) {
             log.error("Error at write json", e);
         }

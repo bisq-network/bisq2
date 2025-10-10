@@ -17,11 +17,15 @@
 
 package bisq.desktop.common.utils;
 
-import bisq.common.file.FileUtils;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.PixelFormat;
+import javafx.scene.image.PixelReader;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
+import javafx.scene.image.WritablePixelFormat;
 import javafx.scene.paint.Color;
 
 import java.io.ByteArrayInputStream;
@@ -29,6 +33,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 
 public class CatHashImageUtil {
     private static final String BASE_PATH = "images/cathash/";
@@ -65,13 +70,13 @@ public class CatHashImageUtil {
     }
 
     public static Image readRawImage(File file) throws IOException {
-        byte[] rawData = FileUtils.read(file.getAbsolutePath());
+        byte[] rawData = Files.readAllBytes(file.toPath());
         return byteArrayToImage(rawData);
     }
 
     public static void writeRawImage(Image image, File file) throws IOException {
         byte[] rawData = imageToByteArray(image);
-        FileUtils.write(file.getAbsolutePath(), rawData);
+        Files.write(file.toPath(), rawData);
     }
 
     public static Image byteArrayToImage(byte[] data) {

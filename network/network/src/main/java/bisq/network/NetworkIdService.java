@@ -166,7 +166,7 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
         try {
             FileUtils.backupCorruptedFile(
                     parentDirectoryPath.toAbsolutePath().toString(),
-                    storeFilePath.toFile(),
+                    storeFilePath,
                     storeFilePath.getFileName().toString(),
                     "corruptedNetworkId"
             );

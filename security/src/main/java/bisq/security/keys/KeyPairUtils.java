@@ -11,6 +11,7 @@ import org.bouncycastle.jce.spec.ECPublicKeySpec;
 import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -30,12 +31,12 @@ public class KeyPairUtils {
     public static void writePrivateKey(KeyPair keyPair, Path storageDir, String tag) {
         Path targetPath = storageDir.resolve(tag);
         try {
-            FileUtils.makeDirs(targetPath);
+            Files.createDirectories(targetPath);
 
             ECPrivateKey ecPrivate = (ECPrivateKey) keyPair.getPrivate();
             byte[] priv32 = toUnsignedFixedLength(ecPrivate.getS(), 32);
 
-            FileUtils.writeToFile(Hex.encode(priv32), targetPath.resolve("private_key_hex").toFile());
+            FileUtils.writeToFile(Hex.encode(priv32), targetPath.resolve("private_key_hex"));
             log.info("Persisted hex encoded 32-byte secp256k1 private key for tag {} at {}", tag, targetPath);
         } catch (Exception e) {
             log.error("Could not persist private key", e);

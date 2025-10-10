@@ -17,7 +17,6 @@
 
 package bisq.network.i2p.router;
 
-import bisq.common.file.FileUtils;
 import bisq.common.file.PropertiesReader;
 import bisq.common.logging.LogSetup;
 import bisq.network.i2p.router.utils.I2PLogLevel;
@@ -30,11 +29,10 @@ import net.i2p.router.Router;
 import net.i2p.router.RouterContext;
 import net.i2p.util.OrderedProperties;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
@@ -55,7 +53,7 @@ public class RouterSetup {
     private final int inboundKBytesPerSecond;
     private final int outboundKBytesPerSecond;
     private final int bandwidthSharePercentage;
-    private final File i2pDir;
+    private final Path i2pDirPath;
 
     RouterSetup(Path i2pDirPath,
                 String i2cpHost,
@@ -65,6 +63,7 @@ public class RouterSetup {
                 int inboundKBytesPerSecond,
                 int outboundKBytesPerSecond,
                 int bandwidthSharePercentage) {
+        this.i2pDirPath = i2pDirPath;
         this.i2cpHost = i2cpHost;
         this.i2cpPort = i2cpPort;
         this.i2pLogLevel = i2pLogLevel;
@@ -73,7 +72,6 @@ public class RouterSetup {
         this.outboundKBytesPerSecond = outboundKBytesPerSecond;
         this.bandwidthSharePercentage = bandwidthSharePercentage;
 
-        i2pDir = i2pDirPath.toFile();
         setupDirectories();
         setupLogging();
 
@@ -83,7 +81,7 @@ public class RouterSetup {
     void initialize() {
         try {
             setupProperties();
-            RouterCertificateUtil.copyCertificatesFromResources(i2pDir);
+            RouterCertificateUtil.copyCertificatesFromResources(i2pDirPath);
         } catch (IOException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
@@ -95,7 +93,7 @@ public class RouterSetup {
     }
 
     private void setupLogging() {
-        String fileName = i2pDir.toPath().resolve("bi2p").toString();
+        String fileName = i2pDirPath.resolve("bi2p").toString();
         LogSetup.setup(fileName);
         log.info("I2P router app logging to {}", fileName);
     }
@@ -170,15 +168,15 @@ public class RouterSetup {
     }
 
     private void mergeAndStoreRouterConfig(Properties overrides) {
-        File configFile = new File(i2pDir, "router.config");
+        Path configFile = i2pDirPath.resolve("router.config");
         Properties properties = new OrderedProperties();
         properties.putAll(getPropertiesFromResources());
         properties.putAll(getPropertiesI2pDir(configFile));
         properties.putAll(overrides);
         try {
-            DataHelper.storeProps(properties, configFile);
+            DataHelper.storeProps(properties, configFile.toFile());
         } catch (IOException e) {
-            log.warn("Could not store router.config file in i2p data directory {}", configFile.getAbsolutePath(), e);
+            log.warn("Could not store router.config file in i2p data directory {}", configFile.toAbsolutePath(), e);
         }
     }
 
@@ -192,36 +190,36 @@ public class RouterSetup {
         return properties;
     }
 
-    private Properties getPropertiesI2pDir(File configFile) {
+    private Properties getPropertiesI2pDir(Path configFile) {
         Properties properties = new Properties();
-        if (configFile.exists()) {
-            try (InputStream inputStream = new FileInputStream(configFile)) {
+        if (Files.exists(configFile)) {
+            try (InputStream inputStream = Files.newInputStream(configFile)) {
                 DataHelper.loadProps(properties, inputStream);
             } catch (IOException e) {
-                log.warn("Could not load router.config file from i2p data directory {}", configFile.getAbsolutePath(), e);
+                log.warn("Could not load router.config file from i2p data directory {}", configFile.toAbsolutePath(), e);
             }
         } else {
             try {
-                configFile.createNewFile();
+                Files.createFile(configFile);
             } catch (IOException e) {
-                log.warn("Could not create router.config file in i2p data directory {}", configFile.getAbsolutePath(), e);
+                log.warn("Could not create router.config file in i2p data directory {}", configFile.toAbsolutePath(), e);
             }
         }
         return properties;
     }
 
     private void createDirectoryAndSetProperty(String dirName, String propertyName) throws IOException {
-        File dir = createDirectory(dirName);
-        System.setProperty(propertyName, dir.getAbsolutePath());
+        Path dir = createDirectory(dirName);
+        System.setProperty(propertyName, dir.toAbsolutePath().toString());
     }
 
-    private File createDirectory(String dirName) throws IOException {
-        return createDirectory(i2pDir, dirName);
+    private Path createDirectory(String dirName) throws IOException {
+        return createDirectory(i2pDirPath, dirName);
     }
 
-    private File createDirectory(File parent, String child) throws IOException {
-        File dir = new File(parent, child);
-        FileUtils.makeDirIfNotExists(dir);
+    private Path createDirectory(Path parent, String child) throws IOException {
+        Path dir = parent.resolve(child);
+        Files.createDirectories(dir);
         return dir;
     }
 }

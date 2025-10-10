@@ -112,7 +112,7 @@ class MediationTableView extends VBox {
             FileChooserUtil.saveFile(tableView.getScene(), initialFileName)
                     .ifPresent(file -> {
                         try {
-                            FileUtils.writeToFile(csv, file);
+                            FileUtils.writeToFile(csv, file.toPath());
                         } catch (IOException e) {
                             new Popup().error(e).show();
                         }
