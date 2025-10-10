@@ -27,7 +27,7 @@ public class ControlPortFileParser {
 
     public static int parse(Path controlPortFilePath) {
         try {
-            String fileContent = FileUtils.readAsString(controlPortFilePath.toString());
+            String fileContent = FileUtils.readUTF8String(controlPortFilePath);
             if (isControlPortFileReady(fileContent)) {
                 for (String line : fileContent.split("\n")) {
                     // Lines end on Windows with "\r\n". Previous String.split("\n") removed "\n" already.

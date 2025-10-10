@@ -25,8 +25,8 @@ import bisq.settings.SettingsService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,16 +65,16 @@ public class LinuxNotificationService implements OsSpecificNotificationService {
 
                     // We are running from source code and use icon from resources as Bisq2.png is not available
                     String fileName = "linux-notification-icon.png";
-                    File destination = Path.of(baseDir.toAbsolutePath().toString(), fileName).toFile();
-                    if (!destination.exists()) {
+                    Path destination = baseDir.resolve(fileName);
+                    if (!Files.exists(destination)) {
                         try {
                             FileUtils.resourceToFile(fileName, destination);
-                            iconPath = destination.getAbsolutePath();
+                            iconPath = destination.toAbsolutePath().toString();
                         } catch (IOException e) {
                             log.error("Copying notificationIcon from resources failed", e);
                         }
                     } else {
-                        iconPath = destination.getAbsolutePath();
+                        iconPath = destination.toAbsolutePath().toString();
                     }
                 }
 

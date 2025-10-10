@@ -18,7 +18,6 @@
 package bisq.user.cathash;
 
 import bisq.common.encoding.Hex;
-import bisq.common.file.FileUtils;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.ByteArrayUtils;
 import bisq.user.profile.UserProfile;
@@ -28,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -82,8 +82,8 @@ public abstract class CatHashService<T> {
         byte[] combined = ByteArrayUtils.concat(powSolution, pubKeyHash);
         BigInteger catHashInput = new BigInteger(combined);
         String userProfileId = Hex.encode(pubKeyHash);
-        File iconsDir = Paths.get(getCatHashIconsDirectory().toString(), "v" + avatarVersion).toFile();
-        File iconFile = Paths.get(iconsDir.getAbsolutePath(), userProfileId + ".raw").toFile();
+        Path iconsDir = Paths.get(getCatHashIconsDirectory().toString(), "v" + avatarVersion);
+        Path iconFile = iconsDir.resolve(userProfileId + ".raw");
 
         // We create the images internally with 2x size for retina resolution
         double scaledSize = 2 * size;
@@ -99,18 +99,18 @@ public abstract class CatHashService<T> {
                 return cache.get(catHashInput);
             }
 
-            if (!iconsDir.exists()) {
+            if (!Files.exists(iconsDir)) {
                 try {
-                    FileUtils.makeDirs(iconsDir);
+                    Files.createDirectories(iconsDir);
                 } catch (IOException e) {
                     log.error(e.toString());
                 }
             }
 
             // Next approach is to read the image from file
-            if (iconFile.exists()) {
+            if (Files.exists(iconFile)) {
                 try {
-                    T image = readRawImage(iconFile);
+                    T image = readRawImage(iconFile.toFile());
                     if (cache.size() < getMaxCacheSize()) {
                         cache.put(catHashInput, image);
                     }
@@ -134,7 +134,7 @@ public abstract class CatHashService<T> {
         if (useCache && cache.size() < getMaxCacheSize()) {
             cache.put(catHashInput, image);
             try {
-                writeRawImage(image, iconFile);
+                writeRawImage(image, iconFile.toFile());
             } catch (IOException e) {
                 log.error("Write image failed", e);
             }
@@ -200,10 +200,10 @@ public abstract class CatHashService<T> {
                         log.info("Removed user profile icons: {}", toRemove);
                     }
                     toRemove.forEach(fileName -> {
-                        File file = Paths.get(iconsDirectory.getAbsolutePath(), versionDir, fileName).toFile();
+                        Path file = Paths.get(iconsDirectory.getAbsolutePath(), versionDir, fileName);
                         try {
                             log.debug("Remove {}", file);
-                            FileUtils.deleteFile(file);
+                            Files.deleteIfExists(file);
                         } catch (IOException e) {
                             log.error("Failed to remove file {}", file, e);
                         }

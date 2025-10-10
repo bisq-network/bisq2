@@ -33,7 +33,8 @@ import bisq.network.NetworkService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -104,8 +105,8 @@ public class SplashController implements Controller {
 
     public void onDeleteTor() {
         var conf = serviceProvider.getConfig();
-        File torDir = conf.getBaseDir().resolve("tor").toFile();
-        if (torDir.exists()) {
+        Path torDir = conf.getBaseDir().resolve("tor");
+        if (Files.exists(torDir)) {
             FileUtils.deleteOnExit(torDir);
             serviceProvider.getShutDownHandler().shutdown();
         }

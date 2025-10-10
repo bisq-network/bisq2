@@ -26,7 +26,6 @@ import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
@@ -69,9 +68,8 @@ public class ApiTorOnionService implements Service {
                     log.info("{} published for {}", onionAddressWithPort, identityTag);
                     try {
                         Path path = baseDir.resolve(identityTag + "_onionAddress.txt");
-                        File file = path.toFile();
 
-                        FileUtils.writeToFile(onionAddressWithPort, file);
+                        FileUtils.writeToFile(onionAddressWithPort, path);
                         return true;
                     } catch (IOException e) {
                         log.error("Error at write onionAddress", e);

@@ -25,7 +25,6 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,7 +32,13 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -89,12 +94,12 @@ public class BackupService {
 
         try {
             Path legacyBackupDir = storeFilePath.getParent().resolve("backup");
-            File legacyBackupFile = legacyBackupDir.resolve(fileName).toFile();
-            if (legacyBackupFile.exists()) {
-                File newBackupFile = getBackupFile();
+            Path legacyBackupFile = legacyBackupDir.resolve(fileName);
+            if (Files.exists(legacyBackupFile)) {
+                Path newBackupFile = getBackupFile();
                 FileUtils.renameFile(legacyBackupFile, newBackupFile);
                 if (FileUtils.listFiles(legacyBackupDir).isEmpty()) {
-                    FileUtils.deleteFileOrDirectory(legacyBackupDir.toFile());
+                    FileUtils.deleteFileOrDirectory(legacyBackupDir);
                 }
             }
         } catch (IOException e) {
@@ -107,7 +112,7 @@ public class BackupService {
             return false;
         }
 
-        if (!storeFilePath.toFile().exists()) {
+        if (!Files.exists(storeFilePath)) {
             return false;
         }
 
@@ -126,8 +131,8 @@ public class BackupService {
     }
 
     @VisibleForTesting
-    boolean backup(File backupFile) throws IOException {
-        boolean success = FileUtils.renameFile(storeFilePath.toFile(), backupFile);
+    boolean backup(Path backupFile) throws IOException {
+        boolean success = FileUtils.renameFile(storeFilePath, backupFile);
         if (!success) {
             log.error("Could not rename {} to {}", storeFilePath, backupFile);
         }
@@ -148,7 +153,7 @@ public class BackupService {
         outdatedBackupFileInfos.forEach(backupFileInfo -> {
             try {
                 String fileNameWithDate = backupFileInfo.getFileNameWithDate();
-                FileUtils.deleteFile(dirPath.resolve(fileNameWithDate).toFile());
+                Files.deleteIfExists(dirPath.resolve(fileNameWithDate));
                 log.debug("Deleted outdated backup {}", fileNameWithDate);
             } catch (Exception e) {
                 log.error("Failed to prune backups", e);
@@ -276,17 +281,17 @@ public class BackupService {
     }
 
     @VisibleForTesting
-    File getBackupFile() throws IOException {
+    Path getBackupFile() throws IOException {
         return getBackupFile(LocalDateTime.now());
     }
 
     @VisibleForTesting
-    File getBackupFile(LocalDateTime localDateTime) throws IOException {
+    Path getBackupFile(LocalDateTime localDateTime) throws IOException {
         String formattedDate = DATE_FORMAT.format(localDateTime);
         String fileNamePath = fileName + "_" + formattedDate;
         Path backupFilePath = dirPath.resolve(fileNamePath);
-        FileUtils.makeDirs(dirPath);
-        return backupFilePath.toFile();
+        Files.createDirectories(dirPath);
+        return backupFilePath;
     }
 
     @VisibleForTesting

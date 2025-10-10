@@ -22,18 +22,18 @@ import bisq.common.archive.ZipFileExtractor;
 import bisq.common.platform.OS;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 
 @Slf4j
 public class TorBinaryZipExtractor {
 
     private static final String ARCHIVE_FILENAME = "tor.zip";
 
-    private final File destDir;
+    private final Path destDir;
 
-    public TorBinaryZipExtractor(File destDir) {
+    public TorBinaryZipExtractor(Path destDir) {
         this.destDir = destDir;
     }
 
@@ -60,8 +60,8 @@ public class TorBinaryZipExtractor {
             return;
         }
 
-        File torBinaryFile = new File(destDir, "tor");
-        if (!torBinaryFile.setExecutable(true)) {
+        Path torBinaryFile = destDir.resolve("tor");
+        if (!torBinaryFile.toFile().setExecutable(true)) {
             throw new ZipFileExtractionFailedException("Couldn't make tor binary executable: " + ARCHIVE_FILENAME);
         }
     }

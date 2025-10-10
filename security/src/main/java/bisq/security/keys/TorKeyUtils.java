@@ -5,7 +5,7 @@ import bisq.common.file.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Base32;
 
-import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -21,13 +21,12 @@ public class TorKeyUtils {
 
     public static void writePrivateKey(TorKeyPair torKeyPair, Path storageDir, String tag) {
         Path targetPath = Paths.get(storageDir.toString(), tag);
-        File torPrivateKeyDir = targetPath.toFile();
         try {
-            FileUtils.makeDirs(torPrivateKeyDir);
-            String dir = torPrivateKeyDir.getAbsolutePath();
+            Files.createDirectories(targetPath);
+            String dir = targetPath.toAbsolutePath().toString();
 
-            FileUtils.writeToFile(Hex.encode(torKeyPair.getPrivateKey()), Paths.get(dir, "private_key_hex").toFile());
-            FileUtils.writeToFile(torKeyPair.getOnionAddress(), Paths.get(dir, "hostname").toFile());
+            FileUtils.writeToFile(Hex.encode(torKeyPair.getPrivateKey()), Paths.get(dir, "private_key_hex"));
+            FileUtils.writeToFile(torKeyPair.getOnionAddress(), Paths.get(dir, "hostname"));
 
             log.info("We persisted the tor private key in hex encoding for onionAddress {} for tag {} to {}.",
                     torKeyPair.getOnionAddress(), tag, dir);

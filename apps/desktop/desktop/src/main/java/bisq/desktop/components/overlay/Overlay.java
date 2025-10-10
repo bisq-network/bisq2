@@ -981,13 +981,11 @@ public abstract class Overlay<T extends Overlay<T>> {
                     // Copy debug log file and replace users home directory with "<HOME_DIR>" to avoid that
                     // private data gets leaked in case the user used their real name as their OS user.
                     Path debugLogPath = Path.of(baseDir + "/tor/").resolve("debug.log");
-                    File debugLogForZipFile = Path.of(baseDir + "/tor/").resolve("debug_for_zip.log").toFile();
+                    Path debugLogForZipFile = Path.of(baseDir + "/tor/").resolve("debug_for_zip.log");
                     try {
-                        if (debugLogForZipFile.exists()) {
-                            debugLogForZipFile.delete();
-                        }
-                        FileUtils.copyFile(debugLogPath.toFile(), debugLogForZipFile);
-                        String logContent = FileUtils.readAsString(debugLogForZipFile.getAbsolutePath());
+                        Files.deleteIfExists(debugLogForZipFile);
+                        FileUtils.copyFile(debugLogPath, debugLogForZipFile);
+                        String logContent = FileUtils.readUTF8String(debugLogForZipFile);
                         logContent = StringUtils.maskHomeDirectory(logContent);
                         FileUtils.writeToFile(logContent, debugLogForZipFile);
                     } catch (IOException e) {
@@ -998,7 +996,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                     Map<String, String> env = Map.of("create", "true");
                     List<Path> logPaths = Arrays.asList(
                             Path.of(baseDir).resolve("bisq.log"),
-                            debugLogForZipFile.toPath());
+                            debugLogForZipFile);
                     try (FileSystem zipFileSystem = FileSystems.newFileSystem(uri, env)) {
                         logPaths.forEach(logPath -> {
                             if (logPath.toFile().isFile()) {
