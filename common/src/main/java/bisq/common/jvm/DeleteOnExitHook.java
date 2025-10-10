@@ -47,8 +47,8 @@ import bisq.common.file.FileUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -111,14 +111,12 @@ public class DeleteOnExitHook {
         // Last in first deleted.
         Collections.reverse(toBeDeleted);
         for (String filename : toBeDeleted) {
+            Path path = Path.of(filename);
             try {
-                FileUtils.deleteFileOrDirectory(new File(filename));
+                FileUtils.deleteFileOrDirectory(path);
             } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            File file = new File(filename);
-            if (file.exists() && !file.delete()) {
                 log.warn("Deleting {} failed", filename);
+                throw new RuntimeException(e);
             }
         }
     }

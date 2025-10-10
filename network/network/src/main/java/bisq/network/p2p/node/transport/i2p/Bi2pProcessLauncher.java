@@ -80,7 +80,7 @@ public class Bi2pProcessLauncher implements Service {
                     String resourcePath = "bi2p/bi2p-" + version + ".zip";
                     try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
                         if (inputStream == null) throw new FileNotFoundException("Resource not found: " + resourcePath);
-                        new ZipFileExtractor(inputStream, i2pRouterDir.toFile()).extractArchive();
+                        new ZipFileExtractor(inputStream, i2pRouterDir).extractArchive();
                     }
                     log.info("Extracted zip {} to {}", resourcePath, i2pRouterDir);
                 }
@@ -104,7 +104,7 @@ public class Bi2pProcessLauncher implements Service {
                 if (OS.isMacOs()) {
                     Path iconPath = i2pRouterDir.resolve("bi2p-app_512.png");
                     if (!Files.exists(iconPath)) {
-                        FileUtils.resourceToFile("images/bi2p/bi2p-app_512.png", iconPath.toFile());
+                        FileUtils.resourceToFile("images/bi2p/bi2p-app_512.png", iconPath);
                     }
                     command.add("-Xdock:icon=" + iconPath);
                 }

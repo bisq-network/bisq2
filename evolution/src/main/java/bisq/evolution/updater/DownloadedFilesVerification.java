@@ -71,8 +71,8 @@ public class DownloadedFilesVerification {
                                                          File sigFile,
                                                          File dataFile) throws IOException {
         String signingKeyFileName = FROM_RESOURCES_PREFIX + signingKeyId + ASC_EXTENSION;
-        File signingKeyFile = Path.of(directory, signingKeyFileName).toFile(); // E.g. from_resources_E222AA02.asc
+        Path signingKeyFile = Path.of(directory, signingKeyFileName); // E.g. from_resources_E222AA02.asc
         FileUtils.resourceToFile("keys/" + signingKeyId + ASC_EXTENSION, signingKeyFile); // We copy key from resources to download directory
-        checkArgument(PgPUtils.isSignatureValid(signingKeyFile, sigFile, dataFile), "Signature verification failed: signingKeyFileName=" + signingKeyFileName);
+        checkArgument(PgPUtils.isSignatureValid(signingKeyFile.toFile(), sigFile, dataFile), "Signature verification failed: signingKeyFileName=" + signingKeyFileName);
     }
 }
