@@ -159,8 +159,6 @@ public abstract class ApplicationService implements Service {
             throw new RuntimeException(e);
         }
 
-        setupLogging(baseDir);
-
         log.info(AsciiLogo.getAsciiLogo());
         log.info("Data directory: {}", baseDir);
         log.info("Version: v{} / Commit hash: {}", ApplicationVersion.getVersion().getVersionAsString(), ApplicationVersion.getBuildCommitShortHash());
@@ -177,6 +175,8 @@ public abstract class ApplicationService implements Service {
 
         applicationConfig = rootConfig.getConfig("application");
         config = Config.from(rootConfig, applicationConfig, baseDir);
+
+        setupLogging(baseDir);
 
         DevMode.setDevMode(config.isDevMode());
         if (config.isDevMode()) {
