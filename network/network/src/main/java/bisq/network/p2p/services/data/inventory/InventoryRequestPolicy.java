@@ -112,6 +112,14 @@ class InventoryRequestPolicy {
                 isBelowMaxPendingRequests();
     }
 
+    public void onAllConnectionsLost() {
+        log.warn("We have lost all connections. " +
+                "We reset initialInventoryRequestsCompleted to false so that we trigger " +
+                "a new inventory request once we are reconnected.");
+        inventoryRequestModel.getNumInventoryRequestsCompleted().set(0);
+        inventoryRequestModel.getInitialInventoryRequestsCompleted().set(false);
+    }
+
 
     List<Connection> getCandidatesForPeriodicRequests() {
         List<Connection> candidates = peerGroupService.getShuffledNonSeedConnections(node)
