@@ -112,6 +112,8 @@ public class SettingsRestApi extends RestApiBase {
                 supportedLanguageCodes.addAll(request.supportedLanguageCodes());
             } else if (request.maxTradePriceDeviation() != null) {
                 settingsService.setMaxTradePriceDeviation(request.maxTradePriceDeviation());
+            } else if (request.selectedMuSigMarket() != null) {
+                settingsService.setSelectedMuSigMarket(DtoMappings.MarketMapping.toBisq2Model(request.selectedMuSigMarket()));
             } else if (request.numDaysAfterRedactingTradeData() != null) {
                 settingsService.setNumDaysAfterRedactingTradeData(request.numDaysAfterRedactingTradeData());
             } else if (request.useAnimations() != null) {
